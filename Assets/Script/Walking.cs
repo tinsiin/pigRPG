@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
+using RandomExtensions;
 
 public class Walking : MonoBehaviour
 {
@@ -35,7 +37,6 @@ public class Walking : MonoBehaviour
     async void Start()
     {
         ps = new PlayersStates();
-        NormalEnemy.csvLoad();//敵の辞書データの読み込み
 
         await walk(0);//最適化のため最終開発の段階で初期UIの更新だけをするようにする。
     }
@@ -153,4 +154,93 @@ public class Walking : MonoBehaviour
     {
         tmp.text = "" + ps.NowProgress;
     }
+    
+        /// <summary>
+    /// 与えられた敵のリストを基に今回の敵を決める、
+    /// 汎用的な相性で敵を集めてリストで返す静的関数
+    /// </summary>
+    public static BattleGroup EnemyCollectAI(List<NormalEnemy> targetList)
+    {
+        List<NormalEnemy> ResultList = new List<NormalEnemy>();//返す用のリスト
+        PartyProperty ourImpression = PartyProperty.TrashGroup;//初期値は馬鹿共
+        
+        //最初の一人はランダムで選ぶ
+        var rndIndex = Random.Range(0, targetList.Count - 1);//ランダムインデックス指定
+        var referenceOne= targetList[rndIndex];//抽出
+        targetList.RemoveAt(rndIndex);//削除
+        ResultList.Add(referenceOne);//追加
+
+        //数判定(一人判定)　
+        if(EnemyCollectManager.Instance.LonelyMatchUp(referenceOne.MyImpression)){
+
+            //パーティー属性を決める　一人なのでその一人の属性をそのままパーティー属性にする
+            ourImpression = EnemyCollectManager.Instance.EnemyLonelyPartyImpression[referenceOne.MyImpression];//()ではなく[]でアクセスすることに注意
+
+            return new BattleGroup(ResultList.Cast<BaseStates>().ToList(),ourImpression) ;//while文に入らずに返す  
+        }
+
+        while (true)
+        {
+            //まず吟味する加入対象をランダムに選ぶ
+            var targetIndex = Random.Range(0, targetList.Count - 1);//ランダムでインデックス指定
+            int okCount = 0;//適合数 これがResultList.Countと同じになったら加入させる
+
+            for (int i = 0; i < ResultList.Count; i++)//既に選ばれた敵全員との相性を見る
+            {//for文で判断しないと現在の配列のインデックスを相性値用の配列のインデックス指定に使えない
+                //種別同士の判定 if文内で変数に代入できる
+                if ((EnemyCollectManager.Instance.TypeMatchUp(ResultList[i].MyType, targetList[targetIndex].MyType)) )
+                {
+                    //属性同士の判定　上クリアしたら
+                    if ((EnemyCollectManager.Instance.ImpressionMatchUp(ResultList[i].MyImpression, targetList[targetIndex].MyImpression)) )
+                    {
+                        okCount++;//適合数を増やす
+                    }
+                }
+            }
+            //foreachで全員との相性を見たら、加入させる。
+            if (okCount == ResultList.Count)//全員との相性が合致したら
+            {
+                ResultList.Add(targetList[targetIndex]);//結果のリストに追加
+                targetList.RemoveAt(targetIndex);//候補リストから削除
+            }
+
+            //数判定
+            if (ResultList.Count == 1)//一人だったら(まだ一人も見つけれてない場合)
+            {
+                if (RandomEx.Shared.NextInt(100) < 88)//88%の確率で一人で終わる計算に入る。
+                {
+                    //数判定(一人判定)　
+                    if(EnemyCollectManager.Instance.LonelyMatchUp(referenceOne.MyImpression)){
+
+                        //パーティー属性を決める　一人なのでその一人の属性をそのままパーティー属性にする
+                        ourImpression = EnemyCollectManager.Instance.EnemyLonelyPartyImpression[referenceOne.MyImpression];//()ではなく[]でアクセスすることに注意
+
+                        break;
+                    }
+                }
+            }
+
+            if (ResultList.Count == 2)//二人だったら三人目の加入を決める
+            {
+                if (RandomEx.Shared.NextInt(100) < 65)//この確率で終わる。
+                {
+                    //パーティー属性を決める
+                    ourImpression = EnemyCollectManager.Instance.calculatePartyProperty(ResultList);
+                    break;
+                }
+            }
+            
+            if(ResultList.Count>=3)
+            {
+                //パーティー属性を決める
+                ourImpression = EnemyCollectManager.Instance.calculatePartyProperty(ResultList);
+                break;//三人になったら強制終了
+            } 
+        }
+
+        
+
+        return new BattleGroup(ResultList.Cast<BaseStates>().ToList(), ourImpression);//バトルグループを制作 
+        }    
+
 }

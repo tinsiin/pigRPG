@@ -105,7 +105,7 @@ public class StageCut
     /// <summary>
     /// 敵のリスト
     /// </summary>
-    public IReadOnlyList<BaseStates> EnemyList => _enemyList;
+    public IReadOnlyList<NormalEnemy> EnemyList => _enemyList;
 
 }
 /// <summary>
