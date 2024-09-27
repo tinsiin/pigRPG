@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayersStates //ƒZ[ƒu‚ÅƒZ[ƒu‚³‚ê‚é‚æ‚¤‚È–•¿‚Æ‚©ƒƒCƒ“ƒ‹[ƒv‚Å‘€ì‚·‚é‚½‚ß‚ÌƒXƒe[ƒ^ƒX‘¾“
+public class PlayersStates //ã‚»ãƒ¼ãƒ–ã§ã‚»ãƒ¼ãƒ–ã•ã‚Œã‚‹ã‚ˆã†ãªäº‹æŸ„ã¨ã‹ãƒ¡ã‚¤ãƒ³ãƒ«ãƒ¼ãƒ—ã§æ“ä½œã™ã‚‹ãŸã‚ã®ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹å¤ªåˆ€
 {
 
     /*public BassJackStates geino;
@@ -13,19 +13,19 @@ public class PlayersStates //ƒZ[ƒu‚ÅƒZ[ƒu‚³‚ê‚é‚æ‚¤‚È–•¿‚Æ‚©ƒƒCƒ“ƒ‹[ƒv‚Å‘€
     int _nowAreaID;
 
     /// <summary>
-    /// Œ»İis“x
+    /// ç¾åœ¨é€²è¡Œåº¦
     /// </summary>
     public int NowProgress => _nowProgress;
     /// <summary>
-    /// Œ»İ‚ÌƒXƒe[ƒW
+    /// ç¾åœ¨ã®ã‚¹ãƒ†ãƒ¼ã‚¸
     /// </summary>
     public int NowStageID => _nowStageID;
     /// <summary>
-    /// Œ»İ‚ÌƒXƒe[ƒW“à‚ÌƒGƒŠƒA
+    /// ç¾åœ¨ã®ã‚¹ãƒ†ãƒ¼ã‚¸å†…ã®ã‚¨ãƒªã‚¢
     /// </summary>
     public int NowAreaID => _nowAreaID;
 
-    public PlayersStates()//ƒRƒ“ƒXƒgƒ‰ƒNƒ^[ 
+    public PlayersStates()//ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ãƒ¼ 
     { 
         _nowProgress = 0;
         _nowStageID = 0;
@@ -34,11 +34,11 @@ public class PlayersStates //ƒZ[ƒu‚ÅƒZ[ƒu‚³‚ê‚é‚æ‚¤‚È–•¿‚Æ‚©ƒƒCƒ“ƒ‹[ƒv‚Å‘€
         //sites = new SateliteProcessStates(3,4,5,6,7,8);
         //noramlia = new StairStates(3, 4, 5, 6, 7, 8);
 
-        //ƒZ[ƒuƒf[ƒ^‚ ‚é‚È‚ç‚±‚ÌŒã‚Éˆ—
+        //ã‚»ãƒ¼ãƒ–ãƒ‡ãƒ¼ã‚¿ã‚ã‚‹ãªã‚‰ã“ã®å¾Œã«å‡¦ç†
     }
 
     /// <summary>
-    /// is“x‚ğ‘‚â‚·  
+    /// é€²è¡Œåº¦ã‚’å¢—ã‚„ã™  
     /// </summary>
     /// <param name="addPoint"></param>
     public void AddProgress(int addPoint)
@@ -46,7 +46,7 @@ public class PlayersStates //ƒZ[ƒu‚ÅƒZ[ƒu‚³‚ê‚é‚æ‚¤‚È–•¿‚Æ‚©ƒƒCƒ“ƒ‹[ƒv‚Å‘€
         _nowProgress += addPoint;
     }
     /// <summary>
-    /// Œ»İis“x‚ğƒ[ƒ‚É‚·‚é
+    /// ç¾åœ¨é€²è¡Œåº¦ã‚’ã‚¼ãƒ­ã«ã™ã‚‹
     /// </summary>
     public void ProgressReset()
     {
@@ -54,38 +54,38 @@ public class PlayersStates //ƒZ[ƒu‚ÅƒZ[ƒu‚³‚ê‚é‚æ‚¤‚È–•¿‚Æ‚©ƒƒCƒ“ƒ‹[ƒv‚Å‘€
     }
 
     /// <summary>
-    /// ƒGƒŠƒA‚ğƒZƒbƒg‚·‚éB
+    /// ã‚¨ãƒªã‚¢ã‚’ã‚»ãƒƒãƒˆã™ã‚‹ã€‚
     /// </summary>
     public void SetArea(int id)
     {
         _nowAreaID = id;
-        Debug.Log(id + "‚ğPlayerStates‚É‹L˜^");
+        Debug.Log(id + "ã‚’PlayerStatesã«è¨˜éŒ²");
     }
 
 
 }
 /*
-public class BassJackStates : BaseStates//‹¤’ÊƒXƒe[ƒ^ƒX‚Éƒvƒ‰ƒX‚Å‚»‚ê‚¼‚ê‚ÌƒLƒƒƒ‰‚Ì“Æ©ƒXƒe[ƒ^ƒX‚Æ‚©‚»‚Ìˆ—
+public class BassJackStates : BaseStates//å…±é€šã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã«ãƒ—ãƒ©ã‚¹ã§ãã‚Œãã‚Œã®ã‚­ãƒ£ãƒ©ã®ç‹¬è‡ªã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã¨ã‹ãã®å‡¦ç†
 {
     public BassJackStates(int c_hp, int c_maxhp, int c_p, int c_maxP, int c_DEF, int c_ATK, int c_HIT, int c_AGI)
          : base(c_hp, c_maxhp, c_p, c_maxP, c_DEF, c_ATK, c_HIT, c_AGI)
-    {//ålŒö‚ÌƒRƒ“ƒXƒgƒ‰ƒNƒ^
+    {//ä¸»äººå…¬ã®ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
        
     }
 }
-public class SateliteProcessStates : BaseStates//‹¤’ÊƒXƒe[ƒ^ƒX‚Éƒvƒ‰ƒX‚Å‚»‚ê‚¼‚ê‚ÌƒLƒƒƒ‰‚Ì“Æ©ƒXƒe[ƒ^ƒX‚Æ‚©‚»‚Ìˆ—
+public class SateliteProcessStates : BaseStates//å…±é€šã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã«ãƒ—ãƒ©ã‚¹ã§ãã‚Œãã‚Œã®ã‚­ãƒ£ãƒ©ã®ç‹¬è‡ªã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã¨ã‹ãã®å‡¦ç†
 {
     public SateliteProcessStates(int c_hp, int c_maxhp, int c_p, int c_maxP, int c_DEF, int c_ATK, int c_HIT, int c_AGI)
          : base(c_hp, c_maxhp, c_p, c_maxP, c_DEF, c_ATK, c_HIT, c_AGI)
-    {//“¯—»‚ÌƒRƒ“ƒXƒgƒ‰ƒNƒ^
+    {//åŒåƒšã®ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 
     }
 }
-public class StairStates : BaseStates//‹¤’ÊƒXƒe[ƒ^ƒX‚Éƒvƒ‰ƒX‚Å‚»‚ê‚¼‚ê‚ÌƒLƒƒƒ‰‚Ì“Æ©ƒXƒe[ƒ^ƒX‚Æ‚©‚»‚Ìˆ—
-{//æ”y‚ÌƒRƒ“ƒXƒgƒ‰ƒNƒ^
+public class StairStates : BaseStates//å…±é€šã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã«ãƒ—ãƒ©ã‚¹ã§ãã‚Œãã‚Œã®ã‚­ãƒ£ãƒ©ã®ç‹¬è‡ªã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã¨ã‹ãã®å‡¦ç†
+{//å…ˆè¼©ã®ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
     public StairStates(int c_hp, int c_maxhp, int c_p, int c_maxP, int c_DEF, int c_ATK, int c_HIT, int c_AGI)
         :base(c_hp, c_maxhp, c_p, c_maxP, c_DEF, c_ATK, c_HIT,c_AGI)
-    {//“¯—»‚ÌƒRƒ“ƒXƒgƒ‰ƒNƒ^
+    {//åŒåƒšã®ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
         
     }
 }

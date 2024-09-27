@@ -6,8 +6,8 @@ using UnityEngine.UIElements;
 
 public class WatchUIUpdate : MonoBehaviour
 {
-    [SerializeField] TextMeshProUGUI StagesString;//ƒXƒe[ƒW‚ÆƒGƒŠƒA–¼‚ÌƒeƒLƒXƒg
-    [SerializeField] TenmetuNowImage MapImg;//’¼Ú‚ÅŒ»İˆÊ’u•\¦‚·‚éŠÈˆÕƒ}ƒbƒv
+    [SerializeField] TextMeshProUGUI StagesString;//ã‚¹ãƒ†ãƒ¼ã‚¸ã¨ã‚¨ãƒªã‚¢åã®ãƒ†ã‚­ã‚¹ãƒˆ
+    [SerializeField] TenmetuNowImage MapImg;//ç›´æ¥ã§ç¾åœ¨ä½ç½®è¡¨ç¤ºã™ã‚‹ç°¡æ˜“ãƒãƒƒãƒ—
     void Start()
     {
         
@@ -18,24 +18,24 @@ public class WatchUIUpdate : MonoBehaviour
         
     }
     /// <summary>
-    /// ‘S‘Ì“I‚ÈEYEAREA‚ÌUIXV
+    /// å…¨ä½“çš„ãªEYEAREAã®UIæ›´æ–°
     /// </summary>
     public void UIUpdate(StageData sd,StageCut sc,PlayersStates pla)
     {
-        StagesString.text = sd.StageName + "E\n" + sc.AreaName;
+        StagesString.text = sd.StageName + "ãƒ»\n" + sc.AreaName;
         NowImageCalc(sc, pla);
     }
     /// <summary>
-    /// ŠÈˆÕƒ}ƒbƒvŒ»İ’n‚ÌUIXV‚Æ‚»‚Ìˆ—
+    /// ç°¡æ˜“ãƒãƒƒãƒ—ç¾åœ¨åœ°ã®UIæ›´æ–°ã¨ãã®å‡¦ç†
     /// </summary>
     void NowImageCalc(StageCut sc,PlayersStates player)
     {
-        //is“x©‘Ì‚ÌŠ„‡‚ğŒvZ
+        //é€²è¡Œåº¦è‡ªä½“ã®å‰²åˆã‚’è¨ˆç®—
         float Ratio = (float)player.NowProgress / (sc.AreaDates.Count - 1);
-        //is“x€ƒGƒŠƒA”(count‚¾‚©‚ç-1) •Ğ•ûƒLƒƒƒXƒg‚µ‚È‚¢‚Æ®”“¯m‚Æ‚µ‚Ä¬”“_ˆÈ‰ºØ‚èÌ‚Ä‚ç‚ê‚éB
-        //Debug.Log("Œ»İis“x‚ÌƒGƒŠƒA”‚É‘Î‚·‚éŠ„‡"+Ratio);
+        //é€²è¡Œåº¦Ã·ã‚¨ãƒªã‚¢æ•°(countã ã‹ã‚‰-1) ç‰‡æ–¹ã‚­ãƒ£ã‚¹ãƒˆã—ãªã„ã¨æ•´æ•°åŒå£«ã¨ã—ã¦å°æ•°ç‚¹ä»¥ä¸‹åˆ‡ã‚Šæ¨ã¦ã‚‰ã‚Œã‚‹ã€‚
+        //Debug.Log("ç¾åœ¨é€²è¡Œåº¦ã®ã‚¨ãƒªã‚¢æ•°ã«å¯¾ã™ã‚‹å‰²åˆ"+Ratio);
 
-        //lerp‚ªƒxƒNƒgƒ‹‚ğİ’è‚µ‚Ä‚­‚ê‚éA’²®‚³‚ê‚½ˆÊ’u‚ğ“n‚·
+        //lerpãŒãƒ™ã‚¯ãƒˆãƒ«ã‚’è¨­å®šã—ã¦ãã‚Œã‚‹ã€èª¿æ•´ã•ã‚ŒãŸä½ç½®ã‚’æ¸¡ã™
         MapImg.LocationSet(Vector2.Lerp(sc.MapLineS,sc.MapLineE, Ratio));
 
     }

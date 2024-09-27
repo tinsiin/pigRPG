@@ -1,154 +1,291 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using RandomExtensions;
 using UnityEngine;
 using static Unity.Burst.Intrinsics.X86.Avx;
 
 /// <summary>
-/// ’Êí‚Ì“G
+/// é€šå¸¸ã®æ•µ
 /// </summary>
 [System.Serializable]
 public class NormalEnemy : BaseStates
 {
     /// <summary>
-    /// ‚±‚Ì“GƒLƒƒƒ‰ƒNƒ^[‚Ì•œŠˆ‚·‚é•à”
-    /// è“®‚¾‚ªŠî–{“I‚É¶–½ƒLƒƒƒ‰ƒNƒ^[‚Ì‚İ‚É‚±‚Ì•à”‚Íİ’è‚·‚é?
+    /// ã“ã®æ•µã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®å¾©æ´»ã™ã‚‹æ­©æ•°
+    /// æ‰‹å‹•ã ãŒåŸºæœ¬çš„ã«ç”Ÿå‘½ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®ã¿ã«ã“ã®æ­©æ•°ã¯è¨­å®šã™ã‚‹?
     /// </summary>
-    public int RecovelySteps;
+    public int recovelySteps;
 
     /// <summary>
-    /// ‚±‚ÌƒLƒƒƒ‰ƒNƒ^[‚ªÄ¶‚·‚é‚©‚Ç‚¤‚©
-    /// False‚É‚·‚é‚Æˆê“x“|‚·‚Æ“ñ“x‚Æo‚Ä‚«‚Ü‚¹‚ñB—á‚¦‚Î‹@ŠBƒLƒƒƒ‰‚È‚çAŠî–{False‚É‚·‚éB
+    /// ã“ã®ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ãŒå†ç”Ÿã™ã‚‹ã‹ã©ã†ã‹
+    /// Falseã«ã™ã‚‹ã¨ä¸€åº¦å€’ã™ã¨äºŒåº¦ã¨å‡ºã¦ãã¾ã›ã‚“ã€‚ä¾‹ãˆã°æ©Ÿæ¢°ã‚­ãƒ£ãƒ©ãªã‚‰ã€åŸºæœ¬Falseã«ã™ã‚‹ã€‚
     /// </summary>
-    public bool Reborn;
+    public bool reborn;
 
+    
+    
+    
+    
+    
+    
+    
     /// <summary>
-    /// “G‚ªˆêl‚ÌÛ‚Ì‘®«‚ğ‚»‚Ì‚Ü‚Üƒp[ƒeƒB[‘®«‚É•ÏŠ·‚·‚é«‘ƒf[ƒ^
+    /// ãƒ©ãƒ³ãƒ€ãƒ ãªãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§ã‚’è¿”ã™
     /// </summary>
-    private static Dictionary<SpiritualProperty,PartyProperty> EnemyLonelyPartyImpression = new Dictionary<SpiritualProperty, PartyProperty>
+    private staticã€€PartyProperty GetRandomPartyProperty()
     {
-        {SpiritualProperty.doremis,PartyProperty.Flowerees},
-        {SpiritualProperty.pillar,PartyProperty.Odradeks},
-        {SpiritualProperty.kindergarden,PartyProperty.TrashGroup},
-        {SpiritualProperty.liminalwhitetile,PartyProperty.MelaneGroup},
-        {SpiritualProperty.sacrifaith,PartyProperty.HolyGroup},
-        {SpiritualProperty.cquiest,PartyProperty.MelaneGroup},
-        //{SpiritualProperty.pysco,PartyProperty.T},//chatgpt‚ÌÅV‚Ìƒ`ƒƒƒbƒg‚©‚çƒ‰ƒ“ƒ_ƒ€‚È’l‚ªo‚é‚æ‚¤‚É‚·‚éB
-        {SpiritualProperty.godtier,PartyProperty.Flowerees},
-        {SpiritualProperty.baledrival,PartyProperty.TrashGroup},
-        {SpiritualProperty.devil,PartyProperty.HolyGroup}
-    };
+        Array values = Enum.GetValues(typeof(PartyProperty)); //getvaluesã§æŒ‡å®šã—ãŸenumã®å€¤ã‚’å…¨ã¦é…åˆ—ã«æ ¼ç´ã™ã‚‹ã€‚
+        return (PartyProperty)values.GetValue(RandomEx.Shared.NextInt(0, values.Length)); //getvalueã§ãƒ©ãƒ³ãƒ€ãƒ ãªå€¤ã‚’å–å¾—
+        //getValueã¯arrayã®ãƒ¡ã‚½ãƒƒãƒ‰ã§ã€å¼•æ•°ã«ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’å–ã‚Šã€ãã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã®å€¤ã‚’objectå‹ã§è¿”ã™ã€‚
+    }
 
     /// <summary>
-    /// í•Ê“¯m‚Ì“GW‚Ü‚èAI‚Ì‘Š«‚Ì«‘ƒf[ƒ^
-    /// “¯‚¶ƒyƒA‚Í‹t‡‚Å‚à©“®“I‚É‘Î‰‚³‚ê‚é‚Ì‚ÅA‚í‚´‚í‚´’Ç‰Á‚µ‚È‚­‚ÄOK
+    /// æ•µãŒä¸€äººã®éš›ã®å±æ€§ã‚’ãã®ã¾ã¾ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§ã«å¤‰æ›ã™ã‚‹è¾æ›¸ãƒ‡ãƒ¼ã‚¿
     /// </summary>
-    private static Dictionary<(CharacterType, CharacterType), int> TypeMatchupTable = new Dictionary<(CharacterType, CharacterType), int>
+    public static Dictionary<SpiritualProperty, PartyProperty> EnemyLonelyPartyImpression =
+        new Dictionary<SpiritualProperty, PartyProperty>
+        {
+            { SpiritualProperty.doremis, PartyProperty.Flowerees },
+            { SpiritualProperty.pillar, PartyProperty.Odradeks },
+            { SpiritualProperty.kindergarden, PartyProperty.TrashGroup },
+            { SpiritualProperty.liminalwhitetile, PartyProperty.MelaneGroup },
+            { SpiritualProperty.sacrifaith, PartyProperty.HolyGroup },
+            { SpiritualProperty.cquiest, PartyProperty.MelaneGroup },
+            { SpiritualProperty.pysco, GetRandomPartyProperty() }, //ã‚µã‚¤ã‚³ã®ã¿ãƒ©ãƒ³ãƒ€ãƒ ãªå€¤ãŒå‡ºã‚‹ã‚ˆã†ã«ã™ã‚‹ã€‚ 
+            { SpiritualProperty.godtier, PartyProperty.Flowerees },
+            { SpiritualProperty.baledrival, PartyProperty.TrashGroup },
+            { SpiritualProperty.devil, PartyProperty.HolyGroup }
+        };
+
+    /// <summary>
+    /// ç¨®åˆ¥åŒå£«ã®æ•µé›†ã¾ã‚ŠAIã®ç›¸æ€§ã®è¾æ›¸ãƒ‡ãƒ¼ã‚¿
+    /// åŒã˜ãƒšã‚¢ã¯é€†é †ã§ã‚‚è‡ªå‹•çš„ã«å¯¾å¿œã•ã‚Œã‚‹ã®ã§ã€ã‚ã–ã‚ã–è¿½åŠ ã—ãªãã¦OK
+    /// </summary>
+    private static Dictionary<(CharacterType, CharacterType), int> TypeMatchupTable =
+        new Dictionary<(CharacterType, CharacterType), int>
+        {
+            { (CharacterType.TLOA, CharacterType.Life), 80 },
+            { (CharacterType.TLOA, CharacterType.Machine), 30 },
+            { (CharacterType.Machine, CharacterType.Life), 60 },
+
+        };
+
+    /// <summary>
+    /// ã‚­ãƒ£ãƒ©å±æ€§åŒå£«ã®æ•µé›†ã¾ã‚ŠAIã®ç›¸æ€§ã®è¾æ›¸ãƒ‡ãƒ¼ã‚¿ã€€æ–¹å‘ãŒã‚ã‚‹ç‚ºé †åºã®æƒ…å ±ã‚‚å«ã‚€ã€‚
+    /// </summary>
+    private static Dictionary<(SpiritualProperty, SpiritualProperty), int> ImpressionMatchupTable;
+
+    public static void csvLoad()//walking
     {
-        {(CharacterType.TLOA, CharacterType.Life), 80},
-        {(CharacterType.TLOA, CharacterType.Machine), 30},
-        {(CharacterType.Machine, CharacterType.Life), 60},
+        ImpressionMatchupTable = new Dictionary<(SpiritualProperty, SpiritualProperty), int>();//è¾æ›¸ãƒ‡ãƒ¼ã‚¿ã®åˆæœŸåŒ–
         
-    };
-    /// <summary>
-    /// ƒLƒƒƒ‰‘®«“¯m‚Ì“GW‚Ü‚èAI‚Ì‘Š«‚Ì«‘ƒf[ƒ^@•ûŒü‚ª‚ ‚éˆ×‡˜‚Ìî•ñ‚àŠÜ‚ŞB
-    /// </summary>
-    private static Dictionary<(SpiritualProperty, SpiritualProperty), int> ImpressionMatchupTable = new Dictionary<(SpiritualProperty, SpiritualProperty), int>
-    {
-        {(SpiritualProperty.liminalwhitetile,SpiritualProperty.pillar),90 },//ƒŠ[ƒ~ƒiƒ‹¨x’Œ
-        {(SpiritualProperty.liminalwhitetile,SpiritualProperty.baledrival),90 },//ƒŠ[ƒ~ƒiƒ‹¨ƒx[ƒ‹
-        {(SpiritualProperty.kindergarden,SpiritualProperty.liminalwhitetile),20 },//ƒLƒ“ƒ_[¨ƒŠ[ƒ~ƒiƒ‹
-        {(SpiritualProperty.cquiest,SpiritualProperty.devil),30 },//ƒV[ƒNƒCƒGƒXƒg¨ƒfƒrƒ‹
-        {(SpiritualProperty.sacrifaith,SpiritualProperty.cquiest),80 },//©ŒÈ‹]µ¨ƒV[ƒNƒCƒGƒXƒg
-        {(SpiritualProperty.sacrifaith,SpiritualProperty.devil), 70},//©ŒÈ‹]µ¨ƒfƒrƒ‹
-        {(SpiritualProperty.devil,SpiritualProperty.cquiest),60 },//ƒfƒrƒ‹¨ƒV[ƒNƒCƒGƒXƒg
-        {(SpiritualProperty.devil,SpiritualProperty.kindergarden),80 },//ƒfƒrƒ‹¨ƒLƒ“ƒ_[
-        {(SpiritualProperty.kindergarden,SpiritualProperty.devil),70 },//ƒLƒ“ƒ_¨ƒfƒrƒ‹
-        {(SpiritualProperty.baledrival,SpiritualProperty.devil),80 },//ƒx[ƒ‹¨ƒfƒrƒ‹
-        {(SpiritualProperty.baledrival,SpiritualProperty.doremis),40},//ƒx[ƒ‹¨ƒhƒŒƒ~ƒX
-        {(SpiritualProperty.baledrival,SpiritualProperty.pysco),70 },//ƒx[ƒ‹¨ƒTƒCƒR
-        {(SpiritualProperty.baledrival,SpiritualProperty.pillar),80},//ƒx[ƒ‹¨x’Œ
-        {(SpiritualProperty.baledrival,SpiritualProperty.godtier),100},//ƒx[ƒ‹¨ƒSƒbƒh
-        {(SpiritualProperty.pysco,SpiritualProperty.pillar),0 },//ƒTƒCƒR¨x’Œ
-        {(SpiritualProperty.pillar,SpiritualProperty.sacrifaith),100 },//x’Œ¨©ŒÈ‹]µ
-    };
+        string csvFile = "Assets/csvData/characterMatchData.csv";//csvãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ‘ã‚¹
+        //ãƒªãƒ¼ãƒŸãƒŠãƒ«ã€ã‚­ãƒ³ãƒ€ãƒ¼ã€è‡ªå·±ã€ã‚·ãƒ¼ã‚¯ã‚¤ã€ãƒ‡ãƒ“ãƒ«ã€ãƒ‰ãƒ¬ãƒŸã‚¹ã€æ”¯æŸ±ã€ã‚´ãƒƒãƒ‰ãƒ†ã‚£ã‚¢ã€ãƒ™ãƒ¼ãƒ«ãƒ‰ãƒ©ã‚¤ãƒ´ã‚¡ãƒ«ã€ã‚µã‚¤ã‚³ãƒ‘ã‚¹ã®é †ç•ªã«è¡Œã‚‚åˆ—ã‚‚ä¸¦ã‚“ã§ã„ã¾ã™ã€‚
+        var SpiritualCsvArray = new SpiritualProperty[]
+        {//ã‚¹ãƒ—ãƒ¬ãƒƒãƒ‰ã‚·ãƒ¼ãƒˆã§ã®è¡Œã¨åˆ—ã§ã®å±æ€§ã«å¯¾å¿œã™ã‚‹ã‚ˆã†ãªé †ç•ªã§é…åˆ—ã«æ ¼ç´ã€‚
+            SpiritualProperty.liminalwhitetile,
+            SpiritualProperty.kindergarden,
+            SpiritualProperty.sacrifaith,
+            SpiritualProperty.cquiest,
+            SpiritualProperty.devil,
+            SpiritualProperty.doremis,
+            SpiritualProperty.pillar,
+            SpiritualProperty.godtier,
+            SpiritualProperty.baledrival,
+            SpiritualProperty.pysco
+        };
+        var rows = File.ReadAllLines(csvFile)//è¡Œã”ã¨ã«èª­ã¿è¾¼ã¿ã€
+            .Select(line => line.Split(',').Select(int.Parse).ToArray())//ãã‚Œã‚’ã•ã‚‰ã«ã‚«ãƒ³ãƒã§åˆ†å‰²ã—ã¦intå‹ã«å¤‰æ›ã—ã¦é…åˆ—ã«æ ¼ç´ã™ã‚‹ã€‚
+            .ToArray();//é…åˆ—ã«ãªã£ãŸè¡Œã‚’ã•ã‚‰ã«é…åˆ—ã«æ ¼ç´ã™ã‚‹ã€‚
+        /*
+         * new List<List<int>> {  å®Ÿéš›ã¯arrayã ã‘ã©ã“ã†ã„ã†ã‚¤ãƒ¡ãƒ¼ã‚¸
+            new List<int> { 50, 20, 44, 53, 42, 37, 90, 100, 90, 50 },
+            new List<int> { 60, 77, 160, 50, 80, 23, 32, 50, 51, 56 }}
+         */
+
+        for (var i = 0; i < rows.Length; i++) //è¡Œã”ã¨ã«å›ã—ã¦ã„ã oneã¯è¡ŒãŸã¡ã‚’æ ¼ç´ã—ãŸé…åˆ—
+        {
+            for (var j = 0; j < rows[i].Length; j++) //æ•°å­—ã”ã¨ã«å›ã™ã€€one[j]ã¯è¡Œã®ä¸­ã®æ•°å­—ã‚’æ ¼ç´ã—ãŸé…åˆ—
+            {
+                ImpressionMatchupTable.Add((SpiritualCsvArray[j], SpiritualCsvArray[i]),
+                    //äºŒã¤ç›®ã®ãƒ«ãƒ¼ãƒ—[j]ã§åˆ—è¦‹å‡ºã—ã®å±æ€§ãŒç›´è¿‘ã§æ¨ªã«é€²ã‚“ã§æ„Ÿã˜ã‚‹å´ã«å…¥ã‚Šã€ä¸€ã¤ç›®ã®ãƒ«ãƒ¼ãƒ—ã®[i]ã¯è¡Œè¦‹å‡ºã—ã®æ„Ÿã˜ã‚‰ã‚Œã‚‹å´ã®å±æ€§ã€‚
+                    rows[i][j]); //å€¤éƒ¨åˆ†ã«ç›¸æ€§å€¤ã¨ã—ã¦ã€intã®arrayå†…ã®ã•ã‚‰ã«arrayå†…ã®å€¤ã‚’å…¥ã‚Œã‚‹ã€‚
+            }
+        }
+        Debug.Log("èª­ã¿è¾¼ã¾ã‚ŒãŸã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼å±æ€§åŒå£«ã®ç›¸æ€§\n"+string.Join(", ", ImpressionMatchupTable.Select(kvp => $"[{kvp.Key}: {kvp.Value}]"+"\n")));//ãƒ‡ãƒãƒƒã‚¯ã§å…¨å†…å®¹ç¾…åˆ—ã€‚
+        
+        
+    }
+
 
     /// <summary>
-    /// ‚±‚Ì‘®«‚Ì“GƒLƒƒƒ‰ƒNƒ^[‚ªÅ‰‚Ìˆêl‚É‘I‚Î‚ê‚½‚Æ‚«A‚»‚Ì‚Ü‚Üˆêl‚ÅI‚í‚éŠm—¦B
+    /// ã“ã®å±æ€§ã®æ•µã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ãŒæœ€åˆã®ä¸€äººã«é¸ã°ã‚ŒãŸã¨ãã€ãã®ã¾ã¾ä¸€äººã§çµ‚ã‚ã‚‹ç¢ºç‡ã€‚
     /// </summary>
     private static Dictionary<SpiritualProperty, int> LonelyMatchImpression = new Dictionary<SpiritualProperty, int>
-{
-    {SpiritualProperty.doremis, 30},
-    {SpiritualProperty.pillar, 30},
-    {SpiritualProperty.kindergarden, 20},
-    {SpiritualProperty.liminalwhitetile, 30},
-    {SpiritualProperty.sacrifaith, 70},
-    {SpiritualProperty.cquiest, 30},
-    {SpiritualProperty.pysco, 30},
-    {SpiritualProperty.godtier, 30},
-    {SpiritualProperty.baledrival, 30},
-    {SpiritualProperty.devil, 30}
-};
+    {
+        { SpiritualProperty.doremis, 30 },
+        { SpiritualProperty.pillar, 30 },
+        { SpiritualProperty.kindergarden, 20 },
+        { SpiritualProperty.liminalwhitetile, 30 },
+        { SpiritualProperty.sacrifaith, 70 },
+        { SpiritualProperty.cquiest, 30 },
+        { SpiritualProperty.pysco, 30 },
+        { SpiritualProperty.godtier, 30 },
+        { SpiritualProperty.baledrival, 30 },
+        { SpiritualProperty.devil, 30 }
+    };
+
     /// <summary>
-    /// ˆêl‚ÅI‚í‚éŠm—¦‚ğ•Ô‚·A¸”s‚µ‚½‚ç-1‚ğ•Ô‚·B
+    /// ä¸€äººã§çµ‚ã‚ã‚‹ç¢ºç‡ã‚’è¿”ã™ã€å¤±æ•—ã—ãŸã‚‰-1ã‚’è¿”ã™ã€‚
     /// </summary>
     /// <param name="I"></param>
     /// <returns></returns>
-    public static int LonelyMatchUp(SpiritualProperty I)
+    public static bool LonelyMatchUp(SpiritualProperty I)
     {
         var matchPer = LonelyMatchImpression[I];
-        if (Random.Range(1,101)<=matchPer)//—”‚ªŠm—¦ˆÈ‰º‚È‚çAŠm—¦‚ğ•Ô‚µ‚Ä‘Š«¬Œ÷‚ğ“`‚¦‚éB
+        if (RandomEx.Shared.NextInt(100) < matchPer)
         {
-            return matchPer;
+            return true;
         }
 
-        return -1;//ˆêl‚ÅI‚í‚ç‚È‚©‚Á‚½ê‡¸”s‚ğ•Ô‚·B
+        return false; //ä¸€äººã§çµ‚ã‚ã‚‰ãªã‹ã£ãŸå ´åˆå¤±æ•—ã‚’è¿”ã™ã€‚
     }
 
 
 
     /// <summary>
-    /// í•Ê“¯m‚Ì“GW‚Ü‚è‚Ì‘Š« ¬Œ÷‚·‚é‚Æ¬Œ÷‚µ‚½Û‚Ìƒp[ƒZƒ“ƒg‚©‚­‚è‚Â
+    /// ç¨®åˆ¥åŒå£«ã®æ•µé›†ã¾ã‚Šã®ç›¸æ€§ 
     /// </summary>
-    /// <param name="I">Šù‚Éƒp[ƒeƒB‚É‚¢‚ÄAƒWƒƒƒbƒW‚·‚é•û</param>
-    /// <param name="You">ƒWƒƒƒbƒW‚³‚ê‚é‘¤A‘Š«‚ªˆ«‚¯‚ê‚Î</param>
-    public static int TypeMatchUp(CharacterType I, CharacterType You)
+    /// <param name="I">æ—¢ã«ãƒ‘ãƒ¼ãƒ†ã‚£ã«ã„ã¦ã€ã‚¸ãƒ£ãƒƒã‚¸ã™ã‚‹æ–¹</param>
+    /// <param name="You">ã‚¸ãƒ£ãƒƒã‚¸ã•ã‚Œã‚‹å´ã€ç›¸æ€§ãŒæ‚ªã‘ã‚Œã°</param>
+    public static bool TypeMatchUp(CharacterType I, CharacterType You)
     {
-        // ‡˜‚ÉŠÖŒW‚È‚­í‚É“¯‚¶Œ‹‰Ê‚ğ“¾‚é‚½‚ßAI‚ÆYou‚ğ•À‚Ñ‘Ö‚¦‚é
+        // é †åºã«é–¢ä¿‚ãªãå¸¸ã«åŒã˜çµæœã‚’å¾—ã‚‹ãŸã‚ã€Iã¨Youã‚’ä¸¦ã³æ›¿ãˆã‚‹
         var sortedPair = I < You ? (I, You) : (You, I);
-        //1<2 ‚È‚çtrue‚È‚Ì‚Å(1,2)‚ª•Ô‚èA@2<1‚È‚çfalse‚È‚Ì‚Å‹t‚É‚µ‚Ä(1,2)‚ª•Ô‚éBí‚É“¯‚¶ƒL[‚ğ¶¬‚·‚éƒƒWƒbƒNB
-        //‚±‚ÌƒƒWƒbƒN‚Ì‚¨‰A‚Å‡˜‚ğ‹C‚É‚µ‚È‚­‚Ä‚¢‚¢B@characteType‚Ìenum‚ÍˆÃ–Ù“I‚É”’l‚Åˆµ‚í‚ê‚é‚±‚Æ‘O’ñB
+        //1<2 ãªã‚‰trueãªã®ã§(1,2)ãŒè¿”ã‚Šã€ã€€2<1ãªã‚‰falseãªã®ã§é€†ã«ã—ã¦(1,2)ãŒè¿”ã‚‹ã€‚å¸¸ã«åŒã˜ã‚­ãƒ¼ã‚’ç”Ÿæˆã™ã‚‹ãƒ­ã‚¸ãƒƒã‚¯ã€‚
+        //ã“ã®ãƒ­ã‚¸ãƒƒã‚¯ã®ãŠé™°ã§é †åºã‚’æ°—ã«ã—ãªãã¦ã„ã„ã€‚ã€€characteTypeã®enumã¯æš—é»™çš„ã«æ•°å€¤ã§æ‰±ã‚ã‚Œã‚‹ã“ã¨å‰æã€‚
 
-        var matchPer = TypeMatchupTable[sortedPair];//ƒWƒƒƒbƒWŠm—¦
+        var matchPer = TypeMatchupTable[sortedPair]; //ã‚¸ãƒ£ãƒƒã‚¸ç¢ºç‡
 
-        if(Random.Range(1,101)<=matchPer)return matchPer;//—”‚ªŠm—¦ˆÈ‰º‚È‚çAŠm—¦‚ğ•Ô‚µ‚Ä‘Š«¬Œ÷‚ğ“`‚¦‚éB
+        if (RandomEx.Shared.NextInt(100) < matchPer) return true;
 
 
-         return -1;//‘Š«‚ª‡‚í‚È‚©‚Á‚½ê‡¸”s‚ğ•Ô‚·B
+        return false; //ç›¸æ€§ãŒåˆã‚ãªã‹ã£ãŸå ´åˆå¤±æ•—ã‚’è¿”ã™ã€‚
     }
-
+    
     /// <summary>
-    /// ‘®«“¯m‚Ì“GW‚Ü‚è‚Ì‘Š« ¬Œ÷‚·‚é‚Æ¬Œ÷‚µ‚½Û‚Ìƒp[ƒZƒ“ƒg‚©‚­‚è‚Â
+    /// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®å€¤ã‚‚å«ã‚ã¦ã€ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼å±æ€§åŒå£«ã®ç›¸æ€§å€¤ã‚’å–å¾—ã™ã‚‹é–¢æ•°ã€‚
     /// </summary>
-    /// <param name="I">Šù‚Éƒp[ƒeƒB‚É‚¢‚ÄAƒWƒƒƒbƒW‚·‚é•û</param>
-    /// <param name="You">ƒWƒƒƒbƒW‚³‚ê‚é‘¤A‘Š«‚ªˆ«‚¯‚ê‚Î</param>
-    public static int ImpressionMatchUp(SpiritualProperty I, SpiritualProperty You)
+    private static int GetImpressionMatchPercent(SpiritualProperty I, SpiritualProperty You)
     {
-
-        // ‡˜‚ªd—v‚È‚Ì‚ÅA‡˜‚ğ‚»‚Ì‚Ü‚Ü‚É‚µ‚Äƒ}ƒbƒ`‚ğŠm”F
+        // é †åºãŒé‡è¦ãªã®ã§ã€é †åºã‚’ãã®ã¾ã¾ã«ã—ã¦ãƒãƒƒãƒã‚’ç¢ºèª
         var key = (I, You);
 
-        // ƒWƒƒƒbƒWŠm—¦‚ÌƒfƒtƒHƒ‹ƒg
-        var matchPer = 50; 
+        // ã‚¸ãƒ£ãƒƒã‚¸ç¢ºç‡ã®ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ
+        var matchPer = 50;
 
-        if (ImpressionMatchupTable.ContainsKey(key))//ƒfƒtƒHƒ‹ƒg‚ÌŠm—¦‚Å‚Í‚È‚¢‚à‚Ì‚¾‚¯‚ª«‘‚É‘¶İ‚·‚é‚Ì‚ÅA‚±‚±‚Å”»’èB
+        if (ImpressionMatchupTable.ContainsKey(key)) //ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®ç¢ºç‡ã§ã¯ãªã„ã‚‚ã®ã ã‘ãŒè¾æ›¸ã«å­˜åœ¨ã™ã‚‹ã®ã§ã€ã“ã“ã§åˆ¤å®šã€‚
         {
-           matchPer=ImpressionMatchupTable[key];//ƒWƒƒƒbƒWŠm—¦
+            matchPer = ImpressionMatchupTable[key]; //ã‚¸ãƒ£ãƒƒã‚¸ç¢ºç‡
         }
-            
 
-        if (Random.Range(1, 101) <= matchPer)return matchPer; // —”‚ªŠm—¦ˆÈ‰º‚È‚çAŠm—¦‚ğ•Ô‚µ‚Ä‘Š«¬Œ÷‚ğ“`‚¦‚é
-        
-
-        return -1;//‘Š«‚ª‡‚í‚È‚©‚Á‚½ê‡¸”s‚ğ•Ô‚·B
+        return matchPer;
     }
+    /// <summary>
+    /// å±æ€§åŒå£«ã®æ•µé›†ã¾ã‚Šã®ç›¸æ€§åˆ¤å®š
+    /// </summary>
+    /// <param name="I">æ—¢ã«ãƒ‘ãƒ¼ãƒ†ã‚£ã«ã„ã¦ã€ã‚¸ãƒ£ãƒƒã‚¸ã™ã‚‹æ–¹</param>
+    /// <param name="You">ã‚¸ãƒ£ãƒƒã‚¸ã•ã‚Œã‚‹å´ã€ç›¸æ€§ãŒæ‚ªã‘ã‚Œã°</param>
+    public static bool ImpressionMatchUp(SpiritualProperty I, SpiritualProperty You)
+    {
+        if (RandomEx.Shared.NextInt(100) < GetImpressionMatchPercent(I,You)) return true;
+        
+        return false; //ç›¸æ€§ãŒåˆã‚ãªã‹ã£ãŸå ´åˆå¤±æ•—ã‚’è¿”ã™ã€‚
+    }
+
+    /// <summary>
+    /// ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼å±æ€§ã®ãƒªã‚¹ãƒˆã‚’æ­£è¦åŒ–ã•ã‚ŒãŸæ–‡å­—åˆ—ã®ã‚­ãƒ¼ã«å¤‰æ›ã€‚ã“ã‚Œã‚’è¾æ›¸ãƒ‡ãƒ¼ã‚¿ã«æ¸¡ã—ã¦ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§ã‚’å–å¾—ã™ã‚‹ã€‚
+    /// </summary>
+    /// <param name="keys"></param>
+    /// <returns></returns>
+    private static string NormalizeSpiritualKey(List<SpiritualProperty> keys)
+    {
+        keys.Sort(); //ã‚½ãƒ¼ãƒˆã—ã¦ãŠãã“ã¨ã§ã€é †åºãŒé•ã£ã¦ã‚‚åŒã˜æ–‡å­—åˆ—ãŒç”Ÿæˆã•ã‚Œã‚‹ã€‚ enumã®æ•°å€¤ãŒæš—é»™çš„ã«æ‰±ã‚ã‚Œã‚‹ã“ã¨å‰æã€‚
+        return string.Join(",", keys); //ã‚«ãƒ³ãƒåŒºåˆ‡ã‚Šã§æ–‡å­—åˆ—ã«å¤‰æ›
+    }
+
+    /// <summary>
+    /// ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼å±æ€§ã®"å›ºå®š"çµ„ã¿åˆã‚ã›ã«ã‚ˆã‚‹ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§ã®è¾æ›¸ãƒ‡ãƒ¼ã‚¿
+    /// </summary>
+    private static Dictionary<string, PartyProperty> PartyPropertyMatchupTable = new Dictionary<string, PartyProperty>
+    {
+        //listã®{}å†…ã«é †ä¸åŒã®çµ„ã¿åˆã‚ã›ã§ã‚­ãƒ¼ã‚’æŒ‡å®šã§ãã‚‹ã€‚
+        {
+            NormalizeSpiritualKey(new List<SpiritualProperty>//è‡ªå·±çŠ ç‰²ã¨ãƒ™ãƒ¼ãƒ«ãŒã„ã‚‹ã¨èŠ±æ¨¹ã«
+                {SpiritualProperty.sacrifaith, SpiritualProperty.baledrival}),
+            PartyProperty.Flowerees
+        },
+    }; //ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®å€¤ã¯(ç›¸æ€§å€¤ã«ã‚ˆã‚‹è¨­å®šã¯)calcPartyPropertyã§è¡Œã†ã€‚
+
+
+    /// <summary>
+    /// ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼å±æ€§ã®çµ„ã¿åˆã‚ã›ã«ã‚ˆã£ã¦ã€ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§ã‚’æ±ºå®šã™ã‚‹
+    /// </summary>
+    /// <param name="calcList">ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼å±æ€§ã‚’æŠ½å‡ºã™ã‚‹ãŸã‚ã®æ•µã®ãƒªã‚¹ãƒˆ</param>
+    /// <returns></returns>
+    public static PartyProperty calculatePartyProperty(List<NormalEnemy> calcList)
+    {
+        //calclistã®å±æ€§ã‚’æŠ½å‡ºã—ã¦å±æ€§ãƒªã‚¹ãƒˆåŒ–
+        var keys = calcList.Select(enemy => enemy.MyImpression).ToList();
+
+        //keysã‚’NormalizeSpiritualKeyã«æ¸¡ã—ã¦æ­£è¦åŒ–ã—ã€è¾æ›¸ãƒ‡ãƒ¼ã‚¿ã‹ã‚‰ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§ã‚’å–å¾—ã™ã‚‹ã€‚
+        //å›ºå®šã®çµ„ã¿åˆã‚ã›ã«ã‚ˆã‚‹ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§ã®è¾æ›¸ãƒ‡ãƒ¼ã‚¿ãŒã‚ã‚‹å ´åˆã€ãã‚Œã‚’è¿”ã™ã€‚
+        if (PartyPropertyMatchupTable.ContainsKey(NormalizeSpiritualKey(keys)))//è¾æ›¸ãƒ‡ãƒ¼ã‚¿ã«ã‚­ãƒ¼ãŒå­˜åœ¨ã™ã‚‹ã‹ã©ã†ã‹
+        {
+            return PartyPropertyMatchupTable[NormalizeSpiritualKey(keys)];//è¾æ›¸ãƒ‡ãƒ¼ã‚¿ã‹ã‚‰è¿”ã™ã€‚
+        }
+        
+        //å›ºå®šã®çµ„ã¿åˆã‚ã›ã«ã‚ˆã‚‹ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§ã®è¾æ›¸ãƒ‡ãƒ¼ã‚¿ãŒãªã‹ã£ãŸå ´åˆã€ç›¸æ€§å€¤ã®åˆ¤æ–­ã§è¡Œã†ã€‚
+        //ä¸‰äººåˆ†ã®ãŠäº’ã„ã®ç›¸æ€§å€¤ã‚’å–å¾—ã™ã‚‹ã€‚(3Ã—2=6é€šã‚Š)
+        var matchPercentages = new List<int>();
+        foreach (var one in keys)//ä¸€äººãšã¤å–ã‚Šå‡ºã—ã¦
+        {
+            foreach (var other in keys)//ä»–ã®ä¸€äººãšã¤å–ã‚Šå‡ºã—ã¦
+            { 
+                matchPercentages.Add(GetImpressionMatchPercent(one, other));
+            }
+        }
+        //ãƒªã‚¹ãƒˆå†…ã®å…¨ã¦ã®å€¤ãŒ70ä»¥ä¸Šãªã‚‰è–æˆ¦
+        if (matchPercentages.All(percent => percent >= 70)) return PartyProperty.HolyGroup;
+        //ãƒªã‚¹ãƒˆå†…ã®å…¨ã¦ã®å€¤ãŒ30ä»¥ä¸‹ãªã‚‰ã‚ªãƒ‰ãƒ©ãƒ‡ã‚¯ã‚¹
+        if (matchPercentages.All(percent => percent <= 30)) return PartyProperty.Odradeks;
+
+        //ç›¸æ€§å€¤ã®å¹³å‡ã‚’å–ã‚‹
+        var average = matchPercentages.Average();
+        
+        if (average >= 70) return PartyProperty.MelaneGroup;//ãƒ¡ãƒ¬ãƒ¼ãƒ³ã‚ºã€€å…¨å¹³70ä»¥ä¸Š
+        
+        //ç›¸æ€§å€¤ã®æ¨™æº–åå·®ã‚’å–ã‚‹
+        double variance = matchPercentages.Select(x => Math.Pow(x - average, 2)).Average();//åˆ†æ•£ powã§ã¹ãä¹—ã‚’å–ã‚Šã€averageã§å¹³å‡ã‚’å–ã‚‹
+        double standardDeviation = Math.Sqrt(variance);//æ¨™æº–åå·® sqrtã¯å¹³æ–¹æ ¹ã‚’å–ã‚‹ãƒ¡ã‚½ãƒƒãƒ‰
+        
+        if (standardDeviation >= 20) return PartyProperty.Odradeks;//ã‚ªãƒ‰ãƒ©ãƒ‡ã‚¯ã‚¹ã€€æ¨™æº–åå·®20ä»¥ä¸Š
+        
+        if (average > 57) return PartyProperty.Flowerees;//èŠ±æ¨¹ å€¤ã®ãƒãƒ©ã¤ããŒæ¿€ã—ã„å ´åˆ
+
+        if (RandomEx.Shared.NextInt(100) < 67)//3åˆ†ã®2ã§é¦¬é¹¿å…±ã‹ãƒ¡ãƒ¬ãƒ¼ãƒ³ã‚ºã‹2åˆ†ã®1ã®ãƒ©ãƒ³ãƒ€ãƒ 
+        {
+            if(RandomEx.Shared.NextInt(100) < 50) return PartyProperty.TrashGroup;//é¦¬é¹¿å…±
+            return PartyProperty.MelaneGroup;//ãƒ¡ãƒ¬ãƒ¼ãƒ³ã‚º
+        }
+        
+        //ã©ã®æ¡ä»¶ã«ã‚‚å½“ã¦ã¯ã¾ã‚‰ãªã‹ã£ãŸå ´åˆã€å®Œå…¨ãƒ©ãƒ³ãƒ€ãƒ ã§æ±ºã¾ã‚‹
+        return GetRandomPartyProperty();
+
+
+    }
+
 }

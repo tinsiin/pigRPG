@@ -4,8 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// �}�b�v�摜��ɓ�_���`���āA���̏�Ɍ��ݐi�s�x�ƃG���A�̏I���̊��������̓�_��Ƀx�N�g���|�W�V�����Ƃ��ĕ\���A
-/// ���ݒn��\������B(���̃N���X���͈̂ʒu�ɓ_�ł����ĕ\�����邾���B)
+/// マップ画像上に二点を定義して、その上に現在進行度とエリアの終わりの割合をその二点上にベクトルポジションとして表し、
+/// 現在地を表示する。(このクラス自体は位置に点滅さして表示するだけ。)
 /// </summary>
 public class TenmetuNowImage : MonoBehaviour
 {
@@ -13,7 +13,7 @@ public class TenmetuNowImage : MonoBehaviour
 
 
     /// <summary>
-    /// �ʒu�����X�V���閽��
+    /// 位置情報を更新する命令
     /// </summary>
     public void LocationSet(Vector2 loc)
     {
@@ -23,6 +23,6 @@ public class TenmetuNowImage : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //�_�ł�������@���̊J���̎��ɂ��̐F�Ɍ��点�悤����???
+        //点滅させたり　魂の開放の時にその色に光らせようかな???
     }
 }

@@ -3,9 +3,9 @@ using R3;
 using UnityEngine;
 
 
-    public class ToggleButtons : MonoBehaviour//ƒJƒXƒ^ƒ}ƒCƒY‚µ‚â‚·‚¢TabContentsChanger‚ğŒp³‚ÆƒWƒFƒlƒŠƒbƒN‚ğg‚Á‚½‰ü‘¢‚ğ‚µ‚Ä‚Ìg—p‚·‚éƒNƒ‰ƒXB
+    public class ToggleButtons : MonoBehaviour//ã‚«ã‚¹ã‚¿ãƒã‚¤ã‚ºã—ã‚„ã™ã„TabContentsChangerã‚’ç¶™æ‰¿ã¨ã‚¸ã‚§ãƒãƒªãƒƒã‚¯ã‚’ä½¿ã£ãŸæ”¹é€ ã‚’ã—ã¦ã®ä½¿ç”¨ã™ã‚‹ã‚¯ãƒ©ã‚¹ã€‚
     {
-        public enum TabContentsKind//tabContentsChanger‚Éw’è‚·‚é—ñ‹“‘Ì
+        public enum TabContentsKind//tabContentsChangerã«æŒ‡å®šã™ã‚‹åˆ—æŒ™ä½“
         {
             Players,
             CharactorConfig,
@@ -14,11 +14,11 @@ using UnityEngine;
 
         [Serializable]
         public class SampleTabContentsChanger : TabContentsChanger<TabContents, TabContentsKind>
-        {//‘Î‰‚·‚é“ñ‚Â‚ÌƒNƒ‰ƒX‚ğw’è‚µ‚ÄŒp³
+        {//å¯¾å¿œã™ã‚‹äºŒã¤ã®ã‚¯ãƒ©ã‚¹ã‚’æŒ‡å®šã—ã¦ç¶™æ‰¿
         }
 
         [SerializeField]
-        private SampleTabContentsChanger _tabContentsChanger;//‚»‚ÌŒp³‚µ‚½ƒNƒ‰ƒX‚ğì‚éB
+        private SampleTabContentsChanger _tabContentsChanger;//ãã®ç¶™æ‰¿ã—ãŸã‚¯ãƒ©ã‚¹ã‚’ä½œã‚‹ã€‚
 
         void Start()
         {
@@ -27,9 +27,9 @@ using UnityEngine;
                                .Subscribe(
                                    value =>
                                    {
-                                       value.content.View.SetActive(value.active);//Ø‚è‘Ö‚¦‚ÌƒNƒ‰ƒX‚Ì“®ì‚ğ‚±‚±‚Å“o˜^‚·‚éB
+                                       value.content.View.SetActive(value.active);//åˆ‡ã‚Šæ›¿ãˆæ™‚ã®ã‚¯ãƒ©ã‚¹ã®å‹•ä½œã‚’ã“ã“ã§ç™»éŒ²ã™ã‚‹ã€‚
                                    }).AddTo(this);
-            //_tabContentsChanger.Select(0);//‘I‚ñ‚¾ó‘Ô‚É—\‚ß‚·‚é“z‚¾‚©‚çÁ‚µ‚Æ‚­B
+            //_tabContentsChanger.Select(0);//é¸ã‚“ã çŠ¶æ…‹ã«äºˆã‚ã™ã‚‹å¥´ã ã‹ã‚‰æ¶ˆã—ã¨ãã€‚
         }
     }
 

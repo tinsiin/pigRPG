@@ -6,82 +6,82 @@ using UnityEngine.Events;
 
 public class SelectButton : MonoBehaviour
 {
-    //public class ClickEvent : UnityEvent<int> { };//Œp³H
-    //int‚ğˆø”‚É‚ÂŠÖ”“ü‚ê‚ğ¶¬B
+    //public class ClickEvent : UnityEvent<int> { };//ç¶™æ‰¿ï¼Ÿ
+    //intã‚’å¼•æ•°ã«æŒã¤é–¢æ•°å…¥ã‚Œã‚’ç”Ÿæˆã€‚
     UnityEvent<int> OnClicked = new UnityEvent<int>();
 
     /// <summary>
-    /// ƒ{ƒ^ƒ“‚Ì‹æ•ÊID
+    /// ãƒœã‚¿ãƒ³ã®åŒºåˆ¥ID
     /// </summary>
     int buttonID;
 
     [SerializeField] TextMeshProUGUI buttonText = null;
 
 
-    // ƒŒƒNƒgƒgƒ‰ƒ“ƒXƒtƒH[ƒ€•ÛŠÇ—p.
+    // ãƒ¬ã‚¯ãƒˆãƒˆãƒ©ãƒ³ã‚¹ãƒ•ã‚©ãƒ¼ãƒ ä¿ç®¡ç”¨.
     RectTransform rect = null;
 
     private void Awake()
     {
-        this.gameObject.SetActive(false);//ƒR[ƒ‹‚ªŒÄ‚Î‚ê‚é‚Ü‚ÅŒ©‚¦‚È‚­‚µ‚Æ‚­
-        Debug.Log("‘I‘ğˆ‚Ìƒ{ƒ^ƒ“‚ªƒCƒ“ƒXƒ^ƒ“ƒX¶¬‚³‚ê‚½B");
+        this.gameObject.SetActive(false);//ã‚³ãƒ¼ãƒ«ãŒå‘¼ã°ã‚Œã‚‹ã¾ã§è¦‹ãˆãªãã—ã¨ã
+        Debug.Log("é¸æŠè‚¢ã®ãƒœã‚¿ãƒ³ãŒã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ç”Ÿæˆã•ã‚ŒãŸã€‚");
     }
 
     /// <summary>
-    /// ì¬ƒR[ƒ‹
+    /// ä½œæˆæ™‚ã‚³ãƒ¼ãƒ«
     /// </summary>
-    /// <param name="buttonIndex">ƒ{ƒ^ƒ“‚Ì¶¬‚³‚ê‚é‡”ÔA‚±‚ê‚ğ‚à‚Æ‚Él‹÷‚É”z’u</param>
-    /// <param name="txt">ƒ{ƒ^ƒ“‚Ì‚É‹L‚·•¶Í</param>
-    /// <param name="onclick">ƒ{ƒ^ƒ“‚É“n‚·‰Ÿ‚µ‚½id‚ğ•Ô‚·‚½‚ß‚ÌŠÖ”“ü‚ê</param>
-    /// <param name="id">ƒ{ƒ^ƒ“‚É•t—^‚³‚ê‚éid</param>
+    /// <param name="buttonIndex">ãƒœã‚¿ãƒ³ã®ç”Ÿæˆã•ã‚Œã‚‹é †ç•ªã€ã“ã‚Œã‚’ã‚‚ã¨ã«å››éš…ã«é…ç½®</param>
+    /// <param name="txt">ãƒœã‚¿ãƒ³ã®ã«è¨˜ã™æ–‡ç« </param>
+    /// <param name="onclick">ãƒœã‚¿ãƒ³ã«æ¸¡ã™æŠ¼ã—ãŸidã‚’è¿”ã™ãŸã‚ã®é–¢æ•°å…¥ã‚Œ</param>
+    /// <param name="id">ãƒœã‚¿ãƒ³ã«ä»˜ä¸ã•ã‚Œã‚‹id</param>
     public void OnCreateButton(int buttonIndex,string txt, UnityAction<int> onclick,int id,int size)
     {
-        rect = GetComponent<RectTransform>();//ˆÊ’uî•ñ‚ğæ“¾
+        rect = GetComponent<RectTransform>();//ä½ç½®æƒ…å ±ã‚’å–å¾—
         
         buttonID = id;
-        buttonText.text = txt;//ƒ{ƒ^ƒ“•¶Í
-        OnClicked.AddListener(onclick);//ŠÖ”‚ğ“n‚·B
+        buttonText.text = txt;//ãƒœã‚¿ãƒ³æ–‡ç« 
+        OnClicked.AddListener(onclick);//é–¢æ•°ã‚’æ¸¡ã™ã€‚
 
-        switch (buttonIndex)//l‹÷‚Ì•ªŠò
+        switch (buttonIndex)//å››éš…ã®åˆ†å²
         {
             case 0:
-                rect.pivot = new Vector2(0, 1);//¶ã
+                rect.pivot = new Vector2(0, 1);//å·¦ä¸Š
                 rect.anchorMax = new Vector2(0, 1);
                 rect.anchorMin = new Vector2(0, 1);
                 break;
             case 1:
-                rect.pivot = new Vector2(1, 1);//‰Eã
+                rect.pivot = new Vector2(1, 1);//å³ä¸Š
                 rect.anchorMax = new Vector2(1, 1);
                 rect.anchorMin = new Vector2(1, 1);
                 break;
             case 2:
-                rect.pivot = new Vector2(0, 0);//¶‰º
+                rect.pivot = new Vector2(0, 0);//å·¦ä¸‹
                 rect.anchorMax = new Vector2(0, 0);
                 rect.anchorMin = new Vector2(0, 0);
                 break;
             case 3:
-                rect.pivot = new Vector2(1, 0);//‰E‰º
+                rect.pivot = new Vector2(1, 0);//å³ä¸‹
                 rect.anchorMax = new Vector2(1, 0);
                 rect.anchorMin = new Vector2(1, 0);
                 break;
         }
 
-        rect.anchoredPosition= Vector3.zero;//ƒAƒ“ƒJ[‚É‰‚¶‚ÄˆÊ’u‚ğ‚·‚×‚Ä‚»‚±‚É‚·‚éA‘S‚Äƒ[ƒ‚É‚·‚é‚±‚Æ‚Å
-        rect.sizeDelta = new Vector2(size, size);//width‚Æheight‚ğ•ÏX
-        this.gameObject.SetActive(true);//Š®—¹‚µ‚½‚Ì‚Å‰f‚·B
-        Debug.Log("‘I‘ğˆ‚Ìƒ{ƒ^ƒ“‚ÌƒR[ƒ‹ŠÖ”‚ªŠ®—¹‚µ‚½");
+        rect.anchoredPosition= Vector3.zero;//ã‚¢ãƒ³ã‚«ãƒ¼ã«å¿œã˜ã¦ä½ç½®ã‚’ã™ã¹ã¦ãã“ã«ã™ã‚‹ã€å…¨ã¦ã‚¼ãƒ­ã«ã™ã‚‹ã“ã¨ã§
+        rect.sizeDelta = new Vector2(size, size);//widthã¨heightã‚’å¤‰æ›´
+        this.gameObject.SetActive(true);//å®Œäº†ã—ãŸã®ã§æ˜ ã™ã€‚
+        Debug.Log("é¸æŠè‚¢ã®ãƒœã‚¿ãƒ³ã®ã‚³ãƒ¼ãƒ«é–¢æ•°ãŒå®Œäº†ã—ãŸ");
     }
 
     /// <summary>
-    /// ƒ{ƒ^ƒ“ƒNƒŠƒbƒNƒR[ƒ‹ƒoƒbƒN
+    /// ãƒœã‚¿ãƒ³ã‚¯ãƒªãƒƒã‚¯ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
     /// </summary>
     public void OnButtonClicked()
     {
-        OnClicked.Invoke(buttonID);//“n‚³‚ê‚½ŠÖ”‚ğÀs
+        OnClicked.Invoke(buttonID);//æ¸¡ã•ã‚ŒãŸé–¢æ•°ã‚’å®Ÿè¡Œ
     }
 
     // ------------------------------------------------------------
-    // •Â‚¶‚é.
+    // é–‰ã˜ã‚‹.
     // ------------------------------------------------------------
     public void Close()
     {

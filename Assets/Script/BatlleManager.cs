@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// í“¬‚ÌŠÇ—ƒNƒ‰ƒX
+/// æˆ¦é—˜ã®ç®¡ç†ã‚¯ãƒ©ã‚¹
 /// </summary>
 public class BatlleManager
 {
     /// <summary>
-    /// –¡•ûƒOƒ‹[ƒv
+    /// å‘³æ–¹ã‚°ãƒ«ãƒ¼ãƒ—
     /// </summary>
     BattleGroup Alliy;
     /// <summary>
-    /// “GƒOƒ‹[ƒv
+    /// æ•µã‚°ãƒ«ãƒ¼ãƒ—
     /// </summary>
     BattleGroup Enemy;
     public BatlleManager(BattleGroup ali,BattleGroup ene)

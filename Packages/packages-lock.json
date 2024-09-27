@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.annulusgames.random-extensions.unity": {
+      "version": "https://github.com/AnnulusGames/RandomExtensions.git?path=src/RandomExtensions.Unity/Assets/RandomExtensions.Unity",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "b635a9ce468043ef055d76dffcc01494dba2bf24"
+    },
     "com.cysharp.r3": {
       "version": "https://github.com/Cysharp/R3.git?path=src/R3.Unity/Assets/R3.Unity",
       "depth": 0,
@@ -8,6 +15,13 @@
         "com.unity.modules.imgui": "1.0.0"
       },
       "hash": "2eaf201aabbbcb8d84c447cdd29201e457a4472a"
+    },
+    "com.cysharp.unitask": {
+      "version": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "2e0917428bc49a88f8bb90f3cbdeabd4d978ae30"
     },
     "com.github-glitchenzo.nugetforunity": {
       "version": "4.1.1",

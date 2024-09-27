@@ -1,6 +1,8 @@
 {
   "dependencies": {
+    "com.annulusgames.random-extensions.unity": "https://github.com/AnnulusGames/RandomExtensions.git?path=src/RandomExtensions.Unity/Assets/RandomExtensions.Unity",
     "com.cysharp.r3": "https://github.com/Cysharp/R3.git?path=src/R3.Unity/Assets/R3.Unity",
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.github-glitchenzo.nugetforunity": "4.1.1",
     "com.unity.collab-proxy": "2.4.4",
     "com.unity.feature.2d": "2.0.0",

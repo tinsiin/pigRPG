@@ -19,13 +19,13 @@ public class ToggleButtonEditor : SelectableEditor//https://qiita.com/mikuri8/it
 
     public override void OnInspectorGUI()
     {
-        base.OnInspectorGUI();//selectableEditor‚Ì•W€gui‚ğ•`‰æ
-        EditorGUILayout.Space();//ƒXƒy[ƒX‚ğ’Ç‰Á‚µ‚ÄA•W€‹@”\‚ÆƒJƒXƒ^ƒ€‹@”\‚ÌŠÔ‚ğ•ª‚¯‚éAŒ©‚â‚·‚­‚È‚éB
+        base.OnInspectorGUI();//selectableEditorã®æ¨™æº–guiã‚’æç”»
+        EditorGUILayout.Space();//ã‚¹ãƒšãƒ¼ã‚¹ã‚’è¿½åŠ ã—ã¦ã€æ¨™æº–æ©Ÿèƒ½ã¨ã‚«ã‚¹ã‚¿ãƒ æ©Ÿèƒ½ã®é–“ã‚’åˆ†ã‘ã‚‹ã€è¦‹ã‚„ã™ããªã‚‹ã€‚
 
-        serializedObject.Update();//ƒVƒŠƒAƒ‰ƒCƒY‚µ‚Ä‚é‚Ì‚ğXV‚·‚é
+        serializedObject.Update();//ã‚·ãƒªã‚¢ãƒ©ã‚¤ã‚ºã—ã¦ã‚‹ã®ã‚’æ›´æ–°ã™ã‚‹
         EditorGUILayout.PropertyField(_myButtonRole);
         EditorGUILayout.PropertyField(_defaultObject);
-        //EditorGUILayout.PropertyField(_selectedObject);//ƒCƒ“ƒXƒyƒNƒ^‚ÉƒtƒB[ƒ‹ƒh‚ğ•\¦
-        serializedObject.ApplyModifiedProperties();//•ÏX‚³‚ê‚½’lƒVƒŠƒAƒ‰ƒCƒY‚ÌƒvƒƒpƒeƒB‚Ì’l‚ğ“K—p‚µÀÛ‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚É”½‰f‚·‚éB
+        //EditorGUILayout.PropertyField(_selectedObject);//ã‚¤ãƒ³ã‚¹ãƒšã‚¯ã‚¿ã«ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã‚’è¡¨ç¤º
+        serializedObject.ApplyModifiedProperties();//å¤‰æ›´ã•ã‚ŒãŸå€¤ã‚·ãƒªã‚¢ãƒ©ã‚¤ã‚ºã®ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã®å€¤ã‚’é©ç”¨ã—å®Ÿéš›ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã«åæ˜ ã™ã‚‹ã€‚
     }
 }

@@ -12,14 +12,14 @@ public class ToggleButtonGroup : MonoBehaviour
 {
     [SerializeField] private List<ToggleButton> _toggleButtons = new();
 
-    [SerializeField] List<Sprite> ButtonsSprite;//ƒ{ƒ^ƒ“‚ÌƒXƒvƒ‰ƒCƒg‚ÌƒŠƒXƒgB
-    [SerializeField] Image ButtonImage;//•\¦‚·‚éƒCƒ[ƒWB
+    [SerializeField] List<Sprite> ButtonsSprite;//ãƒœã‚¿ãƒ³ã®ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆã®ãƒªã‚¹ãƒˆã€‚
+    [SerializeField] Image ButtonImage;//è¡¨ç¤ºã™ã‚‹ã‚¤ãƒ¡ãƒ¼ã‚¸ã€‚
 
-    private ToggleButton _selectedButton;//‘O‚É‘I‘ğ‚µ‚½ƒ{ƒ^ƒ“‚ğ•Û‚·‚é‚½‚ß‚Ìƒoƒbƒtƒ@‚©‚±‚êI
+    private ToggleButton _selectedButton;//å‰ã«é¸æŠã—ãŸãƒœã‚¿ãƒ³ã‚’ä¿æŒã™ã‚‹ãŸã‚ã®ãƒãƒƒãƒ•ã‚¡ã‹ã“ã‚Œï¼
 
-    public Observable<Unit> OnClickAsObservable(int index)//button‚Ìr3Šg’£ƒCƒxƒ“ƒg‚ğƒOƒ‹[ƒv‚©‚ç§Œä‚µ‚Ä•Ô‚·ƒƒ]ƒbƒg
+    public Observable<Unit> OnClickAsObservable(int index)//buttonã®r3æ‹¡å¼µã‚¤ãƒ™ãƒ³ãƒˆã‚’ã‚°ãƒ«ãƒ¼ãƒ—ã‹ã‚‰åˆ¶å¾¡ã—ã¦è¿”ã™ãƒ¡ã‚¾ãƒƒãƒˆ
     {
-        if(index >= _toggleButtons.Count)//index‚ª”ÍˆÍŠO‚¾‚Á‚½‚ç‹ó‚ğ•Ô‚·H
+        if(index >= _toggleButtons.Count)//indexãŒç¯„å›²å¤–ã ã£ãŸã‚‰ç©ºã‚’è¿”ã™ï¼Ÿ
         {
             return Observable.Empty<Unit>();
         }
@@ -32,32 +32,32 @@ public class ToggleButtonGroup : MonoBehaviour
        Initialize();
     }
 
-    private void Initialize()//ˆê“x‘I‘ğ‚µ‚½‚à‚Ì‚ªÄ“x‘I‘ğ‚³‚ê‚È‚¢‚æ‚¤‚ÈƒƒWƒbƒN‚ª‚ ‚éB
+    private void Initialize()//ä¸€åº¦é¸æŠã—ãŸã‚‚ã®ãŒå†åº¦é¸æŠã•ã‚Œãªã„ã‚ˆã†ãªãƒ­ã‚¸ãƒƒã‚¯ãŒã‚ã‚‹ã€‚
     {
         foreach (var one in _toggleButtons)
         {
             one.OnStateChangedAsObservable().Subscribe(
-                state =>//‚»‚ê‚¼‚ê‚Ìƒ{ƒ^ƒ“‚ÌƒXƒe[ƒ^ƒX‚ª•ÏX‚³‚ê‚é‚½‚Ñ‚É“®‚­ŠÖ”‚Æ‚µ‚Ä“o˜^‚·‚é
+                state =>//ãã‚Œãã‚Œã®ãƒœã‚¿ãƒ³ã®ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãŒå¤‰æ›´ã•ã‚Œã‚‹ãŸã³ã«å‹•ãé–¢æ•°ã¨ã—ã¦ç™»éŒ²ã™ã‚‹
                 {
-                    if (state == ToggleButton.State.Selected)//ƒ{ƒ^ƒ“‚ª‘I‘ğ‚³‚ê‚Ä‚éó‘Ô‚É‚È‚Á‚½‚È‚çB(Œ³‚©‚çselected‚Ì“z‚Í‚»‚à‚»‚à‚±‚ÌƒCƒxƒ“ƒg‚Í”­¶‚µ‚È‚¢)
-                    {//(‚»‚ê‚Éd‘g‚İãselected‚ªdefault‚É–ß‚é‚±‚Æ‚à‚È‚¢B)
-                        if (_selectedButton != null)//‘O‚É‘I‘ğ‚µ‚½ƒ{ƒ^ƒ“‚ª‚ ‚Á‚½‚çB
+                    if (state == ToggleButton.State.Selected)//ãƒœã‚¿ãƒ³ãŒé¸æŠã•ã‚Œã¦ã‚‹çŠ¶æ…‹ã«ãªã£ãŸãªã‚‰ã€‚(å…ƒã‹ã‚‰selectedã®å¥´ã¯ãã‚‚ãã‚‚ã“ã®ã‚¤ãƒ™ãƒ³ãƒˆã¯ç™ºç”Ÿã—ãªã„)
+                    {//(ãã‚Œã«ä»•çµ„ã¿ä¸ŠselectedãŒdefaultã«æˆ»ã‚‹ã“ã¨ã‚‚ãªã„ã€‚)
+                        if (_selectedButton != null)//å‰ã«é¸æŠã—ãŸãƒœã‚¿ãƒ³ãŒã‚ã£ãŸã‚‰ã€‚
                         {
-                            _selectedButton.IsManaged = false;//‘O‚É‘I‘ğ‚µ‚½ƒ{ƒ^ƒ“‚Ìismanaged‚ğ‰ğœ‚µ‚ÄB
-                            _selectedButton.SwitchToggleState();//‚³‚ç‚ÉƒXƒCƒbƒ`‚µ‚Ä‘I‘ğ‚³‚ê‚Ä‚È‚¢ó‘Ô‚É–ß‚·B
+                            _selectedButton.IsManaged = false;//å‰ã«é¸æŠã—ãŸãƒœã‚¿ãƒ³ã®ismanagedã‚’è§£é™¤ã—ã¦ã€‚
+                            _selectedButton.SwitchToggleState();//ã•ã‚‰ã«ã‚¹ã‚¤ãƒƒãƒã—ã¦é¸æŠã•ã‚Œã¦ãªã„çŠ¶æ…‹ã«æˆ»ã™ã€‚
                         }
 
-                        one.IsManaged = true;//‚»‚Ì‘I‘ğ‚µ‚½ƒ{ƒ^ƒ“‚ÌIsmanaged‚ğtrue‚ÉB@ismanaged‚ªtrue‚¾‚Æƒ{ƒ^ƒ“‘¤‚ÅØ‚è‘Ö‚í‚ç‚È‚¢‚æ‚¤‚É‚È‚Á‚Ä‚éB
-                        _selectedButton = one;//ƒoƒbƒtƒ@‚É“o˜^‚·‚é
-                        SetTabButtonImage(one.MyButtonRole);//ƒCƒ[ƒW•ÏXB
+                        one.IsManaged = true;//ãã®é¸æŠã—ãŸãƒœã‚¿ãƒ³ã®Ismanagedã‚’trueã«ã€‚ã€€ismanagedãŒtrueã ã¨ãƒœã‚¿ãƒ³å´ã§åˆ‡ã‚Šæ›¿ã‚ã‚‰ãªã„ã‚ˆã†ã«ãªã£ã¦ã‚‹ã€‚
+                        _selectedButton = one;//ãƒãƒƒãƒ•ã‚¡ã«ç™»éŒ²ã™ã‚‹
+                        SetTabButtonImage(one.MyButtonRole);//ã‚¤ãƒ¡ãƒ¼ã‚¸å¤‰æ›´ã€‚
                     }
-                }).AddTo(this);//‚±‚ÌŠÇ—ƒIƒuƒWƒFƒNƒg‚ÆŒ‹‚Ñ‚Â‚¯‚é
+                }).AddTo(this);//ã“ã®ç®¡ç†ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¨çµã³ã¤ã‘ã‚‹
         }
 
-        SetTabButtonImage(ButtonRole.Default);//‰Šú‰æ‘œ‚ğƒZƒbƒg‚µ‚Æ‚­
+        SetTabButtonImage(ButtonRole.Default);//åˆæœŸç”»åƒã‚’ã‚»ãƒƒãƒˆã—ã¨ã
     }
     /// <summary>
-    /// ƒ^ƒuƒ{ƒ^ƒ“‚Ìˆê——‰æ‘œ‚ğƒZƒbƒg‚·‚éB
+    /// ã‚¿ãƒ–ãƒœã‚¿ãƒ³ã®ä¸€è¦§ç”»åƒã‚’ã‚»ãƒƒãƒˆã™ã‚‹ã€‚
     /// </summary>
     public void SetTabButtonImage(ButtonRole br)
     {
@@ -65,18 +65,18 @@ public class ToggleButtonGroup : MonoBehaviour
     }
 
     /// <summary>
-    /// ‹N“®‚·‚éƒgƒOƒ‹‚ğƒOƒ‹[ƒv‚©‚ç‘I‚ÔB@(‚à‚µ‘I‘ğ‚³‚ê‚Ä‚¢‚é‚à‚Ì‚È‚ç“à•”‚Ìismanaged‚É‚æ‚Á‚Ä•Ï‰»‚µ‚È‚¢B)
+    /// èµ·å‹•ã™ã‚‹ãƒˆã‚°ãƒ«ã‚’ã‚°ãƒ«ãƒ¼ãƒ—ã‹ã‚‰é¸ã¶ã€‚ã€€(ã‚‚ã—é¸æŠã•ã‚Œã¦ã„ã‚‹ã‚‚ã®ãªã‚‰å†…éƒ¨ã®ismanagedã«ã‚ˆã£ã¦å¤‰åŒ–ã—ãªã„ã€‚)
     /// </summary>
     /// <param name="index"></param>
     public void SelectToggleIndex(int index)
     {
-        if(0<= index && _toggleButtons.Count > index)//”ÍˆÍƒ`ƒFƒbƒN
+        if(0<= index && _toggleButtons.Count > index)//ç¯„å›²ãƒã‚§ãƒƒã‚¯
         {
             _toggleButtons[index].SwitchToggleState();
         }
     }
 
-    //¡‘I‘ğ‚³‚ê‚Ä‚éƒ{ƒ^ƒ“‚ÌƒCƒ“ƒfƒbƒNƒX‚ğ•Ô‚·B
+    //ä»Šé¸æŠã•ã‚Œã¦ã‚‹ãƒœã‚¿ãƒ³ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’è¿”ã™ã€‚
     public int GetSelectedIndex()
     {
         int index = 0;

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 public enum ButtonRole
-{//ƒ{ƒ^ƒ“ROle‚Ì•À‚Ñ‡‚ÆToggleButton‚ÌGroup‚Å‚ÌƒŠƒXƒg‚Ì•À‚Ñ‡‚ÆButtonSprite‚Ì•À‚Ñ‡‚Íˆê’v‚³‚¹‚é•K—v‚ª‚ ‚éB
+{//ãƒœã‚¿ãƒ³ROleã®ä¸¦ã³é †ã¨ToggleButtonã®Groupã§ã®ãƒªã‚¹ãƒˆã®ä¸¦ã³é †ã¨ButtonSpriteã®ä¸¦ã³é †ã¯ä¸€è‡´ã•ã›ã‚‹å¿…è¦ãŒã‚ã‚‹ã€‚
     Default, Main, CharaConfy, Confy
 }
 public class ToggleButton : Button
@@ -18,16 +18,16 @@ public class ToggleButton : Button
         Default, Selected
     }
     
-    [SerializeField] private GameObject _defaultObject;//ƒ{ƒ^ƒ“‚Ì‰Ÿ‚·”ÍˆÍ
+    [SerializeField] private GameObject _defaultObject;//ãƒœã‚¿ãƒ³ã®æŠ¼ã™ç¯„å›²
     //[SerializeField] private GameObject _selectedObject;
 
     private ReactiveProperty<State> _state = new();
-    public ButtonRole MyButtonRole;//ƒCƒ“ƒXƒyƒNƒ^[‚©‚ç“o˜^
-    private Subject<State> _onStateChanged = new();//ŠO•”‚ÉŒöŠJ‚·‚éƒR[ƒ‹ƒoƒbƒNŠÖ”‚ÌƒoƒbƒLƒ“ƒOƒtƒB[ƒ‹ƒh‚İ‚½‚¢‚È
+    public ButtonRole MyButtonRole;//ã‚¤ãƒ³ã‚¹ãƒšã‚¯ã‚¿ãƒ¼ã‹ã‚‰ç™»éŒ²
+    private Subject<State> _onStateChanged = new();//å¤–éƒ¨ã«å…¬é–‹ã™ã‚‹ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã®ãƒãƒƒã‚­ãƒ³ã‚°ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã¿ãŸã„ãª
 
     public bool IsManaged { get; set; }
 
-    public Observable<State> OnStateChangedAsObservable()//ŒöŠJƒtƒB[ƒ‹ƒh‚İ‚½‚¢‚È
+    public Observable<State> OnStateChangedAsObservable()//å…¬é–‹ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã¿ãŸã„ãª
     {
         return _onStateChanged.AsObservable();
     }
@@ -38,17 +38,17 @@ public class ToggleButton : Button
     }
     private void Initialize()
     {
-        //ƒ{ƒ^ƒ“‚Ì“à•”‚Åó‘Ô•Ï‰»‚És‚¤‚±‚Æ
+        //ãƒœã‚¿ãƒ³ã®å†…éƒ¨ã§çŠ¶æ…‹å¤‰åŒ–æ™‚ã«è¡Œã†ã“ã¨
         _state.Subscribe(
             state =>
             {
                 _defaultObject.SetActive(state == State.Default);
                 //_selectedObject.SetActive(state == State.Selected);
 
-                _onStateChanged.OnNext(state);//ó‘Ô•Ï‰»‚ª‹N‚«‚½‚Æ‚«‚ÉŠO•”‚Å‚Ì“o˜^o—ˆ‚éƒR[ƒ‹ƒoƒbƒN‚ª‹N‚«‚éƒ^ƒCƒ~ƒ“ƒO‚ğw’è
+                _onStateChanged.OnNext(state);//çŠ¶æ…‹å¤‰åŒ–ãŒèµ·ããŸã¨ãã«å¤–éƒ¨ã§ã®ç™»éŒ²å‡ºæ¥ã‚‹ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ãŒèµ·ãã‚‹ã‚¿ã‚¤ãƒŸãƒ³ã‚°ã‚’æŒ‡å®š
             }).AddTo(this);
 
-        _state.Value = State.Default;//‰Šú’l
+        _state.Value = State.Default;//åˆæœŸå€¤
     }
     public override void OnPointerClick(PointerEventData eventData)
     {
@@ -58,7 +58,7 @@ public class ToggleButton : Button
     }
     public void SwitchToggleState()
     {
-        if (interactable && !IsManaged)//ismanaged‚Ì‚¨‰A‚Å‚»‚à‚»‚à‘I‘ğ‚µ‚½ƒ{ƒ^ƒ“‚Í‘¼‚Ì‰Ÿ‚³‚È‚¢‚Æ‰ğœ‚³‚ê‚È‚­‚È‚éB
+        if (interactable && !IsManaged)//ismanagedã®ãŠé™°ã§ãã‚‚ãã‚‚é¸æŠã—ãŸãƒœã‚¿ãƒ³ã¯ä»–ã®æŠ¼ã•ãªã„ã¨è§£é™¤ã•ã‚Œãªããªã‚‹ã€‚
         {
             switch (_state.Value)
             {

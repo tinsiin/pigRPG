@@ -4,30 +4,30 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 /// <summary>
-/// ƒLƒƒƒ‰ƒNƒ^[’B‚Ìí•Ê
+/// ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼é”ã®ç¨®åˆ¥
 /// </summary>
 public enum CharacterType
 {
-    TLOA,Machine,Life//TLOA‚»‚Ì‚à‚ÌA‹@ŠBA¶–½
+    TLOA,Machine,Life//TLOAãã®ã‚‚ã®ã€æ©Ÿæ¢°ã€ç”Ÿå‘½
 }
 /// <summary>
-/// •¨—‘®«AƒXƒLƒ‹‚ÉˆË‘¶‚µAƒLƒƒƒ‰ƒNƒ^[’B‚Ìí•Ê‚âŒÂl‚Æ‚Ì‘Š«‚ÅUŒ‚‚Ì’Ê‚è‚ª•Ï‚í‚é
+/// ç‰©ç†å±æ€§ã€ã‚¹ã‚­ãƒ«ã«ä¾å­˜ã—ã€ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼é”ã®ç¨®åˆ¥ã‚„å€‹äººã¨ã®ç›¸æ€§ã§æ”»æ’ƒã®é€šã‚ŠãŒå¤‰ã‚ã‚‹
 /// </summary>
 public enum PhysicalProperty
 {
-    heavy,volten,dishSmack//°‚¸‚êAƒ”‚§—¬“]A–\’f
+    heavy,volten,dishSmack//åºŠãšã‚Œã€ãƒ´ã‰æµè»¢ã€æš´æ–­
 }
-@
+ã€€
 /// <summary>
-/// ¸_‘®«AƒXƒLƒ‹AƒLƒƒƒ‰ƒNƒ^[‚ÉˆË‘¶‚µAƒLƒƒƒ‰ƒNƒ^[‚Í’¼‘O‚Ég‚Á‚½•¨‚ª“K—p‚³‚ê‚é
-/// ‚¾‚©‚ç¸_‘®«“¯m‚ÅUŒ‚‚Ì’Ê‚è‚Íİ’è‚³‚ê‚éB
+/// ç²¾ç¥å±æ€§ã€ã‚¹ã‚­ãƒ«ã€ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã«ä¾å­˜ã—ã€ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã¯ç›´å‰ã«ä½¿ã£ãŸç‰©ãŒé©ç”¨ã•ã‚Œã‚‹
+/// ã ã‹ã‚‰ç²¾ç¥å±æ€§åŒå£«ã§æ”»æ’ƒã®é€šã‚Šã¯è¨­å®šã•ã‚Œã‚‹ã€‚
 /// </summary>
 public enum SpiritualProperty
 {
-    @doremis,pillar,kindergarden,liminalwhitetile,sacrifaith,cquiest,pysco,godtier,baledrival,devil
+    ã€€doremis,pillar,kindergarden,liminalwhitetile,sacrifaith,cquiest,pysco,godtier,baledrival,devil
 }
 /// <summary>
-/// Šî‘bƒXƒe[ƒ^ƒX‚ÌƒNƒ‰ƒX@@ƒNƒ‰ƒX‚»‚Ì‚à‚Ì‚Íg—p‚µ‚È‚¢‚Ì‚Å’ŠÛƒNƒ‰ƒX
+/// åŸºç¤ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã®ã‚¯ãƒ©ã‚¹ã€€ã€€ã‚¯ãƒ©ã‚¹ãã®ã‚‚ã®ã¯ä½¿ç”¨ã—ãªã„ã®ã§æŠ½è±¡ã‚¯ãƒ©ã‚¹
 /// </summary>
 public abstract class BaseStates
 {
@@ -35,61 +35,61 @@ public abstract class BaseStates
     public int HP { get; private set; }
     public int MAXHP { get; private set; }
 
-    //ƒ|ƒCƒ“ƒg
+    //ãƒã‚¤ãƒ³ãƒˆ
     public int P;
     public int MAXP;
 
     /// <summary>
-    /// ‚±‚ÌƒLƒƒƒ‰ƒNƒ^[‚Ì–¼‘O
+    /// ã“ã®ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®åå‰
     /// </summary>
     public string CharacterName;
 
     /// <summary>
-    /// ‚±‚ÌƒLƒƒƒ‰ƒNƒ^[‚Ìí•Ê
+    /// ã“ã®ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®ç¨®åˆ¥
     /// </summary>
     public CharacterType MyType { get; private set; }
     /// <summary>
-    /// ‚±‚ÌƒLƒƒƒ‰ƒNƒ^[‚Ì‘®« ¸_‘®«‚ª“ü‚é
+    /// ã“ã®ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®å±æ€§ ç²¾ç¥å±æ€§ãŒå…¥ã‚‹
     /// </summary>
     public SpiritualProperty MyImpression {  get; private set; }
 
     /// <summary>
-    /// ƒŠƒJƒoƒŠƒ^[ƒ“
-    /// ˆê‰ñUŒ‚‚µ‚½Œã‚ÉAŸ‚Ìƒ‰ƒ“ƒ_ƒ€“G‘I‘ğƒŠƒXƒg‚É“ü‚è‚Ş‚Ü‚Å‚Ìƒ^[ƒ“ƒJƒEƒ“ƒ^[B‘O‚Ì‚ß‚èó‘Ô‚¾‚Æ2”{‚Ì‘¬“x‚ÅƒJƒEƒ“ƒg‚³‚ê‚éB
+    /// ãƒªã‚«ãƒãƒªã‚¿ãƒ¼ãƒ³
+    /// ä¸€å›æ”»æ’ƒã—ãŸå¾Œã«ã€æ¬¡ã®ãƒ©ãƒ³ãƒ€ãƒ æ•µé¸æŠãƒªã‚¹ãƒˆã«å…¥ã‚Šè¾¼ã‚€ã¾ã§ã®ã‚¿ãƒ¼ãƒ³ã‚«ã‚¦ãƒ³ã‚¿ãƒ¼ã€‚å‰ã®ã‚ã‚ŠçŠ¶æ…‹ã ã¨2å€ã®é€Ÿåº¦ã§ã‚«ã‚¦ãƒ³ãƒˆã•ã‚Œã‚‹ã€‚
     /// </summary>
     public int recoveryTurn;
     /// <summary>
-    /// ƒŠƒJƒoƒŠƒ^[ƒ“‚Ìİ’è’lB
+    /// ãƒªã‚«ãƒãƒªã‚¿ãƒ¼ãƒ³ã®è¨­å®šå€¤ã€‚
     /// </summary>
     public int maxRecoveryTurn{ get; private set; }
 
     [SerializeField]private List<BasePassive> _passiveList;
-    //ó‘ÔˆÙí‚ÌƒŠƒXƒg
-    public IReadOnlyList<BasePassive>@ PassiveList => _passiveList;
+    //çŠ¶æ…‹ç•°å¸¸ã®ãƒªã‚¹ãƒˆ
+    public IReadOnlyList<BasePassive>ã€€ PassiveList => _passiveList;
 
     [SerializeField]private List<BaseSkill> _skillList;
-    //ƒXƒLƒ‹‚ÌƒŠƒXƒg
-    public IReadOnlyList<BaseSkill>@ SkillList => _skillList;
+    //ã‚¹ã‚­ãƒ«ã®ãƒªã‚¹ãƒˆ
+    public IReadOnlyList<BaseSkill>ã€€ SkillList => _skillList;
 
-    //Šî‘bUŒ‚–hŒä@@(‘å–‚È‚Ì‚ÍAŠî–{“I‚É‚±‚Ì•Ó‚è‚Í’´ƒXƒLƒ‹ˆË‘¶‚È‚Ì‚ÅA­‚È‚¢”‚Å‚µ‚©İ’è‚µ‚È‚¢‚±‚ÆB)
+    //åŸºç¤æ”»æ’ƒé˜²å¾¡ã€€ã€€(å¤§äº‹ãªã®ã¯ã€åŸºæœ¬çš„ã«ã“ã®è¾ºã‚Šã¯è¶…ã‚¹ã‚­ãƒ«ä¾å­˜ãªã®ã§ã€å°‘ãªã„æ•°ã§ã—ã‹è¨­å®šã—ãªã„ã“ã¨ã€‚)
     public int b_DEF;
     public int b_AGI;
     public int b_HIT;
     public int b_ATK;
 
     /// <summary>
-    /// –hŒä—ÍŒvZ
+    /// é˜²å¾¡åŠ›è¨ˆç®—
     /// </summary>
     /// <returns></returns>
-    public@virtual int DEF()
+    publicã€€virtual int DEF()
     {
-        var def = b_DEF;//Šî‘b–hŒä—Í‚ªŠî–{B
+        var def = b_DEF;//åŸºç¤é˜²å¾¡åŠ›ãŒåŸºæœ¬ã€‚
         
 
         return def;
     }
     /// <summary>
-    /// ‰Šú¸_‘®«Œˆ’èŠÖ”(Šî–{‚ÍˆóÛ‚ğ‚Á‚Ä‚éƒXƒLƒ‹ƒŠƒXƒg‚©‚ç“K“–‚É‘I‚Ño‚·
+    /// åˆæœŸç²¾ç¥å±æ€§æ±ºå®šé–¢æ•°(åŸºæœ¬ã¯å°è±¡ã‚’æŒã£ã¦ã‚‹ã‚¹ã‚­ãƒ«ãƒªã‚¹ãƒˆã‹ã‚‰é©å½“ã«é¸ã³å‡ºã™
     /// </summary>
     public virtual void InitializeMyImpression()
     {
@@ -98,26 +98,26 @@ public abstract class BaseStates
         if (SkillList != null)
         {
             var rnd = Random.Range(0, SkillList.Count);
-            that = SkillList[rnd].SkillSpiritual;//ƒXƒLƒ‹‚Ì¸_‘®«‚ğ’Šo
-            MyImpression = that;//ˆóÛ‚ÉƒZƒbƒg
+            that = SkillList[rnd].SkillSpiritual;//ã‚¹ã‚­ãƒ«ã®ç²¾ç¥å±æ€§ã‚’æŠ½å‡º
+            MyImpression = that;//å°è±¡ã«ã‚»ãƒƒãƒˆ
         }
         else
         {
-            Debug.Log(CharacterName + " ‚ÌƒXƒLƒ‹‚ª‹ó‚Å‚·B");
+            Debug.Log(CharacterName + " ã®ã‚¹ã‚­ãƒ«ãŒç©ºã§ã™ã€‚");
         }
     }
 
     /// <summary>
-    /// ƒI[ƒoƒ‰ƒCƒh‰Â”\‚Èƒ_ƒ[ƒWŠÖ”
+    /// ã‚ªãƒ¼ãƒãƒ©ã‚¤ãƒ‰å¯èƒ½ãªãƒ€ãƒ¡ãƒ¼ã‚¸é–¢æ•°
     /// </summary>
     /// <param name="atkPoint"></param>
     public virtual void Damage(int atkPoint)
     {
-        HP -= atkPoint - DEF();//HP‚©‚çw’è‚³‚ê‚½UŒ‚—Í‚ªˆø‚©‚ê‚éB
+        HP -= atkPoint - DEF();//HPã‹ã‚‰æŒ‡å®šã•ã‚ŒãŸæ”»æ’ƒåŠ›ãŒå¼•ã‹ã‚Œã‚‹ã€‚
     }
 
     /// <summary>
-    /// €‚ğ”»’è‚·‚éƒI[ƒoƒ‰ƒCƒh‰Â”\‚ÈŠÖ”
+    /// æ­»ã‚’åˆ¤å®šã™ã‚‹ã‚ªãƒ¼ãƒãƒ©ã‚¤ãƒ‰å¯èƒ½ãªé–¢æ•°
     /// </summary>
     /// <returns></returns>
     public virtual bool Death()
@@ -127,13 +127,13 @@ public abstract class BaseStates
     }
 
     /// <summary>
-    /// ƒpƒbƒVƒu‚ğ“K—p
+    /// ãƒ‘ãƒƒã‚·ãƒ–ã‚’é©ç”¨
     /// </summary>
     public virtual void  ApplyPassive(BasePassive status)
     {
         bool typeMatch = false;
         bool propertyMatch = false;
-        //ƒLƒƒƒ‰ƒNƒ^[í•Ê‚Ì‘Š«”»’è
+        //ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ç¨®åˆ¥ã®ç›¸æ€§åˆ¤å®š
         foreach (var type in status.TypeOkList)
         {
             if (MyType == type)
@@ -143,7 +143,7 @@ public abstract class BaseStates
             }
             
         }
-        //ƒLƒƒƒ‰ƒNƒ^[‘®«‚Æ
+        //ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼å±æ€§ã¨
         foreach (var property in status.CharaPropertyOKList)
         {
             if (MyImpression == property)
@@ -153,7 +153,7 @@ public abstract class BaseStates
             }
         }
 
-        //‘Š«ğŒƒNƒŠƒA‚µ‚½‚ç
+        //ç›¸æ€§æ¡ä»¶ã‚¯ãƒªã‚¢ã—ãŸã‚‰
         if(typeMatch && propertyMatch)
         {
             bool isactive=false;
@@ -161,19 +161,19 @@ public abstract class BaseStates
             {
                 if(passive == status)
                 {
-                    isactive = true;//Šù‚ÉƒŠƒXƒg‚ÉŠÜ‚Ü‚ê‚Ä‚¢‚éƒpƒbƒVƒu‚È‚çB
-                    passive.AddPassivePower(1);//Šù‚ÉŠÜ‚Ü‚ê‚Ä‚éƒpƒbƒVƒu‚ğ‹­‚­‚·‚é                   
+                    isactive = true;//æ—¢ã«ãƒªã‚¹ãƒˆã«å«ã¾ã‚Œã¦ã„ã‚‹ãƒ‘ãƒƒã‚·ãƒ–ãªã‚‰ã€‚
+                    passive.AddPassivePower(1);//æ—¢ã«å«ã¾ã‚Œã¦ã‚‹ãƒ‘ãƒƒã‚·ãƒ–ã‚’å¼·ãã™ã‚‹                   
                     break;
                 }
             }
             if (!isactive)
             {
-                _passiveList.Add(status);//ó‘ÔˆÙíƒŠƒXƒg‚É’¼Ú’Ç‰Á
+                _passiveList.Add(status);//çŠ¶æ…‹ç•°å¸¸ãƒªã‚¹ãƒˆã«ç›´æ¥è¿½åŠ 
             }
         }
 
 
 
-    }//removeˆ—‚ÍR3‚Åˆ—‚·‚éB@
+    }//removeå‡¦ç†ã¯R3ã§å‡¦ç†ã™ã‚‹ã€‚ã€€
 
 }

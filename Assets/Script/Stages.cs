@@ -6,14 +6,14 @@ using UnityEngine;
 
 [CreateAssetMenu]
 public class Stages:ScriptableObject
-{//ƒXƒe[ƒW‚É‚Ü‚Â‚í‚é•¨‚ğˆ—‚µ‚½‚èŒÄ‚Ño‚µ‚½‚è(ƒXƒe[ƒWƒf[ƒ^ƒx[ƒX??
-    public List<StageData> StageDates;//ƒXƒe[ƒW‚Ìƒf[ƒ^ƒx[ƒX‚ÌƒŠƒXƒg     
+{//ã‚¹ãƒ†ãƒ¼ã‚¸ã«ã¾ã¤ã‚ã‚‹ç‰©ã‚’å‡¦ç†ã—ãŸã‚Šå‘¼ã³å‡ºã—ãŸã‚Š(ã‚¹ãƒ†ãƒ¼ã‚¸ãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹??
+    public List<StageData> StageDates;//ã‚¹ãƒ†ãƒ¼ã‚¸ã®ãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹ã®ãƒªã‚¹ãƒˆ     
     [SerializeField,TextArea(1,30)] string memo;
 
 }
 
 /// <summary>
-/// ƒXƒe[ƒ^ƒXƒ{[ƒiƒX‚ÌƒNƒ‰ƒX ƒXƒe[ƒW‚²‚Æ‚É“o˜^‚·‚éB
+/// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒœãƒ¼ãƒŠã‚¹ã®ã‚¯ãƒ©ã‚¹ ã‚¹ãƒ†ãƒ¼ã‚¸ã”ã¨ã«ç™»éŒ²ã™ã‚‹ã€‚
 /// </summary>
 [Serializable]
 public class StatesBonus
@@ -28,38 +28,38 @@ public class StatesBonus
 }
 
 [System.Serializable]
-public class StageData//ƒXƒe[ƒWƒf[ƒ^‚ÌƒNƒ‰ƒX
+public class StageData//ã‚¹ãƒ†ãƒ¼ã‚¸ãƒ‡ãƒ¼ã‚¿ã®ã‚¯ãƒ©ã‚¹
 {
     [SerializeField]string _stageName;
     [SerializeField] List<StageCut> _cutArea;
 
 
     /// <summary>
-    /// ƒXƒe[ƒW‚Ì–¼‘O
+    /// ã‚¹ãƒ†ãƒ¼ã‚¸ã®åå‰
     /// </summary>
-    public string StageName => _stageName;//ƒ‰ƒ€ƒ_®‚Å“Ç‚İæ‚èê—p
+    public string StageName => _stageName;//ãƒ©ãƒ ãƒ€å¼ã§èª­ã¿å–ã‚Šå°‚ç”¨
 
     /// <summary>
-    /// ƒXƒe[ƒW‚ğ¬•ª‚¯‚É‚µ‚½ƒŠƒXƒg
+    /// ã‚¹ãƒ†ãƒ¼ã‚¸ã‚’å°åˆ†ã‘ã«ã—ãŸãƒªã‚¹ãƒˆ
     /// </summary>
     public IReadOnlyList<StageCut> CutArea => _cutArea;
 
     /// <summary>
-    /// ƒXƒe[ƒW‚²‚Æ‚Éİ’è‚³‚ê‚éålŒöw‰c‚½‚¿‚Ìƒ{[ƒiƒXB
+    /// ã‚¹ãƒ†ãƒ¼ã‚¸ã”ã¨ã«è¨­å®šã•ã‚Œã‚‹ä¸»äººå…¬é™£å–¶ãŸã¡ã®ãƒœãƒ¼ãƒŠã‚¹ã€‚
     /// </summary>
     public StatesBonus Satelite_StageBonus;
     /// <summary>
-    /// ƒXƒe[ƒW‚²‚Æ‚Éİ’è‚³‚ê‚éålŒöw‰c‚½‚¿‚Ìƒ{[ƒiƒXB
+    /// ã‚¹ãƒ†ãƒ¼ã‚¸ã”ã¨ã«è¨­å®šã•ã‚Œã‚‹ä¸»äººå…¬é™£å–¶ãŸã¡ã®ãƒœãƒ¼ãƒŠã‚¹ã€‚
     /// </summary>
     public StatesBonus Bass_StageBonus;
     /// <summary>
-    /// ƒXƒe[ƒW‚²‚Æ‚Éİ’è‚³‚ê‚éålŒöw‰c‚½‚¿‚Ìƒ{[ƒiƒXB
+    /// ã‚¹ãƒ†ãƒ¼ã‚¸ã”ã¨ã«è¨­å®šã•ã‚Œã‚‹ä¸»äººå…¬é™£å–¶ãŸã¡ã®ãƒœãƒ¼ãƒŠã‚¹ã€‚
     /// </summary>
     public StatesBonus Stair_StageBonus;
     
 }
 /// <summary>
-/// •ªŠò‚É‘Î‰‚·‚é‚½‚ßAƒXƒe[ƒW‚ğ¬•ª‚¯‚É‚µ‚½‚à‚ÌB
+/// åˆ†å²ã«å¯¾å¿œã™ã‚‹ãŸã‚ã€ã‚¹ãƒ†ãƒ¼ã‚¸ã‚’å°åˆ†ã‘ã«ã—ãŸã‚‚ã®ã€‚
 /// </summary>
 /// 
 [System.Serializable]
@@ -67,49 +67,49 @@ public class StageCut
 {
     [SerializeField]string _areaName;
     [SerializeField]int _id;
-    [SerializeField]List<AreaDate> _areaDates;//•À‚ÔƒGƒŠƒA
+    [SerializeField]List<AreaDate> _areaDates;//ä¸¦ã¶ã‚¨ãƒªã‚¢
     [SerializeField] Vector2 _mapLineS;
     [SerializeField] Vector2 _mapLineE;
     [SerializeField] string _mapsrc;
-    [SerializeField] List<NormalEnemy> _enemyList;//“G‚ÌƒŠƒXƒg
+    [SerializeField] List<NormalEnemy> _enemyList;//æ•µã®ãƒªã‚¹ãƒˆ
 
 
     /// <summary>
-    /// ¬•ª‚¯‚µ‚½ƒGƒŠƒA‚Ì–¼‘O
+    /// å°åˆ†ã‘ã—ãŸã‚¨ãƒªã‚¢ã®åå‰
     /// </summary>
     public string AreaName => _areaName;
 
 
     /// <summary>
-    /// ƒ}ƒbƒv‰æ‘œ‚É’è‹`‚·‚é’¼ü‚Ìn“_@nowimg‚ÌanchoredPosition‚ğ’¼Ú“ü—Í
+    /// ãƒãƒƒãƒ—ç”»åƒã«å®šç¾©ã™ã‚‹ç›´ç·šã®å§‹ç‚¹ã€€nowimgã®anchoredPositionã‚’ç›´æ¥å…¥åŠ›
     /// </summary>
     public Vector2 MapLineS => _mapLineS;
     /// <summary>
-    /// ƒ}ƒbƒv‰æ‘œ‚É’è‹`‚·‚é’¼ü‚ÌI“_@nowimg‚ÌanchoredPosition‚ğ’¼Ú“ü—Í
+    /// ãƒãƒƒãƒ—ç”»åƒã«å®šç¾©ã™ã‚‹ç›´ç·šã®çµ‚ç‚¹ã€€nowimgã®anchoredPositionã‚’ç›´æ¥å…¥åŠ›
     /// </summary>
     public Vector2 MapLineE => _mapLineE;
 
     /// <summary>
-    /// ¬•ª‚¯‚É‚µ‚½ƒGƒŠƒA‚ÌID
+    /// å°åˆ†ã‘ã«ã—ãŸã‚¨ãƒªã‚¢ã®ID
     /// </summary>
     public int Id => _id;
     /// <summary>
-    /// ƒGƒŠƒA‚²‚Æ‚ÌŠÈˆÕƒ}ƒbƒv‚Ì‰æ‘œB
+    /// ã‚¨ãƒªã‚¢ã”ã¨ã®ç°¡æ˜“ãƒãƒƒãƒ—ã®ç”»åƒã€‚
     /// </summary>
     public string MapSrc => _mapsrc;
 
     /// <summary>
-    /// •À‚×‚éƒGƒŠƒA‚Ìƒf[ƒ^
+    /// ä¸¦ã¹ã‚‹ã‚¨ãƒªã‚¢ã®ãƒ‡ãƒ¼ã‚¿
     /// </summary>
     public IReadOnlyList<AreaDate> AreaDates => _areaDates;
     /// <summary>
-    /// “G‚ÌƒŠƒXƒg
+    /// æ•µã®ãƒªã‚¹ãƒˆ
     /// </summary>
     public IReadOnlyList<BaseStates> EnemyList => _enemyList;
 
 }
 /// <summary>
-/// ƒXƒe[ƒW‚É•À‚ÔƒGƒŠƒAƒf[ƒ^
+/// ã‚¹ãƒ†ãƒ¼ã‚¸ã«ä¸¦ã¶ã‚¨ãƒªã‚¢ãƒ‡ãƒ¼ã‚¿
 /// </summary>
 [System.Serializable]
 public class AreaDate
@@ -122,28 +122,28 @@ public class AreaDate
     [SerializeField] string _nextStageID;
 
     /// <summary>
-    /// Ÿ‚ÌƒXƒe[ƒW‚ÌidA“ü—Í‚³‚ê‚Ä‚È‚¢‚È‚çƒXƒ‹[
-    /// string.split‚Åstring[]‚ÉŠi”[‚µ‚Ä•ªŠò‚Å‚«‚éB
-    /// u,v‚Å‹æØ‚Á‚Ä“ü—ÍB
+    /// æ¬¡ã®ã‚¹ãƒ†ãƒ¼ã‚¸ã®idã€å…¥åŠ›ã•ã‚Œã¦ãªã„ãªã‚‰ã‚¹ãƒ«ãƒ¼
+    /// string.splitã§string[]ã«æ ¼ç´ã—ã¦åˆ†å²ã§ãã‚‹ã€‚
+    /// ã€Œ,ã€ã§åŒºåˆ‡ã£ã¦å…¥åŠ›ã€‚
     /// </summary>
     public string NextStageID => _nextStageID;
     /// <summary>
-    /// ‹xŒe’n“_‚©‚Ç‚¤‚©
+    /// ä¼‘æ†©åœ°ç‚¹ã‹ã©ã†ã‹
     /// </summary>
     public bool Rest => _rest;
     /// <summary>
-    /// ”wŒi‰æ‘œ‚Ìƒtƒ@ƒCƒ‹–¼
+    /// èƒŒæ™¯ç”»åƒã®ãƒ•ã‚¡ã‚¤ãƒ«å
     /// </summary>
     public string BackSrc => _backsrc;
     /// <summary>
-    /// Ÿ‚ÌƒGƒŠƒAIDA“ü—Í‚³‚ê‚Ä‚È‚¢‚È‚çƒXƒ‹[
-    /// string.split‚Åstring[]‚ÉŠi”[‚µ‚Ä•ªŠò‚Å‚«‚éB
-    /// u,v‚Å‹æØ‚Á‚Ä“ü—ÍB
+    /// æ¬¡ã®ã‚¨ãƒªã‚¢IDã€å…¥åŠ›ã•ã‚Œã¦ãªã„ãªã‚‰ã‚¹ãƒ«ãƒ¼
+    /// string.splitã§string[]ã«æ ¼ç´ã—ã¦åˆ†å²ã§ãã‚‹ã€‚
+    /// ã€Œ,ã€ã§åŒºåˆ‡ã£ã¦å…¥åŠ›ã€‚
     /// </summary>
     public string NextID => _nextID;/// <summary>
-    /// Ÿ‚ÌƒGƒŠƒA‘I‘ğˆ‚Ìƒ{ƒ^ƒ“•¶ÍA“ü—Í‚³‚ê‚Ä‚È‚¢‚È‚çƒXƒ‹[
-    /// string.split‚Åstring[]‚ÉŠi”[‚µ‚Ä•ªŠò‚Å‚«‚éB
-    /// u,v‚Å‹æØ‚Á‚Ä“ü—ÍB
+    /// æ¬¡ã®ã‚¨ãƒªã‚¢é¸æŠè‚¢ã®ãƒœã‚¿ãƒ³æ–‡ç« ã€å…¥åŠ›ã•ã‚Œã¦ãªã„ãªã‚‰ã‚¹ãƒ«ãƒ¼
+    /// string.splitã§string[]ã«æ ¼ç´ã—ã¦åˆ†å²ã§ãã‚‹ã€‚
+    /// ã€Œ,ã€ã§åŒºåˆ‡ã£ã¦å…¥åŠ›ã€‚
     /// </summary>
     public string NextIDString => _nextIDString;
 

@@ -1,7 +1,7 @@
 using UnityEngine;
 
-    public class TabContents : MonoBehaviour//tabContentsChanger‚ÌƒNƒ‰ƒX‚É“o˜^‚·‚éMonoBehavior
-    {//•¡G‚È‘€ì‚·‚é‚È‚ç‚±‚ÌƒNƒ‰ƒX‚Åì‚éB
+    public class TabContents : MonoBehaviour//tabContentsChangerã®ã‚¯ãƒ©ã‚¹ã«ç™»éŒ²ã™ã‚‹MonoBehavior
+    {//è¤‡é›‘ãªæ“ä½œã™ã‚‹ãªã‚‰ã“ã®ã‚¯ãƒ©ã‚¹ã§ä½œã‚‹ã€‚
         public void SetActive(bool isActive)
         {
             gameObject.SetActive(isActive);

@@ -6,11 +6,11 @@ using UnityEngine;
 public class BaseSkill
 {
     /// <summary>
-    /// スキルの精神属性
+    /// 繧ｹ繧ｭ繝ｫ縺ｮ邊ｾ逾槫ｱ樊ｧ
     /// </summary>
     public SpiritualProperty SkillSpiritual {  get; private set; }
     /// <summary>
-    /// スキルの物理属性
+    /// 繧ｹ繧ｭ繝ｫ縺ｮ迚ｩ逅�螻樊ｧ
     /// </summary>
     public PhysicalProperty SkillPhysical { get; private set; }
 

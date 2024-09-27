@@ -4,45 +4,45 @@ using UnityEngine;
 using R3;
 
 /// <summary>
-/// Šî‘bó‘Ô‚Ì’ŠÛƒNƒ‰ƒX
+/// åŸºç¤çŠ¶æ…‹ã®æŠ½è±¡ã‚¯ãƒ©ã‚¹
 /// </summary>
-public@abstract class BasePassive 
+publicã€€abstract class BasePassive 
 {
     /// <summary>
-    /// PassivePower‚Ìİ’è’l
+    /// PassivePowerã®è¨­å®šå€¤
     /// </summary>
     public int MaxPassivePower;
 
     /// <summary>
-    /// ‚±‚Ì’l‚ÍƒpƒbƒVƒu‚Ì"d‚ËŠ|‚¯" ¨&lt;v‚¦’¹4&gt;
+    /// ã“ã®å€¤ã¯ãƒ‘ãƒƒã‚·ãƒ–ã®"é‡ã­æ›ã‘" â†’&lt;æ€ãˆé³¥4&gt;
     /// </summary>
     public int PassivePower { get; private set; }
 
     /// <summary>
-    /// ƒpƒbƒVƒu‚ğd‚ËŠ|‚¯‚·‚éB
+    /// ãƒ‘ãƒƒã‚·ãƒ–ã‚’é‡ã­æ›ã‘ã™ã‚‹ã€‚
     /// </summary>
     /// <param name="addpoint"></param>
     public void AddPassivePower(int addpoint)
     {
         PassivePower += addpoint;
-        if(PassivePower > MaxPassivePower)PassivePower = MaxPassivePower;//İ’è’l‚ğ’´‚¦‚½‚çİ’è’l‚É‚·‚é
+        if(PassivePower > MaxPassivePower)PassivePower = MaxPassivePower;//è¨­å®šå€¤ã‚’è¶…ãˆãŸã‚‰è¨­å®šå€¤ã«ã™ã‚‹
     }
 
     /// <summary>
-    /// “K‡‚·‚éí•Ê‚ÌƒŠƒXƒgB@í•Ê‚Íˆêlˆê‚Â‚È‚Ì‚ÅA”»’fŠî€‚Í‚±‚ê‚¾‚¯‚ÅOK
+    /// é©åˆã™ã‚‹ç¨®åˆ¥ã®ãƒªã‚¹ãƒˆã€‚ã€€ç¨®åˆ¥ã¯ä¸€äººä¸€ã¤ãªã®ã§ã€åˆ¤æ–­åŸºæº–ã¯ã“ã‚Œã ã‘ã§OK
     /// </summary>
     public List<CharacterType> TypeOkList;
 
-    //“K‡‚·‚éƒLƒƒƒ‰‘®«(¸_‘®«)‚ÌƒŠƒXƒg@
+    //é©åˆã™ã‚‹ã‚­ãƒ£ãƒ©å±æ€§(ç²¾ç¥å±æ€§)ã®ãƒªã‚¹ãƒˆã€€
     public List<SpiritualProperty> CharaPropertyOKList;
 
     /// <summary>
-    /// •àsŒø‰Ê@basestates‚Åapplypassive‚Åw“Ç‚·‚é
+    /// æ­©è¡Œæ™‚åŠ¹æœã€€basestatesã§applypassiveã§è³¼èª­ã™ã‚‹
     /// </summary>
     public abstract void WalkEffect();
     
     /// <summary>
-    /// í“¬Œø‰Ê@basestates‚Åapplypassive‚Åw“Ç‚·‚é
+    /// æˆ¦é—˜æ™‚åŠ¹æœã€€basestatesã§applypassiveã§è³¼èª­ã™ã‚‹
     /// </summary>
     public abstract void BattleEffect();
 }

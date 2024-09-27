@@ -8,15 +8,15 @@ public class TabContentsChanger<TView, TKind>
     where TView : MonoBehaviour
     where TKind : Enum
 //https://qiita.com/mikuri8/items/cc807a6c8de2ca7cb95e
-//‚±‚ÌƒWƒFƒlƒŠƒbƒNƒNƒ‰ƒX‚Íˆµ‚¦‚é—ñ‹“‘Ì‚ÉView(UI)‚ğ©—R‚Éw’èo—ˆ‚é‚æ‚¤‚É‚·‚éˆ×‚Ì‚à‚ÌH
+//ã“ã®ã‚¸ã‚§ãƒãƒªãƒƒã‚¯ã‚¯ãƒ©ã‚¹ã¯æ‰±ãˆã‚‹åˆ—æŒ™ä½“ã«View(UI)ã‚’è‡ªç”±ã«æŒ‡å®šå‡ºæ¥ã‚‹ã‚ˆã†ã«ã™ã‚‹ç‚ºã®ã‚‚ã®ï¼Ÿ
 {
     [Serializable]
-    public class ContentHolder//ƒŠƒXƒg‰»‚µ‚Äg—p‚·‚éˆ×‚ÉƒNƒ‰ƒX‚Æ‚µ‚Äì¬
+    public class ContentHolder//ãƒªã‚¹ãƒˆåŒ–ã—ã¦ä½¿ç”¨ã™ã‚‹ç‚ºã«ã‚¯ãƒ©ã‚¹ã¨ã—ã¦ä½œæˆ
     {
-        public TView View;//MonoBehavior‚È‚ç‰½‚Å‚àó‚¯“ü‚ê‚é‚Ì‚ÅAMonoBehavior‚ğ‚à‚Á‚½GameObject‚ğ‰½‚Å‚àSerializeField‚©‚ç“o˜^‚Å‚«‚é
+        public TView View;//MonoBehaviorãªã‚‰ä½•ã§ã‚‚å—ã‘å…¥ã‚Œã‚‹ã®ã§ã€MonoBehaviorã‚’ã‚‚ã£ãŸGameObjectã‚’ä½•ã§ã‚‚SerializeFieldã‹ã‚‰ç™»éŒ²ã§ãã‚‹
         public TKind Kind;
 
-        public bool IsSelect { get; private set; }//‚±‚Ì‘‚«•û‚ÍŒø—¦‚ª‚¢‚¢ƒvƒƒpƒeƒB‚Ì‘‚«•û‚¾‚Æv‚¤B
+        public bool IsSelect { get; private set; }//ã“ã®æ›¸ãæ–¹ã¯åŠ¹ç‡ãŒã„ã„ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã®æ›¸ãæ–¹ã ã¨æ€ã†ã€‚
 
         public void SetSelect(bool select)
         {
@@ -29,53 +29,53 @@ public class TabContentsChanger<TView, TKind>
     [SerializeField]
     private ToggleButtonGroup _toggleButtonGroup;
 
-    private Subject<(ContentHolder, bool)> _onChangeStateSubject = new();//ƒoƒbƒLƒ“ƒOƒtƒB[ƒ‹ƒh??
-    public Observable<(ContentHolder content, bool active)> OnChangeStateAsObservable => _onChangeStateSubject;//ŒöŠJƒtƒB[ƒ‹ƒh?@ƒ‰ƒ€ƒ_‚Ågetê—pƒvƒƒpƒeƒB
+    private Subject<(ContentHolder, bool)> _onChangeStateSubject = new();//ãƒãƒƒã‚­ãƒ³ã‚°ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰??
+    public Observable<(ContentHolder content, bool active)> OnChangeStateAsObservable => _onChangeStateSubject;//å…¬é–‹ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰?ã€€ãƒ©ãƒ ãƒ€ã§getå°‚ç”¨ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£
   
     public void Initialize()
     {
         for(int i = 0; i<Contents.Count; i++)
         {
-            //ƒ{ƒ^ƒ“‚ÆƒRƒ“ƒeƒ“ƒc‚ÌƒCƒ“ƒfƒbƒNƒX‚Í“ˆê‚µ‚Ä‚¢‚é‚Æ‚¢‚¤‘O’ñ@«‚ÅƒRƒ“ƒeƒ“ƒc‚Æƒ{ƒ^ƒ“‚É“¯‚¶ƒCƒ“ƒfƒbƒNƒX‚ğ“n‚µ‚Ä‚¢‚éB
-            var content = Contents[i];//‘æˆêƒ‹[ƒv‚ÌŠY“–‚ÌƒRƒ“ƒeƒ“ƒcƒzƒ‹ƒ_[
-            _toggleButtonGroup.OnClickAsObservable(i)//‘æˆêƒ‹[ƒv‚Å‰ñ‚éƒ{ƒ^ƒ“‚É“o˜^‚·‚éƒNƒŠƒbƒN‚ÌƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^‚·‚éB
+            //ãƒœã‚¿ãƒ³ã¨ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã¯çµ±ä¸€ã—ã¦ã„ã‚‹ã¨ã„ã†å‰æã€€â†“ã§ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã¨ãƒœã‚¿ãƒ³ã«åŒã˜ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’æ¸¡ã—ã¦ã„ã‚‹ã€‚
+            var content = Contents[i];//ç¬¬ä¸€ãƒ«ãƒ¼ãƒ—ã®è©²å½“ã®ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ãƒ›ãƒ«ãƒ€ãƒ¼
+            _toggleButtonGroup.OnClickAsObservable(i)//ç¬¬ä¸€ãƒ«ãƒ¼ãƒ—ã§å›ã‚‹ãƒœã‚¿ãƒ³ã«ç™»éŒ²ã™ã‚‹ã‚¯ãƒªãƒƒã‚¯æ™‚ã®ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã‚’ç™»éŒ²ã™ã‚‹ã€‚
                 .Subscribe(
                 _ =>
                 {
-                    //‚±‚Ìforeachƒ‹[ƒv‚ÍA‚ ‚éƒ{ƒ^ƒ“‚ğ‰Ÿ‚µ‚½‚Æ‚«‚Ì‘S‚Ä‚ÌƒRƒ“ƒeƒ“ƒc(ƒ{ƒ^ƒ“‚ğ‰Ÿ‚·‚Æ•Ï‚í‚é“z)
-                    //‚Ì‹““®‚ğ—\‚ß‚Ç‚¤“®‚­‚©‚±‚±‚Å“o˜^‚µ‚Ä‚éA‚Á‚ÄƒCƒ[ƒW
+                    //ã“ã®foreachãƒ«ãƒ¼ãƒ—ã¯ã€ã‚ã‚‹ãƒœã‚¿ãƒ³ã‚’æŠ¼ã—ãŸã¨ãã®å…¨ã¦ã®ã‚³ãƒ³ãƒ†ãƒ³ãƒ„(ãƒœã‚¿ãƒ³ã‚’æŠ¼ã™ã¨å¤‰ã‚ã‚‹å¥´)
+                    //ã®æŒ™å‹•ã‚’äºˆã‚ã©ã†å‹•ãã‹ã“ã“ã§ç™»éŒ²ã—ã¦ã‚‹ã€ã£ã¦ã‚¤ãƒ¡ãƒ¼ã‚¸
 
-                    foreach (var one in Contents)//ƒRƒ“ƒeƒ“ƒc‘S‚Ä‚ÉÀs
+                    foreach (var one in Contents)//ã‚³ãƒ³ãƒ†ãƒ³ãƒ„å…¨ã¦ã«å®Ÿè¡Œ
                     {
-                        bool active = one.Kind.Equals(content.Kind);//‘I‚ñ‚¾ƒ{ƒ^ƒ“‚É‘Î‰‚·‚éƒRƒ“ƒeƒ“ƒc‚Æƒ‹[ƒv‚µ‚Ä‚éƒRƒ“ƒeƒ“ƒc‚ªˆê’v‚µ‚Ä‚é‚©
-                        _onChangeStateSubject.OnNext((one, active));//•ÏXƒR[ƒ‹ƒoƒbƒN‚ğ‘æ“ñƒ‹[ƒv‚ÌƒRƒ“ƒeƒ“ƒcƒzƒ‹ƒ_[‚Æã‚Ì”äŠrŒ‹‰Ê‚ğ“n‚·B
-                        //ˆê‚Â‚Ìƒ{ƒ^ƒ“‚ğ‰Ÿ‚µ‚½Û‚É‘S‚Ä‚ÌƒRƒ“ƒeƒ“ƒc‚ÉÀs‚·‚é
+                        bool active = one.Kind.Equals(content.Kind);//é¸ã‚“ã ãƒœã‚¿ãƒ³ã«å¯¾å¿œã™ã‚‹ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã¨ãƒ«ãƒ¼ãƒ—ã—ã¦ã‚‹ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ãŒä¸€è‡´ã—ã¦ã‚‹ã‹
+                        _onChangeStateSubject.OnNext((one, active));//å¤‰æ›´ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã‚’ç¬¬äºŒãƒ«ãƒ¼ãƒ—ã®ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ãƒ›ãƒ«ãƒ€ãƒ¼ã¨ä¸Šã®æ¯”è¼ƒçµæœã‚’æ¸¡ã™ã€‚
+                        //ä¸€ã¤ã®ãƒœã‚¿ãƒ³ã‚’æŠ¼ã—ãŸéš›ã«å…¨ã¦ã®ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã«å®Ÿè¡Œã™ã‚‹
 
-                        one.SetSelect(active);//‘æ“ñƒ‹[ƒv‚ÌisSelect‚É”äŠrŒ‹‰Êbool‚ğ“n‚·
-                        //‘I‘ğ‚³‚ê‚Ä‚é•¨‚¾‚¯‚ÉContentHolder‚Ìisselect‚ªtrue‚É‚È‚é‚æ‚¤‚É‚È‚Á‚Ä‚é
+                        one.SetSelect(active);//ç¬¬äºŒãƒ«ãƒ¼ãƒ—ã®isSelectã«æ¯”è¼ƒçµæœboolã‚’æ¸¡ã™
+                        //é¸æŠã•ã‚Œã¦ã‚‹ç‰©ã ã‘ã«ContentHolderã®isselectãŒtrueã«ãªã‚‹ã‚ˆã†ã«ãªã£ã¦ã‚‹
                     }
-                }).AddTo(content.View);//‘æˆêƒ‹[ƒv‚ÌŠY“–ƒRƒ“ƒeƒ“ƒcƒzƒ‹ƒ_[‚ÌView‚ÉŒ‹‚Ñ‚Â‚¯‚é
+                }).AddTo(content.View);//ç¬¬ä¸€ãƒ«ãƒ¼ãƒ—ã®è©²å½“ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ãƒ›ãƒ«ãƒ€ãƒ¼ã®Viewã«çµã³ã¤ã‘ã‚‹
         }
     }
     /// <summary>
-    /// w’èƒCƒ“ƒfƒbƒNƒX‚Ì‘I‘ğ
+    /// æŒ‡å®šã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã®é¸æŠ
     /// </summary>
     public void Select(int index)
     {
-        _toggleButtonGroup.SelectToggleIndex(index);//ƒOƒ‹[ƒvŠÇ—ƒNƒ‰ƒX‚©‚ç‘I‘ğ‚·‚é
+        _toggleButtonGroup.SelectToggleIndex(index);//ã‚°ãƒ«ãƒ¼ãƒ—ç®¡ç†ã‚¯ãƒ©ã‚¹ã‹ã‚‰é¸æŠã™ã‚‹
         for(int i=0; i<Contents.Count; i++)
         {
-            Contents[i].SetSelect(i == index);//ƒRƒ“ƒeƒ“ƒc‚ÌŠY“–‚ğƒZƒŒƒNƒg‚·‚é
-            _onChangeStateSubject.OnNext((Contents[i], i == index));//ƒRƒ“ƒeƒ“ƒc‚ÆƒAƒNƒeƒBƒu‚ğ•Ô‚µ‚ÄÀs‚·‚éB
+            Contents[i].SetSelect(i == index);//ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã®è©²å½“ã‚’ã‚»ãƒ¬ã‚¯ãƒˆã™ã‚‹
+            _onChangeStateSubject.OnNext((Contents[i], i == index));//ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã¨ã‚¢ã‚¯ãƒ†ã‚£ãƒ–ã‚’è¿”ã—ã¦å®Ÿè¡Œã™ã‚‹ã€‚
         }
     }
 
     /// <summary>
-    /// Œ»İƒAƒNƒeƒBƒu‚ÈContentHolder‚Ìæ“¾
+    /// ç¾åœ¨ã‚¢ã‚¯ãƒ†ã‚£ãƒ–ãªContentHolderã®å–å¾—
     /// </summary>
     /// <returns></returns>
     public ContentHolder GetActiveContent()
     {
-        return Contents.Find(content => content.IsSelect);//list‚Ìfind‚ÅvarÈ—ª‚Ìƒ‰ƒ€ƒ_‚Å‚»‚ê‚ª‡’v‚·‚é‚È‚çA‚»‚ê‚ğ•Ô‚·B
+        return Contents.Find(content => content.IsSelect);//listã®findã§varçœç•¥ã®ãƒ©ãƒ ãƒ€ã§ãã‚ŒãŒåˆè‡´ã™ã‚‹ãªã‚‰ã€ãã‚Œã‚’è¿”ã™ã€‚
     }
 }

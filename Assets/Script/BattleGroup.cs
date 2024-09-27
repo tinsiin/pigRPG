@@ -1,30 +1,32 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using RandomExtensions;
 using UnityEngine;
 
 
 /// <summary>
-/// ƒp[ƒeƒB[‘®«
+/// ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§
 /// </summary>
 public enum PartyProperty
 {
     TrashGroup,HolyGroup,MelaneGroup,Odradeks,Flowerees
-        //”n­‹¤A¹í(•K€A–Ú“Ig–½)AƒƒŒ[ƒ“ƒY(‰¤“¹“I)AƒIƒhƒ‰ƒfƒNƒX(’˜‚©‚ç—£‚ê‚Ä‚éA–Ú‚ğŠJ‚¢‚Ä‰äX‚©‚ç—£‚ê‚é‚æ‚¤‚ÉƒRƒƒRƒ‚Æ)A‰Ô÷(ƒIƒTƒŒ)
+        //é¦¬é¹¿å…±ã€è–æˆ¦(å¿…æ­»ã€ç›®çš„ä½¿å‘½)ã€ãƒ¡ãƒ¬ãƒ¼ãƒ³ã‚º(ç‹é“çš„)ã€ã‚ªãƒ‰ãƒ©ãƒ‡ã‚¯ã‚¹(ç§©åºã‹ã‚‰é›¢ã‚Œã¦ã‚‹ã€ç›®ã‚’é–‹ã„ã¦æˆ‘ã€…ã‹ã‚‰é›¢ã‚Œã‚‹ã‚ˆã†ã«ã‚³ãƒ­ã‚³ãƒ­ã¨)ã€èŠ±æ¨¹(ã‚ªã‚µãƒ¬)
 }
 /// <summary>
-/// í‚¢‚ğ‚·‚éƒp[ƒeƒB[‚ÌƒNƒ‰ƒX
+/// æˆ¦ã„ã‚’ã™ã‚‹ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼ã®ã‚¯ãƒ©ã‚¹
 /// </summary>
 public  class BattleGroup
 {
     /// <summary>
-    /// ƒp[ƒeƒB[‘®«
+    /// ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§
     /// </summary>
     public PartyProperty OurImpression;
 
     private List<BaseStates> _ours;
 
     /// <summary>
-    /// ƒRƒ“ƒXƒgƒ‰ƒNƒ^
+    /// ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
     /// </summary>
     public BattleGroup(List<BaseStates> ours, PartyProperty ourImpression)
     {
@@ -33,66 +35,97 @@ public  class BattleGroup
     }
 
     /// <summary>
-    /// W’c‚ÌlˆõƒŠƒXƒg
+    /// é›†å›£ã®äººå“¡ãƒªã‚¹ãƒˆ
     /// </summary>
     public IReadOnlyList<BaseStates> Ours => _ours;
 
+    
+
     /// <summary>
-    /// —^‚¦‚ç‚ê‚½“G‚ÌƒŠƒXƒg‚ğŠî‚É¡‰ñ‚Ì“G‚ğŒˆ‚ß‚éA
-    /// ”Ä—p“I‚È‘Š«‚Å“G‚ğW‚ß‚ÄƒŠƒXƒg‚Å•Ô‚·Ã“IŠÖ”
+    /// ä¸ãˆã‚‰ã‚ŒãŸæ•µã®ãƒªã‚¹ãƒˆã‚’åŸºã«ä»Šå›ã®æ•µã‚’æ±ºã‚ã‚‹ã€
+    /// æ±ç”¨çš„ãªç›¸æ€§ã§æ•µã‚’é›†ã‚ã¦ãƒªã‚¹ãƒˆã§è¿”ã™é™çš„é–¢æ•°
     /// </summary>
     public static BattleGroup EnemyCollectAI(List<NormalEnemy> targetList)
     {
-        List<BaseStates> ResultList = new List<BaseStates>();//•Ô‚·—p‚ÌƒŠƒXƒg
-        PartyProperty ourImpression = PartyProperty.TrashGroup;//‰Šú’l‚Í”n­‹¤
+        List<NormalEnemy> ResultList = new List<NormalEnemy>();//è¿”ã™ç”¨ã®ãƒªã‚¹ãƒˆ
+        PartyProperty ourImpression = PartyProperty.TrashGroup;//åˆæœŸå€¤ã¯é¦¬é¹¿å…±
+        
+        //æœ€åˆã®ä¸€äººã¯ãƒ©ãƒ³ãƒ€ãƒ ã§é¸ã¶
+        var rndIndex = Random.Range(0, targetList.Count - 1);//ãƒ©ãƒ³ãƒ€ãƒ ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹æŒ‡å®š
+        var ReferenceOne= targetList[rndIndex];//æŠ½å‡º
+        targetList.RemoveAt(rndIndex);//å‰Šé™¤
+        ResultList.Add(ReferenceOne);//è¿½åŠ 
 
-        //Å‰‚Ìˆêl‚Íƒ‰ƒ“ƒ_ƒ€‚Å‘I‚Ô
-        var rndIndex = Random.Range(0, targetList.Count - 1);//ƒ‰ƒ“ƒ_ƒ€ƒCƒ“ƒfƒbƒNƒXw’è
-        var ReferenceOne= targetList[rndIndex];//’Šo
-        targetList.RemoveAt(rndIndex);//íœ
-        ResultList.Add(ReferenceOne);//’Ç‰Á
+        //æ•°åˆ¤å®š(ä¸€äººåˆ¤å®š)ã€€
+        if(NormalEnemy.LonelyMatchUp(ReferenceOne.MyImpression)){
 
-        //””»’è(ˆêl”»’è)@‚±‚±‚Ìifˆ—‚Åwhile‚ğŠÜ‚Ş
-        if(NormalEnemy.LonelyMatchUp(ReferenceOne.MyImpression)>0){
+            //ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§ã‚’æ±ºã‚ã‚‹ã€€ä¸€äººãªã®ã§ãã®ä¸€äººã®å±æ€§ã‚’ãã®ã¾ã¾ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§ã«ã™ã‚‹
+            ourImpression = NormalEnemy.EnemyLonelyPartyImpression[ReferenceOne.MyImpression];//()ã§ã¯ãªã[]ã§ã‚¢ã‚¯ã‚»ã‚¹ã™ã‚‹ã“ã¨ã«æ³¨æ„
 
-            //ƒp[ƒeƒB[‘®«‚ğŒˆ‚ß‚é@ˆêl‚È‚Ì‚Å‚»‚Ìˆêl‚Ì‘®«‚ğ‚»‚Ì‚Ü‚Üƒp[ƒeƒB[‘®«‚É‚·‚é
-
-            return new BattleGroup(ResultList,ourImpression) ;//ˆêl‚¾‚¯‚Ìê‡‚Í‚»‚Ì‚Ü‚Ü•Ô‚·      
+            return new BattleGroup(ResultList.Cast<BaseStates>().ToList(),ourImpression) ;//whileæ–‡ã«å…¥ã‚‰ãšã«è¿”ã™  
         }
 
         while (true)
         {
-            //‚Ü‚¸‹á–¡‚·‚é‰Á“ü‘ÎÛ‚ğƒ‰ƒ“ƒ_ƒ€‚É‘I‚Ô
-            var targetIndex = Random.Range(0, targetList.Count - 1);//ƒ‰ƒ“ƒ_ƒ€‚ÅƒCƒ“ƒfƒbƒNƒXw’è
-            int TypePer;//í•Ê‚Ì‘Š«’l
-            int ImpPer;//ˆóÛ‚Ì‘Š«’l
-            int okCount = 0;//“K‡”
+            //ã¾ãšåŸå‘³ã™ã‚‹åŠ å…¥å¯¾è±¡ã‚’ãƒ©ãƒ³ãƒ€ãƒ ã«é¸ã¶
+            var targetIndex = Random.Range(0, targetList.Count - 1);//ãƒ©ãƒ³ãƒ€ãƒ ã§ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹æŒ‡å®š
+            int okCount = 0;//é©åˆæ•° ã“ã‚ŒãŒResultList.Countã¨åŒã˜ã«ãªã£ãŸã‚‰åŠ å…¥ã•ã›ã‚‹
 
-            foreach(var one in ResultList)//Šù‚É‘I‚Î‚ê‚½“G‘Sˆõ‚Æ‚Ì‘Š«‚ğŒ©‚é
-            {
-                //í•Ê“¯m‚Ì”»’è if•¶“à‚Å•Ï”‚É‘ã“ü‚Å‚«‚é
-                if ((TypePer = NormalEnemy.TypeMatchUp(one.MyType, targetList[targetIndex].MyType)) > 0)
+            for (int i = 0; i < ResultList.Count; i++)//æ—¢ã«é¸ã°ã‚ŒãŸæ•µå…¨å“¡ã¨ã®ç›¸æ€§ã‚’è¦‹ã‚‹
+            {//foræ–‡ã§åˆ¤æ–­ã—ãªã„ã¨ç¾åœ¨ã®é…åˆ—ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’ç›¸æ€§å€¤ç”¨ã®é…åˆ—ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹æŒ‡å®šã«ä½¿ãˆãªã„
+                //ç¨®åˆ¥åŒå£«ã®åˆ¤å®š ifæ–‡å†…ã§å¤‰æ•°ã«ä»£å…¥ã§ãã‚‹
+                if ((NormalEnemy.TypeMatchUp(ResultList[i].MyType, targetList[targetIndex].MyType)) )
                 {
-                    //‘®«“¯m‚Ì”»’è@ãƒNƒŠƒA‚µ‚½‚ç
-                    if ((ImpPer = NormalEnemy.ImpressionMatchUp(one.MyImpression, targetList[targetIndex].MyImpression)) > 0)
+                    //å±æ€§åŒå£«ã®åˆ¤å®šã€€ä¸Šã‚¯ãƒªã‚¢ã—ãŸã‚‰
+                    if ((NormalEnemy.ImpressionMatchUp(ResultList[i].MyImpression, targetList[targetIndex].MyImpression)) )
                     {
-                        okCount++;//“K‡”‚ğ‘‚â‚·
+                        okCount++;//é©åˆæ•°ã‚’å¢—ã‚„ã™
                     }
                 }
             }
-            //foreach‚Å‘Sˆõ‚Æ‚Ì‘Š«‚ğŒ©‚½‚çA‰Á“ü‚³‚¹‚éB
-            if (okCount == ResultList.Count)//‘Sˆõ‚Æ‚Ì‘Š«‚ª‡’v‚µ‚½‚ç
+            //foreachã§å…¨å“¡ã¨ã®ç›¸æ€§ã‚’è¦‹ãŸã‚‰ã€åŠ å…¥ã•ã›ã‚‹ã€‚
+            if (okCount == ResultList.Count)//å…¨å“¡ã¨ã®ç›¸æ€§ãŒåˆè‡´ã—ãŸã‚‰
             {
-                ResultList.Add(targetList[targetIndex]);//’Ç‰Á
-                targetList.RemoveAt(targetIndex);//íœ
+                ResultList.Add(targetList[targetIndex]);//çµæœã®ãƒªã‚¹ãƒˆã«è¿½åŠ 
+                targetList.RemoveAt(targetIndex);//å€™è£œãƒªã‚¹ãƒˆã‹ã‚‰å‰Šé™¤
             }
 
-            //””»’è
+            //æ•°åˆ¤å®š
+            if (ResultList.Count == 1)//ä¸€äººã ã£ãŸã‚‰(ã¾ã ä¸€äººã‚‚è¦‹ã¤ã‘ã‚Œã¦ãªã„å ´åˆ)
+            {
+                if (RandomEx.Shared.NextInt(100) < 88)//88%ã®ç¢ºç‡ã§ä¸€äººã§çµ‚ã‚ã‚‹è¨ˆç®—ã«å…¥ã‚‹ã€‚
+                {
+                    //æ•°åˆ¤å®š(ä¸€äººåˆ¤å®š)ã€€
+                    if(NormalEnemy.LonelyMatchUp(ReferenceOne.MyImpression)){
 
-            if(ResultList.Count>=3) break;//Ol‚É‚È‚Á‚½‚ç‹­§I—¹
+                        //ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§ã‚’æ±ºã‚ã‚‹ã€€ä¸€äººãªã®ã§ãã®ä¸€äººã®å±æ€§ã‚’ãã®ã¾ã¾ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§ã«ã™ã‚‹
+                        ourImpression = NormalEnemy.EnemyLonelyPartyImpression[ReferenceOne.MyImpression];//()ã§ã¯ãªã[]ã§ã‚¢ã‚¯ã‚»ã‚¹ã™ã‚‹ã“ã¨ã«æ³¨æ„
 
-        }
+                        break;
+                    }
+                }
+            }
 
-        return new BattleGroup(ResultList, ourImpression);
-    }    
+            if (ResultList.Count == 2)//äºŒäººã ã£ãŸã‚‰ä¸‰äººç›®ã®åŠ å…¥ã‚’æ±ºã‚ã‚‹
+            {
+                if (RandomEx.Shared.NextInt(100) < 65)//ã“ã®ç¢ºç‡ã§çµ‚ã‚ã‚‹ã€‚
+                {
+                    //ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§ã‚’æ±ºã‚ã‚‹
+                    ourImpression = NormalEnemy.calculatePartyProperty(ResultList);
+                    break;
+                }
+            }
+            
+            if(ResultList.Count>=3)
+            {
+                //ãƒ‘ãƒ¼ãƒ†ã‚£ãƒ¼å±æ€§ã‚’æ±ºã‚ã‚‹
+                ourImpression = NormalEnemy.calculatePartyProperty(ResultList);
+                break;//ä¸‰äººã«ãªã£ãŸã‚‰å¼·åˆ¶çµ‚äº†
+            } 
+    }
+
+        
+
+        return new BattleGroup(ResultList.Cast<BaseStates>().ToList(), ourImpression);//ãƒãƒˆãƒ«ã‚°ãƒ«ãƒ¼ãƒ—ã‚’åˆ¶ä½œ 
+        }    
 }

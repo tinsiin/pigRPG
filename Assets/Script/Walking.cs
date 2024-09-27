@@ -15,32 +15,33 @@ public class Walking : MonoBehaviour
     [SerializeField] SelectButton SelectButtonPrefab;
     [SerializeField] int SelectBtnSize;
     /// <summary>
-    /// ‘I‘ğˆƒ{ƒ^ƒ“‚ğ“ü‚ê‚éeƒIƒuƒWƒFƒNƒgæ“¾
+    /// é¸æŠè‚¢ãƒœã‚¿ãƒ³ã‚’å…¥ã‚Œã‚‹è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆå–å¾—
     /// </summary>
     [SerializeField] RectTransform SelectButtonArea;
 
-    //Œ»İ‚ÌƒXƒe[ƒW‚ÆƒGƒŠƒA‚Ìƒf[ƒ^‚ğ•Û‘¶‚·‚éŠÖ”
+    //ç¾åœ¨ã®ã‚¹ãƒ†ãƒ¼ã‚¸ã¨ã‚¨ãƒªã‚¢ã®ãƒ‡ãƒ¼ã‚¿ã‚’ä¿å­˜ã™ã‚‹é–¢æ•°
     StageData NowStageData;
     StageCut NowStageCut;
     AreaDate NowAreaData;
     /// <summary>
-    /// ƒGƒŠƒA‘I‘ğƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚é‚Æ•Ô‚Á‚Ä‚­‚éB-1‚Ípush‘Ò‚¿
+    /// ã‚¨ãƒªã‚¢é¸æŠãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚Œã‚‹ã¨è¿”ã£ã¦ãã‚‹ã€‚-1ã¯pushå¾…ã¡
     /// </summary>
     int AreaResponse;
 
     /// <summary>
-    /// ‘I‘ğˆƒ{ƒ^ƒ“‚ÌƒŠƒXƒg
+    /// é¸æŠè‚¢ãƒœã‚¿ãƒ³ã®ãƒªã‚¹ãƒˆ
     /// </summary>
     List<SelectButton> buttons;
     async void Start()
     {
         ps = new PlayersStates();
+        NormalEnemy.csvLoad();//æ•µã®è¾æ›¸ãƒ‡ãƒ¼ã‚¿ã®èª­ã¿è¾¼ã¿
 
-        await walk(0);//Å“K‰»‚Ì‚½‚ßÅIŠJ”­‚Ì’iŠK‚Å‰ŠúUI‚ÌXV‚¾‚¯‚ğ‚·‚é‚æ‚¤‚É‚·‚éB
+        await walk(0);//æœ€é©åŒ–ã®ãŸã‚æœ€çµ‚é–‹ç™ºã®æ®µéšã§åˆæœŸUIã®æ›´æ–°ã ã‘ã‚’ã™ã‚‹ã‚ˆã†ã«ã™ã‚‹ã€‚
     }
 
     /// <summary>
-    /// •às‚·‚éƒ{ƒ^ƒ“
+    /// æ­©è¡Œã™ã‚‹ãƒœã‚¿ãƒ³
     /// </summary>
     public async void OnWalkBtn()
     {
@@ -51,59 +52,59 @@ public class Walking : MonoBehaviour
     }
 
     /// <summary>
-    /// ƒGƒ“ƒJƒEƒ“ƒgˆ—
+    /// ã‚¨ãƒ³ã‚«ã‚¦ãƒ³ãƒˆå‡¦ç†
     /// </summary>
     public async void EnemyEncount()
     {
         
     }
-    async UniTask@walk(int footnumber)//ƒŠƒXƒg‚Ì“à—e‚ğ”½‰f
+    async UniTaskã€€walk(int footnumber)//ãƒªã‚¹ãƒˆã®å†…å®¹ã‚’åæ˜ 
     {
         
-        ps.AddProgress(footnumber);//is“x‚ğ‘‚â‚·B
+        ps.AddProgress(footnumber);//é€²è¡Œåº¦ã‚’å¢—ã‚„ã™ã€‚
         StageDataUpdate();
        
-        if (NowAreaData.Rest)//‹xŒe’n“_‚È‚ç
+        if (NowAreaData.Rest)//ä¼‘æ†©åœ°ç‚¹ãªã‚‰
         {
-           Debug.Log("‚±‚±‚Í‹xŒe’n“_");
+           Debug.Log("ã“ã“ã¯ä¼‘æ†©åœ°ç‚¹");
         }
 
-        if (!string.IsNullOrEmpty(NowAreaData.NextID))//Ÿ‚ÌƒGƒŠƒA‘I‘ğˆ
+        if (!string.IsNullOrEmpty(NowAreaData.NextID))//æ¬¡ã®ã‚¨ãƒªã‚¢é¸æŠè‚¢
         {
-            string[] arr = NowAreaData.NextIDString.Split(",");//‘I‘ğˆ•¶Í‚ğ¬•ª‚¯
-            string[] arr2 = NowAreaData.NextID.Split(",");//‘I‘ğˆ‚ÌID‚ğ¬•ª‚¯
+            string[] arr = NowAreaData.NextIDString.Split(",");//é¸æŠè‚¢æ–‡ç« ã‚’å°åˆ†ã‘
+            string[] arr2 = NowAreaData.NextID.Split(",");//é¸æŠè‚¢ã®IDã‚’å°åˆ†ã‘
             
             ps.SetArea(await CreateAreaButton(arr,arr2));
             ps.ProgressReset();
         }
 
-        if (string.IsNullOrEmpty(NowAreaData.NextStageID))//Ÿ‚ÌƒXƒe[ƒW‚Ö(‘I‘ğˆ‚È‚µ)
+        if (string.IsNullOrEmpty(NowAreaData.NextStageID))//æ¬¡ã®ã‚¹ãƒ†ãƒ¼ã‚¸ã¸(é¸æŠè‚¢ãªã—)
         {
         }
 
         StageDataUpdate();
-        TestProgressUIUpdate();//ƒeƒXƒg—pis“xuiXV
+        TestProgressUIUpdate();//ãƒ†ã‚¹ãƒˆç”¨é€²è¡Œåº¦uiæ›´æ–°
     }
     /// <summary>
-    /// ƒXƒe[ƒWƒf[ƒ^‚ÌXV
+    /// ã‚¹ãƒ†ãƒ¼ã‚¸ãƒ‡ãƒ¼ã‚¿ã®æ›´æ–°
     /// </summary>
     void StageDataUpdate()
     {
-        NowStageData = stages.StageDates[ps.NowStageID];//Œ»İ‚ÌƒXƒe[ƒWƒf[ƒ^
-        NowStageCut = NowStageData.CutArea[ps.NowAreaID];//Œ»İ‚ÌƒGƒŠƒAƒf[ƒ^
-        NowAreaData = NowStageCut.AreaDates[ps.NowProgress];//Œ»İ’n“_
+        NowStageData = stages.StageDates[ps.NowStageID];//ç¾åœ¨ã®ã‚¹ãƒ†ãƒ¼ã‚¸ãƒ‡ãƒ¼ã‚¿
+        NowStageCut = NowStageData.CutArea[ps.NowAreaID];//ç¾åœ¨ã®ã‚¨ãƒªã‚¢ãƒ‡ãƒ¼ã‚¿
+        NowAreaData = NowStageCut.AreaDates[ps.NowProgress];//ç¾åœ¨åœ°ç‚¹
 
-        wui.UIUpdate(NowStageData, NowStageCut, ps);//uiXV
+        wui.UIUpdate(NowStageData, NowStageCut, ps);//uiæ›´æ–°
     }
 
     /// <summary>
-    /// Ÿ‚ÌƒGƒŠƒA‘I‘ğˆ‚Ìƒ{ƒ^ƒ“‚ğ¶¬B
+    /// æ¬¡ã®ã‚¨ãƒªã‚¢é¸æŠè‚¢ã®ãƒœã‚¿ãƒ³ã‚’ç”Ÿæˆã€‚
     /// </summary>
     /// <param name="selectparams"></param>
     public async UniTask<int> CreateAreaButton(string[] stringParams, string[] idParams)
     {
         walkbtn.enabled = false;
-        AreaResponse = -1;//ƒ{ƒ^ƒ“‰ğ“š‚ªi‚Ü‚È‚¢‚æ‚¤–³Œø‰»
+        AreaResponse = -1;//ãƒœã‚¿ãƒ³è§£ç­”ãŒé€²ã¾ãªã„ã‚ˆã†ç„¡åŠ¹åŒ–
         int index = 0;
         //var tasks = new List<UniTask>();
 
@@ -117,7 +118,7 @@ public class Walking : MonoBehaviour
             index++;
         }
 
-        //‰½‚©‚µ‚çƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚Ä•Ô‚³‚ê‚é‚Ü‚Å‘Ò‚Â@:cancellationToken‚Í•¡”‚ ‚éƒIƒvƒVƒ‡ƒ“‚Ì‚¤‚¿ˆê‚Â‚ğ‘I‚Ô\•¶
+        //ä½•ã‹ã—ã‚‰ãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚Œã¦è¿”ã•ã‚Œã‚‹ã¾ã§å¾…ã¤ã€€:cancellationTokenã¯è¤‡æ•°ã‚ã‚‹ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã®ã†ã¡ä¸€ã¤ã‚’é¸ã¶æ§‹æ–‡
         await UniTask.WaitUntil(() => AreaResponse != -1, cancellationToken: this.GetCancellationTokenOnDestroy());
 
         AreaButtonClose();
@@ -128,7 +129,7 @@ public class Walking : MonoBehaviour
         return res;
     }
     /// <summary>
-    /// ƒGƒŠƒA‘I‘ğˆƒ{ƒ^ƒ“‚ğ•Â‚¶‚é
+    /// ã‚¨ãƒªã‚¢é¸æŠè‚¢ãƒœã‚¿ãƒ³ã‚’é–‰ã˜ã‚‹
     /// </summary>
     void AreaButtonClose()
     {
@@ -138,17 +139,17 @@ public class Walking : MonoBehaviour
     }
 
     /// <summary>
-    /// ‘I‘ğˆƒ{ƒ^ƒ“‚É“n‚µ‘I‘ğˆ‚ÌŒ‹‰Ê‚ğ‹L˜^‚·‚é‚½‚ß‚ÌŠÖ”
+    /// é¸æŠè‚¢ãƒœã‚¿ãƒ³ã«æ¸¡ã—é¸æŠè‚¢ã®çµæœã‚’è¨˜éŒ²ã™ã‚‹ãŸã‚ã®é–¢æ•°
     /// </summary>
     void OnAnyClickSelectButton(int returnid)
     {
-        Debug.Log(returnid + "‚ÌƒGƒŠƒAID‚ğ‹L˜^");
-        AreaResponse = returnid;//‚±‚±‚Å0`‚Ì”š‚ğ“n‚³‚ê‚é‚±‚Æ‚Åƒ{ƒ^ƒ“‘I‘ğˆ—‚Ì”ñ“¯Šú‘Ò‚¿‚ªis
+        Debug.Log(returnid + "ã®ã‚¨ãƒªã‚¢IDã‚’è¨˜éŒ²");
+        AreaResponse = returnid;//ã“ã“ã§0ï½ã®æ•°å­—ã‚’æ¸¡ã•ã‚Œã‚‹ã“ã¨ã§ãƒœã‚¿ãƒ³é¸æŠå‡¦ç†ã®éåŒæœŸå¾…ã¡ãŒé€²è¡Œ
     }
 
 
-    //ÅI“I‚Éeyearea‘¤‚Åˆê‹C‚Éeyearea‚ÌUI‚ğˆ—‚·‚é‚Ì‚ğì‚Á‚ÄA‚»‚Á‚¿‚Éƒf[ƒ^‚ğ“n‚·‚æ‚¤‚É‚·‚éB
-    void TestProgressUIUpdate()//ƒeƒXƒg—p
+    //æœ€çµ‚çš„ã«eyeareaå´ã§ä¸€æ°—ã«eyeareaã®UIã‚’å‡¦ç†ã™ã‚‹ã®ã‚’ä½œã£ã¦ã€ãã£ã¡ã«ãƒ‡ãƒ¼ã‚¿ã‚’æ¸¡ã™ã‚ˆã†ã«ã™ã‚‹ã€‚
+    void TestProgressUIUpdate()//ãƒ†ã‚¹ãƒˆç”¨
     {
         tmp.text = "" + ps.NowProgress;
     }
