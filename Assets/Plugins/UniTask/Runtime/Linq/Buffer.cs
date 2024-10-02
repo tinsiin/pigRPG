@@ -7,7 +7,8 @@ namespace Cysharp.Threading.Tasks.Linq
 {
     public static partial class UniTaskAsyncEnumerable
     {
-        public static IUniTaskAsyncEnumerable<IList<TSource>> Buffer<TSource>(this IUniTaskAsyncEnumerable<TSource> source, Int32 count)
+        public static IUniTaskAsyncEnumerable<IList<TSource>> Buffer<TSource>(
+            this IUniTaskAsyncEnumerable<TSource> source, Int32 count)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
             if (count <= 0) throw Error.ArgumentOutOfRange(nameof(count));
@@ -15,7 +16,8 @@ namespace Cysharp.Threading.Tasks.Linq
             return new Buffer<TSource>(source, count);
         }
 
-        public static IUniTaskAsyncEnumerable<IList<TSource>> Buffer<TSource>(this IUniTaskAsyncEnumerable<TSource> source, Int32 count, Int32 skip)
+        public static IUniTaskAsyncEnumerable<IList<TSource>> Buffer<TSource>(
+            this IUniTaskAsyncEnumerable<TSource> source, Int32 count, Int32 skip)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
             if (count <= 0) throw Error.ArgumentOutOfRange(nameof(count));
@@ -103,7 +105,6 @@ namespace Cysharp.Threading.Tasks.Linq
 
                 try
                 {
-
                     LOOP:
                     awaiter = enumerator.MoveNextAsync().GetAwaiter();
                     if (awaiter.IsCompleted)
@@ -174,6 +175,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     return enumerator.DisposeAsync();
                 }
+
                 return default;
             }
         }
@@ -214,7 +216,8 @@ namespace Cysharp.Threading.Tasks.Linq
             Queue<List<TSource>> buffers;
             int index = 0;
 
-            public _BufferSkip(IUniTaskAsyncEnumerable<TSource> source, int count, int skip, CancellationToken cancellationToken)
+            public _BufferSkip(IUniTaskAsyncEnumerable<TSource> source, int count, int skip,
+                CancellationToken cancellationToken)
             {
                 this.source = source;
                 this.count = count;
@@ -259,7 +262,6 @@ namespace Cysharp.Threading.Tasks.Linq
 
                 try
                 {
-
                     LOOP:
                     awaiter = enumerator.MoveNextAsync().GetAwaiter();
                     if (awaiter.IsCompleted)
@@ -338,6 +340,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     return enumerator.DisposeAsync();
                 }
+
                 return default;
             }
         }

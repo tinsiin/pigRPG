@@ -6,7 +6,8 @@ namespace Cysharp.Threading.Tasks.Linq
 {
     public static partial class UniTaskAsyncEnumerable
     {
-        public static IConnectableUniTaskAsyncEnumerable<TSource> Publish<TSource>(this IUniTaskAsyncEnumerable<TSource> source)
+        public static IConnectableUniTaskAsyncEnumerable<TSource> Publish<TSource>(
+            this IUniTaskAsyncEnumerable<TSource> source)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
 
@@ -55,6 +56,7 @@ namespace Cysharp.Threading.Tasks.Linq
                     {
                         trigger.SetResult(enumerator.Current);
                     }
+
                     trigger.SetCompleted();
                 }
                 catch (Exception ex)
@@ -107,7 +109,8 @@ namespace Cysharp.Threading.Tasks.Linq
 
                 if (cancellationToken.CanBeCanceled)
                 {
-                    this.cancellationTokenRegistration = cancellationToken.RegisterWithoutCaptureExecutionContext(CancelDelegate, this);
+                    this.cancellationTokenRegistration =
+                        cancellationToken.RegisterWithoutCaptureExecutionContext(CancelDelegate, this);
                 }
 
                 parent.trigger.Add(this);

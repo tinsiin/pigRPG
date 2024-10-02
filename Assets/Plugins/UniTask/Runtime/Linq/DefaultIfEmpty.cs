@@ -6,14 +6,16 @@ namespace Cysharp.Threading.Tasks.Linq
 {
     public static partial class UniTaskAsyncEnumerable
     {
-        public static IUniTaskAsyncEnumerable<TSource> DefaultIfEmpty<TSource>(this IUniTaskAsyncEnumerable<TSource> source)
+        public static IUniTaskAsyncEnumerable<TSource> DefaultIfEmpty<TSource>(
+            this IUniTaskAsyncEnumerable<TSource> source)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
 
             return new DefaultIfEmpty<TSource>(source, default);
         }
 
-        public static IUniTaskAsyncEnumerable<TSource> DefaultIfEmpty<TSource>(this IUniTaskAsyncEnumerable<TSource> source, TSource defaultValue)
+        public static IUniTaskAsyncEnumerable<TSource> DefaultIfEmpty<TSource>(
+            this IUniTaskAsyncEnumerable<TSource> source, TSource defaultValue)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
 
@@ -56,7 +58,8 @@ namespace Cysharp.Threading.Tasks.Linq
             IUniTaskAsyncEnumerator<TSource> enumerator;
             UniTask<bool>.Awaiter awaiter;
 
-            public _DefaultIfEmpty(IUniTaskAsyncEnumerable<TSource> source, TSource defaultValue, CancellationToken cancellationToken)
+            public _DefaultIfEmpty(IUniTaskAsyncEnumerable<TSource> source, TSource defaultValue,
+                CancellationToken cancellationToken)
             {
                 this.source = source;
                 this.defaultValue = defaultValue;
@@ -134,9 +137,9 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     return enumerator.DisposeAsync();
                 }
+
                 return default;
             }
         }
     }
-
 }

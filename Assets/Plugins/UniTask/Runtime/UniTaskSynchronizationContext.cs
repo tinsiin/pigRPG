@@ -44,6 +44,7 @@ namespace Cysharp.Threading.Tasks
                         Array.Copy(waitingList, newArray, waitingListCount);
                         waitingList = newArray;
                     }
+
                     waitingList[waitingListCount] = new Callback(d, state);
                     waitingListCount++;
                 }
@@ -59,6 +60,7 @@ namespace Cysharp.Threading.Tasks
                         Array.Copy(actionList, newArray, actionListCount);
                         actionList = newArray;
                     }
+
                     actionList[actionListCount] = new Callback(d, state);
                     actionListCount++;
                 }

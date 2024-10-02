@@ -69,6 +69,7 @@ namespace Cysharp.Threading.Tasks.Internal
             {
                 newcapacity = array.Length + MinimumGrow;
             }
+
             SetCapacity(newcapacity);
         }
 
@@ -101,6 +102,7 @@ namespace Cysharp.Threading.Tasks.Internal
             {
                 tmp = 0;
             }
+
             index = tmp;
         }
 

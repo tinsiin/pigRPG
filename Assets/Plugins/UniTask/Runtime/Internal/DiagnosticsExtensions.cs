@@ -76,6 +76,7 @@ namespace Cysharp.Threading.Tasks.Internal
                 {
                     sb.Append(".");
                 }
+
                 sb.Append(mb.Name);
                 if (mb.IsGenericMethod)
                 {
@@ -84,12 +85,14 @@ namespace Cysharp.Threading.Tasks.Internal
                     {
                         sb.Append(BeautifyType(item, true));
                     }
+
                     sb.Append(">");
                 }
 
                 // parameter
                 sb.Append("(");
-                sb.Append(string.Join(", ", mb.GetParameters().Select(p => BeautifyType(p.ParameterType, true) + " " + p.Name)));
+                sb.Append(string.Join(", ",
+                    mb.GetParameters().Select(p => BeautifyType(p.ParameterType, true) + " " + p.Name)));
                 sb.Append(")");
 
                 // file name
@@ -113,12 +116,14 @@ namespace Cysharp.Threading.Tasks.Internal
                     if (fileName != null)
                     {
                         sb.Append(' ');
-                        sb.AppendFormat(CultureInfo.InvariantCulture, "(at {0})", AppendHyperLink(fileName, sf.GetFileLineNumber().ToString()));
+                        sb.AppendFormat(CultureInfo.InvariantCulture, "(at {0})",
+                            AppendHyperLink(fileName, sf.GetFileLineNumber().ToString()));
                     }
                 }
 
                 sb.AppendLine();
             }
+
             return sb.ToString();
         }
 
@@ -140,7 +145,8 @@ namespace Cysharp.Threading.Tasks.Internal
                 return false;
             }
 
-            var methods = parentType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            var methods = parentType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
+                                                BindingFlags.Instance | BindingFlags.DeclaredOnly);
             if (methods == null)
             {
                 return false;
@@ -176,13 +182,20 @@ namespace Cysharp.Threading.Tasks.Internal
             {
                 return builtin;
             }
+
             if (t.IsGenericParameter) return t.Name;
             if (t.IsArray) return BeautifyType(t.GetElementType(), shortName) + "[]";
             if (t.FullName?.StartsWith("System.ValueTuple") ?? false)
             {
                 return "(" + string.Join(", ", t.GetGenericArguments().Select(x => BeautifyType(x, true))) + ")";
             }
-            if (!t.IsGenericType) return shortName ? t.Name : t.FullName.Replace("Cysharp.Threading.Tasks.Triggers.", "").Replace("Cysharp.Threading.Tasks.Internal.", "").Replace("Cysharp.Threading.Tasks.", "") ?? t.Name;
+
+            if (!t.IsGenericType)
+                return shortName
+                    ? t.Name
+                    : t.FullName.Replace("Cysharp.Threading.Tasks.Triggers.", "")
+                          .Replace("Cysharp.Threading.Tasks.Internal.", "").Replace("Cysharp.Threading.Tasks.", "") ??
+                      t.Name;
 
             var innerFormat = string.Join(", ", t.GetGenericArguments().Select(x => BeautifyType(x, true)));
 
@@ -192,7 +205,9 @@ namespace Cysharp.Threading.Tasks.Internal
                 genericType = "Task";
             }
 
-            return typeBeautifyRegex.Replace(genericType, "").Replace("Cysharp.Threading.Tasks.Triggers.", "").Replace("Cysharp.Threading.Tasks.Internal.", "").Replace("Cysharp.Threading.Tasks.", "") + "<" + innerFormat + ">";
+            return typeBeautifyRegex.Replace(genericType, "").Replace("Cysharp.Threading.Tasks.Triggers.", "")
+                       .Replace("Cysharp.Threading.Tasks.Internal.", "").Replace("Cysharp.Threading.Tasks.", "") + "<" +
+                   innerFormat + ">";
         }
 
         static bool IgnoreLine(MethodBase methodInfo)
@@ -239,11 +254,12 @@ namespace Cysharp.Threading.Tasks.Internal
             }
             else
             {
-                var fname = fi.FullName.Replace(Path.DirectorySeparatorChar, '/').Replace(PlayerLoopHelper.ApplicationDataPath, "");
+                var fname = fi.FullName.Replace(Path.DirectorySeparatorChar, '/')
+                    .Replace(PlayerLoopHelper.ApplicationDataPath, "");
                 var withAssetsPath = "Assets/" + fname;
-                return "<a href=\"" + withAssetsPath + "\" line=\"" + line + "\">" + withAssetsPath + ":" + line + "</a>";
+                return "<a href=\"" + withAssetsPath + "\" line=\"" + line + "\">" + withAssetsPath + ":" + line +
+                       "</a>";
             }
         }
     }
 }
-

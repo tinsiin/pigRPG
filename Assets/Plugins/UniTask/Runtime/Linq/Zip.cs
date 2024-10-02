@@ -6,8 +6,8 @@ namespace Cysharp.Threading.Tasks.Linq
 {
     public static partial class UniTaskAsyncEnumerable
     {
-
-        public static IUniTaskAsyncEnumerable<(TFirst First, TSecond Second)> Zip<TFirst, TSecond>(this IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second)
+        public static IUniTaskAsyncEnumerable<(TFirst First, TSecond Second)> Zip<TFirst, TSecond>(
+            this IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second)
         {
             Error.ThrowArgumentNullException(first, nameof(first));
             Error.ThrowArgumentNullException(second, nameof(second));
@@ -15,7 +15,9 @@ namespace Cysharp.Threading.Tasks.Linq
             return Zip(first, second, (x, y) => (x, y));
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> Zip<TFirst, TSecond, TResult>(this IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second, Func<TFirst, TSecond, TResult> resultSelector)
+        public static IUniTaskAsyncEnumerable<TResult> Zip<TFirst, TSecond, TResult>(
+            this IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second,
+            Func<TFirst, TSecond, TResult> resultSelector)
         {
             Error.ThrowArgumentNullException(first, nameof(first));
             Error.ThrowArgumentNullException(second, nameof(second));
@@ -24,7 +26,9 @@ namespace Cysharp.Threading.Tasks.Linq
             return new Zip<TFirst, TSecond, TResult>(first, second, resultSelector);
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> ZipAwait<TFirst, TSecond, TResult>(this IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second, Func<TFirst, TSecond, UniTask<TResult>> selector)
+        public static IUniTaskAsyncEnumerable<TResult> ZipAwait<TFirst, TSecond, TResult>(
+            this IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second,
+            Func<TFirst, TSecond, UniTask<TResult>> selector)
         {
             Error.ThrowArgumentNullException(first, nameof(first));
             Error.ThrowArgumentNullException(second, nameof(second));
@@ -33,7 +37,9 @@ namespace Cysharp.Threading.Tasks.Linq
             return new ZipAwait<TFirst, TSecond, TResult>(first, second, selector);
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> ZipAwaitWithCancellation<TFirst, TSecond, TResult>(this IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second, Func<TFirst, TSecond, CancellationToken, UniTask<TResult>> selector)
+        public static IUniTaskAsyncEnumerable<TResult> ZipAwaitWithCancellation<TFirst, TSecond, TResult>(
+            this IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second,
+            Func<TFirst, TSecond, CancellationToken, UniTask<TResult>> selector)
         {
             Error.ThrowArgumentNullException(first, nameof(first));
             Error.ThrowArgumentNullException(second, nameof(second));
@@ -49,7 +55,8 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<TSecond> second;
         readonly Func<TFirst, TSecond, TResult> resultSelector;
 
-        public Zip(IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second, Func<TFirst, TSecond, TResult> resultSelector)
+        public Zip(IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second,
+            Func<TFirst, TSecond, TResult> resultSelector)
         {
             this.first = first;
             this.second = second;
@@ -78,7 +85,8 @@ namespace Cysharp.Threading.Tasks.Linq
             UniTask<bool>.Awaiter firstAwaiter;
             UniTask<bool>.Awaiter secondAwaiter;
 
-            public _Zip(IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second, Func<TFirst, TSecond, TResult> resultSelector, CancellationToken cancellationToken)
+            public _Zip(IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second,
+                Func<TFirst, TSecond, TResult> resultSelector, CancellationToken cancellationToken)
             {
                 this.first = first;
                 this.second = second;
@@ -157,7 +165,8 @@ namespace Cysharp.Threading.Tasks.Linq
                     {
                         try
                         {
-                            self.Current = self.resultSelector(self.firstEnumerator.Current, self.secondEnumerator.Current);
+                            self.Current = self.resultSelector(self.firstEnumerator.Current,
+                                self.secondEnumerator.Current);
                         }
                         catch (Exception ex)
                         {
@@ -187,6 +196,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await firstEnumerator.DisposeAsync();
                 }
+
                 if (secondEnumerator != null)
                 {
                     await secondEnumerator.DisposeAsync();
@@ -201,7 +211,8 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<TSecond> second;
         readonly Func<TFirst, TSecond, UniTask<TResult>> resultSelector;
 
-        public ZipAwait(IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second, Func<TFirst, TSecond, UniTask<TResult>> resultSelector)
+        public ZipAwait(IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second,
+            Func<TFirst, TSecond, UniTask<TResult>> resultSelector)
         {
             this.first = first;
             this.second = second;
@@ -232,7 +243,8 @@ namespace Cysharp.Threading.Tasks.Linq
             UniTask<bool>.Awaiter secondAwaiter;
             UniTask<TResult>.Awaiter resultAwaiter;
 
-            public _ZipAwait(IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second, Func<TFirst, TSecond, UniTask<TResult>> resultSelector, CancellationToken cancellationToken)
+            public _ZipAwait(IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second,
+                Func<TFirst, TSecond, UniTask<TResult>> resultSelector, CancellationToken cancellationToken)
             {
                 this.first = first;
                 this.second = second;
@@ -311,7 +323,9 @@ namespace Cysharp.Threading.Tasks.Linq
                     {
                         try
                         {
-                            self.resultAwaiter = self.resultSelector(self.firstEnumerator.Current, self.secondEnumerator.Current).GetAwaiter();
+                            self.resultAwaiter =
+                                self.resultSelector(self.firstEnumerator.Current, self.secondEnumerator.Current)
+                                    .GetAwaiter();
                             if (self.resultAwaiter.IsCompleted)
                             {
                                 ResultAwaitCore(self);
@@ -359,6 +373,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await firstEnumerator.DisposeAsync();
                 }
+
                 if (secondEnumerator != null)
                 {
                     await secondEnumerator.DisposeAsync();
@@ -373,7 +388,8 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<TSecond> second;
         readonly Func<TFirst, TSecond, CancellationToken, UniTask<TResult>> resultSelector;
 
-        public ZipAwaitWithCancellation(IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second, Func<TFirst, TSecond, CancellationToken, UniTask<TResult>> resultSelector)
+        public ZipAwaitWithCancellation(IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second,
+            Func<TFirst, TSecond, CancellationToken, UniTask<TResult>> resultSelector)
         {
             this.first = first;
             this.second = second;
@@ -404,7 +420,10 @@ namespace Cysharp.Threading.Tasks.Linq
             UniTask<bool>.Awaiter secondAwaiter;
             UniTask<TResult>.Awaiter resultAwaiter;
 
-            public _ZipAwaitWithCancellation(IUniTaskAsyncEnumerable<TFirst> first, IUniTaskAsyncEnumerable<TSecond> second, Func<TFirst, TSecond, CancellationToken, UniTask<TResult>> resultSelector, CancellationToken cancellationToken)
+            public _ZipAwaitWithCancellation(IUniTaskAsyncEnumerable<TFirst> first,
+                IUniTaskAsyncEnumerable<TSecond> second,
+                Func<TFirst, TSecond, CancellationToken, UniTask<TResult>> resultSelector,
+                CancellationToken cancellationToken)
             {
                 this.first = first;
                 this.second = second;
@@ -483,7 +502,8 @@ namespace Cysharp.Threading.Tasks.Linq
                     {
                         try
                         {
-                            self.resultAwaiter = self.resultSelector(self.firstEnumerator.Current, self.secondEnumerator.Current, self.cancellationToken).GetAwaiter();
+                            self.resultAwaiter = self.resultSelector(self.firstEnumerator.Current,
+                                self.secondEnumerator.Current, self.cancellationToken).GetAwaiter();
                             if (self.resultAwaiter.IsCompleted)
                             {
                                 ResultAwaitCore(self);
@@ -531,6 +551,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await firstEnumerator.DisposeAsync();
                 }
+
                 if (secondEnumerator != null)
                 {
                     await secondEnumerator.DisposeAsync();

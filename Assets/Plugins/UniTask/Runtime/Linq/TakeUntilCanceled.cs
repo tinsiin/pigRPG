@@ -6,7 +6,8 @@ namespace Cysharp.Threading.Tasks.Linq
 {
     public static partial class UniTaskAsyncEnumerable
     {
-        public static IUniTaskAsyncEnumerable<TSource> TakeUntilCanceled<TSource>(this IUniTaskAsyncEnumerable<TSource> source, CancellationToken cancellationToken)
+        public static IUniTaskAsyncEnumerable<TSource> TakeUntilCanceled<TSource>(
+            this IUniTaskAsyncEnumerable<TSource> source, CancellationToken cancellationToken)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
 
@@ -46,7 +47,8 @@ namespace Cysharp.Threading.Tasks.Linq
             IUniTaskAsyncEnumerator<TSource> enumerator;
             UniTask<bool>.Awaiter awaiter;
 
-            public _TakeUntilCanceled(IUniTaskAsyncEnumerable<TSource> source, CancellationToken cancellationToken1, CancellationToken cancellationToken2)
+            public _TakeUntilCanceled(IUniTaskAsyncEnumerable<TSource> source, CancellationToken cancellationToken1,
+                CancellationToken cancellationToken2)
             {
                 this.source = source;
                 this.cancellationToken1 = cancellationToken1;
@@ -54,13 +56,16 @@ namespace Cysharp.Threading.Tasks.Linq
 
                 if (cancellationToken1.CanBeCanceled)
                 {
-                    this.cancellationTokenRegistration1 = cancellationToken1.RegisterWithoutCaptureExecutionContext(CancelDelegate1, this);
+                    this.cancellationTokenRegistration1 =
+                        cancellationToken1.RegisterWithoutCaptureExecutionContext(CancelDelegate1, this);
                 }
 
                 if (cancellationToken1 != cancellationToken2 && cancellationToken2.CanBeCanceled)
                 {
-                    this.cancellationTokenRegistration2 = cancellationToken2.RegisterWithoutCaptureExecutionContext(CancelDelegate2, this);
+                    this.cancellationTokenRegistration2 =
+                        cancellationToken2.RegisterWithoutCaptureExecutionContext(CancelDelegate2, this);
                 }
+
                 TaskTracker.TrackActiveTask(this, 3);
             }
 
@@ -73,7 +78,8 @@ namespace Cysharp.Threading.Tasks.Linq
 
                 if (enumerator == null)
                 {
-                    enumerator = source.GetAsyncEnumerator(cancellationToken2); // use only AsyncEnumerator provided token.
+                    enumerator =
+                        source.GetAsyncEnumerator(cancellationToken2); // use only AsyncEnumerator provided token.
                 }
 
                 if (isCanceled) return CompletedTasks.False;
@@ -157,6 +163,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     return enumerator.DisposeAsync();
                 }
+
                 return default;
             }
         }

@@ -1,7 +1,6 @@
 ﻿// asmdef Version Defines, enabled when com.unity.addressables is imported.
 
 #if UNITASK_ADDRESSABLE_SUPPORT
-
 using Cysharp.Threading.Tasks.Internal;
 using System;
 using System.Runtime.CompilerServices;
@@ -21,12 +20,15 @@ namespace Cysharp.Threading.Tasks
             return ToUniTask(handle).GetAwaiter();
         }
 
-        public static UniTask WithCancellation(this AsyncOperationHandle handle, CancellationToken cancellationToken, bool cancelImmediately = false, bool autoReleaseWhenCanceled = false)
+        public static UniTask WithCancellation(this AsyncOperationHandle handle, CancellationToken cancellationToken, bool cancelImmediately
+ = false, bool autoReleaseWhenCanceled = false)
         {
             return ToUniTask(handle, cancellationToken: cancellationToken, cancelImmediately: cancelImmediately, autoReleaseWhenCanceled: autoReleaseWhenCanceled);
         }
 
-        public static UniTask ToUniTask(this AsyncOperationHandle handle, IProgress<float> progress = null, PlayerLoopTiming timing = PlayerLoopTiming.Update, CancellationToken cancellationToken = default(CancellationToken), bool cancelImmediately = false, bool autoReleaseWhenCanceled = false)
+        public static UniTask ToUniTask(this AsyncOperationHandle handle, IProgress<float> progress =
+ null, PlayerLoopTiming timing = PlayerLoopTiming.Update, CancellationToken cancellationToken =
+ default(CancellationToken), bool cancelImmediately = false, bool autoReleaseWhenCanceled = false)
         {
             if (cancellationToken.IsCancellationRequested) return UniTask.FromCanceled(cancellationToken);
 
@@ -141,7 +143,8 @@ namespace Cysharp.Threading.Tasks
                 
                 if (cancelImmediately && cancellationToken.CanBeCanceled)
                 {
-                    result.cancellationTokenRegistration = cancellationToken.RegisterWithoutCaptureExecutionContext(state =>
+                    result.cancellationTokenRegistration =
+ cancellationToken.RegisterWithoutCaptureExecutionContext(state =>
                     {
                         var promise = (AsyncOperationHandleConfiguredSource)state;
                         if (promise.autoReleaseWhenCanceled && promise.handle.IsValid())
@@ -270,12 +273,15 @@ namespace Cysharp.Threading.Tasks
             return ToUniTask(handle).GetAwaiter();
         }
 
-        public static UniTask<T> WithCancellation<T>(this AsyncOperationHandle<T> handle, CancellationToken cancellationToken, bool cancelImmediately = false, bool autoReleaseWhenCanceled = false)
+        public static UniTask<T> WithCancellation<T>(this AsyncOperationHandle<T> handle, CancellationToken cancellationToken, bool cancelImmediately
+ = false, bool autoReleaseWhenCanceled = false)
         {
             return ToUniTask(handle, cancellationToken: cancellationToken, cancelImmediately: cancelImmediately, autoReleaseWhenCanceled: autoReleaseWhenCanceled);
         }
 
-        public static UniTask<T> ToUniTask<T>(this AsyncOperationHandle<T> handle, IProgress<float> progress = null, PlayerLoopTiming timing = PlayerLoopTiming.Update, CancellationToken cancellationToken = default(CancellationToken), bool cancelImmediately = false, bool autoReleaseWhenCanceled = false)
+        public static UniTask<T> ToUniTask<T>(this AsyncOperationHandle<T> handle, IProgress<float> progress =
+ null, PlayerLoopTiming timing = PlayerLoopTiming.Update, CancellationToken cancellationToken =
+ default(CancellationToken), bool cancelImmediately = false, bool autoReleaseWhenCanceled = false)
         {
             if (cancellationToken.IsCancellationRequested) return UniTask.FromCanceled<T>(cancellationToken);
 
@@ -344,7 +350,8 @@ namespace Cysharp.Threading.Tasks
                 
                 if (cancelImmediately && cancellationToken.CanBeCanceled)
                 {
-                    result.cancellationTokenRegistration = cancellationToken.RegisterWithoutCaptureExecutionContext(state =>
+                    result.cancellationTokenRegistration =
+ cancellationToken.RegisterWithoutCaptureExecutionContext(state =>
                     {
                         var promise = (AsyncOperationHandleConfiguredSource<T>)state;
                         if (promise.autoReleaseWhenCanceled && promise.handle.IsValid())

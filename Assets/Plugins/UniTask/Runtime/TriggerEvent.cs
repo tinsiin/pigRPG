@@ -249,6 +249,7 @@ namespace Cysharp.Threading.Tasks
             {
                 iteratingNode = next;
             }
+
             if (handler == iteratingHead)
             {
                 iteratingHead = next;

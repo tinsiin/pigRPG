@@ -7,7 +7,9 @@ namespace Cysharp.Threading.Tasks.Linq
 {
     public static partial class UniTaskAsyncEnumerable
     {
-        public static IUniTaskAsyncEnumerable<TProperty> EveryValueChanged<TTarget, TProperty>(TTarget target, Func<TTarget, TProperty> propertySelector, PlayerLoopTiming monitorTiming = PlayerLoopTiming.Update, IEqualityComparer<TProperty> equalityComparer = null, bool cancelImmediately = false)
+        public static IUniTaskAsyncEnumerable<TProperty> EveryValueChanged<TTarget, TProperty>(TTarget target,
+            Func<TTarget, TProperty> propertySelector, PlayerLoopTiming monitorTiming = PlayerLoopTiming.Update,
+            IEqualityComparer<TProperty> equalityComparer = null, bool cancelImmediately = false)
             where TTarget : class
         {
             var unityObject = target as UnityEngine.Object;
@@ -15,11 +17,15 @@ namespace Cysharp.Threading.Tasks.Linq
 
             if (isUnityObject)
             {
-                return new EveryValueChangedUnityObject<TTarget, TProperty>(target, propertySelector, equalityComparer ?? UnityEqualityComparer.GetDefault<TProperty>(), monitorTiming, cancelImmediately);
+                return new EveryValueChangedUnityObject<TTarget, TProperty>(target, propertySelector,
+                    equalityComparer ?? UnityEqualityComparer.GetDefault<TProperty>(), monitorTiming,
+                    cancelImmediately);
             }
             else
             {
-                return new EveryValueChangedStandardObject<TTarget, TProperty>(target, propertySelector, equalityComparer ?? UnityEqualityComparer.GetDefault<TProperty>(), monitorTiming, cancelImmediately);
+                return new EveryValueChangedStandardObject<TTarget, TProperty>(target, propertySelector,
+                    equalityComparer ?? UnityEqualityComparer.GetDefault<TProperty>(), monitorTiming,
+                    cancelImmediately);
             }
         }
     }
@@ -32,7 +38,8 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly PlayerLoopTiming monitorTiming;
         readonly bool cancelImmediately;
 
-        public EveryValueChangedUnityObject(TTarget target, Func<TTarget, TProperty> propertySelector, IEqualityComparer<TProperty> equalityComparer, PlayerLoopTiming monitorTiming, bool cancelImmediately)
+        public EveryValueChangedUnityObject(TTarget target, Func<TTarget, TProperty> propertySelector,
+            IEqualityComparer<TProperty> equalityComparer, PlayerLoopTiming monitorTiming, bool cancelImmediately)
         {
             this.target = target;
             this.propertySelector = propertySelector;
@@ -43,7 +50,8 @@ namespace Cysharp.Threading.Tasks.Linq
 
         public IUniTaskAsyncEnumerator<TProperty> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            return new _EveryValueChanged(target, propertySelector, equalityComparer, monitorTiming, cancellationToken, cancelImmediately);
+            return new _EveryValueChanged(target, propertySelector, equalityComparer, monitorTiming, cancellationToken,
+                cancelImmediately);
         }
 
         sealed class _EveryValueChanged : MoveNextSource, IUniTaskAsyncEnumerator<TProperty>, IPlayerLoopItem
@@ -59,7 +67,9 @@ namespace Cysharp.Threading.Tasks.Linq
             TProperty currentValue;
             bool disposed;
 
-            public _EveryValueChanged(TTarget target, Func<TTarget, TProperty> propertySelector, IEqualityComparer<TProperty> equalityComparer, PlayerLoopTiming monitorTiming, CancellationToken cancellationToken, bool cancelImmediately)
+            public _EveryValueChanged(TTarget target, Func<TTarget, TProperty> propertySelector,
+                IEqualityComparer<TProperty> equalityComparer, PlayerLoopTiming monitorTiming,
+                CancellationToken cancellationToken, bool cancelImmediately)
             {
                 this.target = target;
                 this.targetAsUnityObject = target as UnityEngine.Object;
@@ -67,7 +77,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 this.equalityComparer = equalityComparer;
                 this.cancellationToken = cancellationToken;
                 this.first = true;
-                
+
                 if (cancelImmediately && cancellationToken.CanBeCanceled)
                 {
                     cancellationTokenRegistration = cancellationToken.RegisterWithoutCaptureExecutionContext(state =>
@@ -76,7 +86,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         source.completionSource.TrySetCanceled(source.cancellationToken);
                     }, this);
                 }
-                
+
                 TaskTracker.TrackActiveTask(this, 2);
                 PlayerLoopHelper.AddAction(monitorTiming, this);
             }
@@ -88,7 +98,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 if (disposed) return CompletedTasks.False;
 
                 completionSource.Reset();
-                
+
                 if (cancellationToken.IsCancellationRequested)
                 {
                     completionSource.TrySetCanceled(cancellationToken);
@@ -102,6 +112,7 @@ namespace Cysharp.Threading.Tasks.Linq
                     {
                         return CompletedTasks.False;
                     }
+
                     this.currentValue = propertySelector(target);
                     return CompletedTasks.True;
                 }
@@ -117,23 +128,25 @@ namespace Cysharp.Threading.Tasks.Linq
                     disposed = true;
                     TaskTracker.RemoveTracking(this);
                 }
+
                 return default;
             }
 
             public bool MoveNext()
             {
-                if (disposed || targetAsUnityObject == null) 
+                if (disposed || targetAsUnityObject == null)
                 {
                     completionSource.TrySetResult(false);
                     DisposeAsync().Forget();
                     return false;
                 }
-                
+
                 if (cancellationToken.IsCancellationRequested)
                 {
                     completionSource.TrySetCanceled(cancellationToken);
                     return false;
                 }
+
                 TProperty nextValue = default(TProperty);
                 try
                 {
@@ -166,7 +179,8 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly PlayerLoopTiming monitorTiming;
         readonly bool cancelImmediately;
 
-        public EveryValueChangedStandardObject(TTarget target, Func<TTarget, TProperty> propertySelector, IEqualityComparer<TProperty> equalityComparer, PlayerLoopTiming monitorTiming, bool cancelImmediately)
+        public EveryValueChangedStandardObject(TTarget target, Func<TTarget, TProperty> propertySelector,
+            IEqualityComparer<TProperty> equalityComparer, PlayerLoopTiming monitorTiming, bool cancelImmediately)
         {
             this.target = new WeakReference<TTarget>(target, false);
             this.propertySelector = propertySelector;
@@ -177,7 +191,8 @@ namespace Cysharp.Threading.Tasks.Linq
 
         public IUniTaskAsyncEnumerator<TProperty> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            return new _EveryValueChanged(target, propertySelector, equalityComparer, monitorTiming, cancellationToken, cancelImmediately);
+            return new _EveryValueChanged(target, propertySelector, equalityComparer, monitorTiming, cancellationToken,
+                cancelImmediately);
         }
 
         sealed class _EveryValueChanged : MoveNextSource, IUniTaskAsyncEnumerator<TProperty>, IPlayerLoopItem
@@ -192,14 +207,16 @@ namespace Cysharp.Threading.Tasks.Linq
             TProperty currentValue;
             bool disposed;
 
-            public _EveryValueChanged(WeakReference<TTarget> target, Func<TTarget, TProperty> propertySelector, IEqualityComparer<TProperty> equalityComparer, PlayerLoopTiming monitorTiming, CancellationToken cancellationToken, bool cancelImmediately)
+            public _EveryValueChanged(WeakReference<TTarget> target, Func<TTarget, TProperty> propertySelector,
+                IEqualityComparer<TProperty> equalityComparer, PlayerLoopTiming monitorTiming,
+                CancellationToken cancellationToken, bool cancelImmediately)
             {
                 this.target = target;
                 this.propertySelector = propertySelector;
                 this.equalityComparer = equalityComparer;
                 this.cancellationToken = cancellationToken;
                 this.first = true;
-                
+
                 if (cancelImmediately && cancellationToken.CanBeCanceled)
                 {
                     cancellationTokenRegistration = cancellationToken.RegisterWithoutCaptureExecutionContext(state =>
@@ -208,7 +225,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         source.completionSource.TrySetCanceled(source.cancellationToken);
                     }, this);
                 }
-                
+
                 TaskTracker.TrackActiveTask(this, 2);
                 PlayerLoopHelper.AddAction(monitorTiming, this);
             }
@@ -220,13 +237,13 @@ namespace Cysharp.Threading.Tasks.Linq
                 if (disposed) return CompletedTasks.False;
 
                 completionSource.Reset();
-                
+
                 if (cancellationToken.IsCancellationRequested)
                 {
                     completionSource.TrySetCanceled(cancellationToken);
                     return new UniTask<bool>(this, completionSource.Version);
                 }
-                
+
                 if (first)
                 {
                     first = false;
@@ -234,6 +251,7 @@ namespace Cysharp.Threading.Tasks.Linq
                     {
                         return CompletedTasks.False;
                     }
+
                     this.currentValue = propertySelector(t);
                     return CompletedTasks.True;
                 }
@@ -249,6 +267,7 @@ namespace Cysharp.Threading.Tasks.Linq
                     disposed = true;
                     TaskTracker.RemoveTracking(this);
                 }
+
                 return default;
             }
 

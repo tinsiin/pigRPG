@@ -6,14 +6,16 @@ namespace Cysharp.Threading.Tasks.Linq
 {
     public static partial class UniTaskAsyncEnumerable
     {
-        public static UniTask<TSource> LastAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source, CancellationToken cancellationToken = default)
+        public static UniTask<TSource> LastAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source,
+            CancellationToken cancellationToken = default)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
 
             return Last.LastAsync(source, cancellationToken, false);
         }
 
-        public static UniTask<TSource> LastAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source, Func<TSource, Boolean> predicate, CancellationToken cancellationToken = default)
+        public static UniTask<TSource> LastAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source,
+            Func<TSource, Boolean> predicate, CancellationToken cancellationToken = default)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
             Error.ThrowArgumentNullException(predicate, nameof(predicate));
@@ -21,7 +23,8 @@ namespace Cysharp.Threading.Tasks.Linq
             return Last.LastAsync(source, predicate, cancellationToken, false);
         }
 
-        public static UniTask<TSource> LastAwaitAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source, Func<TSource, UniTask<Boolean>> predicate, CancellationToken cancellationToken = default)
+        public static UniTask<TSource> LastAwaitAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source,
+            Func<TSource, UniTask<Boolean>> predicate, CancellationToken cancellationToken = default)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
             Error.ThrowArgumentNullException(predicate, nameof(predicate));
@@ -29,7 +32,9 @@ namespace Cysharp.Threading.Tasks.Linq
             return Last.LastAwaitAsync(source, predicate, cancellationToken, false);
         }
 
-        public static UniTask<TSource> LastAwaitWithCancellationAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source, Func<TSource, CancellationToken, UniTask<Boolean>> predicate, CancellationToken cancellationToken = default)
+        public static UniTask<TSource> LastAwaitWithCancellationAsync<TSource>(
+            this IUniTaskAsyncEnumerable<TSource> source, Func<TSource, CancellationToken, UniTask<Boolean>> predicate,
+            CancellationToken cancellationToken = default)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
             Error.ThrowArgumentNullException(predicate, nameof(predicate));
@@ -37,14 +42,16 @@ namespace Cysharp.Threading.Tasks.Linq
             return Last.LastAwaitWithCancellationAsync(source, predicate, cancellationToken, false);
         }
 
-        public static UniTask<TSource> LastOrDefaultAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source, CancellationToken cancellationToken = default)
+        public static UniTask<TSource> LastOrDefaultAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source,
+            CancellationToken cancellationToken = default)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
 
             return Last.LastAsync(source, cancellationToken, true);
         }
 
-        public static UniTask<TSource> LastOrDefaultAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source, Func<TSource, Boolean> predicate, CancellationToken cancellationToken = default)
+        public static UniTask<TSource> LastOrDefaultAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source,
+            Func<TSource, Boolean> predicate, CancellationToken cancellationToken = default)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
             Error.ThrowArgumentNullException(predicate, nameof(predicate));
@@ -52,7 +59,8 @@ namespace Cysharp.Threading.Tasks.Linq
             return Last.LastAsync(source, predicate, cancellationToken, true);
         }
 
-        public static UniTask<TSource> LastOrDefaultAwaitAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source, Func<TSource, UniTask<Boolean>> predicate, CancellationToken cancellationToken = default)
+        public static UniTask<TSource> LastOrDefaultAwaitAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source,
+            Func<TSource, UniTask<Boolean>> predicate, CancellationToken cancellationToken = default)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
             Error.ThrowArgumentNullException(predicate, nameof(predicate));
@@ -60,7 +68,9 @@ namespace Cysharp.Threading.Tasks.Linq
             return Last.LastAwaitAsync(source, predicate, cancellationToken, true);
         }
 
-        public static UniTask<TSource> LastOrDefaultAwaitWithCancellationAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source, Func<TSource, CancellationToken, UniTask<Boolean>> predicate, CancellationToken cancellationToken = default)
+        public static UniTask<TSource> LastOrDefaultAwaitWithCancellationAsync<TSource>(
+            this IUniTaskAsyncEnumerable<TSource> source, Func<TSource, CancellationToken, UniTask<Boolean>> predicate,
+            CancellationToken cancellationToken = default)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
             Error.ThrowArgumentNullException(predicate, nameof(predicate));
@@ -71,7 +81,8 @@ namespace Cysharp.Threading.Tasks.Linq
 
     internal static class Last
     {
-        public static async UniTask<TSource> LastAsync<TSource>(IUniTaskAsyncEnumerable<TSource> source, CancellationToken cancellationToken, bool defaultIfEmpty)
+        public static async UniTask<TSource> LastAsync<TSource>(IUniTaskAsyncEnumerable<TSource> source,
+            CancellationToken cancellationToken, bool defaultIfEmpty)
         {
             var e = source.GetAsyncEnumerator(cancellationToken);
             try
@@ -97,6 +108,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     value = e.Current;
                 }
+
                 return value;
             }
             finally
@@ -108,7 +120,8 @@ namespace Cysharp.Threading.Tasks.Linq
             }
         }
 
-        public static async UniTask<TSource> LastAsync<TSource>(IUniTaskAsyncEnumerable<TSource> source, Func<TSource, Boolean> predicate, CancellationToken cancellationToken, bool defaultIfEmpty)
+        public static async UniTask<TSource> LastAsync<TSource>(IUniTaskAsyncEnumerable<TSource> source,
+            Func<TSource, Boolean> predicate, CancellationToken cancellationToken, bool defaultIfEmpty)
         {
             var e = source.GetAsyncEnumerator(cancellationToken);
             try
@@ -151,7 +164,8 @@ namespace Cysharp.Threading.Tasks.Linq
             }
         }
 
-        public static async UniTask<TSource> LastAwaitAsync<TSource>(IUniTaskAsyncEnumerable<TSource> source, Func<TSource, UniTask<Boolean>> predicate, CancellationToken cancellationToken, bool defaultIfEmpty)
+        public static async UniTask<TSource> LastAwaitAsync<TSource>(IUniTaskAsyncEnumerable<TSource> source,
+            Func<TSource, UniTask<Boolean>> predicate, CancellationToken cancellationToken, bool defaultIfEmpty)
         {
             var e = source.GetAsyncEnumerator(cancellationToken);
             try
@@ -194,7 +208,9 @@ namespace Cysharp.Threading.Tasks.Linq
             }
         }
 
-        public static async UniTask<TSource> LastAwaitWithCancellationAsync<TSource>(IUniTaskAsyncEnumerable<TSource> source, Func<TSource, CancellationToken, UniTask<Boolean>> predicate, CancellationToken cancellationToken, bool defaultIfEmpty)
+        public static async UniTask<TSource> LastAwaitWithCancellationAsync<TSource>(
+            IUniTaskAsyncEnumerable<TSource> source, Func<TSource, CancellationToken, UniTask<Boolean>> predicate,
+            CancellationToken cancellationToken, bool defaultIfEmpty)
         {
             var e = source.GetAsyncEnumerator(cancellationToken);
             try

@@ -4,7 +4,8 @@ namespace Cysharp.Threading.Tasks.Linq
 {
     public static partial class UniTaskAsyncEnumerable
     {
-        public static IUniTaskAsyncEnumerable<AsyncUnit> EveryUpdate(PlayerLoopTiming updateTiming = PlayerLoopTiming.Update, bool cancelImmediately = false)
+        public static IUniTaskAsyncEnumerable<AsyncUnit> EveryUpdate(
+            PlayerLoopTiming updateTiming = PlayerLoopTiming.Update, bool cancelImmediately = false)
         {
             return new EveryUpdate(updateTiming, cancelImmediately);
         }
@@ -34,7 +35,8 @@ namespace Cysharp.Threading.Tasks.Linq
 
             bool disposed;
 
-            public _EveryUpdate(PlayerLoopTiming updateTiming, CancellationToken cancellationToken, bool cancelImmediately)
+            public _EveryUpdate(PlayerLoopTiming updateTiming, CancellationToken cancellationToken,
+                bool cancelImmediately)
             {
                 this.updateTiming = updateTiming;
                 this.cancellationToken = cancellationToken;
@@ -57,13 +59,14 @@ namespace Cysharp.Threading.Tasks.Linq
             public UniTask<bool> MoveNextAsync()
             {
                 if (disposed) return CompletedTasks.False;
-                
+
                 completionSource.Reset();
 
                 if (cancellationToken.IsCancellationRequested)
                 {
                     completionSource.TrySetCanceled(cancellationToken);
                 }
+
                 return new UniTask<bool>(this, completionSource.Version);
             }
 
@@ -75,6 +78,7 @@ namespace Cysharp.Threading.Tasks.Linq
                     disposed = true;
                     TaskTracker.RemoveTracking(this);
                 }
+
                 return default;
             }
 
@@ -85,7 +89,7 @@ namespace Cysharp.Threading.Tasks.Linq
                     completionSource.TrySetCanceled(cancellationToken);
                     return false;
                 }
-                
+
                 if (disposed)
                 {
                     completionSource.TrySetResult(false);

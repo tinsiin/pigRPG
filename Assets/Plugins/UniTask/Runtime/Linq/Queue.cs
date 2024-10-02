@@ -60,7 +60,8 @@ namespace Cysharp.Threading.Tasks.Linq
                 return channelEnumerator.MoveNextAsync();
             }
 
-            static async UniTaskVoid ConsumeAll(_Queue self, IUniTaskAsyncEnumerator<TSource> enumerator, ChannelWriter<TSource> writer)
+            static async UniTaskVoid ConsumeAll(_Queue self, IUniTaskAsyncEnumerator<TSource> enumerator,
+                ChannelWriter<TSource> writer)
             {
                 try
                 {
@@ -68,6 +69,7 @@ namespace Cysharp.Threading.Tasks.Linq
                     {
                         writer.TryWrite(enumerator.Current);
                     }
+
                     writer.TryComplete();
                 }
                 catch (Exception ex)
@@ -87,6 +89,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await sourceEnumerator.DisposeAsync();
                 }
+
                 if (channelEnumerator != null)
                 {
                     await channelEnumerator.DisposeAsync();

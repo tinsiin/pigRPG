@@ -28,7 +28,7 @@ namespace Cysharp.Threading.Tasks
         /// Dispatch exception event to Unity MainThread. Default is true.
         /// </summary>
         public static bool DispatchUnityMainThread = true;
-        
+
         // cache delegate.
         static readonly SendOrPostCallback handleExceptionInvoke = InvokeUnobservedTaskException;
 
@@ -50,7 +50,8 @@ namespace Cysharp.Threading.Tasks
                 if (UnobservedTaskException != null)
                 {
 #if UNITY_2018_3_OR_NEWER
-                    if (!DispatchUnityMainThread || Thread.CurrentThread.ManagedThreadId == PlayerLoopHelper.MainThreadId)
+                    if (!DispatchUnityMainThread ||
+                        Thread.CurrentThread.ManagedThreadId == PlayerLoopHelper.MainThreadId)
                     {
                         // allows inlining call.
                         UnobservedTaskException.Invoke(ex);
@@ -72,6 +73,7 @@ namespace Cysharp.Threading.Tasks
                     {
                         msg = "UnobservedTaskException: " + ex.ToString();
                     }
+
                     switch (UnobservedExceptionWriteLogType)
                     {
                         case UnityEngine.LogType.Error:
@@ -100,4 +102,3 @@ namespace Cysharp.Threading.Tasks
         }
     }
 }
-

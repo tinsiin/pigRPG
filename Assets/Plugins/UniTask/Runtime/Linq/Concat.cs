@@ -6,7 +6,8 @@ namespace Cysharp.Threading.Tasks.Linq
 {
     public static partial class UniTaskAsyncEnumerable
     {
-        public static IUniTaskAsyncEnumerable<TSource> Concat<TSource>(this IUniTaskAsyncEnumerable<TSource> first, IUniTaskAsyncEnumerable<TSource> second)
+        public static IUniTaskAsyncEnumerable<TSource> Concat<TSource>(this IUniTaskAsyncEnumerable<TSource> first,
+            IUniTaskAsyncEnumerable<TSource> second)
         {
             Error.ThrowArgumentNullException(first, nameof(first));
             Error.ThrowArgumentNullException(second, nameof(second));
@@ -51,7 +52,8 @@ namespace Cysharp.Threading.Tasks.Linq
             IUniTaskAsyncEnumerator<TSource> enumerator;
             UniTask<bool>.Awaiter awaiter;
 
-            public _Concat(IUniTaskAsyncEnumerable<TSource> first, IUniTaskAsyncEnumerable<TSource> second, CancellationToken cancellationToken)
+            public _Concat(IUniTaskAsyncEnumerable<TSource> first, IUniTaskAsyncEnumerable<TSource> second,
+                CancellationToken cancellationToken)
             {
                 this.first = first;
                 this.second = second;

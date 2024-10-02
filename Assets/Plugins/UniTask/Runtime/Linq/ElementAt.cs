@@ -6,14 +6,16 @@ namespace Cysharp.Threading.Tasks.Linq
 {
     public static partial class UniTaskAsyncEnumerable
     {
-        public static UniTask<TSource> ElementAtAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source, int index, CancellationToken cancellationToken = default)
+        public static UniTask<TSource> ElementAtAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source, int index,
+            CancellationToken cancellationToken = default)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
 
             return ElementAt.ElementAtAsync(source, index, cancellationToken, false);
         }
 
-        public static UniTask<TSource> ElementAtOrDefaultAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source, int index, CancellationToken cancellationToken = default)
+        public static UniTask<TSource> ElementAtOrDefaultAsync<TSource>(this IUniTaskAsyncEnumerable<TSource> source,
+            int index, CancellationToken cancellationToken = default)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
 
@@ -23,7 +25,8 @@ namespace Cysharp.Threading.Tasks.Linq
 
     internal static class ElementAt
     {
-        public static async UniTask<TSource> ElementAtAsync<TSource>(IUniTaskAsyncEnumerable<TSource> source, int index, CancellationToken cancellationToken, bool defaultIfEmpty)
+        public static async UniTask<TSource> ElementAtAsync<TSource>(IUniTaskAsyncEnumerable<TSource> source, int index,
+            CancellationToken cancellationToken, bool defaultIfEmpty)
         {
             var e = source.GetAsyncEnumerator(cancellationToken);
             try

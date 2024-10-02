@@ -118,12 +118,14 @@ namespace Cysharp.Threading.Tasks.Internal
         {
             public bool Equals(Vector4 self, Vector4 vector)
             {
-                return self.x.Equals(vector.x) && self.y.Equals(vector.y) && self.z.Equals(vector.z) && self.w.Equals(vector.w);
+                return self.x.Equals(vector.x) && self.y.Equals(vector.y) && self.z.Equals(vector.z) &&
+                       self.w.Equals(vector.w);
             }
 
             public int GetHashCode(Vector4 obj)
             {
-                return obj.x.GetHashCode() ^ obj.y.GetHashCode() << 2 ^ obj.z.GetHashCode() >> 2 ^ obj.w.GetHashCode() >> 1;
+                return obj.x.GetHashCode() ^ obj.y.GetHashCode() << 2 ^ obj.z.GetHashCode() >> 2 ^
+                       obj.w.GetHashCode() >> 1;
             }
         }
 
@@ -131,12 +133,14 @@ namespace Cysharp.Threading.Tasks.Internal
         {
             public bool Equals(Color self, Color other)
             {
-                return self.r.Equals(other.r) && self.g.Equals(other.g) && self.b.Equals(other.b) && self.a.Equals(other.a);
+                return self.r.Equals(other.r) && self.g.Equals(other.g) && self.b.Equals(other.b) &&
+                       self.a.Equals(other.a);
             }
 
             public int GetHashCode(Color obj)
             {
-                return obj.r.GetHashCode() ^ obj.g.GetHashCode() << 2 ^ obj.b.GetHashCode() >> 2 ^ obj.a.GetHashCode() >> 1;
+                return obj.r.GetHashCode() ^ obj.g.GetHashCode() << 2 ^ obj.b.GetHashCode() >> 2 ^
+                       obj.a.GetHashCode() >> 1;
             }
         }
 
@@ -144,12 +148,14 @@ namespace Cysharp.Threading.Tasks.Internal
         {
             public bool Equals(Rect self, Rect other)
             {
-                return self.x.Equals(other.x) && self.width.Equals(other.width) && self.y.Equals(other.y) && self.height.Equals(other.height);
+                return self.x.Equals(other.x) && self.width.Equals(other.width) && self.y.Equals(other.y) &&
+                       self.height.Equals(other.height);
             }
 
             public int GetHashCode(Rect obj)
             {
-                return obj.x.GetHashCode() ^ obj.width.GetHashCode() << 2 ^ obj.y.GetHashCode() >> 2 ^ obj.height.GetHashCode() >> 1;
+                return obj.x.GetHashCode() ^ obj.width.GetHashCode() << 2 ^ obj.y.GetHashCode() >> 2 ^
+                       obj.height.GetHashCode() >> 1;
             }
         }
 
@@ -170,12 +176,14 @@ namespace Cysharp.Threading.Tasks.Internal
         {
             public bool Equals(Quaternion self, Quaternion vector)
             {
-                return self.x.Equals(vector.x) && self.y.Equals(vector.y) && self.z.Equals(vector.z) && self.w.Equals(vector.w);
+                return self.x.Equals(vector.x) && self.y.Equals(vector.y) && self.z.Equals(vector.z) &&
+                       self.w.Equals(vector.w);
             }
 
             public int GetHashCode(Quaternion obj)
             {
-                return obj.x.GetHashCode() ^ obj.y.GetHashCode() << 2 ^ obj.z.GetHashCode() >> 2 ^ obj.w.GetHashCode() >> 1;
+                return obj.x.GetHashCode() ^ obj.y.GetHashCode() << 2 ^ obj.z.GetHashCode() >> 2 ^
+                       obj.w.GetHashCode() >> 1;
             }
         }
 
@@ -183,12 +191,14 @@ namespace Cysharp.Threading.Tasks.Internal
         {
             public bool Equals(Color32 self, Color32 vector)
             {
-                return self.a.Equals(vector.a) && self.r.Equals(vector.r) && self.g.Equals(vector.g) && self.b.Equals(vector.b);
+                return self.a.Equals(vector.a) && self.r.Equals(vector.r) && self.g.Equals(vector.g) &&
+                       self.b.Equals(vector.b);
             }
 
             public int GetHashCode(Color32 obj)
             {
-                return obj.a.GetHashCode() ^ obj.r.GetHashCode() << 2 ^ obj.g.GetHashCode() >> 2 ^ obj.b.GetHashCode() >> 1;
+                return obj.a.GetHashCode() ^ obj.r.GetHashCode() << 2 ^ obj.g.GetHashCode() >> 2 ^
+                       obj.b.GetHashCode() >> 1;
             }
         }
 
@@ -239,12 +249,14 @@ namespace Cysharp.Threading.Tasks.Internal
         {
             public bool Equals(RectInt self, RectInt other)
             {
-                return self.x.Equals(other.x) && self.width.Equals(other.width) && self.y.Equals(other.y) && self.height.Equals(other.height);
+                return self.x.Equals(other.x) && self.width.Equals(other.width) && self.y.Equals(other.y) &&
+                       self.height.Equals(other.height);
             }
 
             public int GetHashCode(RectInt obj)
             {
-                return obj.x.GetHashCode() ^ obj.width.GetHashCode() << 2 ^ obj.y.GetHashCode() >> 2 ^ obj.height.GetHashCode() >> 1;
+                return obj.x.GetHashCode() ^ obj.width.GetHashCode() << 2 ^ obj.y.GetHashCode() >> 2 ^
+                       obj.height.GetHashCode() >> 1;
             }
         }
 
@@ -253,12 +265,13 @@ namespace Cysharp.Threading.Tasks.Internal
             public bool Equals(BoundsInt self, BoundsInt vector)
             {
                 return Vector3IntEqualityComparer.Default.Equals(self.position, vector.position)
-                    && Vector3IntEqualityComparer.Default.Equals(self.size, vector.size);
+                       && Vector3IntEqualityComparer.Default.Equals(self.size, vector.size);
             }
 
             public int GetHashCode(BoundsInt obj)
             {
-                return Vector3IntEqualityComparer.Default.GetHashCode(obj.position) ^ Vector3IntEqualityComparer.Default.GetHashCode(obj.size) << 2;
+                return Vector3IntEqualityComparer.Default.GetHashCode(obj.position) ^
+                       Vector3IntEqualityComparer.Default.GetHashCode(obj.size) << 2;
             }
         }
 

@@ -15,12 +15,14 @@ namespace Cysharp.Threading.Tasks
             BindToCore(source, text, text.GetCancellationTokenOnDestroy(), rebindOnError).Forget();
         }
 
-        public static void BindTo(this IUniTaskAsyncEnumerable<string> source, TMP_Text text, CancellationToken cancellationToken, bool rebindOnError = true)
+        public static void BindTo(this IUniTaskAsyncEnumerable<string> source, TMP_Text text,
+            CancellationToken cancellationToken, bool rebindOnError = true)
         {
             BindToCore(source, text, cancellationToken, rebindOnError).Forget();
         }
 
-        static async UniTaskVoid BindToCore(IUniTaskAsyncEnumerable<string> source, TMP_Text text, CancellationToken cancellationToken, bool rebindOnError)
+        static async UniTaskVoid BindToCore(IUniTaskAsyncEnumerable<string> source, TMP_Text text,
+            CancellationToken cancellationToken, bool rebindOnError)
         {
             var repeat = false;
             BIND_AGAIN:
@@ -71,7 +73,8 @@ namespace Cysharp.Threading.Tasks
             BindToCore(source, text, text.GetCancellationTokenOnDestroy(), rebindOnError).Forget();
         }
 
-        public static void BindTo<T>(this IUniTaskAsyncEnumerable<T> source, TMP_Text text, CancellationToken cancellationToken, bool rebindOnError = true)
+        public static void BindTo<T>(this IUniTaskAsyncEnumerable<T> source, TMP_Text text,
+            CancellationToken cancellationToken, bool rebindOnError = true)
         {
             BindToCore(source, text, cancellationToken, rebindOnError).Forget();
         }
@@ -81,7 +84,8 @@ namespace Cysharp.Threading.Tasks
             BindToCore(source, text, text.GetCancellationTokenOnDestroy(), rebindOnError).Forget();
         }
 
-        static async UniTaskVoid BindToCore<T>(IUniTaskAsyncEnumerable<T> source, TMP_Text text, CancellationToken cancellationToken, bool rebindOnError)
+        static async UniTaskVoid BindToCore<T>(IUniTaskAsyncEnumerable<T> source, TMP_Text text,
+            CancellationToken cancellationToken, bool rebindOnError)
         {
             var repeat = false;
             BIND_AGAIN:

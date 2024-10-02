@@ -43,13 +43,16 @@ namespace Cysharp.Threading.Tasks.CompilerServices
         // Get AsyncStateMachine internal state to check IL2CPP bug
         public static int GetState(IAsyncStateMachine stateMachine)
         {
-            var info = stateMachine.GetType().GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+            var info = stateMachine.GetType().GetFields(System.Reflection.BindingFlags.Public |
+                                                        System.Reflection.BindingFlags.NonPublic |
+                                                        System.Reflection.BindingFlags.Instance)
                 .First(x => x.Name.EndsWith("__state"));
             return (int)info.GetValue(stateMachine);
         }
     }
 
-    internal sealed class AsyncUniTaskVoid<TStateMachine> : IStateMachineRunner, ITaskPoolNode<AsyncUniTaskVoid<TStateMachine>>, IUniTaskSource
+    internal sealed class AsyncUniTaskVoid<TStateMachine> : IStateMachineRunner,
+        ITaskPoolNode<AsyncUniTaskVoid<TStateMachine>>, IUniTaskSource
         where TStateMachine : IAsyncStateMachine
     {
         static TaskPool<AsyncUniTaskVoid<TStateMachine>> pool;
@@ -76,6 +79,7 @@ namespace Cysharp.Threading.Tasks.CompilerServices
             {
                 result = new AsyncUniTaskVoid<TStateMachine>();
             }
+
             TaskTracker.TrackActiveTask(result, 3);
 
             runnerFieldRef = result; // set runner before copied.
@@ -125,13 +129,14 @@ namespace Cysharp.Threading.Tasks.CompilerServices
         }
     }
 
-    internal sealed class AsyncUniTask<TStateMachine> : IStateMachineRunnerPromise, IUniTaskSource, ITaskPoolNode<AsyncUniTask<TStateMachine>>
+    internal sealed class AsyncUniTask<TStateMachine> : IStateMachineRunnerPromise, IUniTaskSource,
+        ITaskPoolNode<AsyncUniTask<TStateMachine>>
         where TStateMachine : IAsyncStateMachine
     {
         static TaskPool<AsyncUniTask<TStateMachine>> pool;
 
 #if ENABLE_IL2CPP
-        readonly Action returnDelegate;  
+        readonly Action returnDelegate;
 #endif
         public Action MoveNext { get; }
 
@@ -146,12 +151,14 @@ namespace Cysharp.Threading.Tasks.CompilerServices
 #endif
         }
 
-        public static void SetStateMachine(ref TStateMachine stateMachine, ref IStateMachineRunnerPromise runnerPromiseFieldRef)
+        public static void SetStateMachine(ref TStateMachine stateMachine,
+            ref IStateMachineRunnerPromise runnerPromiseFieldRef)
         {
             if (!pool.TryPop(out var result))
             {
                 result = new AsyncUniTask<TStateMachine>();
             }
+
             TaskTracker.TrackActiveTask(result, 3);
 
             runnerPromiseFieldRef = result; // set runner before copied.
@@ -191,11 +198,7 @@ namespace Cysharp.Threading.Tasks.CompilerServices
 
         public UniTask Task
         {
-            [DebuggerHidden]
-            get
-            {
-                return new UniTask(this, core.Version);
-            }
+            [DebuggerHidden] get { return new UniTask(this, core.Version); }
         }
 
         [DebuggerHidden]
@@ -247,13 +250,14 @@ namespace Cysharp.Threading.Tasks.CompilerServices
         }
     }
 
-    internal sealed class AsyncUniTask<TStateMachine, T> : IStateMachineRunnerPromise<T>, IUniTaskSource<T>, ITaskPoolNode<AsyncUniTask<TStateMachine, T>>
+    internal sealed class AsyncUniTask<TStateMachine, T> : IStateMachineRunnerPromise<T>, IUniTaskSource<T>,
+        ITaskPoolNode<AsyncUniTask<TStateMachine, T>>
         where TStateMachine : IAsyncStateMachine
     {
         static TaskPool<AsyncUniTask<TStateMachine, T>> pool;
 
 #if ENABLE_IL2CPP
-        readonly Action returnDelegate;  
+        readonly Action returnDelegate;
 #endif
 
         public Action MoveNext { get; }
@@ -269,12 +273,14 @@ namespace Cysharp.Threading.Tasks.CompilerServices
 #endif
         }
 
-        public static void SetStateMachine(ref TStateMachine stateMachine, ref IStateMachineRunnerPromise<T> runnerPromiseFieldRef)
+        public static void SetStateMachine(ref TStateMachine stateMachine,
+            ref IStateMachineRunnerPromise<T> runnerPromiseFieldRef)
         {
             if (!pool.TryPop(out var result))
             {
                 result = new AsyncUniTask<TStateMachine, T>();
             }
+
             TaskTracker.TrackActiveTask(result, 3);
 
             runnerPromiseFieldRef = result; // set runner before copied.
@@ -315,11 +321,7 @@ namespace Cysharp.Threading.Tasks.CompilerServices
 
         public UniTask<T> Task
         {
-            [DebuggerHidden]
-            get
-            {
-                return new UniTask<T>(this, core.Version);
-            }
+            [DebuggerHidden] get { return new UniTask<T>(this, core.Version); }
         }
 
         [DebuggerHidden]
@@ -377,4 +379,3 @@ namespace Cysharp.Threading.Tasks.CompilerServices
         }
     }
 }
-

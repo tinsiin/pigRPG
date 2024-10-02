@@ -118,7 +118,8 @@ namespace Cysharp.Threading.Tasks.Triggers
                     parent.AddHandler(this);
                     if (cancellationToken.CanBeCanceled)
                     {
-                        registration = cancellationToken.RegisterWithoutCaptureExecutionContext(cancellationCallback, this);
+                        registration =
+                            cancellationToken.RegisterWithoutCaptureExecutionContext(cancellationCallback, this);
                     }
                 }
 
@@ -156,6 +157,7 @@ namespace Cysharp.Threading.Tasks.Triggers
                     trigger.OnDestroy();
                     return false;
                 }
+
                 return true;
             }
         }

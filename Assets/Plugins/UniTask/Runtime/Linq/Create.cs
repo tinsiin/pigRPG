@@ -40,7 +40,8 @@ namespace Cysharp.Threading.Tasks.Linq
             int state = -1;
             AsyncWriter writer;
 
-            public _Create(Func<IAsyncWriter<T>, CancellationToken, UniTask> create, CancellationToken cancellationToken)
+            public _Create(Func<IAsyncWriter<T>, CancellationToken, UniTask> create,
+                CancellationToken cancellationToken)
             {
                 this.create = create;
                 this.cancellationToken = cancellationToken;
@@ -72,16 +73,17 @@ namespace Cysharp.Threading.Tasks.Linq
                     switch (state)
                     {
                         case -1: // init
+                        {
+                            writer = new AsyncWriter(this);
+                            RunWriterTask(create(writer, cancellationToken)).Forget();
+                            if (Volatile.Read(ref state) == -2)
                             {
-                                writer = new AsyncWriter(this);
-                                RunWriterTask(create(writer, cancellationToken)).Forget();
-                                if (Volatile.Read(ref state) == -2)
-                                {
-                                    return; // complete synchronously
-                                }
-                                state = 0; // wait YieldAsync, it set TrySetResult(true)
-                                return;
+                                return; // complete synchronously
                             }
+
+                            state = 0; // wait YieldAsync, it set TrySetResult(true)
+                            return;
+                        }
                         case 0:
                             writer.SignalWriter();
                             return;
@@ -138,7 +140,7 @@ namespace Cysharp.Threading.Tasks.Linq
             {
                 this.enumerator = enumerator;
             }
-            
+
             public void Dispose()
             {
                 var status = core.GetStatus(core.Version);
@@ -146,7 +148,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     core.TrySetCanceled();
                 }
-            }            
+            }
 
             public void GetResult(short token)
             {

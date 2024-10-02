@@ -6,14 +6,16 @@ namespace Cysharp.Threading.Tasks.Linq
 {
     public static partial class UniTaskAsyncEnumerable
     {
-        public static IUniTaskAsyncEnumerable<TSource> Append<TSource>(this IUniTaskAsyncEnumerable<TSource> source, TSource element)
+        public static IUniTaskAsyncEnumerable<TSource> Append<TSource>(this IUniTaskAsyncEnumerable<TSource> source,
+            TSource element)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
 
             return new AppendPrepend<TSource>(source, element, true);
         }
 
-        public static IUniTaskAsyncEnumerable<TSource> Prepend<TSource>(this IUniTaskAsyncEnumerable<TSource> source, TSource element)
+        public static IUniTaskAsyncEnumerable<TSource> Prepend<TSource>(this IUniTaskAsyncEnumerable<TSource> source,
+            TSource element)
         {
             Error.ThrowArgumentNullException(source, nameof(source));
 
@@ -59,7 +61,8 @@ namespace Cysharp.Threading.Tasks.Linq
             IUniTaskAsyncEnumerator<TSource> enumerator;
             UniTask<bool>.Awaiter awaiter;
 
-            public _AppendPrepend(IUniTaskAsyncEnumerable<TSource> source, TSource element, bool append, CancellationToken cancellationToken)
+            public _AppendPrepend(IUniTaskAsyncEnumerable<TSource> source, TSource element, bool append,
+                CancellationToken cancellationToken)
             {
                 this.source = source;
                 this.element = element;
@@ -143,9 +146,9 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     return enumerator.DisposeAsync();
                 }
+
                 return default;
             }
         }
     }
-
 }

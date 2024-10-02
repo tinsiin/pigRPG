@@ -26,7 +26,8 @@ namespace Cysharp.Threading.Tasks.Internal
             {
                 if (startTimestamp == 0)
                 {
-                    throw new InvalidOperationException("Detected invalid initialization(use 'default'), only to create from StartNew().");
+                    throw new InvalidOperationException(
+                        "Detected invalid initialization(use 'default'), only to create from StartNew().");
                 }
 
                 var delta = Stopwatch.GetTimestamp() - startTimestamp;

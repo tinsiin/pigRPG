@@ -24,11 +24,10 @@ namespace Cysharp.Threading.Tasks
             return System.Linq.Enumerable.Select(source, selector);
         }
 
-        public static IEnumerable<UniTask<TR>> Select<T, TR>(this IEnumerable<T> source, Func<T, int, UniTask<TR>> selector)
+        public static IEnumerable<UniTask<TR>> Select<T, TR>(this IEnumerable<T> source,
+            Func<T, int, UniTask<TR>> selector)
         {
             return System.Linq.Enumerable.Select(source, selector);
         }
     }
 }
-
-

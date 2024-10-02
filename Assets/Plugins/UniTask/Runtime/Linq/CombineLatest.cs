@@ -6,7 +6,9 @@ namespace Cysharp.Threading.Tasks.Linq
 {
     public static partial class UniTaskAsyncEnumerable
     {
-        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, TResult>(this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, Func<T1, T2, TResult> resultSelector)
+        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, TResult>(
+            this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            Func<T1, T2, TResult> resultSelector)
         {
             Error.ThrowArgumentNullException(source1, nameof(source1));
             Error.ThrowArgumentNullException(source2, nameof(source2));
@@ -15,7 +17,9 @@ namespace Cysharp.Threading.Tasks.Linq
             return new CombineLatest<T1, T2, TResult>(source1, source2, resultSelector);
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, TResult>(this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, Func<T1, T2, T3, TResult> resultSelector)
+        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, TResult>(
+            this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, Func<T1, T2, T3, TResult> resultSelector)
         {
             Error.ThrowArgumentNullException(source1, nameof(source1));
             Error.ThrowArgumentNullException(source2, nameof(source2));
@@ -25,7 +29,10 @@ namespace Cysharp.Threading.Tasks.Linq
             return new CombineLatest<T1, T2, T3, TResult>(source1, source2, source3, resultSelector);
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, TResult>(this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, Func<T1, T2, T3, T4, TResult> resultSelector)
+        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, TResult>(
+            this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            Func<T1, T2, T3, T4, TResult> resultSelector)
         {
             Error.ThrowArgumentNullException(source1, nameof(source1));
             Error.ThrowArgumentNullException(source2, nameof(source2));
@@ -36,7 +43,10 @@ namespace Cysharp.Threading.Tasks.Linq
             return new CombineLatest<T1, T2, T3, T4, TResult>(source1, source2, source3, source4, resultSelector);
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, TResult>(this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, Func<T1, T2, T3, T4, T5, TResult> resultSelector)
+        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, TResult>(
+            this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, Func<T1, T2, T3, T4, T5, TResult> resultSelector)
         {
             Error.ThrowArgumentNullException(source1, nameof(source1));
             Error.ThrowArgumentNullException(source2, nameof(source2));
@@ -45,10 +55,15 @@ namespace Cysharp.Threading.Tasks.Linq
             Error.ThrowArgumentNullException(source5, nameof(source5));
             Error.ThrowArgumentNullException(resultSelector, nameof(resultSelector));
 
-            return new CombineLatest<T1, T2, T3, T4, T5, TResult>(source1, source2, source3, source4, source5, resultSelector);
+            return new CombineLatest<T1, T2, T3, T4, T5, TResult>(source1, source2, source3, source4, source5,
+                resultSelector);
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, T6, TResult>(this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, Func<T1, T2, T3, T4, T5, T6, TResult> resultSelector)
+        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, T6, TResult>(
+            this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+            Func<T1, T2, T3, T4, T5, T6, TResult> resultSelector)
         {
             Error.ThrowArgumentNullException(source1, nameof(source1));
             Error.ThrowArgumentNullException(source2, nameof(source2));
@@ -58,10 +73,15 @@ namespace Cysharp.Threading.Tasks.Linq
             Error.ThrowArgumentNullException(source6, nameof(source6));
             Error.ThrowArgumentNullException(resultSelector, nameof(resultSelector));
 
-            return new CombineLatest<T1, T2, T3, T4, T5, T6, TResult>(source1, source2, source3, source4, source5, source6, resultSelector);
+            return new CombineLatest<T1, T2, T3, T4, T5, T6, TResult>(source1, source2, source3, source4, source5,
+                source6, resultSelector);
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, T6, T7, TResult>(this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, Func<T1, T2, T3, T4, T5, T6, T7, TResult> resultSelector)
+        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, T6, T7, TResult>(
+            this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+            IUniTaskAsyncEnumerable<T7> source7, Func<T1, T2, T3, T4, T5, T6, T7, TResult> resultSelector)
         {
             Error.ThrowArgumentNullException(source1, nameof(source1));
             Error.ThrowArgumentNullException(source2, nameof(source2));
@@ -72,10 +92,16 @@ namespace Cysharp.Threading.Tasks.Linq
             Error.ThrowArgumentNullException(source7, nameof(source7));
             Error.ThrowArgumentNullException(resultSelector, nameof(resultSelector));
 
-            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, TResult>(source1, source2, source3, source4, source5, source6, source7, resultSelector);
+            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, TResult>(source1, source2, source3, source4, source5,
+                source6, source7, resultSelector);
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> resultSelector)
+        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(
+            this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+            IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+            Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> resultSelector)
         {
             Error.ThrowArgumentNullException(source1, nameof(source1));
             Error.ThrowArgumentNullException(source2, nameof(source2));
@@ -87,10 +113,16 @@ namespace Cysharp.Threading.Tasks.Linq
             Error.ThrowArgumentNullException(source8, nameof(source8));
             Error.ThrowArgumentNullException(resultSelector, nameof(resultSelector));
 
-            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(source1, source2, source3, source4, source5, source6, source7, source8, resultSelector);
+            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(source1, source2, source3, source4,
+                source5, source6, source7, source8, resultSelector);
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>(this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> resultSelector)
+        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>(
+            this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+            IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+            IUniTaskAsyncEnumerable<T9> source9, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> resultSelector)
         {
             Error.ThrowArgumentNullException(source1, nameof(source1));
             Error.ThrowArgumentNullException(source2, nameof(source2));
@@ -103,10 +135,17 @@ namespace Cysharp.Threading.Tasks.Linq
             Error.ThrowArgumentNullException(source9, nameof(source9));
             Error.ThrowArgumentNullException(resultSelector, nameof(resultSelector));
 
-            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>(source1, source2, source3, source4, source5, source6, source7, source8, source9, resultSelector);
+            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>(source1, source2, source3, source4,
+                source5, source6, source7, source8, source9, resultSelector);
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>(this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> resultSelector)
+        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>(
+            this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+            IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+            IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+            Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> resultSelector)
         {
             Error.ThrowArgumentNullException(source1, nameof(source1));
             Error.ThrowArgumentNullException(source2, nameof(source2));
@@ -120,10 +159,19 @@ namespace Cysharp.Threading.Tasks.Linq
             Error.ThrowArgumentNullException(source10, nameof(source10));
             Error.ThrowArgumentNullException(resultSelector, nameof(resultSelector));
 
-            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>(source1, source2, source3, source4, source5, source6, source7, source8, source9, source10, resultSelector);
+            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>(source1, source2, source3,
+                source4, source5, source6, source7, source8, source9, source10, resultSelector);
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, IUniTaskAsyncEnumerable<T11> source11, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> resultSelector)
+        public static IUniTaskAsyncEnumerable<TResult>
+            CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(
+                this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+                IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+                IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+                IUniTaskAsyncEnumerable<T11> source11,
+                Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> resultSelector)
         {
             Error.ThrowArgumentNullException(source1, nameof(source1));
             Error.ThrowArgumentNullException(source2, nameof(source2));
@@ -138,10 +186,19 @@ namespace Cysharp.Threading.Tasks.Linq
             Error.ThrowArgumentNullException(source11, nameof(source11));
             Error.ThrowArgumentNullException(resultSelector, nameof(resultSelector));
 
-            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(source1, source2, source3, source4, source5, source6, source7, source8, source9, source10, source11, resultSelector);
+            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(source1, source2, source3,
+                source4, source5, source6, source7, source8, source9, source10, source11, resultSelector);
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult>(this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> resultSelector)
+        public static IUniTaskAsyncEnumerable<TResult>
+            CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult>(
+                this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+                IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+                IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+                IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12,
+                Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> resultSelector)
         {
             Error.ThrowArgumentNullException(source1, nameof(source1));
             Error.ThrowArgumentNullException(source2, nameof(source2));
@@ -157,10 +214,21 @@ namespace Cysharp.Threading.Tasks.Linq
             Error.ThrowArgumentNullException(source12, nameof(source12));
             Error.ThrowArgumentNullException(resultSelector, nameof(resultSelector));
 
-            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult>(source1, source2, source3, source4, source5, source6, source7, source8, source9, source10, source11, source12, resultSelector);
+            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult>(source1, source2,
+                source3, source4, source5, source6, source7, source8, source9, source10, source11, source12,
+                resultSelector);
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult>(this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12, IUniTaskAsyncEnumerable<T13> source13, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> resultSelector)
+        public static IUniTaskAsyncEnumerable<TResult>
+            CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult>(
+                this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+                IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+                IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+                IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12,
+                IUniTaskAsyncEnumerable<T13> source13,
+                Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> resultSelector)
         {
             Error.ThrowArgumentNullException(source1, nameof(source1));
             Error.ThrowArgumentNullException(source2, nameof(source2));
@@ -177,10 +245,21 @@ namespace Cysharp.Threading.Tasks.Linq
             Error.ThrowArgumentNullException(source13, nameof(source13));
             Error.ThrowArgumentNullException(resultSelector, nameof(resultSelector));
 
-            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult>(source1, source2, source3, source4, source5, source6, source7, source8, source9, source10, source11, source12, source13, resultSelector);
+            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult>(source1, source2,
+                source3, source4, source5, source6, source7, source8, source9, source10, source11, source12, source13,
+                resultSelector);
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult>(this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12, IUniTaskAsyncEnumerable<T13> source13, IUniTaskAsyncEnumerable<T14> source14, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> resultSelector)
+        public static IUniTaskAsyncEnumerable<TResult>
+            CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult>(
+                this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+                IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+                IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+                IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12,
+                IUniTaskAsyncEnumerable<T13> source13, IUniTaskAsyncEnumerable<T14> source14,
+                Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> resultSelector)
         {
             Error.ThrowArgumentNullException(source1, nameof(source1));
             Error.ThrowArgumentNullException(source2, nameof(source2));
@@ -198,10 +277,22 @@ namespace Cysharp.Threading.Tasks.Linq
             Error.ThrowArgumentNullException(source14, nameof(source14));
             Error.ThrowArgumentNullException(resultSelector, nameof(resultSelector));
 
-            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult>(source1, source2, source3, source4, source5, source6, source7, source8, source9, source10, source11, source12, source13, source14, resultSelector);
+            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult>(source1,
+                source2, source3, source4, source5, source6, source7, source8, source9, source10, source11, source12,
+                source13, source14, resultSelector);
         }
 
-        public static IUniTaskAsyncEnumerable<TResult> CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult>(this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12, IUniTaskAsyncEnumerable<T13> source13, IUniTaskAsyncEnumerable<T14> source14, IUniTaskAsyncEnumerable<T15> source15, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> resultSelector)
+        public static IUniTaskAsyncEnumerable<TResult>
+            CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult>(
+                this IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+                IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+                IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+                IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12,
+                IUniTaskAsyncEnumerable<T13> source13, IUniTaskAsyncEnumerable<T14> source14,
+                IUniTaskAsyncEnumerable<T15> source15,
+                Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> resultSelector)
         {
             Error.ThrowArgumentNullException(source1, nameof(source1));
             Error.ThrowArgumentNullException(source2, nameof(source2));
@@ -220,23 +311,25 @@ namespace Cysharp.Threading.Tasks.Linq
             Error.ThrowArgumentNullException(source15, nameof(source15));
             Error.ThrowArgumentNullException(resultSelector, nameof(resultSelector));
 
-            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult>(source1, source2, source3, source4, source5, source6, source7, source8, source9, source10, source11, source12, source13, source14, source15, resultSelector);
+            return new CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult>(source1,
+                source2, source3, source4, source5, source6, source7, source8, source9, source10, source11, source12,
+                source13, source14, source15, resultSelector);
         }
-
     }
 
     internal class CombineLatest<T1, T2, TResult> : IUniTaskAsyncEnumerable<TResult>
     {
         readonly IUniTaskAsyncEnumerable<T1> source1;
         readonly IUniTaskAsyncEnumerable<T2> source2;
-        
+
         readonly Func<T1, T2, TResult> resultSelector;
 
-        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, Func<T1, T2, TResult> resultSelector)
+        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            Func<T1, T2, TResult> resultSelector)
         {
             this.source1 = source1;
             this.source2 = source2;
-        
+
             this.resultSelector = resultSelector;
         }
 
@@ -253,7 +346,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
             readonly IUniTaskAsyncEnumerable<T1> source1;
             readonly IUniTaskAsyncEnumerable<T2> source2;
-       
+
             readonly Func<T1, T2, TResult> resultSelector;
             CancellationToken cancellationToken;
 
@@ -273,11 +366,12 @@ namespace Cysharp.Threading.Tasks.Linq
             bool syncRunning;
             TResult result;
 
-            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, Func<T1, T2, TResult> resultSelector, CancellationToken cancellationToken)
+            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                Func<T1, T2, TResult> resultSelector, CancellationToken cancellationToken)
             {
                 this.source1 = source1;
                 this.source2 = source2;
-                
+
                 this.resultSelector = resultSelector;
                 this.cancellationToken = cancellationToken;
                 TaskTracker.TrackActiveTask(this, 3);
@@ -313,6 +407,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter1.SourceOnCompleted(Completed1Delegate, this);
                     }
                 }
+
                 if (!running2)
                 {
                     running2 = true;
@@ -331,6 +426,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     goto AGAIN;
                 }
+
                 syncRunning = false;
 
                 return new UniTask<bool>(this, completionSource.Version);
@@ -356,6 +452,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -385,6 +482,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter1.SourceOnCompleted(Completed1Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -411,6 +509,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -440,6 +539,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter2.SourceOnCompleted(Completed2Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -467,6 +567,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await enumerator1.DisposeAsync();
                 }
+
                 if (enumerator2 != null)
                 {
                     await enumerator2.DisposeAsync();
@@ -480,15 +581,16 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<T1> source1;
         readonly IUniTaskAsyncEnumerable<T2> source2;
         readonly IUniTaskAsyncEnumerable<T3> source3;
-        
+
         readonly Func<T1, T2, T3, TResult> resultSelector;
 
-        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, Func<T1, T2, T3, TResult> resultSelector)
+        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, Func<T1, T2, T3, TResult> resultSelector)
         {
             this.source1 = source1;
             this.source2 = source2;
             this.source3 = source3;
-        
+
             this.resultSelector = resultSelector;
         }
 
@@ -507,7 +609,7 @@ namespace Cysharp.Threading.Tasks.Linq
             readonly IUniTaskAsyncEnumerable<T1> source1;
             readonly IUniTaskAsyncEnumerable<T2> source2;
             readonly IUniTaskAsyncEnumerable<T3> source3;
-       
+
             readonly Func<T1, T2, T3, TResult> resultSelector;
             CancellationToken cancellationToken;
 
@@ -533,12 +635,14 @@ namespace Cysharp.Threading.Tasks.Linq
             bool syncRunning;
             TResult result;
 
-            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, Func<T1, T2, T3, TResult> resultSelector, CancellationToken cancellationToken)
+            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, Func<T1, T2, T3, TResult> resultSelector,
+                CancellationToken cancellationToken)
             {
                 this.source1 = source1;
                 this.source2 = source2;
                 this.source3 = source3;
-                
+
                 this.resultSelector = resultSelector;
                 this.cancellationToken = cancellationToken;
                 TaskTracker.TrackActiveTask(this, 3);
@@ -575,6 +679,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter1.SourceOnCompleted(Completed1Delegate, this);
                     }
                 }
+
                 if (!running2)
                 {
                     running2 = true;
@@ -588,6 +693,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter2.SourceOnCompleted(Completed2Delegate, this);
                     }
                 }
+
                 if (!running3)
                 {
                     running3 = true;
@@ -606,6 +712,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     goto AGAIN;
                 }
+
                 syncRunning = false;
 
                 return new UniTask<bool>(this, completionSource.Version);
@@ -631,6 +738,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -660,6 +768,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter1.SourceOnCompleted(Completed1Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -686,6 +795,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -715,6 +825,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter2.SourceOnCompleted(Completed2Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -741,6 +852,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -770,6 +882,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter3.SourceOnCompleted(Completed3Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -797,10 +910,12 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await enumerator1.DisposeAsync();
                 }
+
                 if (enumerator2 != null)
                 {
                     await enumerator2.DisposeAsync();
                 }
+
                 if (enumerator3 != null)
                 {
                     await enumerator3.DisposeAsync();
@@ -815,16 +930,18 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<T2> source2;
         readonly IUniTaskAsyncEnumerable<T3> source3;
         readonly IUniTaskAsyncEnumerable<T4> source4;
-        
+
         readonly Func<T1, T2, T3, T4, TResult> resultSelector;
 
-        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, Func<T1, T2, T3, T4, TResult> resultSelector)
+        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            Func<T1, T2, T3, T4, TResult> resultSelector)
         {
             this.source1 = source1;
             this.source2 = source2;
             this.source3 = source3;
             this.source4 = source4;
-        
+
             this.resultSelector = resultSelector;
         }
 
@@ -845,7 +962,7 @@ namespace Cysharp.Threading.Tasks.Linq
             readonly IUniTaskAsyncEnumerable<T2> source2;
             readonly IUniTaskAsyncEnumerable<T3> source3;
             readonly IUniTaskAsyncEnumerable<T4> source4;
-       
+
             readonly Func<T1, T2, T3, T4, TResult> resultSelector;
             CancellationToken cancellationToken;
 
@@ -877,13 +994,15 @@ namespace Cysharp.Threading.Tasks.Linq
             bool syncRunning;
             TResult result;
 
-            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, Func<T1, T2, T3, T4, TResult> resultSelector, CancellationToken cancellationToken)
+            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                Func<T1, T2, T3, T4, TResult> resultSelector, CancellationToken cancellationToken)
             {
                 this.source1 = source1;
                 this.source2 = source2;
                 this.source3 = source3;
                 this.source4 = source4;
-                
+
                 this.resultSelector = resultSelector;
                 this.cancellationToken = cancellationToken;
                 TaskTracker.TrackActiveTask(this, 3);
@@ -921,6 +1040,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter1.SourceOnCompleted(Completed1Delegate, this);
                     }
                 }
+
                 if (!running2)
                 {
                     running2 = true;
@@ -934,6 +1054,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter2.SourceOnCompleted(Completed2Delegate, this);
                     }
                 }
+
                 if (!running3)
                 {
                     running3 = true;
@@ -947,6 +1068,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter3.SourceOnCompleted(Completed3Delegate, this);
                     }
                 }
+
                 if (!running4)
                 {
                     running4 = true;
@@ -965,6 +1087,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     goto AGAIN;
                 }
+
                 syncRunning = false;
 
                 return new UniTask<bool>(this, completionSource.Version);
@@ -990,6 +1113,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -1019,6 +1143,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter1.SourceOnCompleted(Completed1Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -1045,6 +1170,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -1074,6 +1200,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter2.SourceOnCompleted(Completed2Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -1100,6 +1227,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -1129,6 +1257,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter3.SourceOnCompleted(Completed3Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -1155,6 +1284,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -1184,6 +1314,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter4.SourceOnCompleted(Completed4Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -1211,14 +1342,17 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await enumerator1.DisposeAsync();
                 }
+
                 if (enumerator2 != null)
                 {
                     await enumerator2.DisposeAsync();
                 }
+
                 if (enumerator3 != null)
                 {
                     await enumerator3.DisposeAsync();
                 }
+
                 if (enumerator4 != null)
                 {
                     await enumerator4.DisposeAsync();
@@ -1234,17 +1368,19 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<T3> source3;
         readonly IUniTaskAsyncEnumerable<T4> source4;
         readonly IUniTaskAsyncEnumerable<T5> source5;
-        
+
         readonly Func<T1, T2, T3, T4, T5, TResult> resultSelector;
 
-        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, Func<T1, T2, T3, T4, T5, TResult> resultSelector)
+        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, Func<T1, T2, T3, T4, T5, TResult> resultSelector)
         {
             this.source1 = source1;
             this.source2 = source2;
             this.source3 = source3;
             this.source4 = source4;
             this.source5 = source5;
-        
+
             this.resultSelector = resultSelector;
         }
 
@@ -1267,7 +1403,7 @@ namespace Cysharp.Threading.Tasks.Linq
             readonly IUniTaskAsyncEnumerable<T3> source3;
             readonly IUniTaskAsyncEnumerable<T4> source4;
             readonly IUniTaskAsyncEnumerable<T5> source5;
-       
+
             readonly Func<T1, T2, T3, T4, T5, TResult> resultSelector;
             CancellationToken cancellationToken;
 
@@ -1305,14 +1441,17 @@ namespace Cysharp.Threading.Tasks.Linq
             bool syncRunning;
             TResult result;
 
-            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, Func<T1, T2, T3, T4, T5, TResult> resultSelector, CancellationToken cancellationToken)
+            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, Func<T1, T2, T3, T4, T5, TResult> resultSelector,
+                CancellationToken cancellationToken)
             {
                 this.source1 = source1;
                 this.source2 = source2;
                 this.source3 = source3;
                 this.source4 = source4;
                 this.source5 = source5;
-                
+
                 this.resultSelector = resultSelector;
                 this.cancellationToken = cancellationToken;
                 TaskTracker.TrackActiveTask(this, 3);
@@ -1351,6 +1490,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter1.SourceOnCompleted(Completed1Delegate, this);
                     }
                 }
+
                 if (!running2)
                 {
                     running2 = true;
@@ -1364,6 +1504,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter2.SourceOnCompleted(Completed2Delegate, this);
                     }
                 }
+
                 if (!running3)
                 {
                     running3 = true;
@@ -1377,6 +1518,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter3.SourceOnCompleted(Completed3Delegate, this);
                     }
                 }
+
                 if (!running4)
                 {
                     running4 = true;
@@ -1390,6 +1532,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter4.SourceOnCompleted(Completed4Delegate, this);
                     }
                 }
+
                 if (!running5)
                 {
                     running5 = true;
@@ -1408,6 +1551,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     goto AGAIN;
                 }
+
                 syncRunning = false;
 
                 return new UniTask<bool>(this, completionSource.Version);
@@ -1433,6 +1577,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -1462,6 +1607,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter1.SourceOnCompleted(Completed1Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -1488,6 +1634,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -1517,6 +1664,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter2.SourceOnCompleted(Completed2Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -1543,6 +1691,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -1572,6 +1721,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter3.SourceOnCompleted(Completed3Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -1598,6 +1748,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -1627,6 +1778,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter4.SourceOnCompleted(Completed4Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -1653,6 +1805,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -1682,6 +1835,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter5.SourceOnCompleted(Completed5Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -1709,18 +1863,22 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await enumerator1.DisposeAsync();
                 }
+
                 if (enumerator2 != null)
                 {
                     await enumerator2.DisposeAsync();
                 }
+
                 if (enumerator3 != null)
                 {
                     await enumerator3.DisposeAsync();
                 }
+
                 if (enumerator4 != null)
                 {
                     await enumerator4.DisposeAsync();
                 }
+
                 if (enumerator5 != null)
                 {
                     await enumerator5.DisposeAsync();
@@ -1737,10 +1895,13 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<T4> source4;
         readonly IUniTaskAsyncEnumerable<T5> source5;
         readonly IUniTaskAsyncEnumerable<T6> source6;
-        
+
         readonly Func<T1, T2, T3, T4, T5, T6, TResult> resultSelector;
 
-        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, Func<T1, T2, T3, T4, T5, T6, TResult> resultSelector)
+        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+            Func<T1, T2, T3, T4, T5, T6, TResult> resultSelector)
         {
             this.source1 = source1;
             this.source2 = source2;
@@ -1748,13 +1909,14 @@ namespace Cysharp.Threading.Tasks.Linq
             this.source4 = source4;
             this.source5 = source5;
             this.source6 = source6;
-        
+
             this.resultSelector = resultSelector;
         }
 
         public IUniTaskAsyncEnumerator<TResult> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            return new _CombineLatest(source1, source2, source3, source4, source5, source6, resultSelector, cancellationToken);
+            return new _CombineLatest(source1, source2, source3, source4, source5, source6, resultSelector,
+                cancellationToken);
         }
 
         class _CombineLatest : MoveNextSource, IUniTaskAsyncEnumerator<TResult>
@@ -1773,7 +1935,7 @@ namespace Cysharp.Threading.Tasks.Linq
             readonly IUniTaskAsyncEnumerable<T4> source4;
             readonly IUniTaskAsyncEnumerable<T5> source5;
             readonly IUniTaskAsyncEnumerable<T6> source6;
-       
+
             readonly Func<T1, T2, T3, T4, T5, T6, TResult> resultSelector;
             CancellationToken cancellationToken;
 
@@ -1817,7 +1979,10 @@ namespace Cysharp.Threading.Tasks.Linq
             bool syncRunning;
             TResult result;
 
-            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, Func<T1, T2, T3, T4, T5, T6, TResult> resultSelector, CancellationToken cancellationToken)
+            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+                Func<T1, T2, T3, T4, T5, T6, TResult> resultSelector, CancellationToken cancellationToken)
             {
                 this.source1 = source1;
                 this.source2 = source2;
@@ -1825,7 +1990,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 this.source4 = source4;
                 this.source5 = source5;
                 this.source6 = source6;
-                
+
                 this.resultSelector = resultSelector;
                 this.cancellationToken = cancellationToken;
                 TaskTracker.TrackActiveTask(this, 3);
@@ -1865,6 +2030,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter1.SourceOnCompleted(Completed1Delegate, this);
                     }
                 }
+
                 if (!running2)
                 {
                     running2 = true;
@@ -1878,6 +2044,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter2.SourceOnCompleted(Completed2Delegate, this);
                     }
                 }
+
                 if (!running3)
                 {
                     running3 = true;
@@ -1891,6 +2058,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter3.SourceOnCompleted(Completed3Delegate, this);
                     }
                 }
+
                 if (!running4)
                 {
                     running4 = true;
@@ -1904,6 +2072,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter4.SourceOnCompleted(Completed4Delegate, this);
                     }
                 }
+
                 if (!running5)
                 {
                     running5 = true;
@@ -1917,6 +2086,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter5.SourceOnCompleted(Completed5Delegate, this);
                     }
                 }
+
                 if (!running6)
                 {
                     running6 = true;
@@ -1935,6 +2105,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     goto AGAIN;
                 }
+
                 syncRunning = false;
 
                 return new UniTask<bool>(this, completionSource.Version);
@@ -1960,6 +2131,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -1989,6 +2161,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter1.SourceOnCompleted(Completed1Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -2015,6 +2188,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -2044,6 +2218,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter2.SourceOnCompleted(Completed2Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -2070,6 +2245,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -2099,6 +2275,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter3.SourceOnCompleted(Completed3Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -2125,6 +2302,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -2154,6 +2332,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter4.SourceOnCompleted(Completed4Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -2180,6 +2359,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -2209,6 +2389,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter5.SourceOnCompleted(Completed5Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -2235,6 +2416,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -2264,6 +2446,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter6.SourceOnCompleted(Completed6Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -2291,22 +2474,27 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await enumerator1.DisposeAsync();
                 }
+
                 if (enumerator2 != null)
                 {
                     await enumerator2.DisposeAsync();
                 }
+
                 if (enumerator3 != null)
                 {
                     await enumerator3.DisposeAsync();
                 }
+
                 if (enumerator4 != null)
                 {
                     await enumerator4.DisposeAsync();
                 }
+
                 if (enumerator5 != null)
                 {
                     await enumerator5.DisposeAsync();
                 }
+
                 if (enumerator6 != null)
                 {
                     await enumerator6.DisposeAsync();
@@ -2324,10 +2512,13 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<T5> source5;
         readonly IUniTaskAsyncEnumerable<T6> source6;
         readonly IUniTaskAsyncEnumerable<T7> source7;
-        
+
         readonly Func<T1, T2, T3, T4, T5, T6, T7, TResult> resultSelector;
 
-        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, Func<T1, T2, T3, T4, T5, T6, T7, TResult> resultSelector)
+        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+            IUniTaskAsyncEnumerable<T7> source7, Func<T1, T2, T3, T4, T5, T6, T7, TResult> resultSelector)
         {
             this.source1 = source1;
             this.source2 = source2;
@@ -2336,13 +2527,14 @@ namespace Cysharp.Threading.Tasks.Linq
             this.source5 = source5;
             this.source6 = source6;
             this.source7 = source7;
-        
+
             this.resultSelector = resultSelector;
         }
 
         public IUniTaskAsyncEnumerator<TResult> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, resultSelector, cancellationToken);
+            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, resultSelector,
+                cancellationToken);
         }
 
         class _CombineLatest : MoveNextSource, IUniTaskAsyncEnumerator<TResult>
@@ -2363,7 +2555,7 @@ namespace Cysharp.Threading.Tasks.Linq
             readonly IUniTaskAsyncEnumerable<T5> source5;
             readonly IUniTaskAsyncEnumerable<T6> source6;
             readonly IUniTaskAsyncEnumerable<T7> source7;
-       
+
             readonly Func<T1, T2, T3, T4, T5, T6, T7, TResult> resultSelector;
             CancellationToken cancellationToken;
 
@@ -2413,7 +2605,11 @@ namespace Cysharp.Threading.Tasks.Linq
             bool syncRunning;
             TResult result;
 
-            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, Func<T1, T2, T3, T4, T5, T6, T7, TResult> resultSelector, CancellationToken cancellationToken)
+            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+                IUniTaskAsyncEnumerable<T7> source7, Func<T1, T2, T3, T4, T5, T6, T7, TResult> resultSelector,
+                CancellationToken cancellationToken)
             {
                 this.source1 = source1;
                 this.source2 = source2;
@@ -2422,7 +2618,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 this.source5 = source5;
                 this.source6 = source6;
                 this.source7 = source7;
-                
+
                 this.resultSelector = resultSelector;
                 this.cancellationToken = cancellationToken;
                 TaskTracker.TrackActiveTask(this, 3);
@@ -2463,6 +2659,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter1.SourceOnCompleted(Completed1Delegate, this);
                     }
                 }
+
                 if (!running2)
                 {
                     running2 = true;
@@ -2476,6 +2673,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter2.SourceOnCompleted(Completed2Delegate, this);
                     }
                 }
+
                 if (!running3)
                 {
                     running3 = true;
@@ -2489,6 +2687,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter3.SourceOnCompleted(Completed3Delegate, this);
                     }
                 }
+
                 if (!running4)
                 {
                     running4 = true;
@@ -2502,6 +2701,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter4.SourceOnCompleted(Completed4Delegate, this);
                     }
                 }
+
                 if (!running5)
                 {
                     running5 = true;
@@ -2515,6 +2715,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter5.SourceOnCompleted(Completed5Delegate, this);
                     }
                 }
+
                 if (!running6)
                 {
                     running6 = true;
@@ -2528,6 +2729,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter6.SourceOnCompleted(Completed6Delegate, this);
                     }
                 }
+
                 if (!running7)
                 {
                     running7 = true;
@@ -2546,6 +2748,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     goto AGAIN;
                 }
+
                 syncRunning = false;
 
                 return new UniTask<bool>(this, completionSource.Version);
@@ -2571,6 +2774,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -2600,6 +2804,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter1.SourceOnCompleted(Completed1Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -2626,6 +2831,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -2655,6 +2861,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter2.SourceOnCompleted(Completed2Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -2681,6 +2888,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -2710,6 +2918,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter3.SourceOnCompleted(Completed3Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -2736,6 +2945,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -2765,6 +2975,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter4.SourceOnCompleted(Completed4Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -2791,6 +3002,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -2820,6 +3032,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter5.SourceOnCompleted(Completed5Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -2846,6 +3059,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -2875,6 +3089,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter6.SourceOnCompleted(Completed6Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -2901,6 +3116,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -2930,6 +3146,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter7.SourceOnCompleted(Completed7Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -2938,7 +3155,8 @@ namespace Cysharp.Threading.Tasks.Linq
 
             bool TrySetResult()
             {
-                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 && hasCurrent7)
+                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 &&
+                    hasCurrent7)
                 {
                     result = resultSelector(current1, current2, current3, current4, current5, current6, current7);
                     completionSource.TrySetResult(true);
@@ -2957,26 +3175,32 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await enumerator1.DisposeAsync();
                 }
+
                 if (enumerator2 != null)
                 {
                     await enumerator2.DisposeAsync();
                 }
+
                 if (enumerator3 != null)
                 {
                     await enumerator3.DisposeAsync();
                 }
+
                 if (enumerator4 != null)
                 {
                     await enumerator4.DisposeAsync();
                 }
+
                 if (enumerator5 != null)
                 {
                     await enumerator5.DisposeAsync();
                 }
+
                 if (enumerator6 != null)
                 {
                     await enumerator6.DisposeAsync();
                 }
+
                 if (enumerator7 != null)
                 {
                     await enumerator7.DisposeAsync();
@@ -2995,10 +3219,14 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<T6> source6;
         readonly IUniTaskAsyncEnumerable<T7> source7;
         readonly IUniTaskAsyncEnumerable<T8> source8;
-        
+
         readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> resultSelector;
 
-        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> resultSelector)
+        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+            IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+            Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> resultSelector)
         {
             this.source1 = source1;
             this.source2 = source2;
@@ -3008,13 +3236,14 @@ namespace Cysharp.Threading.Tasks.Linq
             this.source6 = source6;
             this.source7 = source7;
             this.source8 = source8;
-        
+
             this.resultSelector = resultSelector;
         }
 
         public IUniTaskAsyncEnumerator<TResult> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8, resultSelector, cancellationToken);
+            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8,
+                resultSelector, cancellationToken);
         }
 
         class _CombineLatest : MoveNextSource, IUniTaskAsyncEnumerator<TResult>
@@ -3037,7 +3266,7 @@ namespace Cysharp.Threading.Tasks.Linq
             readonly IUniTaskAsyncEnumerable<T6> source6;
             readonly IUniTaskAsyncEnumerable<T7> source7;
             readonly IUniTaskAsyncEnumerable<T8> source8;
-       
+
             readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> resultSelector;
             CancellationToken cancellationToken;
 
@@ -3093,7 +3322,11 @@ namespace Cysharp.Threading.Tasks.Linq
             bool syncRunning;
             TResult result;
 
-            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> resultSelector, CancellationToken cancellationToken)
+            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+                IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+                Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> resultSelector, CancellationToken cancellationToken)
             {
                 this.source1 = source1;
                 this.source2 = source2;
@@ -3103,7 +3336,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 this.source6 = source6;
                 this.source7 = source7;
                 this.source8 = source8;
-                
+
                 this.resultSelector = resultSelector;
                 this.cancellationToken = cancellationToken;
                 TaskTracker.TrackActiveTask(this, 3);
@@ -3145,6 +3378,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter1.SourceOnCompleted(Completed1Delegate, this);
                     }
                 }
+
                 if (!running2)
                 {
                     running2 = true;
@@ -3158,6 +3392,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter2.SourceOnCompleted(Completed2Delegate, this);
                     }
                 }
+
                 if (!running3)
                 {
                     running3 = true;
@@ -3171,6 +3406,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter3.SourceOnCompleted(Completed3Delegate, this);
                     }
                 }
+
                 if (!running4)
                 {
                     running4 = true;
@@ -3184,6 +3420,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter4.SourceOnCompleted(Completed4Delegate, this);
                     }
                 }
+
                 if (!running5)
                 {
                     running5 = true;
@@ -3197,6 +3434,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter5.SourceOnCompleted(Completed5Delegate, this);
                     }
                 }
+
                 if (!running6)
                 {
                     running6 = true;
@@ -3210,6 +3448,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter6.SourceOnCompleted(Completed6Delegate, this);
                     }
                 }
+
                 if (!running7)
                 {
                     running7 = true;
@@ -3223,6 +3462,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter7.SourceOnCompleted(Completed7Delegate, this);
                     }
                 }
+
                 if (!running8)
                 {
                     running8 = true;
@@ -3237,10 +3477,12 @@ namespace Cysharp.Threading.Tasks.Linq
                     }
                 }
 
-                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 || !running8)
+                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 ||
+                    !running8)
                 {
                     goto AGAIN;
                 }
+
                 syncRunning = false;
 
                 return new UniTask<bool>(this, completionSource.Version);
@@ -3266,6 +3508,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -3295,6 +3538,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter1.SourceOnCompleted(Completed1Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -3321,6 +3565,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -3350,6 +3595,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter2.SourceOnCompleted(Completed2Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -3376,6 +3622,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -3405,6 +3652,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter3.SourceOnCompleted(Completed3Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -3431,6 +3679,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -3460,6 +3709,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter4.SourceOnCompleted(Completed4Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -3486,6 +3736,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -3515,6 +3766,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter5.SourceOnCompleted(Completed5Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -3541,6 +3793,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -3570,6 +3823,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter6.SourceOnCompleted(Completed6Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -3596,6 +3850,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -3625,6 +3880,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter7.SourceOnCompleted(Completed7Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -3651,6 +3907,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -3680,6 +3937,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter8.SourceOnCompleted(Completed8Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -3688,9 +3946,11 @@ namespace Cysharp.Threading.Tasks.Linq
 
             bool TrySetResult()
             {
-                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 && hasCurrent7 && hasCurrent8)
+                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 &&
+                    hasCurrent7 && hasCurrent8)
                 {
-                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7, current8);
+                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7,
+                        current8);
                     completionSource.TrySetResult(true);
                     return true;
                 }
@@ -3707,30 +3967,37 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await enumerator1.DisposeAsync();
                 }
+
                 if (enumerator2 != null)
                 {
                     await enumerator2.DisposeAsync();
                 }
+
                 if (enumerator3 != null)
                 {
                     await enumerator3.DisposeAsync();
                 }
+
                 if (enumerator4 != null)
                 {
                     await enumerator4.DisposeAsync();
                 }
+
                 if (enumerator5 != null)
                 {
                     await enumerator5.DisposeAsync();
                 }
+
                 if (enumerator6 != null)
                 {
                     await enumerator6.DisposeAsync();
                 }
+
                 if (enumerator7 != null)
                 {
                     await enumerator7.DisposeAsync();
                 }
+
                 if (enumerator8 != null)
                 {
                     await enumerator8.DisposeAsync();
@@ -3750,10 +4017,14 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<T7> source7;
         readonly IUniTaskAsyncEnumerable<T8> source8;
         readonly IUniTaskAsyncEnumerable<T9> source9;
-        
+
         readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> resultSelector;
 
-        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> resultSelector)
+        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+            IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+            IUniTaskAsyncEnumerable<T9> source9, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> resultSelector)
         {
             this.source1 = source1;
             this.source2 = source2;
@@ -3764,13 +4035,14 @@ namespace Cysharp.Threading.Tasks.Linq
             this.source7 = source7;
             this.source8 = source8;
             this.source9 = source9;
-        
+
             this.resultSelector = resultSelector;
         }
 
         public IUniTaskAsyncEnumerator<TResult> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8, source9, resultSelector, cancellationToken);
+            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8, source9,
+                resultSelector, cancellationToken);
         }
 
         class _CombineLatest : MoveNextSource, IUniTaskAsyncEnumerator<TResult>
@@ -3795,7 +4067,7 @@ namespace Cysharp.Threading.Tasks.Linq
             readonly IUniTaskAsyncEnumerable<T7> source7;
             readonly IUniTaskAsyncEnumerable<T8> source8;
             readonly IUniTaskAsyncEnumerable<T9> source9;
-       
+
             readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> resultSelector;
             CancellationToken cancellationToken;
 
@@ -3857,7 +4129,12 @@ namespace Cysharp.Threading.Tasks.Linq
             bool syncRunning;
             TResult result;
 
-            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> resultSelector, CancellationToken cancellationToken)
+            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+                IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+                IUniTaskAsyncEnumerable<T9> source9, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> resultSelector,
+                CancellationToken cancellationToken)
             {
                 this.source1 = source1;
                 this.source2 = source2;
@@ -3868,7 +4145,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 this.source7 = source7;
                 this.source8 = source8;
                 this.source9 = source9;
-                
+
                 this.resultSelector = resultSelector;
                 this.cancellationToken = cancellationToken;
                 TaskTracker.TrackActiveTask(this, 3);
@@ -3911,6 +4188,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter1.SourceOnCompleted(Completed1Delegate, this);
                     }
                 }
+
                 if (!running2)
                 {
                     running2 = true;
@@ -3924,6 +4202,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter2.SourceOnCompleted(Completed2Delegate, this);
                     }
                 }
+
                 if (!running3)
                 {
                     running3 = true;
@@ -3937,6 +4216,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter3.SourceOnCompleted(Completed3Delegate, this);
                     }
                 }
+
                 if (!running4)
                 {
                     running4 = true;
@@ -3950,6 +4230,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter4.SourceOnCompleted(Completed4Delegate, this);
                     }
                 }
+
                 if (!running5)
                 {
                     running5 = true;
@@ -3963,6 +4244,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter5.SourceOnCompleted(Completed5Delegate, this);
                     }
                 }
+
                 if (!running6)
                 {
                     running6 = true;
@@ -3976,6 +4258,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter6.SourceOnCompleted(Completed6Delegate, this);
                     }
                 }
+
                 if (!running7)
                 {
                     running7 = true;
@@ -3989,6 +4272,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter7.SourceOnCompleted(Completed7Delegate, this);
                     }
                 }
+
                 if (!running8)
                 {
                     running8 = true;
@@ -4002,6 +4286,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter8.SourceOnCompleted(Completed8Delegate, this);
                     }
                 }
+
                 if (!running9)
                 {
                     running9 = true;
@@ -4016,10 +4301,12 @@ namespace Cysharp.Threading.Tasks.Linq
                     }
                 }
 
-                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 || !running8 || !running9)
+                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 ||
+                    !running8 || !running9)
                 {
                     goto AGAIN;
                 }
+
                 syncRunning = false;
 
                 return new UniTask<bool>(this, completionSource.Version);
@@ -4045,6 +4332,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -4074,6 +4362,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter1.SourceOnCompleted(Completed1Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -4100,6 +4389,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -4129,6 +4419,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter2.SourceOnCompleted(Completed2Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -4155,6 +4446,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -4184,6 +4476,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter3.SourceOnCompleted(Completed3Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -4210,6 +4503,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -4239,6 +4533,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter4.SourceOnCompleted(Completed4Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -4265,6 +4560,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -4294,6 +4590,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter5.SourceOnCompleted(Completed5Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -4320,6 +4617,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -4349,6 +4647,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter6.SourceOnCompleted(Completed6Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -4375,6 +4674,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -4404,6 +4704,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter7.SourceOnCompleted(Completed7Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -4430,6 +4731,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -4459,6 +4761,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter8.SourceOnCompleted(Completed8Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -4485,6 +4788,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -4514,6 +4818,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter9.SourceOnCompleted(Completed9Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -4522,9 +4827,11 @@ namespace Cysharp.Threading.Tasks.Linq
 
             bool TrySetResult()
             {
-                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 && hasCurrent7 && hasCurrent8 && hasCurrent9)
+                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 &&
+                    hasCurrent7 && hasCurrent8 && hasCurrent9)
                 {
-                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7, current8, current9);
+                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7,
+                        current8, current9);
                     completionSource.TrySetResult(true);
                     return true;
                 }
@@ -4541,34 +4848,42 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await enumerator1.DisposeAsync();
                 }
+
                 if (enumerator2 != null)
                 {
                     await enumerator2.DisposeAsync();
                 }
+
                 if (enumerator3 != null)
                 {
                     await enumerator3.DisposeAsync();
                 }
+
                 if (enumerator4 != null)
                 {
                     await enumerator4.DisposeAsync();
                 }
+
                 if (enumerator5 != null)
                 {
                     await enumerator5.DisposeAsync();
                 }
+
                 if (enumerator6 != null)
                 {
                     await enumerator6.DisposeAsync();
                 }
+
                 if (enumerator7 != null)
                 {
                     await enumerator7.DisposeAsync();
                 }
+
                 if (enumerator8 != null)
                 {
                     await enumerator8.DisposeAsync();
                 }
+
                 if (enumerator9 != null)
                 {
                     await enumerator9.DisposeAsync();
@@ -4589,10 +4904,15 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<T8> source8;
         readonly IUniTaskAsyncEnumerable<T9> source9;
         readonly IUniTaskAsyncEnumerable<T10> source10;
-        
+
         readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> resultSelector;
 
-        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> resultSelector)
+        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+            IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+            IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+            Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> resultSelector)
         {
             this.source1 = source1;
             this.source2 = source2;
@@ -4604,13 +4924,14 @@ namespace Cysharp.Threading.Tasks.Linq
             this.source8 = source8;
             this.source9 = source9;
             this.source10 = source10;
-        
+
             this.resultSelector = resultSelector;
         }
 
         public IUniTaskAsyncEnumerator<TResult> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8, source9, source10, resultSelector, cancellationToken);
+            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8, source9,
+                source10, resultSelector, cancellationToken);
         }
 
         class _CombineLatest : MoveNextSource, IUniTaskAsyncEnumerator<TResult>
@@ -4637,7 +4958,7 @@ namespace Cysharp.Threading.Tasks.Linq
             readonly IUniTaskAsyncEnumerable<T8> source8;
             readonly IUniTaskAsyncEnumerable<T9> source9;
             readonly IUniTaskAsyncEnumerable<T10> source10;
-       
+
             readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> resultSelector;
             CancellationToken cancellationToken;
 
@@ -4705,7 +5026,13 @@ namespace Cysharp.Threading.Tasks.Linq
             bool syncRunning;
             TResult result;
 
-            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> resultSelector, CancellationToken cancellationToken)
+            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+                IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+                IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+                Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> resultSelector,
+                CancellationToken cancellationToken)
             {
                 this.source1 = source1;
                 this.source2 = source2;
@@ -4717,7 +5044,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 this.source8 = source8;
                 this.source9 = source9;
                 this.source10 = source10;
-                
+
                 this.resultSelector = resultSelector;
                 this.cancellationToken = cancellationToken;
                 TaskTracker.TrackActiveTask(this, 3);
@@ -4761,6 +5088,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter1.SourceOnCompleted(Completed1Delegate, this);
                     }
                 }
+
                 if (!running2)
                 {
                     running2 = true;
@@ -4774,6 +5102,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter2.SourceOnCompleted(Completed2Delegate, this);
                     }
                 }
+
                 if (!running3)
                 {
                     running3 = true;
@@ -4787,6 +5116,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter3.SourceOnCompleted(Completed3Delegate, this);
                     }
                 }
+
                 if (!running4)
                 {
                     running4 = true;
@@ -4800,6 +5130,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter4.SourceOnCompleted(Completed4Delegate, this);
                     }
                 }
+
                 if (!running5)
                 {
                     running5 = true;
@@ -4813,6 +5144,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter5.SourceOnCompleted(Completed5Delegate, this);
                     }
                 }
+
                 if (!running6)
                 {
                     running6 = true;
@@ -4826,6 +5158,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter6.SourceOnCompleted(Completed6Delegate, this);
                     }
                 }
+
                 if (!running7)
                 {
                     running7 = true;
@@ -4839,6 +5172,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter7.SourceOnCompleted(Completed7Delegate, this);
                     }
                 }
+
                 if (!running8)
                 {
                     running8 = true;
@@ -4852,6 +5186,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter8.SourceOnCompleted(Completed8Delegate, this);
                     }
                 }
+
                 if (!running9)
                 {
                     running9 = true;
@@ -4865,6 +5200,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter9.SourceOnCompleted(Completed9Delegate, this);
                     }
                 }
+
                 if (!running10)
                 {
                     running10 = true;
@@ -4879,10 +5215,12 @@ namespace Cysharp.Threading.Tasks.Linq
                     }
                 }
 
-                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 || !running8 || !running9 || !running10)
+                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 ||
+                    !running8 || !running9 || !running10)
                 {
                     goto AGAIN;
                 }
+
                 syncRunning = false;
 
                 return new UniTask<bool>(this, completionSource.Version);
@@ -4908,6 +5246,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -4937,6 +5276,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter1.SourceOnCompleted(Completed1Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -4963,6 +5303,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -4992,6 +5333,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter2.SourceOnCompleted(Completed2Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -5018,6 +5360,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -5047,6 +5390,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter3.SourceOnCompleted(Completed3Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -5073,6 +5417,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -5102,6 +5447,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter4.SourceOnCompleted(Completed4Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -5128,6 +5474,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -5157,6 +5504,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter5.SourceOnCompleted(Completed5Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -5183,6 +5531,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -5212,6 +5561,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter6.SourceOnCompleted(Completed6Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -5238,6 +5588,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -5267,6 +5618,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter7.SourceOnCompleted(Completed7Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -5293,6 +5645,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -5322,6 +5675,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter8.SourceOnCompleted(Completed8Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -5348,6 +5702,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -5377,6 +5732,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter9.SourceOnCompleted(Completed9Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -5403,6 +5759,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -5432,6 +5789,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter10.SourceOnCompleted(Completed10Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -5440,9 +5798,11 @@ namespace Cysharp.Threading.Tasks.Linq
 
             bool TrySetResult()
             {
-                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 && hasCurrent7 && hasCurrent8 && hasCurrent9 && hasCurrent10)
+                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 &&
+                    hasCurrent7 && hasCurrent8 && hasCurrent9 && hasCurrent10)
                 {
-                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7, current8, current9, current10);
+                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7,
+                        current8, current9, current10);
                     completionSource.TrySetResult(true);
                     return true;
                 }
@@ -5459,38 +5819,47 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await enumerator1.DisposeAsync();
                 }
+
                 if (enumerator2 != null)
                 {
                     await enumerator2.DisposeAsync();
                 }
+
                 if (enumerator3 != null)
                 {
                     await enumerator3.DisposeAsync();
                 }
+
                 if (enumerator4 != null)
                 {
                     await enumerator4.DisposeAsync();
                 }
+
                 if (enumerator5 != null)
                 {
                     await enumerator5.DisposeAsync();
                 }
+
                 if (enumerator6 != null)
                 {
                     await enumerator6.DisposeAsync();
                 }
+
                 if (enumerator7 != null)
                 {
                     await enumerator7.DisposeAsync();
                 }
+
                 if (enumerator8 != null)
                 {
                     await enumerator8.DisposeAsync();
                 }
+
                 if (enumerator9 != null)
                 {
                     await enumerator9.DisposeAsync();
                 }
+
                 if (enumerator10 != null)
                 {
                     await enumerator10.DisposeAsync();
@@ -5499,7 +5868,8 @@ namespace Cysharp.Threading.Tasks.Linq
         }
     }
 
-    internal class CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> : IUniTaskAsyncEnumerable<TResult>
+    internal class
+        CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> : IUniTaskAsyncEnumerable<TResult>
     {
         readonly IUniTaskAsyncEnumerable<T1> source1;
         readonly IUniTaskAsyncEnumerable<T2> source2;
@@ -5512,10 +5882,16 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<T9> source9;
         readonly IUniTaskAsyncEnumerable<T10> source10;
         readonly IUniTaskAsyncEnumerable<T11> source11;
-        
+
         readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> resultSelector;
 
-        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, IUniTaskAsyncEnumerable<T11> source11, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> resultSelector)
+        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+            IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+            IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+            IUniTaskAsyncEnumerable<T11> source11,
+            Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> resultSelector)
         {
             this.source1 = source1;
             this.source2 = source2;
@@ -5528,13 +5904,14 @@ namespace Cysharp.Threading.Tasks.Linq
             this.source9 = source9;
             this.source10 = source10;
             this.source11 = source11;
-        
+
             this.resultSelector = resultSelector;
         }
 
         public IUniTaskAsyncEnumerator<TResult> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8, source9, source10, source11, resultSelector, cancellationToken);
+            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8, source9,
+                source10, source11, resultSelector, cancellationToken);
         }
 
         class _CombineLatest : MoveNextSource, IUniTaskAsyncEnumerator<TResult>
@@ -5563,7 +5940,7 @@ namespace Cysharp.Threading.Tasks.Linq
             readonly IUniTaskAsyncEnumerable<T9> source9;
             readonly IUniTaskAsyncEnumerable<T10> source10;
             readonly IUniTaskAsyncEnumerable<T11> source11;
-       
+
             readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> resultSelector;
             CancellationToken cancellationToken;
 
@@ -5637,7 +6014,14 @@ namespace Cysharp.Threading.Tasks.Linq
             bool syncRunning;
             TResult result;
 
-            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, IUniTaskAsyncEnumerable<T11> source11, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> resultSelector, CancellationToken cancellationToken)
+            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+                IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+                IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+                IUniTaskAsyncEnumerable<T11> source11,
+                Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> resultSelector,
+                CancellationToken cancellationToken)
             {
                 this.source1 = source1;
                 this.source2 = source2;
@@ -5650,7 +6034,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 this.source9 = source9;
                 this.source10 = source10;
                 this.source11 = source11;
-                
+
                 this.resultSelector = resultSelector;
                 this.cancellationToken = cancellationToken;
                 TaskTracker.TrackActiveTask(this, 3);
@@ -5695,6 +6079,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter1.SourceOnCompleted(Completed1Delegate, this);
                     }
                 }
+
                 if (!running2)
                 {
                     running2 = true;
@@ -5708,6 +6093,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter2.SourceOnCompleted(Completed2Delegate, this);
                     }
                 }
+
                 if (!running3)
                 {
                     running3 = true;
@@ -5721,6 +6107,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter3.SourceOnCompleted(Completed3Delegate, this);
                     }
                 }
+
                 if (!running4)
                 {
                     running4 = true;
@@ -5734,6 +6121,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter4.SourceOnCompleted(Completed4Delegate, this);
                     }
                 }
+
                 if (!running5)
                 {
                     running5 = true;
@@ -5747,6 +6135,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter5.SourceOnCompleted(Completed5Delegate, this);
                     }
                 }
+
                 if (!running6)
                 {
                     running6 = true;
@@ -5760,6 +6149,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter6.SourceOnCompleted(Completed6Delegate, this);
                     }
                 }
+
                 if (!running7)
                 {
                     running7 = true;
@@ -5773,6 +6163,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter7.SourceOnCompleted(Completed7Delegate, this);
                     }
                 }
+
                 if (!running8)
                 {
                     running8 = true;
@@ -5786,6 +6177,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter8.SourceOnCompleted(Completed8Delegate, this);
                     }
                 }
+
                 if (!running9)
                 {
                     running9 = true;
@@ -5799,6 +6191,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter9.SourceOnCompleted(Completed9Delegate, this);
                     }
                 }
+
                 if (!running10)
                 {
                     running10 = true;
@@ -5812,6 +6205,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter10.SourceOnCompleted(Completed10Delegate, this);
                     }
                 }
+
                 if (!running11)
                 {
                     running11 = true;
@@ -5826,10 +6220,12 @@ namespace Cysharp.Threading.Tasks.Linq
                     }
                 }
 
-                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 || !running8 || !running9 || !running10 || !running11)
+                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 ||
+                    !running8 || !running9 || !running10 || !running11)
                 {
                     goto AGAIN;
                 }
+
                 syncRunning = false;
 
                 return new UniTask<bool>(this, completionSource.Version);
@@ -5855,6 +6251,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -5884,6 +6281,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter1.SourceOnCompleted(Completed1Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -5910,6 +6308,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -5939,6 +6338,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter2.SourceOnCompleted(Completed2Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -5965,6 +6365,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -5994,6 +6395,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter3.SourceOnCompleted(Completed3Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -6020,6 +6422,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -6049,6 +6452,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter4.SourceOnCompleted(Completed4Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -6075,6 +6479,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -6104,6 +6509,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter5.SourceOnCompleted(Completed5Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -6130,6 +6536,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -6159,6 +6566,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter6.SourceOnCompleted(Completed6Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -6185,6 +6593,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -6214,6 +6623,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter7.SourceOnCompleted(Completed7Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -6240,6 +6650,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -6269,6 +6680,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter8.SourceOnCompleted(Completed8Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -6295,6 +6707,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -6324,6 +6737,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter9.SourceOnCompleted(Completed9Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -6350,6 +6764,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -6379,6 +6794,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter10.SourceOnCompleted(Completed10Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -6405,6 +6821,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -6434,6 +6851,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter11.SourceOnCompleted(Completed11Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -6442,9 +6860,11 @@ namespace Cysharp.Threading.Tasks.Linq
 
             bool TrySetResult()
             {
-                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 && hasCurrent7 && hasCurrent8 && hasCurrent9 && hasCurrent10 && hasCurrent11)
+                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 &&
+                    hasCurrent7 && hasCurrent8 && hasCurrent9 && hasCurrent10 && hasCurrent11)
                 {
-                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7, current8, current9, current10, current11);
+                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7,
+                        current8, current9, current10, current11);
                     completionSource.TrySetResult(true);
                     return true;
                 }
@@ -6461,42 +6881,52 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await enumerator1.DisposeAsync();
                 }
+
                 if (enumerator2 != null)
                 {
                     await enumerator2.DisposeAsync();
                 }
+
                 if (enumerator3 != null)
                 {
                     await enumerator3.DisposeAsync();
                 }
+
                 if (enumerator4 != null)
                 {
                     await enumerator4.DisposeAsync();
                 }
+
                 if (enumerator5 != null)
                 {
                     await enumerator5.DisposeAsync();
                 }
+
                 if (enumerator6 != null)
                 {
                     await enumerator6.DisposeAsync();
                 }
+
                 if (enumerator7 != null)
                 {
                     await enumerator7.DisposeAsync();
                 }
+
                 if (enumerator8 != null)
                 {
                     await enumerator8.DisposeAsync();
                 }
+
                 if (enumerator9 != null)
                 {
                     await enumerator9.DisposeAsync();
                 }
+
                 if (enumerator10 != null)
                 {
                     await enumerator10.DisposeAsync();
                 }
+
                 if (enumerator11 != null)
                 {
                     await enumerator11.DisposeAsync();
@@ -6505,7 +6935,8 @@ namespace Cysharp.Threading.Tasks.Linq
         }
     }
 
-    internal class CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> : IUniTaskAsyncEnumerable<TResult>
+    internal class
+        CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> : IUniTaskAsyncEnumerable<TResult>
     {
         readonly IUniTaskAsyncEnumerable<T1> source1;
         readonly IUniTaskAsyncEnumerable<T2> source2;
@@ -6519,10 +6950,16 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<T10> source10;
         readonly IUniTaskAsyncEnumerable<T11> source11;
         readonly IUniTaskAsyncEnumerable<T12> source12;
-        
+
         readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> resultSelector;
 
-        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> resultSelector)
+        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+            IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+            IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+            IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12,
+            Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> resultSelector)
         {
             this.source1 = source1;
             this.source2 = source2;
@@ -6536,13 +6973,14 @@ namespace Cysharp.Threading.Tasks.Linq
             this.source10 = source10;
             this.source11 = source11;
             this.source12 = source12;
-        
+
             this.resultSelector = resultSelector;
         }
 
         public IUniTaskAsyncEnumerator<TResult> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8, source9, source10, source11, source12, resultSelector, cancellationToken);
+            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8, source9,
+                source10, source11, source12, resultSelector, cancellationToken);
         }
 
         class _CombineLatest : MoveNextSource, IUniTaskAsyncEnumerator<TResult>
@@ -6573,7 +7011,7 @@ namespace Cysharp.Threading.Tasks.Linq
             readonly IUniTaskAsyncEnumerable<T10> source10;
             readonly IUniTaskAsyncEnumerable<T11> source11;
             readonly IUniTaskAsyncEnumerable<T12> source12;
-       
+
             readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> resultSelector;
             CancellationToken cancellationToken;
 
@@ -6653,7 +7091,14 @@ namespace Cysharp.Threading.Tasks.Linq
             bool syncRunning;
             TResult result;
 
-            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> resultSelector, CancellationToken cancellationToken)
+            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+                IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+                IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+                IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12,
+                Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> resultSelector,
+                CancellationToken cancellationToken)
             {
                 this.source1 = source1;
                 this.source2 = source2;
@@ -6667,7 +7112,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 this.source10 = source10;
                 this.source11 = source11;
                 this.source12 = source12;
-                
+
                 this.resultSelector = resultSelector;
                 this.cancellationToken = cancellationToken;
                 TaskTracker.TrackActiveTask(this, 3);
@@ -6713,6 +7158,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter1.SourceOnCompleted(Completed1Delegate, this);
                     }
                 }
+
                 if (!running2)
                 {
                     running2 = true;
@@ -6726,6 +7172,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter2.SourceOnCompleted(Completed2Delegate, this);
                     }
                 }
+
                 if (!running3)
                 {
                     running3 = true;
@@ -6739,6 +7186,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter3.SourceOnCompleted(Completed3Delegate, this);
                     }
                 }
+
                 if (!running4)
                 {
                     running4 = true;
@@ -6752,6 +7200,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter4.SourceOnCompleted(Completed4Delegate, this);
                     }
                 }
+
                 if (!running5)
                 {
                     running5 = true;
@@ -6765,6 +7214,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter5.SourceOnCompleted(Completed5Delegate, this);
                     }
                 }
+
                 if (!running6)
                 {
                     running6 = true;
@@ -6778,6 +7228,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter6.SourceOnCompleted(Completed6Delegate, this);
                     }
                 }
+
                 if (!running7)
                 {
                     running7 = true;
@@ -6791,6 +7242,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter7.SourceOnCompleted(Completed7Delegate, this);
                     }
                 }
+
                 if (!running8)
                 {
                     running8 = true;
@@ -6804,6 +7256,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter8.SourceOnCompleted(Completed8Delegate, this);
                     }
                 }
+
                 if (!running9)
                 {
                     running9 = true;
@@ -6817,6 +7270,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter9.SourceOnCompleted(Completed9Delegate, this);
                     }
                 }
+
                 if (!running10)
                 {
                     running10 = true;
@@ -6830,6 +7284,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter10.SourceOnCompleted(Completed10Delegate, this);
                     }
                 }
+
                 if (!running11)
                 {
                     running11 = true;
@@ -6843,6 +7298,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter11.SourceOnCompleted(Completed11Delegate, this);
                     }
                 }
+
                 if (!running12)
                 {
                     running12 = true;
@@ -6857,10 +7313,12 @@ namespace Cysharp.Threading.Tasks.Linq
                     }
                 }
 
-                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 || !running8 || !running9 || !running10 || !running11 || !running12)
+                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 ||
+                    !running8 || !running9 || !running10 || !running11 || !running12)
                 {
                     goto AGAIN;
                 }
+
                 syncRunning = false;
 
                 return new UniTask<bool>(this, completionSource.Version);
@@ -6886,6 +7344,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -6915,6 +7374,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter1.SourceOnCompleted(Completed1Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -6941,6 +7401,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -6970,6 +7431,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter2.SourceOnCompleted(Completed2Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -6996,6 +7458,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -7025,6 +7488,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter3.SourceOnCompleted(Completed3Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -7051,6 +7515,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -7080,6 +7545,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter4.SourceOnCompleted(Completed4Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -7106,6 +7572,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -7135,6 +7602,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter5.SourceOnCompleted(Completed5Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -7161,6 +7629,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -7190,6 +7659,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter6.SourceOnCompleted(Completed6Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -7216,6 +7686,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -7245,6 +7716,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter7.SourceOnCompleted(Completed7Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -7271,6 +7743,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -7300,6 +7773,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter8.SourceOnCompleted(Completed8Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -7326,6 +7800,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -7355,6 +7830,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter9.SourceOnCompleted(Completed9Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -7381,6 +7857,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -7410,6 +7887,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter10.SourceOnCompleted(Completed10Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -7436,6 +7914,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -7465,6 +7944,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter11.SourceOnCompleted(Completed11Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -7491,6 +7971,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -7520,6 +8001,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter12.SourceOnCompleted(Completed12Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -7528,9 +8010,11 @@ namespace Cysharp.Threading.Tasks.Linq
 
             bool TrySetResult()
             {
-                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 && hasCurrent7 && hasCurrent8 && hasCurrent9 && hasCurrent10 && hasCurrent11 && hasCurrent12)
+                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 &&
+                    hasCurrent7 && hasCurrent8 && hasCurrent9 && hasCurrent10 && hasCurrent11 && hasCurrent12)
                 {
-                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7, current8, current9, current10, current11, current12);
+                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7,
+                        current8, current9, current10, current11, current12);
                     completionSource.TrySetResult(true);
                     return true;
                 }
@@ -7547,46 +8031,57 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await enumerator1.DisposeAsync();
                 }
+
                 if (enumerator2 != null)
                 {
                     await enumerator2.DisposeAsync();
                 }
+
                 if (enumerator3 != null)
                 {
                     await enumerator3.DisposeAsync();
                 }
+
                 if (enumerator4 != null)
                 {
                     await enumerator4.DisposeAsync();
                 }
+
                 if (enumerator5 != null)
                 {
                     await enumerator5.DisposeAsync();
                 }
+
                 if (enumerator6 != null)
                 {
                     await enumerator6.DisposeAsync();
                 }
+
                 if (enumerator7 != null)
                 {
                     await enumerator7.DisposeAsync();
                 }
+
                 if (enumerator8 != null)
                 {
                     await enumerator8.DisposeAsync();
                 }
+
                 if (enumerator9 != null)
                 {
                     await enumerator9.DisposeAsync();
                 }
+
                 if (enumerator10 != null)
                 {
                     await enumerator10.DisposeAsync();
                 }
+
                 if (enumerator11 != null)
                 {
                     await enumerator11.DisposeAsync();
                 }
+
                 if (enumerator12 != null)
                 {
                     await enumerator12.DisposeAsync();
@@ -7595,7 +8090,9 @@ namespace Cysharp.Threading.Tasks.Linq
         }
     }
 
-    internal class CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> : IUniTaskAsyncEnumerable<TResult>
+    internal class
+        CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13,
+            TResult> : IUniTaskAsyncEnumerable<TResult>
     {
         readonly IUniTaskAsyncEnumerable<T1> source1;
         readonly IUniTaskAsyncEnumerable<T2> source2;
@@ -7610,10 +8107,17 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<T11> source11;
         readonly IUniTaskAsyncEnumerable<T12> source12;
         readonly IUniTaskAsyncEnumerable<T13> source13;
-        
+
         readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> resultSelector;
 
-        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12, IUniTaskAsyncEnumerable<T13> source13, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> resultSelector)
+        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+            IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+            IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+            IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12,
+            IUniTaskAsyncEnumerable<T13> source13,
+            Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> resultSelector)
         {
             this.source1 = source1;
             this.source2 = source2;
@@ -7628,13 +8132,14 @@ namespace Cysharp.Threading.Tasks.Linq
             this.source11 = source11;
             this.source12 = source12;
             this.source13 = source13;
-        
+
             this.resultSelector = resultSelector;
         }
 
         public IUniTaskAsyncEnumerator<TResult> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8, source9, source10, source11, source12, source13, resultSelector, cancellationToken);
+            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8, source9,
+                source10, source11, source12, source13, resultSelector, cancellationToken);
         }
 
         class _CombineLatest : MoveNextSource, IUniTaskAsyncEnumerator<TResult>
@@ -7667,7 +8172,7 @@ namespace Cysharp.Threading.Tasks.Linq
             readonly IUniTaskAsyncEnumerable<T11> source11;
             readonly IUniTaskAsyncEnumerable<T12> source12;
             readonly IUniTaskAsyncEnumerable<T13> source13;
-       
+
             readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> resultSelector;
             CancellationToken cancellationToken;
 
@@ -7753,7 +8258,15 @@ namespace Cysharp.Threading.Tasks.Linq
             bool syncRunning;
             TResult result;
 
-            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12, IUniTaskAsyncEnumerable<T13> source13, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> resultSelector, CancellationToken cancellationToken)
+            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+                IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+                IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+                IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12,
+                IUniTaskAsyncEnumerable<T13> source13,
+                Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> resultSelector,
+                CancellationToken cancellationToken)
             {
                 this.source1 = source1;
                 this.source2 = source2;
@@ -7768,7 +8281,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 this.source11 = source11;
                 this.source12 = source12;
                 this.source13 = source13;
-                
+
                 this.resultSelector = resultSelector;
                 this.cancellationToken = cancellationToken;
                 TaskTracker.TrackActiveTask(this, 3);
@@ -7815,6 +8328,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter1.SourceOnCompleted(Completed1Delegate, this);
                     }
                 }
+
                 if (!running2)
                 {
                     running2 = true;
@@ -7828,6 +8342,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter2.SourceOnCompleted(Completed2Delegate, this);
                     }
                 }
+
                 if (!running3)
                 {
                     running3 = true;
@@ -7841,6 +8356,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter3.SourceOnCompleted(Completed3Delegate, this);
                     }
                 }
+
                 if (!running4)
                 {
                     running4 = true;
@@ -7854,6 +8370,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter4.SourceOnCompleted(Completed4Delegate, this);
                     }
                 }
+
                 if (!running5)
                 {
                     running5 = true;
@@ -7867,6 +8384,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter5.SourceOnCompleted(Completed5Delegate, this);
                     }
                 }
+
                 if (!running6)
                 {
                     running6 = true;
@@ -7880,6 +8398,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter6.SourceOnCompleted(Completed6Delegate, this);
                     }
                 }
+
                 if (!running7)
                 {
                     running7 = true;
@@ -7893,6 +8412,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter7.SourceOnCompleted(Completed7Delegate, this);
                     }
                 }
+
                 if (!running8)
                 {
                     running8 = true;
@@ -7906,6 +8426,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter8.SourceOnCompleted(Completed8Delegate, this);
                     }
                 }
+
                 if (!running9)
                 {
                     running9 = true;
@@ -7919,6 +8440,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter9.SourceOnCompleted(Completed9Delegate, this);
                     }
                 }
+
                 if (!running10)
                 {
                     running10 = true;
@@ -7932,6 +8454,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter10.SourceOnCompleted(Completed10Delegate, this);
                     }
                 }
+
                 if (!running11)
                 {
                     running11 = true;
@@ -7945,6 +8468,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter11.SourceOnCompleted(Completed11Delegate, this);
                     }
                 }
+
                 if (!running12)
                 {
                     running12 = true;
@@ -7958,6 +8482,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter12.SourceOnCompleted(Completed12Delegate, this);
                     }
                 }
+
                 if (!running13)
                 {
                     running13 = true;
@@ -7972,10 +8497,12 @@ namespace Cysharp.Threading.Tasks.Linq
                     }
                 }
 
-                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 || !running8 || !running9 || !running10 || !running11 || !running12 || !running13)
+                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 ||
+                    !running8 || !running9 || !running10 || !running11 || !running12 || !running13)
                 {
                     goto AGAIN;
                 }
+
                 syncRunning = false;
 
                 return new UniTask<bool>(this, completionSource.Version);
@@ -8001,6 +8528,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -8030,6 +8558,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter1.SourceOnCompleted(Completed1Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -8056,6 +8585,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -8085,6 +8615,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter2.SourceOnCompleted(Completed2Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -8111,6 +8642,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -8140,6 +8672,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter3.SourceOnCompleted(Completed3Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -8166,6 +8699,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -8195,6 +8729,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter4.SourceOnCompleted(Completed4Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -8221,6 +8756,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -8250,6 +8786,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter5.SourceOnCompleted(Completed5Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -8276,6 +8813,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -8305,6 +8843,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter6.SourceOnCompleted(Completed6Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -8331,6 +8870,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -8360,6 +8900,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter7.SourceOnCompleted(Completed7Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -8386,6 +8927,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -8415,6 +8957,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter8.SourceOnCompleted(Completed8Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -8441,6 +8984,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -8470,6 +9014,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter9.SourceOnCompleted(Completed9Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -8496,6 +9041,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -8525,6 +9071,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter10.SourceOnCompleted(Completed10Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -8551,6 +9098,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -8580,6 +9128,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter11.SourceOnCompleted(Completed11Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -8606,6 +9155,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -8635,6 +9185,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter12.SourceOnCompleted(Completed12Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -8661,6 +9212,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -8690,6 +9242,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter13.SourceOnCompleted(Completed13Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -8698,9 +9251,12 @@ namespace Cysharp.Threading.Tasks.Linq
 
             bool TrySetResult()
             {
-                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 && hasCurrent7 && hasCurrent8 && hasCurrent9 && hasCurrent10 && hasCurrent11 && hasCurrent12 && hasCurrent13)
+                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 &&
+                    hasCurrent7 && hasCurrent8 && hasCurrent9 && hasCurrent10 && hasCurrent11 && hasCurrent12 &&
+                    hasCurrent13)
                 {
-                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7, current8, current9, current10, current11, current12, current13);
+                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7,
+                        current8, current9, current10, current11, current12, current13);
                     completionSource.TrySetResult(true);
                     return true;
                 }
@@ -8717,50 +9273,62 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await enumerator1.DisposeAsync();
                 }
+
                 if (enumerator2 != null)
                 {
                     await enumerator2.DisposeAsync();
                 }
+
                 if (enumerator3 != null)
                 {
                     await enumerator3.DisposeAsync();
                 }
+
                 if (enumerator4 != null)
                 {
                     await enumerator4.DisposeAsync();
                 }
+
                 if (enumerator5 != null)
                 {
                     await enumerator5.DisposeAsync();
                 }
+
                 if (enumerator6 != null)
                 {
                     await enumerator6.DisposeAsync();
                 }
+
                 if (enumerator7 != null)
                 {
                     await enumerator7.DisposeAsync();
                 }
+
                 if (enumerator8 != null)
                 {
                     await enumerator8.DisposeAsync();
                 }
+
                 if (enumerator9 != null)
                 {
                     await enumerator9.DisposeAsync();
                 }
+
                 if (enumerator10 != null)
                 {
                     await enumerator10.DisposeAsync();
                 }
+
                 if (enumerator11 != null)
                 {
                     await enumerator11.DisposeAsync();
                 }
+
                 if (enumerator12 != null)
                 {
                     await enumerator12.DisposeAsync();
                 }
+
                 if (enumerator13 != null)
                 {
                     await enumerator13.DisposeAsync();
@@ -8769,7 +9337,9 @@ namespace Cysharp.Threading.Tasks.Linq
         }
     }
 
-    internal class CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> : IUniTaskAsyncEnumerable<TResult>
+    internal class
+        CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14,
+            TResult> : IUniTaskAsyncEnumerable<TResult>
     {
         readonly IUniTaskAsyncEnumerable<T1> source1;
         readonly IUniTaskAsyncEnumerable<T2> source2;
@@ -8785,10 +9355,17 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<T12> source12;
         readonly IUniTaskAsyncEnumerable<T13> source13;
         readonly IUniTaskAsyncEnumerable<T14> source14;
-        
+
         readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> resultSelector;
 
-        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12, IUniTaskAsyncEnumerable<T13> source13, IUniTaskAsyncEnumerable<T14> source14, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> resultSelector)
+        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+            IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+            IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+            IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12,
+            IUniTaskAsyncEnumerable<T13> source13, IUniTaskAsyncEnumerable<T14> source14,
+            Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> resultSelector)
         {
             this.source1 = source1;
             this.source2 = source2;
@@ -8804,13 +9381,14 @@ namespace Cysharp.Threading.Tasks.Linq
             this.source12 = source12;
             this.source13 = source13;
             this.source14 = source14;
-        
+
             this.resultSelector = resultSelector;
         }
 
         public IUniTaskAsyncEnumerator<TResult> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8, source9, source10, source11, source12, source13, source14, resultSelector, cancellationToken);
+            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8, source9,
+                source10, source11, source12, source13, source14, resultSelector, cancellationToken);
         }
 
         class _CombineLatest : MoveNextSource, IUniTaskAsyncEnumerator<TResult>
@@ -8845,7 +9423,7 @@ namespace Cysharp.Threading.Tasks.Linq
             readonly IUniTaskAsyncEnumerable<T12> source12;
             readonly IUniTaskAsyncEnumerable<T13> source13;
             readonly IUniTaskAsyncEnumerable<T14> source14;
-       
+
             readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> resultSelector;
             CancellationToken cancellationToken;
 
@@ -8937,7 +9515,15 @@ namespace Cysharp.Threading.Tasks.Linq
             bool syncRunning;
             TResult result;
 
-            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12, IUniTaskAsyncEnumerable<T13> source13, IUniTaskAsyncEnumerable<T14> source14, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> resultSelector, CancellationToken cancellationToken)
+            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+                IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+                IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+                IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12,
+                IUniTaskAsyncEnumerable<T13> source13, IUniTaskAsyncEnumerable<T14> source14,
+                Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> resultSelector,
+                CancellationToken cancellationToken)
             {
                 this.source1 = source1;
                 this.source2 = source2;
@@ -8953,7 +9539,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 this.source12 = source12;
                 this.source13 = source13;
                 this.source14 = source14;
-                
+
                 this.resultSelector = resultSelector;
                 this.cancellationToken = cancellationToken;
                 TaskTracker.TrackActiveTask(this, 3);
@@ -9001,6 +9587,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter1.SourceOnCompleted(Completed1Delegate, this);
                     }
                 }
+
                 if (!running2)
                 {
                     running2 = true;
@@ -9014,6 +9601,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter2.SourceOnCompleted(Completed2Delegate, this);
                     }
                 }
+
                 if (!running3)
                 {
                     running3 = true;
@@ -9027,6 +9615,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter3.SourceOnCompleted(Completed3Delegate, this);
                     }
                 }
+
                 if (!running4)
                 {
                     running4 = true;
@@ -9040,6 +9629,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter4.SourceOnCompleted(Completed4Delegate, this);
                     }
                 }
+
                 if (!running5)
                 {
                     running5 = true;
@@ -9053,6 +9643,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter5.SourceOnCompleted(Completed5Delegate, this);
                     }
                 }
+
                 if (!running6)
                 {
                     running6 = true;
@@ -9066,6 +9657,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter6.SourceOnCompleted(Completed6Delegate, this);
                     }
                 }
+
                 if (!running7)
                 {
                     running7 = true;
@@ -9079,6 +9671,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter7.SourceOnCompleted(Completed7Delegate, this);
                     }
                 }
+
                 if (!running8)
                 {
                     running8 = true;
@@ -9092,6 +9685,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter8.SourceOnCompleted(Completed8Delegate, this);
                     }
                 }
+
                 if (!running9)
                 {
                     running9 = true;
@@ -9105,6 +9699,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter9.SourceOnCompleted(Completed9Delegate, this);
                     }
                 }
+
                 if (!running10)
                 {
                     running10 = true;
@@ -9118,6 +9713,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter10.SourceOnCompleted(Completed10Delegate, this);
                     }
                 }
+
                 if (!running11)
                 {
                     running11 = true;
@@ -9131,6 +9727,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter11.SourceOnCompleted(Completed11Delegate, this);
                     }
                 }
+
                 if (!running12)
                 {
                     running12 = true;
@@ -9144,6 +9741,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter12.SourceOnCompleted(Completed12Delegate, this);
                     }
                 }
+
                 if (!running13)
                 {
                     running13 = true;
@@ -9157,6 +9755,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter13.SourceOnCompleted(Completed13Delegate, this);
                     }
                 }
+
                 if (!running14)
                 {
                     running14 = true;
@@ -9171,10 +9770,12 @@ namespace Cysharp.Threading.Tasks.Linq
                     }
                 }
 
-                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 || !running8 || !running9 || !running10 || !running11 || !running12 || !running13 || !running14)
+                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 ||
+                    !running8 || !running9 || !running10 || !running11 || !running12 || !running13 || !running14)
                 {
                     goto AGAIN;
                 }
+
                 syncRunning = false;
 
                 return new UniTask<bool>(this, completionSource.Version);
@@ -9200,6 +9801,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -9229,6 +9831,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter1.SourceOnCompleted(Completed1Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -9255,6 +9858,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -9284,6 +9888,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter2.SourceOnCompleted(Completed2Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -9310,6 +9915,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -9339,6 +9945,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter3.SourceOnCompleted(Completed3Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -9365,6 +9972,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -9394,6 +10002,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter4.SourceOnCompleted(Completed4Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -9420,6 +10029,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -9449,6 +10059,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter5.SourceOnCompleted(Completed5Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -9475,6 +10086,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -9504,6 +10116,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter6.SourceOnCompleted(Completed6Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -9530,6 +10143,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -9559,6 +10173,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter7.SourceOnCompleted(Completed7Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -9585,6 +10200,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -9614,6 +10230,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter8.SourceOnCompleted(Completed8Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -9640,6 +10257,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -9669,6 +10287,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter9.SourceOnCompleted(Completed9Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -9695,6 +10314,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -9724,6 +10344,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter10.SourceOnCompleted(Completed10Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -9750,6 +10371,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -9779,6 +10401,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter11.SourceOnCompleted(Completed11Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -9805,6 +10428,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -9834,6 +10458,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter12.SourceOnCompleted(Completed12Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -9860,6 +10485,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -9889,6 +10515,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter13.SourceOnCompleted(Completed13Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -9915,6 +10542,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -9944,6 +10572,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter14.SourceOnCompleted(Completed14Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -9952,9 +10581,12 @@ namespace Cysharp.Threading.Tasks.Linq
 
             bool TrySetResult()
             {
-                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 && hasCurrent7 && hasCurrent8 && hasCurrent9 && hasCurrent10 && hasCurrent11 && hasCurrent12 && hasCurrent13 && hasCurrent14)
+                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 &&
+                    hasCurrent7 && hasCurrent8 && hasCurrent9 && hasCurrent10 && hasCurrent11 && hasCurrent12 &&
+                    hasCurrent13 && hasCurrent14)
                 {
-                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7, current8, current9, current10, current11, current12, current13, current14);
+                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7,
+                        current8, current9, current10, current11, current12, current13, current14);
                     completionSource.TrySetResult(true);
                     return true;
                 }
@@ -9971,54 +10603,67 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await enumerator1.DisposeAsync();
                 }
+
                 if (enumerator2 != null)
                 {
                     await enumerator2.DisposeAsync();
                 }
+
                 if (enumerator3 != null)
                 {
                     await enumerator3.DisposeAsync();
                 }
+
                 if (enumerator4 != null)
                 {
                     await enumerator4.DisposeAsync();
                 }
+
                 if (enumerator5 != null)
                 {
                     await enumerator5.DisposeAsync();
                 }
+
                 if (enumerator6 != null)
                 {
                     await enumerator6.DisposeAsync();
                 }
+
                 if (enumerator7 != null)
                 {
                     await enumerator7.DisposeAsync();
                 }
+
                 if (enumerator8 != null)
                 {
                     await enumerator8.DisposeAsync();
                 }
+
                 if (enumerator9 != null)
                 {
                     await enumerator9.DisposeAsync();
                 }
+
                 if (enumerator10 != null)
                 {
                     await enumerator10.DisposeAsync();
                 }
+
                 if (enumerator11 != null)
                 {
                     await enumerator11.DisposeAsync();
                 }
+
                 if (enumerator12 != null)
                 {
                     await enumerator12.DisposeAsync();
                 }
+
                 if (enumerator13 != null)
                 {
                     await enumerator13.DisposeAsync();
                 }
+
                 if (enumerator14 != null)
                 {
                     await enumerator14.DisposeAsync();
@@ -10027,7 +10672,9 @@ namespace Cysharp.Threading.Tasks.Linq
         }
     }
 
-    internal class CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> : IUniTaskAsyncEnumerable<TResult>
+    internal class
+        CombineLatest<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15,
+            TResult> : IUniTaskAsyncEnumerable<TResult>
     {
         readonly IUniTaskAsyncEnumerable<T1> source1;
         readonly IUniTaskAsyncEnumerable<T2> source2;
@@ -10044,10 +10691,18 @@ namespace Cysharp.Threading.Tasks.Linq
         readonly IUniTaskAsyncEnumerable<T13> source13;
         readonly IUniTaskAsyncEnumerable<T14> source14;
         readonly IUniTaskAsyncEnumerable<T15> source15;
-        
+
         readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> resultSelector;
 
-        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12, IUniTaskAsyncEnumerable<T13> source13, IUniTaskAsyncEnumerable<T14> source14, IUniTaskAsyncEnumerable<T15> source15, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> resultSelector)
+        public CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+            IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+            IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+            IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+            IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+            IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12,
+            IUniTaskAsyncEnumerable<T13> source13, IUniTaskAsyncEnumerable<T14> source14,
+            IUniTaskAsyncEnumerable<T15> source15,
+            Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> resultSelector)
         {
             this.source1 = source1;
             this.source2 = source2;
@@ -10064,13 +10719,14 @@ namespace Cysharp.Threading.Tasks.Linq
             this.source13 = source13;
             this.source14 = source14;
             this.source15 = source15;
-        
+
             this.resultSelector = resultSelector;
         }
 
         public IUniTaskAsyncEnumerator<TResult> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8, source9, source10, source11, source12, source13, source14, source15, resultSelector, cancellationToken);
+            return new _CombineLatest(source1, source2, source3, source4, source5, source6, source7, source8, source9,
+                source10, source11, source12, source13, source14, source15, resultSelector, cancellationToken);
         }
 
         class _CombineLatest : MoveNextSource, IUniTaskAsyncEnumerator<TResult>
@@ -10107,7 +10763,7 @@ namespace Cysharp.Threading.Tasks.Linq
             readonly IUniTaskAsyncEnumerable<T13> source13;
             readonly IUniTaskAsyncEnumerable<T14> source14;
             readonly IUniTaskAsyncEnumerable<T15> source15;
-       
+
             readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> resultSelector;
             CancellationToken cancellationToken;
 
@@ -10205,7 +10861,16 @@ namespace Cysharp.Threading.Tasks.Linq
             bool syncRunning;
             TResult result;
 
-            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2, IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4, IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6, IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8, IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10, IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12, IUniTaskAsyncEnumerable<T13> source13, IUniTaskAsyncEnumerable<T14> source14, IUniTaskAsyncEnumerable<T15> source15, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> resultSelector, CancellationToken cancellationToken)
+            public _CombineLatest(IUniTaskAsyncEnumerable<T1> source1, IUniTaskAsyncEnumerable<T2> source2,
+                IUniTaskAsyncEnumerable<T3> source3, IUniTaskAsyncEnumerable<T4> source4,
+                IUniTaskAsyncEnumerable<T5> source5, IUniTaskAsyncEnumerable<T6> source6,
+                IUniTaskAsyncEnumerable<T7> source7, IUniTaskAsyncEnumerable<T8> source8,
+                IUniTaskAsyncEnumerable<T9> source9, IUniTaskAsyncEnumerable<T10> source10,
+                IUniTaskAsyncEnumerable<T11> source11, IUniTaskAsyncEnumerable<T12> source12,
+                IUniTaskAsyncEnumerable<T13> source13, IUniTaskAsyncEnumerable<T14> source14,
+                IUniTaskAsyncEnumerable<T15> source15,
+                Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> resultSelector,
+                CancellationToken cancellationToken)
             {
                 this.source1 = source1;
                 this.source2 = source2;
@@ -10222,7 +10887,7 @@ namespace Cysharp.Threading.Tasks.Linq
                 this.source13 = source13;
                 this.source14 = source14;
                 this.source15 = source15;
-                
+
                 this.resultSelector = resultSelector;
                 this.cancellationToken = cancellationToken;
                 TaskTracker.TrackActiveTask(this, 3);
@@ -10271,6 +10936,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter1.SourceOnCompleted(Completed1Delegate, this);
                     }
                 }
+
                 if (!running2)
                 {
                     running2 = true;
@@ -10284,6 +10950,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter2.SourceOnCompleted(Completed2Delegate, this);
                     }
                 }
+
                 if (!running3)
                 {
                     running3 = true;
@@ -10297,6 +10964,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter3.SourceOnCompleted(Completed3Delegate, this);
                     }
                 }
+
                 if (!running4)
                 {
                     running4 = true;
@@ -10310,6 +10978,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter4.SourceOnCompleted(Completed4Delegate, this);
                     }
                 }
+
                 if (!running5)
                 {
                     running5 = true;
@@ -10323,6 +10992,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter5.SourceOnCompleted(Completed5Delegate, this);
                     }
                 }
+
                 if (!running6)
                 {
                     running6 = true;
@@ -10336,6 +11006,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter6.SourceOnCompleted(Completed6Delegate, this);
                     }
                 }
+
                 if (!running7)
                 {
                     running7 = true;
@@ -10349,6 +11020,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter7.SourceOnCompleted(Completed7Delegate, this);
                     }
                 }
+
                 if (!running8)
                 {
                     running8 = true;
@@ -10362,6 +11034,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter8.SourceOnCompleted(Completed8Delegate, this);
                     }
                 }
+
                 if (!running9)
                 {
                     running9 = true;
@@ -10375,6 +11048,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter9.SourceOnCompleted(Completed9Delegate, this);
                     }
                 }
+
                 if (!running10)
                 {
                     running10 = true;
@@ -10388,6 +11062,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter10.SourceOnCompleted(Completed10Delegate, this);
                     }
                 }
+
                 if (!running11)
                 {
                     running11 = true;
@@ -10401,6 +11076,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter11.SourceOnCompleted(Completed11Delegate, this);
                     }
                 }
+
                 if (!running12)
                 {
                     running12 = true;
@@ -10414,6 +11090,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter12.SourceOnCompleted(Completed12Delegate, this);
                     }
                 }
+
                 if (!running13)
                 {
                     running13 = true;
@@ -10427,6 +11104,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter13.SourceOnCompleted(Completed13Delegate, this);
                     }
                 }
+
                 if (!running14)
                 {
                     running14 = true;
@@ -10440,6 +11118,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         awaiter14.SourceOnCompleted(Completed14Delegate, this);
                     }
                 }
+
                 if (!running15)
                 {
                     running15 = true;
@@ -10454,10 +11133,13 @@ namespace Cysharp.Threading.Tasks.Linq
                     }
                 }
 
-                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 || !running8 || !running9 || !running10 || !running11 || !running12 || !running13 || !running14 || !running15)
+                if (!running1 || !running2 || !running3 || !running4 || !running5 || !running6 || !running7 ||
+                    !running8 || !running9 || !running10 || !running11 || !running12 || !running13 || !running14 ||
+                    !running15)
                 {
                     goto AGAIN;
                 }
+
                 syncRunning = false;
 
                 return new UniTask<bool>(this, completionSource.Version);
@@ -10483,6 +11165,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -10512,6 +11195,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter1.SourceOnCompleted(Completed1Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -10538,6 +11222,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -10567,6 +11252,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter2.SourceOnCompleted(Completed2Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -10593,6 +11279,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -10622,6 +11309,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter3.SourceOnCompleted(Completed3Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -10648,6 +11336,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -10677,6 +11366,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter4.SourceOnCompleted(Completed4Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -10703,6 +11393,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -10732,6 +11423,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter5.SourceOnCompleted(Completed5Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -10758,6 +11450,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -10787,6 +11480,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter6.SourceOnCompleted(Completed6Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -10813,6 +11507,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -10842,6 +11537,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter7.SourceOnCompleted(Completed7Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -10868,6 +11564,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -10897,6 +11594,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter8.SourceOnCompleted(Completed8Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -10923,6 +11621,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -10952,6 +11651,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter9.SourceOnCompleted(Completed9Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -10978,6 +11678,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -11007,6 +11708,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter10.SourceOnCompleted(Completed10Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -11033,6 +11735,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -11062,6 +11765,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter11.SourceOnCompleted(Completed11Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -11088,6 +11792,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -11117,6 +11822,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter12.SourceOnCompleted(Completed12Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -11143,6 +11849,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -11172,6 +11879,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter13.SourceOnCompleted(Completed13Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -11198,6 +11906,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -11227,6 +11936,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter14.SourceOnCompleted(Completed14Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -11253,6 +11963,7 @@ namespace Cysharp.Threading.Tasks.Linq
                         {
                             goto COMPLETE;
                         }
+
                         return;
                     }
                 }
@@ -11282,6 +11993,7 @@ namespace Cysharp.Threading.Tasks.Linq
 
                     self.awaiter15.SourceOnCompleted(Completed15Delegate, self);
                 }
+
                 return;
                 COMPLETE:
                 self.completionSource.TrySetResult(false);
@@ -11290,9 +12002,12 @@ namespace Cysharp.Threading.Tasks.Linq
 
             bool TrySetResult()
             {
-                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 && hasCurrent7 && hasCurrent8 && hasCurrent9 && hasCurrent10 && hasCurrent11 && hasCurrent12 && hasCurrent13 && hasCurrent14 && hasCurrent15)
+                if (hasCurrent1 && hasCurrent2 && hasCurrent3 && hasCurrent4 && hasCurrent5 && hasCurrent6 &&
+                    hasCurrent7 && hasCurrent8 && hasCurrent9 && hasCurrent10 && hasCurrent11 && hasCurrent12 &&
+                    hasCurrent13 && hasCurrent14 && hasCurrent15)
                 {
-                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7, current8, current9, current10, current11, current12, current13, current14, current15);
+                    result = resultSelector(current1, current2, current3, current4, current5, current6, current7,
+                        current8, current9, current10, current11, current12, current13, current14, current15);
                     completionSource.TrySetResult(true);
                     return true;
                 }
@@ -11309,58 +12024,72 @@ namespace Cysharp.Threading.Tasks.Linq
                 {
                     await enumerator1.DisposeAsync();
                 }
+
                 if (enumerator2 != null)
                 {
                     await enumerator2.DisposeAsync();
                 }
+
                 if (enumerator3 != null)
                 {
                     await enumerator3.DisposeAsync();
                 }
+
                 if (enumerator4 != null)
                 {
                     await enumerator4.DisposeAsync();
                 }
+
                 if (enumerator5 != null)
                 {
                     await enumerator5.DisposeAsync();
                 }
+
                 if (enumerator6 != null)
                 {
                     await enumerator6.DisposeAsync();
                 }
+
                 if (enumerator7 != null)
                 {
                     await enumerator7.DisposeAsync();
                 }
+
                 if (enumerator8 != null)
                 {
                     await enumerator8.DisposeAsync();
                 }
+
                 if (enumerator9 != null)
                 {
                     await enumerator9.DisposeAsync();
                 }
+
                 if (enumerator10 != null)
                 {
                     await enumerator10.DisposeAsync();
                 }
+
                 if (enumerator11 != null)
                 {
                     await enumerator11.DisposeAsync();
                 }
+
                 if (enumerator12 != null)
                 {
                     await enumerator12.DisposeAsync();
                 }
+
                 if (enumerator13 != null)
                 {
                     await enumerator13.DisposeAsync();
                 }
+
                 if (enumerator14 != null)
                 {
                     await enumerator14.DisposeAsync();
                 }
+
                 if (enumerator15 != null)
                 {
                     await enumerator15.DisposeAsync();
@@ -11368,5 +12097,4 @@ namespace Cysharp.Threading.Tasks.Linq
             }
         }
     }
-
 }

@@ -40,6 +40,7 @@ namespace Cysharp.Threading.Tasks
                     this.Text = dhb.text;
                 }
             }
+
             this.ResponseHeaders = unityWebRequest.GetResponseHeaders();
         }
 
@@ -49,7 +50,7 @@ namespace Cysharp.Threading.Tasks
             {
                 if (msg == null)
                 {
-                    if(!string.IsNullOrWhiteSpace(Text))
+                    if (!string.IsNullOrWhiteSpace(Text))
                     {
                         msg = Error + Environment.NewLine + Text;
                     }
@@ -58,6 +59,7 @@ namespace Cysharp.Threading.Tasks
                         msg = Error;
                     }
                 }
+
                 return msg;
             }
         }
