@@ -13,4 +13,12 @@ public class BattleTimeLine : MonoBehaviour
     {
         this.battleManagers = battleManagers;
     }
+
+    public void TimeNext()
+    {
+        foreach (var one in battleManagers)//
+        {
+            one.BattleTurn();
+        }
+    }
 }

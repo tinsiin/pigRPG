@@ -1,10 +1,14 @@
 
 
+using UnityEngine;
+
 /// <summary>
 ///     バトルを、管理するクラス
 /// </summary>
 public class BattleManager
 {
+    
+    
     /// <summary>
     ///     プレイヤー側のバトルグループ　ここに味方のバトルグループオブジェクトをリンクする？
     /// </summary>
@@ -26,5 +30,6 @@ public class BattleManager
 
     public void BattleTurn()
     {
+        
     }
 }
