@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Shader Graphs_NoiseSea
-  m_Shader: {fileID: -6465566751694194690, guid: 74223ff7a76efae42bb2349473bc096c, type: 3}
+  m_Name: Shader Graphs_WalkWeb
+  m_Shader: {fileID: -6465566751694194690, guid: d243057185145db4db13df6fbdf78fd5, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -24,7 +24,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: a71d8d493e758114da46bd90e3030341, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -41,14 +41,17 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Out: 0.68
-    - _Speed: 0.98
-    - _alt: 1
-    - _lag: 189
-    - _lagStep: -23.7
+    - _adma: 0.09
+    - _maskAlpha: 0.5
+    - _maskSize: 0.67
+    - _maskX: 0.6
+    - _maskY: 0.61
+    - _speed: 0.08
+    - _webMax: 170
+    - _webMin: 150
     m_Colors: []
   m_BuildTextureStacks: []
---- !u!114 &8265283539830468141
+--- !u!114 &6495474850585103095
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}
