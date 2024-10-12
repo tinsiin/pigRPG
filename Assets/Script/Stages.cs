@@ -10,6 +10,7 @@ public class Stages : ScriptableObject
     //ステージにまつわる物を処理したり呼び出したり(ステージデータベース??
     public List<StageData> StageDates; //ステージのデータベースのリスト     
     [SerializeField] [TextArea(1, 30)] private string memo;
+
 }
 
 /// <summary>
@@ -73,12 +74,14 @@ public class StageCut
     [SerializeField] private Vector2 _mapLineE;
     [SerializeField] private string _mapsrc;
     [SerializeField] private List<NormalEnemy> _enemyList; //敵のリスト
+    [SerializeField] private GameObject[] _sideObject_Lefts;//左側に出現するオブジェクト
+    [SerializeField] private GameObject[] _sideObject_Rights;//右側に出現するオブジェクト
+
 
     /// <summary>
     ///     エンカウント率
     /// </summary>
-    private int EncounterRate;
-
+    [SerializeField] private int EncounterRate;
 
     /// <summary>
     ///     小分けしたエリアの名前
@@ -207,6 +210,31 @@ public class StageCut
 
         return new BattleGroup(ResultList.Cast<BaseStates>().ToList(), ourImpression); //バトルグループを制作 
     }
+
+    /// <summary>
+    /// leftとRightのオブジェクトを返す。
+    /// </summary>
+    /// <returns>GameObjectの入った配列</returns>
+    public GameObject[] GetRandomSideObject()
+    {
+        if (_sideObject_Lefts.Length < 0)
+        {
+            Debug.LogError("_sideObject_LeftsのPrefabのリストが空です");
+            return null;
+        }
+        if (_sideObject_Rights.Length < 0)
+        {
+            Debug.LogError("_sideObject_RightsのPrefabのリストが空です");
+            return null;
+        }
+
+        // ランダムなオブジェクトを選択
+        var leftItem = RandomEx.Shared.GetItem<GameObject>(_sideObject_Lefts);
+        var rightItem = RandomEx.Shared.GetItem<GameObject>(_sideObject_Rights);
+
+        return new GameObject[] { leftItem, rightItem };
+    }
+
 }
 
 /// <summary>

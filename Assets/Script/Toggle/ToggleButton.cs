@@ -32,7 +32,7 @@ public class ToggleButton : Button
 
     public bool IsManaged { get; set; }
 
-    private void Awake()
+    private new void Awake()
     {
         Initialize();
     }

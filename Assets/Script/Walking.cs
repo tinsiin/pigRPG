@@ -34,7 +34,7 @@ public class Walking : MonoBehaviour
     //現在のステージとエリアのデータを保存する関数
     private StageData NowStageData;
     private PlayersStates ps;
-    private async void Start()
+    private  void Start()
     {
         ps=PlayersStates.Instance;//変数にキャッシュして使用
         
@@ -47,7 +47,10 @@ public class Walking : MonoBehaviour
     /// </summary>
     public async void OnWalkBtn()
     {
-        if (stages && ps != null) await Walk(1);
+        if (stages && ps != null)
+        {
+            await Walk(1);
+        }
     }
 
     private void Encount()
@@ -80,13 +83,13 @@ public class Walking : MonoBehaviour
         }
     }
 
-    private async UniTask　Walk(int footnumber) //リストの内容を反映
+
+    private async UniTask Walk(int footnumber) //リストの内容を反映
     {
-        ps.AddProgress(footnumber); //進行度を増やす。
+        //ps.AddProgress(footnumber); //進行度を増やす。
         StageDataUpdate();
 
         //エンカウント
-
 
         if (NowAreaData.Rest) //休憩地点なら
             Debug.Log("ここは休憩地点");
@@ -104,12 +107,11 @@ public class Walking : MonoBehaviour
         {
         }
 
-        StageDataUpdate();
         TestProgressUIUpdate(); //テスト用進行度ui更新
     }
 
     /// <summary>
-    ///     ステージデータの更新
+    ///     ステージデータの更新　uiの更新も行う
     /// </summary>
     private void StageDataUpdate()
     {

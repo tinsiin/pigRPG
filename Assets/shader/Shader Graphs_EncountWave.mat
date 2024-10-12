@@ -61,7 +61,7 @@ Material:
     - _adma: 5.56
     - _maskAlpha: 1
     - _maskSize: 0.45
-    - _maskX: 1.84
+    - _maskX: 1.78
     - _maskY: 2.02
     m_Colors: []
   m_BuildTextureStacks: []
