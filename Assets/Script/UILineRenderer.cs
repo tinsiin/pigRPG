@@ -45,30 +45,30 @@ public class UILineRenderer : Graphic
     protected override void OnPopulateMesh(VertexHelper vh)
     {
         vh.Clear();
+            // 時間に基づく揺れの計算
+            float shakeOffset = Mathf.Sin(timeElapsed * shakeFrequency) * shakeAmplitude;
 
-        // 時間に基づく揺れの計算
-        float shakeOffset = Mathf.Sin(timeElapsed * shakeFrequency) * shakeAmplitude;
+            // 線の描画
+            foreach (var line in lines)
+            {
+                DrawLine(vh, ApplyShakeToLine(line, shakeOffset));
+            }
 
-        // 線の描画
-        foreach (var line in lines)
-        {
-            DrawLine(vh, ApplyShakeToLine(line, shakeOffset));
-        }
-
-        // 円の描画
-        foreach (var circle in circles)
-        {
-            DrawCircle(vh, ApplyShakeToCircle(circle, shakeOffset));
-        }
+            // 円の描画
+            foreach (var circle in circles)
+            {
+                DrawCircle(vh, ApplyShakeToCircle(circle, shakeOffset));
+            }
     }
 
     protected override void Awake()
     {
         base.Awake();
 
+        // 生成時にランダムにずらす処理　　タイプにより場合分け
         if(sideObject_Type == SideObject_Type.Chaos)
         {
-            foreach (var line in lines)
+            foreach (var line in lines)//この場合は全ての線がそれぞれずれる
             {
                 line.startPoint += new Vector2(RandomEx.Shared.NextFloat(-bornPosRange.x, bornPosRange.x), RandomEx.Shared.NextFloat(-bornPosRange.y, bornPosRange.y));
                 line.endPoint += new Vector2(RandomEx.Shared.NextFloat(-bornPosRange.x, bornPosRange.x), RandomEx.Shared.NextFloat(-bornPosRange.y, bornPosRange.y));
@@ -78,7 +78,7 @@ public class UILineRenderer : Graphic
                 circle.center += new Vector2(RandomEx.Shared.NextFloat(-bornPosRange.x, bornPosRange.x), RandomEx.Shared.NextFloat(-bornPosRange.y, bornPosRange.y));
             }
         }
-        else if(sideObject_Type == SideObject_Type.Normal)
+        else if(sideObject_Type == SideObject_Type.Normal)//この場合は全ての線が同じずれを持つ
         {
             // 一度だけ乱数を生成
             Vector2 randomOffset = new Vector2(
@@ -179,7 +179,10 @@ public class UILineRenderer : Graphic
 
     void Update()
     {
-        timeElapsed += Time.deltaTime;
-        SetVerticesDirty();
+        if (shakeAmplitude > 0 && shakeFrequency>0)
+        {
+            timeElapsed += Time.deltaTime;
+            SetVerticesDirty();
+        }
     }
 }

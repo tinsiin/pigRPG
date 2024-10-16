@@ -33,8 +33,8 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _FreqX: 40
-    - _FreqY: 18
+    - _FreqX: 1
+    - _FreqY: 22.1
     - _Param: 0.1
     - _PhaseX: 0
     - _PhaseY: 6.28
