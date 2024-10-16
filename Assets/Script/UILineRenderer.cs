@@ -30,6 +30,7 @@ public class UILineRenderer : Graphic
 
     public float thickness = 5f;
     public Color lineColor = Color.white;
+    public Color two = Color.blue;
     public int circleSegments = 36;
 
     // 振動のパラメータ
@@ -136,7 +137,7 @@ public class UILineRenderer : Graphic
         innerVertices[1] = line.endPoint - normal;
 
         // 頂点の追加
-        AddQuad(vh, outerVertices[0], innerVertices[0], innerVertices[1], outerVertices[1], lineColor);
+        AddQuad(vh, outerVertices[0], innerVertices[0], innerVertices[1], outerVertices[1], new Color[] { lineColor,lineColor,two,two });
     }
 
     void DrawCircle(VertexHelper vh, CircleData circle)
@@ -155,7 +156,7 @@ public class UILineRenderer : Graphic
 
             if (i > 0)
             {
-                AddQuad(vh, prevOuter, prevInner, inner, outer, lineColor);
+                AddQuad(vh, prevOuter, prevInner, inner, outer, new Color[] { lineColor,lineColor,lineColor,lineColor });
             }
 
             prevOuter = outer;
@@ -163,14 +164,14 @@ public class UILineRenderer : Graphic
         }
     }
 
-    void AddQuad(VertexHelper vh, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4, Color color)
+    void AddQuad(VertexHelper vh, Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4, Color[] color)
     {
         int idx = vh.currentVertCount;
 
         Vector3[] positions = { v1, v2, v3, v4 };
         for (int i = 0; i < 4; i++)
         {
-            vh.AddVert(positions[i], color, Vector2.zero);
+            vh.AddVert(positions[i], color[i], Vector2.zero);
         }
 
         vh.AddTriangle(idx, idx + 1, idx + 2);

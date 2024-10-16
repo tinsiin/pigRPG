@@ -3430,7 +3430,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1921224903}
   - component: {fileID: 1921224905}
-  - component: {fileID: 1921224906}
   m_Layer: 5
   m_Name: Road
   m_TagString: Untagged
@@ -3465,44 +3464,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1921224902}
   m_CullTransparentMesh: 1
---- !u!114 &1921224906
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1921224902}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 92eb127c231733943840f287062ce4e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 0
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  lines:
-  - startPoint: {x: 100.08168, y: -279.30533}
-    endPoint: {x: 267.89795, y: -480.1054}
-  - startPoint: {x: -130.90024, y: -246.98192}
-    endPoint: {x: -353.34183, y: -489.41968}
-  - startPoint: {x: -127.85232, y: -239.86807}
-    endPoint: {x: -175.55624, y: -449.79883}
-  - startPoint: {x: 153.55696, y: -239.86728}
-    endPoint: {x: 59.121025, y: -482.30826}
-  circles:
-  - center: {x: 4.1552696, y: -322.02655}
-    radius: 4.37
-  - center: {x: 4.1552696, y: -322.02655}
-    radius: 4.37
-  - center: {x: 125.119446, y: -341.20383}
-    radius: 4.37
-  thickness: 4.76
-  StartColor: {r: 1, g: 1, b: 1, a: 1}
-  EndColor: {r: 0.9547169, g: 0.9547169, b: 0.9547169, a: 1}
-  circleSegments: 36
-  bornPosRange: {x: 0, y: 0}
-  sideObject_Type: 0
 --- !u!1 &2018993888
 GameObject:
   m_ObjectHideFlags: 0

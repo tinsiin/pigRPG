@@ -68,6 +68,7 @@ MonoBehaviour:
   circles: []
   thickness: 7.8
   lineColor: {r: 0.16910642, g: 0.33925214, b: 0.4415095, a: 0.5568628}
+  two: {r: 0.16862746, g: 0.34117648, b: 0.4431373, a: 0.39215687}
   circleSegments: 36
   shakeAmplitude: 10
   shakeFrequency: 1

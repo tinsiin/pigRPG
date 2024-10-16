@@ -40,6 +40,7 @@ public class SideObjectMove : MonoBehaviour　　//エディタ拡張からア�
 
     private RectTransform _thisRect;
     Color _initLineColor;
+    Color _initTwoColor;
     UILineRenderer lr;
     int fadeInEndPoint = 0;//フェードインのアニメーションが終わった数を記録する変数
     Transform parentRect;//親オブジェクトのTransform
@@ -56,7 +57,9 @@ public class SideObjectMove : MonoBehaviour　　//エディタ拡張からア�
 
         var _lineThickness = lr.thickness; //線の予定された太さを取得
         _initLineColor = lr.lineColor; //線の予定された色を取得
+        _initTwoColor = lr.two; //線の予定された色を取得
         lr.lineColor = new Color(_initLineColor.r, _initLineColor.g, _initLineColor.b, 0); //透明にする このコード消すとフェードインの前にサイドオブジェクトがちらつく
+        lr.two = new Color(_initTwoColor.r, _initTwoColor.g, _initTwoColor.b, 0); //透明にする このコード消すとフェードインの前にサイドオブジェクトがちらつく
 
         //スケールに大きさのノイズを含める(位置ノイズはUiLineRendererのAwake)
         // 一度だけ乱数を生成
@@ -82,6 +85,20 @@ public class SideObjectMove : MonoBehaviour　　//エディタ拡張からア�
                 var color = lr.lineColor;
                 color.a = alpha;
                 lr.lineColor = color;
+                lr.SetVerticesDirty(); // uilinerendererの頂点データに変更を通知
+            })
+            .AddTo(this);
+        mh.PlaybackSpeed = boostSpeed;//再生速度を速める
+
+        mh= LMotion.Create(0, _initTwoColor.a, fadeInTime + fadeRnd)//フェードインの時間にバラつきを加える/開始時間にもバラつきを
+            .WithEase(_curve)
+            .WithDelay(fadeDelayRnd)//遅延時間にバラつきを加える
+            .WithOnComplete(() => fadeInEndPoint++)//終わったことを記録
+            .Bind(alpha =>
+            {
+                var color = lr.two;
+                color.a = alpha;
+                lr.two = color;
                 lr.SetVerticesDirty(); // uilinerendererの頂点データに変更を通知
             })
             .AddTo(this);
