@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8314452177652807963
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2292920649390489989}
+  - component: {fileID: 4639543716833717851}
+  - component: {fileID: 6242263045871882834}
+  m_Layer: 5
+  m_Name: Road
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2292920649390489989
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8314452177652807963}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &4639543716833717851
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8314452177652807963}
+  m_CullTransparentMesh: 1
+--- !u!114 &6242263045871882834
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8314452177652807963}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 386d1e5d6220fee42b5380bbad02a686, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  lines:
+  - startPoint: {x: 100.00001, y: -284.71765}
+    endPoint: {x: 267, y: -479.99994}
+  - startPoint: {x: -130, y: -246}
+    endPoint: {x: -353, y: -489}
+  - startPoint: {x: -127.00001, y: -239.99655}
+    endPoint: {x: -211.48502, y: -511.89532}
+  - startPoint: {x: 66.337074, y: -484.57648}
+    endPoint: {x: 100.58693, y: -282.60068}
+  circles:
+  - center: {x: 73.0456, y: -352.4141}
+    radius: 10.59
+  - center: {x: 204.85103, y: -427.7373}
+    radius: 10.59
+  thickness: 7.88
+  lineColor: {r: 1, g: 1, b: 1, a: 1}
+  two: {r: 0.78113204, g: 0.78113204, b: 0.78113204, a: 0.6745098}
+  circleSegments: 36
+  shakeAmplitude: 0
+  shakeFrequency: 0
+  bornPosRange: {x: 0, y: 0}
+  sideObject_Type: 1

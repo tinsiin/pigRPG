@@ -24,6 +24,7 @@ namespace Editor
         {
             UILineRenderer lineRenderer = (UILineRenderer)target;
 
+
             if ((lineRenderer.lines == null || lineRenderer.lines.Count == 0) &&
                 (lineRenderer.circles == null || lineRenderer.circles.Count == 0))
                 return;
@@ -127,15 +128,16 @@ namespace Editor
                 }
 
                 // ラベルを表示
-                Handles.Label(startWorldPos, $"Line {i} Start");
-                Handles.Label(endWorldPos, $"Line {i} End");
+                var style = new GUIStyle();
+                style.normal.textColor = Color.blue;
+                Handles.Label(startWorldPos, $"Line {i} Start",style);
+                Handles.Label(endWorldPos, $"Line {i} End",style);
             }
 
             // 各円の個別ハンドルも引き続き操作可能
             for (int i = 0; i < lineRenderer.circles.Count; i++)
             {
                 UILineRenderer.CircleData circle = lineRenderer.circles[i];
-
                 EditorGUI.BeginChangeCheck();
 
                 // 中心点のハンドル操作
@@ -156,7 +158,9 @@ namespace Editor
                 }
 
                 // ラベルを表示
-                Handles.Label(centerWorldPosCircle, $"Circle {i} Center");
+                var style = new GUIStyle();
+                style.normal.textColor = Color.blue;
+                Handles.Label(centerWorldPosCircle, $"Circle {i} Center",style);
             }
         }
 

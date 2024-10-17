@@ -33,7 +33,6 @@ public class StageData //ステージデータのクラス
 {
     [SerializeField] private string _stageName;
     [SerializeField] private List<StageCut> _cutArea;
-
     /// <summary>
     ///     ステージごとに設定される主人公陣営たちのボーナス。
     /// </summary>
@@ -59,6 +58,7 @@ public class StageData //ステージデータのクラス
     ///     ステージを小分けにしたリスト
     /// </summary>
     public IReadOnlyList<StageCut> CutArea => _cutArea;
+
 }
 
 /// <summary>
