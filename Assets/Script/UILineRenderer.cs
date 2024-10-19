@@ -41,7 +41,7 @@ public class UILineRenderer : Graphic
 
     //生成時にランダムにずれる。(サイドオブジェクトのノイズ性を高めるため　ドリームリアリティってやつ)
     [SerializeField] private Vector2 bornPosRange;
-    [SerializeField] private SideObject_Type sideObject_Type;
+    public SideObject_Type sideObject_Type;
 
     protected override void OnPopulateMesh(VertexHelper vh)
     {
@@ -62,9 +62,8 @@ public class UILineRenderer : Graphic
             }
     }
 
-    protected override void Awake()
+    protected override void Start()
     {
-        base.Awake();
 
         // 生成時にランダムにずらす処理　　タイプにより場合分け
         if(sideObject_Type == SideObject_Type.Chaos)
@@ -86,7 +85,7 @@ public class UILineRenderer : Graphic
                 RandomEx.Shared.NextFloat(-bornPosRange.x, bornPosRange.x),
                 RandomEx.Shared.NextFloat(-bornPosRange.y, bornPosRange.y)
             );
-            Debug.Log("今回のずれ" + randomOffset);
+            //Debug.Log("今回のずれ" + randomOffset);
 
             // すべてのラインに同じ乱数を適用
             foreach (var line in lines)

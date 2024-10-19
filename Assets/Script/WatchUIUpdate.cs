@@ -1,13 +1,25 @@
 using Cysharp.Threading.Tasks;
+using LitMotion;
+using LitMotion.Extensions;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+
 
 public class WatchUIUpdate : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI StagesString; //ステージとエリア名のテキスト
     [SerializeField] private TenmetuNowImage MapImg; //直接で現在位置表示する簡易マップ
     [SerializeField] private RectTransform bgRect; //背景のRectTransform
+    [SerializeField] private DarkWaveManager _waveManager;
+
+    //ズーム用変数
+    [SerializeField] private AnimationCurve _firstZoomAnimationCurve;
+    [SerializeField] private float _firstZoomSpeedTime;
+    [SerializeField] private Vector2 _gotoPos;
+    [SerializeField] private Vector2 _gotoScaleXY;
+    [SerializeField] private Vector2 _NormalPos;
+    [SerializeField] private Vector2 _NormalScaleXY;
 
     GameObject[] TwoObjects;//サイドオブジェクトの配列
     SideObjectMove[] SideObjectMoves = new SideObjectMove[2];//サイドオブジェクトのスクリプトの配列
@@ -22,40 +34,55 @@ public class WatchUIUpdate : MonoBehaviour
         LiveSideObjects[1] = new List<SideObjectMove>();
     }
 
-    private void Update()
+    RectTransform _rect;
+    RectTransform Rect
     {
-        /*for(int i = 0; i < 2; i++)
-        {
-            //Debug.Log("サイドオブジェクトのリスト数" + LiveSideObjects[i].Count);
-
-            //オブジェクト自体が再生を完了して自動でDestroyしたのを消す処理
-            for (int j = LiveSideObjects[i].Count - 1; j >= 0; j--) // 後ろ向きのループ
+        get {
+            if (_rect == null)
             {
-                if ((LiveSideObjects[i][j] == null)) // もしnullなら
-                {
-                    Debug.Log("SideObjectが自動で消されたのでLiveListからも削除");
-                    LiveSideObjects[i].RemoveAt(j); // リストから削除
-                }
+                _rect = GetComponent<RectTransform>();
             }
-            
-
-        }*/
+            return _rect;
+        }
     }
 
     /// <summary>
-    ///     全体的なEYEAREAのUI更新
+    ///     歩行時のEYEAREAのUI更新
     /// </summary>
-    public void UIUpdate(StageData sd, StageCut sc, PlayersStates pla)
+    public void WalkUIUpdate(StageData sd, StageCut sc, PlayersStates pla)
     {
         StagesString.text = sd.StageName + "・\n" + sc.AreaName;
         NowImageCalc(sc, pla);
-        SideObjectManage(sc);//サイドオブジェクト
+        SideObjectManage(sc, SideObject_Type.Normal);//サイドオブジェクト
+    }
+
+    /// <summary>
+    /// エンカウントしたら最初にズームする処理
+    /// </summary>
+    public void FirstImpressionZoom()
+    {
+        var nowScaleXY = new Vector2(Rect.localScale.x, Rect.localScale.y);
+        var nowPos = new Vector2(Rect.anchoredPosition.x, Rect.anchoredPosition.y);
+
+        //_waveManager.InWave();
+
+        //スケール移動
+        LMotion.Create(nowScaleXY, _gotoScaleXY, _firstZoomSpeedTime)
+            .WithEase(_firstZoomAnimationCurve)
+            .BindToLocalScaleXY(Rect)
+            .AddTo(this);
+
+        //ポジション移動
+        LMotion.Create(nowPos, _gotoPos, _firstZoomSpeedTime)
+           .WithEase(_firstZoomAnimationCurve)
+           .BindToAnchoredPosition(Rect)
+           .AddTo(this);
     }
 
     /// <summary>
     /// 歩行の度に更新されるSideObjectの管理
     /// </summary>
-    public void SideObjectManage(StageCut nowStageCut)
+    private void SideObjectManage(StageCut nowStageCut, SideObject_Type type)
     {
 
         var GetObjects = nowStageCut.GetRandomSideObject();//サイドオブジェクトLEFTとRIGHTを取得
@@ -69,6 +96,8 @@ public class WatchUIUpdate : MonoBehaviour
             }
 
             TwoObjects[i] = Instantiate(GetObjects[i], bgRect);//サイドオブジェクトを生成、配列に代入
+            var LineObject = TwoObjects[i].GetComponent<UILineRenderer>();
+            LineObject.sideObject_Type = type;//引数のタイプを渡す。
             SideObjectMoves[i] = TwoObjects[i].GetComponent<SideObjectMove>();//スクリプトを取得
             SideObjectMoves[i].boostSpeed=3.0f;//スピードを初期化
             LiveSideObjects[i].Add(SideObjectMoves[i]);//生きているリスト(左右どちらか)に追加

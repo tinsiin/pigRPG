@@ -58,10 +58,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _adma: 5.56
+    - _adma: 6.51
     - _maskAlpha: 1
-    - _maskSize: 0.45
-    - _maskX: 0
-    - _maskY: 2.02
+    - _maskSize: 0.486
+    - _maskX: 1.95
+    - _maskY: 2.5
     m_Colors: []
   m_BuildTextureStacks: []

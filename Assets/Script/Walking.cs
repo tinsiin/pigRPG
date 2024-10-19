@@ -75,21 +75,27 @@ public class Walking : MonoBehaviour
             var bm = new BattleManager(allyGroup, enemyGroup); //バトルを管理するクラス
             //battleTimeLineを生成
             var TimeLine = new BattleTimeLine(new List<BattleManager>{bm}); //バトルのタイムラインを管理するクラス
+
+            wui.FirstImpressionZoom();
         }
         else
         {
             //エンカウントしなかった場合の処理
+            wui.FirstImpressionZoom();
+
             Debug.Log("No encounter");
         }
     }
 
-
+    //メインループ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
+    //☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
     private async UniTask Walk(int footnumber) //リストの内容を反映
     {
         //ps.AddProgress(footnumber); //進行度を増やす。
         StageDataUpdate();
 
         //エンカウント
+        Encount();
 
         if (NowAreaData.Rest) //休憩地点なら
             Debug.Log("ここは休憩地点");
@@ -119,7 +125,7 @@ public class Walking : MonoBehaviour
         NowStageCut = NowStageData.CutArea[ps.NowAreaID]; //現在のエリアデータ
         NowAreaData = NowStageCut.AreaDates[ps.NowProgress]; //現在地点
 
-        wui.UIUpdate(NowStageData, NowStageCut, ps); //ui更新
+        wui.WalkUIUpdate(NowStageData, NowStageCut, ps); //ui更新
     }
 
     /// <summary>

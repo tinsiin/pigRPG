@@ -41,7 +41,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Out: 0.59
+    - _Out: 0.62
     - _Speed: 0.98
     - _alt: 1
     - _lag: 189

@@ -72,7 +72,7 @@ MonoBehaviour:
   circleSegments: 36
   shakeAmplitude: 10
   shakeFrequency: 1
-  bornPosRange: {x: 100, y: 100}
+  bornPosRange: {x: 44, y: 44}
   sideObject_Type: 1
 --- !u!114 &7470618897537686000
 MonoBehaviour:
