@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Unlit_CircularBuildings_copy
-  m_Shader: {fileID: 4800000, guid: d81983b9a88e0fd4fb71db72e4189fe5, type: 3}
+  m_Name: Custom_RotatingLoadingCircles
+  m_Shader: {fileID: 4800000, guid: 60764474635d6f149950e13716eeba4c, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -29,22 +29,18 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BuildingCount: 15.89
-    - _BuildingHeight: 3.9
-    - _BuildingHeightMax: 2873.6
-    - _BuildingHeightMin: 72.8
-    - _BuildingLength: 2.05
-    - _BuildingWidth: 6.82
-    - _CircleRadius: 8.8
-    - _ConvergenceSpeed: 3.13
-    - _CycleTime: 5
-    - _Distortion: 0
-    - _LineWidth: 2.1
-    - _RandomSeed: 1255.9
-    - _Rotation: 96.86
+    - _CircleCount: 11
+    - _CycleTime: 0.76
+    - _DelayTime: 0
+    - _MainRadius: 0.36
+    - _Opacity: 1
+    - _RadiusScale: 1.5
+    - _RotationSpeed: 0.08
+    - _SmallRadius: 0.03
     m_Colors:
-    - _BackgroundColor: {r: 1, g: 1, b: 1, a: 0}
-    - _ColorGradientEnd: {r: 0.10437165, g: 0.5169811, b: 0.5169811, a: 1}
-    - _ColorGradientStart: {r: 0, g: 0, b: 0, a: 1}
-    - _LineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _BackgroundColor: {r: 0, g: 0, b: 0, a: 0}
+    - _CircleColor: {r: 0.19433957, g: 0.6597328, b: 1, a: 1}
+    - _ColorGradientEnd: {r: 1, g: 1, b: 1, a: 1}
+    - _ColorGradientStart: {r: 0.2905661, g: 0.27576366, b: 0.27576366, a: 1}
+    - _LineColor: {r: 0.2651548, g: 0.5961993, b: 0.8415094, a: 1}
   m_BuildTextureStacks: []

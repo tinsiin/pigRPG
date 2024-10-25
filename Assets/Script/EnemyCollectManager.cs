@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UnityEngine.AddressableAssets;
 using RandomExtensions;
 using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 public class EnemyCollectManager : MonoBehaviour
 {
@@ -108,11 +110,13 @@ public class EnemyCollectManager : MonoBehaviour
         //getValueはarrayのメソッドで、引数にインデックスを取り、そのインデックスの値をobject型で返す。
     }
 
-    private void ImpressionMatchUpCsvLoad() //
+    private async void ImpressionMatchUpCsvLoad() //
     {
         ImpressionMatchupTable = new Dictionary<(SpiritualProperty, SpiritualProperty), int>(); //辞書データの初期化
-
+        
         var csvFile = "Assets/csvData/characterMatchData.csv"; //csvファイルのパス
+
+        var textHandle = await Addressables.LoadAssetAsync<TextAsset>(csvFile).WithCancellation(destroyCancellationToken);
         //リーミナル、キンダー、自己、シークイ、デビル、ドレミス、支柱、ゴッドティア、ベールドライヴァル、サイコパスの順番に行も列も並んでいます。
         var SpiritualCsvArray = new[]
         {
@@ -128,7 +132,9 @@ public class EnemyCollectManager : MonoBehaviour
             SpiritualProperty.baledrival,
             SpiritualProperty.pysco
         };
-        var rows = File.ReadAllLines(csvFile) //行ごとに読み込み、
+        var rows = textHandle.text //そのままテキストを渡す
+            .Split("\n")//改行ごとに分割
+            .Select(line => line.Trim())//行の先頭と末尾の空白や改行を削除する
             .Select(line => line.Split(',').Select(int.Parse).ToArray()) //それをさらにカンマで分割してint型に変換して配列に格納する。
             .ToArray(); //配列になった行をさらに配列に格納する。
         /*

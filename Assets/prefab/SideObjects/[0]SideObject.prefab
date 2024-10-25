@@ -63,8 +63,8 @@ MonoBehaviour:
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   lines:
-  - startPoint: {x: 98.211136, y: 90.20782}
-    endPoint: {x: 99.7944, y: -292.8577}
+  - startPoint: {x: 61.560467, y: 78.81245}
+    endPoint: {x: 63.143734, y: -304.25305}
   circles: []
   thickness: 7.8
   lineColor: {r: 0.16910642, g: 0.33925214, b: 0.4415095, a: 0.5568628}
@@ -72,7 +72,7 @@ MonoBehaviour:
   circleSegments: 36
   shakeAmplitude: 10
   shakeFrequency: 1
-  bornPosRange: {x: 44, y: 44}
+  bornPosRange: {x: 33, y: 80}
   sideObject_Type: 1
 --- !u!114 &7470618897537686000
 MonoBehaviour:

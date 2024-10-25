@@ -37,6 +37,7 @@ public class Walking : MonoBehaviour
     private  void Start()
     {
         ps=PlayersStates.Instance;//変数にキャッシュして使用
+        BaseStates.CsvLoad();
         
         //初期UI更新　最適化のため最終開発の段階で初期UIの更新だけをするようにする。
         TestProgressUIUpdate();
@@ -72,7 +73,7 @@ public class Walking : MonoBehaviour
 
 
             //BattleManagerを生成
-            var bm = new BattleManager(allyGroup, enemyGroup); //バトルを管理するクラス
+            var bm = new BattleManager(allyGroup, enemyGroup,BattleStartSituation.Normal); //バトルを管理するクラス
             //battleTimeLineを生成
             var TimeLine = new BattleTimeLine(new List<BattleManager>{bm}); //バトルのタイムラインを管理するクラス
 
