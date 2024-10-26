@@ -45,7 +45,7 @@ public class TabContentsChanger<TView, TKind>
     }
 
     /// <summary>
-    ///     指定インデックスの選択
+    ///     指定インデックスの選択  
     /// </summary>
     public void Select(int index)
     {
@@ -55,6 +55,18 @@ public class TabContentsChanger<TView, TKind>
             Contents[i].SetSelect(i == index); //コンテンツの該当をセレクトする
             _onChangeStateSubject.OnNext((Contents[i], i == index)); //コンテンツとアクティブを返して実行する。
         }
+    }
+
+    /// <summary>
+    /// kind列挙体でViewのmonobehaviorを入手する
+    /// </summary>
+    /// <param name="kind"></param>
+    /// <returns></returns>
+    public TView GetViewFromKind(TKind kind)
+    {
+        var holder = Contents.Find(content => content.Kind.Equals(kind));
+
+        return holder.View;
     }
 
     /// <summary>
@@ -72,7 +84,7 @@ public class TabContentsChanger<TView, TKind>
         public TView View; //MonoBehaviorなら何でも受け入れるので、MonoBehaviorをもったGameObjectを何でもSerializeFieldから登録できる
         public TKind Kind;
 
-        public bool IsSelect { get; private set; } //この書き方は効率がいいプロパティの書き方だと思う。
+        public bool IsSelect { get; private set; } 
 
         public void SetSelect(bool select)
         {

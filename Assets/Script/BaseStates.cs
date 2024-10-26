@@ -184,29 +184,38 @@ public abstract class BaseStates
     {
         HP -= atkPoint - DEF(DEFAtkper); //HPから指定された攻撃力が引かれる。
     }
+
+    /// <summary>
+    /// ヒールは防御できない、つまりヒールが逆効果のキャラクターならヒールは有効打ってこと
+    /// </summary>
+    /// <param name="HealPoint"></param>
     public virtual void Heal(int HealPoint)
     {
-        HP += HealPoint;//ヒールは防御できない、つまりヒールが逆効果のキャラクターならヒールは有効打ってこと
+        HP += HealPoint;
     }
 
     /// <summary>
-    /// スキルに対するリアクション
+    /// スキルに対するリアクション ここでスキルの解釈をする。
     /// </summary>
     /// <param name="skill"></param>
     public virtual void ReactionSkill(BaseSkill skill)
     {
+        //スキルパワーの精神属性による計算
+        var modifier = SkillSpiritualModifier[(skill.SkillSpiritual, MyImpression)];//スキルの精神属性と自分の精神属性による補正
+        var skillPower = Mathf.RoundToInt(skill.SkillPower * modifier.GetValue() / 100.0f);
+
         //スキルの種別により、処理が分岐する
         switch (skill.WhatSkill)
         {
             case SkillType.Attack:
                 {
-                    Damage(skill.SkillPower, skill.DEFATK);
+                    Damage(skillPower, skill.DEFATK);
                     break;
                 }
 
             case SkillType.Heal:
                 {
-                    Heal(skill.SkillPower);
+                    Heal(skillPower);
                     break;
                 }
         }
@@ -393,9 +402,9 @@ public abstract class BaseStates
         }
 
 
-            Debug.Log("読み込まれたキャラクター精神スキル補正値\n" +
+            /*Debug.Log("読み込まれたキャラクター精神スキル補正値\n" +
                   string.Join(", ",
-                      SkillSpiritualModifier.Select(kvp => $"[{kvp.Key}: {kvp.Value.GetValue()} rndMax({kvp.Value.rndMax})]" + "\n"))); //デバックで全内容羅列。
+                      SkillSpiritualModifier.Select(kvp => $"[{kvp.Key}: {kvp.Value.GetValue()} rndMax({kvp.Value.rndMax})]" + "\n"))); //デバックで全内容羅列。*/
     }
 }
 
@@ -405,7 +414,7 @@ public abstract class BaseStates
 public class FixedOrRandomValue
 {
 
-    public int rndMax;//乱数の最大値 乱数かどうかはrndMaxに-1を入れればいい
+    private int rndMax;//乱数の最大値 乱数かどうかはrndMaxに-1を入れればいい
     private int rndMinOrFixed;//単一の値または乱数としての最小値
 
     /// <summary>

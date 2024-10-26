@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using R3;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,6 +13,12 @@ public class Walking : MonoBehaviour
     [SerializeField] private Button walkbtn;
     [SerializeField] private SelectButton SelectButtonPrefab;
     [SerializeField] private int SelectBtnSize;
+
+    /// <summary>
+    /// USERUIの状態
+    /// </summary>
+    public static ReactiveProperty<TabState> USERUI_state = new();
+
 
     /// <summary>
     ///     選択肢ボタンを入れる親オブジェクト取得
@@ -52,6 +59,7 @@ public class Walking : MonoBehaviour
         {
             await Walk(1);
         }
+        USERUI_state.Value = TabState.TalkWindow;
     }
 
     private void Encount()

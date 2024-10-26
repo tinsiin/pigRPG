@@ -2,10 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ACTpart
-{
-
-}
 
 /// <summary>
 /// 複数のBattleManagerを管理するクラス
@@ -14,11 +10,6 @@ public class ACTpart
 public class BattleTimeLine : MonoBehaviour
 {
     private List<BattleManager> battleManagers;
-
-    /// <summary>
-    /// 全ての行動を記録するリスト
-    /// </summary>
-    private List<ACTpart> ALLACTList;
 
     public BattleTimeLine(List<BattleManager> battleManagers)
     {
@@ -29,7 +20,7 @@ public class BattleTimeLine : MonoBehaviour
     {
         foreach (var one in battleManagers)//
         {
-            one.BattleTurn();
+
         }
     }
 }
