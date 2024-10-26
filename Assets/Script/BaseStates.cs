@@ -280,15 +280,27 @@ public abstract class BaseStates
     /// <summary>
     /// 精神属性でのスキルの補正値　スキルの精神属性→キャラクター属性
     /// </summary>
-    protected static Dictionary<(SpiritualProperty, SpiritualProperty), int> SkillSpiritualModifier;
+    protected static Dictionary<(SpiritualProperty, SpiritualProperty), FixedOrRandomValue> SkillSpiritualModifier;
 
-    //CancellationToken cancellLoad;
+    /// <summary>
+    /// セルの文字列を整数にパースする。空または無効な場合はデフォルト値を返す。
+    /// </summary>
+    /// <param name="cell">セルの文字列</param>
+    /// <returns>パースされた整数値またはデフォルト値</returns>
+    private static int ParseCell(string cell)
+    {
+        if (int.TryParse(cell, out int result))
+        {
+            return result;
+        }//空セルの場合は整数変換に失敗してelseが入る　splitで,,みたいに区切り文字が二連続すると""空文字列が入る
+        else return -1;  //空セルには-1が入る　空セルが入るのはrndMaxが入る所のみになってるはずなので、最大値が無効になる-1が入る
+    }
     /// <summary>
     /// BaseStatus内で使われるデータ用のcsvファイルをロード
     /// </summary>
     public async static void CsvLoad()
     {
-        SkillSpiritualModifier = new Dictionary<(SpiritualProperty, SpiritualProperty), int>();//初期化
+        SkillSpiritualModifier = new Dictionary<(SpiritualProperty, SpiritualProperty), FixedOrRandomValue>();//初期化
         var csvFile = "Assets/csvData/SpiritualMatchData.csv";
 
         var textHandle = await Addressables.LoadAssetAsync<TextAsset>(csvFile);
@@ -296,8 +308,8 @@ public abstract class BaseStates
 
         var rows = textHandle.text //そのままテキストを渡す
             .Split("\n")//改行ごとに分割
-            .Select(line => line.Trim())//行の先頭と末尾の空白や改行を削除する
-            .Select(line => line.Split(',').Select(int.Parse).ToArray()) //それをさらにカンマで分割してint型に変換して配列に格納する。
+            //.Select(line => line.Trim())//行の先頭と末尾の空白や改行を削除する
+            .Select(line => line.Split(',').Select(ParseCell).ToArray()) //それをさらにカンマで分割してint型に変換して配列に格納する。
             .ToArray(); //配列になった行をさらに配列に格納する。
         /*
          * new List<List<int>> {  実際はarrayだけどこういうイメージ
@@ -305,18 +317,85 @@ public abstract class BaseStates
             new List<int> { 60, 77, 160, 50, 80, 23, 32, 50, 51, 56 }}
          */
 
+        var SpiritualCsvArrayRows = new[]
+        {
+            //精神攻撃の相性の　行の属性並び順
+            SpiritualProperty.liminalwhitetile,
+            SpiritualProperty.kindergarden,
+            SpiritualProperty.sacrifaith,
+            SpiritualProperty.cquiest,
+            SpiritualProperty.devil,
+            SpiritualProperty.devil,//乱数のmax
+            SpiritualProperty.doremis,
+            SpiritualProperty.pillar,
+            SpiritualProperty.godtier,
+            SpiritualProperty.baledrival,
+            SpiritualProperty.pysco
+        };
+        var SpiritualCsvArrayColumn = new[]
+        {
+            //精神攻撃の相性の　列の属性並び順
+            SpiritualProperty.liminalwhitetile,
+            SpiritualProperty.kindergarden,
+            SpiritualProperty.sacrifaith,
+            SpiritualProperty.cquiest,
+            SpiritualProperty.devil,
+            SpiritualProperty.doremis,
+            SpiritualProperty.pillar,
+            SpiritualProperty.godtier,
+            SpiritualProperty.baledrival,
+            SpiritualProperty.baledrival,//乱数のmax
+            SpiritualProperty.pysco
+        };
+
+
         for (var i = 0; i < rows.Length; i++) //行ごとに回していく oneは行たちを格納した配列
+        {
+            //4行目と5行目はdevilへの乱数min,max
+
+            //min 部分でクラスを生成　max部分で既にあるクラスにmaxをセット　空なら-1
+            //つまり乱数のmaxにあたる行でのみSetmaxが既にある辞書に実行されるという仕組みにすればいいのだ楽だラクダ
             for (var j = 0; j < rows[i].Length; j++) //数字ごとに回す　one[j]は行の中の数字を格納した配列
             {
-             //4行目と5行目はdevilの乱数min,max
-             //8,9列目はbaleの乱数min,max
+                //8,9列目はbaleが相手に対する乱数min,max
+
+                var key = (SpiritualCsvArrayColumn[j], SpiritualCsvArrayRows[i]);
+                var value = rows[i][j];
+                if (i == 5 || j == 9)//もし五行目、または九列目の場合
+                {
+                    if (SkillSpiritualModifier.ContainsKey(key))//キーが既にあれば
+                    {
+                        SkillSpiritualModifier[key].SetMax(value);//乱数最大値を設定
+                        //Debug.Log($"乱数セット{value}");
+                    }
+                    else
+                    {
+                        Debug.LogError($"キー {key} が存在しません。SetMax を実行できません。");
+                    }
+                    //既にある辞書データの乱数単一の値のクラスに最大値をセット
+                }
+                else
+                {
+                    //固定値としてクラスを生成 (生成時にrndMaxに初期値-1が入るよ)
+                    if (!SkillSpiritualModifier.ContainsKey(key))//キーが存在していなければ
+                    {
+                        SkillSpiritualModifier.Add(key, new FixedOrRandomValue(value));//キーを追加
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"キー {key} は既に存在しています。追加をスキップします。");
+                    }   
+
+                }
+
 
             }
+        }
 
 
-            /*Debug.Log("読み込まれたキャラクター属性同士の相性\n" +
+            Debug.Log("読み込まれたキャラクター精神スキル補正値\n" +
                   string.Join(", ",
-                      ImpressionMatchupTable.Select(kvp => $"[{kvp.Key}: {kvp.Value}]" + "\n"))); //デバックで全内容羅列。*/
+                      SkillSpiritualModifier.Select(kvp => $"[{kvp.Key}: {kvp.Value.GetValue()} rndMax({kvp.Value.rndMax})]" + "\n"))); //デバックで全内容羅列。
     }
 }
 
@@ -325,38 +404,31 @@ public abstract class BaseStates
 /// </summary>
 public class FixedOrRandomValue
 {
-    private bool IsRandom;//乱数かどうか
 
-    private int rndMax;//乱数の最大値最小値
-    private int rndMin;
-
-
-    private int value;//単一の値
+    public int rndMax;//乱数の最大値 乱数かどうかはrndMaxに-1を入れればいい
+    private int rndMinOrFixed;//単一の値または乱数としての最小値
 
     /// <summary>
-    /// 乱数か単一の値かを指定してクラス生成
+    /// クラス生成
     /// </summary>
     /// <param name="isRnd">乱数として保持するかどうか</param>
     /// <param name="minOrFixed">最小値または単一の値として</param>
     /// <param name="max">省略可能、乱数なら最大値</param>
-    public FixedOrRandomValue(bool isRnd,int minOrFixed ,int max = -1)
+    public FixedOrRandomValue(int minOrFixed )
     {
-        if (isRnd)
-        {
-            rndMax = max;
-            rndMin = minOrFixed;
-        }
-        else
-        {
-            value = minOrFixed;
-        }
+        rndMinOrFixed = minOrFixed;//まず最小値またはデフォルトありきでクラスを作成
+        rndMax = -1;//予め無を表す-1で初期化
+    }
 
-        IsRandom = isRnd;
+    public void SetMax(int value)
+    {
+        rndMax = value;//-1を指定するとないってこと
     }
     public int GetValue()
     {
-        if (IsRandom) return RandomEx.Shared.NextInt(rndMin,rndMax+1);//ランダムなら
+        if (rndMax == -1) return rndMinOrFixed;//乱数じゃないなら単一の値が返る
 
-        return value;//乱数じゃないなら単一の値が返る
+        return RandomEx.Shared.NextInt(rndMinOrFixed,rndMax+1);//ランダムなら
+
     }
 }
