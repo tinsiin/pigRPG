@@ -18,13 +18,13 @@ public enum BattleStartSituation
 /// </summary>
 public class ACTpart
 {
-    string Message;//画面に映るメッセージ
+    string Message;//画面に映るメッセージ 空文字列の場合飛ばす
 
     BaseStates under;
     BaseStates Im;
 
     //useruiのstateを司る
-
+    TabState uiState;//スキル選択状態、NextWaitなどに主に変更するため？
 }
 
 
