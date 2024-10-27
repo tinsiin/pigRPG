@@ -138,6 +138,7 @@ public class PlayersStates:MonoBehaviour
     }
 }
 
+[Serializable]
 public class BassJackStates : BaseStates //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
 {
     /// <summary>
@@ -150,6 +151,7 @@ public class BassJackStates : BaseStates //共通ステータスにプラスで�
     {
     }
 }
+[Serializable]
 
 public class SateliteProcessStates : BaseStates //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
 {
@@ -160,7 +162,7 @@ public class SateliteProcessStates : BaseStates //共通ステータスにプラ
     {
     }
 }
-
+[Serializable]
 public class StairStates : BaseStates //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
 {
     //先輩のコンストラクタ

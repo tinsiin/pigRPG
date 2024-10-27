@@ -525,6 +525,62 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 440ef6f28be5c104cbb968a1e4febc22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  geino:
+    _skillList: []
+    b_AGI: 0
+    b_ATK: 0
+    b_DEF: 0
+    b_HIT: 0
+    CharacterName: 
+    ImpressionStringName: 
+    NowUseSkill:
+      _name: 
+      IsTLOA: 0
+      SkillPower: 0
+      DEFATK: 0
+      WhatSkill: 0
+    MAXP: 0
+    P: 0
+    recoveryTurn: 0
+  noramlia:
+    _skillList: []
+    b_AGI: 0
+    b_ATK: 0
+    b_DEF: 0
+    b_HIT: 0
+    CharacterName: 
+    ImpressionStringName: 
+    NowUseSkill:
+      _name: 
+      IsTLOA: 0
+      SkillPower: 0
+      DEFATK: 0
+      WhatSkill: 0
+    MAXP: 0
+    P: 0
+    recoveryTurn: 0
+  sites:
+    _skillList:
+    - _name: 
+      IsTLOA: 0
+      SkillPower: 20
+      DEFATK: 1.5
+      WhatSkill: 0
+    b_AGI: 0
+    b_ATK: 0
+    b_DEF: 0
+    b_HIT: 0
+    CharacterName: 
+    ImpressionStringName: 
+    NowUseSkill:
+      _name: 
+      IsTLOA: 0
+      SkillPower: 0
+      DEFATK: 0
+      WhatSkill: 0
+    MAXP: 0
+    P: 0
+    recoveryTurn: 0
 --- !u!1 &90538794
 GameObject:
   m_ObjectHideFlags: 0

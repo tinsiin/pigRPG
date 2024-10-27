@@ -1,9 +1,12 @@
 using System.Collections.Generic;
+using UnityEngine;
+using System;
 
 /// <summary>
 ///     基礎状態の抽象クラス
 /// </summary>
-public　abstract class BasePassive
+[Serializable]
+public abstract class BasePassive
 {
     //適合するキャラ属性(精神属性)のリスト　
     public List<SpiritualProperty> CharaPropertyOKList;

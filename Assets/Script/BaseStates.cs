@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using RandomExtensions;
+using System;
 
 /// <summary>
 ///     キャラクター達の種別
@@ -48,11 +49,12 @@ public enum SpiritualProperty
 /// <summary>
 ///     基礎ステータスのクラス　　クラスそのものは使用しないので抽象クラス
 /// </summary>
+[Serializable]
 public abstract class BaseStates
 {
-    [SerializeField] private readonly List<BasePassive> _passiveList;
+    [SerializeField] private  List<BasePassive> _passiveList;
 
-    [SerializeField] private readonly List<BaseSkill> _skillList;
+    [SerializeField] List<BaseSkill> _skillList;
     public int b_AGI;
     public int b_ATK;
 
@@ -166,7 +168,7 @@ public abstract class BaseStates
 
         if (SkillList != null)
         {
-            var rnd = Random.Range(0, SkillList.Count);
+            var rnd = RandomEx.Shared.NextInt(0, SkillList.Count);
             that = SkillList[rnd].SkillSpiritual; //スキルの精神属性を抽出
             MyImpression = that; //印象にセット
         }
