@@ -535,8 +535,11 @@ MonoBehaviour:
     ImpressionStringName: 
     NowUseSkill:
       _name: 
+      CanCancel: 0
       IsTLOA: 0
       SkillPower: 0
+      SkillLevel: 0
+      SkillRivahal: 0
       DEFATK: 0
       WhatSkill: 0
     MAXP: 0
@@ -552,8 +555,11 @@ MonoBehaviour:
     ImpressionStringName: 
     NowUseSkill:
       _name: 
+      CanCancel: 0
       IsTLOA: 0
       SkillPower: 0
+      SkillLevel: 0
+      SkillRivahal: 0
       DEFATK: 0
       WhatSkill: 0
     MAXP: 0
@@ -562,8 +568,11 @@ MonoBehaviour:
   sites:
     _skillList:
     - _name: 
+      CanCancel: 0
       IsTLOA: 0
       SkillPower: 20
+      SkillLevel: 0
+      SkillRivahal: 0
       DEFATK: 1.5
       WhatSkill: 0
     b_AGI: 0
@@ -574,8 +583,11 @@ MonoBehaviour:
     ImpressionStringName: 
     NowUseSkill:
       _name: 
+      CanCancel: 0
       IsTLOA: 0
       SkillPower: 0
+      SkillLevel: 0
+      SkillRivahal: 0
       DEFATK: 0
       WhatSkill: 0
     MAXP: 0

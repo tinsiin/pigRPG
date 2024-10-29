@@ -525,6 +525,74 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 440ef6f28be5c104cbb968a1e4febc22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  geino:
+    _skillList: []
+    b_AGI: 0
+    b_ATK: 0
+    b_DEF: 0
+    b_HIT: 0
+    CharacterName: 
+    ImpressionStringName: 
+    NowUseSkill:
+      _name: 
+      CanCancel: 0
+      IsTLOA: 0
+      SkillPower: 0
+      SkillLevel: 0
+      SkillRivahal: 0
+      DEFATK: 0
+      WhatSkill: 0
+    MAXP: 0
+    P: 0
+    recoveryTurn: 0
+  noramlia:
+    _skillList: []
+    b_AGI: 0
+    b_ATK: 0
+    b_DEF: 0
+    b_HIT: 0
+    CharacterName: 
+    ImpressionStringName: 
+    NowUseSkill:
+      _name: 
+      CanCancel: 0
+      IsTLOA: 0
+      SkillPower: 0
+      SkillLevel: 0
+      SkillRivahal: 0
+      DEFATK: 0
+      WhatSkill: 0
+    MAXP: 0
+    P: 0
+    recoveryTurn: 0
+  sites:
+    _skillList:
+    - _name: 
+      CanCancel: 0
+      IsTLOA: 0
+      SkillPower: 20
+      SkillLevel: 0
+      SkillRivahal: 0
+      DEFATK: 1.5
+      WhatSkill: 0
+    b_AGI: 0
+    b_ATK: 0
+    b_DEF: 0
+    b_HIT: 0
+    CharacterName: 
+    ImpressionStringName: 
+    NowUseSkill:
+      _name: 
+      CanCancel: 0
+      IsTLOA: 0
+      SkillPower: 0
+      SkillLevel: 0
+      SkillRivahal: 0
+      DEFATK: 0
+      WhatSkill: 0
+    MAXP: 0
+    P: 0
+    recoveryTurn: 0
 --- !u!1 &90538794
 GameObject:
   m_ObjectHideFlags: 0
@@ -4096,7 +4164,7 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: test
+          m_StringArgument: "\u3066\u3059\u3068\u30D7\u30E9\u30A4\u30E0\u30D3\u30C7\u30AA"
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &1638120968

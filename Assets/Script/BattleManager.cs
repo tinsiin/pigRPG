@@ -62,12 +62,19 @@ public class BattleManager
 
         if(first == BattleStartSituation.alliFirst)
         {
-            for(var i = 0; i < 3; i++)
+            for(var i = 0; i < allyGroup.Ours.Count; i++)//グループの人数分
             {
-                //味方グループの中から三人分アクションをいれる
+                //味方グループの中から人数分アクションをいれる
                 //CharactorATKList.Add(RandomEx.Shared.GetItem<BaseStates>(AllyGroup.Ours.ToArray<BaseStates>()));
             }　　　　　　　　　　　　　　　　　　　　
         }
+    }
+
+    private void RandomTurn()
+    {
+        //enemyGroupとalliGroupからrecovelyTurnがゼロ以上
+
+        //死んでるかどうかはそのターンでスキップすればいい
     }
 
 

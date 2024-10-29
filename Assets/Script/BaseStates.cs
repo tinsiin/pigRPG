@@ -206,22 +206,15 @@ public abstract class BaseStates
         var modifier = SkillSpiritualModifier[(skill.SkillSpiritual, MyImpression)];//スキルの精神属性と自分の精神属性による補正
         var skillPower = Mathf.RoundToInt(skill.SkillPower * modifier.GetValue() / 100.0f);
 
-        //スキルの種別により、処理が分岐する
-        switch (skill.WhatSkill)
-        {
-            case SkillType.Attack:
-                {
-                    Damage(skillPower, skill.DEFATK);
-                    break;
-                }
+        //スキルの持ってる性質を全て処理として実行
 
-            case SkillType.Heal:
-                {
-                    Heal(skillPower);
-                    break;
-                }
-        }
+        if (skill.HasType(SkillType.Attack))Damage(skillPower, skill.DEFATK);
+
+         if(skill.HasType(SkillType.Heal))Heal(skillPower);
+
     }
+
+
     /// <summary>
     /// クラスを通じて相手を攻撃する
     /// </summary>

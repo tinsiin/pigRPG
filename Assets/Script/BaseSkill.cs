@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
+[Flags]
 public enum SkillType
 {
-    Attack,Heal,subOnly
-        //攻撃、回復、サブ効果のみ
+    Attack =1 << 0,
+    Heal = 1 << 1,
+    addPassive = 1 << 2,
+    RemovePassive = 1 << 3,
+        //攻撃、回復、状態異常付与
 }
 [Serializable]
 public class BaseSkill
@@ -17,6 +21,15 @@ public class BaseSkill
     public SpiritualProperty SkillSpiritual { get; }
 
     /// <summary>
+    /// スキル性質を持ってるかどうか
+    /// </summary>
+    public bool HasType(SkillType skill)
+    {
+        return (WhatSkill & skill) == skill;
+    }
+
+
+    /// <summary>
     ///     スキルの物理属性
     /// </summary>
     public PhysicalProperty SkillPhysical { get; }
@@ -25,14 +38,16 @@ public class BaseSkill
 
     [SerializeField]
     private string _name;
-
-    private int _doConsecutiveCount;//BattleManager単位で"連続"で使われた回数。　つまりbattaleManagerの終わりでskilWashの必要があるの
-
+ 
+    private int _doConsecutiveCount;//BattleManager単位で"連続"で使われた回数。　
     private int _doCount;//BattleManager単位で行使した回数
 
     private int _triggerCount;//発動への－カウント　このカウント分連続でやらないと発動しなかったりする　重要なのは連続でやらなくても　一気にまたゼロからになるかはスキル次第
     private int _triggerCountMax;//発動への－カウント　の指標
-    private int _atkCount;
+    private int _atkCount;//攻撃回数
+    private int _deltaTurn;//前回のスキル行使から経った戦闘ターン
+
+    public bool CanCancel = true;//triggerCountが0以上の複数ターン実行が必要なスキルの場合、複数ターンに跨る実行中に中断出来るかどうか。
 
     public string SkillName
     {
