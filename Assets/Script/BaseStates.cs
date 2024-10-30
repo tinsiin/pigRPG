@@ -87,7 +87,7 @@ public abstract class BaseStates
     /// </summary>
     public int recoveryTurn;
 
-    protected BaseStates(int p, int maxp, string characterName, int recoveryTurn, List<BasePassive> passiveList,
+    /*protected BaseStates(int p, int maxp, string characterName, int recoveryTurn, List<BasePassive> passiveList,
         List<BaseSkill> skillList, int bDef, int bAgi, int bHit, int bAtk, int hp, int maxhp, CharacterType myType,
         SpiritualProperty myImpression, int maxRecoveryTurn)
     {
@@ -106,7 +106,7 @@ public abstract class BaseStates
         MyType = myType;
         MyImpression = myImpression;
         this.maxRecoveryTurn = maxRecoveryTurn;
-    }
+    }*/
 
     //HP
     private int _hp;
@@ -162,7 +162,7 @@ public abstract class BaseStates
     /// <summary>
     ///     初期精神属性決定関数(基本は印象を持ってるスキルリストから適当に選び出す
     /// </summary>
-    public virtual void InitializeMyImpression()
+    protected virtual void InitializeMyImpression()
     {
         SpiritualProperty that;
 

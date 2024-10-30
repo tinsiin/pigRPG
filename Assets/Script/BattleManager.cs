@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using RandomExtensions;
 using System.Linq;
+using RandomExtensions.Linq;
 
 /// <summary>
 /// 戦闘の先手が起ったかどうか
@@ -11,20 +12,6 @@ using System.Linq;
 public enum BattleStartSituation
 {
     alliFirst,EnemyFirst,Normal//味方先手、敵先手、ノーマル
-}
-
-/// <summary>
-/// 一個一個の行動を示すクラス USERUIでの一回の操作単位を想定する
-/// </summary>
-public class ACTpart
-{
-    string Message;//画面に映るメッセージ 空文字列の場合飛ばす
-
-    BaseStates under;
-    BaseStates Im;
-
-    //useruiのstateを司る
-    TabState uiState;//スキル選択状態、NextWaitなどに主に変更するため？
 }
 
 
@@ -45,11 +32,11 @@ public class BattleManager
     /// </summary>
     private BattleGroup EnemyGroup;
 
-    /// <summary>
-    /// 全ての行動を記録するリスト
-    /// </summary>
-    private List<ACTpart> ALLACTList;
+    private BattleStartSituation firstSituation;
 
+    private List<BaseStates> CharactorACTList;
+
+    private int BattleTurnCount;//バトルの経過ターン
 
 
     /// <summary>
@@ -59,22 +46,51 @@ public class BattleManager
     {
         AllyGroup = allyGroup;
         EnemyGroup = enemyGroup;
+        firstSituation = first;
 
-        if(first == BattleStartSituation.alliFirst)
+        //敵か味方どちらかが先手を取ったかによって、
+        if (first == BattleStartSituation.alliFirst)
         {
-            for(var i = 0; i < allyGroup.Ours.Count; i++)//グループの人数分
-            {
-                //味方グループの中から人数分アクションをいれる
-                //CharactorATKList.Add(RandomEx.Shared.GetItem<BaseStates>(AllyGroup.Ours.ToArray<BaseStates>()));
-            }　　　　　　　　　　　　　　　　　　　　
+            AddFirstBattleGroupTurn(allyGroup);
+        }
+        else if(first == BattleStartSituation.EnemyFirst)
+        {
+            AddFirstBattleGroupTurn(EnemyGroup);
         }
     }
 
+    /// <summary>
+    /// キャラクター行動リストに先手分のリストを入れる。
+    /// </summary>
+    void AddFirstBattleGroupTurn(BattleGroup _group)
+    {
+        var group = _group.Ours;
+        BaseStates[] CounterCharas = _group.GetCharactersFromImpression(SpiritualProperty.kindergarden, SpiritualProperty.godtier);
+        for (var i = 0; i < group.Count; i++)//グループの人数分
+        {
+            if (i == group.Count - 1  && CounterCharas.Length>0 && RandomEx.Shared.NextInt(100) < 40)
+            {//もし最後の先手ターンで敵グループにキンダーガーデンかゴッドティアがいて、　40%の確率が当たったら
+                //反撃グループにいるそのどちらかの印象を持ったキャラクターのターンが入る。
+                CharactorACTList.Add(RandomEx.Shared.GetItem<BaseStates>(CounterCharas));
+            }
+            else
+            {
+                //グループの中から人数分アクションをいれる
+                CharactorACTList.Add(RandomEx.Shared.GetItem<BaseStates>(group.ToArray<BaseStates>()));
+            }
+
+        }
+
+    }
+
+    /// <summary>
+    /// ランダムに次の人のターンを選出する。
+    /// </summary>
     private void RandomTurn()
     {
-        //enemyGroupとalliGroupからrecovelyTurnがゼロ以上
+        //もしすでにキャラクターが居たら、そのリストを先ずは消化する
 
-        //死んでるかどうかはそのターンでスキップすればいい
+        //いなければランダムで行動者が選ばれる
     }
 
 

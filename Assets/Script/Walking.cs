@@ -59,7 +59,6 @@ public class Walking : MonoBehaviour
         {
             await Walk(1);
         }
-        USERUI_state.Value = TabState.TalkWindow;
     }
 
     private void Encount()

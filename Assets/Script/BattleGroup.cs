@@ -1,4 +1,7 @@
+using RandomExtensions.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.VisualScripting;
 
 /// <summary>
 ///     パーティー属性
@@ -39,4 +42,31 @@ public class BattleGroup
     ///     集団の人員リスト
     /// </summary>
     public IReadOnlyList<BaseStates> Ours => _ours;
+
+    /// <summary>
+    /// このグループには指定したどれかの精神印象を持った奴が"一人でも"いるかどうか　
+    /// 複数の印象を一気に指定できます。
+    /// </summary>
+    public bool ContainAnyImpression(params SpiritualProperty[] impressions)
+    {
+        /*foreach (var impression in impressions)//判定する印象全てを判定する
+        {
+            foreach (var one in _ours)//グループ内全てに回す
+            {
+                if (one.MyImpression == impression) return true;//いっこでも　あったら終わりです
+            }
+        }
+
+        return false;*/
+
+        return _ours.Any(one => impressions.Contains(one.MyImpression));
+    }
+
+    /// <summary>
+    /// 指定された印象を持ったキャラクター達を返す関数
+    /// </summary>
+    public BaseStates[] GetCharactersFromImpression(params SpiritualProperty[] impressions)
+    {
+        return _ours.Where(one => impressions.Contains(one.MyImpression)).ToArray();
+    }
 }

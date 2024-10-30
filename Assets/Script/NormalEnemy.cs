@@ -19,13 +19,4 @@ public class NormalEnemy : BaseStates
     /// </summary>
     public bool reborn;
 
-    public NormalEnemy(int p, int maxp, string characterName, int recoveryTurn, List<BasePassive> passiveList,
-        List<BaseSkill> skillList, int bDef, int bAgi, int bHit, int bAtk, int hp, int maxhp, CharacterType myType,
-        SpiritualProperty myImpression, int maxRecoveryTurn, int recovelySteps, bool reborn) : base(p, maxp,
-        characterName, recoveryTurn, passiveList, skillList, bDef, bAgi, bHit, bAtk, hp, maxhp, myType, myImpression,
-        maxRecoveryTurn)
-    {
-        this.recovelySteps = recovelySteps;
-        this.reborn = reborn;
-    }
 }

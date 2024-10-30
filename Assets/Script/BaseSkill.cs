@@ -49,6 +49,10 @@ public class BaseSkill
 
     public bool CanCancel = true;//triggerCountが0以上の複数ターン実行が必要なスキルの場合、複数ターンに跨る実行中に中断出来るかどうか。
 
+    public int SKillDidWaitCount;//スキルを行使した後の硬直時間。 Doer、行使者のRecovelyTurnに一時的に加算される？
+    //複数実行するとどう扱われる？
+
+
     public string SkillName
     {
         get { return _name; }

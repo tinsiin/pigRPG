@@ -144,32 +144,14 @@ public class BassJackStates : BaseStates //共通ステータスにプラスで�
     /// <summary>
     ///     コンストラクタ
     /// </summary>
-    public BassJackStates(int p, int maxp, string characterName, int recoveryTurn, List<BasePassive> passiveList,
-        List<BaseSkill> skillList, int bDef, int bAgi, int bHit, int bAtk, int hp, int maxhp, CharacterType myType,
-        SpiritualProperty myImpression, int maxRecoveryTurn) : base(p, maxp, characterName, recoveryTurn, passiveList,
-        skillList, bDef, bAgi, bHit, bAtk, hp, maxhp, myType, myImpression, maxRecoveryTurn)
-    {
-    }
 }
 [Serializable]
 
 public class SateliteProcessStates : BaseStates //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
 {
-    public SateliteProcessStates(int p, int maxp, string characterName, int recoveryTurn, List<BasePassive> passiveList,
-        List<BaseSkill> skillList, int bDef, int bAgi, int bHit, int bAtk, int hp, int maxhp, CharacterType myType,
-        SpiritualProperty myImpression, int maxRecoveryTurn) : base(p, maxp, characterName, recoveryTurn, passiveList,
-        skillList, bDef, bAgi, bHit, bAtk, hp, maxhp, myType, myImpression, maxRecoveryTurn)
-    {
-    }
 }
 [Serializable]
 public class StairStates : BaseStates //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
 {
     //先輩のコンストラクタ
-    public StairStates(int p, int maxp, string characterName, int recoveryTurn, List<BasePassive> passiveList,
-        List<BaseSkill> skillList, int bDef, int bAgi, int bHit, int bAtk, int hp, int maxhp, CharacterType myType,
-        SpiritualProperty myImpression, int maxRecoveryTurn) : base(p, maxp, characterName, recoveryTurn, passiveList,
-        skillList, bDef, bAgi, bHit, bAtk, hp, maxhp, myType, myImpression, maxRecoveryTurn)
-    {
-    }
 }
