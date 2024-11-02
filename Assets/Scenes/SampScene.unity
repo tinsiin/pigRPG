@@ -526,13 +526,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   geino:
-    _skillList: []
+    _skillList:
+    - _name: "test\u30B9\u30AD\u30EB"
+      CanCancel: 0
+      SKillDidWaitCount: 0
+      IsTLOA: 0
+      SkillPower: 1
+      SkillLevel: 0
+      SkillRivahal: 0
+      DEFATK: 0
+      WhatSkill: 1
     b_AGI: 0
-    b_ATK: 0
+    b_ATK: 1
     b_DEF: 0
-    b_HIT: 0
-    CharacterName: 
-    ImpressionStringName: 
+    b_HIT: 1
+    CharacterName: geino
+    ImpressionStringName: geinoimpression
     NowUseSkill:
       _name: 
       CanCancel: 0
@@ -543,9 +552,22 @@ MonoBehaviour:
       SkillRivahal: 0
       DEFATK: 0
       WhatSkill: 0
-    MAXP: 0
-    P: 0
+    FreezeUseSkill:
+      _name: 
+      CanCancel: 1
+      SKillDidWaitCount: 0
+      IsTLOA: 0
+      SkillPower: 0
+      SkillLevel: 0
+      SkillRivahal: 0
+      DEFATK: 0
+      WhatSkill: 0
+    MAXP: 3
+    P: 3
     recoveryTurn: 0
+    CanOprate: 1
+    _hp: 20
+    _maxHp: 30
   noramlia:
     _skillList: []
     b_AGI: 0
@@ -564,9 +586,22 @@ MonoBehaviour:
       SkillRivahal: 0
       DEFATK: 0
       WhatSkill: 0
+    FreezeUseSkill:
+      _name: 
+      CanCancel: 1
+      SKillDidWaitCount: 0
+      IsTLOA: 0
+      SkillPower: 0
+      SkillLevel: 0
+      SkillRivahal: 0
+      DEFATK: 0
+      WhatSkill: 0
     MAXP: 0
     P: 0
     recoveryTurn: 0
+    CanOprate: 0
+    _hp: 0
+    _maxHp: 0
   sites:
     _skillList:
     - _name: 
@@ -594,9 +629,22 @@ MonoBehaviour:
       SkillRivahal: 0
       DEFATK: 0
       WhatSkill: 0
+    FreezeUseSkill:
+      _name: 
+      CanCancel: 1
+      SKillDidWaitCount: 0
+      IsTLOA: 0
+      SkillPower: 0
+      SkillLevel: 0
+      SkillRivahal: 0
+      DEFATK: 0
+      WhatSkill: 0
     MAXP: 0
     P: 0
     recoveryTurn: 0
+    CanOprate: 0
+    _hp: 0
+    _maxHp: 0
 --- !u!1 &90538794
 GameObject:
   m_ObjectHideFlags: 0

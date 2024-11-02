@@ -85,11 +85,11 @@ public class Walking : MonoBehaviour
             var TimeLine = new BattleTimeLine(new List<BattleManager>{bm}); //バトルのタイムラインを管理するクラス
 
             wui.FirstImpressionZoom();
+            USERUI_state.Value = bm.ACTPop();
         }
         else
         {
             //エンカウントしなかった場合の処理
-            wui.FirstImpressionZoom();
 
             Debug.Log("No encounter");
         }

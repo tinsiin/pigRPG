@@ -7,7 +7,7 @@ using UnityEngine;
 /// 複数のBattleManagerを管理するクラス
 /// つまり、USERUIでのボタン操作一つ一つを戦闘時に管理する感じ
 /// </summary>
-public class BattleTimeLine : MonoBehaviour
+public class BattleTimeLine 
 {
     private List<BattleManager> battleManagers;
 

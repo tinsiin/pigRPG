@@ -136,74 +136,96 @@ public class StageCut
         if (!EncountCheck()) return null; //エンカウント失敗したら、nullを返す
 
         var ResultList = new List<NormalEnemy>(); //返す用のリスト
-        PartyProperty ourImpression; //初期値は馬鹿共
-        var targetList = _enemyList; //引数のリストをコピー
+        PartyProperty ourImpression;
+        var targetList = new List<NormalEnemy>(_enemyList); //引数のリストをコピー newを使ってディープコピーにしないと元が消える。
+
+        var validEnemies = targetList.Where(enemy => enemy.Reborn//生きてる敵だけに選別する
+                                           ? enemy.CanRebornWhatHeWill(PlayersStates.Instance.NowProgress)
+                                           : !enemy.broken).ToList();
+
+        if (!validEnemies.Any())//リストが空だった場合
+        {
+            Debug.LogWarning("EnemyCollectAI: 有効な敵が存在しません。");
+            return null; // または適切なデフォルト値を返す
+        }
 
         //最初の一人はランダムで選ぶ
-        var rndIndex = RandomEx.Shared.NextInt(0, targetList.Count - 1); //ランダムインデックス指定
-        var referenceOne = targetList[rndIndex]; //抽出
-        targetList.RemoveAt(rndIndex); //削除
-        ResultList.Add(referenceOne); //追加
+            var rndIndex = RandomEx.Shared.NextInt(0, validEnemies.Count - 1); //ランダムインデックス指定
+            var referenceOne = validEnemies[rndIndex]; //抽出
 
-        //数判定(一人判定)　
-        if (EnemyCollectManager.Instance.LonelyMatchUp(referenceOne.MyImpression))
+            validEnemies.RemoveAt(rndIndex); //削除
+            ResultList.Add(referenceOne); //追加
+
+
+        //数判定(一人判定)　または　もう待機リストに誰もいなかった場合
+        if (EnemyCollectManager.Instance.LonelyMatchUp(ResultList[0].MyImpression) || validEnemies.Count <= 0)
         {
             //パーティー属性を決める　一人なのでその一人の属性をそのままパーティー属性にする
             ourImpression =
                 EnemyCollectManager.Instance.EnemyLonelyPartyImpression
-                    [referenceOne.MyImpression]; //()ではなく[]でアクセスすることに注意
+                    [ResultList[0].MyImpression]; //()ではなく[]でアクセスすることに注意
 
             return new BattleGroup(ResultList.Cast<BaseStates>().ToList(), ourImpression); //while文に入らずに返す  
         }
 
+        //複数人加入するループ
         while (true)
         {
             //まず吟味する加入対象をランダムに選ぶ
-            var targetIndex = RandomEx.Shared.NextInt(0, targetList.Count - 1); //ランダムでインデックス指定
+            var targetIndex = RandomEx.Shared.NextInt(0, validEnemies.Count - 1); //ランダムでインデックス指定
+
             var okCount = 0; //適合数 これがResultList.Countと同じになったら加入させる
 
             for (var i = 0; i < ResultList.Count; i++) //既に選ばれた敵全員との相性を見る
                 //for文で判断しないと現在の配列のインデックスを相性値用の配列のインデックス指定に使えない
                 //種別同士の判定 if文内で変数に代入できる
-                if (EnemyCollectManager.Instance.TypeMatchUp(ResultList[i].MyType, targetList[targetIndex].MyType))
-                    //属性同士の判定　上クリアしたら
+                if (EnemyCollectManager.Instance.TypeMatchUp(ResultList[i].MyType, validEnemies[targetIndex].MyType))
                     if (EnemyCollectManager.Instance.ImpressionMatchUp(ResultList[i].MyImpression,
-                            targetList[targetIndex].MyImpression))
+                            validEnemies[targetIndex].MyImpression))//属性同士の判定
                         okCount++; //適合数を増やす
             //foreachで全員との相性を見たら、加入させる。
             if (okCount == ResultList.Count) //全員との相性が合致したら
             {
-                ResultList.Add(targetList[targetIndex]); //結果のリストに追加
-                targetList.RemoveAt(targetIndex); //候補リストから削除
+                ResultList.Add(validEnemies[targetIndex]); //結果のリストに追加
+                validEnemies.RemoveAt(targetIndex); //候補リストから削除
             }
 
             //数判定
             if (ResultList.Count == 1) //一人だったら(まだ一人も見つけれてない場合)
                 if (RandomEx.Shared.NextInt(100) < 88) //88%の確率で一人で終わる計算に入る。
                     //数判定(一人判定)　
-                    if (EnemyCollectManager.Instance.LonelyMatchUp(referenceOne.MyImpression))
+                    if (EnemyCollectManager.Instance.LonelyMatchUp(ResultList[0].MyImpression))
                     {
                         //パーティー属性を決める　一人なのでその一人の属性をそのままパーティー属性にする
                         ourImpression =
                             EnemyCollectManager.Instance.EnemyLonelyPartyImpression
-                                [referenceOne.MyImpression]; //()ではなく[]でアクセスすることに注意
+                                [ResultList[0].MyImpression]; //()ではなく[]でアクセスすることに注意
 
                         break;
                     }
 
             if (ResultList.Count == 2) //二人だったら三人目の加入を決める
+            {
                 if (RandomEx.Shared.NextInt(100) < 65) //この確率で終わる。
                 {
                     //パーティー属性を決める
                     ourImpression = EnemyCollectManager.Instance.calculatePartyProperty(ResultList);
                     break;
                 }
+            }
 
             if (ResultList.Count >= 3)
             {
                 //パーティー属性を決める
                 ourImpression = EnemyCollectManager.Instance.calculatePartyProperty(ResultList);
                 break; //三人になったら強制終了
+            }
+
+            if (validEnemies.Count < 1)//人数チェックして待機リストに一人もいなかったら終わり
+            {
+                //パーティー属性を決める
+                ourImpression = EnemyCollectManager.Instance.calculatePartyProperty(ResultList);
+                break;
             }
         }
 

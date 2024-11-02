@@ -5,6 +5,8 @@ using UnityEngine;
 using RandomExtensions;
 using System.Linq;
 using RandomExtensions.Linq;
+using Unity.VisualScripting;
+using R3;
 
 /// <summary>
 /// 戦闘の先手が起ったかどうか
@@ -14,6 +16,55 @@ public enum BattleStartSituation
     alliFirst,EnemyFirst,Normal//味方先手、敵先手、ノーマル
 }
 
+/// <summary>
+/// 行動リスト
+/// </summary>
+public class ACTList
+{
+    
+    List<BaseStates> CharactorACTList;
+    List<string> TopMessage;
+
+    
+
+    public int Count
+    {
+        get => CharactorACTList.Count;
+    }
+
+    public void Add(BaseStates chara,string mes = "")
+    {
+        CharactorACTList.Add(chara);
+        TopMessage.Add(mes);
+    }
+
+    public  ACTList()
+    {
+        CharactorACTList=new List<BaseStates>();
+        TopMessage = new List<string>();
+    }
+
+    /// <summary>
+    /// インデックスで消す。
+    /// </summary>
+    /// <param name="index"></param>
+    public void RemoveAt(int index)
+    {
+        CharactorACTList.RemoveAt(index);
+        TopMessage.RemoveAt(index);
+    }
+
+    public string GetAtTopMessage(int index)
+    {
+        return TopMessage[index];
+    }
+    public BaseStates GetAtCharacter(int index)
+    {
+        return CharactorACTList[index];
+    }
+
+
+}
 
 /// <summary>
 ///     バトルを、管理するクラス
@@ -34,7 +85,7 @@ public class BattleManager
 
     private BattleStartSituation firstSituation;
 
-    private List<BaseStates> CharactorACTList;
+    private ACTList Acts;//行動先約リスト？
 
     private int BattleTurnCount;//バトルの経過ターン
 
@@ -47,6 +98,7 @@ public class BattleManager
         AllyGroup = allyGroup;
         EnemyGroup = enemyGroup;
         firstSituation = first;
+        Acts = new ACTList();
 
         //敵か味方どちらかが先手を取ったかによって、
         if (first == BattleStartSituation.alliFirst)
@@ -71,12 +123,12 @@ public class BattleManager
             if (i == group.Count - 1  && CounterCharas.Length>0 && RandomEx.Shared.NextInt(100) < 40)
             {//もし最後の先手ターンで敵グループにキンダーガーデンかゴッドティアがいて、　40%の確率が当たったら
                 //反撃グループにいるそのどちらかの印象を持ったキャラクターのターンが入る。
-                CharactorACTList.Add(RandomEx.Shared.GetItem<BaseStates>(CounterCharas));
+                Acts.Add(RandomEx.Shared.GetItem(CounterCharas),"ﾊﾝﾀｰﾅｲﾄﾉ糸ﾃﾞ彼ﾊ気ｶﾞ付ｲﾀ▼");
             }
             else
             {
                 //グループの中から人数分アクションをいれる
-                CharactorACTList.Add(RandomEx.Shared.GetItem<BaseStates>(group.ToArray<BaseStates>()));
+                Acts.Add(RandomEx.Shared.GetItem(group.ToArray<BaseStates>()),$"先手{i}☆");
             }
 
         }
@@ -86,22 +138,52 @@ public class BattleManager
     /// <summary>
     /// ランダムに次の人のターンを選出する。
     /// </summary>
-    private void RandomTurn()
+    private BaseStates RandomTurn()
+    {
+        BaseStates Chara;//選出される人
+
+        var Charas = new List<BaseStates>();//全ての人間の混合リスト
+        Charas.AddRange(AllyGroup.Ours);
+        Charas.AddRange(EnemyGroup.Ours);
+
+
+        Chara = RandomEx.Shared.GetItem(Charas.ToArray<BaseStates>());//全ての人間からランダムで選ぶ
+
+        return Chara;
+    }
+
+    string UniqueTopMessage;//通常メッセージの冠詞？
+    BaseStates Acter;//今回の俳優
+    /// <summary>
+    /// 行動準備 次のボタンを決める
+    /// </summary>
+    public TabState ACTPop()
     {
         //もしすでにキャラクターが居たら、そのリストを先ずは消化する
+        if (Acts.Count > 0)
+        {
+            UniqueTopMessage=Acts.GetAtTopMessage(0);//リストからメッセージとキャラクターをゲット。
+            Acter = Acts.GetAtCharacter(0);
+            Acts.RemoveAt(0);
+        }
+        else
+        {
+            //居なかったらランダムに選ぶ
+            Acter = RandomTurn();
+        }
 
-        //いなければランダムで行動者が選ばれる
+        if (Acter.CanOprate)//操作するキャラクターなら
+        {
+            if(Acter.FreezeUseSkill == null)//強制続行中のスキルがなければ
+            {
+                //スキル選択ボタンを返す
+                return TabState.Skill;
+            }
+        }
+
+        return TabState.NextWait;
+
+
     }
 
-
-
-    /// <summary>
-    /// スキル行使をする。
-    /// </summary>
-    public void BattleTurn(BaseStates UnderAttacker)
-    {
-
-        //CharactorATKList[0].AttackChara(UnderAttacker);//攻撃行動をさせる。
-        //CharactorATKList.RemoveAt(0);//最初の要素を削除        
-    }
 }

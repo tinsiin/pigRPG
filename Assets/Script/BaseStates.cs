@@ -76,6 +76,11 @@ public abstract class BaseStates
     //次の攻撃ターンで使われる
     public BaseSkill NowUseSkill;
 
+    /// <summary>
+    /// 中断できない発動カウント中のスキル　nullならその状態でないということ
+    /// </summary>
+    public BaseSkill FreezeUseSkill;
+
     public int MAXP;
 
     //ポイント
@@ -87,28 +92,14 @@ public abstract class BaseStates
     /// </summary>
     public int recoveryTurn;
 
-    /*protected BaseStates(int p, int maxp, string characterName, int recoveryTurn, List<BasePassive> passiveList,
-        List<BaseSkill> skillList, int bDef, int bAgi, int bHit, int bAtk, int hp, int maxhp, CharacterType myType,
-        SpiritualProperty myImpression, int maxRecoveryTurn)
-    {
-        P = p;
-        MAXP = maxp;
-        CharacterName = characterName;
-        this.recoveryTurn = recoveryTurn;
-        _passiveList = passiveList;
-        _skillList = skillList;
-        b_DEF = bDef;
-        b_AGI = bAgi;
-        b_HIT = bHit;
-        b_ATK = bAtk;
-        HP = hp;
-        MAXHP = maxhp;
-        MyType = myType;
-        MyImpression = myImpression;
-        this.maxRecoveryTurn = maxRecoveryTurn;
-    }*/
+    /// <summary>
+    /// このキャラクターを操作できるかどうか。　味方なら基本的に操作するね
+    /// </summary>
+    public bool CanOprate;
+
 
     //HP
+    [SerializeField]
     private int _hp;
     public int HP
     {
@@ -122,7 +113,10 @@ public abstract class BaseStates
             else _hp = value;
         }
     }
-    public int MAXHP { get; private set; }
+    [SerializeField]
+    private int _maxHp;
+    public int MAXHP => _maxHp;
+    
 
     /// <summary>
     ///     このキャラクターの種別
