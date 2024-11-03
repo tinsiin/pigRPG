@@ -165,7 +165,7 @@ public class StageCut
                 EnemyCollectManager.Instance.EnemyLonelyPartyImpression
                     [ResultList[0].MyImpression]; //()ではなく[]でアクセスすることに注意
 
-            return new BattleGroup(ResultList.Cast<BaseStates>().ToList(), ourImpression); //while文に入らずに返す  
+            return new BattleGroup(ResultList.Cast<BaseStates>().ToList(), ourImpression,WhichGroup.Enemyiy); //while文に入らずに返す  
         }
 
         //複数人加入するループ
@@ -230,7 +230,7 @@ public class StageCut
         }
 
 
-        return new BattleGroup(ResultList.Cast<BaseStates>().ToList(), ourImpression); //バトルグループを制作 
+        return new BattleGroup(ResultList.Cast<BaseStates>().ToList(), ourImpression, WhichGroup.Enemyiy); //バトルグループを制作 
     }
 
     /// <summary>

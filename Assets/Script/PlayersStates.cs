@@ -55,7 +55,7 @@ public class PlayersStates:MonoBehaviour
         var playerGroup = new List<BaseStates> { geino, sites, noramlia }; //キャラ
         var nowOurImpression = GetPartyImpression(); //パーティー属性を彼らのHPから決定
 
-        return new BattleGroup(playerGroup, nowOurImpression); //パーティー属性を返す
+        return new BattleGroup(playerGroup, nowOurImpression,WhichGroup.alliy); //パーティー属性を返す
     }
 
     /// <summary>

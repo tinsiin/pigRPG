@@ -532,6 +532,7 @@ MonoBehaviour:
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 1
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 0
@@ -548,6 +549,7 @@ MonoBehaviour:
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 0
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 0
@@ -558,6 +560,7 @@ MonoBehaviour:
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 0
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 0
@@ -582,6 +585,7 @@ MonoBehaviour:
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 0
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 0
@@ -592,6 +596,7 @@ MonoBehaviour:
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 0
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 0
@@ -609,6 +614,7 @@ MonoBehaviour:
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 20
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 1.5
@@ -625,6 +631,7 @@ MonoBehaviour:
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 0
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 0
@@ -635,6 +642,7 @@ MonoBehaviour:
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 0
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 0

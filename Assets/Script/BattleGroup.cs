@@ -32,16 +32,28 @@ public class BattleGroup
     /// <summary>
     ///     コンストラクタ
     /// </summary>
-    public BattleGroup(List<BaseStates> ours, PartyProperty ourImpression)
+    public BattleGroup(List<BaseStates> ours, PartyProperty ourImpression,WhichGroup _which)
     {
         _ours = ours;
         OurImpression = ourImpression;
+        which = _which;
     }
+
 
     /// <summary>
     ///     集団の人員リスト
     /// </summary>
     public IReadOnlyList<BaseStates> Ours => _ours;
+
+    /// <summary>
+    /// 現在のグループで前のめりしているcharacter
+    /// </summary>
+    public BaseStates InstantVanguard;
+
+    /// <summary>
+    /// 陣営
+    /// </summary>
+    public WhichGroup which;
 
     /// <summary>
     /// このグループには指定したどれかの精神印象を持った奴が"一人でも"いるかどうか　

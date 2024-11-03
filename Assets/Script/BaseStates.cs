@@ -27,6 +27,27 @@ public enum PhysicalProperty
     volten,
     dishSmack //床ずれ、ヴぉ流転、暴断
 }
+/// <summary>
+/// 命中率、攻撃力、回避力、防御力への補正
+/// </summary>
+public class ModifierPart 
+{
+    /// <summary>
+    /// どういう補正かを保存する　攻撃時にunderに出てくる
+    /// </summary>
+    public string whatModifier;
+
+    /// <summary>
+    /// 補正率
+    /// </summary>
+    public float Modifier;
+
+    public ModifierPart(string txt,float value)
+    {
+        whatModifier = txt;
+        Modifier = value;
+    }
+}
 
 /// <summary>
 ///     精神属性、スキル、キャラクターに依存し、キャラクターは直前に使った物が適用される
@@ -55,12 +76,12 @@ public abstract class BaseStates
     [SerializeField] private  List<BasePassive> _passiveList;
 
     [SerializeField] List<BaseSkill> _skillList;
-    public int b_AGI;
-    public int b_ATK;
+    public float b_AGI;
+    public float b_ATK;
 
     //基礎攻撃防御　　(大事なのは、基本的にこの辺りは超スキル依存なので、少ない数でしか設定しないこと。)
-    public int b_DEF;
-    public int b_HIT;
+    public float b_DEF;
+    public float b_HIT;
 
     /// <summary>
     ///     このキャラクターの名前
@@ -97,11 +118,10 @@ public abstract class BaseStates
     /// </summary>
     public bool CanOprate;
 
-
     //HP
     [SerializeField]
-    private int _hp;
-    public int HP
+    private float _hp;
+    public float HP
     {
         get { return _hp; }
         set
@@ -114,9 +134,21 @@ public abstract class BaseStates
         }
     }
     [SerializeField]
-    private int _maxHp;
-    public int MAXHP => _maxHp;
-    
+    private float _maxHp;
+    public float MAXHP => _maxHp;
+
+    /// <summary>
+    /// 早い行動を心がけるかどうか。　敵はAIで、味方ならCharaConfyまたは逐次実行する際に決定
+    /// </summary>
+    private bool _commitToSwiftAction;
+    /// <summary>
+    /// 前のめりするキャラクターを狙うかどうか　オーバーライド可能
+    /// </summary>
+    public virtual bool ActWithoutHesitation()
+    {
+        return _commitToSwiftAction;
+    }
+
 
     /// <summary>
     ///     このキャラクターの種別
@@ -134,6 +166,45 @@ public abstract class BaseStates
     /// </summary>
     public int maxRecoveryTurn { get; private set; }
 
+    /// <summary>
+    /// 次に使用する命中率へのパーセント補正用保持リスト
+    /// </summary>
+    private List<ModifierPart> _useHITPercentageModifiers;
+
+    /// <summary>
+    /// 命中率補正をセットする。
+    /// </summary>
+    public void SetHITPercentageModifier(float value,string memo)
+    {
+        _useHITPercentageModifiers.Add(new ModifierPart(memo, value));
+    }
+
+    /// <summary>
+    /// 特別な命中率補正
+    /// </summary>
+    /// <param name="per"></param>
+    public float UseHITPercentageModifier
+    {
+        get =>_useHITPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
+    }
+    /// <summary>
+    /// 特別な命中率補正の保持リストを返す。　主にフレーバー要素用。
+    /// </summary>
+    public List<ModifierPart> UseHitPercentageModifiers
+    {
+        get => _useHITPercentageModifiers;
+    }
+
+    /// <summary>
+    /// 一時的な補正などをすべて消す
+    /// </summary>
+    public void RemoveUseThings()
+    {
+        _useHITPercentageModifiers =new List<ModifierPart>();
+    }
+
+
+
     //状態異常のリスト
     public IReadOnlyList<BasePassive> PassiveList => _passiveList;
 
@@ -141,17 +212,43 @@ public abstract class BaseStates
     public IReadOnlyList<BaseSkill> SkillList => _skillList;
 
     /// <summary>
+    /// 命中率計算
+    /// </summary>
+    /// <returns></returns>
+    public virtual float HIT()
+    {
+        float hit = b_HIT;//基礎命中率
+
+        hit *= UseHITPercentageModifier;//命中率補正。リスト内がゼロならちゃんと1.0fが返る。
+
+        return hit;
+    }
+
+    /// <summary>
+    /// 回避率計算
+    /// </summary>
+    public virtual float AGI()
+    {
+        float AGI = b_AGI;//基礎回避率
+
+        //状態異常やら武器枠なんやらでなんか補正ある多分
+
+        return AGI;
+    }
+
+    /// <summary>
     ///     防御力計算
     /// </summary>
     /// <returns></returns>
-    public　virtual int DEF(float minusPer)
+    public　virtual float DEF(float minusPer)
     {
         var def = b_DEF; //基礎防御力が基本。
         
         var minusAmount = def * minusPer;//防御低減率
 
-        return (int)(def - minusAmount);
+        return def - minusAmount;
     }
+
 
     /// <summary>
     ///     初期精神属性決定関数(基本は印象を持ってるスキルリストから適当に選び出す
@@ -176,7 +273,7 @@ public abstract class BaseStates
     ///     オーバライド可能なダメージ関数
     /// </summary>
     /// <param name="atkPoint"></param>
-    public virtual void Damage(int atkPoint,float DEFAtkper)　
+    public virtual void Damage(float atkPoint,float DEFAtkper)　
     {
         HP -= atkPoint - DEF(DEFAtkper); //HPから指定された攻撃力が引かれる。
     }
@@ -185,24 +282,46 @@ public abstract class BaseStates
     /// ヒールは防御できない、つまりヒールが逆効果のキャラクターならヒールは有効打ってこと
     /// </summary>
     /// <param name="HealPoint"></param>
-    public virtual void Heal(int HealPoint)
+    public virtual void Heal(float HealPoint)
     {
         HP += HealPoint;
+    }
+
+    /// <summary>
+    /// 攻撃者と防御者とスキルを利用してヒットするかの計算
+    /// </summary>
+    private bool IsReactHIT(BaseStates Attacker,BaseSkill skill)
+    {
+        var hit = Attacker.HIT() *  skill.SkillHitPer;//術者の命中×スキルの命中率
+
+        if(RandomEx.Shared.NextFloat(0,hit+AGI()) < hit)//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
+        {
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
     /// スキルに対するリアクション ここでスキルの解釈をする。
     /// </summary>
     /// <param name="skill"></param>
-    public virtual void ReactionSkill(BaseSkill skill)
+    public virtual void ReactionSkill(BaseSkill skill,BaseStates Attacker)
     {
         //スキルパワーの精神属性による計算
         var modifier = SkillSpiritualModifier[(skill.SkillSpiritual, MyImpression)];//スキルの精神属性と自分の精神属性による補正
-        var skillPower = Mathf.RoundToInt(skill.SkillPower * modifier.GetValue() / 100.0f);
+        var skillPower = skill.SkillPowerCalc() * modifier.GetValue() / 100.0f;
 
         //スキルの持ってる性質を全て処理として実行
 
-        if (skill.HasType(SkillType.Attack))Damage(skillPower, skill.DEFATK);
+        if (skill.HasType(SkillType.Attack))
+        {
+            if (IsReactHIT(Attacker,skill))
+            {
+                //成功されるとダメージを受ける
+                Damage(skillPower, skill.DEFATK);
+            }
+        }
 
          if(skill.HasType(SkillType.Heal))Heal(skillPower);
 
@@ -221,7 +340,7 @@ public abstract class BaseStates
         //敵なら基本的に全てプログラム制御などになる。
 
         //基本的に味方キャラの処理
-        UnderAttacker.ReactionSkill(NowUseSkill);
+        UnderAttacker.ReactionSkill(NowUseSkill,this);
     }
 
     /// <summary>

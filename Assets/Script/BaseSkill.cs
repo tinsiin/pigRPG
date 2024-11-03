@@ -44,7 +44,8 @@ public class BaseSkill
 
     private int _triggerCount;//発動への－カウント　このカウント分連続でやらないと発動しなかったりする　重要なのは連続でやらなくても　一気にまたゼロからになるかはスキル次第
     private int _triggerCountMax;//発動への－カウント　の指標
-    private int _atkCount;//攻撃回数
+    private int _atkCountMax;//攻撃回数
+    private int _atkCountDown;//実際にカウントダウンする攻撃回数用変数
     private int _deltaTurn;//前回のスキル行使から経った戦闘ターン
 
     public bool CanCancel = true;//triggerCountが0以上の複数ターン実行が必要なスキルの場合、複数ターンに跨る実行中に中断出来るかどうか。
@@ -69,6 +70,21 @@ public class BaseSkill
     }
 
     /// <summary>
+    /// スキル実行に必要なカウント　-1で実行される。
+    /// </summary>
+    public int TrigerCount()
+    {
+        if (_triggerCountMax > 0)//1回以上設定されてたら
+        {
+            _triggerCount--;
+            return _triggerCount;
+        }
+
+        //発動カウントが0に設定されている場合、そのまま実行される。
+        return -1;
+    }
+
+    /// <summary>
     /// 選ばれなかった時の発動カウントが戻っちゃう処理
     /// </summary>
     public virtual void ReturnTrigger()
@@ -79,12 +95,20 @@ public class BaseSkill
     /// <summary>
     /// オーバライド可能な攻撃回数
     /// </summary>
-    public virtual int ATKCount
+    public virtual int ATKCountMax
     {
-        get { return _atkCount; }
-        set { _atkCount = value; }
+        get { return _atkCountMax; }
+        set { _atkCountMax = value; }
 
     }
+    /// <summary>
+    /// オーバーライド可能な攻撃回数のカウントダウンする変数
+    /// </summary>
+    public virtual int ATKCountDown
+    {
+        get => _atkCountDown;
+    }
+
     /// <summary>
     /// オーバライド可能な連続で使われた回数
     /// </summary>
@@ -106,6 +130,11 @@ public class BaseSkill
     public float SkillPower;
 
     /// <summary>
+    /// スキルの命中補正
+    /// </summary>
+    public float SkillHitPer;
+
+    /// <summary>
     /// 基本的にスキルのレベルは恒常的に上がらないが、戦闘内では一時的に上がったりするのかもしれない。
     /// </summary>
     public float SkillLevel;
@@ -122,6 +151,7 @@ public class BaseSkill
 
     }
 
+    //スキルパワーの計算
     public virtual float SkillPowerCalc()
     {
         return SkillPower;
