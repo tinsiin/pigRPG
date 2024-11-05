@@ -7,6 +7,8 @@ using System.Linq;
 using RandomExtensions.Linq;
 using Unity.VisualScripting;
 using R3;
+using Cysharp.Threading.Tasks;
+using UnityEditor.Experimental.GraphView;
 
 /// <summary>
 /// 戦闘の先手が起ったかどうか
@@ -129,12 +131,26 @@ public class BattleManager
         //敵か味方どちらかが先手を取ったかによって、
         if (first == BattleStartSituation.alliFirst)
         {
-            AddFirstBattleGroupTurn(allyGroup,enemyGroup);
+            AddFirstBattleGroupTurn(allyGroup, enemyGroup);
+            //味方が先手
         }
-        else if(first == BattleStartSituation.EnemyFirst)
+        else if (first == BattleStartSituation.EnemyFirst)
         {
-            AddFirstBattleGroupTurn(EnemyGroup,allyGroup);
+            AddFirstBattleGroupTurn(EnemyGroup, allyGroup);
+            Debug.Log("敵が先手");
         }
+        else Debug.Log("お互い向き合って戦闘は始まった");
+        //noraml、つまり普通に始まったら先約リスト二は何も始まらない
+
+    }
+    /// <summary>
+    /// BaseStatesを継承したキャラクターのListから死亡者を省いたリストに変換する
+    /// </summary>
+    /// <param name="Charas"></param>
+    /// <returns></returns>
+    private List<BaseStates> RemoveDeathCharacters(List<BaseStates> Charas) 
+    {
+        return Charas.Where(chara => !chara.Death()).ToList();
     }
 
     /// <summary>
@@ -142,14 +158,17 @@ public class BattleManager
     /// </summary>
     void AddFirstBattleGroupTurn(BattleGroup _group,BattleGroup _counterGroup)
     {
-        var group = _group.Ours;
-        BaseStates[] CounterCharas = _counterGroup.GetCharactersFromImpression(SpiritualProperty.kindergarden, SpiritualProperty.godtier);
+        var group = RemoveDeathCharacters(_group.Ours);//死者を取り除く
+
+        //死者を取り除く　先手に対する切り返しであるハンターナイトが実行できる可能性のあるキャラクターを選別する
+        List<BaseStates> CounterCharas = RemoveDeathCharacters(_counterGroup.GetCharactersFromImpression(SpiritualProperty.kindergarden, SpiritualProperty.godtier));
+
         for (var i = 0; i < group.Count; i++)//グループの人数分
         {
-            if (i == group.Count - 1  && CounterCharas.Length>0 && RandomEx.Shared.NextInt(100) < 40)
+            if (i == group.Count - 1  && CounterCharas.Count>0 && RandomEx.Shared.NextInt(100) < 40)
             {//もし最後の先手ターンで後手グループにキンダーガーデンかゴッドティアがいて、　40%の確率が当たったら
                 //反撃グループにいるそのどちらかの印象を持ったキャラクターのターンが入る。
-                Acts.Add(RandomEx.Shared.GetItem(CounterCharas),_counterGroup.which,"ﾊﾝﾀｰﾅｲﾄ▼");
+                Acts.Add(RandomEx.Shared.GetItem(CounterCharas.ToArray()),_counterGroup.which,"ﾊﾝﾀｰﾅｲﾄ▼");
             }
             else
             {
@@ -158,6 +177,7 @@ public class BattleManager
             }
 
         }
+        Debug.Log("actsの数 = " + Acts.Count);
 
     }
 
@@ -168,40 +188,51 @@ public class BattleManager
     {
         BaseStates Chara;//選出される人
 
-        var Charas = new List<BaseStates>();//キャラリスト
+        List<BaseStates> Charas;//キャラリスト
 
         if (RandomEx.Shared.NextBool())//キャラリストから選ぶの決める
         {
-            Charas.AddRange(AllyGroup.Ours);
+            Charas = AllyGroup.Ours;
             Faction = WhichGroup.alliy;
         }
         else
         {
-            Charas.AddRange(EnemyGroup.Ours);
+            Charas = EnemyGroup.Ours;
             Faction = WhichGroup.Enemyiy;
         }
 
-
+        Charas = RemoveDeathCharacters(Charas);//死者を取り除く
         Chara = RandomEx.Shared.GetItem(Charas.ToArray<BaseStates>());//キャラリストからランダムで選ぶ
 
         return Chara;
+    }
+    /// <summary>
+    /// BattleManager内の一時保存要素のリセット？
+    /// </summary>
+    private void ResetManagerTemp()
+    {
+        UniqueTopMessage = "";
     }
     /// <summary>
     /// 行動準備 次のボタンを決める
     /// </summary>
     public TabState ACTPop()
     {
+        ResetManagerTemp();//一時保存要素をリセット
+
         //もしすでにキャラクターが居たら、そのリストを先ずは消化する
         if (Acts.Count > 0)
         {
             UniqueTopMessage=Acts.GetAtTopMessage(0);//リストからメッセージとキャラクターをゲット。
             Acter = Acts.GetAtCharacter(0);
             Faction = Acts.GetAtFaction(0);
+            Debug.Log("俳優は先約リストから選ばれました");
         }
         else
         {
             //居なかったらランダムに選ぶ
             Acter = RandomTurn();
+            Debug.Log("俳優はランダムに選ばれました");
         }
 
         if (Acter.CanOprate)//操作するキャラクターなら
@@ -222,88 +253,162 @@ public class BattleManager
 
     }
 
-    const int FrontGuardPer = 20;
-    const int BackLineHITModifier = 70;
     /// <summary>
-    /// characterが行動すると次のボタンのあれが出る
+    /// 発動カウントかスキル実行かで分岐
     /// </summary>
     /// <returns></returns>
-    public TabState CharacterACT()
+    public TabState CharacterActBranching()
     {
         //スキル実行処理
         var skill = Acter.NowUseSkill;
         int count;//メッセージテキスト用のカウント数字
         if ((count = skill.TrigerCount()) >= 0)//発動カウントが0以上ならまだカウント中
         {
-            if(skill.CanCancel == false)//キャンセル不可能の場合。
-            {
-                Acter.FreezeUseSkill = skill;//このスキルがキャンセル不可能として俳優に凍結される。
-            }
-            MessageDropper.Instance.CreateMessage($"{skill.SkillName}の発動カウント！残り{count}回。");//発動カウントのメッセージ
-
-            //発動カウント時はスキルの複数回連続実行がありえないから、普通に消す
-            Acts.RemoveAt(0);
-
-            //Turnを進める
-            BattleTurnCount++;
-            return ACTPop();
+            return TriggerACT(count);//発動カウント処理
         }
         else//発動カウントが-1以下　つまりカウントしてないまたは終わったなら
-        {//この後の被害者選別の実行を行ってからスキル実行を行う。
-
-            Acter.FreezeUseSkill= null;//凍結されてもされてなくても空にしておく
-
+        { 
+            return SkillACT();
         }
 
+    }
+    /// <summary>
+    /// 戦闘系のメッセージ作成
+    /// </summary>
+    /// <param name="txt"></param>
+    private void CreateBattleMessage(string txt)
+    {
+        MessageDropper.Instance.CreateMessage(UniqueTopMessage + txt);
+    }
 
-        if (Acter.ActWithoutHesitation())//前のめりしてる奴を狙うなら
+    /// <summary>
+    /// 発動カウントを実行
+    /// </summary>
+    private TabState TriggerACT(int count)
+    {
+        Debug.Log("発動カウント実行");
+        var skill = Acter.NowUseSkill;
+        if (skill.CanCancel == false)//キャンセル不可能の場合。
         {
-
-            if (Faction == WhichGroup.alliy)//味方なら敵を
-            {
-                UnderActer = EnemyGroup.InstantVanguard;
-            }
-            else UnderActer = AllyGroup.InstantVanguard;//敵なら味方を
+            Acter.FreezeUseSkill = skill;//このスキルがキャンセル不可能として俳優に凍結される。
         }
-        else
-        {//後衛を狙おうとしたなら 後衛への命中率は7割補正され　そもそも2割の確率で前のめりしてる奴にあたる
+        CreateBattleMessage($"{skill.SkillName}の発動カウント！残り{count}回。");//発動カウントのメッセージ
 
-            if (RandomEx.Shared.NextInt(100) < FrontGuardPer)//前衛のかばいに引っかかったら
-            {
-                if (Faction == WhichGroup.alliy)//味方なら敵の前のめりを
-                {
-                    UnderActer = EnemyGroup.InstantVanguard;
-                }
-                else//敵なら味方の前のめりを
-                {
-                    UnderActer = AllyGroup.InstantVanguard;
-                }
-            }
-            else//引っかかんなかったら前衛を抜いたメンバーから選ぶ
-            {
-                List<BaseStates> BackLines;//後衛リスト
-                if (Faction == WhichGroup.alliy)//味方なら敵を
-                {
-                    BackLines = new List<BaseStates>(EnemyGroup.Ours.Where(member => member != EnemyGroup.InstantVanguard));//前衛を抜いてディープコピーする
-                }
-                else//敵なら味方を
-                {
-                    BackLines = new List<BaseStates>(AllyGroup.Ours.Where(member => member != AllyGroup.InstantVanguard));
-                }
-                UnderActer = RandomEx.Shared.GetItem(BackLines.ToArray());//後衛リストからランダムで選択
-                Acter.SetHITPercentageModifier(BackLineHITModifier,"少し遠いよ");//後衛への命中率補正70%を追加。
-            }
-        }
-
-        //攻撃回数に応じた実行処理
-
-        //複数実行が終わり、今回の俳優を消す。
+        //発動カウント時はスキルの複数回連続実行がありえないから、普通にターンが進む
+        if (Acts.Count > 0)//先約リストでの実行なら削除
         Acts.RemoveAt(0);
+
         //Turnを進める
         BattleTurnCount++;
 
-        return TabState.NextWait;
+        return ACTPop();
     }
+
+    /// <summary>
+    /// スキルアクトを実行
+    /// </summary>
+    /// <returns></returns>
+    private TabState SkillACT()
+    {
+        Debug.Log("スキル行使実行");
+
+        //人数やスキルの攻撃傾向によって、被攻撃者の選別をする
+
+
+        //単体の敵を対立したグループから狙うなら
+        SelectTargetFromOpposingGroup();
+
+        //実行処理
+        CreateBattleMessage(Acter.AttackChara(UnderActer));//攻撃の処理からメッセージが返る。
+
+        //スキル実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
+        if (Acter.NowUseSkill.IsAggressiveCommit)
+        {
+            if(Faction == WhichGroup.alliy)
+            {
+                AllyGroup.InstantVanguard = Acter;
+            }
+            else
+            {
+                EnemyGroup.InstantVanguard = Acter;
+            }
+        }
+
+
+        if (Acter.NowUseSkill.NextConsecutiveATK())//まだ連続実行するなら
+        {
+            if (Acts.Count <= 0)//先約リストに今回の実行者を入れとく
+                Acts.Add(Acter, Faction);
+
+            Acter.FreezeSkill();//連続実行の為凍結
+
+        }
+        else //複数実行が終わり
+        {
+           
+            if(Acts.Count>0)//先約リストでの実行なら削除
+            Acts.RemoveAt(0);
+
+            Acter.FreezeUseSkill = null;//凍結されてもされてなくても空にしておく
+            //Turnを進める
+            BattleTurnCount++;
+        }
+
+
+        return ACTPop();
+
+    }
+    const int FrontGuardPer = 13;
+    const int BackLineHITModifier = 70;
+    /// <summary>
+    /// 対立関係のグループからスキルの実行対象者"単体"を選びUnderActerに入れる関数
+    /// 前のめりしてる奴かそうでない奴かを狙う感じ
+    /// </summary>
+    private void SelectTargetFromOpposingGroup()
+    {
+        var SelectGroup = new BattleGroup(AllyGroup.Ours,AllyGroup.OurImpression,AllyGroup.which);
+        //味方なら敵グループから、敵なら味方グループから選別する ディープコピー。
+        if (Faction == WhichGroup.alliy) SelectGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);
+
+        if (!Acter.NowUseSkill.HasType(SkillType.DeathHeal))//スキルが死回復要素がなければ
+        {
+            SelectGroup.SetCharactersList(RemoveDeathCharacters(SelectGroup.Ours));//死ぬ要素を省いたキャラクターリストに変換
+        }
+
+        if (SelectGroup.Ours.Count < 2)//選ばれる対立関係のグループに一人しかいない場合
+        {
+            UnderActer = SelectGroup.Ours[0];//普通にグループの一人だけを狙う
+        }
+        else//二人以上いたら前のめりかそうでないかでの分岐処理
+        {
+            if (Acter.ActWithoutHesitation())//前のめりしてる奴を狙うなら
+            {
+                UnderActer = SelectGroup.InstantVanguard;
+                Debug.Log(Acter.CharacterName + "は前のめりしてる奴を狙った");
+            }
+            else
+            {//後衛を狙おうとしたなら 後衛への命中率は7割補正され　そもそも1.3割の確率で前のめりしてる奴にあたる
+
+                if (RandomEx.Shared.NextInt(100) < FrontGuardPer)//前衛のかばいに引っかかったら
+                {
+                    UniqueTopMessage += "テラーズヒット";//かばうテキストを追加？
+                    UnderActer = SelectGroup.InstantVanguard;
+                    Debug.Log(Acter.CharacterName + "は後衛を狙ったが前のめりしてる奴に阻まれた");
+                }
+                else//引っかかんなかったら前衛を抜いたメンバーから選ぶ
+                {
+                    List<BaseStates> BackLines;//後衛リスト
+
+                    BackLines = new List<BaseStates>(SelectGroup.Ours.Where(member => member != SelectGroup.InstantVanguard));//前衛を抜いてディープコピーする
+
+                    UnderActer = RandomEx.Shared.GetItem(BackLines.ToArray());//後衛リストからランダムで選択
+                    Acter.SetHITPercentageModifier(BackLineHITModifier, "少し遠いよ");//後衛への命中率補正70%を追加。
+                    Debug.Log(Acter.CharacterName + "は後衛を狙った");
+                }
+            }
+        }
+    }
+
 
 
 }

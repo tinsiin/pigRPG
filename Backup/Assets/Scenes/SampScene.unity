@@ -529,9 +529,13 @@ MonoBehaviour:
     _skillList:
     - _name: "test\u30B9\u30AD\u30EB"
       CanCancel: 0
+      CanHandleConsecutiveATK: 0
+      IsPurposefulConsecutiveRandom: 0
+      ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 1
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 0
@@ -545,9 +549,13 @@ MonoBehaviour:
     NowUseSkill:
       _name: 
       CanCancel: 0
+      CanHandleConsecutiveATK: 0
+      IsPurposefulConsecutiveRandom: 0
+      ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 0
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 0
@@ -555,9 +563,13 @@ MonoBehaviour:
     FreezeUseSkill:
       _name: 
       CanCancel: 1
+      CanHandleConsecutiveATK: 0
+      IsPurposefulConsecutiveRandom: 0
+      ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 0
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 0
@@ -579,9 +591,13 @@ MonoBehaviour:
     NowUseSkill:
       _name: 
       CanCancel: 0
+      CanHandleConsecutiveATK: 0
+      IsPurposefulConsecutiveRandom: 0
+      ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 0
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 0
@@ -589,9 +605,13 @@ MonoBehaviour:
     FreezeUseSkill:
       _name: 
       CanCancel: 1
+      CanHandleConsecutiveATK: 0
+      IsPurposefulConsecutiveRandom: 0
+      ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 0
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 0
@@ -606,9 +626,13 @@ MonoBehaviour:
     _skillList:
     - _name: 
       CanCancel: 0
+      CanHandleConsecutiveATK: 0
+      IsPurposefulConsecutiveRandom: 0
+      ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 20
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 1.5
@@ -622,9 +646,13 @@ MonoBehaviour:
     NowUseSkill:
       _name: 
       CanCancel: 0
+      CanHandleConsecutiveATK: 0
+      IsPurposefulConsecutiveRandom: 0
+      ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 0
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 0
@@ -632,9 +660,13 @@ MonoBehaviour:
     FreezeUseSkill:
       _name: 
       CanCancel: 1
+      CanHandleConsecutiveATK: 0
+      IsPurposefulConsecutiveRandom: 0
+      ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
       SkillPower: 0
+      SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
       DEFATK: 0

@@ -149,6 +149,15 @@ public abstract class BaseStates
         return _commitToSwiftAction;
     }
 
+    /// <summary>
+    /// 使用中のスキルを強制続行中のスキルとする。　
+    /// 例えばスキルの連続実行中の処理や発動カウント中のキャンセル不可能なスキルなどで使う
+    /// </summary>
+    public void FreezeSkill()
+    {
+        FreezeUseSkill = NowUseSkill;
+    }
+
 
     /// <summary>
     ///     このキャラクターの種別
@@ -176,6 +185,7 @@ public abstract class BaseStates
     /// </summary>
     public void SetHITPercentageModifier(float value,string memo)
     {
+        if(_useHITPercentageModifiers == null)_useHITPercentageModifiers=new List<ModifierPart>();//nullチェック、処理
         _useHITPercentageModifiers.Add(new ModifierPart(memo, value));
     }
 
@@ -253,7 +263,7 @@ public abstract class BaseStates
     /// <summary>
     ///     初期精神属性決定関数(基本は印象を持ってるスキルリストから適当に選び出す
     /// </summary>
-    protected virtual void InitializeMyImpression()
+    public virtual void InitializeMyImpression()
     {
         SpiritualProperty that;
 
@@ -273,26 +283,30 @@ public abstract class BaseStates
     ///     オーバライド可能なダメージ関数
     /// </summary>
     /// <param name="atkPoint"></param>
-    public virtual void Damage(float atkPoint,float DEFAtkper)　
+    public virtual string Damage(float atkPoint,float DEFAtkper)　
     {
         HP -= atkPoint - DEF(DEFAtkper); //HPから指定された攻撃力が引かれる。
+        Debug.Log("攻撃が実行された");
+        return "-+~*8";
     }
 
     /// <summary>
     /// ヒールは防御できない、つまりヒールが逆効果のキャラクターならヒールは有効打ってこと
     /// </summary>
     /// <param name="HealPoint"></param>
-    public virtual void Heal(float HealPoint)
+    public virtual string Heal(float HealPoint)
     {
         HP += HealPoint;
+        Debug.Log("ヒールが実行された");
+        return "癒された";
     }
 
     /// <summary>
     /// 攻撃者と防御者とスキルを利用してヒットするかの計算
     /// </summary>
-    private bool IsReactHIT(BaseStates Attacker,BaseSkill skill)
+    private bool IsReactHIT(BaseSkill skill)
     {
-        var hit = Attacker.HIT() *  skill.SkillHitPer;//術者の命中×スキルの命中率
+        var hit = skill.SkillHitCalc();
 
         if(RandomEx.Shared.NextFloat(0,hit+AGI()) < hit)//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
         {
@@ -306,25 +320,28 @@ public abstract class BaseStates
     /// スキルに対するリアクション ここでスキルの解釈をする。
     /// </summary>
     /// <param name="skill"></param>
-    public virtual void ReactionSkill(BaseSkill skill,BaseStates Attacker)
+    public virtual string ReactionSkill(BaseSkill skill)
     {
         //スキルパワーの精神属性による計算
         var modifier = SkillSpiritualModifier[(skill.SkillSpiritual, MyImpression)];//スキルの精神属性と自分の精神属性による補正
         var skillPower = skill.SkillPowerCalc() * modifier.GetValue() / 100.0f;
+        var txt = "";//メッセージテキスト用
 
         //スキルの持ってる性質を全て処理として実行
 
         if (skill.HasType(SkillType.Attack))
         {
-            if (IsReactHIT(Attacker,skill))
+            if (IsReactHIT(skill))
             {
                 //成功されるとダメージを受ける
-                Damage(skillPower, skill.DEFATK);
+                txt += Damage(skillPower, skill.DEFATK);
             }
         }
 
-         if(skill.HasType(SkillType.Heal))Heal(skillPower);
+         if(skill.HasType(SkillType.Heal))txt += Heal(skillPower);
 
+        Debug.Log("ReactionSkill");
+        return txt;
     }
 
 
@@ -332,15 +349,15 @@ public abstract class BaseStates
     /// クラスを通じて相手を攻撃する
     /// </summary>
     /// <param name="UnderAttacker"></param>
-    public virtual void AttackChara(BaseStates UnderAttacker)
+    public virtual string AttackChara(BaseStates UnderAttacker)
     {
-        //クラスのdamage関数にskillを渡して処理させる
-        //ここに渡すやり方が敵と味方で変わる。
-        //味方ならプレイヤーのボタン結果やそれによる遅延または加算行為など多岐にわたるが、
-        //敵なら基本的に全てプログラム制御などになる。
+        //本来この関数は今のところ無駄　BMでの処理では直接UnderActerのreactionSkill呼びだしゃいい話だし
+        //ただもしかしたらここでのunderAttackerによっての何らかの分岐処理するかもだから念のためね。
 
-        //基本的に味方キャラの処理
-        UnderAttacker.ReactionSkill(NowUseSkill,this);
+        var txt = UnderAttacker.ReactionSkill(NowUseSkill);
+        NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルをこのタイミングでカウントアップ
+        Debug.Log("AttackChara");
+        return txt;
     }
 
     /// <summary>

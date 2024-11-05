@@ -11,6 +11,7 @@ public class Walking : MonoBehaviour
     [SerializeField] private Stages stages;
     [SerializeField] private TextMeshProUGUI tmp;
     [SerializeField] private Button walkbtn;
+    [SerializeField] private Button _nextWaitBtn;
     [SerializeField] private SelectButton SelectButtonPrefab;
     [SerializeField] private int SelectBtnSize;
 
@@ -61,7 +62,12 @@ public class Walking : MonoBehaviour
         }
     }
 
-    private void Encount()
+    private void OnClickNextWaitBtn()
+    {
+        USERUI_state.Value = bm.CharacterActBranching();
+    }
+    BattleManager bm;
+    private  void Encount()
     {
         BattleGroup enemyGroup = null; //敵グループ
         BattleGroup allyGroup = null; //味方グループ
@@ -80,12 +86,13 @@ public class Walking : MonoBehaviour
 
 
             //BattleManagerを生成
-            var bm = new BattleManager(allyGroup, enemyGroup,BattleStartSituation.Normal); //バトルを管理するクラス
+            bm = new BattleManager(allyGroup, enemyGroup,BattleStartSituation.Normal); //バトルを管理するクラス
             //battleTimeLineを生成
             var TimeLine = new BattleTimeLine(new List<BattleManager>{bm}); //バトルのタイムラインを管理するクラス
 
             wui.FirstImpressionZoom();
-            USERUI_state.Value = bm.ACTPop();
+            USERUI_state.Value = bm.ACTPop();//一番最初のUSERUIの状態を変更させるのと戦闘ループの最初の準備処理。
+            _nextWaitBtn.onClick.AddListener(OnClickNextWaitBtn);//ボタンにbmの処理を追加
         }
         else
         {
@@ -152,7 +159,6 @@ public class Walking : MonoBehaviour
         {
             var button = Instantiate(SelectButtonPrefab, SelectButtonArea);
             buttons.Add(button);
-            //tasks.Add(button.OnCreateButton(index, s, OnAnyClickSelectButton));
             button.OnCreateButton(index, s, OnAnyClickSelectButton, int.Parse(idParams[index]), SelectBtnSize);
             index++;
         }

@@ -152,7 +152,8 @@ public class StageCut
         //最初の一人はランダムで選ぶ
             var rndIndex = RandomEx.Shared.NextInt(0, validEnemies.Count - 1); //ランダムインデックス指定
             var referenceOne = validEnemies[rndIndex]; //抽出
-
+            
+            referenceOne.InitializeMyImpression();//精神属性のランダム生成
             validEnemies.RemoveAt(rndIndex); //削除
             ResultList.Add(referenceOne); //追加
 
@@ -186,6 +187,7 @@ public class StageCut
             //foreachで全員との相性を見たら、加入させる。
             if (okCount == ResultList.Count) //全員との相性が合致したら
             {
+                validEnemies[targetIndex].InitializeMyImpression();//精神属性のランダム生成
                 ResultList.Add(validEnemies[targetIndex]); //結果のリストに追加
                 validEnemies.RemoveAt(targetIndex); //候補リストから削除
             }

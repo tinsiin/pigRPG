@@ -1,3 +1,4 @@
+using RandomExtensions;
 using RandomExtensions.Linq;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +23,6 @@ public enum PartyProperty
 /// </summary>
 public class BattleGroup
 {
-    private readonly List<BaseStates> _ours;
 
     /// <summary>
     ///     パーティー属性
@@ -34,16 +34,29 @@ public class BattleGroup
     /// </summary>
     public BattleGroup(List<BaseStates> ours, PartyProperty ourImpression,WhichGroup _which)
     {
-        _ours = ours;
+        Ours = ours;
         OurImpression = ourImpression;
         which = _which;
+        InitializeRandomInstantVanGuardSelect();
     }
 
+    /// <summary>
+    /// 前のめりをランダムにグループ内で選別しInstantVanguardの初期化する
+    /// </summary>
+    private void InitializeRandomInstantVanGuardSelect()
+    {
+        InstantVanguard = RandomEx.Shared.GetItem(Ours.ToArray());
+    }
 
     /// <summary>
     ///     集団の人員リスト
     /// </summary>
-    public IReadOnlyList<BaseStates> Ours => _ours;
+    public List<BaseStates> Ours {  get; private set; }
+
+    public void SetCharactersList(List<BaseStates> list)
+    {
+        Ours = list;
+    }
 
     /// <summary>
     /// 現在のグループで前のめりしているcharacter
@@ -61,24 +74,14 @@ public class BattleGroup
     /// </summary>
     public bool ContainAnyImpression(params SpiritualProperty[] impressions)
     {
-        /*foreach (var impression in impressions)//判定する印象全てを判定する
-        {
-            foreach (var one in _ours)//グループ内全てに回す
-            {
-                if (one.MyImpression == impression) return true;//いっこでも　あったら終わりです
-            }
-        }
-
-        return false;*/
-
-        return _ours.Any(one => impressions.Contains(one.MyImpression));
+        return Ours.Any(one => impressions.Contains(one.MyImpression));
     }
 
     /// <summary>
     /// 指定された印象を持ったキャラクター達を返す関数
     /// </summary>
-    public BaseStates[] GetCharactersFromImpression(params SpiritualProperty[] impressions)
+    public List<BaseStates> GetCharactersFromImpression(params SpiritualProperty[] impressions)
     {
-        return _ours.Where(one => impressions.Contains(one.MyImpression)).ToArray();
+        return Ours.Where(one => impressions.Contains(one.MyImpression)).ToList();
     }
 }
