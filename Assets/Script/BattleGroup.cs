@@ -3,6 +3,7 @@ using RandomExtensions.Linq;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
+using UnityEngine;
 
 /// <summary>
 ///     パーティー属性
@@ -37,7 +38,7 @@ public class BattleGroup
         Ours = ours;
         OurImpression = ourImpression;
         which = _which;
-        InitializeRandomInstantVanGuardSelect();
+        InitializeRandomInstantVanGuardSelect();//前のめりをランダムに生成
     }
 
     /// <summary>
@@ -46,6 +47,60 @@ public class BattleGroup
     private void InitializeRandomInstantVanGuardSelect()
     {
         InstantVanguard = RandomEx.Shared.GetItem(Ours.ToArray());
+    }
+    /// <summary>
+    /// グループ全員の全スキルをリセットする
+    /// </summary>
+    public void ResetCharactersSkillsProperty()
+    {
+        foreach (var chara in Ours) 
+        {
+            chara.SkillsTmpReset();
+        }
+    }
+    /// <summary>
+    /// パーティー皆の死んでる奴がいたらそれ記録する
+    /// </summary>
+    public void CharactersRecordDeath()
+    {
+        foreach (var chara in Ours)
+        {
+            chara.RecordDeath();
+        }
+    }
+    /// <summary>
+    /// パーティー全員が死んでるかどうか
+    /// </summary>
+    /// <returns></returns>
+    public bool PartyDeath()
+    {
+        foreach (var chara in Ours)
+        {
+            if (!chara.Death())//死んでなかったら
+            {
+                return false;//一人でも生きてるからfalse
+            }
+        }
+        return true;//全員死んでるからtrue
+    }
+    /// <summary>
+    /// oursがnormalEnemyの時だけ利用する。リカバリーステップのカウント準備の処理
+    /// </summary>
+    public void RecovelyStart(int nowProgress)
+    {
+        List<NormalEnemy> enes =  Ours.OfType<NormalEnemy>().ToList();
+        if (enes.Count < 1) Debug.LogWarning("恐らくRecovelyStep用の関数を敵じゃないクラスで利用してる");
+        else
+        {
+            enes.Where(enemy => enemy.Death() && enemy.Reborn).ToList();//死者であり、復活するタイプだけ
+
+            foreach(var ene in enes)
+            {
+                ene.ReadyRecovelyStep(nowProgress);//敵キャラの復活歩数準備
+            }
+        }
+
+        
     }
 
     /// <summary>

@@ -416,6 +416,7 @@ GameObject:
   - component: {fileID: 78173491}
   - component: {fileID: 78173492}
   - component: {fileID: 78173493}
+  - component: {fileID: 78173494}
   m_Layer: 5
   m_Name: USERUI
   m_TagString: Untagged
@@ -495,9 +496,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   wui: {fileID: 132546432}
-  stages: {fileID: 11400000, guid: bccb5f6cc7b82624ab0f4c4a5af425e6, type: 2}
   tmp: {fileID: 2134117278}
   walkbtn: {fileID: 2056622405}
+  _nextWaitBtn: {fileID: 111255130}
   SelectButtonPrefab: {fileID: 3284314377910982221, guid: 88d2701a3a3550449a821a64c23be273, type: 3}
   SelectBtnSize: 95
   SelectButtonArea: {fileID: 1734461211}
@@ -526,29 +527,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   geino:
-    _skillList:
-    - _name: "test\u30B9\u30AD\u30EB"
-      CanCancel: 0
-      CanHandleConsecutiveATK: 0
-      IsPurposefulConsecutiveRandom: 0
-      ConsecutivePercentage: 0
-      SKillDidWaitCount: 0
-      IsTLOA: 0
-      SkillPower: 1
-      SkillHitPer: 0
-      SkillLevel: 0
-      SkillRivahal: 0
-      DEFATK: 0
-      WhatSkill: 1
+    _skillList: []
     b_AGI: 0
-    b_ATK: 1
+    b_ATK: 0
     b_DEF: 0
-    b_HIT: 1
-    CharacterName: geino
-    ImpressionStringName: geinoimpression
+    b_HIT: 0
+    CharacterName: "\u30B8\u30FC\u30CE"
+    ImpressionStringName: 
     NowUseSkill:
       _name: 
-      CanCancel: 0
+      CanCancel: 1
+      IsAggressiveCommit: 1
       CanHandleConsecutiveATK: 0
       IsPurposefulConsecutiveRandom: 0
       ConsecutivePercentage: 0
@@ -563,6 +552,7 @@ MonoBehaviour:
     FreezeUseSkill:
       _name: 
       CanCancel: 1
+      IsAggressiveCommit: 1
       CanHandleConsecutiveATK: 0
       IsPurposefulConsecutiveRandom: 0
       ConsecutivePercentage: 0
@@ -574,12 +564,12 @@ MonoBehaviour:
       SkillRivahal: 0
       DEFATK: 0
       WhatSkill: 0
-    MAXP: 3
-    P: 3
+    MAXP: 0
+    P: 0
     recoveryTurn: 0
-    CanOprate: 1
-    _hp: 20
-    _maxHp: 30
+    CanOprate: 0
+    _hp: 3
+    _maxHp: 3
   noramlia:
     _skillList: []
     b_AGI: 0
@@ -590,7 +580,8 @@ MonoBehaviour:
     ImpressionStringName: 
     NowUseSkill:
       _name: 
-      CanCancel: 0
+      CanCancel: 1
+      IsAggressiveCommit: 1
       CanHandleConsecutiveATK: 0
       IsPurposefulConsecutiveRandom: 0
       ConsecutivePercentage: 0
@@ -605,6 +596,7 @@ MonoBehaviour:
     FreezeUseSkill:
       _name: 
       CanCancel: 1
+      IsAggressiveCommit: 1
       CanHandleConsecutiveATK: 0
       IsPurposefulConsecutiveRandom: 0
       ConsecutivePercentage: 0
@@ -623,20 +615,7 @@ MonoBehaviour:
     _hp: 0
     _maxHp: 0
   sites:
-    _skillList:
-    - _name: 
-      CanCancel: 0
-      CanHandleConsecutiveATK: 0
-      IsPurposefulConsecutiveRandom: 0
-      ConsecutivePercentage: 0
-      SKillDidWaitCount: 0
-      IsTLOA: 0
-      SkillPower: 20
-      SkillHitPer: 0
-      SkillLevel: 0
-      SkillRivahal: 0
-      DEFATK: 1.5
-      WhatSkill: 0
+    _skillList: []
     b_AGI: 0
     b_ATK: 0
     b_DEF: 0
@@ -645,7 +624,8 @@ MonoBehaviour:
     ImpressionStringName: 
     NowUseSkill:
       _name: 
-      CanCancel: 0
+      CanCancel: 1
+      IsAggressiveCommit: 1
       CanHandleConsecutiveATK: 0
       IsPurposefulConsecutiveRandom: 0
       ConsecutivePercentage: 0
@@ -660,6 +640,7 @@ MonoBehaviour:
     FreezeUseSkill:
       _name: 
       CanCancel: 1
+      IsAggressiveCommit: 1
       CanHandleConsecutiveATK: 0
       IsPurposefulConsecutiveRandom: 0
       ConsecutivePercentage: 0
@@ -677,6 +658,129 @@ MonoBehaviour:
     CanOprate: 0
     _hp: 0
     _maxHp: 0
+--- !u!114 &78173494
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 78173487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de3ee7f39762d9b4183910f2b7545996, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  StageDates:
+  - _stageName: "\u30A8\u30F3\u30C8\u30E9\u30F3\u30B9\u30DB\u30FC\u30EB"
+    _cutArea:
+    - _areaName: "\u5165\u53E3"
+      _id: 0
+      _areaDates:
+      - _rest: 0
+        _backsrc: 
+        _nextID: 
+        _nextIDString: 
+        _nextStageID: 
+      - _rest: 0
+        _backsrc: 
+        _nextID: 
+        _nextIDString: 
+        _nextStageID: 
+      _mapLineS: {x: 0, y: 0}
+      _mapLineE: {x: 0, y: 0}
+      _mapsrc: 
+      _enemyList:
+      - _skillList:
+        - _name: 
+          CanCancel: 0
+          IsAggressiveCommit: 0
+          CanHandleConsecutiveATK: 0
+          IsPurposefulConsecutiveRandom: 0
+          ConsecutivePercentage: 0
+          SKillDidWaitCount: 0
+          IsTLOA: 0
+          SkillPower: 0
+          SkillHitPer: 0
+          SkillLevel: 0
+          SkillRivahal: 0
+          DEFATK: 0
+          WhatSkill: 1
+        b_AGI: 0
+        b_ATK: 0
+        b_DEF: 0
+        b_HIT: 0
+        CharacterName: "\uFF4B\uFF4C\uFF1B\uFF4B"
+        ImpressionStringName: 
+        NowUseSkill:
+          _name: 
+          CanCancel: 0
+          IsAggressiveCommit: 0
+          CanHandleConsecutiveATK: 0
+          IsPurposefulConsecutiveRandom: 0
+          ConsecutivePercentage: 0
+          SKillDidWaitCount: 0
+          IsTLOA: 0
+          SkillPower: 0
+          SkillHitPer: 0
+          SkillLevel: 0
+          SkillRivahal: 0
+          DEFATK: 0
+          WhatSkill: 0
+        FreezeUseSkill:
+          _name: 
+          CanCancel: 0
+          IsAggressiveCommit: 0
+          CanHandleConsecutiveATK: 0
+          IsPurposefulConsecutiveRandom: 0
+          ConsecutivePercentage: 0
+          SKillDidWaitCount: 0
+          IsTLOA: 0
+          SkillPower: 0
+          SkillHitPer: 0
+          SkillLevel: 0
+          SkillRivahal: 0
+          DEFATK: 0
+          WhatSkill: 0
+        MAXP: 0
+        P: 0
+        recoveryTurn: 0
+        CanOprate: 0
+        _hp: 1
+        _maxHp: 1
+        RecovelySteps: 0
+        broken: 0
+      _sideObject_Lefts:
+      - {fileID: 647846275447870780, guid: 9a2f32cb2b47ac145a7cd93ddf550ff6, type: 3}
+      - {fileID: 4505394165267339441, guid: 453d3bd738f719744994a2f1cdc94e68, type: 3}
+      _sideObject_Rights:
+      - {fileID: 4505394165267339441, guid: fadad38d3e8a5554692345edb047c679, type: 3}
+      EncounterRate: 60
+      EscapeRate: 50
+    Satelite_StageBonus:
+      ATKBpunus: 0
+      DEFBonus: 0
+      AGIBonus: 0
+      HITBonus: 0
+      HPBonus: 0
+      PBonus: 0
+      RecovelyTurnMinusBonus: 0
+    Bass_StageBonus:
+      ATKBpunus: 0
+      DEFBonus: 0
+      AGIBonus: 0
+      HITBonus: 0
+      HPBonus: 0
+      PBonus: 0
+      RecovelyTurnMinusBonus: 0
+    Stair_StageBonus:
+      ATKBpunus: 0
+      DEFBonus: 0
+      AGIBonus: 0
+      HITBonus: 0
+      HPBonus: 0
+      PBonus: 0
+      RecovelyTurnMinusBonus: 0
+  memo: 
 --- !u!1 &90538794
 GameObject:
   m_ObjectHideFlags: 0
@@ -942,7 +1046,7 @@ GameObject:
   - component: {fileID: 111255131}
   - component: {fileID: 111255130}
   m_Layer: 5
-  m_Name: Button
+  m_Name: NextWaitButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1011,7 +1115,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 111255131}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: 
+        m_MethodName: 
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &111255131
 MonoBehaviour:
   m_ObjectHideFlags: 0

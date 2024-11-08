@@ -1,3 +1,4 @@
+using R3;
 using System;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -40,15 +41,40 @@ public class BaseSkill
 
     [SerializeField]
     private string _name;
- 
-    private int _doConsecutiveCount;//BattleManager単位で"連続"で使われた回数。　
-    private int _doCount;//BattleManager単位で行使した回数
 
+    private int _doConsecutiveCount;//スキルを連続実行した回数
+    private int _doCount;//スキルを実行した回数
+    private int _hitCount;    // スキルがヒットした回数
+    private int _hitConsecutiveCount;//スキルが連続ヒットした回数
     private int _triggerCount;//発動への－カウント　このカウント分連続でやらないと発動しなかったりする　重要なのは連続でやらなくても　一気にまたゼロからになるかはスキル次第
     private int _triggerCountMax;//発動への－カウント　の指標
     private int _atkCount;//攻撃回数
     private int _atkCountUP;//攻撃回数
-    private int _deltaTurn;//前回のスキル行使から経った戦闘ターン
+
+    /// <summary>
+    /// 前回のスキル行使の戦闘ターン ない状態は-1
+    /// </summary>
+    private int _tmpSkillUseTurn = -1;
+    /// <summary>
+    /// 前回スキル実行した時からの経過ターン 
+    /// </summary>
+    public int DeltaTurn { get; private set; } = -1;
+
+    /// <summary>
+    /// 前回からのターン差を記録するDeltaTurnを更新する関数  battleManagerで利用する。
+    /// </summary>
+    public void SetDeltaTurn(int nowTurn)
+    {
+        if(_tmpSkillUseTurn > 0)//前回のターンが記録されていたら
+        {
+            DeltaTurn = Math.Abs(_tmpSkillUseTurn - nowTurn);//前回との差をdeltaTurn保持変数に記録する
+        }
+        //記録されていない場合、リセットされて-1になっているので何もしない。
+
+
+        _tmpSkillUseTurn = nowTurn;//今回のターン数を一時記録
+
+    }
 
     /// <summary>
     /// triggerCountが0以上の複数ターン実行が必要なスキルの場合、複数ターンに跨る実行中に中断出来るかどうか。
@@ -86,12 +112,49 @@ public class BaseSkill
 
 
     /// <summary>
-    /// 攻撃した回数
-    /// </summary>
+    /// BattleManager単位で行使した回数
+    /// 実行対象のreactionSkill内でインクリメント
+    /// </summary>    
     public  int DoCount
     {
         get { return _doCount; }
         set { _doCount = value; }
+    }
+
+    /// <summary>
+    /// BattleManager単位で"連続"で使われた回数。　
+    /// 実行する際にdoerのSkillUseConsecutiveCountUpからAttackChara内で使用
+    /// </summary>
+    public virtual int DoConsecutiveCount
+    {
+        get { return _doConsecutiveCount; }
+        set { _doConsecutiveCount = value; }
+
+    }
+
+    /// <summary>
+    /// スキルがヒットしたときの回数カウント
+    /// </summary>
+    public int HitCount
+    {
+        get => _hitCount;
+        set { _hitCount = value; }
+    }
+    /// <summary>
+    /// スキルが連続ヒットしたときの回数カウント
+    /// </summary>
+    public int HitConsecutiveCount
+    {
+        get => _hitConsecutiveCount;
+        set { _hitConsecutiveCount = value; }
+    }
+
+    /// <summary>
+    /// スキルのヒットした回数、またその連続回数をカウントアップする
+    /// </summary>
+    public void SkillHitCount()
+    {
+        HitCount++;//単純にヒット回数を増やす
     }
 
     /// <summary>
@@ -116,6 +179,13 @@ public class BaseSkill
     {
         _triggerCount = _triggerCountMax;//基本的に一回でもやんなかったらすぐ戻る感じ
     }
+    /// <summary>
+    /// 実行に成功した際の発動カウントのリセット
+    /// </summary>
+    public virtual void DoneTrigger()
+    {
+        _triggerCount = _triggerCountMax;//基本的にもう一回最初から
+    }
 
     /// <summary>
     /// オーバライド可能な攻撃回数
@@ -135,25 +205,19 @@ public class BaseSkill
     {
         if (_atkCountUP >= _atkCount)//もし設定した値にカウントアップ値が達成してたら。
         {
+            _atkCountUP = 0;//値初期化
             return false;//終わり
         }
         return true;//まだ達成してないから次の攻撃がある。
     }
-
+    /// <summary>
+    /// 連続攻撃の値を増やす
+    /// </summary>
+    /// <returns></returns>
     public virtual int ConsecutiveFixedATKCountUP()
     {
         _atkCountUP++;
         return _atkCountUP;
-    }
-
-    /// <summary>
-    /// オーバライド可能な連続で使われた回数
-    /// </summary>
-    public virtual int DoConsecutiveCount
-    {
-        get { return _doConsecutiveCount; }
-        set { _doConsecutiveCount = value; }
-
     }
 
     /// <summary>
@@ -180,6 +244,29 @@ public class BaseSkill
     /// </summary>
     public float SkillRivahal;
 
+    /// <summary>
+    /// 初期化コールバック関数 初期化なので起動時の最初の一回しか使わないような処理しか書かないようにして
+    /// </summary>
+    public void OnInitialize(BaseStates owner)
+    {
+        Doer = owner;//管理者を記録
+    }
+    /// <summary>
+    /// スキルの"一時保存"系プロパティをリセットする(主にbattleManager系で)
+    /// </summary>
+    public void ResetTmpProperty()
+    {
+        _doCount = 0;
+        _doConsecutiveCount = 0;
+        _hitCount = 0;
+        _hitConsecutiveCount = 0;
+        _atkCountUP = 0;
+        _triggerCount = _triggerCountMax;//発動カウントはカウントダウンするから最初っから
+        _tmpSkillUseTurn = -1;//前回とのターン比較用の変数をnullに
+
+        SkillRivahal = 0;
+        SkillLevel = 0;
+    }
     /// <summary>
     /// TLOAと対決した際のライバハルの増え方の関数
     /// </summary>

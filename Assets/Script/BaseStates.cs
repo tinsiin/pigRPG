@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using RandomExtensions;
 using System;
+using UnityEditor.Experimental.GraphView;
 
 /// <summary>
 ///     キャラクター達の種別
@@ -94,14 +95,43 @@ public abstract class BaseStates
     public string ImpressionStringName;
 
 
-    //次の攻撃ターンで使われる
+    /// <summary>
+    ///現在のの攻撃ターンで使われる
+    /// </summary>
     public BaseSkill NowUseSkill;
 
     /// <summary>
     /// 中断できない発動カウント中のスキル　nullならその状態でないということ
     /// </summary>
     public BaseSkill FreezeUseSkill;
+    /// <summary>
+    /// 前回使ったスキルの保持
+    /// </summary>
+    private BaseSkill _tempUseSkill;
+    /// <summary>
+    /// スキルを連続実行した回数などをスキルのクラスに記録する関数
+    /// </summary>
+    /// <param name="useSkill"></param>
+    public void SkillUseConsecutiveCountUp(BaseSkill useSkill )
+    {
+        useSkill.SkillHitCount();//スキルのヒット回数の計算
 
+        if (useSkill == _tempUseSkill)//前回使ったスキルと同じなら
+        {
+            useSkill.DoConsecutiveCount++;//連続実行回数を増やす
+            useSkill.HitConsecutiveCount++;//連続ヒット回数を増やす
+        }
+        else//違ったら
+        {
+            if(_tempUseSkill != null)//nullじゃなかったら
+            {
+                _tempUseSkill.DoConsecutiveCount = 0;//リセット
+                _tempUseSkill.HitConsecutiveCount++;//連続ヒット回数をリセット　
+            }
+            useSkill.DoConsecutiveCount++;//最初の一回目として
+            useSkill.HitConsecutiveCount++;//連続ヒット回数を増やす
+        }
+    }
     public int MAXP;
 
     //ポイント
@@ -157,7 +187,13 @@ public abstract class BaseStates
     {
         FreezeUseSkill = NowUseSkill;
     }
-
+    /// <summary>
+    /// 強制続行中のスキルをなくす
+    /// </summary>
+    public void Defrost()
+    {
+        FreezeUseSkill = null;
+    }
 
     /// <summary>
     ///     このキャラクターの種別
@@ -316,6 +352,7 @@ public abstract class BaseStates
         return false;
     }
 
+
     /// <summary>
     /// スキルに対するリアクション ここでスキルの解釈をする。
     /// </summary>
@@ -326,6 +363,7 @@ public abstract class BaseStates
         var modifier = SkillSpiritualModifier[(skill.SkillSpiritual, MyImpression)];//スキルの精神属性と自分の精神属性による補正
         var skillPower = skill.SkillPowerCalc() * modifier.GetValue() / 100.0f;
         var txt = "";//メッセージテキスト用
+        skill.DoCount++;//スキルを実行した回数をカウントアップ
 
         //スキルの持ってる性質を全て処理として実行
 
@@ -335,6 +373,10 @@ public abstract class BaseStates
             {
                 //成功されるとダメージを受ける
                 txt += Damage(skillPower, skill.DEFATK);
+            }
+            else
+            {//外したら
+                skill.HitConsecutiveCount = 0;//連続ヒット回数がゼロ　
             }
         }
 
@@ -354,9 +396,15 @@ public abstract class BaseStates
         //本来この関数は今のところ無駄　BMでの処理では直接UnderActerのreactionSkill呼びだしゃいい話だし
         //ただもしかしたらここでのunderAttackerによっての何らかの分岐処理するかもだから念のためね。
 
-        var txt = UnderAttacker.ReactionSkill(NowUseSkill);
-        NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルをこのタイミングでカウントアップ
+
+        SkillUseConsecutiveCountUp(NowUseSkill);//連続カウントアップ
+
+        var txt = UnderAttacker.ReactionSkill(NowUseSkill);//敵がスキルにリアクション
+
+        NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルの攻撃回数をカウントアップ
         Debug.Log("AttackChara");
+
+        _tempUseSkill = NowUseSkill;//使ったスキルを一時保存
         return txt;
     }
 
@@ -368,6 +416,46 @@ public abstract class BaseStates
     {
         if (HP <= 0) return true;
         return false;
+    }
+    /// <summary>
+    /// RecordedDeath用のバッキングフィールド
+    /// </summary>
+    private bool _recordedDeath;
+    /// <summary>
+    /// キャラクターによって認識される死　これがtrueなら誰も彼の事を攻撃したりはしない
+    /// </summary>
+    public bool RecordedDeath => _recordedDeath;
+    /// <summary>
+    /// 死を記録
+    /// </summary>
+    /// <returns></returns>
+    public virtual void RecordDeath()
+    {
+        if (Death())
+        {
+            _recordedDeath = true;
+        }
+    }
+
+    /// <summary>
+    /// 持ってるスキルリストを初期化する
+    /// </summary>
+    public void SkillsInitialize()
+    {
+        foreach(var skill in SkillList)
+        {
+            skill.OnInitialize(this);
+        }
+    }
+    /// <summary>
+    /// 全スキルの一時保存系プロパティをリセットする
+    /// </summary>
+    public void SkillsTmpReset()
+    {
+        foreach (var skill in SkillList)
+        {
+            skill.ResetTmpProperty();//プロパティをリセットする
+        }
     }
 
     /// <summary>

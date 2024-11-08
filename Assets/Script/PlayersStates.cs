@@ -21,19 +21,20 @@ public class PlayersStates:MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        NowProgress = 0;//ステージ関連のステータス初期化
+        NowStageID = 0;
+        NowAreaID = 0;
+
+        geino.SkillsInitialize();//スキル初期化
+        noramlia.SkillsInitialize();
+        sites.SkillsInitialize();
+
     }
     public StairStates geino;
     public BassJackStates noramlia;
     public SateliteProcessStates sites;
 
-    public PlayersStates() //コンストラクター 
-    {
-        NowProgress = 0;
-        NowStageID = 0;
-        NowAreaID = 0;
-
-        //セーブデータあるならこの後に処理
-    }
 
     /// <summary>
     ///     現在進行度
@@ -43,7 +44,7 @@ public class PlayersStates:MonoBehaviour
     /// <summary>
     ///     現在のステージ
     /// </summary>
-    public int NowStageID { get; }
+    public int NowStageID { get; private set; }
 
     /// <summary>
     ///     現在のステージ内のエリア

@@ -57,6 +57,13 @@ public class ACTList
         TopMessage = new List<string>();
         FactionList = new List<WhichGroup>();
     }
+    /// <summary>
+    /// 先約リスト内から死者を取り除く
+    /// </summary>
+    public void RemoveDeathCharacters()
+    {
+        CharactorACTList = CharactorACTList.Where(chara => !chara.Death()).ToList();
+    }
 
     /// <summary>
     /// インデックスで消す。
@@ -91,8 +98,8 @@ public class ACTList
 /// </summary>
 public class BattleManager
 {
-    
-    
+
+
     /// <summary>
     ///     プレイヤー側のバトルグループ　ここに味方のバトルグループオブジェクトをリンクする？
     /// </summary>
@@ -110,6 +117,8 @@ public class BattleManager
     BaseStates Acter;//今回の俳優
     BaseStates UnderActer;//行動を受ける人
     WhichGroup Faction;//陣営
+    bool Wipeout=false;//全滅したかどうか
+    bool RunOut=false;//逃走
 
 
 
@@ -121,7 +130,7 @@ public class BattleManager
     /// <summary>
     ///     コンストラクタ
     /// </summary>
-    public BattleManager(BattleGroup allyGroup, BattleGroup enemyGroup,BattleStartSituation first)
+    public BattleManager(BattleGroup allyGroup, BattleGroup enemyGroup, BattleStartSituation first)
     {
         AllyGroup = allyGroup;
         EnemyGroup = enemyGroup;
@@ -146,17 +155,24 @@ public class BattleManager
     /// <summary>
     /// BaseStatesを継承したキャラクターのListから死亡者を省いたリストに変換する
     /// </summary>
-    /// <param name="Charas"></param>
-    /// <returns></returns>
-    private List<BaseStates> RemoveDeathCharacters(List<BaseStates> Charas) 
+    private List<BaseStates> RemoveDeathCharacters(List<BaseStates> Charas)
     {
         return Charas.Where(chara => !chara.Death()).ToList();
+    }
+    /// <summary>
+    /// 死亡が記録されたキャラクターのリストを省く
+    /// </summary>
+    /// <param name="Charas"></param>
+    /// <returns></returns>
+    private List<BaseStates> RemoveRecordedDeathCharacters(List<BaseStates> Charas)
+    {
+        return Charas.Where(chara => !chara.RecordedDeath).ToList();
     }
 
     /// <summary>
     /// キャラクター行動リストに先手分のリストを入れる。
     /// </summary>
-    void AddFirstBattleGroupTurn(BattleGroup _group,BattleGroup _counterGroup)
+    void AddFirstBattleGroupTurn(BattleGroup _group, BattleGroup _counterGroup)
     {
         var group = RemoveDeathCharacters(_group.Ours);//死者を取り除く
 
@@ -165,15 +181,15 @@ public class BattleManager
 
         for (var i = 0; i < group.Count; i++)//グループの人数分
         {
-            if (i == group.Count - 1  && CounterCharas.Count>0 && RandomEx.Shared.NextInt(100) < 40)
+            if (i == group.Count - 1 && CounterCharas.Count > 0 && RandomEx.Shared.NextInt(100) < 40)
             {//もし最後の先手ターンで後手グループにキンダーガーデンかゴッドティアがいて、　40%の確率が当たったら
                 //反撃グループにいるそのどちらかの印象を持ったキャラクターのターンが入る。
-                Acts.Add(RandomEx.Shared.GetItem(CounterCharas.ToArray()),_counterGroup.which,"ﾊﾝﾀｰﾅｲﾄ▼");
+                Acts.Add(RandomEx.Shared.GetItem(CounterCharas.ToArray()), _counterGroup.which, "ﾊﾝﾀｰﾅｲﾄ▼");
             }
             else
             {
                 //グループの中から人数分アクションをいれる
-                Acts.Add(RandomEx.Shared.GetItem(group.ToArray<BaseStates>()),_group.which,$"先手{i}☆");
+                Acts.Add(RandomEx.Shared.GetItem(group.ToArray<BaseStates>()), _group.which, $"先手{i}☆");
             }
 
         }
@@ -219,11 +235,25 @@ public class BattleManager
     public TabState ACTPop()
     {
         ResetManagerTemp();//一時保存要素をリセット
+        Acts.RemoveDeathCharacters();//先約リストから死者を取り除く
 
-        //もしすでにキャラクターが居たら、そのリストを先ずは消化する
+        //パーティーの死亡判定
+        if (AllyGroup.PartyDeath())
+        {
+            Wipeout = true;
+            Faction = WhichGroup.alliy;
+            return TabState.NextWait;//押して処理
+        }else if (EnemyGroup.PartyDeath())
+        {
+            Wipeout =true;
+            Faction = WhichGroup.Enemyiy;
+            return TabState.NextWait;//押して処理
+        }
+
+        //もし先約リストにキャラクターが居たら、そのリストを先ずは消化する
         if (Acts.Count > 0)
         {
-            UniqueTopMessage=Acts.GetAtTopMessage(0);//リストからメッセージとキャラクターをゲット。
+            UniqueTopMessage = Acts.GetAtTopMessage(0);//リストからメッセージとキャラクターをゲット。
             Acter = Acts.GetAtCharacter(0);
             Faction = Acts.GetAtFaction(0);
             Debug.Log("俳優は先約リストから選ばれました");
@@ -237,7 +267,7 @@ public class BattleManager
 
         if (Acter.CanOprate)//操作するキャラクターなら
         {
-            if(Acter.FreezeUseSkill == null)//強制続行中のスキルがなければ
+            if (Acter.FreezeUseSkill == null)//強制続行中のスキルがなければ
             {
                 //スキル選択ボタンを返す
                 return TabState.Skill;
@@ -259,6 +289,11 @@ public class BattleManager
     /// <returns></returns>
     public TabState CharacterActBranching()
     {
+        if (Wipeout　|| RunOut) //全滅か逃走かで終了アクトへ
+        {
+            return DialogEndACT();
+        }
+
         //スキル実行処理
         var skill = Acter.NowUseSkill;
         int count;//メッセージテキスト用のカウント数字
@@ -267,10 +302,32 @@ public class BattleManager
             return TriggerACT(count);//発動カウント処理
         }
         else//発動カウントが-1以下　つまりカウントしてないまたは終わったなら
-        { 
+        {
+            skill.DoneTrigger();//トリガーのカウントを成功したときの戻らせ方させて
             return SkillACT();
         }
 
+    }
+    /// <summary>
+    /// メッセージと共に終わらせる
+    /// </summary>
+    public TabState DialogEndACT()
+    {
+        if (Wipeout)
+        {
+            if(Faction == WhichGroup.alliy)
+            {
+                MessageDropper.Instance.CreateMessage("死んだ");
+            }
+            else
+            {
+                MessageDropper.Instance.CreateMessage("勝ち抜いた");
+            }
+        }
+        if(RunOut) MessageDropper.Instance.CreateMessage("逃げた");
+
+        OnBattleEnd();
+        return TabState.walk;
     }
     /// <summary>
     /// 戦闘系のメッセージ作成
@@ -290,16 +347,12 @@ public class BattleManager
         var skill = Acter.NowUseSkill;
         if (skill.CanCancel == false)//キャンセル不可能の場合。
         {
-            Acter.FreezeUseSkill = skill;//このスキルがキャンセル不可能として俳優に凍結される。
+            Acter.FreezeSkill();//このスキルがキャンセル不可能として俳優に凍結される。
         }
         CreateBattleMessage($"{skill.SkillName}の発動カウント！残り{count}回。");//発動カウントのメッセージ
 
         //発動カウント時はスキルの複数回連続実行がありえないから、普通にターンが進む
-        if (Acts.Count > 0)//先約リストでの実行なら削除
-        Acts.RemoveAt(0);
-
-        //Turnを進める
-        BattleTurnCount++;
+        NextTurn();
 
         return ACTPop();
     }
@@ -319,12 +372,13 @@ public class BattleManager
         SelectTargetFromOpposingGroup();
 
         //実行処理
+        Acter.NowUseSkill.SetDeltaTurn(BattleTurnCount);//スキルのdeltaTurnをセット
         CreateBattleMessage(Acter.AttackChara(UnderActer));//攻撃の処理からメッセージが返る。
 
         //スキル実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
         if (Acter.NowUseSkill.IsAggressiveCommit)
         {
-            if(Faction == WhichGroup.alliy)
+            if (Faction == WhichGroup.alliy)
             {
                 AllyGroup.InstantVanguard = Acter;
             }
@@ -345,13 +399,9 @@ public class BattleManager
         }
         else //複数実行が終わり
         {
-           
-            if(Acts.Count>0)//先約リストでの実行なら削除
-            Acts.RemoveAt(0);
+            Acter.Defrost();//凍結されてもされてなくても空にしておく
 
-            Acter.FreezeUseSkill = null;//凍結されてもされてなくても空にしておく
-            //Turnを進める
-            BattleTurnCount++;
+            NextTurn();
         }
 
 
@@ -366,17 +416,18 @@ public class BattleManager
     /// </summary>
     private void SelectTargetFromOpposingGroup()
     {
-        var SelectGroup = new BattleGroup(AllyGroup.Ours,AllyGroup.OurImpression,AllyGroup.which);
+        var SelectGroup = new BattleGroup(AllyGroup.Ours, AllyGroup.OurImpression, AllyGroup.which);
         //味方なら敵グループから、敵なら味方グループから選別する ディープコピー。
         if (Faction == WhichGroup.alliy) SelectGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);
 
         if (!Acter.NowUseSkill.HasType(SkillType.DeathHeal))//スキルが死回復要素がなければ
         {
-            SelectGroup.SetCharactersList(RemoveDeathCharacters(SelectGroup.Ours));//死ぬ要素を省いたキャラクターリストに変換
+            SelectGroup.SetCharactersList(RemoveRecordedDeathCharacters(SelectGroup.Ours));//死が記録されたキャラを省いたキャラクターリストに変換
         }
 
         if (SelectGroup.Ours.Count < 2)//選ばれる対立関係のグループに一人しかいない場合
         {
+            Debug.Log(AllyGroup.Ours.Count + "←allyGroup EnemyGroup→" + EnemyGroup.Ours.Count + " SelectGroup→" + SelectGroup.Ours.Count + "陣営は" + Acter.CharacterName);
             UnderActer = SelectGroup.Ours[0];//普通にグループの一人だけを狙う
         }
         else//二人以上いたら前のめりかそうでないかでの分岐処理
@@ -408,7 +459,39 @@ public class BattleManager
             }
         }
     }
+    private void NextTurn()
+    {
+        if (Acts.Count > 0)//先約リストでの実行なら削除
+            Acts.RemoveAt(0);
 
+        //Turnを進める
+        BattleTurnCount++;
 
+        //ここ死亡記録
+        DeathRecord();
+    }
+    /// <summary>
+    /// 死亡記録　対象者として認識されなくなる
+    /// </summary>
+    private void DeathRecord()
+    {
+        //死亡記録
+        AllyGroup.CharactersRecordDeath();
+        EnemyGroup.CharactersRecordDeath();
+
+    }
+
+    /// <summary>
+    /// battleManagerを消去するときの処理
+    /// </summary>
+    private void OnBattleEnd()
+    {
+        //全てのキャラクターのスキルのTurn系プロパティをリセットする
+        EnemyGroup.ResetCharactersSkillsProperty();
+        AllyGroup.ResetCharactersSkillsProperty();
+
+        //敵キャラは復活歩数の準備
+        EnemyGroup.RecovelyStart(PlayersStates.Instance.NowProgress);
+    }
 
 }

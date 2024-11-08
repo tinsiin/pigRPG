@@ -30,6 +30,14 @@ public class NormalEnemy : BaseStates
     //このカウントは死んだ状態でバトルが終わると、入る　Death()ではまだバトル内で復活する恐れがあるから。
 
     private int _lastEncountProgress;//最後にエンカウントした時の歩数
+    /// <summary>
+    /// 復活歩数をカウント変数にセットする。　
+    /// </summary>
+    public void ReadyRecovelyStep(int nowProgress)
+    {
+        _lastEncountProgress = nowProgress;//今回の進行度を保存する。
+        _recovelyStepCount = RecovelySteps;
+    }
 
     /// <summary>
     /// "一回死んだ復活可能者"が復活するかどうか
@@ -49,6 +57,18 @@ public class NormalEnemy : BaseStates
         _lastEncountProgress = nowProgress;//もしカウントが終わってなかったら今回の進行度を保存する
 
         return false;
+    }
+    /// <summary>
+    /// 敵キャラクターはAttackCharaにてこの関数を通じてNowUseSkillを決める
+    /// </summary>
+    public virtual void SkillAI()
+    {
+
+    }
+    public override string AttackChara(BaseStates UnderAttacker)
+    {
+        SkillAI();
+        return base.AttackChara(UnderAttacker);
     }
 
 

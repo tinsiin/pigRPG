@@ -8,7 +8,6 @@ using UnityEngine.UI;
 public class Walking : MonoBehaviour
 {
     [SerializeField] private WatchUIUpdate wui;
-    [SerializeField] private Stages stages;
     [SerializeField] private TextMeshProUGUI tmp;
     [SerializeField] private Button walkbtn;
     [SerializeField] private Button _nextWaitBtn;
@@ -38,6 +37,7 @@ public class Walking : MonoBehaviour
 
     private AreaDate NowAreaData;
     private StageCut NowStageCut;
+    private Stages stages;
 
     //現在のステージとエリアのデータを保存する関数
     private StageData NowStageData;
@@ -46,6 +46,7 @@ public class Walking : MonoBehaviour
     {
         ps=PlayersStates.Instance;//変数にキャッシュして使用
         BaseStates.CsvLoad();
+        stages = GetComponent<Stages>();
         
         //初期UI更新　最適化のため最終開発の段階で初期UIの更新だけをするようにする。
         TestProgressUIUpdate();
