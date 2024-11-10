@@ -31,7 +31,7 @@ public enum PhysicalProperty
 /// <summary>
 /// 命中率、攻撃力、回避力、防御力への補正
 /// </summary>
-public class ModifierPart 
+public class ModifierPart
 {
     /// <summary>
     /// どういう補正かを保存する　攻撃時にunderに出てくる
@@ -43,7 +43,7 @@ public class ModifierPart
     /// </summary>
     public float Modifier;
 
-    public ModifierPart(string txt,float value)
+    public ModifierPart(string txt, float value)
     {
         whatModifier = txt;
         Modifier = value;
@@ -74,7 +74,7 @@ public enum SpiritualProperty
 [Serializable]
 public abstract class BaseStates
 {
-    [SerializeField] private  List<BasePassive> _passiveList;
+    [SerializeField] private List<BasePassive> _passiveList;
 
     [SerializeField] List<BaseSkill> _skillList;
     public float b_AGI;
@@ -112,7 +112,7 @@ public abstract class BaseStates
     /// スキルを連続実行した回数などをスキルのクラスに記録する関数
     /// </summary>
     /// <param name="useSkill"></param>
-    public void SkillUseConsecutiveCountUp(BaseSkill useSkill )
+    public void SkillUseConsecutiveCountUp(BaseSkill useSkill)
     {
         useSkill.SkillHitCount();//スキルのヒット回数の計算
 
@@ -123,7 +123,7 @@ public abstract class BaseStates
         }
         else//違ったら
         {
-            if(_tempUseSkill != null)//nullじゃなかったら
+            if (_tempUseSkill != null)//nullじゃなかったら
             {
                 _tempUseSkill.DoConsecutiveCount = 0;//リセット
                 _tempUseSkill.HitConsecutiveCount++;//連続ヒット回数をリセット　
@@ -138,10 +138,67 @@ public abstract class BaseStates
     public int P;
 
     /// <summary>
-    ///     リカバリターン
-    ///     一回攻撃した後に、次のランダム敵選択リストに入り込むまでのターンカウンター。前のめり状態だと2倍の速度でカウントされる。
+    ///     リカバリターン/再行動クールタイムの設定値。
     /// </summary>
-    public int recoveryTurn;
+    public int maxRecoveryTurn;
+
+    /// <summary>
+    ///     recovelyTurnの基礎バッキングフィールド
+    /// </summary>
+    private int recoveryTurn;
+    
+    /// <summary>
+    /// skillDidWaitCountなどで一時的に通常recovelyTurnに追加される一時的に再行動クールタイム/追加硬直値
+    /// </summary>
+    private int tmpTurnsToAdd;
+    /// <summary>
+    /// 一時保存用のリカバリターン判別用の前ターン変数
+    /// </summary>
+    private int tmp_EncountTurn;
+    /// <summary>
+    /// recovelyCountという行動クールタイムに一時的に値を加える
+    /// </summary>
+    public void RecovelyCountTmpAdd(int addTurn)
+    {
+        tmpTurnsToAdd += addTurn;
+    }
+    /// <summary>
+    /// このキャラが戦場にて再行動を取れるかどうかと時間を唱える関数
+    /// </summary>
+    public bool RecovelyBattleField(int nowTurn)
+    {
+        var difference = Math.Abs(nowTurn - tmp_EncountTurn);//前ターンと今回のターンの差異から経過ターン
+        tmp_EncountTurn = nowTurn;//一時保存
+        if((recoveryTurn +=difference) >= maxRecoveryTurn+tmpTurnsToAdd)//累計ターン経過が最大値を超えたら
+        {
+            //ここでrecovelyTurnを初期化すると　リストで一括処理した時にカウントアップだけじゃなくて、
+            //選ばれたことになっちゃうから、0に初期化する部分はBattleManagerで選ばれた時に処理する。
+            return true;
+        }
+        return false;
+    }
+    /// <summary>
+    /// 戦場へ参戦回復出来るまでのカウントスタート
+    /// </summary>
+    public void RecovelyWaitStart()
+    {
+        recoveryTurn = 0;
+        RemoveRecovelyTmpAddTurn();
+    }
+    /// <summary>
+    /// キャラに設定された追加硬直値をリセットする
+    /// </summary>
+    public void RemoveRecovelyTmpAddTurn()
+    {
+        tmpTurnsToAdd = 0;
+    }
+    /// <summary>
+    /// 戦場へ参戦回復が出来るようにする
+    /// </summary>
+    public void RecovelyOK()
+    {
+        recoveryTurn = maxRecoveryTurn;
+    }
 
     /// <summary>
     /// このキャラクターを操作できるかどうか。　味方なら基本的に操作するね
@@ -206,10 +263,6 @@ public abstract class BaseStates
     /// </summary>
     public SpiritualProperty MyImpression { get; private set; }
 
-    /// <summary>
-    ///     リカバリターンの設定値。
-    /// </summary>
-    public int maxRecoveryTurn { get; private set; }
 
     /// <summary>
     /// 次に使用する命中率へのパーセント補正用保持リスト
@@ -219,9 +272,9 @@ public abstract class BaseStates
     /// <summary>
     /// 命中率補正をセットする。
     /// </summary>
-    public void SetHITPercentageModifier(float value,string memo)
+    public void SetHITPercentageModifier(float value, string memo)
     {
-        if(_useHITPercentageModifiers == null)_useHITPercentageModifiers=new List<ModifierPart>();//nullチェック、処理
+        if (_useHITPercentageModifiers == null) _useHITPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
         _useHITPercentageModifiers.Add(new ModifierPart(memo, value));
     }
 
@@ -231,7 +284,7 @@ public abstract class BaseStates
     /// <param name="per"></param>
     public float UseHITPercentageModifier
     {
-        get =>_useHITPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
+        get => _useHITPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
     }
     /// <summary>
     /// 特別な命中率補正の保持リストを返す。　主にフレーバー要素用。
@@ -246,7 +299,7 @@ public abstract class BaseStates
     /// </summary>
     public void RemoveUseThings()
     {
-        _useHITPercentageModifiers =new List<ModifierPart>();
+        _useHITPercentageModifiers = new List<ModifierPart>();
     }
 
 
@@ -286,10 +339,10 @@ public abstract class BaseStates
     ///     防御力計算
     /// </summary>
     /// <returns></returns>
-    public　virtual float DEF(float minusPer)
+    public virtual float DEF(float minusPer)
     {
         var def = b_DEF; //基礎防御力が基本。
-        
+
         var minusAmount = def * minusPer;//防御低減率
 
         return def - minusAmount;
@@ -319,7 +372,7 @@ public abstract class BaseStates
     ///     オーバライド可能なダメージ関数
     /// </summary>
     /// <param name="atkPoint"></param>
-    public virtual string Damage(float atkPoint,float DEFAtkper)　
+    public virtual string Damage(float atkPoint, float DEFAtkper)
     {
         HP -= atkPoint - DEF(DEFAtkper); //HPから指定された攻撃力が引かれる。
         Debug.Log("攻撃が実行された");
@@ -344,7 +397,7 @@ public abstract class BaseStates
     {
         var hit = skill.SkillHitCalc();
 
-        if(RandomEx.Shared.NextFloat(0,hit+AGI()) < hit)//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
+        if (RandomEx.Shared.NextFloat(0, hit + AGI()) < hit)//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
         {
             return true;
         }
@@ -380,7 +433,7 @@ public abstract class BaseStates
             }
         }
 
-         if(skill.HasType(SkillType.Heal))txt += Heal(skillPower);
+        if (skill.HasType(SkillType.Heal)) txt += Heal(skillPower);
 
         Debug.Log("ReactionSkill");
         return txt;
@@ -418,31 +471,11 @@ public abstract class BaseStates
         return false;
     }
     /// <summary>
-    /// RecordedDeath用のバッキングフィールド
-    /// </summary>
-    private bool _recordedDeath;
-    /// <summary>
-    /// キャラクターによって認識される死　これがtrueなら誰も彼の事を攻撃したりはしない
-    /// </summary>
-    public bool RecordedDeath => _recordedDeath;
-    /// <summary>
-    /// 死を記録
-    /// </summary>
-    /// <returns></returns>
-    public virtual void RecordDeath()
-    {
-        if (Death())
-        {
-            _recordedDeath = true;
-        }
-    }
-
-    /// <summary>
     /// 持ってるスキルリストを初期化する
     /// </summary>
     public void SkillsInitialize()
     {
-        foreach(var skill in SkillList)
+        foreach (var skill in SkillList)
         {
             skill.OnInitialize(this);
         }
@@ -530,7 +563,7 @@ public abstract class BaseStates
 
         var rows = textHandle.text //そのままテキストを渡す
             .Split("\n")//改行ごとに分割
-            //.Select(line => line.Trim())//行の先頭と末尾の空白や改行を削除する
+                        //.Select(line => line.Trim())//行の先頭と末尾の空白や改行を削除する
             .Select(line => line.Split(',').Select(ParseCell).ToArray()) //それをさらにカンマで分割してint型に変換して配列に格納する。
             .ToArray(); //配列になった行をさらに配列に格納する。
         /*
@@ -606,7 +639,7 @@ public abstract class BaseStates
                     else
                     {
                         Debug.LogWarning($"キー {key} は既に存在しています。追加をスキップします。");
-                    }   
+                    }
 
                 }
 
@@ -615,9 +648,9 @@ public abstract class BaseStates
         }
 
 
-            /*Debug.Log("読み込まれたキャラクター精神スキル補正値\n" +
-                  string.Join(", ",
-                      SkillSpiritualModifier.Select(kvp => $"[{kvp.Key}: {kvp.Value.GetValue()} rndMax({kvp.Value.rndMax})]" + "\n"))); //デバックで全内容羅列。*/
+        /*Debug.Log("読み込まれたキャラクター精神スキル補正値\n" +
+              string.Join(", ",
+                  SkillSpiritualModifier.Select(kvp => $"[{kvp.Key}: {kvp.Value.GetValue()} rndMax({kvp.Value.rndMax})]" + "\n"))); //デバックで全内容羅列。*/
     }
 }
 
@@ -636,7 +669,7 @@ public class FixedOrRandomValue
     /// <param name="isRnd">乱数として保持するかどうか</param>
     /// <param name="minOrFixed">最小値または単一の値として</param>
     /// <param name="max">省略可能、乱数なら最大値</param>
-    public FixedOrRandomValue(int minOrFixed )
+    public FixedOrRandomValue(int minOrFixed)
     {
         rndMinOrFixed = minOrFixed;//まず最小値またはデフォルトありきでクラスを作成
         rndMax = -1;//予め無を表す-1で初期化
@@ -650,7 +683,7 @@ public class FixedOrRandomValue
     {
         if (rndMax == -1) return rndMinOrFixed;//乱数じゃないなら単一の値が返る
 
-        return RandomEx.Shared.NextInt(rndMinOrFixed,rndMax+1);//ランダムなら
+        return RandomEx.Shared.NextInt(rndMinOrFixed, rndMax + 1);//ランダムなら
 
     }
 }

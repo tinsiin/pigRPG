@@ -538,8 +538,7 @@ MonoBehaviour:
       _name: 
       CanCancel: 1
       IsAggressiveCommit: 1
-      CanHandleConsecutiveATK: 0
-      IsPurposefulConsecutiveRandom: 0
+      CanSelectAggressiveCommit: 0
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
@@ -549,12 +548,13 @@ MonoBehaviour:
       SkillRivahal: 0
       DEFATK: 0
       WhatSkill: 0
+      ConsecutiveType: 0
+      ZoneTrait: 0
     FreezeUseSkill:
       _name: 
       CanCancel: 1
       IsAggressiveCommit: 1
-      CanHandleConsecutiveATK: 0
-      IsPurposefulConsecutiveRandom: 0
+      CanSelectAggressiveCommit: 0
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
@@ -564,9 +564,11 @@ MonoBehaviour:
       SkillRivahal: 0
       DEFATK: 0
       WhatSkill: 0
+      ConsecutiveType: 0
+      ZoneTrait: 0
     MAXP: 0
     P: 0
-    recoveryTurn: 0
+    maxRecoveryTurn: 0
     CanOprate: 0
     _hp: 3
     _maxHp: 3
@@ -582,8 +584,7 @@ MonoBehaviour:
       _name: 
       CanCancel: 1
       IsAggressiveCommit: 1
-      CanHandleConsecutiveATK: 0
-      IsPurposefulConsecutiveRandom: 0
+      CanSelectAggressiveCommit: 0
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
@@ -593,12 +594,13 @@ MonoBehaviour:
       SkillRivahal: 0
       DEFATK: 0
       WhatSkill: 0
+      ConsecutiveType: 0
+      ZoneTrait: 0
     FreezeUseSkill:
       _name: 
       CanCancel: 1
       IsAggressiveCommit: 1
-      CanHandleConsecutiveATK: 0
-      IsPurposefulConsecutiveRandom: 0
+      CanSelectAggressiveCommit: 0
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
@@ -608,9 +610,11 @@ MonoBehaviour:
       SkillRivahal: 0
       DEFATK: 0
       WhatSkill: 0
+      ConsecutiveType: 0
+      ZoneTrait: 0
     MAXP: 0
     P: 0
-    recoveryTurn: 0
+    maxRecoveryTurn: 0
     CanOprate: 0
     _hp: 0
     _maxHp: 0
@@ -626,8 +630,7 @@ MonoBehaviour:
       _name: 
       CanCancel: 1
       IsAggressiveCommit: 1
-      CanHandleConsecutiveATK: 0
-      IsPurposefulConsecutiveRandom: 0
+      CanSelectAggressiveCommit: 0
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
@@ -637,12 +640,13 @@ MonoBehaviour:
       SkillRivahal: 0
       DEFATK: 0
       WhatSkill: 0
+      ConsecutiveType: 0
+      ZoneTrait: 0
     FreezeUseSkill:
       _name: 
       CanCancel: 1
       IsAggressiveCommit: 1
-      CanHandleConsecutiveATK: 0
-      IsPurposefulConsecutiveRandom: 0
+      CanSelectAggressiveCommit: 0
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
@@ -652,9 +656,11 @@ MonoBehaviour:
       SkillRivahal: 0
       DEFATK: 0
       WhatSkill: 0
+      ConsecutiveType: 0
+      ZoneTrait: 0
     MAXP: 0
     P: 0
-    recoveryTurn: 0
+    maxRecoveryTurn: 0
     CanOprate: 0
     _hp: 0
     _maxHp: 0
@@ -690,65 +696,12 @@ MonoBehaviour:
       _mapLineE: {x: 0, y: 0}
       _mapsrc: 
       _enemyList:
-      - _skillList:
-        - _name: 
-          CanCancel: 0
-          IsAggressiveCommit: 0
-          CanHandleConsecutiveATK: 0
-          IsPurposefulConsecutiveRandom: 0
-          ConsecutivePercentage: 0
-          SKillDidWaitCount: 0
-          IsTLOA: 0
-          SkillPower: 0
-          SkillHitPer: 0
-          SkillLevel: 0
-          SkillRivahal: 0
-          DEFATK: 0
-          WhatSkill: 1
-        b_AGI: 0
-        b_ATK: 0
-        b_DEF: 0
-        b_HIT: 0
-        CharacterName: "\uFF4B\uFF4C\uFF1B\uFF4B"
-        ImpressionStringName: 
-        NowUseSkill:
-          _name: 
-          CanCancel: 0
-          IsAggressiveCommit: 0
-          CanHandleConsecutiveATK: 0
-          IsPurposefulConsecutiveRandom: 0
-          ConsecutivePercentage: 0
-          SKillDidWaitCount: 0
-          IsTLOA: 0
-          SkillPower: 0
-          SkillHitPer: 0
-          SkillLevel: 0
-          SkillRivahal: 0
-          DEFATK: 0
-          WhatSkill: 0
-        FreezeUseSkill:
-          _name: 
-          CanCancel: 0
-          IsAggressiveCommit: 0
-          CanHandleConsecutiveATK: 0
-          IsPurposefulConsecutiveRandom: 0
-          ConsecutivePercentage: 0
-          SKillDidWaitCount: 0
-          IsTLOA: 0
-          SkillPower: 0
-          SkillHitPer: 0
-          SkillLevel: 0
-          SkillRivahal: 0
-          DEFATK: 0
-          WhatSkill: 0
-        MAXP: 0
-        P: 0
-        recoveryTurn: 0
-        CanOprate: 0
-        _hp: 1
-        _maxHp: 1
-        RecovelySteps: 0
-        broken: 0
+      - rid: -2
+      - rid: 720943376607215620
+      - rid: 720943376607215619
+      _enyList:
+      - rid: -2
+      - rid: 720943376607215618
       _sideObject_Lefts:
       - {fileID: 647846275447870780, guid: 9a2f32cb2b47ac145a7cd93ddf550ff6, type: 3}
       - {fileID: 4505394165267339441, guid: 453d3bd738f719744994a2f1cdc94e68, type: 3}
@@ -781,6 +734,161 @@ MonoBehaviour:
       PBonus: 0
       RecovelyTurnMinusBonus: 0
   memo: 
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 720943376607215618
+      type: {class: NormalEnemy, ns: , asm: Assembly-CSharp}
+      data:
+        _skillList: []
+        b_AGI: 0
+        b_ATK: 0
+        b_DEF: 0
+        b_HIT: 0
+        CharacterName: 
+        ImpressionStringName: 
+        NowUseSkill:
+          _name: 
+          CanCancel: 1
+          IsAggressiveCommit: 1
+          CanSelectAggressiveCommit: 0
+          ConsecutivePercentage: 0
+          SKillDidWaitCount: 0
+          IsTLOA: 0
+          SkillPower: 0
+          SkillHitPer: 0
+          SkillLevel: 0
+          SkillRivahal: 0
+          DEFATK: 0
+          WhatSkill: 0
+          ConsecutiveType: 0
+          ZoneTrait: 0
+        FreezeUseSkill:
+          _name: 
+          CanCancel: 1
+          IsAggressiveCommit: 1
+          CanSelectAggressiveCommit: 0
+          ConsecutivePercentage: 0
+          SKillDidWaitCount: 0
+          IsTLOA: 0
+          SkillPower: 0
+          SkillHitPer: 0
+          SkillLevel: 0
+          SkillRivahal: 0
+          DEFATK: 0
+          WhatSkill: 0
+          ConsecutiveType: 0
+          ZoneTrait: 0
+        MAXP: 0
+        P: 0
+        maxRecoveryTurn: 0
+        CanOprate: 0
+        _hp: 0
+        _maxHp: 0
+        RecovelySteps: 0
+        broken: 0
+    - rid: 720943376607215619
+      type: {class: butterfly, ns: , asm: Assembly-CSharp}
+      data:
+        _skillList: []
+        b_AGI: 0
+        b_ATK: 0
+        b_DEF: 0
+        b_HIT: 0
+        CharacterName: 
+        ImpressionStringName: 
+        NowUseSkill:
+          _name: 
+          CanCancel: 1
+          IsAggressiveCommit: 1
+          CanSelectAggressiveCommit: 0
+          ConsecutivePercentage: 0
+          SKillDidWaitCount: 0
+          IsTLOA: 0
+          SkillPower: 0
+          SkillHitPer: 0
+          SkillLevel: 0
+          SkillRivahal: 0
+          DEFATK: 0
+          WhatSkill: 0
+          ConsecutiveType: 0
+          ZoneTrait: 0
+        FreezeUseSkill:
+          _name: 
+          CanCancel: 1
+          IsAggressiveCommit: 1
+          CanSelectAggressiveCommit: 0
+          ConsecutivePercentage: 0
+          SKillDidWaitCount: 0
+          IsTLOA: 0
+          SkillPower: 0
+          SkillHitPer: 0
+          SkillLevel: 0
+          SkillRivahal: 0
+          DEFATK: 0
+          WhatSkill: 0
+          ConsecutiveType: 0
+          ZoneTrait: 0
+        MAXP: 0
+        P: 0
+        maxRecoveryTurn: 0
+        CanOprate: 0
+        _hp: 0
+        _maxHp: 0
+        RecovelySteps: 0
+        broken: 0
+    - rid: 720943376607215620
+      type: {class: butterfly, ns: , asm: Assembly-CSharp}
+      data:
+        _skillList: []
+        b_AGI: 0
+        b_ATK: 0
+        b_DEF: 0
+        b_HIT: 0
+        CharacterName: 
+        ImpressionStringName: 
+        NowUseSkill:
+          _name: 
+          CanCancel: 1
+          IsAggressiveCommit: 1
+          CanSelectAggressiveCommit: 0
+          ConsecutivePercentage: 0
+          SKillDidWaitCount: 0
+          IsTLOA: 0
+          SkillPower: 0
+          SkillHitPer: 0
+          SkillLevel: 0
+          SkillRivahal: 0
+          DEFATK: 0
+          WhatSkill: 0
+          ConsecutiveType: 0
+          ZoneTrait: 0
+        FreezeUseSkill:
+          _name: 
+          CanCancel: 1
+          IsAggressiveCommit: 1
+          CanSelectAggressiveCommit: 0
+          ConsecutivePercentage: 0
+          SKillDidWaitCount: 0
+          IsTLOA: 0
+          SkillPower: 0
+          SkillHitPer: 0
+          SkillLevel: 0
+          SkillRivahal: 0
+          DEFATK: 0
+          WhatSkill: 0
+          ConsecutiveType: 0
+          ZoneTrait: 0
+        MAXP: 0
+        P: 0
+        maxRecoveryTurn: 0
+        CanOprate: 0
+        _hp: 0
+        _maxHp: 0
+        RecovelySteps: 0
+        broken: 0
 --- !u!1 &90538794
 GameObject:
   m_ObjectHideFlags: 0

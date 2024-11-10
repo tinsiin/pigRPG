@@ -38,16 +38,37 @@ public class BattleGroup
         Ours = ours;
         OurImpression = ourImpression;
         which = _which;
-        InitializeRandomInstantVanGuardSelect();//前のめりをランダムに生成
     }
 
     /// <summary>
-    /// 前のめりをランダムにグループ内で選別しInstantVanguardの初期化する
+    /// 前のめり消す処理　前のめりした人間が死亡したときなど
     /// </summary>
-    private void InitializeRandomInstantVanGuardSelect()
+    private void RemoveVanguard()
     {
-        InstantVanguard = RandomEx.Shared.GetItem(Ours.ToArray());
+        InstantVanguard = null;
     }
+    /// <summary>
+    /// 前のめり者が死亡した際の処理
+    /// </summary>
+    public void VanGuardDeath()
+    {
+        if (InstantVanguard.Death())
+        {
+            RemoveVanguard();
+        }
+    }
+    /// <summary>
+    /// グループ全キャラの追加硬直値をリセットする
+    /// </summary>
+    public void ResetCharactersRecovelyStepTmpToAdd()
+    {
+        foreach (var chara in Ours)
+        {
+            chara.RemoveRecovelyTmpAddTurn();
+        }
+
+    }
+
     /// <summary>
     /// グループ全員の全スキルをリセットする
     /// </summary>
@@ -59,14 +80,15 @@ public class BattleGroup
         }
     }
     /// <summary>
-    /// パーティー皆の死んでる奴がいたらそれ記録する
+    /// グループ全員の行動を可能な状態にしておく
     /// </summary>
-    public void CharactersRecordDeath()
+    public void PartyRecovelyTurnOK()
     {
         foreach (var chara in Ours)
         {
-            chara.RecordDeath();
+            chara.RecovelyOK();
         }
+
     }
     /// <summary>
     /// パーティー全員が死んでるかどうか

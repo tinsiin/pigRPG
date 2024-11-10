@@ -5,6 +5,9 @@ using Unity.VisualScripting;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
+/// <summary>
+/// スキルの実行性質
+/// </summary>
 [Flags]
 public enum SkillType
 {
@@ -15,6 +18,91 @@ public enum SkillType
     DeathHeal = 1 << 4,
         //攻撃、回復、状態異常付与、死回復
 }
+/// <summary>
+/// スキル範囲の性質
+/// </summary>
+[Flags]
+public enum SkillZoneTrait
+{
+    /// <summary>
+    /// 選択可能な単体対象
+    /// </summary>
+    CanPerfectSelectSingleTarget = 1 << 0,
+    /// <summary>
+    /// 前のめりか後衛(ランダム)で選択可能な単体対象
+    /// </summary>
+    CanSelectSingleTarget = 1 << 1,
+    /// <summary>
+    /// ランダムの単体対象
+    /// </summary>
+    RandomSingleTarget = 1 << 2,
+
+    /// <summary>
+    /// 前のめりか後衛で選択可能な範囲対象
+    /// </summary>
+    CanSelectMultiTarget = 1 << 3,
+    /// <summary>
+    /// ランダムで選ばれる前のめりか後衛の範囲対象
+    /// </summary>
+    RandomSelectMultiTarget = 1 << 4,
+    /// <summary>
+    /// 全範囲攻撃
+    /// </summary>
+    AllTarget = 1 << 5,
+
+    /// <summary>
+    /// 範囲ランダム　全シチュエーション
+    /// </summary>
+    RandomRangeRandomTargetALLSituation = 1 << 6,
+    /// <summary>
+    /// 範囲ランダム   前のめり,後衛単位or単体ランダム
+    /// </summary>
+    RandomRangeRandomTargetMultiOrSingle = 1 << 7,
+    /// <summary>
+    /// 範囲ランダム　全体or単体ランダム
+    /// </summary>
+    RandomRangeRandomTargetALLorSingle = 1 << 8,
+    /// <summary>
+    /// 範囲ランダム　全体or前のめり,後衛単位
+    /// </summary>
+    RandomRangeRandomTargetALLorMulti = 1 << 9,
+
+    /// <summary>
+    /// RandomRangeを省いた要素のうちが選択可能かどうか
+    /// </summary>
+    CanSelectRange = 1 << 10,
+
+}
+/// <summary>
+/// スキルの連続性質
+/// </summary>
+[Flags]
+public enum SkillConsecutiveType
+{
+    /// <summary>
+    /// 最初に選ばれた敵を攻撃し続ける
+    /// </summary>
+    AttackTargetContinuously = 1 >> 0,
+
+    /// <summary>
+    /// 毎コマンドZoneTraitに従って対象者の選択可能
+    /// </summary>
+    CanOprate = 1 >> 1 ,
+
+    /// <summary>
+    /// 毎コマンドZoneTraitに従ったランダムな対象者の選別をする。
+    /// </summary>
+    RandomOprate = 1 >> 2,
+    /// <summary>
+    /// ターンをまたいだ連続的攻撃　連続攻撃回数分だけ単体攻撃が無理やり進む感じ
+    /// </summary>
+    FreezeConsecutive = 1 >> 3 ,
+    /// <summary>
+    /// ランダムな百分率でスキル実行が連続されるかどうか
+    /// </summary>
+    RandomPercentConsecutice = 1 >> 4 ,
+
+}
 [Serializable]
 public class BaseSkill
 {
@@ -23,12 +111,27 @@ public class BaseSkill
     /// </summary>
     public SpiritualProperty SkillSpiritual { get; }
 
+
     /// <summary>
     /// スキル性質を持ってるかどうか
     /// </summary>
     public bool HasType(SkillType skill)
     {
         return (WhatSkill & skill) == skill;
+    }
+    /// <summary>
+    /// そのスキル連続性質を持ってるかどうか
+    /// </summary>
+    public bool HasConsecutiveType(SkillConsecutiveType skill)
+    {
+        return (ConsecutiveType & skill) == skill;
+    }
+    /// <summary>
+    /// スキル範囲性質を持ってるかどうか
+    /// </summary>
+    public bool HasZoneTrait(SkillZoneTrait skill)
+    {
+        return (ZoneTrait & skill) == skill;
     }
 
 
@@ -65,7 +168,7 @@ public class BaseSkill
     /// </summary>
     public void SetDeltaTurn(int nowTurn)
     {
-        if(_tmpSkillUseTurn > 0)//前回のターンが記録されていたら
+        if(_tmpSkillUseTurn >= 0)//前回のターンが記録されていたら
         {
             DeltaTurn = Math.Abs(_tmpSkillUseTurn - nowTurn);//前回との差をdeltaTurn保持変数に記録する
         }
@@ -85,24 +188,22 @@ public class BaseSkill
     /// このスキルを利用すると前のめり状態になるかどうか
     /// </summary>
     public bool IsAggressiveCommit = true;
+    /// <summary>
+    /// スキルが前のめりになるからならないかを選べるかどうか
+    /// </summary>
+    public bool CanSelectAggressiveCommit = false;
 
-    /// <summary>
-    /// 連続攻撃時に毎回対象者を選択できるかどうか
-    /// </summary>
-    public bool CanHandleConsecutiveATK=false;
-    /// <summary>
-    /// 選んだ攻撃傾向の範囲内で連続攻撃する際に対象者が変わるかどうか
-    /// falseなら複数回攻撃の際に同じ人間にのみHITさせようとする。
-    /// </summary>
-    public bool IsPurposefulConsecutiveRandom = false;
+  
 
     /// <summary>
     /// ランダムにスキル実行が継続されるかどうかの割合　
     /// </summary>
     public float ConsecutivePercentage = 0;
 
+    /// <summary>
+    /// 実行したキャラに付与される追加硬直値
+    /// </summary>
     public int SKillDidWaitCount;//スキルを行使した後の硬直時間。 Doer、行使者のRecovelyTurnに一時的に加算される？
-    //複数実行するとどう扱われる？
 
 
     public string SkillName
@@ -211,6 +312,17 @@ public class BaseSkill
         return true;//まだ達成してないから次の攻撃がある。
     }
     /// <summary>
+    /// 現在が連続攻撃中(二回目以降)かどうか
+    /// </summary>
+    public bool NowConsecutiveATKFromTheSecondTimeOnward()
+    {
+        if (_atkCountUP > 0)
+        {
+            return true;
+        }
+        return false;
+    }
+    /// <summary>
     /// 連続攻撃の値を増やす
     /// </summary>
     /// <returns></returns>
@@ -298,4 +410,8 @@ public class BaseSkill
     public float DEFATK;
 
     public SkillType WhatSkill;
+
+    public SkillConsecutiveType ConsecutiveType;
+    public SkillZoneTrait ZoneTrait;
+
 }
