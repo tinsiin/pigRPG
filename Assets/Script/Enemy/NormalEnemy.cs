@@ -60,15 +60,13 @@ public class NormalEnemy : BaseStates
     }
     /// <summary>
     /// 敵キャラクターはAttackCharaにてこの関数を通じてNowUseSkillを決める
+    /// スキル実行の際に選択可能なオプションがあればここで決める
     /// </summary>
     public virtual void SkillAI()
     {
+        //まず使うスキル使えるスキルを選ぶ
 
-    }
-    public override string AttackChara(BaseStates UnderAttacker)
-    {
-        SkillAI();
-        return base.AttackChara(UnderAttacker);
+        //そのスキル上のオプションを選ぶ
     }
 
 

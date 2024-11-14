@@ -7,6 +7,11 @@ public enum TabState
 {
     walk, TalkWindow, NextWait, Skill
 }
+public enum SkillUICharaState
+{
+    geino, sites, normalia
+}
+
 
 public class TabContents : MonoBehaviour //tabContentsChangerのクラスに登録するMonoBehavior
 {
@@ -26,7 +31,16 @@ public class TabContents : MonoBehaviour //tabContentsChangerのクラスに登�
     [SerializeField]
     GameObject NextObject;
     [SerializeField]
-    GameObject SkillObject;
+    TabCharaStateContent SkillObject;
+
+    /// <summary>
+    /// キャラ状態によってuiが変わる
+    /// </summary>
+    public void CharaStateSwitch(SkillUICharaState state)
+    {
+        SkillObject.SwitchContent(state);//キャラによるui変更は今の所スキル画面のみ
+    }
+
 
     public void SwitchContent(TabState state)
     {

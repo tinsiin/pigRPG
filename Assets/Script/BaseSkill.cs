@@ -29,7 +29,7 @@ public enum SkillZoneTrait
     /// </summary>
     CanPerfectSelectSingleTarget = 1 << 0,
     /// <summary>
-    /// 前のめりか後衛(ランダム)で選択可能な単体対象
+    /// 前のめりか後衛(内ランダム)で選択可能な単体対象
     /// </summary>
     CanSelectSingleTarget = 1 << 1,
     /// <summary>
@@ -46,35 +46,54 @@ public enum SkillZoneTrait
     /// </summary>
     RandomSelectMultiTarget = 1 << 4,
     /// <summary>
+    /// ランダムな範囲、つまり一人か二人か三人がランダム
+    /// </summary>
+    RandomMultiTarget = 1 << 5,
+    /// <summary>
     /// 全範囲攻撃
     /// </summary>
-    AllTarget = 1 << 5,
+    AllTarget = 1 << 6,
 
     /// <summary>
     /// 範囲ランダム　全シチュエーション
     /// </summary>
-    RandomRangeRandomTargetALLSituation = 1 << 6,
+    RandomRangeRandomTargetALLSituation = 1 << 7,
     /// <summary>
     /// 範囲ランダム   前のめり,後衛単位or単体ランダム
     /// </summary>
-    RandomRangeRandomTargetMultiOrSingle = 1 << 7,
+    RandomRangeRandomTargetMultiOrSingle = 1 << 8,
     /// <summary>
     /// 範囲ランダム　全体or単体ランダム
     /// </summary>
-    RandomRangeRandomTargetALLorSingle = 1 << 8,
+    RandomRangeRandomTargetALLorSingle = 1 << 9,
     /// <summary>
     /// 範囲ランダム　全体or前のめり,後衛単位
     /// </summary>
-    RandomRangeRandomTargetALLorMulti = 1 << 9,
+    RandomRangeRandomTargetALLorMulti = 1 << 10,
 
     /// <summary>
     /// RandomRangeを省いた要素のうちが選択可能かどうか
     /// </summary>
-    CanSelectRange = 1 << 10,
+    CanSelectRange = 1 << 11,
+    /// <summary>
+    /// 死を選べるまたは対象選別の範囲に入るかどうか
+    /// </summary>
+    CanSelectDeath = 1 << 12,
+    /// <summary>
+    /// 対立関係のグループ相手だけではなく、自陣をも選べるかどうか
+    /// </summary>
+    CanSelectAlly = 1 << 13,
+    /// <summary>
+    /// 基本的には前のめりしか選べない。 前のめりがいない場合
+    ///ランダムな事故が起きる感じで、
+    ///その事故は意志により選択は不可能
+    ///canSelectAllyは無効
+    /// </summary>
+    ControlByThisSituation = 1 << 14,
 
 }
 /// <summary>
-/// スキルの連続性質
+/// スキルの実行順序的性質
 /// </summary>
 [Flags]
 public enum SkillConsecutiveType
@@ -100,8 +119,59 @@ public enum SkillConsecutiveType
     /// <summary>
     /// ランダムな百分率でスキル実行が連続されるかどうか
     /// </summary>
-    RandomPercentConsecutice = 1 >> 4 ,
+    RandomPercentConsecutive = 1 >> 4 ,
+    /// <summary>
+    /// _atkCountの値に応じて連続攻撃が行われるかどうか
+    /// </summary>
+    FixedConsecutive =1 >> 5 ,
+    /// <summary>
+    /// スキル保存性質　
+    /// **意図的に実行とは別に攻撃保存を選べて**、
+    ///その攻撃保存を**選んだ分だけ連続攻撃回数として発動**
+    ///Randomな場合はパーセント補正が変わる？
+    /// </summary>
+    Stockpile = 1 >> 6 ,
 
+}
+/// <summary>
+/// 対象を選別する意思状態の列挙体 各手順で選ばれた末の結果なので、単一の結果のみだからビット演算とかでない
+/// </summary>
+public enum DirectedWill
+{
+    /// <summary>
+    /// 前のめり
+    /// </summary>
+    InstantVanguard,
+    /// <summary>
+    /// 後衛または前のめりいない集団
+    /// </summary>
+    BacklineOrAny,
+    /// <summary>
+    /// 単一ユニット
+    /// </summary>
+    One,
+    /// <summary>
+    /// 全て
+    /// </summary>
+    All,
+}
+/// <summary>
+/// "範囲"攻撃の割合的な意志を表す列挙体 予め設定された3つの割合をどう扱うかの指定
+/// </summary>
+public enum AttackDistributionType
+{
+    /// <summary>
+    /// 完全ランダムでいる分だけ割り当てる
+    /// </summary>
+    Random,
+    /// <summary>
+    /// 一人一人指定する　味方なら選んだのが、敵ならSkillAIを通じて指定
+    /// </summary>
+    OneToOne,
+    /// <summary>
+    /// 2までの値だけを利用して、前衛と後衛への割合。　前衛が以内なら後衛単位　おそらく2が使われる
+    /// </summary>
+    vanguardOrBackers
 }
 [Serializable]
 public class BaseSkill
@@ -114,10 +184,16 @@ public class BaseSkill
 
     /// <summary>
     /// スキル性質を持ってるかどうか
+    /// 複数指定した場合は全て当てはまってるかどうかで判断
     /// </summary>
-    public bool HasType(SkillType skill)
+    public bool HasType(params SkillType[] skills)
     {
-        return (WhatSkill & skill) == skill;
+        SkillType combinedSkills = 0;
+        foreach (SkillType skill in skills)
+        {
+            combinedSkills |= skill;
+        }
+        return (WhatSkill & combinedSkills) == combinedSkills;
     }
     /// <summary>
     /// そのスキル連続性質を持ってるかどうか
@@ -128,10 +204,16 @@ public class BaseSkill
     }
     /// <summary>
     /// スキル範囲性質を持ってるかどうか
+    /// 複数指定した場合は全て当てはまってるかどうかで判断
     /// </summary>
-    public bool HasZoneTrait(SkillZoneTrait skill)
+    public bool HasZoneTrait(params SkillZoneTrait[] skills)
     {
-        return (ZoneTrait & skill) == skill;
+        SkillZoneTrait combinedSkills = 0;
+        foreach (SkillZoneTrait skill in skills)
+        {
+            combinedSkills |= skill;
+        }
+        return (ZoneTrait & combinedSkills) == combinedSkills;
     }
 
 
@@ -338,6 +420,11 @@ public class BaseSkill
     public bool IsTLOA;
 
     /// <summary>
+    /// スキルの範囲効果における各割合　最大で6の長さまで使うと思う
+    /// </summary>
+    public int[] PowerSpread;
+
+    /// <summary>
     /// スキルのパワー
     /// </summary>
     public float SkillPower;
@@ -388,9 +475,10 @@ public class BaseSkill
     }
 
     //スキルパワーの計算
-    public virtual float SkillPowerCalc()
+    public virtual float SkillPowerCalc(int underIndex)
     {
-        return SkillPower;
+        //範囲割合を含める
+        return SkillPower* PowerSpread[underIndex];
     }
 
     /// <summary>

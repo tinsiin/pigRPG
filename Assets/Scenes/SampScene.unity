@@ -527,7 +527,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   geino:
-    _skillList: []
+    _skillList:
+    - _name: 
+      CanCancel: 0
+      IsAggressiveCommit: 0
+      CanSelectAggressiveCommit: 0
+      ConsecutivePercentage: 0
+      SKillDidWaitCount: 0
+      IsTLOA: 0
+      PowerSpread: 
+      SkillPower: 0
+      SkillHitPer: 0
+      SkillLevel: 0
+      SkillRivahal: 0
+      DEFATK: 0
+      WhatSkill: 0
+      ConsecutiveType: 0
+      ZoneTrait: 0
     b_AGI: 0
     b_ATK: 0
     b_DEF: 0
@@ -542,6 +558,7 @@ MonoBehaviour:
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
+      PowerSpread: 000000000000000000000000
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
@@ -558,6 +575,7 @@ MonoBehaviour:
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
+      PowerSpread: 000000000000000000000000
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
@@ -569,9 +587,9 @@ MonoBehaviour:
     MAXP: 0
     P: 0
     maxRecoveryTurn: 0
-    CanOprate: 0
     _hp: 3
     _maxHp: 3
+    Target: 0
   noramlia:
     _skillList: []
     b_AGI: 0
@@ -588,6 +606,7 @@ MonoBehaviour:
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
+      PowerSpread: 000000000000000000000000
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
@@ -604,6 +623,7 @@ MonoBehaviour:
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
+      PowerSpread: 000000000000000000000000
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
@@ -615,9 +635,9 @@ MonoBehaviour:
     MAXP: 0
     P: 0
     maxRecoveryTurn: 0
-    CanOprate: 0
     _hp: 0
     _maxHp: 0
+    Target: 0
   sites:
     _skillList: []
     b_AGI: 0
@@ -634,6 +654,7 @@ MonoBehaviour:
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
+      PowerSpread: 000000000000000000000000
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
@@ -650,6 +671,7 @@ MonoBehaviour:
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
+      PowerSpread: 000000000000000000000000
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
@@ -661,9 +683,9 @@ MonoBehaviour:
     MAXP: 0
     P: 0
     maxRecoveryTurn: 0
-    CanOprate: 0
     _hp: 0
     _maxHp: 0
+    Target: 0
 --- !u!114 &78173494
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -757,6 +779,7 @@ MonoBehaviour:
           ConsecutivePercentage: 0
           SKillDidWaitCount: 0
           IsTLOA: 0
+          PowerSpread: 000000000000000000000000
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
@@ -773,6 +796,7 @@ MonoBehaviour:
           ConsecutivePercentage: 0
           SKillDidWaitCount: 0
           IsTLOA: 0
+          PowerSpread: 000000000000000000000000
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
@@ -784,15 +808,47 @@ MonoBehaviour:
         MAXP: 0
         P: 0
         maxRecoveryTurn: 0
-        CanOprate: 0
         _hp: 0
         _maxHp: 0
+        Target: 0
         RecovelySteps: 0
         broken: 0
     - rid: 720943376607215619
       type: {class: butterfly, ns: , asm: Assembly-CSharp}
       data:
-        _skillList: []
+        _skillList:
+        - _name: 
+          CanCancel: 0
+          IsAggressiveCommit: 0
+          CanSelectAggressiveCommit: 0
+          ConsecutivePercentage: 0
+          SKillDidWaitCount: 0
+          IsTLOA: 0
+          PowerSpread: 
+          SkillPower: 0
+          SkillHitPer: 0
+          SkillLevel: 0
+          SkillRivahal: 0
+          DEFATK: 0
+          WhatSkill: 0
+          ConsecutiveType: 0
+          ZoneTrait: 0
+        - _name: 
+          CanCancel: 0
+          IsAggressiveCommit: 0
+          CanSelectAggressiveCommit: 0
+          ConsecutivePercentage: 0
+          SKillDidWaitCount: 0
+          IsTLOA: 0
+          PowerSpread: 
+          SkillPower: 0
+          SkillHitPer: 0
+          SkillLevel: 0
+          SkillRivahal: 0
+          DEFATK: 0
+          WhatSkill: 0
+          ConsecutiveType: 0
+          ZoneTrait: 0
         b_AGI: 0
         b_ATK: 0
         b_DEF: 0
@@ -807,6 +863,7 @@ MonoBehaviour:
           ConsecutivePercentage: 0
           SKillDidWaitCount: 0
           IsTLOA: 0
+          PowerSpread: 000000000000000000000000
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
@@ -823,6 +880,7 @@ MonoBehaviour:
           ConsecutivePercentage: 0
           SKillDidWaitCount: 0
           IsTLOA: 0
+          PowerSpread: 000000000000000000000000
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
@@ -834,9 +892,9 @@ MonoBehaviour:
         MAXP: 0
         P: 0
         maxRecoveryTurn: 0
-        CanOprate: 0
         _hp: 0
         _maxHp: 0
+        Target: 0
         RecovelySteps: 0
         broken: 0
     - rid: 720943376607215620
@@ -857,6 +915,7 @@ MonoBehaviour:
           ConsecutivePercentage: 0
           SKillDidWaitCount: 0
           IsTLOA: 0
+          PowerSpread: 000000000000000000000000
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
@@ -873,6 +932,7 @@ MonoBehaviour:
           ConsecutivePercentage: 0
           SKillDidWaitCount: 0
           IsTLOA: 0
+          PowerSpread: 000000000000000000000000
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
@@ -884,9 +944,9 @@ MonoBehaviour:
         MAXP: 0
         P: 0
         maxRecoveryTurn: 0
-        CanOprate: 0
         _hp: 0
         _maxHp: 0
+        Target: 0
         RecovelySteps: 0
         broken: 0
 --- !u!1 &90538794
@@ -1949,7 +2009,7 @@ MonoBehaviour:
   WalkObject: {fileID: 1242296982}
   TalkObject: {fileID: 1089394721}
   NextObject: {fileID: 1220168680}
-  SkillObject: {fileID: 1736134640}
+  SkillObject: {fileID: 1736134642}
 --- !u!1 &422419475
 GameObject:
   m_ObjectHideFlags: 0
@@ -2025,6 +2085,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 422419475}
   m_CullTransparentMesh: 1
+--- !u!1 &436718585
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 436718586}
+  m_Layer: 5
+  m_Name: normalia
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &436718586
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 436718585}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1736134641}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &471126756
 GameObject:
   m_ObjectHideFlags: 0
@@ -2207,6 +2302,41 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   shadow: {fileID: 905423574}
+--- !u!1 &514049931
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 514049932}
+  m_Layer: 5
+  m_Name: geino
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &514049932
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 514049931}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1736134641}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -2415,6 +2545,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 564736995}
   m_CullTransparentMesh: 1
+--- !u!1 &570427287
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 570427288}
+  m_Layer: 5
+  m_Name: sites
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &570427288
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 570427287}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1736134641}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &591004733
 GameObject:
   m_ObjectHideFlags: 0
@@ -3442,7 +3607,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1190210407
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3572,7 +3737,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1220168681
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3763,7 +3928,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1281680887
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4864,6 +5029,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1736134641}
+  - component: {fileID: 1736134642}
   m_Layer: 5
   m_Name: SkillObject
   m_TagString: Untagged
@@ -4882,7 +5048,10 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 514049932}
+  - {fileID: 570427288}
+  - {fileID: 436718586}
   m_Father: {fileID: 396914254}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -4890,6 +5059,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1736134642
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1736134640}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2215fb533482f34fb4eb3ccef98b884, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  geino: {fileID: 514049931}
+  sites: {fileID: 570427287}
+  normalia: {fileID: 436718585}
 --- !u!1 &1741918117
 GameObject:
   m_ObjectHideFlags: 0
@@ -5710,15 +5894,15 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2134117276}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 90}
+  m_LocalScale: {x: 1, y: 1, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1869100685}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 284, y: -482}
+  m_AnchoredPosition: {x: -171.57, y: 745.93}
   m_SizeDelta: {x: 736.87, y: 112.77}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2134117278

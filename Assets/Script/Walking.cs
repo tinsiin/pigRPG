@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+
 public class Walking : MonoBehaviour
 {
     [SerializeField] private WatchUIUpdate wui;
@@ -18,6 +19,11 @@ public class Walking : MonoBehaviour
     /// USERUIの状態
     /// </summary>
     public static ReactiveProperty<TabState> USERUI_state = new();
+
+    /// <summary>
+    /// スキルUIで誰のスキルが映っているか
+    /// </summary>
+    public static ReactiveProperty<SkillUICharaState> SKILLUI_state = new();
 
 
     /// <summary>

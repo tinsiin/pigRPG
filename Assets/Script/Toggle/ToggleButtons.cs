@@ -25,6 +25,16 @@ public class ToggleButtons : MonoBehaviour //カスタマイズしやすいTabCo
                 }).AddTo(this);
         //_tabContentsChanger.Select(0);//選んだ状態に予めする奴だから消しとく。
 
+        Walking.SKILLUI_state.Subscribe(
+            state =>
+            {
+                //今の所メイン画面のみがキャラ状態によって変わる
+                _tabContentsChanger.GetViewFromKind(TabContentsKind.Players).CharaStateSwitch(state);
+
+
+            }).AddTo(this);
+        Walking.SKILLUI_state.Value = SkillUICharaState.geino;//とりあえず親父が選ばれてる
+
         Walking.USERUI_state.Subscribe(
             state =>
             {

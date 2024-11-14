@@ -200,11 +200,6 @@ public abstract class BaseStates
         recoveryTurn = maxRecoveryTurn;
     }
 
-    /// <summary>
-    /// このキャラクターを操作できるかどうか。　味方なら基本的に操作するね
-    /// </summary>
-    public bool CanOprate;
-
     //HP
     [SerializeField]
     private float _hp;
@@ -225,16 +220,10 @@ public abstract class BaseStates
     public float MAXHP => _maxHp;
 
     /// <summary>
-    /// 早い行動を心がけるかどうか。　敵はAIで、味方ならCharaConfyまたは逐次実行する際に決定
+    /// このキャラがどの辺りを狙っているか
     /// </summary>
-    private bool _commitToSwiftAction;
-    /// <summary>
-    /// 前のめりするキャラクターを狙うかどうか　オーバーライド可能
-    /// </summary>
-    public virtual bool ActWithoutHesitation()
-    {
-        return _commitToSwiftAction;
-    }
+    public DirectedWill Target;
+
 
     /// <summary>
     /// 使用中のスキルを強制続行中のスキルとする。　
@@ -410,11 +399,12 @@ public abstract class BaseStates
     /// スキルに対するリアクション ここでスキルの解釈をする。
     /// </summary>
     /// <param name="skill"></param>
-    public virtual string ReactionSkill(BaseSkill skill)
+    /// <param name="UnderIndex">攻撃される人の順番　スキルのPowerSpreadの順番に同期している</param>
+    public virtual string ReactionSkill(BaseSkill skill,int UnderIndex)
     {
         //スキルパワーの精神属性による計算
         var modifier = SkillSpiritualModifier[(skill.SkillSpiritual, MyImpression)];//スキルの精神属性と自分の精神属性による補正
-        var skillPower = skill.SkillPowerCalc() * modifier.GetValue() / 100.0f;
+        var skillPower = skill.SkillPowerCalc(UnderIndex) * modifier.GetValue() / 100.0f;
         var txt = "";//メッセージテキスト用
         skill.DoCount++;//スキルを実行した回数をカウントアップ
 
@@ -444,15 +434,19 @@ public abstract class BaseStates
     /// クラスを通じて相手を攻撃する
     /// </summary>
     /// <param name="UnderAttacker"></param>
-    public virtual string AttackChara(BaseStates UnderAttacker)
+    public virtual string AttackChara(List<BaseStates> UnderAttacker)
     {
         //本来この関数は今のところ無駄　BMでの処理では直接UnderActerのreactionSkill呼びだしゃいい話だし
         //ただもしかしたらここでのunderAttackerによっての何らかの分岐処理するかもだから念のためね。
 
 
         SkillUseConsecutiveCountUp(NowUseSkill);//連続カウントアップ
+        string txt="";
 
-        var txt = UnderAttacker.ReactionSkill(NowUseSkill);//敵がスキルにリアクション
+        for(var i = 0; i < UnderAttacker.Count;i++)//いる分だけ
+        {
+            txt += UnderAttacker[i].ReactionSkill(NowUseSkill,i);//敵がスキルにリアクション
+        }
 
         NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルの攻撃回数をカウントアップ
         Debug.Log("AttackChara");

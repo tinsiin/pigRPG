@@ -26,7 +26,6 @@ public enum WhichGroup
 }
 
 
-
 /// <summary>
 /// 行動リスト
 /// </summary>
@@ -115,7 +114,10 @@ public class BattleManager
 
     string UniqueTopMessage;//通常メッセージの冠詞？
     BaseStates Acter;//今回の俳優
-    BaseStates UnderActer;//行動を受ける人
+    /// <summary>
+    /// 行動を受ける人 これの順番によってスキルの三割合が当てはまる
+    /// </summary>
+    List<BaseStates> UnderActer;
     WhichGroup Faction;//陣営
     bool Wipeout = false;//全滅したかどうか
     bool RunOut = false;//逃走
@@ -170,11 +172,11 @@ public class BattleManager
     private List<BaseStates> RetainActionableCharacters(List<BaseStates> Charas)
     {
         //少なくとも一人のキャラクターが RecovelyBattleField(BattleTurnCount) を満たすと、Any() が true を返し、while ループが終了します。
-        while (!(Charas= Charas.Where(chara => chara.RecovelyBattleField(BattleTurnCount)).ToList()).Any())
+        while (!(Charas = Charas.Where(chara => chara.RecovelyBattleField(BattleTurnCount)).ToList()).Any())
         {
             BattleTurnCount++;//全員再行動までのクールタイム中なら、全員硬直したまま時間が進む
         }
-        return Charas; 
+        return Charas;
     }
     /// <summary>
     /// キャラクター行動リストに先手分のリストを入れる。
@@ -275,10 +277,23 @@ public class BattleManager
             Debug.Log("俳優はランダムに選ばれました");
         }
 
-        if (Acter.CanOprate)//操作するキャラクターなら
+        //俳優が味方なら
+        var ps = PlayersStates.Instance;
+        if (Acter == ps.geino || Acter == ps.sites || Acter == ps.noramlia)
         {
             if (Acter.FreezeUseSkill == null)//強制続行中のスキルがなければ
             {
+                switch (Acter)
+                {
+                    case StairStates:
+                        break;
+
+                    case SateliteProcessStates:
+                        break;
+                    case BaseStates: 
+                        break;
+                        
+                }
                 //スキル選択ボタンを返す
                 return TabState.Skill;
             }
@@ -376,24 +391,15 @@ public class BattleManager
         Debug.Log("スキル行使実行");
         var skill = Acter.NowUseSkill;
 
+        if (Faction == WhichGroup.Enemyiy)//敵ならここで思考して決める
+        {
+            var ene = Acter as NormalEnemy;
+            ene.SkillAI();//ここで決めないとスキル可変オプションが下記の対象者選択で反映されないから
+        }
+
         //人数やスキルの攻撃傾向によって、被攻撃者の選別をする
 
-        //対象者とは前のめりのものが必須なので死亡者が前のめっていてはいけない
-
-        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectSingleTarget))
-        {
-            if (skill.NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃中(二回目以降なら)
-            {
-                if (skill.HasConsecutiveType(SkillConsecutiveType.CanOprate))
-                {
-                    SelectTargetFromOpposingGroupOnlyLive();//対立関係のグループから生きている前のめりか後衛のうちかを選ぶ
-                }
-            }
-            else
-            {
-                SelectTargetFromOpposingGroupOnlyLive();//対立関係のグループから生きている前のめりか後衛のうちかを選ぶ
-            }
-        }
+        SelectTargetFromWill();
 
 
         //実行処理
@@ -439,62 +445,267 @@ public class BattleManager
     const int FrontGuardPer = 13;
     const int BackLineHITModifier = 70;
     /// <summary>
-    /// 対立関係のグループからスキルの実行対象者"単体"を選びUnderActerに入れる関数
-    /// 前のめりしてる奴かそうでない奴かを狙う感じ　　生存者限定
+    /// スキルの実行者をunderActerに入れる処理　意思が実際の選別に状況を伴って変換される処理
     /// </summary>
-    private void SelectTargetFromOpposingGroupOnlyLive()
+    private void SelectTargetFromWill()
     {
-        var SelectGroup = new BattleGroup(AllyGroup.Ours, AllyGroup.OurImpression, AllyGroup.which);
-        //味方なら敵グループから、敵なら味方グループから選別する ディープコピー。
-        if (Faction == WhichGroup.alliy) SelectGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);
+        BattleGroup SelectGroup;//我々から見た敵陣
+        BattleGroup OurGroup = null;//我々自陣          nullの場合はスキルの範囲性質に味方選択がないということ
+        var skill = Acter.NowUseSkill;
+        List<BaseStates> UA = null;
+
+        //選抜グループ決定する処理☆☆☆☆☆☆☆☆☆☆☆
+        if (Faction == WhichGroup.alliy)
+        {//味方なら敵グループから、
+            SelectGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);
+
+            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))//自陣も対象に選べるなら
+            {
+                OurGroup = new BattleGroup(AllyGroup.Ours, AllyGroup.OurImpression, AllyGroup.which);//自陣
+            }
+        }
+        else
+        {//敵なら味方グループから選別する ディープコピー。
+            SelectGroup = new BattleGroup(AllyGroup.Ours, AllyGroup.OurImpression, AllyGroup.which);
+            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))//自陣も対象に選べるなら
+            {
+                OurGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);//自陣
+            }
+
+        }
 
         //死者は省く
-        SelectGroup.SetCharactersList(RemoveDeathCharacters(SelectGroup.Ours));
+        if (!skill.HasZoneTrait(SkillZoneTrait.CanSelectDeath))//死を選べないのなら　死を省く
+        {
+            SelectGroup.SetCharactersList(RemoveDeathCharacters(SelectGroup.Ours));
+            if (OurGroup != null)
+            {
+                OurGroup.SetCharactersList(RemoveDeathCharacters(OurGroup.Ours));//自陣もあったら省く
+            }
+        }
 
         //行動者決定☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
 
-        //選ばれる対立関係のグループに一人しかいない場合
-        if (SelectGroup.Ours.Count < 2)
+        if (skill.HasZoneTrait(SkillZoneTrait.CanPerfectSelectSingleTarget))//完全に一人一人を選ぶのなら
         {
-            Debug.Log(AllyGroup.Ours.Count + "←allyGroup EnemyGroup→" + EnemyGroup.Ours.Count + " SelectGroup→" + SelectGroup.Ours.Count + "陣営は" + Acter.CharacterName);
-            UnderActer = SelectGroup.Ours[0];//普通にグループの一人だけを狙う
+
         }
-        else//二人以上いたら前のめりかそうでないかでの分岐処理
+        else
         {
-
-            if (SelectGroup.InstantVanguard == null)//対象者グループに前のめりがいない場合。
+            //選ばれる対立関係のグループに一人しかいない場合
+            if (SelectGroup.Ours.Count < 2)
             {
-                UnderActer = RandomEx.Shared.GetItem(SelectGroup.Ours.ToArray());//s選別リストからランダムで選択
+                Debug.Log(AllyGroup.Ours.Count + "←allyGroup EnemyGroup→" + EnemyGroup.Ours.Count + " SelectGroup→" + SelectGroup.Ours.Count + "陣営は" + Acter.CharacterName);
+                UA.Add(SelectGroup.Ours[0]);//普通にグループの一人だけを狙う
             }
-            else//前のめりがいるなら
+            else//二人以上いたら前のめりかそうでないかでの分岐処理
             {
-                if (Acter.ActWithoutHesitation())//前のめりしてる奴を狙うなら
+                if (skill.HasZoneTrait(SkillZoneTrait.CanSelectSingleTarget))//前のめりか後衛(内ランダム単体)で選択する
                 {
-                    UnderActer = SelectGroup.InstantVanguard;
-                    Debug.Log(Acter.CharacterName + "は前のめりしてる奴を狙った");
+                    if (SelectGroup.InstantVanguard == null)//対象者グループに前のめりがいない場合。
+                    {
+                        UA.Add(RandomEx.Shared.GetItem(SelectGroup.Ours.ToArray()));//s選別リストからランダムで選択
+                    }
+                    else//前のめりがいるなら
+                    {
+                        if (Acter.Target == DirectedWill.InstantVanguard)//前のめりしてる奴を狙うなら
+                        {
+                            UA.Add(SelectGroup.InstantVanguard);
+                            Debug.Log(Acter.CharacterName + "は前のめりしてる奴を狙った");
+                        }
+                        else if (Acter.Target == DirectedWill.BacklineOrAny)
+                        {//後衛を狙おうとしたなら 後衛への命中率は7割補正され　そもそも1.3割の確率で前のめりしてる奴にあたる
+
+                            if (RandomEx.Shared.NextInt(100) < FrontGuardPer)//前衛のかばいに引っかかったら
+                            {
+                                UniqueTopMessage += "テラーズヒット";//かばうテキストを追加？
+                                UA.Add(SelectGroup.InstantVanguard);
+                                Debug.Log(Acter.CharacterName + "は後衛を狙ったが前のめりしてる奴に阻まれた");
+                            }
+                            else//引っかかんなかったら前衛を抜いたメンバーから選ぶ
+                            {
+                                List<BaseStates> BackLines;//後衛リスト
+
+                                //前衛を抜いてディープコピーする
+                                BackLines = new List<BaseStates>(SelectGroup.Ours.Where(member => member != SelectGroup.InstantVanguard));
+
+                                UA.Add(RandomEx.Shared.GetItem(BackLines.ToArray()));//後衛リストからランダムで選択
+                                Acter.SetHITPercentageModifier(BackLineHITModifier, "少し遠いよ");//後衛への命中率補正70%を追加。
+                                Debug.Log(Acter.CharacterName + "は後衛を狙った");
+                            }
+                        }
+                        else Debug.LogError("CanSelectSingleTargetの処理では前のめりか後衛以外の意志を受け付けていません。");
+                    }
+
                 }
-                else
-                {//後衛を狙おうとしたなら 後衛への命中率は7割補正され　そもそも1.3割の確率で前のめりしてる奴にあたる
+                else if (skill.HasZoneTrait(SkillZoneTrait.RandomSingleTarget))//完全にランダムの単体対象
+                {
+                    BaseStates[] selects = SelectGroup.Ours.ToArray();
+                    if (OurGroup != null)//自陣グループも選択可能なら
+                        selects.AddRange(OurGroup.Ours);
 
-                    if (RandomEx.Shared.NextInt(100) < FrontGuardPer)//前衛のかばいに引っかかったら
+                    UA.Add(RandomEx.Shared.GetItem(selects));//s選別リストからランダムで選択
+                }
+                else if (skill.HasZoneTrait(SkillZoneTrait.ControlByThisSituation))//状況のみに縛られる。(前のめりにしか当たらないなら
+                {
+                    if (SelectGroup.InstantVanguard == null)//対象者グループに前のめりがいない場合。事故が起きる
                     {
-                        UniqueTopMessage += "テラーズヒット";//かばうテキストを追加？
-                        UnderActer = SelectGroup.InstantVanguard;
-                        Debug.Log(Acter.CharacterName + "は後衛を狙ったが前のめりしてる奴に阻まれた");
+                        //前のめりしか選べなくても、もし前のめりがいなかったら、その**平坦なグループ**にスキル性質による攻撃が当たる。
+
+
+                        //前のめりいないことによる事故☆☆☆☆☆☆☆☆☆☆
+
+                        //シングルにあたるなら
+                        if (skill.HasZoneTrait(SkillZoneTrait.RandomSingleTarget))
+                        {
+                            UA.Add(RandomEx.Shared.GetItem(SelectGroup.Ours.ToArray()));//選別リストからランダムで選択
+                        }
+                        //前のめりがいないんだから、　前のめりか後衛単位での　集団事故は起こらないため　RandomSelectMultiTargetによる場合分けはない。
+
+                        //全範囲事故なら
+                        if (skill.HasZoneTrait(SkillZoneTrait.AllTarget))
+                        {
+                            BaseStates[] selects = SelectGroup.Ours.ToArray();
+                            if (OurGroup != null)//自陣グループも選択可能なら
+                                selects.AddRange(OurGroup.Ours);
+
+                            UA.AddRange(selects);//対象範囲を全て加える
+                        }
+                        //ランダム範囲事故なら
+                        if (skill.HasZoneTrait(SkillZoneTrait.RandomMultiTarget))
+                        {
+                            List<BaseStates> selects = SelectGroup.Ours;
+                            if (OurGroup != null)//自陣グループも選択可能なら
+                                selects.AddRange(OurGroup.Ours);
+
+                            var count = selects.Count;//群体の数を取得
+                            count = RandomEx.Shared.NextInt(1, count + 1);//取得する数もランダム
+
+                            for (int i = 0; i < count; i++) //ランダムな数分引き抜く
+                            {
+                                var item = RandomEx.Shared.GetItem(selects.ToArray());
+                                UA.Add(item);//選別リストからランダムで選択
+                                selects.Remove(item);//選択したから除去
+                            }
+                        }
                     }
-                    else//引っかかんなかったら前衛を抜いたメンバーから選ぶ
+                    else
                     {
-                        List<BaseStates> BackLines;//後衛リスト
-
-                        //前衛を抜いてディープコピーする
-                        BackLines = new List<BaseStates>(SelectGroup.Ours.Where(member => member != SelectGroup.InstantVanguard));
-
-                        UnderActer = RandomEx.Shared.GetItem(BackLines.ToArray());//後衛リストからランダムで選択
-                        Acter.SetHITPercentageModifier(BackLineHITModifier, "少し遠いよ");//後衛への命中率補正70%を追加。
-                        Debug.Log(Acter.CharacterName + "は後衛を狙った");
+                        UA.Add(SelectGroup.InstantVanguard);//前のめりしか狙えない
                     }
+
+                }
+                else if (skill.HasZoneTrait(SkillZoneTrait.CanSelectMultiTarget))//前衛、後衛単位の範囲でランダムに狙うなら
+                {
+                    if (SelectGroup.InstantVanguard == null)//対象者グループに前のめりがいない場合。最大二人範囲で攻撃
+                    {
+                        //グループ全員のリストで回すが、もし三人目に行きそうになったら、止める
+                        var counter = 0;
+                        SelectGroup.Ours.Shuffle();//リスト内でシャッフル
+                        foreach (var one in SelectGroup.Ours)
+                        {
+                            UA.Add(one);
+                            counter++;
+                            if (counter >= 2) break;//二人目を入れたらbreak　二人目まで行かなくてもforEachで勝手に終わる
+                        }
+                    }
+                    else//前のめりいたら
+                    {
+                        if (Acter.Target == DirectedWill.InstantVanguard)//前のめりしてる奴を狙うなら
+                        {
+                            UA.Add(SelectGroup.InstantVanguard);
+                            Debug.Log(Acter.CharacterName + "は前のめりしてる奴を狙った");
+                        }
+                        else if (Acter.Target == DirectedWill.BacklineOrAny)
+                        {//後衛を狙おうとしたなら 後衛への命中率は9割補正され　そもそも1.2割の確率で前のめりしてる奴にあたる
+
+                            if (RandomEx.Shared.NextInt(100) < 12)//前衛のかばいに引っかかったら
+                            {
+                                UniqueTopMessage += "テラーズヒット";//かばうテキストを追加？
+                                UA.Add(SelectGroup.InstantVanguard);
+                                Debug.Log(Acter.CharacterName + "は後衛を狙ったが前のめりしてる奴に阻まれた");
+                            }
+                            else//引っかかんなかったら後衛を丸々攻撃
+                            {
+                                List<BaseStates> BackLines;//後衛リスト
+
+                                //前衛を抜いてディープコピーする
+                                BackLines = new List<BaseStates>(SelectGroup.Ours.Where(member => member != SelectGroup.InstantVanguard));
+
+                                UA.AddRange(BackLines);//後衛をそのまま入れる
+                                Acter.SetHITPercentageModifier(90, "ほんの少し狙いにくい");//後衛への命中率補正を追加。
+                                Debug.Log(Acter.CharacterName + "は後衛を狙った");
+                            }
+                        }
+                        else Debug.LogError("CanSelectMultiTargetの処理では前のめりか後衛以外の意志を受け付けていません。");
+
+                    }
+                }
+                else if (skill.HasZoneTrait(SkillZoneTrait.RandomSelectMultiTarget))//前衛または後衛単位をランダムに狙う
+                {
+                    var selectVanguard = RandomEx.Shared.NextBool();//前衛を選ぶかどうか
+
+                    //前のめりがいなかったら
+                    if (SelectGroup.InstantVanguard == null)//対象者グループに前のめりがいない場合。最大二人範囲で攻撃
+                    {
+                        //グループ全員のリストで回すが、もし三人目に行きそうになったら、止める
+                        var counter = 0;
+                        SelectGroup.Ours.Shuffle();//リスト内でシャッフル
+                        foreach (var one in SelectGroup.Ours)
+                        {
+                            UA.Add(one);
+                            counter++;
+                            if (counter >= 2) break;//二人目を入れたらbreak　二人目まで行かなくてもforEachで勝手に終わる
+                        }
+                    }
+                    else//前のめりいたら
+                    {
+                        if (selectVanguard) //前のめりを選ぶなら
+                        {
+                            UA.Add(SelectGroup.InstantVanguard);
+                            Debug.Log(Acter.CharacterName + "の技は前のめりしてる奴に向いた");
+                        }
+                        else//後衛単位を狙うなら
+                        {
+                            List<BaseStates> BackLines;//後衛リスト
+
+                            //前衛を抜いてディープコピーする
+                            BackLines = new List<BaseStates>(SelectGroup.Ours.Where(member => member != SelectGroup.InstantVanguard));
+
+                            UA.AddRange(BackLines);//後衛をそのまま入れる
+                            Debug.Log(Acter.CharacterName + "の技は後衛に向いた");
+
+                        }
+                    }
+                }
+                else if (skill.HasZoneTrait(SkillZoneTrait.RandomMultiTarget))//ランダムな範囲攻撃の場合
+                {
+                    List<BaseStates> selects = SelectGroup.Ours;
+                    if (OurGroup != null)//自陣グループも選択可能なら
+                        selects.AddRange(OurGroup.Ours);
+
+                    var count = selects.Count;//群体の数を取得
+                    count = RandomEx.Shared.NextInt(1, count + 1);//取得する数もランダム
+
+                    for (int i = 0; i < count; i++) //ランダムな数分引き抜く
+                    {
+                        var item = RandomEx.Shared.GetItem(selects.ToArray());
+                        UA.Add(item);//選別リストからランダムで選択
+                        selects.Remove(item);//選択したから除去
+                    }
+                }
+                else if (skill.HasZoneTrait(SkillZoneTrait.AllTarget))//全範囲
+                {
+                    BaseStates[] selects = SelectGroup.Ours.ToArray();
+                    if (OurGroup != null)//自陣グループも選択可能なら
+                        selects.AddRange(OurGroup.Ours);
+
+                    UA.AddRange(selects);//対象範囲を全て加える
+
                 }
             }
+
+            UnderActer = UA;
         }
     }
     private void NextTurn(bool Next)
@@ -503,8 +714,8 @@ public class BattleManager
             Acts.RemoveAt(0);
 
         //Turnを進める
-        if(!Next)
-        BattleTurnCount++;
+        if (!Next)
+            BattleTurnCount++;
 
         //前のめり者が死亡してたら、nullにする処理
         AllyGroup.VanGuardDeath();
