@@ -5,7 +5,7 @@ using UnityEngine;
 /// </summary>
 public enum TabState
 {
-    walk, TalkWindow, NextWait, Skill
+    walk, TalkWindow, NextWait, Skill, SelectTarget
 }
 public enum SkillUICharaState
 {
@@ -32,6 +32,8 @@ public class TabContents : MonoBehaviour //tabContentsChangerのクラスに登�
     GameObject NextObject;
     [SerializeField]
     TabCharaStateContent SkillObject;
+    [SerializeField]
+    GameObject SelectTargetObject;
 
     /// <summary>
     /// キャラ状態によってuiが変わる
@@ -44,33 +46,44 @@ public class TabContents : MonoBehaviour //tabContentsChangerのクラスに登�
 
     public void SwitchContent(TabState state)
     {
-        if(IsContents) 
-        switch (state)
-        {
-            case TabState.walk://歩きボタン
-                WalkObject.SetActive(true);
-                TalkObject.SetActive(false);
-                NextObject.SetActive(false);
-                SkillObject.SetActive(false);
-                 break;
-            case TabState.TalkWindow:
-                WalkObject.SetActive(false);
-                TalkObject.SetActive(true);
-                NextObject.SetActive(false);
-                SkillObject.SetActive(false);
-                break;
-            case TabState.NextWait:
-                WalkObject.SetActive(false);
-                TalkObject.SetActive(false);
-                NextObject.SetActive(true);
-                SkillObject.SetActive(false);
-                break;
-            case TabState.Skill:
-                WalkObject.SetActive(false);
-                TalkObject.SetActive(false);
-                NextObject.SetActive(false);
-                SkillObject.SetActive(true);
-                break;
-        }
+        if (IsContents)
+            switch (state)
+            {
+                case TabState.walk://歩きボタン
+                    WalkObject.SetActive(true);
+                    TalkObject.SetActive(false);
+                    NextObject.SetActive(false);
+                    SkillObject.SetActive(false);
+                    SelectTargetObject.SetActive(false);
+                    break;
+                case TabState.TalkWindow:
+                    WalkObject.SetActive(false);
+                    TalkObject.SetActive(true);
+                    NextObject.SetActive(false);
+                    SkillObject.SetActive(false);
+                    SelectTargetObject.SetActive(false);
+                    break;
+                case TabState.NextWait:
+                    WalkObject.SetActive(false);
+                    TalkObject.SetActive(false);
+                    NextObject.SetActive(true);
+                    SkillObject.SetActive(false);
+                    SelectTargetObject.SetActive(false);
+                    break;
+                case TabState.Skill:
+                    WalkObject.SetActive(false);
+                    TalkObject.SetActive(false);
+                    NextObject.SetActive(false);
+                    SkillObject.SetActive(true);
+                    SelectTargetObject.SetActive(false);
+                    break;
+                case TabState.SelectTarget:
+                    WalkObject.SetActive(false);
+                    TalkObject.SetActive(false);
+                    NextObject.SetActive(false);
+                    SkillObject.SetActive(true);
+                    SelectTargetObject.SetActive(true);
+                    break;
+            }
     }
 }

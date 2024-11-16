@@ -14,6 +14,7 @@ public class Walking : MonoBehaviour
     [SerializeField] private Button _nextWaitBtn;
     [SerializeField] private SelectButton SelectButtonPrefab;
     [SerializeField] private int SelectBtnSize;
+    [SerializeField] private SelectTargetButtons SelectTargetView;
 
     /// <summary>
     /// USERUIの状態
@@ -72,6 +73,13 @@ public class Walking : MonoBehaviour
     private void OnClickNextWaitBtn()
     {
         USERUI_state.Value = bm.CharacterActBranching();
+    }
+    /// <summary>
+    /// 対象者選択画面を作成するStaticな関数
+    /// </summary>
+    public static void CreateTargetView()
+    {
+
     }
     BattleManager bm;
     private  void Encount()

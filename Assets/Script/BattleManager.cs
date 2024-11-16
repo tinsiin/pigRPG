@@ -283,14 +283,17 @@ public class BattleManager
         {
             if (Acter.FreezeUseSkill == null)//強制続行中のスキルがなければ
             {
-                switch (Acter)
+                switch (Acter)//スキル選択ボタンを各キャラの物にしてから
                 {
                     case StairStates:
+                        Walking.SKILLUI_state.Value = SkillUICharaState.geino;
                         break;
 
                     case SateliteProcessStates:
+                        Walking.SKILLUI_state.Value = SkillUICharaState.sites;
                         break;
-                    case BaseStates: 
+                    case BassJackStates:
+                        Walking.SKILLUI_state.Value = SkillUICharaState.normalia;
                         break;
                         
                 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 ///セーブでセーブされるような事柄とかメインループで操作するためのステータス太刀　シングルトン
@@ -30,10 +31,16 @@ public class PlayersStates:MonoBehaviour
         noramlia.SkillsInitialize();
         sites.SkillsInitialize();
 
+        //ボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
+        skillButtonList[0].onClick.AddListener(() => geino.OnSkillBtnCallBack(0));
+
     }
     public StairStates geino;
     public BassJackStates noramlia;
     public SateliteProcessStates sites;
+
+    [SerializeField]
+    private List<Button> skillButtonList;//スキルボタン用リスト
 
 
     /// <summary>
@@ -138,21 +145,36 @@ public class PlayersStates:MonoBehaviour
         Debug.Log(id + "をPlayerStatesに記録");
     }
 }
+public class AllyClass : BaseStates
+{
+    public void OnSkillBtnCallBack(int skillListIndex)
+    {
+        NowUseSkill = SkillList[skillListIndex];//使用スキルに代入する
+        Debug.Log(SkillList[skillListIndex].SkillName + "を" + CharacterName +" のNowUseSkillにボタンを押して登録しました。");
+
+        //スキルの性質によるボタンの行く先の分岐
+
+        if (NowUseSkill.HasZoneTrait(SkillZoneTrait.CanPerfectSelectSingleTarget))//選択できる系なら
+        {
+            Walking.USERUI_state.Value = TabState.SelectTarget;//選択画面へ飛ぶ
+        }
+        else if (NowUseSkill.HasZoneTrait(SkillZoneTrait.ControlByThisSituation))
+        {
+            Walking.USERUI_state.Value = TabState.NextWait;//何もないなら事象ボタンへ
+        }
+    }　
+
+}
 
 [Serializable]
-public class BassJackStates : BaseStates //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
-{
-    /// <summary>
-    ///     コンストラクタ
-    /// </summary>
-}
-[Serializable]
-
-public class SateliteProcessStates : BaseStates //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
+public class BassJackStates : AllyClass //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
 {
 }
 [Serializable]
-public class StairStates : BaseStates //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
+public class SateliteProcessStates : AllyClass //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
 {
-    //先輩のコンストラクタ
+}
+[Serializable]
+public class StairStates : AllyClass //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
+{
 }
