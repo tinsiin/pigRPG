@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using R3;
@@ -14,7 +15,6 @@ public class Walking : MonoBehaviour
     [SerializeField] private Button _nextWaitBtn;
     [SerializeField] private SelectButton SelectButtonPrefab;
     [SerializeField] private int SelectBtnSize;
-    [SerializeField] private SelectTargetButtons SelectTargetView;
 
     /// <summary>
     /// USERUIの状態
@@ -25,6 +25,8 @@ public class Walking : MonoBehaviour
     /// スキルUIで誰のスキルが映っているか
     /// </summary>
     public static ReactiveProperty<SkillUICharaState> SKILLUI_state = new();
+
+    public static IDisposable disposableCreateTarget;
 
 
     /// <summary>
@@ -74,13 +76,7 @@ public class Walking : MonoBehaviour
     {
         USERUI_state.Value = bm.CharacterActBranching();
     }
-    /// <summary>
-    /// 対象者選択画面を作成するStaticな関数
-    /// </summary>
-    public static void CreateTargetView()
-    {
 
-    }
     BattleManager bm;
     private  void Encount()
     {

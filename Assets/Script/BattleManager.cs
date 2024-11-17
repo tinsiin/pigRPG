@@ -102,22 +102,22 @@ public class BattleManager
     /// <summary>
     ///     プレイヤー側のバトルグループ　ここに味方のバトルグループオブジェクトをリンクする？
     /// </summary>
-    private BattleGroup AllyGroup;
+    public BattleGroup AllyGroup;
 
     /// <summary>
     ///     敵側のバトルグループ　ここに敵グループのバトルグループオブジェクトをリンクする？
     /// </summary>
-    private BattleGroup EnemyGroup;
+    public BattleGroup EnemyGroup;
 
     private BattleStartSituation firstSituation;
 
 
     string UniqueTopMessage;//通常メッセージの冠詞？
-    BaseStates Acter;//今回の俳優
+    public BaseStates Acter;//今回の俳優
     /// <summary>
     /// 行動を受ける人 これの順番によってスキルの三割合が当てはまる
     /// </summary>
-    List<BaseStates> UnderActer;
+    public List<BaseStates> UnderActer;
     WhichGroup Faction;//陣営
     bool Wipeout = false;//全滅したかどうか
     bool RunOut = false;//逃走
@@ -161,7 +161,7 @@ public class BattleManager
     /// <summary>
     /// BaseStatesを継承したキャラクターのListから死亡者を省いたリストに変換する
     /// </summary>
-    private List<BaseStates> RemoveDeathCharacters(List<BaseStates> Charas)
+    public List<BaseStates> RemoveDeathCharacters(List<BaseStates> Charas)
     {
         return Charas.Where(chara => !chara.Death()).ToList();
     }
@@ -281,6 +281,16 @@ public class BattleManager
         var ps = PlayersStates.Instance;
         if (Acter == ps.geino || Acter == ps.sites || Acter == ps.noramlia)
         {
+            //味方が行動するならば
+            if(Walking.disposableCreateTarget != null) Walking.disposableCreateTarget.Dispose();//既に入ってたらnullする。
+            Walking.disposableCreateTarget = Walking.USERUI_state.Subscribe(
+                state =>
+                {
+                    if (state == TabState.SelectTarget) SelectTargetButtons.Instance.OnCreated(this);
+                    //対象者画面に移動したときに生成コールが実行されるようにする
+                });
+
+
             if (Acter.FreezeUseSkill == null)//強制続行中のスキルがなければ
             {
                 switch (Acter)//スキル選択ボタンを各キャラの物にしてから
@@ -303,6 +313,8 @@ public class BattleManager
             else//スキル強制続行中なら、
             {
                 Acter.NowUseSkill = Acter.FreezeUseSkill;//操作の代わりに使用スキルに強制続行スキルを入れとく
+
+                //ここでもスキル選択出来る様にしとく？
             }
         }
 

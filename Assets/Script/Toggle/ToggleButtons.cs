@@ -41,9 +41,6 @@ public class ToggleButtons : MonoBehaviour //カスタマイズしやすいTabCo
                 //mainとキャラコンフィグのタブだけ、USERUIの状態によって変化する。
                 _tabContentsChanger.GetViewFromKind(TabContentsKind.Players).SwitchContent(state);
                 _tabContentsChanger.GetViewFromKind(TabContentsKind.CharactorConfig).SwitchContent(state);
-
-                if (state == TabState.SelectTarget) Walking.CreateTargetView();//対象者画面に切り替わるのなら、準備をする。
-
             }).AddTo(this);
         Walking.USERUI_state.Value = TabState.walk;
     }
