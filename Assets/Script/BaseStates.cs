@@ -224,6 +224,27 @@ public abstract class BaseStates
     /// </summary>
     public DirectedWill Target;
 
+    /// <summary>
+    /// このキャラの現在の範囲の意思　　複数持てる
+    /// スキルの範囲性質にcanSelectRangeがある場合のみ、ない場合はskillのzoneTraitをそのまま代入される。
+    /// </summary>
+    public SkillZoneTrait RangeWill;
+
+    /// <summary>
+    /// スキル範囲性質を持ってるかどうか
+    /// 複数指定した場合は全て当てはまってるかどうかで判断
+    /// </summary>
+    public bool HasRangeWill(params SkillZoneTrait[] skills)
+    {
+        SkillZoneTrait combinedSkills = 0;
+        foreach (SkillZoneTrait skill in skills)
+        {
+            combinedSkills |= skill;
+        }
+        return (RangeWill & combinedSkills) == combinedSkills;
+    }
+
+
 
     /// <summary>
     /// 使用中のスキルを強制続行中のスキルとする。　

@@ -182,6 +182,7 @@ public class BaseSkill
     public SpiritualProperty SkillSpiritual { get; }
 
 
+
     /// <summary>
     /// スキル性質を持ってるかどうか
     /// 複数指定した場合は全て当てはまってるかどうかで判断

@@ -154,7 +154,13 @@ public class AllyClass : BaseStates
 
         //スキルの性質によるボタンの行く先の分岐
 
-        if (NowUseSkill.HasZoneTrait(SkillZoneTrait.CanPerfectSelectSingleTarget))//選択できる系なら
+        if (NowUseSkill.HasZoneTrait(SkillZoneTrait.CanSelectRange))//範囲を選べるのなら
+        {
+            Walking.USERUI_state.Value = TabState.SelectRange;//範囲選択画面へ飛ぶ
+        }
+        else if (NowUseSkill.HasZoneTrait(SkillZoneTrait.CanPerfectSelectSingleTarget) || 
+            NowUseSkill.HasZoneTrait(SkillZoneTrait.CanSelectSingleTarget) || 
+            NowUseSkill.HasZoneTrait(SkillZoneTrait.CanSelectMultiTarget))//選択できる系なら
         {
             Walking.USERUI_state.Value = TabState.SelectTarget;//選択画面へ飛ぶ
         }

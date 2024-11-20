@@ -13,6 +13,8 @@ public class SelectTargetButtons : MonoBehaviour
     [SerializeField]
     Button buttonPrefab;
     [SerializeField]
+    Button SelectEndBtn;
+    [SerializeField]
     RectTransform parentRect;
 
     [Header("Layout Settings")]
@@ -114,10 +116,39 @@ public class SelectTargetButtons : MonoBehaviour
             //つまりボタンを作らずそのままNextWaitへ
 
             var enemyLives = bm.RemoveDeathCharacters(bm.EnemyGroup.Ours);//生きてる敵だけ
-            if(bm.EnemyGroup.InstantVanguard == null || enemyLives.Count < 2)//前のめりがいないか　敵の生きてる人数が二人未満なら
+            if((bm.EnemyGroup.InstantVanguard == null || enemyLives.Count < 2)) //前のめりがいないか　敵の生きてる人数が二人未満
             {
-                ReturnNextWaitView();//そのまま次の画面へ
-                bm.Acter.Target = DirectedWill.BacklineOrAny;//後衛または誰かの意思を入れとく。
+                if (!AllyTargeting)//味方選択がないなら
+                {
+                    ReturnNextWaitView();//そのまま次の画面へ
+                    bm.Acter.Target = DirectedWill.BacklineOrAny;//後衛または誰かの意思を入れとく。
+                }
+                else//味方も選択できるなら
+                {
+                    //敵一人を選択可能なボタンとして配置する
+                    var button = Instantiate(buttonPrefab, transform);
+                    var rect = button.GetComponent<RectTransform>();
+
+                    // 親オブジェクトの右端を超える場合は次の行に移動
+                    if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+                    {
+                        // 左端にリセット
+                        currentX = startX;
+
+                        // 次の行に移動
+                        currentY -= (buttonSize.y + verticalPadding);
+                    }
+
+                    // ボタンの位置を設定
+                    rect.anchoredPosition = new Vector2(currentX, currentY);
+
+                    // 次のボタンのX位置を更新
+                    currentX += (buttonSize.x + horizontalPadding);
+
+                    button.onClick.AddListener(() => OnClickSelectVanguardOrBacklines(button, DirectedWill.BacklineOrAny));
+                    button.GetComponentInChildren<TextMeshProUGUI>().text = "敵";//ボタンのテキスト
+                    EnemybuttonList.Add(button);//敵のボタンリストに入れる
+                }
             }
             else//前のめりがいて二人以上いるなら
             {
@@ -161,39 +192,46 @@ public class SelectTargetButtons : MonoBehaviour
         {
             var selects = bm.EnemyGroup.Ours;
 
-
             if (!skill.HasZoneTrait(SkillZoneTrait.CanSelectDeath))//死亡者選択不可能なら
             {
                 selects = bm.RemoveDeathCharacters(selects);//省く
             }
 
-            for (var i = 0; i < selects.Count; i++)
+            if (selects.Count < 2 && AllyTargeting)//敵の生きてる人数が二人未満で、味方の選択もなければ
             {
-                var button = Instantiate(buttonPrefab, transform);
-                var rect = button.GetComponent<RectTransform>();
-
-                // 親オブジェクトの右端を超える場合は次の行に移動
-                if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+                ReturnNextWaitView();//そのまま次の画面へ
+                bm.Acter.Target = DirectedWill.BacklineOrAny;//後衛または誰かの意思を入れとく。
+            }
+            else
+            {
+                for (var i = 0; i < selects.Count; i++)
                 {
-                    // 左端にリセット
-                    currentX = startX;
+                    var button = Instantiate(buttonPrefab, transform);
+                    var rect = button.GetComponent<RectTransform>();
 
-                    // 次の行に移動
-                    currentY -= (buttonSize.y + verticalPadding);
+                    // 親オブジェクトの右端を超える場合は次の行に移動
+                    if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+                    {
+                        // 左端にリセット
+                        currentX = startX;
+
+                        // 次の行に移動
+                        currentY -= (buttonSize.y + verticalPadding);
+                    }
+
+                    // ボタンの位置を設定
+                    rect.anchoredPosition = new Vector2(currentX, currentY);
+
+                    // 次のボタンのX位置を更新
+                    currentX += (buttonSize.x + horizontalPadding);
+
+                    button.onClick.AddListener(() => OnClickSelectTarget(selects[i], button, WhichGroup.Enemyiy, DirectedWill.One));//関数を登録
+                    button.GetComponentInChildren<TextMeshProUGUI>().text = selects[i].CharacterName;//ボタンのテキストにキャラ名
+                    EnemybuttonList.Add(button);//敵のボタンリストを入れる
+
                 }
 
-                // ボタンの位置を設定
-                rect.anchoredPosition = new Vector2(currentX, currentY);
-
-                // 次のボタンのX位置を更新
-                currentX += (buttonSize.x + horizontalPadding);
-
-                button.onClick.AddListener(() => OnClickSelectTarget(selects[i], button, WhichGroup.Enemyiy, DirectedWill.One));//関数を登録
-                button.GetComponentInChildren<TextMeshProUGUI>().text = selects[i].CharacterName;//ボタンのテキストにキャラ名
-                EnemybuttonList.Add(button);//敵のボタンリストを入れる
-
             }
-
         }
 
         if (AllyTargeting)//味方全員を入れる
@@ -235,6 +273,16 @@ public class SelectTargetButtons : MonoBehaviour
             }
 
         }
+
+        //選択を途中で終えるボタン
+        SelectEndBtn.gameObject.SetActive(false);//見えなくする。
+    }
+    /// <summary>
+    /// 途中で複数選択を止めるボタン
+    /// </summary>
+    public void OnClickSelectEndBtn()
+    {
+        ReturnNextWaitView();
     }
     /// <summary>
     /// 前のめりか後衛かを選択するボタン。
@@ -277,11 +325,17 @@ public class SelectTargetButtons : MonoBehaviour
             NeedSelectCountEnemy--;
 
         //各陣営ごとに属したボタンが二つ以上なくても終わり (一つだけあってもそれは廃棄予定の"このオブジェクト"だから)
+        //つまりもう選ぶボタンがないなら
         if (faction == WhichGroup.alliy)
         {//味方ボタンなら
             if (AllybuttonList.Count > 1 || NeedSelectCountAlly <= 0)//味方ボタンが二つ以上ないか、味方選択必要カウントダウンがゼロ以下なら次行く処理
             {
                 ReturnNextWaitView();
+            }
+            else
+            {
+                //まだ選べるのなら、途中で選択を止められるボタンを表示する。
+                SelectEndBtn.gameObject.SetActive(true);
             }
         }
         else if (faction == WhichGroup.Enemyiy)
@@ -289,6 +343,11 @@ public class SelectTargetButtons : MonoBehaviour
             if (EnemybuttonList.Count > 1 || NeedSelectCountEnemy <= 0) //敵ボタンが二つ以上ないなら、敵選択必要カウントダウンがゼロ以下なら次行く処理
             {
                 ReturnNextWaitView();
+            }
+            else
+            {
+                //まだ選べるのなら、途中で選択を止められるボタンを表示する。
+                SelectEndBtn.gameObject.SetActive(true);
             }
 
 

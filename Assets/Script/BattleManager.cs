@@ -288,6 +288,8 @@ public class BattleManager
                 {
                     if (state == TabState.SelectTarget) SelectTargetButtons.Instance.OnCreated(this);
                     //対象者画面に移動したときに生成コールが実行されるようにする
+
+                    if (state == TabState.SelectRange)SelectRangeButtons.Instance.OnCreated(this);
                 });
 
 
