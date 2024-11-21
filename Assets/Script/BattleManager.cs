@@ -753,6 +753,10 @@ public class BattleManager
         EnemyGroup.ResetCharactersRecovelyStepTmpToAdd();
         AllyGroup.ResetCharactersRecovelyStepTmpToAdd();
 
+        //全てのキャラクターの特別な補正をリセットする
+        EnemyGroup.ResetCharactersUseThinges();
+        AllyGroup.ResetCharactersUseThinges();
+
         //敵キャラは復活歩数の準備
         EnemyGroup.RecovelyStart(PlayersStates.Instance.NowProgress);
     }

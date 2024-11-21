@@ -470,6 +470,7 @@ public abstract class BaseStates
         }
 
         NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルの攻撃回数をカウントアップ
+        RemoveUseThings();//特別な補正を消去
         Debug.Log("AttackChara");
 
         _tempUseSkill = NowUseSkill;//使ったスキルを一時保存

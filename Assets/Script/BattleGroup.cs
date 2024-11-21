@@ -68,6 +68,16 @@ public class BattleGroup
         }
 
     }
+    /// <summary>
+    /// グループ全キャラの特別な補正を消去
+    /// </summary>
+    public void ResetCharactersUseThinges()
+    {
+        foreach (var chara in Ours)
+        {
+            chara.RemoveUseThings();
+        }
+    }
 
     /// <summary>
     /// グループ全員の全スキルをリセットする

@@ -1,6 +1,7 @@
 using RandomExtensions;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using TMPro;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -37,8 +38,8 @@ public class SelectTargetButtons : MonoBehaviour
         parentSize = parentRect.rect.size;
 
         // 親オブジェクトの左上を基準とするためのオフセット
-        startX = -parentSize.x / 2 + buttonSize.x / 2;
-        startY = parentSize.y / 2 - buttonSize.y;
+        startX = -parentSize.x / 2 + buttonSize.x / 2 + horizontalPadding;
+        startY = parentSize.y / 2 - buttonSize.y + horizontalPadding;
     }
     // ボタンのサイズを取得
     Vector2 buttonSize;
@@ -63,6 +64,12 @@ public class SelectTargetButtons : MonoBehaviour
         var underActer = bm.UnderActer;
         var skill = acter.NowUseSkill;
 
+        //もしスキルの範囲性質にcanSelectTargetがない場合
+        if (!skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))
+        {
+            acter.RangeWill |= skill.ZoneTrait;//実行者の範囲意志にそのままスキルの範囲性質を入れる。
+        }
+
         // 現在の位置を初期化
         float currentX = startX;
         float currentY = startY;
@@ -73,22 +80,22 @@ public class SelectTargetButtons : MonoBehaviour
         bool AllyTargeting = false;//味方の対象選択
         bool EnemyVanguardOrBackLine = false;//敵の前のめりor後衛
 
-        if (skill.HasZoneTrait(SkillZoneTrait.CanPerfectSelectSingleTarget))//選択可能な単体対象
+        if (acter.HasRangeWill(SkillZoneTrait.CanPerfectSelectSingleTarget))//選択可能な単体対象
         {
             EnemyTargeting = true;
             NeedSelectCountEnemy = 1;
 
-            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))
+            if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))
             {
                 AllyTargeting = true;//味方も選べたら味方も追加
                 NeedSelectCountAlly = 1;
             }
 
         }
-        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectSingleTarget))//前のめりか後衛(ランダム単体)を狙うか
+        if (acter.HasRangeWill(SkillZoneTrait.CanSelectSingleTarget))//前のめりか後衛(ランダム単体)を狙うか
         {
             EnemyVanguardOrBackLine = true;
-            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))//味方も選べるなら
+            if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//味方も選べるなら
             {
                 AllyTargeting = true;//味方は単体でしか選べない
                 //一人または二人単位 
@@ -96,10 +103,10 @@ public class SelectTargetButtons : MonoBehaviour
             }
         }
 
-        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectSingleTarget))//前のめりか後衛(範囲)を狙うか
+        if (acter.HasRangeWill(SkillZoneTrait.CanSelectSingleTarget))//前のめりか後衛(範囲)を狙うか
         {
             EnemyVanguardOrBackLine = true;
-            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))//味方も選べるなら
+            if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//味方も選べるなら
             {
                 AllyTargeting = true;//味方は単体でしか選べない
                 //二人範囲 
@@ -192,7 +199,7 @@ public class SelectTargetButtons : MonoBehaviour
         {
             var selects = bm.EnemyGroup.Ours;
 
-            if (!skill.HasZoneTrait(SkillZoneTrait.CanSelectDeath))//死亡者選択不可能なら
+            if (!acter.HasRangeWill(SkillZoneTrait.CanSelectDeath))//死亡者選択不可能なら
             {
                 selects = bm.RemoveDeathCharacters(selects);//省く
             }
@@ -239,7 +246,7 @@ public class SelectTargetButtons : MonoBehaviour
             var selects = bm.AllyGroup.Ours;
 
 
-            if(!skill.HasZoneTrait(SkillZoneTrait.CanSelectDeath))//死亡者選択不可能なら
+            if(!acter.HasRangeWill(SkillZoneTrait.CanSelectDeath))//死亡者選択不可能なら
             {
                 selects = bm.RemoveDeathCharacters(selects);//省く
             }
@@ -276,6 +283,42 @@ public class SelectTargetButtons : MonoBehaviour
 
         //選択を途中で終えるボタン
         SelectEndBtn.gameObject.SetActive(false);//見えなくする。
+    }
+    /// <summary>
+    /// ボタンの並び方テスト用ボタン
+    /// </summary>
+    public void OnClickTestButton()
+    {
+        // 現在の位置を初期化
+        float currentX = startX;
+        float currentY = startY;
+
+        const int count = 10;
+
+        for (var i = 0; i < count; i++)
+        {
+            var button = Instantiate(buttonPrefab, transform);
+            var rect = button.GetComponent<RectTransform>();
+
+            // 親オブジェクトの右端を超える場合は次の行に移動
+            if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+            {
+                // 左端にリセット
+                currentX = startX;
+
+                // 次の行に移動
+                currentY -= (buttonSize.y + verticalPadding);
+            }
+
+            // ボタンの位置を設定
+            rect.anchoredPosition = new Vector2(currentX, currentY);
+
+            // 次のボタンのX位置を更新
+            currentX += (buttonSize.x + horizontalPadding);
+
+        }
+
+
     }
     /// <summary>
     /// 途中で複数選択を止めるボタン

@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UI;
 
 
 public class SelectRangeButtons : MonoBehaviour
 {
-    public　static SelectRangeButtons Instance {  get; private set; }
+    public static SelectRangeButtons Instance { get; private set; }
 
     [SerializeField]
     Button buttonPrefab;
@@ -19,7 +20,7 @@ public class SelectRangeButtons : MonoBehaviour
 
     private void Awake()
     {
-        if(Instance == null)
+        if (Instance == null)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
@@ -32,9 +33,11 @@ public class SelectRangeButtons : MonoBehaviour
         parentSize = parentRect.rect.size;
 
         // 親オブジェクトの左上を基準とするためのオフセット
-        startX = -parentSize.x / 2 + buttonSize.x / 2;
-        startY = parentSize.y / 2 - buttonSize.y;
-
+        startX = -parentSize.x / 2 + buttonSize.x / 2 + horizontalPadding;
+        startY = parentSize.y / 2 - buttonSize.y + horizontalPadding;
+        //親オブジェクトの左下に固定する為のオプション用オフセット
+        optionStartX = -parentSize.x / 2 + buttonSize.x / 2 + horizontalPadding;
+        optionStartY = -parentSize.y / 2 + buttonSize.y / 2 + horizontalPadding;
     }
     // ボタンのサイズを取得
     Vector2 buttonSize;
@@ -43,6 +46,8 @@ public class SelectRangeButtons : MonoBehaviour
     // 親オブジェクトの左上を基準とするためのオフセット
     float startX;
     float startY;
+    float optionStartX;
+    float optionStartY;
 
     BattleManager bm;
     List<Button> buttonList;
@@ -148,9 +153,8 @@ public class SelectRangeButtons : MonoBehaviour
         }
 
 
-        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectMultiTarget))//前のめりまたは後衛の団体かで選べるなら
+        if (skill.HasZoneTrait(SkillZoneTrait.AllTarget))//全範囲なら
         {
-            //.CanSelectSingleTargetを今回の範囲とするボタンを作成する。
             var button = Instantiate(buttonPrefab, transform);
             var rect = button.GetComponent<RectTransform>();
 
@@ -170,8 +174,68 @@ public class SelectRangeButtons : MonoBehaviour
             // 次のボタンのX位置を更新
             currentX += (buttonSize.x + horizontalPadding);
 
-            button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectMultiTarget));
-            button.GetComponentInChildren<TextMeshProUGUI>().text = "前のめりかそれ以外二人を狙う";//ボタンのテキスト
+            button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.AllTarget));
+            button.GetComponentInChildren<TextMeshProUGUI>().text = "敵の全範囲を狙う";//ボタンのテキスト
+            buttonList.Add(button);//ボタンリストに入れる
+
+        }
+
+
+        //ここからオプションのボタン
+
+        currentX = optionStartX;
+        currentY = optionStartY;
+
+        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))//味方を選ぶオプションを追加するなら
+        {
+            var button = Instantiate(buttonPrefab, transform);
+            var rect = button.GetComponent<RectTransform>();
+
+            // 親オブジェクトの右端を超える場合は次の行に移動
+            if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+            {
+                // 左端にリセット
+                currentX = startX;
+
+                // 次の行に移動
+                currentY -= (buttonSize.y + verticalPadding);
+            }
+
+            // ボタンの位置を設定
+            rect.anchoredPosition = new Vector2(currentX, currentY);
+
+            // 次のボタンのX位置を更新
+            currentX += (buttonSize.x + horizontalPadding);
+
+            button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectAlly));
+            button.GetComponentInChildren<TextMeshProUGUI>().text = "味方";//ボタンのテキスト
+            buttonList.Add(button);//ボタンリストに入れる
+
+        }
+
+        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectDeath))//死者を選ぶオプションを追加するなら
+        {
+            var button = Instantiate(buttonPrefab, transform);
+            var rect = button.GetComponent<RectTransform>();
+
+            // 親オブジェクトの右端を超える場合は次の行に移動
+            if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+            {
+                // 左端にリセット
+                currentX = startX;
+
+                // 次の行に移動
+                currentY -= (buttonSize.y + verticalPadding);
+            }
+
+            // ボタンの位置を設定
+            rect.anchoredPosition = new Vector2(currentX, currentY);
+
+            // 次のボタンのX位置を更新
+            currentX += (buttonSize.x + horizontalPadding);
+
+            button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectDeath));
+            button.GetComponentInChildren<TextMeshProUGUI>().text = "死者";//ボタンのテキスト
             buttonList.Add(button);//ボタンリストに入れる
 
         }
@@ -182,11 +246,78 @@ public class SelectRangeButtons : MonoBehaviour
 
 
     }
+    /// <summary>
+    /// テスト用ボタン
+    /// </summary>
+    public void OnClickTestButton()
+    {
+        // 現在の位置を初期化
+        float currentX = startX;
+        float currentY = startY;
+
+        const int Optioncount = 2;
+        const int count = 3;
+
+        currentX = startX;//通常ボタン
+        currentY = startY;
+
+        for (int i = 0; i < count; i++)
+        {
+            var button = Instantiate(buttonPrefab, transform);
+            var rect = button.GetComponent<RectTransform>();
+
+            // 親オブジェクトの右端を超える場合は次の行に移動
+            if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+            {
+                // 左端にリセット
+                currentX = startX;
+
+                // 次の行に移動
+                currentY -= (buttonSize.y + verticalPadding);
+            }
+
+            // ボタンの位置を設定
+            rect.anchoredPosition = new Vector2(currentX, currentY);
+
+            // 次のボタンのX位置を更新
+            currentX += (buttonSize.x + horizontalPadding);
+        }
+
+
+
+        currentX = optionStartX;//オプションボタン
+        currentY = optionStartY;
+
+        for (int i = 0; i < Optioncount; i++)
+        {
+            var button = Instantiate(buttonPrefab, transform);
+            var rect = button.GetComponent<RectTransform>();
+
+            // 親オブジェクトの右端を超える場合は次の行に移動
+            if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+            {
+                // 左端にリセット
+                currentX = startX;
+
+                // 次の行に移動
+                currentY -= (buttonSize.y + verticalPadding);
+            }
+
+            // ボタンの位置を設定
+            rect.anchoredPosition = new Vector2(currentX, currentY);
+
+            // 次のボタンのX位置を更新
+            currentX += (buttonSize.x + horizontalPadding);
+        }
+
+
+
+    }
 
     /// <summary>
     /// オプションの範囲選択ボタンに渡すコールバック
     /// </summary>
-    public void OnClickOptionRangeBtn(Button thisbtn,SkillZoneTrait option)
+    public void OnClickOptionRangeBtn(Button thisbtn, SkillZoneTrait option)
     {
         bm.Acter.RangeWill |= option;
         Destroy(thisbtn);//ボタンは消える
@@ -194,7 +325,7 @@ public class SelectRangeButtons : MonoBehaviour
         //オプションなのでこれ選んだだけでは次へ進まない。
     }
 
-    public void OnClickRangeBtn(Button thisbtn,SkillZoneTrait range)
+    public void OnClickRangeBtn(Button thisbtn, SkillZoneTrait range)
     {
         bm.Acter.RangeWill |= range;
         foreach (var button in buttonList)
@@ -210,12 +341,12 @@ public class SelectRangeButtons : MonoBehaviour
     /// </summary>
     public void NextTab()
     {
-        //全範囲ならそのままnextWait
+        //全範囲ならそのままnextWait　　対象を選ぶ必要がないからね
         if (bm.Acter.HasRangeWill(SkillZoneTrait.AllTarget))
         {
             Walking.USERUI_state.Value = TabState.NextWait;
         }
-        else 
+        else
         {
             Walking.USERUI_state.Value = TabState.SelectTarget;//そうでないなら選択画面へ。
 
