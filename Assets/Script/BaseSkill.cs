@@ -43,6 +43,7 @@ public enum SkillZoneTrait
     CanSelectMultiTarget = 1 << 3,
     /// <summary>
     /// ランダムで選ばれる前のめりか後衛の範囲対象
+    /// この際唐突性があるためテラーズヒットは発生しない
     /// </summary>
     RandomSelectMultiTarget = 1 << 4,
     /// <summary>
@@ -57,19 +58,19 @@ public enum SkillZoneTrait
     /// <summary>
     /// 範囲ランダム　全シチュエーション
     /// </summary>
-    RandomRangeRandomTargetALLSituation = 1 << 7,
+    RandomTargetALLSituation = 1 << 7,
     /// <summary>
     /// 範囲ランダム   前のめり,後衛単位or単体ランダム
     /// </summary>
-    RandomRangeRandomTargetMultiOrSingle = 1 << 8,
+    RandomTargetMultiOrSingle = 1 << 8,
     /// <summary>
     /// 範囲ランダム　全体or単体ランダム
     /// </summary>
-    RandomRangeRandomTargetALLorSingle = 1 << 9,
+    RandomTargetALLorSingle = 1 << 9,
     /// <summary>
     /// 範囲ランダム　全体or前のめり,後衛単位
     /// </summary>
-    RandomRangeRandomTargetALLorMulti = 1 << 10,
+    RandomTargetALLorMulti = 1 << 10,
 
     /// <summary>
     /// RandomRangeを省いた要素のうちが選択可能かどうか
@@ -90,6 +91,10 @@ public enum SkillZoneTrait
     ///canSelectAllyは無効
     /// </summary>
     ControlByThisSituation = 1 << 14,
+    /// <summary>
+    /// 範囲ランダム判定用
+    /// </summary>
+    RandomRange = 1 << 15,
 
 }
 /// <summary>
@@ -135,6 +140,8 @@ public enum SkillConsecutiveType
 }
 /// <summary>
 /// 対象を選別する意思状態の列挙体 各手順で選ばれた末の結果なので、単一の結果のみだからビット演算とかでない
+/// この列挙体は**状況内で選別するシチュエーション的な変数**という側面が強い。
+/// 要はbattleManagerでそれぞれの状況に応じてキャラを選別するって感じ
 /// </summary>
 public enum DirectedWill
 {
@@ -150,10 +157,6 @@ public enum DirectedWill
     /// 単一ユニット
     /// </summary>
     One,
-    /// <summary>
-    /// 全て
-    /// </summary>
-    All,
 }
 /// <summary>
 /// "範囲"攻撃の割合的な意志を表す列挙体 予め設定された3つの割合をどう扱うかの指定

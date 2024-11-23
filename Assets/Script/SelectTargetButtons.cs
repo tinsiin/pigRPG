@@ -103,7 +103,7 @@ public class SelectTargetButtons : MonoBehaviour
             }
         }
 
-        if (acter.HasRangeWill(SkillZoneTrait.CanSelectSingleTarget))//前のめりか後衛(範囲)を狙うか
+        if (acter.HasRangeWill(SkillZoneTrait.CanSelectMultiTarget))//前のめりか後衛(範囲)を狙うか
         {
             EnemyVanguardOrBackLine = true;
             if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//味方も選べるなら
@@ -128,7 +128,7 @@ public class SelectTargetButtons : MonoBehaviour
                 if (!AllyTargeting)//味方選択がないなら
                 {
                     ReturnNextWaitView();//そのまま次の画面へ
-                    bm.Acter.Target = DirectedWill.BacklineOrAny;//後衛または誰かの意思を入れとく。
+                    //bmに処理を任せる
                 }
                 else//味方も選択できるなら
                 {
@@ -207,7 +207,7 @@ public class SelectTargetButtons : MonoBehaviour
             if (selects.Count < 2 && AllyTargeting)//敵の生きてる人数が二人未満で、味方の選択もなければ
             {
                 ReturnNextWaitView();//そのまま次の画面へ
-                bm.Acter.Target = DirectedWill.BacklineOrAny;//後衛または誰かの意思を入れとく。
+                                     //bmに処理を任せる
             }
             else
             {
@@ -343,7 +343,6 @@ public class SelectTargetButtons : MonoBehaviour
     void OnClickSelectTarget(BaseStates target, Button thisBtn, WhichGroup faction,DirectedWill will)
     {
         bm.UnderActer.Add(target);
-
 
         if (AllybuttonList.Count > 0 && faction == WhichGroup.Enemyiy)///敵のボタンで味方のボタンが一つ以上あったら
         {
