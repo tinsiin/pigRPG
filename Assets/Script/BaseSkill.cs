@@ -481,8 +481,22 @@ public class BaseSkill
     //スキルパワーの計算
     public virtual float SkillPowerCalc(int underIndex)
     {
+        var pwr = SkillPower;//基礎パワー
+
+        //術者の範囲意志に威力の割合差分が存在するならば、威力に掛ける。
+        foreach(KeyValuePair<SkillZoneTrait,float> entry in PowerRangePercentageDictionary)//辞書に存在する物全てをループ
+        {
+            if (Doer.HasRangeWill(entry.Key))//キーの内容が行使者の範囲意志と合致した場合
+            {
+                pwr *= entry.Value;//威力にfloatの値を掛ける
+
+                //基本的に範囲は一つだけのはずなので無用なループは避けてここで終了
+                break;
+            }
+        }
+       
         //範囲割合を含める
-        return SkillPower* PowerSpread[underIndex];
+        return pwr * PowerSpread[underIndex];
     }
 
     /// <summary>
@@ -505,5 +519,12 @@ public class BaseSkill
 
     public SkillConsecutiveType ConsecutiveType;
     public SkillZoneTrait ZoneTrait;
+
+    /// <summary>
+    /// 威力の範囲が複数に選択または分岐可能時の割合差分
+    /// インスペクタで追加し、基本的にskillPowerCalcと味方の範囲選択ボタンでの表記で用い、
+    /// canselectRangeで範囲が複数選択できる、またはrandomRangeで範囲が複数分岐した際に使う感じ。
+    /// </summary>
+    public SerializableDictionary<SkillZoneTrait, float> PowerRangePercentageDictionary;
 
 }

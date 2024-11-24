@@ -92,7 +92,8 @@ public class SelectRangeButtons : MonoBehaviour
             currentX += (buttonSize.x + horizontalPadding);
 
             button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectSingleTarget));
-            button.GetComponentInChildren<TextMeshProUGUI>().text = "前のめりまたはそれ以外のどちらかを狙う";//ボタンのテキスト
+            button.GetComponentInChildren<TextMeshProUGUI>().text =
+                "前のめりまたはそれ以外のどちらかを狙う" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectSingleTarget);//ボタンのテキスト
             buttonList.Add(button);//ボタンリストに入れる
 
         }
@@ -120,7 +121,8 @@ public class SelectRangeButtons : MonoBehaviour
             currentX += (buttonSize.x + horizontalPadding);
 
             button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanPerfectSelectSingleTarget));
-            button.GetComponentInChildren<TextMeshProUGUI>().text = "個々を狙う";//ボタンのテキスト
+            button.GetComponentInChildren<TextMeshProUGUI>().text =
+                "個々を狙う" + AddPercentageTextOnButton(SkillZoneTrait.CanPerfectSelectSingleTarget);//ボタンのテキスト
             buttonList.Add(button);//ボタンリストに入れる
 
         }
@@ -147,7 +149,8 @@ public class SelectRangeButtons : MonoBehaviour
             currentX += (buttonSize.x + horizontalPadding);
 
             button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectMultiTarget));
-            button.GetComponentInChildren<TextMeshProUGUI>().text = "前のめりかそれ以外二人を狙う";//ボタンのテキスト
+            button.GetComponentInChildren<TextMeshProUGUI>().text =
+                "前のめりかそれ以外二人を狙う" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectMultiTarget);//ボタンのテキスト
             buttonList.Add(button);//ボタンリストに入れる
 
         }
@@ -175,7 +178,8 @@ public class SelectRangeButtons : MonoBehaviour
             currentX += (buttonSize.x + horizontalPadding);
 
             button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.AllTarget));
-            button.GetComponentInChildren<TextMeshProUGUI>().text = "敵の全範囲を狙う";//ボタンのテキスト
+            button.GetComponentInChildren<TextMeshProUGUI>().text =
+                "敵の全範囲を狙う" + AddPercentageTextOnButton(SkillZoneTrait.AllTarget);//ボタンのテキスト
             buttonList.Add(button);//ボタンリストに入れる
 
         }
@@ -208,7 +212,8 @@ public class SelectRangeButtons : MonoBehaviour
             currentX += (buttonSize.x + horizontalPadding);
 
             button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectAlly));
-            button.GetComponentInChildren<TextMeshProUGUI>().text = "味方";//ボタンのテキスト
+            button.GetComponentInChildren<TextMeshProUGUI>().text =
+                "味方" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectAlly);//ボタンのテキスト
             buttonList.Add(button);//ボタンリストに入れる
 
         }
@@ -235,7 +240,8 @@ public class SelectRangeButtons : MonoBehaviour
             currentX += (buttonSize.x + horizontalPadding);
 
             button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectDeath));
-            button.GetComponentInChildren<TextMeshProUGUI>().text = "死者";//ボタンのテキスト
+            button.GetComponentInChildren<TextMeshProUGUI>().text =
+                "死者" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectDeath);//ボタンのテキスト
             buttonList.Add(button);//ボタンリストに入れる
 
         }
@@ -335,11 +341,26 @@ public class SelectRangeButtons : MonoBehaviour
         NextTab();//次へ行く
 
     }
+    /// <summary>
+    /// ボタンに威力の範囲による割合差分のテキストを追加する
+    /// 引数に範囲性質を渡すと、それに応じた割合差分があるならば、数字のテキストを返す。
+    /// </summary>
+    private string AddPercentageTextOnButton(SkillZoneTrait zone)
+    {
+        var skill = bm.Acter.NowUseSkill;
+        var txt = "";//何もなければ空文字が返るのみ
+        if (skill.PowerRangePercentageDictionary.ContainsKey(zone))//その範囲性質の割合差分があるならば
+        {
+            txt = "\n割合差分:" + (skill.PowerRangePercentageDictionary[zone] * 100).ToString() + "%";//テキストに入れる。
+        }
+
+        return txt;
+    }
 
     /// <summary>
     /// 次のタブへ行く
     /// </summary>
-    public void NextTab()
+    private void NextTab()
     {
         //全範囲ならそのままnextWait　　対象を選ぶ必要がないからね
         if (bm.Acter.HasRangeWill(SkillZoneTrait.AllTarget))

@@ -544,6 +544,8 @@ MonoBehaviour:
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
+      PowerRangePercentageDictionary:
+        _list: []
     b_AGI: 0
     b_ATK: 0
     b_DEF: 0
@@ -567,6 +569,8 @@ MonoBehaviour:
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
+      PowerRangePercentageDictionary:
+        _list: []
     FreezeUseSkill:
       _name: 
       CanCancel: 1
@@ -584,6 +588,8 @@ MonoBehaviour:
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
+      PowerRangePercentageDictionary:
+        _list: []
     MAXP: 0
     P: 0
     maxRecoveryTurn: 0
@@ -616,6 +622,8 @@ MonoBehaviour:
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
+      PowerRangePercentageDictionary:
+        _list: []
     FreezeUseSkill:
       _name: 
       CanCancel: 1
@@ -633,6 +641,8 @@ MonoBehaviour:
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
+      PowerRangePercentageDictionary:
+        _list: []
     MAXP: 0
     P: 0
     maxRecoveryTurn: 0
@@ -665,6 +675,8 @@ MonoBehaviour:
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
+      PowerRangePercentageDictionary:
+        _list: []
     FreezeUseSkill:
       _name: 
       CanCancel: 1
@@ -682,6 +694,8 @@ MonoBehaviour:
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
+      PowerRangePercentageDictionary:
+        _list: []
     MAXP: 0
     P: 0
     maxRecoveryTurn: 0
@@ -793,6 +807,8 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          PowerRangePercentageDictionary:
+            _list: []
         FreezeUseSkill:
           _name: 
           CanCancel: 1
@@ -810,6 +826,8 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          PowerRangePercentageDictionary:
+            _list: []
         MAXP: 0
         P: 0
         maxRecoveryTurn: 0
@@ -839,6 +857,8 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          PowerRangePercentageDictionary:
+            _list: []
         - _name: 
           CanCancel: 0
           IsAggressiveCommit: 0
@@ -855,6 +875,8 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          PowerRangePercentageDictionary:
+            _list: []
         b_AGI: 0
         b_ATK: 0
         b_DEF: 0
@@ -878,6 +900,8 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          PowerRangePercentageDictionary:
+            _list: []
         FreezeUseSkill:
           _name: 
           CanCancel: 1
@@ -895,6 +919,8 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          PowerRangePercentageDictionary:
+            _list: []
         MAXP: 0
         P: 0
         maxRecoveryTurn: 0
@@ -931,6 +957,8 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          PowerRangePercentageDictionary:
+            _list: []
         FreezeUseSkill:
           _name: 
           CanCancel: 1
@@ -948,6 +976,8 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          PowerRangePercentageDictionary:
+            _list: []
         MAXP: 0
         P: 0
         maxRecoveryTurn: 0
