@@ -8,6 +8,7 @@ using UnityEngine.AddressableAssets;
 using RandomExtensions;
 using System;
 using UnityEditor.Experimental.GraphView;
+using static BattleManager;
 
 /// <summary>
 ///     キャラクター達の種別
@@ -274,6 +275,7 @@ public abstract class BaseStates
     public SpiritualProperty MyImpression { get; private set; }
 
 
+
     /// <summary>
     /// 次に使用する命中率へのパーセント補正用保持リスト
     /// </summary>
@@ -421,13 +423,14 @@ public abstract class BaseStates
     /// </summary>
     /// <param name="skill"></param>
     /// <param name="UnderIndex">攻撃される人の順番　スキルのPowerSpreadの順番に同期している</param>
-    public virtual string ReactionSkill(BaseSkill skill,int UnderIndex)
+    public virtual string ReactionSkill(BaseSkill skill,float spread)
     {
         //スキルパワーの精神属性による計算
         var modifier = SkillSpiritualModifier[(skill.SkillSpiritual, MyImpression)];//スキルの精神属性と自分の精神属性による補正
-        var skillPower = skill.SkillPowerCalc(UnderIndex) * modifier.GetValue() / 100.0f;
+        var skillPower = skill.SkillPowerCalc(spread) * modifier.GetValue() / 100.0f;
         var txt = "";//メッセージテキスト用
         skill.DoCount++;//スキルを実行した回数をカウントアップ
+
 
         //スキルの持ってる性質を全て処理として実行
 
@@ -455,7 +458,7 @@ public abstract class BaseStates
     /// クラスを通じて相手を攻撃する
     /// </summary>
     /// <param name="UnderAttacker"></param>
-    public virtual string AttackChara(List<BaseStates> UnderAttacker)
+    public virtual string AttackChara(UnderActersEntryList Unders)
     {
         //本来この関数は今のところ無駄　BMでの処理では直接UnderActerのreactionSkill呼びだしゃいい話だし
         //ただもしかしたらここでのunderAttackerによっての何らかの分岐処理するかもだから念のためね。
@@ -464,9 +467,9 @@ public abstract class BaseStates
         SkillUseConsecutiveCountUp(NowUseSkill);//連続カウントアップ
         string txt="";
 
-        for(var i = 0; i < UnderAttacker.Count;i++)//いる分だけ
+        for(var i = 0; i < Unders.Count; i++)
         {
-            txt += UnderAttacker[i].ReactionSkill(NowUseSkill,i);//敵がスキルにリアクション
+            txt += Unders.GetAtCharacter(i).ReactionSkill(NowUseSkill, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
         }
 
         NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルの攻撃回数をカウントアップ

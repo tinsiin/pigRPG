@@ -1,4 +1,5 @@
 using RandomExtensions;
+using RandomExtensions.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
@@ -6,6 +7,7 @@ using TMPro;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UI;
+using static UnityEngine.GraphicsBuffer;
 
 public class SelectTargetButtons : MonoBehaviour
 {
@@ -54,6 +56,8 @@ public class SelectTargetButtons : MonoBehaviour
     int NeedSelectCountEnemy;
     List<Button> AllybuttonList;
     List<Button> EnemybuttonList;
+
+    List<BaseStates> CashUnders;//分散値に対するランダム性をタンポポするための対象者キャッシュ
     /// <summary>
     /// 生成用コールバック
     /// </summary>
@@ -61,8 +65,8 @@ public class SelectTargetButtons : MonoBehaviour
     {
         bm = _bm;
         var acter = bm.Acter;
-        var underActer = bm.UnderActer;
         var skill = acter.NowUseSkill;
+        CashUnders = new List<BaseStates>();
 
         //もしスキルの範囲性質にcanSelectTargetがない場合
         if (!skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))
@@ -342,7 +346,7 @@ public class SelectTargetButtons : MonoBehaviour
     /// </summary>
     void OnClickSelectTarget(BaseStates target, Button thisBtn, WhichGroup faction,DirectedWill will)
     {
-        bm.UnderActer.Add(target);
+        CashUnders.Add(target);
 
         if (AllybuttonList.Count > 0 && faction == WhichGroup.Enemyiy)///敵のボタンで味方のボタンが一つ以上あったら
         {
@@ -403,6 +407,13 @@ public class SelectTargetButtons : MonoBehaviour
     private void ReturnNextWaitView()
     {
         Walking.USERUI_state.Value = TabState.NextWait;
+
+        //bmの対象者リストにキャッシュリストを入れる
+        CashUnders.Shuffle();//分散値のランダム性のためシャッフル
+        foreach(var cash in CashUnders)
+        {
+            bm.unders.CharaAdd(cash);
+        }
 
         foreach (var button in AllybuttonList)
         {

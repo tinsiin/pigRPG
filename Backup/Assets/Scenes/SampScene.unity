@@ -544,6 +544,7 @@ MonoBehaviour:
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
+      DistributionType: 0
       PowerRangePercentageDictionary:
         _list: []
     b_AGI: 0
@@ -569,6 +570,7 @@ MonoBehaviour:
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
+      DistributionType: 0
       PowerRangePercentageDictionary:
         _list: []
     FreezeUseSkill:
@@ -588,6 +590,7 @@ MonoBehaviour:
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
+      DistributionType: 0
       PowerRangePercentageDictionary:
         _list: []
     MAXP: 0
@@ -622,6 +625,7 @@ MonoBehaviour:
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
+      DistributionType: 0
       PowerRangePercentageDictionary:
         _list: []
     FreezeUseSkill:
@@ -641,6 +645,7 @@ MonoBehaviour:
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
+      DistributionType: 0
       PowerRangePercentageDictionary:
         _list: []
     MAXP: 0
@@ -675,6 +680,7 @@ MonoBehaviour:
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
+      DistributionType: 0
       PowerRangePercentageDictionary:
         _list: []
     FreezeUseSkill:
@@ -694,6 +700,7 @@ MonoBehaviour:
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
+      DistributionType: 0
       PowerRangePercentageDictionary:
         _list: []
     MAXP: 0
@@ -807,6 +814,7 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          DistributionType: 0
           PowerRangePercentageDictionary:
             _list: []
         FreezeUseSkill:
@@ -826,6 +834,7 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          DistributionType: 0
           PowerRangePercentageDictionary:
             _list: []
         MAXP: 0
@@ -857,6 +866,7 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          DistributionType: 0
           PowerRangePercentageDictionary:
             _list: []
         - _name: 
@@ -875,6 +885,7 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          DistributionType: 0
           PowerRangePercentageDictionary:
             _list: []
         b_AGI: 0
@@ -900,6 +911,7 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          DistributionType: 0
           PowerRangePercentageDictionary:
             _list: []
         FreezeUseSkill:
@@ -919,6 +931,7 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          DistributionType: 0
           PowerRangePercentageDictionary:
             _list: []
         MAXP: 0
@@ -957,6 +970,7 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          DistributionType: 0
           PowerRangePercentageDictionary:
             _list: []
         FreezeUseSkill:
@@ -976,6 +990,7 @@ MonoBehaviour:
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
+          DistributionType: 0
           PowerRangePercentageDictionary:
             _list: []
         MAXP: 0

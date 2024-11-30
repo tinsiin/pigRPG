@@ -9,6 +9,7 @@ using Unity.VisualScripting;
 using R3;
 using Cysharp.Threading.Tasks;
 using UnityEditor.Experimental.GraphView;
+using UnityEngine.Rendering.Universal;
 
 /// <summary>
 /// 戦闘の先手が起ったかどうか
@@ -97,6 +98,130 @@ public class ACTList
 /// </summary>
 public class BattleManager
 {
+    /// <summary>
+    /// 攻撃対象者の一時処方に耐えうる保持リスト
+    /// </summary>
+    public class UnderActersEntryList
+    {
+        BattleManager Manager;
+        /// <summary>
+        /// 対象者キャラクターリスト
+        /// </summary>
+        List<BaseStates> charas;
+        /// <summary>
+        /// 割り当てられる"当てられる"スキルの分散値
+        /// </summary>
+        List<float> spreadPer;
+
+        List<float> _cashSpread;
+        List<float> CashSpread
+        {
+            get
+            {
+                if(_cashSpread == null)
+                {
+                    _cashSpread = Manager.Acter.NowUseSkill.PowerSpread.ToList();
+                }
+                return _cashSpread;
+            }
+        }
+
+        public int Count => charas.Count;
+
+        public UnderActersEntryList(BattleManager instance)
+        {
+            charas = new List<BaseStates>();
+            spreadPer = new List<float>();
+            Manager = instance;
+        }
+
+        public BaseStates GetAtCharacter(int index)
+        {
+            return charas[index];
+        }
+        public float GetAtSpreadPer(int index)
+        {
+            return spreadPer[index];
+        }
+
+        /// <summary>
+        /// 既にある対象者リストをそのまま処理。
+        /// </summary>
+        public void SetList(List<BaseStates> charas) 
+        {
+            foreach (var chara in charas)
+            {
+                CharaAdd(chara);
+            }
+        }
+
+        /// <summary>
+        /// 追加し整理する関数
+        /// </summary>
+        public void CharaAdd(BaseStates chara)
+        {
+            var skill = Manager.Acter.NowUseSkill;
+
+            float item = 1;//分散しなかったらデフォルトで100%
+
+            if (skill.PowerSpread.Length > 0)//スキル分散値配列のサイズがゼロより大きかったら分散する
+            {
+                //爆発的
+                if (skill.DistributionType == AttackDistributionType.Explosion)
+                {
+                    if (Manager.IsVanguard(chara))
+                    {
+                        item = CashSpread[0];//前のめりなら前の"0"の分散値
+                    }
+                    else
+                    {
+                        item = CashSpread[1];//後衛なら後ろの"1"の分散値
+                    }
+                }
+                //放射型、ビーム型
+                if(skill.DistributionType == AttackDistributionType.Beam)
+                {
+                    if (Manager.IsVanguard(chara))
+                    {
+                        item = CashSpread[0];//最初のを抽出
+                        CashSpread.RemoveAt(0);
+                    }
+                    else
+                    {
+                        item = CashSpread[CashSpread.Count -1];//末尾から抽出
+                        CashSpread.RemoveAt(CashSpread.Count - 1);
+                    }
+                }
+                //投げる型
+                if(skill.DistributionType == AttackDistributionType.Throw)
+                {
+                    if (Manager.IsVanguard(chara))
+                    {
+                        item = CashSpread[CashSpread.Count - 1];//末尾から抽出
+                        CashSpread.RemoveAt(CashSpread.Count - 1);
+                    }
+                    else
+                    {
+                        item = CashSpread[0];//最初のを抽出
+                        CashSpread.RemoveAt(0);
+                    }
+                }
+                //ランダムの場合
+                if(skill.DistributionType == AttackDistributionType.Random)
+                {
+                        item = CashSpread[CashSpread.Count - 1];//末尾から抽出
+                        CashSpread.RemoveAt(CashSpread.Count - 1);
+                }
+
+            }
+            spreadPer.Add(item);
+            charas.Add(chara);//追加
+
+        }
+
+
+
+    }
 
 
     /// <summary>
@@ -115,9 +240,9 @@ public class BattleManager
     string UniqueTopMessage;//通常メッセージの冠詞？
     public BaseStates Acter;//今回の俳優
     /// <summary>
-    /// 行動を受ける人 これの順番によってスキルの三割合が当てはまる
+    /// 行動を受ける人 
     /// </summary>
-    public List<BaseStates> UnderActer;
+    public UnderActersEntryList unders;
     WhichGroup Faction;//陣営
     bool Wipeout = false;//全滅したかどうか
     bool RunOut = false;//逃走
@@ -140,7 +265,7 @@ public class BattleManager
         EnemyGroup = enemyGroup;
         firstSituation = first;
         Acts = new ACTList();
-        UnderActer = new List<BaseStates>();
+        unders = new UnderActersEntryList(this);
 
         OnBattleStart();//初期化コールバック
 
@@ -422,14 +547,12 @@ public class BattleManager
         }
 
         //人数やスキルの攻撃傾向によって、被攻撃者の選別をする
-
         SelectTargetFromWill();
-
 
         //実行処理
         skill.SetDeltaTurn(BattleTurnCount);//スキルのdeltaTurnをセット
-        CreateBattleMessage(Acter.AttackChara(UnderActer));//攻撃の処理からメッセージが返る。
-        UnderActer = new List<BaseStates>();//初期化
+        CreateBattleMessage(Acter.AttackChara(unders));//攻撃の処理からメッセージが返る。
+        unders = new UnderActersEntryList(this);//初期化
 
         //スキル実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
         if (skill.IsAggressiveCommit)
@@ -546,6 +669,15 @@ public class BattleManager
                     }
             }
         }
+    }
+    /// <summary>
+    /// そのキャラが、敵味方問わずグループにおける前のめり状態かどうかを判別します。
+    /// </summary>
+    bool IsVanguard(BaseStates chara)
+    {
+        if(chara == AllyGroup.InstantVanguard)return true;
+        if(chara == EnemyGroup.InstantVanguard)return true;
+        return false;
     }
     const int FrontGuardPer = 13;
     const int BackLineHITModifier = 70;
@@ -818,8 +950,13 @@ public class BattleManager
 
                 }
             }
+
             //underActerがゼロ個でないと、つまりここの意志選択関数以外で直接指定してるなら、入れない。
-            if (UnderActer.Count < 1) UnderActer = UA;
+            if (unders.Count < 1) 
+            {
+                UA.Shuffle();
+                unders.SetList(UA);
+            }
         }
     }
     private void NextTurn(bool Next)

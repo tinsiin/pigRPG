@@ -58,7 +58,6 @@ public class SelectRangeButtons : MonoBehaviour
     {
         bm = _bm;
         var acter = bm.Acter;
-        var underActer = bm.UnderActer;
         var skill = acter.NowUseSkill;
 
         // Œ»İ‚ÌˆÊ’u‚ğ‰Šú‰»

@@ -159,7 +159,8 @@ public enum DirectedWill
     One,
 }
 /// <summary>
-/// "範囲"攻撃の割合的な意志を表す列挙体 予め設定された3つの割合をどう扱うかの指定
+/// "範囲"攻撃の分散性質を表す列挙体 予め設定された3～６つの割合をどう扱うかの指定
+/// powerSpreadの配列のサイズで分散するかどうかを判定する。(つまりNoneみたいな値はない。)
 /// </summary>
 public enum AttackDistributionType
 {
@@ -168,13 +169,19 @@ public enum AttackDistributionType
     /// </summary>
     Random,
     /// <summary>
-    /// 一人一人指定する　味方なら選んだのが、敵ならSkillAIを通じて指定
+    /// 前のめり状態(敵味方問わず)のキャラが最初に回されるランダム分散　
+    /// 放射系統のビーム的な
     /// </summary>
-    OneToOne,
+    Beam,
     /// <summary>
-    /// 2までの値だけを利用して、前衛と後衛への割合。　前衛が以内なら後衛単位　おそらく2が使われる
+    /// 2までの値だけを利用して、前衛と後衛への割合。　
+    /// 前衛が以内なら後衛単位　おそらく2が使われる
     /// </summary>
-    vanguardOrBackers
+    Explosion,
+    /// <summary>
+    /// 投げる。　つまり敵味方問わず前のめり状態のが一番後ろに回される
+    /// </summary>
+    Throw,
 }
 [Serializable]
 public class BaseSkill
@@ -426,7 +433,7 @@ public class BaseSkill
     /// <summary>
     /// スキルの範囲効果における各割合　最大で6の長さまで使うと思う
     /// </summary>
-    public int[] PowerSpread;
+    public float[] PowerSpread;
 
     /// <summary>
     /// スキルのパワー
@@ -479,12 +486,13 @@ public class BaseSkill
     }
 
     //スキルパワーの計算
-    public virtual float SkillPowerCalc(int underIndex)
+    public virtual float SkillPowerCalc(float spread)
     {
         var pwr = SkillPower;//基礎パワー
 
         //術者の範囲意志に威力の割合差分が存在するならば、威力に掛ける。
-        foreach(KeyValuePair<SkillZoneTrait,float> entry in PowerRangePercentageDictionary)//辞書に存在する物全てをループ
+        foreach(KeyValuePair<SkillZoneTrait,float> entry 
+            in PowerRangePercentageDictionary)//辞書に存在する物全てをループ
         {
             if (Doer.HasRangeWill(entry.Key))//キーの内容が行使者の範囲意志と合致した場合
             {
@@ -494,9 +502,10 @@ public class BaseSkill
                 break;
             }
         }
-       
-        //範囲割合を含める
-        return pwr * PowerSpread[underIndex];
+
+        pwr *= spread;//分散値を掛ける
+
+        return pwr;
     }
 
     /// <summary>
@@ -515,16 +524,31 @@ public class BaseSkill
     //防御無視率
     public float DEFATK;
 
+    /// <summary>
+    /// スキルの攻撃性質
+    /// </summary>
     public SkillType WhatSkill;
-
+    /// <summary>
+    /// スキルの連撃性質
+    /// </summary>
     public SkillConsecutiveType ConsecutiveType;
+    /// <summary>
+    /// スキルの範囲性質
+    /// </summary>
     public SkillZoneTrait ZoneTrait;
+    /// <summary>
+    /// スキルの分散性質
+    /// </summary>
+    public AttackDistributionType DistributionType;
 
     /// <summary>
     /// 威力の範囲が複数に選択または分岐可能時の割合差分
-    /// インスペクタで追加し、基本的にskillPowerCalcと味方の範囲選択ボタンでの表記で用い、
-    /// canselectRangeで範囲が複数選択できる、またはrandomRangeで範囲が複数分岐した際に使う感じ。
+    /// インスペクタで追加し、
+    /// 基本的にskillPowerCalcと味方の範囲選択ボタンでの表記で用い、
+    /// canselectRangeで範囲が複数選択できる、
+    /// またはrandomRangeで範囲が複数分岐した際に使う感じ。
     /// </summary>
-    public SerializableDictionary<SkillZoneTrait, float> PowerRangePercentageDictionary;
+    public SerializableDictionary<SkillZoneTrait, float> 
+        PowerRangePercentageDictionary;
 
 }
