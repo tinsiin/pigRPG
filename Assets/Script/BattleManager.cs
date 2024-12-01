@@ -673,7 +673,7 @@ public class BattleManager
     /// <summary>
     /// そのキャラが、敵味方問わずグループにおける前のめり状態かどうかを判別します。
     /// </summary>
-    bool IsVanguard(BaseStates chara)
+    public bool IsVanguard(BaseStates chara)
     {
         if(chara == AllyGroup.InstantVanguard)return true;
         if(chara == EnemyGroup.InstantVanguard)return true;
@@ -1000,6 +1000,16 @@ public class BattleManager
         //全キャラのrecovelyTurnを最大値にセットすることで全員行動可能
         EnemyGroup.PartyRecovelyTurnOK();
         AllyGroup.PartyRecovelyTurnOK();
+
+        //全キャラにbmセット
+        foreach(var one in EnemyGroup.Ours)
+        {
+            one.Managed(this);
+        }
+        foreach(var one in AllyGroup.Ours)
+        {
+            one.Managed(this);
+        }
     }
 
 }

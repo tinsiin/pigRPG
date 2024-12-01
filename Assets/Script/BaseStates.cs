@@ -9,6 +9,7 @@ using RandomExtensions;
 using System;
 using UnityEditor.Experimental.GraphView;
 using static BattleManager;
+using Unity.Burst.CompilerServices;
 
 /// <summary>
 ///     キャラクター達の種別
@@ -75,6 +76,13 @@ public enum SpiritualProperty
 [Serializable]
 public abstract class BaseStates
 {
+    private BattleManager manager;
+
+    public void Managed(BattleManager ma)
+    {
+        manager = ma;
+    }
+
     [SerializeField] private List<BasePassive> _passiveList;
 
     [SerializeField] List<BaseSkill> _skillList;
@@ -147,7 +155,7 @@ public abstract class BaseStates
     ///     recovelyTurnの基礎バッキングフィールド
     /// </summary>
     private int recoveryTurn;
-    
+
     /// <summary>
     /// skillDidWaitCountなどで一時的に通常recovelyTurnに追加される一時的に再行動クールタイム/追加硬直値
     /// </summary>
@@ -170,7 +178,7 @@ public abstract class BaseStates
     {
         var difference = Math.Abs(nowTurn - tmp_EncountTurn);//前ターンと今回のターンの差異から経過ターン
         tmp_EncountTurn = nowTurn;//一時保存
-        if((recoveryTurn +=difference) >= maxRecoveryTurn+tmpTurnsToAdd)//累計ターン経過が最大値を超えたら
+        if ((recoveryTurn += difference) >= maxRecoveryTurn + tmpTurnsToAdd)//累計ターン経過が最大値を超えたら
         {
             //ここでrecovelyTurnを初期化すると　リストで一括処理した時にカウントアップだけじゃなくて、
             //選ばれたことになっちゃうから、0に初期化する部分はBattleManagerで選ばれた時に処理する。
@@ -245,6 +253,27 @@ public abstract class BaseStates
         return (RangeWill & combinedSkills) == combinedSkills;
     }
 
+    /// <summary>
+    /// 指定されたスキルフラグのうち、一つでもRangeWillに含まれている場合はfalseを返し、
+    /// 全く含まれていない場合はtrueを返します。
+    /// </summary>
+    public bool DontHasRangeWill(params SkillZoneTrait[] skills)
+    {
+        // 受け取ったスキルフラグをビット単位で結合
+        SkillZoneTrait combinedSkills = 0;
+        foreach (SkillZoneTrait skill in skills)
+        {
+            combinedSkills |= skill;
+        }
+
+        // RangeWillに含まれるフラグとcombinedSkillsのビットAND演算
+        // 結果が0でなければ、一つ以上のフラグが含まれている
+        bool containsAny = (RangeWill & combinedSkills) != 0;
+
+        // 一つでも含まれていればfalse、含まれていなければtrueを返す
+        return !containsAny;
+    }
+
 
 
     /// <summary>
@@ -280,6 +309,18 @@ public abstract class BaseStates
     /// 次に使用する命中率へのパーセント補正用保持リスト
     /// </summary>
     private List<ModifierPart> _useHITPercentageModifiers;
+    /// <summary>
+    /// 次に使用する攻撃力へのパーセント補正用保持リスト
+    /// </summary>
+    private List<ModifierPart> _useATKPercentageModifiers;
+    /// <summary>
+    /// 次に使用する回避率へのパーセント補正用保持リスト
+    /// </summary>
+    private List<ModifierPart> _useAGIPercentageModifiers;
+    /// <summary>
+    /// 次に使用する防御力へのパーセント補正用保持リスト
+    /// </summary>
+    private List<ModifierPart> _useDEFPercentageModifiers;
 
     /// <summary>
     /// 命中率補正をセットする。
@@ -288,6 +329,30 @@ public abstract class BaseStates
     {
         if (_useHITPercentageModifiers == null) _useHITPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
         _useHITPercentageModifiers.Add(new ModifierPart(memo, value));
+    }
+    /// <summary>
+    /// 攻撃力補正をセットする。
+    /// </summary>
+    public void SetATKPercentageModifier(float value, string memo)
+    {
+        if (_useATKPercentageModifiers == null) _useATKPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
+        _useATKPercentageModifiers.Add(new ModifierPart(memo, value));
+    }
+    /// <summary>
+    /// 回避率補正をセットする。
+    /// </summary>
+    public void SetAGIPercentageModifier(float value, string memo)
+    {
+        if (_useAGIPercentageModifiers == null) _useAGIPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
+        _useAGIPercentageModifiers.Add(new ModifierPart(memo, value));
+    }
+    /// <summary>
+    /// 防御力補正をセットする。
+    /// </summary>
+    public void SetDEFPercentageModifier(float value, string memo)
+    {
+        if (_useDEFPercentageModifiers == null) _useDEFPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
+        _useDEFPercentageModifiers.Add(new ModifierPart(memo, value));
     }
 
     /// <summary>
@@ -298,6 +363,30 @@ public abstract class BaseStates
     {
         get => _useHITPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
     }
+
+    /// <summary>
+    /// 特別な攻撃力補正
+    /// </summary>
+    public float UseATKPercentageModifier
+    {
+        get => _useATKPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
+    }
+
+    /// <summary>
+    /// 特別な回避率補正
+    /// </summary>
+    public float UseAGIPercentageModifier
+    {
+        get => _useAGIPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
+    }
+
+    /// <summary>
+    /// 特別な防御力補正
+    /// </summary>
+    public float UseDEFPercentageModifier
+    {
+        get => _useDEFPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
+    }
     /// <summary>
     /// 特別な命中率補正の保持リストを返す。　主にフレーバー要素用。
     /// </summary>
@@ -307,11 +396,38 @@ public abstract class BaseStates
     }
 
     /// <summary>
+    /// 特別な攻撃力補正の保持リストを返す。　主にフレーバー要素用。
+    /// </summary>
+    public List<ModifierPart> UseATKPercentageModifiers
+    {
+        get => _useATKPercentageModifiers;
+    }
+
+    /// <summary>
+    /// 特別な回避率補正の保持リストを返す。　主にフレーバー要素用。
+    /// </summary>
+    public List<ModifierPart> UseAGIPercentageModifiers
+    {
+        get => _useAGIPercentageModifiers;
+    }
+
+    /// <summary>
+    /// 特別な防御力補正の保持リストを返す。　主にフレーバー要素用。
+    /// </summary>
+    public List<ModifierPart> UseDEFPercentageModifiers
+    {
+        get => _useDEFPercentageModifiers;
+    }
+
+    /// <summary>
     /// 一時的な補正などをすべて消す
     /// </summary>
     public void RemoveUseThings()
     {
         _useHITPercentageModifiers = new List<ModifierPart>();
+        _useATKPercentageModifiers = new List<ModifierPart>();
+        _useAGIPercentageModifiers = new List<ModifierPart>();
+        _useDEFPercentageModifiers = new List<ModifierPart>();
     }
 
 
@@ -332,6 +448,20 @@ public abstract class BaseStates
 
         hit *= UseHITPercentageModifier;//命中率補正。リスト内がゼロならちゃんと1.0fが返る。
 
+        //範囲意志によるボーナス
+        foreach (KeyValuePair<SkillZoneTrait, float> entry
+            in NowUseSkill.HitRangePercentageDictionary)//辞書に存在する物全てをループ
+        {
+            if (HasRangeWill(entry.Key))//キーの内容が範囲意志と合致した場合
+            {
+                hit += entry.Value;//範囲意志による補正が掛かる
+
+                //基本的に範囲は一つだけのはずなので無用なループは避けてここで終了
+                break;
+            }
+        }
+
+
         return hit;
     }
 
@@ -340,11 +470,34 @@ public abstract class BaseStates
     /// </summary>
     public virtual float AGI()
     {
-        float AGI = b_AGI;//基礎回避率
+        float agi = b_AGI;//基礎回避率
 
-        //状態異常やら武器枠なんやらでなんか補正ある多分
+        agi *= UseAGIPercentageModifier;//回避率補正。リスト内がゼロならちゃんと1.0fが返る。
 
-        return AGI;
+
+        return agi;
+    }
+
+    public virtual float ATK()
+    {
+        float atk = b_ATK;//基礎攻撃力
+
+        atk *= UseATKPercentageModifier;//攻撃力補正
+
+        //範囲意志によるボーナス
+        foreach (KeyValuePair<SkillZoneTrait, float> entry
+            in NowUseSkill.PowerRangePercentageDictionary)//辞書に存在する物全てをループ
+        {
+            if (HasRangeWill(entry.Key))//キーの内容が範囲意志と合致した場合
+            {
+                atk += entry.Value;//範囲意志による補正が掛かる
+
+                //基本的に範囲は一つだけのはずなので無用なループは避けてここで終了
+                break;
+            }
+        }
+
+        return atk;
     }
 
     /// <summary>
@@ -355,7 +508,10 @@ public abstract class BaseStates
     {
         var def = b_DEF; //基礎防御力が基本。
 
+        def *= UseDEFPercentageModifier;//防御力補正
+
         var minusAmount = def * minusPer;//防御低減率
+
 
         return def - minusAmount;
     }
@@ -384,11 +540,12 @@ public abstract class BaseStates
     ///     オーバライド可能なダメージ関数
     /// </summary>
     /// <param name="atkPoint"></param>
-    public virtual string Damage(float atkPoint, float DEFAtkper)
+    public virtual string Damage(BaseStates Atker, float SkillPower)
     {
-        HP -= atkPoint - DEF(DEFAtkper); //HPから指定された攻撃力が引かれる。
+        var skill = Atker.NowUseSkill;
+        HP -= (Atker.ATK() - DEF(skill.DEFATK)) * SkillPower;//(攻撃-対象者の防御) ×スキルパワー？
         Debug.Log("攻撃が実行された");
-        return "-+~*8";
+        return "-+~*⋮¦";
     }
 
     /// <summary>
@@ -405,13 +562,35 @@ public abstract class BaseStates
     /// <summary>
     /// 攻撃者と防御者とスキルを利用してヒットするかの計算
     /// </summary>
-    private bool IsReactHIT(BaseSkill skill)
+    private bool IsReactHIT(BaseStates Attacker)
     {
-        var hit = skill.SkillHitCalc();
+        var skill = Attacker.NowUseSkill;
+        var hitcalc = Attacker.HIT();//命中の計算
+        var agicalc = AGI();//回避の計算
 
-        if (RandomEx.Shared.NextFloat(0, hit + AGI()) < hit)//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
+        if (manager.IsVanguard(this))//自分が前のめりなら
         {
-            return true;
+            agicalc /= 2;//回避率半減
+        }
+
+        //複数性質を持っていない、完全なる単体の攻撃なら
+        if (Attacker.DontHasRangeWill(SkillZoneTrait.CanSelectMultiTarget,
+            SkillZoneTrait.RandomSelectMultiTarget, SkillZoneTrait.RandomMultiTarget,
+            SkillZoneTrait.AllTarget))
+        //ControlBySituationでの事故性質でも複数性質で複数事故が起こるかもしれないので、それも加味してる。
+        {
+            var agiPer = 6;//攻撃者のAgiの命中補正用 割る数
+            if (skill.SkillPhysical == PhysicalProperty.heavy)//暴断攻撃なら
+            {
+                agiPer *= 2;//割る数が二倍に
+            }
+            hitcalc += Attacker.AGI() / agiPer;
+        }
+
+        if (RandomEx.Shared.NextFloat(0, hitcalc + AGI()) < hitcalc)//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
+        {
+            //スキルそのものの命中率
+            return skill.SkillHitCalc();
         }
 
         return false;
@@ -423,8 +602,10 @@ public abstract class BaseStates
     /// </summary>
     /// <param name="skill"></param>
     /// <param name="UnderIndex">攻撃される人の順番　スキルのPowerSpreadの順番に同期している</param>
-    public virtual string ReactionSkill(BaseSkill skill,float spread)
+    public virtual string ReactionSkill(BaseStates attacker, float spread)
     {
+        var skill = attacker.NowUseSkill;
+
         //スキルパワーの精神属性による計算
         var modifier = SkillSpiritualModifier[(skill.SkillSpiritual, MyImpression)];//スキルの精神属性と自分の精神属性による補正
         var skillPower = skill.SkillPowerCalc(spread) * modifier.GetValue() / 100.0f;
@@ -436,10 +617,10 @@ public abstract class BaseStates
 
         if (skill.HasType(SkillType.Attack))
         {
-            if (IsReactHIT(skill))
+            if (IsReactHIT(attacker))
             {
                 //成功されるとダメージを受ける
-                txt += Damage(skillPower, skill.DEFATK);
+                txt += Damage(attacker, skillPower);
             }
             else
             {//外したら
@@ -465,11 +646,11 @@ public abstract class BaseStates
 
 
         SkillUseConsecutiveCountUp(NowUseSkill);//連続カウントアップ
-        string txt="";
+        string txt = "";
 
-        for(var i = 0; i < Unders.Count; i++)
+        for (var i = 0; i < Unders.Count; i++)
         {
-            txt += Unders.GetAtCharacter(i).ReactionSkill(NowUseSkill, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
+            txt += Unders.GetAtCharacter(i).ReactionSkill(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
         }
 
         NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルの攻撃回数をカウントアップ

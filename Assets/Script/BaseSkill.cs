@@ -1,4 +1,5 @@
 using R3;
+using RandomExtensions;
 using System;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -441,9 +442,9 @@ public class BaseSkill
     public float SkillPower;
 
     /// <summary>
-    /// スキルの命中補正
+    /// スキルの命中補正 int 百分率
     /// </summary>
-    public float SkillHitPer;
+    public int SkillHitPer;
 
     /// <summary>
     /// 基本的にスキルのレベルは恒常的に上がらないが、戦闘内では一時的に上がったりするのかもしれない。
@@ -490,18 +491,7 @@ public class BaseSkill
     {
         var pwr = SkillPower;//基礎パワー
 
-        //術者の範囲意志に威力の割合差分が存在するならば、威力に掛ける。
-        foreach(KeyValuePair<SkillZoneTrait,float> entry 
-            in PowerRangePercentageDictionary)//辞書に存在する物全てをループ
-        {
-            if (Doer.HasRangeWill(entry.Key))//キーの内容が行使者の範囲意志と合致した場合
-            {
-                pwr *= entry.Value;//威力にfloatの値を掛ける
-
-                //基本的に範囲は一つだけのはずなので無用なループは避けてここで終了
-                break;
-            }
-        }
+        
 
         pwr *= spread;//分散値を掛ける
 
@@ -511,9 +501,10 @@ public class BaseSkill
     /// <summary>
     /// スキルにより補正された最終命中率
     /// </summary>
-    public virtual float SkillHitCalc()
+    public virtual bool SkillHitCalc()
     {
-        return Doer.HIT() * SkillHitPer;//術者の命中×スキルの命中率
+
+        return RandomEx.Shared.NextInt(100) < SkillHitPer;//スキルの命中率
     }
 
     /// <summary>
@@ -550,5 +541,10 @@ public class BaseSkill
     /// </summary>
     public SerializableDictionary<SkillZoneTrait, float> 
         PowerRangePercentageDictionary;
+    /// <summary>
+    /// 命中率のステータスに直接かかるスキルの範囲意志による威力補正
+    /// </summary>
+    public SerializableDictionary<SkillZoneTrait, float> 
+        HitRangePercentageDictionary;
 
 }

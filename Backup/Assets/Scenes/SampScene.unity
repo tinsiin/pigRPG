@@ -535,7 +535,7 @@ MonoBehaviour:
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
-      PowerSpread: 
+      PowerSpread: []
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
@@ -561,7 +561,10 @@ MonoBehaviour:
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
-      PowerSpread: 000000000000000000000000
+      PowerSpread:
+      - 0
+      - 0
+      - 0
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
@@ -581,7 +584,10 @@ MonoBehaviour:
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
-      PowerSpread: 000000000000000000000000
+      PowerSpread:
+      - 0
+      - 0
+      - 0
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
@@ -616,7 +622,10 @@ MonoBehaviour:
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
-      PowerSpread: 000000000000000000000000
+      PowerSpread:
+      - 0
+      - 0
+      - 0
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
@@ -636,7 +645,10 @@ MonoBehaviour:
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
-      PowerSpread: 000000000000000000000000
+      PowerSpread:
+      - 0
+      - 0
+      - 0
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
@@ -671,7 +683,10 @@ MonoBehaviour:
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
-      PowerSpread: 000000000000000000000000
+      PowerSpread:
+      - 0
+      - 0
+      - 0
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
@@ -691,7 +706,10 @@ MonoBehaviour:
       ConsecutivePercentage: 0
       SKillDidWaitCount: 0
       IsTLOA: 0
-      PowerSpread: 000000000000000000000000
+      PowerSpread:
+      - 0
+      - 0
+      - 0
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
@@ -805,7 +823,10 @@ MonoBehaviour:
           ConsecutivePercentage: 0
           SKillDidWaitCount: 0
           IsTLOA: 0
-          PowerSpread: 000000000000000000000000
+          PowerSpread:
+          - 0
+          - 0
+          - 0
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
@@ -825,7 +846,10 @@ MonoBehaviour:
           ConsecutivePercentage: 0
           SKillDidWaitCount: 0
           IsTLOA: 0
-          PowerSpread: 000000000000000000000000
+          PowerSpread:
+          - 0
+          - 0
+          - 0
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
@@ -857,7 +881,7 @@ MonoBehaviour:
           ConsecutivePercentage: 0
           SKillDidWaitCount: 0
           IsTLOA: 0
-          PowerSpread: 
+          PowerSpread: []
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
@@ -876,7 +900,7 @@ MonoBehaviour:
           ConsecutivePercentage: 0
           SKillDidWaitCount: 0
           IsTLOA: 0
-          PowerSpread: 
+          PowerSpread: []
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
@@ -902,7 +926,10 @@ MonoBehaviour:
           ConsecutivePercentage: 0
           SKillDidWaitCount: 0
           IsTLOA: 0
-          PowerSpread: 000000000000000000000000
+          PowerSpread:
+          - 0
+          - 0
+          - 0
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
@@ -922,7 +949,10 @@ MonoBehaviour:
           ConsecutivePercentage: 0
           SKillDidWaitCount: 0
           IsTLOA: 0
-          PowerSpread: 000000000000000000000000
+          PowerSpread:
+          - 0
+          - 0
+          - 0
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
@@ -961,7 +991,10 @@ MonoBehaviour:
           ConsecutivePercentage: 0
           SKillDidWaitCount: 0
           IsTLOA: 0
-          PowerSpread: 000000000000000000000000
+          PowerSpread:
+          - 0
+          - 0
+          - 0
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
@@ -981,7 +1014,10 @@ MonoBehaviour:
           ConsecutivePercentage: 0
           SKillDidWaitCount: 0
           IsTLOA: 0
-          PowerSpread: 000000000000000000000000
+          PowerSpread:
+          - 0
+          - 0
+          - 0
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
