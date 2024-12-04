@@ -51,6 +51,52 @@ public class ModifierPart
         Modifier = value;
     }
 }
+/// <summary>
+/// 慣れ補正で使用するスキルとその使用者
+/// </summary>
+public class FocusedSkillAndUser
+{
+    public FocusedSkillAndUser(BaseStates InitUser,BaseSkill askil,float InitDmg)
+    {
+        User = new List<BaseStates>();
+        User.Add(InitUser);
+        skill = askil;
+
+        //Memory();//この記憶回数の処理の後に補正するので、作った瞬間はゼロから始めた方がいい
+        DamageMemory(InitDmg);
+    }
+
+    /// <summary>
+    /// そのスキルのユーザー
+    /// </summary>
+    public List<BaseStates> User;
+
+    /// <summary>
+    /// 保存スキル
+    /// </summary>
+    public BaseSkill skill;
+
+    int _memoryCount;
+    /// <summary>
+    /// 慣れの記憶回数
+    /// </summary>
+    public int MemoryCount => _memoryCount;
+    public void Memory()
+    {
+        _memoryCount++;
+    }
+
+
+    float _topDmg;
+    /// <summary>
+    /// このスキルが自らに施した最大限のダメージ
+    /// </summary>
+    public float TopDmg => _topDmg;
+    public void DamageMemory(float dmg)
+    {
+        if(dmg > _topDmg) _topDmg = dmg;//越してたら記録
+    }
+}
 
 /// <summary>
 ///     精神属性、スキル、キャラクターに依存し、キャラクターは直前に使った物が適用される
@@ -70,12 +116,159 @@ public enum SpiritualProperty
     devil
 }
 
+public enum MemoryDensity
+{
+    /// <summary>
+    /// 薄い
+    /// </summary>
+    Low,   
+    /// <summary>
+    /// 普通
+    /// </summary>
+    Medium,     
+    /// <summary>
+    /// しっかりと
+    /// </summary>
+    High,       
+}
+
 /// <summary>
 ///     基礎ステータスのクラス　　クラスそのものは使用しないので抽象クラス
 /// </summary>
 [Serializable]
 public abstract class BaseStates
 {
+    /// <summary>
+    /// 慣れ補正用　スキルの注目リスト
+    /// </summary>
+    public List<FocusedSkillAndUser> FocusSkillList;
+    
+    /// <summary>
+    /// スキルに慣れる処理 慣れ補正を返す
+    /// </summary>
+    float AdaptToSkill(BaseStates enemy,BaseSkill skill,float dmg)
+    {
+        var donthaveskill = true;
+        float AdaptModify = -1;//デフォルト値
+
+        foreach(var fo in FocusSkillList)
+        {
+            if(fo.skill == skill)//スキル既にあるなら
+            {
+                fo.DamageMemory(dmg);// ダメージ記録
+                donthaveskill = false;//既にあるフラグ！
+            }
+            else
+            {
+                //それ以外全ての記憶回数をターン数経過によって減らす
+
+            }
+        }
+        //もし初めて食らうのなら
+        if (donthaveskill)
+        {
+            var fo = new FocusedSkillAndUser(enemy, skill,dmg);
+            FocusSkillList.Add(fo);//最初のキャラクターとスキルを記録
+        }
+
+
+
+
+        //スキルの記憶回数での並べ替え
+        //記憶回数が多い方から数えて、　　"今回のスキル"がそれに入ってるなら慣れ補正を返す
+        //数える範囲は　記憶範囲
+        FocusSkillList = FocusSkillList.OrderByDescending(skill => skill.MemoryCount).ToList();
+
+        //記憶範囲の取得　　精神属性による場合分け
+        List<MemoryDensity> rl;
+        switch (MyImpression)//左から降順に入ってくる　一番左が最初の、一番上の値ってこと
+        {
+            case SpiritualProperty.doremis:
+                rl = new List<MemoryDensity> {MemoryDensity.High,MemoryDensity.Medium,MemoryDensity.Medium};
+                break;//しっかりと　普通　普通
+
+            case SpiritualProperty.pillar:
+                rl = new List<MemoryDensity> { MemoryDensity.Medium, MemoryDensity.Medium, MemoryDensity.Medium,
+                MemoryDensity.Medium,MemoryDensity.Medium,MemoryDensity.Medium,};
+                break;//普通　×6
+
+            case SpiritualProperty.kindergarden:
+                rl = new List<MemoryDensity> { MemoryDensity.Low};
+                break;//薄い
+
+            case SpiritualProperty.liminalwhitetile:
+                rl = new List<MemoryDensity> { MemoryDensity.Medium,MemoryDensity.Medium,
+                    MemoryDensity.Low,MemoryDensity.Low, MemoryDensity.Low};
+                break;//普通×2 薄い×3
+
+            case SpiritualProperty.sacrifaith:
+                rl = new List<MemoryDensity> { MemoryDensity.High,MemoryDensity.Low};
+                break;//ハイアンドロー
+
+            case SpiritualProperty.cquiest:
+                rl = new List<MemoryDensity> { MemoryDensity.High, MemoryDensity.High,MemoryDensity.High,MemoryDensity.High, MemoryDensity.High,
+                MemoryDensity.Low};//しっかりと×5 //薄い1
+                break;
+
+            case SpiritualProperty.pysco:
+                rl = new List<MemoryDensity> { MemoryDensity.High, MemoryDensity.Low };
+                break;//ハイアンドロー
+
+            case SpiritualProperty.godtier:
+                rl = new List<MemoryDensity> { MemoryDensity.High,MemoryDensity.High,MemoryDensity.Medium,
+                MemoryDensity.Medium,MemoryDensity.Medium,MemoryDensity.Low,MemoryDensity.Low,MemoryDensity.Low};
+                break;//しっかりと×2 普通×3 薄く×3
+
+            case SpiritualProperty.baledrival:
+                rl = new List<MemoryDensity> { MemoryDensity.High,MemoryDensity.High,MemoryDensity.High,MemoryDensity.High,
+                MemoryDensity.Low,MemoryDensity.Low,MemoryDensity.Low,
+                MemoryDensity.Low,MemoryDensity.Low,MemoryDensity.Low,MemoryDensity.Low,MemoryDensity.Low};
+                break;//しっかりと×4 薄く　×8
+
+            case SpiritualProperty.devil:
+                rl = new List<MemoryDensity> { MemoryDensity.Medium,MemoryDensity.Medium,
+                MemoryDensity.Low,MemoryDensity.Low,MemoryDensity.Low};
+                break;//普通×2 薄く×3
+            default:
+                rl = new List<MemoryDensity> { MemoryDensity.Low };
+                break;//適当
+
+        }
+
+
+
+
+        //二回目以降で記憶範囲にあるのなら、補正計算して返す
+        if (!donthaveskill)
+        {
+            for(var i = 0; i < rl.Count; i++)//記憶範囲のサイズ分ループ
+            {
+                var fo = FocusSkillList[i];
+                if (fo.skill == skill)//もし記憶範囲に今回のスキルがあるならば
+                {
+                    //fo.MemoryCount  //記憶回数の数
+                    //rl[i]  //精神属性による段階
+                    //HITによる固定値の範囲
+                }
+            }
+        }
+
+        //ダメージの大きさで並べ替える
+        FocusSkillList = FocusSkillList.OrderByDescending(skill => skill.TopDmg).ToList();
+
+        //最大ダメージの序列で記憶回数の増加をする
+        //カウントアップして回して、該当のスキルになったら記憶回数の増加
+        if (!donthaveskill)
+        {
+
+        }
+        return AdaptModify;
+    }
+
+
+
+
+
     private BattleManager manager;
 
     public void Managed(BattleManager ma)
@@ -437,6 +630,18 @@ public abstract class BaseStates
 
     //スキルのリスト
     public IReadOnlyList<BaseSkill> SkillList => _skillList;
+    /// <summary>
+    /// 完全な単体攻撃かどうか
+    /// (例えばControlByThisSituationの場合はrangeWillにそのままskillのzoneTraitが入るので、
+    /// そこに範囲系の性質(事故で範囲攻撃に変化)がある場合はfalseが返る
+    /// </summary>
+    /// <returns></returns>
+    private bool IsSingleATK()
+    {
+        return DontHasRangeWill(SkillZoneTrait.CanSelectMultiTarget,
+            SkillZoneTrait.RandomSelectMultiTarget, SkillZoneTrait.RandomMultiTarget,
+            SkillZoneTrait.AllTarget);
+    }
 
     /// <summary>
     /// 命中率計算
@@ -461,6 +666,20 @@ public abstract class BaseStates
             }
         }
 
+        //単体攻撃による命中補正
+        //複数性質を持っていない、完全なる単体の攻撃なら
+        if (IsSingleATK())
+        //ControlBySituationでの事故性質でも複数性質で複数事故が起こるかもしれないので、それも加味してる。
+        {
+            var agiPer = 6;//攻撃者のAgiの命中補正用 割る数
+            if (NowUseSkill.SkillPhysical == PhysicalProperty.heavy)//暴断攻撃なら
+            {
+                agiPer *= 2;//割る数が二倍に
+            }
+            hit += AGI() / agiPer;
+        }
+
+
 
         return hit;
     }
@@ -474,6 +693,10 @@ public abstract class BaseStates
 
         agi *= UseAGIPercentageModifier;//回避率補正。リスト内がゼロならちゃんと1.0fが返る。
 
+        if (manager.IsVanguard(this))//自分が前のめりなら
+        {
+            agi /= 2;//回避率半減
+        }
 
         return agi;
     }
@@ -497,7 +720,17 @@ public abstract class BaseStates
             }
         }
 
-        return atk;
+        //単体攻撃で暴断物理攻撃の場合のAgi攻撃補正
+        if (IsSingleATK())
+        {
+            if(NowUseSkill.SkillPhysical == PhysicalProperty.heavy)
+            {
+                atk += AGI() / 6;
+            }
+        }
+
+
+            return atk;
     }
 
     /// <summary>
@@ -518,7 +751,7 @@ public abstract class BaseStates
 
 
     /// <summary>
-    ///     初期精神属性決定関数(基本は印象を持ってるスキルリストから適当に選び出す
+    ///初期精神属性決定関数(基本は印象を持ってるスキルリストから適当に選び出す
     /// </summary>
     public virtual void InitializeMyImpression()
     {
@@ -543,7 +776,12 @@ public abstract class BaseStates
     public virtual string Damage(BaseStates Atker, float SkillPower)
     {
         var skill = Atker.NowUseSkill;
-        HP -= (Atker.ATK() - DEF(skill.DEFATK)) * SkillPower;//(攻撃-対象者の防御) ×スキルパワー？
+        var dmg = (Atker.ATK() - DEF(skill.DEFATK)) * SkillPower;//(攻撃-対象者の防御) ×スキルパワー？
+
+        //慣れ補正
+        AdaptToSkill(Atker,skill,dmg);
+
+        HP -= dmg;
         Debug.Log("攻撃が実行された");
         return "-+~*⋮¦";
     }
@@ -565,29 +803,8 @@ public abstract class BaseStates
     private bool IsReactHIT(BaseStates Attacker)
     {
         var skill = Attacker.NowUseSkill;
-        var hitcalc = Attacker.HIT();//命中の計算
-        var agicalc = AGI();//回避の計算
 
-        if (manager.IsVanguard(this))//自分が前のめりなら
-        {
-            agicalc /= 2;//回避率半減
-        }
-
-        //複数性質を持っていない、完全なる単体の攻撃なら
-        if (Attacker.DontHasRangeWill(SkillZoneTrait.CanSelectMultiTarget,
-            SkillZoneTrait.RandomSelectMultiTarget, SkillZoneTrait.RandomMultiTarget,
-            SkillZoneTrait.AllTarget))
-        //ControlBySituationでの事故性質でも複数性質で複数事故が起こるかもしれないので、それも加味してる。
-        {
-            var agiPer = 6;//攻撃者のAgiの命中補正用 割る数
-            if (skill.SkillPhysical == PhysicalProperty.heavy)//暴断攻撃なら
-            {
-                agiPer *= 2;//割る数が二倍に
-            }
-            hitcalc += Attacker.AGI() / agiPer;
-        }
-
-        if (RandomEx.Shared.NextFloat(0, hitcalc + AGI()) < hitcalc)//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
+        if (RandomEx.Shared.NextFloat(0, Attacker.HIT() + AGI()) < Attacker.HIT())//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
         {
             //スキルそのものの命中率
             return skill.SkillHitCalc();
@@ -628,7 +845,13 @@ public abstract class BaseStates
             }
         }
 
-        if (skill.HasType(SkillType.Heal)) txt += Heal(skillPower);
+        if (skill.HasType(SkillType.Heal)) 
+        {
+            if (skill.SkillHitCalc())//スキル命中率の計算だけ行う
+            {
+                txt += Heal(skillPower);
+            }
+        }
 
         Debug.Log("ReactionSkill");
         return txt;

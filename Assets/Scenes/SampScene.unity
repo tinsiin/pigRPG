@@ -547,6 +547,8 @@ MonoBehaviour:
       DistributionType: 0
       PowerRangePercentageDictionary:
         _list: []
+      HitRangePercentageDictionary:
+        _list: []
     b_AGI: 0
     b_ATK: 0
     b_DEF: 0
@@ -576,6 +578,8 @@ MonoBehaviour:
       DistributionType: 0
       PowerRangePercentageDictionary:
         _list: []
+      HitRangePercentageDictionary:
+        _list: []
     FreezeUseSkill:
       _name: 
       CanCancel: 1
@@ -598,6 +602,8 @@ MonoBehaviour:
       ZoneTrait: 0
       DistributionType: 0
       PowerRangePercentageDictionary:
+        _list: []
+      HitRangePercentageDictionary:
         _list: []
     MAXP: 0
     P: 0
@@ -637,6 +643,8 @@ MonoBehaviour:
       DistributionType: 0
       PowerRangePercentageDictionary:
         _list: []
+      HitRangePercentageDictionary:
+        _list: []
     FreezeUseSkill:
       _name: 
       CanCancel: 1
@@ -659,6 +667,8 @@ MonoBehaviour:
       ZoneTrait: 0
       DistributionType: 0
       PowerRangePercentageDictionary:
+        _list: []
+      HitRangePercentageDictionary:
         _list: []
     MAXP: 0
     P: 0
@@ -698,6 +708,8 @@ MonoBehaviour:
       DistributionType: 0
       PowerRangePercentageDictionary:
         _list: []
+      HitRangePercentageDictionary:
+        _list: []
     FreezeUseSkill:
       _name: 
       CanCancel: 1
@@ -720,6 +732,8 @@ MonoBehaviour:
       ZoneTrait: 0
       DistributionType: 0
       PowerRangePercentageDictionary:
+        _list: []
+      HitRangePercentageDictionary:
         _list: []
     MAXP: 0
     P: 0
@@ -838,6 +852,8 @@ MonoBehaviour:
           DistributionType: 0
           PowerRangePercentageDictionary:
             _list: []
+          HitRangePercentageDictionary:
+            _list: []
         FreezeUseSkill:
           _name: 
           CanCancel: 1
@@ -860,6 +876,8 @@ MonoBehaviour:
           ZoneTrait: 0
           DistributionType: 0
           PowerRangePercentageDictionary:
+            _list: []
+          HitRangePercentageDictionary:
             _list: []
         MAXP: 0
         P: 0
@@ -893,6 +911,8 @@ MonoBehaviour:
           DistributionType: 0
           PowerRangePercentageDictionary:
             _list: []
+          HitRangePercentageDictionary:
+            _list: []
         - _name: 
           CanCancel: 0
           IsAggressiveCommit: 0
@@ -911,6 +931,8 @@ MonoBehaviour:
           ZoneTrait: 0
           DistributionType: 0
           PowerRangePercentageDictionary:
+            _list: []
+          HitRangePercentageDictionary:
             _list: []
         b_AGI: 0
         b_ATK: 0
@@ -941,6 +963,8 @@ MonoBehaviour:
           DistributionType: 0
           PowerRangePercentageDictionary:
             _list: []
+          HitRangePercentageDictionary:
+            _list: []
         FreezeUseSkill:
           _name: 
           CanCancel: 1
@@ -963,6 +987,8 @@ MonoBehaviour:
           ZoneTrait: 0
           DistributionType: 0
           PowerRangePercentageDictionary:
+            _list: []
+          HitRangePercentageDictionary:
             _list: []
         MAXP: 0
         P: 0
@@ -1006,6 +1032,8 @@ MonoBehaviour:
           DistributionType: 0
           PowerRangePercentageDictionary:
             _list: []
+          HitRangePercentageDictionary:
+            _list: []
         FreezeUseSkill:
           _name: 
           CanCancel: 1
@@ -1028,6 +1056,8 @@ MonoBehaviour:
           ZoneTrait: 0
           DistributionType: 0
           PowerRangePercentageDictionary:
+            _list: []
+          HitRangePercentageDictionary:
             _list: []
         MAXP: 0
         P: 0
