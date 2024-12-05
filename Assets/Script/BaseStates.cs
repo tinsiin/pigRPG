@@ -149,6 +149,8 @@ public abstract class BaseStates
     float AdaptToSkill(BaseStates enemy,BaseSkill skill,float dmg)
     {
         var donthaveskill = true;
+        var IsFirstAttacker = false;//知っているスキルに食らったとき、その攻撃者が初見かどうか
+        var IsConfused = false;//戸惑いフラグ
         float AdaptModify = -1;//デフォルト値
 
         foreach(var fo in FocusSkillList)
@@ -157,6 +159,10 @@ public abstract class BaseStates
             {
                 fo.DamageMemory(dmg);// ダメージ記録
                 donthaveskill = false;//既にあるフラグ！
+                if(IsFirstAttacker = !fo.User.Any(chara => chara == enemy))//攻撃者が人員リストにいない場合　true
+                {
+                    fo.User.Add(enemy);//敵をそのスキルのユーザーリストに登録
+                }
             }
             else
             {
@@ -246,6 +252,13 @@ public abstract class BaseStates
                 var fo = FocusSkillList[i];
                 if (fo.skill == skill)//もし記憶範囲に今回のスキルがあるならば
                 {
+                    //もしスキルを使う行使者が初見なら(二人目以降の使用者)
+                    //精神属性によっては戸惑って補正はない　　戸惑いフラグが立つ
+                    if (IsFirstAttacker)
+                    {
+
+                    }
+
                     //fo.MemoryCount  //記憶回数の数
                     //rl[i]  //精神属性による段階
                     //HITによる固定値の範囲
@@ -257,10 +270,11 @@ public abstract class BaseStates
         FocusSkillList = FocusSkillList.OrderByDescending(skill => skill.TopDmg).ToList();
 
         //最大ダメージの序列で記憶回数の増加をする
-        //カウントアップして回して、該当のスキルになったら記憶回数の増加
-        if (!donthaveskill)
+        //カウントアップして回して、該当のスキルになったら記憶回数の増加　
+        //戸惑いが立ってると記憶回数は増加しない
+        if (!donthaveskill && !IsConfused)
         {
-
+            //序列だから逆に回す
         }
         return AdaptModify;
     }
