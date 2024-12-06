@@ -256,6 +256,23 @@ public abstract class BaseStates
                     //精神属性によっては戸惑って補正はない　　戸惑いフラグが立つ
                     if (IsFirstAttacker)
                     {
+                        switch (MyImpression)
+                        {//ドレミス　ゴッドティア　キンダー　シークイエストは戸惑わない
+                            case SpiritualProperty.doremis:
+                                IsConfused = false; break;
+                            case SpiritualProperty.godtier:
+                                IsConfused = false; break;
+                            case SpiritualProperty.kindergarden:
+                                IsConfused = false; break;
+                            case SpiritualProperty.cquiest:
+                                IsConfused = false; break;
+                            default:
+                                IsConfused = true; break;//それ以外で初見人なら戸惑う
+                        }
+                    }
+
+                    if (!IsConfused)//戸惑ってなければ、補正がかかる。(デフォルト値の-1でなくなる。)
+                    {
 
                     }
 
