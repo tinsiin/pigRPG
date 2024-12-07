@@ -56,7 +56,7 @@ public class ModifierPart
 /// </summary>
 public class FocusedSkillAndUser
 {
-    public FocusedSkillAndUser(BaseStates InitUser,BaseSkill askil,float InitDmg)
+    public FocusedSkillAndUser(BaseStates InitUser, BaseSkill askil, float InitDmg)
     {
         User = new List<BaseStates>();
         User.Add(InitUser);
@@ -94,7 +94,7 @@ public class FocusedSkillAndUser
     public float TopDmg => _topDmg;
     public void DamageMemory(float dmg)
     {
-        if(dmg > _topDmg) _topDmg = dmg;//越してたら記録
+        if (dmg > _topDmg) _topDmg = dmg;//越してたら記録
     }
 }
 
@@ -121,15 +121,15 @@ public enum MemoryDensity
     /// <summary>
     /// 薄い
     /// </summary>
-    Low,   
+    Low,
     /// <summary>
     /// 普通
     /// </summary>
-    Medium,     
+    Medium,
     /// <summary>
     /// しっかりと
     /// </summary>
-    High,       
+    High,
 }
 
 /// <summary>
@@ -142,38 +142,168 @@ public abstract class BaseStates
     /// 慣れ補正用　スキルの注目リスト
     /// </summary>
     public List<FocusedSkillAndUser> FocusSkillList;
-    
+
+    /// <summary>
+    /// リーミナルホワイト用の素数による慣れ補正の"-スキル優先順位-"のグルーピング方式
+    /// 引数の整数が何番目のグループに属するかを返す
+    /// グループは0からはじまり、各素数を境界として区切る。
+    /// グループnは [p_(n-1), p_n - 1] の範囲（p_0=0と仮定, p_1=2）
+    /// 例: p_1=2の場合、グループ1は 0～1
+    ///     p_2=3の場合、グループ2は 2～2
+    ///     p_3=5の場合、グループ3は 3～4
+    /// </summary>
+    int GetLiminalAdaptToSkillGrouping(int number)
+    {
+        if (number < 0) return -1; // 負数はエラー扱い
+
+        // number以上の素数を取得
+        int primeAbove = GetPrimeAbove(number);
+
+        // primeAboveがp_nだとして、p_(n-1)からp_n-1までがn番目のグループとなる
+        // p_1=2, p_0=0とみなす
+        int index = GetPrimeIndex(primeAbove); // primeAboveが何番目の素数か(2が1番目)
+        int prevPrime = (index == 1) ? 0 : GetPrimeByIndex(index - 1); // 前の素数(なければ0)
+
+        // prevPrime～(primeAbove-1)がindex番目のグループ
+        if (number >= prevPrime && number <= primeAbove - 1)
+        {
+            return index;
+        }
+
+        return -1; // 理論上起こらないが安全策
+    }
+    /// <summary>
+    /// n以上の素数のうち、最初に出てくる素数を返す
+    /// nが素数ならnを返す
+    /// </summary>
+    int GetPrimeAbove(int n)
+    {
+        if (n <= 2) return 2;
+        int candidate = n;
+        while (!IsPrime(candidate))
+        {
+            candidate++;
+        }
+        return candidate;
+    }
+
+    /// <summary>
+    /// 素数pが全素数列(2,3,5,7,...)の中で何番目かを返す(2が1番目)
+    /// </summary>
+    int GetPrimeIndex(int p)
+    {
+        int count = 0;
+        int num = 2;
+        while (num <= p)
+        {
+            if (IsPrime(num))
+            {
+                count++;
+                if (num == p) return count;
+            }
+            num++;
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// index番目(1-based)の素数を返す
+    /// 1 -> 2, 2 -> 3, 3 -> 5, ...
+    /// </summary>
+    int GetPrimeByIndex(int index)
+    {
+        if (index < 1) throw new ArgumentException("indexは1以上である必要があります");
+        int count = 0;
+        int num = 2;
+        while (true)
+        {
+            if (IsPrime(num))
+            {
+                count++;
+                if (count == index)
+                {
+                    return num;
+                }
+            }
+            num++;
+        }
+    }
+
+    /// <summary>
+    /// 素数判定(簡易)
+    /// </summary>
+    bool IsPrime(int x)
+    {
+        if (x < 2) return false;
+        if (x == 2) return true;
+        if (x % 2 == 0) return false;
+        int limit = (int)Math.Sqrt(x);
+        for (int i = 3; i <= limit; i += 2)
+        {
+            if (x % i == 0) return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// 注目リスト内でのスキルの序列を返す
+    /// </summary>
+    int AdaptPriorityToSkill(BaseSkill skill)
+    {
+        //ダメージの大きさで並び替えて
+        FocusSkillList = FocusSkillList.OrderByDescending(skill => skill.TopDmg).ToList();
+
+        return FocusSkillList.FindIndex(fo => fo.skill == skill);
+    }
+
+    /// <summary>
+    /// 現在のスキルの優先序列がどのグループ序列に属してるか
+    /// </summary>
+    int AdaptToSkillsGrouping(int index)
+    {
+        int groupIndex = -1;
+        switch (MyImpression)//自分の印象によってスキルのグループ分けが変わる。
+        {
+            case SpiritualProperty.liminalwhitetile:
+                groupIndex = GetLiminalAdaptToSkillGrouping(index);
+                break;
+        }
+
+        return groupIndex;
+    }
+
     /// <summary>
     /// スキルに慣れる処理 慣れ補正を返す
     /// </summary>
-    float AdaptToSkill(BaseStates enemy,BaseSkill skill,float dmg)
+    float AdaptToSkill(BaseStates enemy, BaseSkill skill, float dmg)
     {
         var donthaveskill = true;
         var IsFirstAttacker = false;//知っているスキルに食らったとき、その攻撃者が初見かどうか
         var IsConfused = false;//戸惑いフラグ
         float AdaptModify = -1;//デフォルト値
 
-        foreach(var fo in FocusSkillList)
+        foreach (var fo in FocusSkillList)
         {
-            if(fo.skill == skill)//スキル既にあるなら
+            if (fo.skill == skill)//スキル既にあるなら
             {
                 fo.DamageMemory(dmg);// ダメージ記録
                 donthaveskill = false;//既にあるフラグ！
-                if(IsFirstAttacker = !fo.User.Any(chara => chara == enemy))//攻撃者が人員リストにいない場合　true
+                if (IsFirstAttacker = !fo.User.Any(chara => chara == enemy))//攻撃者が人員リストにいない場合　true
                 {
                     fo.User.Add(enemy);//敵をそのスキルのユーザーリストに登録
                 }
             }
-            else
+            else//それ以外全ての記憶回数をターン数経過によって減らす
             {
-                //それ以外全ての記憶回数をターン数経過によって減らす
+                //まず優先順位を取得し、グループ序列を取得
+                var index = AdaptToSkillsGrouping(AdaptPriorityToSkill(skill));
 
             }
         }
         //もし初めて食らうのなら
         if (donthaveskill)
         {
-            var fo = new FocusedSkillAndUser(enemy, skill,dmg);
+            var fo = new FocusedSkillAndUser(enemy, skill, dmg);
             FocusSkillList.Add(fo);//最初のキャラクターとスキルを記録
         }
 
@@ -190,7 +320,7 @@ public abstract class BaseStates
         switch (MyImpression)//左から降順に入ってくる　一番左が最初の、一番上の値ってこと
         {
             case SpiritualProperty.doremis:
-                rl = new List<MemoryDensity> {MemoryDensity.High,MemoryDensity.Medium,MemoryDensity.Medium};
+                rl = new List<MemoryDensity> { MemoryDensity.High, MemoryDensity.Medium, MemoryDensity.Medium };
                 break;//しっかりと　普通　普通
 
             case SpiritualProperty.pillar:
@@ -199,7 +329,7 @@ public abstract class BaseStates
                 break;//普通　×6
 
             case SpiritualProperty.kindergarden:
-                rl = new List<MemoryDensity> { MemoryDensity.Low};
+                rl = new List<MemoryDensity> { MemoryDensity.Low };
                 break;//薄い
 
             case SpiritualProperty.liminalwhitetile:
@@ -208,7 +338,7 @@ public abstract class BaseStates
                 break;//普通×2 薄い×3
 
             case SpiritualProperty.sacrifaith:
-                rl = new List<MemoryDensity> { MemoryDensity.High,MemoryDensity.Low};
+                rl = new List<MemoryDensity> { MemoryDensity.High, MemoryDensity.Low };
                 break;//ハイアンドロー
 
             case SpiritualProperty.cquiest:
@@ -247,7 +377,7 @@ public abstract class BaseStates
         //二回目以降で記憶範囲にあるのなら、補正計算して返す
         if (!donthaveskill)
         {
-            for(var i = 0; i < rl.Count; i++)//記憶範囲のサイズ分ループ
+            for (var i = 0; i < rl.Count; i++)//記憶範囲のサイズ分ループ
             {
                 var fo = FocusSkillList[i];
                 if (fo.skill == skill)//もし記憶範囲に今回のスキルがあるならば
@@ -283,8 +413,6 @@ public abstract class BaseStates
             }
         }
 
-        //ダメージの大きさで並べ替える
-        FocusSkillList = FocusSkillList.OrderByDescending(skill => skill.TopDmg).ToList();
 
         //最大ダメージの序列で記憶回数の増加をする
         //カウントアップして回して、該当のスキルになったら記憶回数の増加　
@@ -754,14 +882,14 @@ public abstract class BaseStates
         //単体攻撃で暴断物理攻撃の場合のAgi攻撃補正
         if (IsSingleATK())
         {
-            if(NowUseSkill.SkillPhysical == PhysicalProperty.heavy)
+            if (NowUseSkill.SkillPhysical == PhysicalProperty.heavy)
             {
                 atk += AGI() / 6;
             }
         }
 
 
-            return atk;
+        return atk;
     }
 
     /// <summary>
@@ -810,7 +938,7 @@ public abstract class BaseStates
         var dmg = (Atker.ATK() - DEF(skill.DEFATK)) * SkillPower;//(攻撃-対象者の防御) ×スキルパワー？
 
         //慣れ補正
-        AdaptToSkill(Atker,skill,dmg);
+        AdaptToSkill(Atker, skill, dmg);
 
         HP -= dmg;
         Debug.Log("攻撃が実行された");
@@ -876,7 +1004,7 @@ public abstract class BaseStates
             }
         }
 
-        if (skill.HasType(SkillType.Heal)) 
+        if (skill.HasType(SkillType.Heal))
         {
             if (skill.SkillHitCalc())//スキル命中率の計算だけ行う
             {
