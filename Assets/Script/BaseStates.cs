@@ -141,7 +141,7 @@ public abstract class BaseStates
     /// <summary>
     /// 慣れ補正用　スキルの注目リスト
     /// </summary>
-    public List<FocusedSkillAndUser> FocusSkillList;
+    public List<FocusedSkillAndUser> FocusSkillList = new List<FocusedSkillAndUser>();
 
     /// <summary>
     /// リーミナルホワイト用の素数による慣れ補正の"-スキル優先順位-"のグルーピング方式
@@ -171,6 +171,68 @@ public abstract class BaseStates
         }
 
         return -1; // 理論上起こらないが安全策
+    }
+    /// <summary>
+    /// キンダーガーデン用の素数による慣れ補正の"-スキル優先順位-"のグルーピング方式
+    /// 引数の整数が何番目のグループに属するかを返す
+    /// 最大HPが多ければ多いほど、乱数の間隔が狭まりやすい　= ダメージ格差による技への慣れの忘れやすさと慣れやすさが低段階化しやすい
+    /// </summary>
+    int GetKinderAdaptToSkillGrouping(int number)
+    {
+
+    }
+    /// <summary>
+    /// キンダーガーデン用の慣れ補正グルーピングの数列を保持するリスト
+    /// </summary>
+    List<int> KinderAdaptToSkillGroupingIntegerList;
+    /// <summary>
+    /// キンダーガーデン用の慣れ補正のグルーピング方式の乱数を決定する。
+    /// "bm生成時"に全キャラにこれを通じて決定される。
+    /// </summary>
+    public void DecisionKinderAdaptToSkillGrouping()
+    {
+        // decayRateを計算
+        // completionFraction = exp(-decayRate*(maxHP-minHP))
+        // decayRate = -ln(completionFraction)/(maxHP-minHP)
+        if (completionFraction <= 0f || completionFraction >= 1f)
+        {
+            // completionFractionは0～1の間で設定してください
+            completionFraction = 0.01f;
+        }
+
+        decayRate = -Mathf.Log(completionFraction) / (kinderGroupingMaxSimHP - kinderGroupingMinSimHP);
+
+        var sum = 0;
+        KinderAdaptToSkillGroupingIntegerList = new List<int>();//慣れ補正用のinteger保持リストを初期化
+        //大体70個ほど決定する。hpの大きさに応じて最大間隔が狭まる
+        for (var i = 0; i < 70; i++)
+        {
+            sum += RandomEx.Shared.NextInt(1, Mathf.RoundToInt(GetKinderGroupingIntervalRndMax()) + 1);
+            KinderAdaptToSkillGroupingIntegerList.Add(sum);
+        }
+
+    }
+    [Header("キンダーガーデンの慣れ補正用　HPの想定範囲")]
+    [SerializeField] float kinderGroupingMinSimHP = 1;    // ゲーム中でのHPの想定してる最小値
+    [SerializeField] float kinderGroupingMaxSimHP = 80;   // ゲーム中での想定してるHPの最大値(ここまでにキンダーガーデンの優先順位間隔が下がりきる。)
+
+    [Header("キンダーガーデンの慣れ補正用　出力値調整")]
+    [SerializeField] float InitKinderGroupingInterval = 17;   // 最小HP時の出力値
+    [SerializeField] float limitKinderGroupingInterval = 2;    // 最大HP時に近づいていく限界値
+
+    [Tooltip("最大HP時点で、開始の値から限界の値までの差をどの割合まで縮めるか。\n0に近いほど限界値により近づく(下がりきる)。\n例えば0.01なら1%まで縮まる。")]
+    [SerializeField]float completionFraction = 0.01f;
+
+    private float decayRate;
+    /// <summary>
+    /// キンダーガーデン用のグループ区切りでの乱数の最大値をゲットする。
+    /// </summary>
+    /// <returns></returns>
+    float GetKinderGroupingIntervalRndMax()
+    {
+        // f(hp) = limitValue + (startValue - limitValue) * exp(-decayRate * (キャラの最大HP - minHP))
+        float result = limitKinderGroupingInterval + (InitKinderGroupingInterval - limitKinderGroupingInterval) * Mathf.Exp(-decayRate * (_maxHp - kinderGroupingMinSimHP));
+        return result;
     }
     /// <summary>
     /// n以上の素数のうち、最初に出てくる素数を返す
@@ -246,7 +308,7 @@ public abstract class BaseStates
     }
 
     /// <summary>
-    /// 注目リスト内でのスキルの序列を返す
+    /// 注目リスト内でのスキルの序列を返す 0から数えるインデックス　0から数える
     /// </summary>
     int AdaptPriorityToSkill(BaseSkill skill)
     {
@@ -258,6 +320,7 @@ public abstract class BaseStates
 
     /// <summary>
     /// 現在のスキルの優先序列がどのグループ序列に属してるか
+    /// 各関数のツールチップにグループ分け方式の説明アリ
     /// </summary>
     int AdaptToSkillsGrouping(int index)
     {
@@ -266,6 +329,9 @@ public abstract class BaseStates
         {
             case SpiritualProperty.liminalwhitetile:
                 groupIndex = GetLiminalAdaptToSkillGrouping(index);
+                break;
+            case SpiritualProperty.kindergarden:
+                groupIndex = GetKinderAdaptToSkillGrouping(index);
                 break;
         }
 
