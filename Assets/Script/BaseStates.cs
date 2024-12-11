@@ -556,6 +556,36 @@ public abstract class BaseStates
 
         return groupIndex;
     }
+    /// <summary>
+    /// DEFによる基礎減少値を返す。
+    /// </summary>
+    float GetBaseReducationValue()
+    {
+        var def = DEF(1);//攻撃によって減少されないまっさらな防御力
+        if (def <= threshold)
+        {
+            // 第1段階: StartValueからmidLimitValueへ収束
+            // f(DEF) = midLimitValue + (StartValue - midLimitValue)*exp(-decayRate1*DEF)
+            return midLimitValue + (startValue - midLimitValue) * Mathf.Exp(-decayRate1 * def);
+        }
+        else
+        {
+            // 第2段階: thresholdを超えたらmidLimitValueから0へ超ゆるやかな減衰
+            // f(DEF) = finalLimitValue + midlimtValue * exp(-decayRate2*(DEF - threshold))
+            float excess = def - threshold;
+            return finalLimitValue + (midLimitValue - finalLimitValue) * Mathf.Exp(-decayRate2 * excess);
+        }
+    }
+    [Header("慣れ補正のDEFによる基礎減少値パラメータ（第1段階）")]
+    [SerializeField]float startValue = 0.7f;   // DEF=0での基礎減少値
+    [SerializeField] float midLimitValue = 0.2f; // 中間の下限値(比較的到達しやすい値)
+    [SerializeField] float decayRate1 = 0.04f;  // 第1段階で開始値から中間の下限値へ近づく速度
+    [SerializeField] float threshold = 88f;    // 第1段階から第2段階へ移行するDEF値
+
+    [Header("パラメータ（第2段階）")]
+    // 第2段階：0.2から0への超低速な減衰
+    [SerializeField] float finalLimitValue = 0.0f;//基礎減少値がDEFによって下がりきる最終下限値　　基本的に0
+    [SerializeField] float decayRate2 = 0.007f; // 非常に小さい値にしてfinalLimitValueに収束するには莫大なDEFが必要になる
 
     /// <summary>
     /// スキルに慣れる処理 慣れ補正を返す
@@ -596,14 +626,18 @@ public abstract class BaseStates
             //まず優先順位を取得し、グループ序列(スキルの最終優先ランク)を取得
             var finalSkillRank = AdaptToSkillsGrouping(AdaptPriorityToSkill(fo.skill));
 
+            //DEFによる基礎減少値を取得
+            var b_ReductionValue = GetBaseReducationValue(); 
+
             //DEFによる固定値と優先順位を計算して、どのくらい減るか　
             //優先順位が低ければ低いほど、つまりfinalSkillRankが多ければ多いほど、記憶回数が減りやすい
-            var DeathMemoryInt = 0;//減る記憶回数
+            var DeathMemoryFloat = 0;//減る記憶回数
 
-            //計算☆☆☆☆☆☆☆☆
+            //計算☆☆☆☆☆☆☆☆　記憶忘却回数 = 優先順位×基礎減少値×経過ターン　
+            //そのスキルの記憶回数の序列の割合/(3～2)により、 　　記憶忘却回数 /= 3　
 
 
-            fo.Forget(DeathMemoryInt);//減る数だけ減る
+            fo.Forget(DeathMemoryFloat);//減る数だけ減る
 
         }
 
