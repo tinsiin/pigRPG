@@ -527,6 +527,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   geino:
+    countPrimes: 77
+    insertProbability: 0.2
+    kinderGroupingMinSimHP: 1
+    kinderGroupingMaxSimHP: 80
+    InitKinderGroupingInterval: 17
+    limitKinderGroupingInterval: 2
+    completionFraction: 0.01
     _skillList:
     - _name: "\u30C6\u30B9\u30C8\u30B9\u30AD\u30EB"
       CanCancel: 0
@@ -613,6 +620,13 @@ MonoBehaviour:
     Target: 0
     RangeWill: 0
   noramlia:
+    countPrimes: 77
+    insertProbability: 0.2
+    kinderGroupingMinSimHP: 1
+    kinderGroupingMaxSimHP: 80
+    InitKinderGroupingInterval: 17
+    limitKinderGroupingInterval: 2
+    completionFraction: 0.01
     _skillList: []
     b_AGI: 0
     b_ATK: 0
@@ -678,6 +692,13 @@ MonoBehaviour:
     Target: 0
     RangeWill: 0
   sites:
+    countPrimes: 77
+    insertProbability: 0.2
+    kinderGroupingMinSimHP: 1
+    kinderGroupingMaxSimHP: 80
+    InitKinderGroupingInterval: 17
+    limitKinderGroupingInterval: 2
+    completionFraction: 0.01
     _skillList: []
     b_AGI: 0
     b_ATK: 0
@@ -822,6 +843,13 @@ MonoBehaviour:
     - rid: 720943376607215618
       type: {class: NormalEnemy, ns: , asm: Assembly-CSharp}
       data:
+        countPrimes: 77
+        insertProbability: 0.2
+        kinderGroupingMinSimHP: 1
+        kinderGroupingMaxSimHP: 80
+        InitKinderGroupingInterval: 17
+        limitKinderGroupingInterval: 2
+        completionFraction: 0.01
         _skillList: []
         b_AGI: 0
         b_ATK: 0
@@ -891,6 +919,13 @@ MonoBehaviour:
     - rid: 720943376607215619
       type: {class: butterfly, ns: , asm: Assembly-CSharp}
       data:
+        countPrimes: 77
+        insertProbability: 0.2
+        kinderGroupingMinSimHP: 1
+        kinderGroupingMaxSimHP: 80
+        InitKinderGroupingInterval: 17
+        limitKinderGroupingInterval: 2
+        completionFraction: 0.01
         _skillList:
         - _name: 
           CanCancel: 0
@@ -1002,6 +1037,13 @@ MonoBehaviour:
     - rid: 720943376607215620
       type: {class: butterfly, ns: , asm: Assembly-CSharp}
       data:
+        countPrimes: 77
+        insertProbability: 0.2
+        kinderGroupingMinSimHP: 1
+        kinderGroupingMaxSimHP: 80
+        InitKinderGroupingInterval: 17
+        limitKinderGroupingInterval: 2
+        completionFraction: 0.01
         _skillList: []
         b_AGI: 0
         b_ATK: 0

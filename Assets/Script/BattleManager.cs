@@ -1001,14 +1001,14 @@ public class BattleManager
         EnemyGroup.PartyRecovelyTurnOK();
         AllyGroup.PartyRecovelyTurnOK();
 
-        //全キャラのキンダーガーデン用の慣れ補正の優先順位のグルーピングの数列を初期化
+        //引数なしのbmスタート時のコールバック
         foreach (var one in EnemyGroup.Ours)
         {
-            one.DecisionKinderAdaptToSkillGrouping();
+            one.OnBattleStartNoArgument();
         }
         foreach (var one in AllyGroup.Ours)
         {
-            one.DecisionKinderAdaptToSkillGrouping();
+            one.OnBattleStartNoArgument();
         }
 
 

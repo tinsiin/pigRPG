@@ -10,6 +10,7 @@ using System;
 using UnityEditor.Experimental.GraphView;
 using static BattleManager;
 using Unity.Burst.CompilerServices;
+using static UnityEngine.Rendering.DebugUI;
 
 /// <summary>
 ///     キャラクター達の種別
@@ -76,14 +77,18 @@ public class FocusedSkillAndUser
     /// </summary>
     public BaseSkill skill;
 
-    int _memoryCount;
+    float _memoryCount;
     /// <summary>
     /// 慣れの記憶回数
     /// </summary>
-    public int MemoryCount => _memoryCount;
-    public void Memory()
+    public float MemoryCount => _memoryCount;
+    public void Memory(float value)
     {
-        _memoryCount++;
+        _memoryCount += value;
+    }
+    public void Forget(float value)
+    {
+        _memoryCount -= value;
     }
 
 
@@ -144,6 +149,58 @@ public abstract class BaseStates
     public List<FocusedSkillAndUser> FocusSkillList = new List<FocusedSkillAndUser>();
 
     /// <summary>
+    ///bm生成時に初期化される関数
+    /// </summary>
+    public void OnBattleStartNoArgument()
+    {
+        DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
+        DecisionSacriFaithAdaptToSkillGrouping();
+    }
+    /// <summary>
+    /// ベールドライヴァル用の慣れ補正の優先順位のグルーピング
+    /// グルーピングっていうか　3 を境目に二つに分かれるだけ。
+    /// </summary>
+    int GetBaleAdaptToSkillGrouping(int number)
+    {//序列が 0～2　つまり三位までなら
+        if (number < 3) return 0;//グループ序列は0
+        else return 1;//それ以降の順位なら、グループ序列は１
+    }
+    /// <summary>
+    /// ゴッドティアー用の慣れ補正の優先順位のグルーピング
+    /// 6ごとに区分けする
+    /// </summary>
+    int GetGodtierAdaptToSkillGrouping(int number)
+    {
+        return number / 6;
+    }
+
+    /// <summary>
+    /// 支柱用の慣れ補正の優先順位のグルーピング
+    /// 5ごとに区分けする
+    /// </summary>
+    int GetPillarAdaptToSkillGrouping(int number)
+    {
+        return number / 5;
+    }
+    /// <summary>
+    /// ドレミスは用の慣れ補正の優先順位のグルーピング
+    /// 最初の六つ(0～5)  そしてその後は七つ区切り
+    /// </summary>
+    int GetDoremisAdaptToSkillGrouping(int number)
+    {
+        if (number < 6)//最初の六つならそのまま
+        {
+            return number;
+        }
+        // 6以降は7つごと
+        // 6～12 → グループ6
+        // 13～19 → グループ7
+        // 20～26 → グループ8 ...
+        return 6 + (number - 6) / 7;  //6足してんのは最初の六つの固定グループ以降の順列であるから。　6引いてんのは最初の六つによるずれ修正
+    }
+
+
+    /// <summary>
     /// リーミナルホワイト用の素数による慣れ補正の"-スキル優先順位-"のグルーピング方式
     /// 引数の整数が何番目のグループに属するかを返す
     /// グループは0からはじまり、各素数を境界として区切る。
@@ -154,8 +211,6 @@ public abstract class BaseStates
     /// </summary>
     int GetLiminalAdaptToSkillGrouping(int number)
     {
-        if (number < 0) return -1; // 負数はエラー扱い
-
         // number以上の素数を取得
         int primeAbove = GetPrimeAbove(number);
 
@@ -173,23 +228,149 @@ public abstract class BaseStates
         return -1; // 理論上起こらないが安全策
     }
     /// <summary>
-    /// キンダーガーデン用の素数による慣れ補正の"-スキル優先順位-"のグルーピング方式
-    /// 引数の整数が何番目のグループに属するかを返す
-    /// 最大HPが多ければ多いほど、乱数の間隔が狭まりやすい　= ダメージ格差による技への慣れの忘れやすさと慣れやすさが低段階化しやすい
+    /// シークイエスト用の十ごとに優先順位のグループ分けし、
+    /// 渡されたindexが何番目に属するかを返す関数
     /// </summary>
-    int GetKinderAdaptToSkillGrouping(int number)
+    int GetCquiestAdaptToSkillGrouping(int number)
     {
+        if (number < 0) return -1; // 負数はエラー扱い
 
+        //0~9をグループ0、10~19をグループ1、20~29をグループ2…という風に10刻みで
+        // グループ分けを行い、渡された整数がどのグループかを返します。
+        // 
+        // 例:
+        //  - 0～9   → グループ0
+        //  - 10～19 → グループ1
+        //  - 20～29 → グループ2
+        return number / 10;
     }
     /// <summary>
-    /// キンダーガーデン用の慣れ補正グルーピングの数列を保持するリスト
+    /// 慣れ補正でintの精神属性ごとのグループ分け保持リストから優先順位のグループ序列を入手する関数
+    /// 整数を受け取り、しきい値リストに基づいてその値が所属するグループ番号を返します。
+    /// しきい値リストは昇順にソートされていることを想定。
     /// </summary>
-    List<int> KinderAdaptToSkillGroupingIntegerList;
+    int GetAdaptToSkillGroupingFromList(int number, List<int> sequence)
+    {
+        //  例: thresholds = [10,20,30]
+        // number <= 10 -> グループ0
+        // 11 <= number <= 20 -> グループ1
+        // 21 <= number <= 30 -> グループ2
+        // 31 <= number     -> グループ3
+
+        // 値がしきい値リストの最初の値以下の場合、0番目のグループに属するとする
+        // ここは要件に合わせて調整可能。
+        for (int i = 0; i < sequence.Count; i++)
+        {
+            if (number <= sequence[i])
+            {
+                return i;
+            }
+        }
+
+        // 全てのしきい値を超えた場合は最後のグループ+1を返す
+        return sequence.Count;
+    }
+    /// <summary>
+    /// 自己犠牲用の慣れ補正のグルーピング方式の素数を交えた乱数を決定する。
+    /// "bm生成時"に全キャラにこれを通じて決定される。
+    /// 指定した数だけ素数を生成し、それらをリストに入れ、それらの素数の間に任意の数の乱数を挿入した数列を作成する
+    /// </summary>
+    void DecisionSacriFaithAdaptToSkillGrouping()
+    {
+        var primes = GetFirstNPrimes(countPrimes);
+        if (primes == null || primes.Count == 0)
+        {
+            throw new ArgumentException("primesリストが空です");
+        }
+        if (insertProbability < 0.0 || insertProbability > 1.0)
+        {
+            throw new ArgumentException("insertProbabilityは0.0～1.0の間で指定してください");
+        }
+
+        List<int> result = new List<int>();
+
+        for (int i = 0; i < primes.Count - 1; i++)
+        {
+            int currentPrime = primes[i];
+            int nextPrime = primes[i + 1];
+
+            // 現在の素数を追加
+            result.Add(currentPrime);
+
+            int gapStart = currentPrime + 1;
+            int gapEnd = nextPrime - 1;
+
+            // gap範囲を計算
+            int gapRange = gapEnd - gapStart + 1;
+            if (gapRange > 0)
+            {
+                // gapRange / 2.5回分の挿入判定を行う
+                int tries = (int)Math.Floor(gapRange / 2.5);
+                if (tries > 0)
+                {
+                    List<int> insertedNumbers = new List<int>();
+
+                    for (int t = 0; t < tries; t++)
+                    {
+                        // 挿入確率判定
+                        if (RandomEx.Shared.NextDouble() < insertProbability)
+                        {
+                            // gap内からランダムに1つ取得
+                            int randomValue = RandomEx.Shared.NextInt(gapStart, gapEnd + 1);
+
+                            if (!insertedNumbers.Contains(randomValue)) //重複してたら追加しない。
+                                insertedNumbers.Add(randomValue);
+                        }
+                    }
+
+                    // 取得した乱数をソートして追加（昇順順列にするため）
+                    insertedNumbers.Sort();
+
+                    foreach (var val in insertedNumbers)
+                    {
+                        result.Add(val);
+                    }
+                }
+            }
+        }
+
+        // 最後の素数を追加
+        result.Add(primes[primes.Count - 1]);
+
+        SacrifaithAdaptToSkillGroupingIntegerList = result;//保持リストに入れる
+    }
+    [Header("自己犠牲の慣れ補正用　HPの想定範囲 基本的に初期値からいじらない")]
+    [SerializeField] int countPrimes = 77;//生成する素数の数
+    [SerializeField] double insertProbability = 0.2;
+    /// <summary>
+    /// 自己犠牲用の慣れ補正グルーピングの数列を保持するリスト
+    /// </summary>
+    List<int> SacrifaithAdaptToSkillGroupingIntegerList;
+    /// <summary>
+    /// 指定した数の素数を小さい順に返す
+    /// 簡易的な実装。多くの素数が欲しい場合は、高速なアルゴリズム(エラトステネスの篩など)に切り替え推奨
+    /// </summary>
+    private List<int> GetFirstNPrimes(int n)
+    {
+        List<int> primes = new List<int>();
+        int num = 2;
+
+        while (primes.Count < n)
+        {
+            if (IsPrime(num))
+            {
+                primes.Add(num);
+            }
+            num++;
+        }
+
+        return primes;
+    }
     /// <summary>
     /// キンダーガーデン用の慣れ補正のグルーピング方式の乱数を決定する。
     /// "bm生成時"に全キャラにこれを通じて決定される。
     /// </summary>
-    public void DecisionKinderAdaptToSkillGrouping()
+    void DecisionKinderAdaptToSkillGrouping()
     {
         // decayRateを計算
         // completionFraction = exp(-decayRate*(maxHP-minHP))
@@ -212,18 +393,22 @@ public abstract class BaseStates
         }
 
     }
-    [Header("キンダーガーデンの慣れ補正用　HPの想定範囲")]
+    [Header("キンダーガーデンの慣れ補正用　HPの想定範囲 基本的に初期値からいじらない")]
     [SerializeField] float kinderGroupingMinSimHP = 1;    // ゲーム中でのHPの想定してる最小値
     [SerializeField] float kinderGroupingMaxSimHP = 80;   // ゲーム中での想定してるHPの最大値(ここまでにキンダーガーデンの優先順位間隔が下がりきる。)
 
-    [Header("キンダーガーデンの慣れ補正用　出力値調整")]
+    [Header("キンダーガーデンの慣れ補正用　出力値調整　基本的に初期値からいじらない")]
     [SerializeField] float InitKinderGroupingInterval = 17;   // 最小HP時の出力値
     [SerializeField] float limitKinderGroupingInterval = 2;    // 最大HP時に近づいていく限界値
 
     [Tooltip("最大HP時点で、開始の値から限界の値までの差をどの割合まで縮めるか。\n0に近いほど限界値により近づく(下がりきる)。\n例えば0.01なら1%まで縮まる。")]
-    [SerializeField]float completionFraction = 0.01f;
+    [SerializeField] float completionFraction = 0.01f;
 
     private float decayRate;
+    /// <summary>
+    /// キンダーガーデン用の慣れ補正グルーピングの数列を保持するリスト
+    /// </summary>
+    List<int> KinderAdaptToSkillGroupingIntegerList;
     /// <summary>
     /// キンダーガーデン用のグループ区切りでの乱数の最大値をゲットする。
     /// </summary>
@@ -325,13 +510,47 @@ public abstract class BaseStates
     int AdaptToSkillsGrouping(int index)
     {
         int groupIndex = -1;
+        if (index < 0) return -1;//負の値が優先序列として渡されたらエラー
         switch (MyImpression)//自分の印象によってスキルのグループ分けが変わる。
         {
             case SpiritualProperty.liminalwhitetile:
                 groupIndex = GetLiminalAdaptToSkillGrouping(index);
                 break;
             case SpiritualProperty.kindergarden:
-                groupIndex = GetKinderAdaptToSkillGrouping(index);
+                // キンダーガーデン用の素数による慣れ補正の"-スキル優先順位-"のグルーピング方式
+                // 引数の整数が何番目のグループに属するかを返す
+                // 最大HPが多ければ多いほど、乱数の間隔が狭まりやすい　= ダメージ格差による技への慣れの忘れやすさと慣れやすさが低段階化しやすい
+                groupIndex = GetAdaptToSkillGroupingFromList(index, KinderAdaptToSkillGroupingIntegerList);
+                break;
+            case SpiritualProperty.sacrifaith:
+                //自己犠牲は素数の間に　素数間隔 / 2.5　回　その間の数の乱数を入れる。
+                //つまり素数と乱数の混じった優先順位のグループ分けがされる
+                groupIndex = GetAdaptToSkillGroupingFromList(index, SacrifaithAdaptToSkillGroupingIntegerList);
+                break;
+            case SpiritualProperty.cquiest:
+                //シークイエストは十ごとに区分けする。
+                groupIndex = GetCquiestAdaptToSkillGrouping(index);
+                break;
+            case SpiritualProperty.baledrival:
+                //ベールドライヴァルは三位以降以前に区分けする。
+                groupIndex = GetBaleAdaptToSkillGrouping(index);
+                break;
+            case SpiritualProperty.godtier:
+                //ゴッドティアは六つごとに区分けする
+                groupIndex = GetGodtierAdaptToSkillGrouping(index);
+                break;
+            case SpiritualProperty.pillar:
+                //支柱は六つごとに区分けする
+                groupIndex = GetPillarAdaptToSkillGrouping(index);
+                break;
+            case SpiritualProperty.doremis:
+                //ドレミスは六つ固定　以降七つ区切り
+                groupIndex = GetDoremisAdaptToSkillGrouping(index);
+                break;
+
+
+            default:
+                groupIndex = index;//デビルとサイコパスは省く
                 break;
         }
 
@@ -347,6 +566,7 @@ public abstract class BaseStates
         var IsFirstAttacker = false;//知っているスキルに食らったとき、その攻撃者が初見かどうか
         var IsConfused = false;//戸惑いフラグ
         float AdaptModify = -1;//デフォルト値
+        FocusedSkillAndUser NowFocusSkill　= null;//今回食らった注目慣れスキル
 
         foreach (var fo in FocusSkillList)
         {
@@ -358,21 +578,34 @@ public abstract class BaseStates
                 {
                     fo.User.Add(enemy);//敵をそのスキルのユーザーリストに登録
                 }
-            }
-            else//それ以外全ての記憶回数をターン数経過によって減らす
-            {
-                //まず優先順位を取得し、グループ序列を取得
-                var index = AdaptToSkillsGrouping(AdaptPriorityToSkill(skill));
-
+                NowFocusSkill = fo;//既にあるスキルを今回の慣れ注目スキルに
             }
         }
         //もし初めて食らうのなら
         if (donthaveskill)
         {
-            var fo = new FocusedSkillAndUser(enemy, skill, dmg);
-            FocusSkillList.Add(fo);//最初のキャラクターとスキルを記録
+            NowFocusSkill = new FocusedSkillAndUser(enemy, skill, dmg);//新しく慣れ注目スキルに
+            FocusSkillList.Add(NowFocusSkill);//最初のキャラクターとスキルを記録
         }
 
+        //今回食らった以外の全てのスキルの記憶回数をターン数経過によって減らす
+        var templist = FocusSkillList;
+        templist.Remove(NowFocusSkill);//今回の慣れ注目スキルを省く
+        foreach (var fo in templist)
+        {
+            //まず優先順位を取得し、グループ序列(スキルの最終優先ランク)を取得
+            var finalSkillRank = AdaptToSkillsGrouping(AdaptPriorityToSkill(fo.skill));
+
+            //DEFによる固定値と優先順位を計算して、どのくらい減るか　
+            //優先順位が低ければ低いほど、つまりfinalSkillRankが多ければ多いほど、記憶回数が減りやすい
+            var DeathMemoryInt = 0;//減る記憶回数
+
+            //計算☆☆☆☆☆☆☆☆
+
+
+            fo.Forget(DeathMemoryInt);//減る数だけ減る
+
+        }
 
 
 
