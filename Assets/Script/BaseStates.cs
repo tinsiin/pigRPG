@@ -153,8 +153,13 @@ public abstract class BaseStates
     /// </summary>
     public void OnBattleStartNoArgument()
     {
+        TempDamageTurn = 0;
         DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
         DecisionSacriFaithAdaptToSkillGrouping();
+    }
+    public void OnBattleEndNoArgument()
+    {
+        TempDamageTurn = 0;
     }
     /// <summary>
     /// ベールドライヴァル用の慣れ補正の優先順位のグルーピング
@@ -493,12 +498,22 @@ public abstract class BaseStates
     }
 
     /// <summary>
-    /// 注目リスト内でのスキルの序列を返す 0から数えるインデックス　0から数える
+    /// 注目リスト内でのスキルのy優先順位の序列を返す 0から数えるインデックス　0から数える
     /// </summary>
-    int AdaptPriorityToSkill(BaseSkill skill)
+    int AdaptPriorityDamageToSkill(BaseSkill skill)
     {
         //ダメージの大きさで並び替えて
         FocusSkillList = FocusSkillList.OrderByDescending(skill => skill.TopDmg).ToList();
+
+        return FocusSkillList.FindIndex(fo => fo.skill == skill);
+    }
+    /// <summary>
+    /// 注目リスト内でのスキルのy優先順位の序列を返す 0から数えるインデックス　0から数える
+    /// </summary>
+    int AdaptPriorityMemoryToSkill(BaseSkill skill)
+    {
+        //記憶回数のカウントで並び替えて
+        FocusSkillList = FocusSkillList.OrderByDescending(skill => skill.MemoryCount).ToList();
 
         return FocusSkillList.FindIndex(fo => fo.skill == skill);
     }
@@ -577,7 +592,7 @@ public abstract class BaseStates
         }
     }
     [Header("慣れ補正のDEFによる基礎減少値パラメータ（第1段階）")]
-    [SerializeField]float startValue = 0.7f;   // DEF=0での基礎減少値
+    [SerializeField] float startValue = 0.7f;   // DEF=0での基礎減少値
     [SerializeField] float midLimitValue = 0.2f; // 中間の下限値(比較的到達しやすい値)
     [SerializeField] float decayRate1 = 0.04f;  // 第1段階で開始値から中間の下限値へ近づく速度
     [SerializeField] float threshold = 88f;    // 第1段階から第2段階へ移行するDEF値
@@ -588,6 +603,23 @@ public abstract class BaseStates
     [SerializeField] float decayRate2 = 0.007f; // 非常に小さい値にしてfinalLimitValueに収束するには莫大なDEFが必要になる
 
     /// <summary>
+    /// 前にダメージを受けたターン
+    /// </summary>
+    int TempDamageTurn;
+    /// <summary>
+    /// 記憶回数の序列割合をゲット
+    /// 指定されたインデックスがリスト内でどの程度の割合に位置しているかを計算します。
+    /// 先頭が1.0、末尾が0.0の割合となります。 
+    /// </summary>
+    float GetMemoryCountRankRatio(int index)
+    {
+        if (FocusSkillList.Count == 1)
+            return 1.0f; // リストに1つだけの場合、割合は1.0
+
+        // 先頭が1.0、末尾が0.0となるように割合を計算
+        return 1.0f - ((float)index / (FocusSkillList.Count - 1));
+    }
+    /// <summary>
     /// スキルに慣れる処理 慣れ補正を返す
     /// </summary>
     float AdaptToSkill(BaseStates enemy, BaseSkill skill, float dmg)
@@ -596,7 +628,8 @@ public abstract class BaseStates
         var IsFirstAttacker = false;//知っているスキルに食らったとき、その攻撃者が初見かどうか
         var IsConfused = false;//戸惑いフラグ
         float AdaptModify = -1;//デフォルト値
-        FocusedSkillAndUser NowFocusSkill　= null;//今回食らった注目慣れスキル
+        var nowTurn = manager.BattleTurnCount;//現在のターン数
+        FocusedSkillAndUser NowFocusSkill = null;//今回食らった注目慣れスキル
 
         foreach (var fo in FocusSkillList)
         {
@@ -624,17 +657,39 @@ public abstract class BaseStates
         foreach (var fo in templist)
         {
             //まず優先順位を取得し、グループ序列(スキルの最終優先ランク)を取得
-            var finalSkillRank = AdaptToSkillsGrouping(AdaptPriorityToSkill(fo.skill));
+            var finalSkillRank = AdaptToSkillsGrouping(AdaptPriorityDamageToSkill(fo.skill));
 
             //DEFによる基礎減少値を取得
-            var b_ReductionValue = GetBaseReducationValue(); 
+            var b_ReductionValue = GetBaseReducationValue();
 
             //DEFによる固定値と優先順位を計算して、どのくらい減るか　
-            //優先順位が低ければ低いほど、つまりfinalSkillRankが多ければ多いほど、記憶回数が減りやすい
-            var DeathMemoryFloat = 0;//減る記憶回数
+            //優先順位が低ければ低いほど、つまりfinalSkillRankが多ければ多いほど、記憶回数が減りやすい(だからそのまま計算できる)
+            var DeathMemoryFloat = 0f;//記憶忘却回数
 
-            //計算☆☆☆☆☆☆☆☆　記憶忘却回数 = 優先順位×基礎減少値×経過ターン　
-            //そのスキルの記憶回数の序列の割合/(3～2)により、 　　記憶忘却回数 /= 3　
+            //前回"スキル問わず"攻撃を受けてから今回受けるまでの　"経過ターン"
+            //(スキル性質がAttackのとき、必ず実行されるから　攻撃を受けた間隔　が経過ターンに入ります　スキルによる差はありません。)
+            var DeltaDamageTurn = Math.Abs(nowTurn - TempDamageTurn);
+
+
+            var rankNotTopModify = 0f;//二位以降での補正
+            if (finalSkillRank > 0) rankNotTopModify = 0.08f;//優先順位が一軍でないのなら、序列補正に加算される固定値
+            var PriorityModify = 1 + finalSkillRank / 8 + rankNotTopModify;//序列補正
+
+            //計算☆☆☆☆☆☆☆☆　記憶忘却回数 = 序列補正×基礎減少値×経過ターン　
+            //そのスキルの記憶回数の序列の割合/(3～2)により、 乱数判定成功したら、　　記憶忘却回数 /= 3　
+
+            DeathMemoryFloat = PriorityModify * b_ReductionValue * DeltaDamageTurn;
+
+
+            //記憶回数の序列割合を入手
+            var MemoryRankRatio = GetMemoryCountRankRatio(AdaptPriorityMemoryToSkill(skill));
+
+            var mod1 = RandomEx.Shared.NextFloat(2, 4);//2～3
+            var rat1 = MemoryRankRatio / mod1;
+            if (RandomEx.Shared.NextFloat(1f) < rat1)//乱数判定　成功したら。
+            {
+                DeathMemoryFloat /= 3;//3分の一に減衰される
+            }
 
 
             fo.Forget(DeathMemoryFloat);//減る数だけ減る
@@ -744,6 +799,8 @@ public abstract class BaseStates
                     //HITによる固定値の範囲
                 }
             }
+
+            TempDamageTurn = nowTurn;//今回の被害ターンを記録する。
         }
 
 

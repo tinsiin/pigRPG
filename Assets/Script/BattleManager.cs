@@ -253,7 +253,7 @@ public class BattleManager
     /// </summary>
     private ACTList Acts;//行動先約リスト？
 
-    private int BattleTurnCount;//バトルの経過ターン
+    public int BattleTurnCount;//バトルの経過ターン
 
 
     /// <summary>
@@ -993,6 +993,15 @@ public class BattleManager
 
         //敵キャラは復活歩数の準備
         EnemyGroup.RecovelyStart(PlayersStates.Instance.NowProgress);
+
+        foreach(var one in AllyGroup.Ours)
+        {
+            one.OnBattleEndNoArgument();
+        }
+        foreach(var one in EnemyGroup.Ours)
+        {
+            one.OnBattleEndNoArgument();
+        }
     }
 
     private void OnBattleStart()
