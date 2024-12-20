@@ -572,12 +572,39 @@ public abstract class BaseStates
         return groupIndex;
     }
     /// <summary>
-    /// DEFによる基礎減少値を返す。
+    /// DEFによる基礎上昇値(慣れ補正)　記憶回数に加算されるものです。
     /// </summary>
-    float GetBaseReducationValue()
+    float GetBaseMemoryIncreaseValue()
+    {
+        var def = DEF(1);
+        if (def <= increaseThreshold)
+        {
+            // 第1段階: startIncreaseValueからmidLimitIncreaseValueへ収束
+            return midLimitIncreaseValue + (startIncreaseValue - midLimitIncreaseValue) * Mathf.Exp(-increaseDecayRate1 * def);
+        }
+        else
+        {
+            // 第2段階: threshold超過後はmidLimitIncreaseValueからfinalLimitIncreaseValueへ超緩やかに減少
+            float excess = def - increaseThreshold;
+            return finalLimitIncreaseValue + (midLimitIncreaseValue - finalLimitIncreaseValue) * Mathf.Exp(-increaseDecayRate2 * excess);
+        }
+    }
+    [Header("慣れ補正のDEFによる基礎上昇値パラメータ（第1段階）")]
+    [SerializeField] float startIncreaseValue = 1.89f; // DEF=0での基礎上昇値 
+    [SerializeField] float midLimitIncreaseValue = 4.444f; // 中間で収束する上昇値 
+    [SerializeField] float increaseDecayRate1 = 0.0444f; // 第1段階でstart→midLimitへ近づく速度 
+    [SerializeField] float increaseThreshold = 100f; // 第2段階移行DEF値 
+
+    [Header("慣れ補正のDEFによる基礎上昇値パラメータ（第2段階）")]
+    [SerializeField] float finalLimitIncreaseValue = 8.9f; // 第2段階で最終的に近づく値 
+    [SerializeField] float increaseDecayRate2 = 0.0027f; // 第2段階でmid→finalLimitへ近づく速度 
+    /// <summary>
+    /// DEFによる基礎減少値を返す。　これは慣れ補正の記憶回数に加算される物。
+    /// </summary>
+    float GetBaseMemoryReducationValue()
     {
         var def = DEF(1);//攻撃によって減少されないまっさらな防御力
-        if (def <= threshold)
+        if (def <= thresholdDEF)
         {
             // 第1段階: StartValueからmidLimitValueへ収束
             // f(DEF) = midLimitValue + (StartValue - midLimitValue)*exp(-decayRate1*DEF)
@@ -587,7 +614,7 @@ public abstract class BaseStates
         {
             // 第2段階: thresholdを超えたらmidLimitValueから0へ超ゆるやかな減衰
             // f(DEF) = finalLimitValue + midlimtValue * exp(-decayRate2*(DEF - threshold))
-            float excess = def - threshold;
+            float excess = def - thresholdDEF;
             return finalLimitValue + (midLimitValue - finalLimitValue) * Mathf.Exp(-decayRate2 * excess);
         }
     }
@@ -595,7 +622,7 @@ public abstract class BaseStates
     [SerializeField] float startValue = 0.7f;   // DEF=0での基礎減少値
     [SerializeField] float midLimitValue = 0.2f; // 中間の下限値(比較的到達しやすい値)
     [SerializeField] float decayRate1 = 0.04f;  // 第1段階で開始値から中間の下限値へ近づく速度
-    [SerializeField] float threshold = 88f;    // 第1段階から第2段階へ移行するDEF値
+    [SerializeField] float thresholdDEF = 88f;    // 第1段階から第2段階へ移行するDEF値
 
     [Header("パラメータ（第2段階）")]
     // 第2段階：0.2から0への超低速な減衰
@@ -620,90 +647,11 @@ public abstract class BaseStates
         return 1.0f - ((float)index / (FocusSkillList.Count - 1));
     }
     /// <summary>
-    /// スキルに慣れる処理 慣れ補正を返す
+    /// 自身の精神属性による記憶段階構造と範囲の取得
     /// </summary>
-    float AdaptToSkill(BaseStates enemy, BaseSkill skill, float dmg)
+    /// <returns></returns>
+    List<MemoryDensity> MemoryStageStructure()
     {
-        var donthaveskill = true;
-        var IsFirstAttacker = false;//知っているスキルに食らったとき、その攻撃者が初見かどうか
-        var IsConfused = false;//戸惑いフラグ
-        float AdaptModify = -1;//デフォルト値
-        var nowTurn = manager.BattleTurnCount;//現在のターン数
-        FocusedSkillAndUser NowFocusSkill = null;//今回食らった注目慣れスキル
-
-        foreach (var fo in FocusSkillList)
-        {
-            if (fo.skill == skill)//スキル既にあるなら
-            {
-                fo.DamageMemory(dmg);// ダメージ記録
-                donthaveskill = false;//既にあるフラグ！
-                if (IsFirstAttacker = !fo.User.Any(chara => chara == enemy))//攻撃者が人員リストにいない場合　true
-                {
-                    fo.User.Add(enemy);//敵をそのスキルのユーザーリストに登録
-                }
-                NowFocusSkill = fo;//既にあるスキルを今回の慣れ注目スキルに
-            }
-        }
-        //もし初めて食らうのなら
-        if (donthaveskill)
-        {
-            NowFocusSkill = new FocusedSkillAndUser(enemy, skill, dmg);//新しく慣れ注目スキルに
-            FocusSkillList.Add(NowFocusSkill);//最初のキャラクターとスキルを記録
-        }
-
-        //今回食らった以外の全てのスキルの記憶回数をターン数経過によって減らす
-        var templist = FocusSkillList;
-        templist.Remove(NowFocusSkill);//今回の慣れ注目スキルを省く
-        foreach (var fo in templist)
-        {
-            //まず優先順位を取得し、グループ序列(スキルの最終優先ランク)を取得
-            var finalSkillRank = AdaptToSkillsGrouping(AdaptPriorityDamageToSkill(fo.skill));
-
-            //DEFによる基礎減少値を取得
-            var b_ReductionValue = GetBaseReducationValue();
-
-            //DEFによる固定値と優先順位を計算して、どのくらい減るか　
-            //優先順位が低ければ低いほど、つまりfinalSkillRankが多ければ多いほど、記憶回数が減りやすい(だからそのまま計算できる)
-            var DeathMemoryFloat = 0f;//記憶忘却回数
-
-            //前回"スキル問わず"攻撃を受けてから今回受けるまでの　"経過ターン"
-            //(スキル性質がAttackのとき、必ず実行されるから　攻撃を受けた間隔　が経過ターンに入ります　スキルによる差はありません。)
-            var DeltaDamageTurn = Math.Abs(nowTurn - TempDamageTurn);
-
-
-            var rankNotTopModify = 0f;//二位以降での補正
-            if (finalSkillRank > 0) rankNotTopModify = 0.08f;//優先順位が一軍でないのなら、序列補正に加算される固定値
-            var PriorityModify = 1 + finalSkillRank / 8 + rankNotTopModify;//序列補正
-
-            //計算☆☆☆☆☆☆☆☆　記憶忘却回数 = 序列補正×基礎減少値×経過ターン　
-            //そのスキルの記憶回数の序列の割合/(3～2)により、 乱数判定成功したら、　　記憶忘却回数 /= 3　
-
-            DeathMemoryFloat = PriorityModify * b_ReductionValue * DeltaDamageTurn;
-
-
-            //記憶回数の序列割合を入手
-            var MemoryRankRatio = GetMemoryCountRankRatio(AdaptPriorityMemoryToSkill(skill));
-
-            var mod1 = RandomEx.Shared.NextFloat(2, 4);//2～3
-            var rat1 = MemoryRankRatio / mod1;
-            if (RandomEx.Shared.NextFloat(1f) < rat1)//乱数判定　成功したら。
-            {
-                DeathMemoryFloat /= 3;//3分の一に減衰される
-            }
-
-
-            fo.Forget(DeathMemoryFloat);//減る数だけ減る
-
-        }
-
-
-
-        //スキルの記憶回数での並べ替え
-        //記憶回数が多い方から数えて、　　"今回のスキル"がそれに入ってるなら慣れ補正を返す
-        //数える範囲は　記憶範囲
-        FocusSkillList = FocusSkillList.OrderByDescending(skill => skill.MemoryCount).ToList();
-
-        //記憶範囲の取得　　精神属性による場合分け
         List<MemoryDensity> rl;
         switch (MyImpression)//左から降順に入ってくる　一番左が最初の、一番上の値ってこと
         {
@@ -758,14 +706,117 @@ public abstract class BaseStates
                 break;//適当
 
         }
+        return rl;
+    }
+    /// <summary>
+    /// 攻撃力を減衰する最終的な"慣れ"の基礎量
+    /// </summary>
+    float GetBaseAdaptValue()
+    {
+        const float bValue = 0.0004f; //ここの単位調節は1バトルの長さと密接に関係すると思う。
+
+        return bValue * b_EYE;//基礎命中率で補正。　「慣れは"元々"の視力と、記憶の精神由来の構成が物を言います。」
+    }
+    /// <summary>
+    /// EYE()を用いてAdaptModifyが下回らないようにする特定の下限しきい値を計算する関数
+    /// </summary>
+    float CalculateEYEBasedAdaptThreshold()
+    {
+        return 0f;
+    }
+    /// <summary>
+    /// スキルに慣れる処理 慣れ補正を返す
+    /// </summary>
+    float AdaptToSkill(BaseStates enemy, BaseSkill skill, float dmg)
+    {
+        var donthaveskill = true;//持ってないフラグ
+        var IsFirstAttacker = false;//知っているスキルに食らったとき、その攻撃者が初見かどうか
+        var IsConfused = false;//戸惑いフラグ
+        float AdaptModify = -1;//デフォルト値
+        var nowTurn = manager.BattleTurnCount;//現在のターン数
+        FocusedSkillAndUser NowFocusSkill = null;//今回食らった注目慣れスキル
+
+        //今回食らうスキルが既に食らってるかどうかの判定ーーーーーーーーーーーーーーーーー
+        foreach (var fo in FocusSkillList)
+        {
+            if (fo.skill == skill)//スキル既にあるなら
+            {
+                fo.DamageMemory(dmg);// ダメージ記録
+                donthaveskill = false;//既にあるフラグ！
+                if (IsFirstAttacker = !fo.User.Any(chara => chara == enemy))//攻撃者が人員リストにいない場合　true
+                {
+                    fo.User.Add(enemy);//敵をそのスキルのユーザーリストに登録
+                }
+                NowFocusSkill = fo;//既にあるスキルを今回の慣れ注目スキルに
+            }
+        }
+        //もし初めて食らうのならーーーーーーーーーーーーーーーーー
+        if (donthaveskill)
+        {
+            NowFocusSkill = new FocusedSkillAndUser(enemy, skill, dmg);//新しく慣れ注目スキルに
+            FocusSkillList.Add(NowFocusSkill);//最初のキャラクターとスキルを記録
+        }
+
+        //前回"スキル問わず"攻撃を受けてから今回受けるまでの　"経過ターン"
+        //(スキル性質がAttackのとき、必ず実行されるから　攻撃を受けた間隔　が経過ターンに入ります　スキルによる差はありません。)
+        var DeltaDamageTurn = Math.Abs(nowTurn - TempDamageTurn);
+
+        //今回食らった以外の全てのスキルの記憶回数をターン数経過によって減らすーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        var templist = FocusSkillList;
+
+        templist.Remove(NowFocusSkill);//今回の慣れ注目スキルを省く
+        foreach (var fo in templist)
+        {
+            //まず優先順位を取得し、グループ序列(スキルの最終優先ランク)を取得
+            var finalSkillRank = AdaptToSkillsGrouping(AdaptPriorityDamageToSkill(fo.skill));
+
+            //DEFによる基礎減少値を取得
+            var b_ReductionValue = GetBaseMemoryReducationValue();
+
+            //DEFによる固定値と優先順位を計算して、どのくらい減るか　
+            //優先順位が低ければ低いほど、つまりfinalSkillRankが多ければ多いほど、記憶回数が減りやすい(だからそのまま計算できる)
+            var DeathMemoryFloat = 0f;//記憶忘却回数
+
+            var rankNotTopModify = 0f;//二位以降での補正
+            if (finalSkillRank > 0) rankNotTopModify = 0.08f;//優先順位が一軍でないのなら、序列補正に加算される固定値
+            var PriorityModify = 1 + finalSkillRank / 8 + rankNotTopModify;//序列補正
+
+            //計算　記憶忘却回数 = 序列補正×基礎減少値×経過ターン　
+            //そのスキルの記憶回数の序列の割合/(3～2)により、 乱数判定成功したら、　　記憶忘却回数 /= 3　
+
+            DeathMemoryFloat = PriorityModify * b_ReductionValue * DeltaDamageTurn;
 
 
+            //記憶回数の序列割合を入手
+            var MemoryRankRatio = GetMemoryCountRankRatio(AdaptPriorityMemoryToSkill(skill));
 
+            var mod1 = RandomEx.Shared.NextFloat(2, 4);//2～3
+            var rat1 = MemoryRankRatio / mod1;
+            if (RandomEx.Shared.NextFloat(1f) < rat1)//乱数判定　成功したら。
+            {
+                DeathMemoryFloat /= 3;//3分の一に減衰される
+            }
+
+
+            fo.Forget(DeathMemoryFloat);//減る数だけ減る
+
+        }
+
+
+        //記憶回数による記憶範囲の判定と慣れ補正の計算☆ーーーーーーーーーーーーーーーーーーーーーーーーー
+
+        //スキルの記憶回数での並べ替え
+        //記憶回数が多い方から数えて、　　"今回のスキル"がそれに入ってるなら慣れ補正を返す
+        //数える範囲は　記憶範囲
+        FocusSkillList = FocusSkillList.OrderByDescending(skill => skill.MemoryCount).ToList();
+
+        //記憶段階と範囲の取得　　
+        var rl = MemoryStageStructure();
 
         //二回目以降で記憶範囲にあるのなら、補正計算して返す
         if (!donthaveskill)
         {
-            for (var i = 0; i < rl.Count; i++)//記憶範囲のサイズ分ループ
+            for (var i = 0; i < rl.Count; i++)//記憶段階と範囲のサイズ分ループ
             {
                 var fo = FocusSkillList[i];
                 if (fo.skill == skill)//もし記憶範囲に今回のスキルがあるならば
@@ -791,12 +842,35 @@ public abstract class BaseStates
 
                     if (!IsConfused)//戸惑ってなければ、補正がかかる。(デフォルト値の-1でなくなる。)
                     {
+                        var BaseValue = GetBaseAdaptValue();//基礎量
+                        var MemoryValue = Mathf.Floor(fo.MemoryCount);//記憶回数(小数点以下切り捨て)
 
+                        float MemoryPriority = -1;//記憶段階による補正
+                        switch (rl[i])
+                        {
+                            case MemoryDensity.Low:
+                                MemoryPriority = 1.42f;
+                                break;
+                            case MemoryDensity.Medium:
+                                MemoryPriority = 3.75f;
+                                break;
+                            case MemoryDensity.High:
+                                MemoryPriority = 10f;
+                                break;
+                        }
+
+                        //一回計算
+                        AdaptModify = 1 - (BaseValue * MemoryValue * MemoryPriority);
+
+                        //下限しきい値の設定
+                        var Threshold = CalculateEYEBasedAdaptThreshold();
                     }
 
-                    //fo.MemoryCount  //記憶回数の数
+                    //"慣れ減衰"の計算に使用☆
+
+                    //fo.MemoryCount  //記憶回数の数(切り下げ、小数点以下切り捨て)
                     //rl[i]  //精神属性による段階
-                    //HITによる固定値の範囲
+                    //EYEによる基礎量
                 }
             }
 
@@ -804,12 +878,40 @@ public abstract class BaseStates
         }
 
 
-        //最大ダメージの序列で記憶回数の増加をする
-        //カウントアップして回して、該当のスキルになったら記憶回数の増加　
         //戸惑いが立ってると記憶回数は増加しない
-        if (!donthaveskill && !IsConfused)
-        {
-            //序列だから逆に回す
+        if (!IsConfused)
+        {//FocuseSkillはコンストラクタでMemory()されないため、donthaveSkillに関わらず、実行されます。
+
+            //今回食らったスキルの記憶回数を増やすーーーーーーーーーーーーーーーーーーーーーーーーーーー☆
+            var finalSkillRank1 = AdaptToSkillsGrouping(AdaptPriorityDamageToSkill(NowFocusSkill.skill));//優先順位取得
+                                                                                                         //基礎上昇値取得
+                                                                                                         //DEFによる基礎上昇値を取得
+            var b_IncreaseValue = GetBaseMemoryIncreaseValue();
+
+            // 優先順位による補正　値は変更されます。
+            // (例)：一軍は2.0倍、下位になるほど0.9倍ずつ減らす
+            // rank=0で2.0, rank=1で1.8, rank=2で1.62 ...など
+            float priorityBaseGain = 2.2f * Mathf.Pow(0.77f, finalSkillRank1);
+
+            //一軍なら微々たる追加補正
+            float rankTopIncreaseModify = finalSkillRank1 == 0 ? 0.05f : 0f;//一軍ならば、左の値が優先順位補正に加算
+            float PriorityIncreaseModify = priorityBaseGain + rankTopIncreaseModify;
+
+            // 攻撃を受けてからの経過ターンが少ないほどターンボーナス(掛け算)が増す（
+            float TurnBonus = 1.0f;//デフォルト値
+            if (DeltaDamageTurn < 5) TurnBonus += 0.1f;//4ターン以内
+            if (DeltaDamageTurn < 4) TurnBonus += 0.45f;//3ターン以内
+            if (DeltaDamageTurn < 3) TurnBonus += 0.7f;//2ターン以内
+
+            //記憶回数による微加算　(これは掛けるのではなく最終計算結果に加算する￥)
+            float MemoryAdjust = 0.08f * NowFocusSkill.MemoryCount;
+
+            // 最終的な増加量計算
+            // メモリ増加例: (基礎上昇値 * 優先順位補正 * 記憶割合補正 + ターン補正)
+            float MemoryIncrease = b_IncreaseValue * PriorityIncreaseModify * TurnBonus + MemoryAdjust;
+
+            //注目スキルとして記憶回数が増える。
+            NowFocusSkill.Memory(MemoryIncrease);
         }
         return AdaptModify;
     }
@@ -831,9 +933,9 @@ public abstract class BaseStates
     public float b_AGI;
     public float b_ATK;
 
-    //基礎攻撃防御　　(大事なのは、基本的にこの辺りは超スキル依存なので、少ない数でしか設定しないこと。)
+    //基礎攻撃防御　　(大事なのは、基本的にこの辺りは超スキル依存なの)
     public float b_DEF;
-    public float b_HIT;
+    public float b_EYE;
 
     /// <summary>
     ///     このキャラクターの名前
@@ -1196,11 +1298,11 @@ public abstract class BaseStates
     /// 命中率計算
     /// </summary>
     /// <returns></returns>
-    public virtual float HIT()
+    public virtual float EYE()
     {
-        float hit = b_HIT;//基礎命中率
+        float eye = b_EYE;//基礎命中率
 
-        hit *= UseHITPercentageModifier;//命中率補正。リスト内がゼロならちゃんと1.0fが返る。
+        eye *= UseHITPercentageModifier;//命中率補正。リスト内がゼロならちゃんと1.0fが返る。
 
         //範囲意志によるボーナス
         foreach (KeyValuePair<SkillZoneTrait, float> entry
@@ -1208,7 +1310,7 @@ public abstract class BaseStates
         {
             if (HasRangeWill(entry.Key))//キーの内容が範囲意志と合致した場合
             {
-                hit += entry.Value;//範囲意志による補正が掛かる
+                eye += entry.Value;//範囲意志による補正が掛かる
 
                 //基本的に範囲は一つだけのはずなので無用なループは避けてここで終了
                 break;
@@ -1225,12 +1327,12 @@ public abstract class BaseStates
             {
                 agiPer *= 2;//割る数が二倍に
             }
-            hit += AGI() / agiPer;
+            eye += AGI() / agiPer;
         }
 
 
 
-        return hit;
+        return eye;
     }
 
     /// <summary>
@@ -1353,7 +1455,7 @@ public abstract class BaseStates
     {
         var skill = Attacker.NowUseSkill;
 
-        if (RandomEx.Shared.NextFloat(0, Attacker.HIT() + AGI()) < Attacker.HIT())//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
+        if (RandomEx.Shared.NextFloat(0, Attacker.EYE() + AGI()) < Attacker.EYE())//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
         {
             //スキルそのものの命中率
             return skill.SkillHitCalc();

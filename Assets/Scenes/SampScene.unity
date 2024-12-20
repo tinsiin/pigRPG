@@ -534,10 +534,16 @@ MonoBehaviour:
     InitKinderGroupingInterval: 17
     limitKinderGroupingInterval: 2
     completionFraction: 0.01
+    startIncreaseValue: 1.89
+    midLimitIncreaseValue: 0.5
+    increaseDecayRate1: 0.02
+    increaseThreshold: 100
+    finalLimitIncreaseValue: 0.1
+    increaseDecayRate2: 0.001
     startValue: 0.7
     midLimitValue: 0.2
     decayRate1: 0.04
-    threshold: 88
+    thresholdDEF: 88
     finalLimitValue: 0
     decayRate2: 0.001
     _skillList:
@@ -565,7 +571,7 @@ MonoBehaviour:
     b_AGI: 0
     b_ATK: 0
     b_DEF: 0
-    b_HIT: 0
+    b_EYE: 0
     CharacterName: "\u30B8\u30FC\u30CE"
     ImpressionStringName: 
     NowUseSkill:
@@ -633,17 +639,23 @@ MonoBehaviour:
     InitKinderGroupingInterval: 17
     limitKinderGroupingInterval: 2
     completionFraction: 0.01
+    startIncreaseValue: 1.89
+    midLimitIncreaseValue: 0.5
+    increaseDecayRate1: 0.02
+    increaseThreshold: 100
+    finalLimitIncreaseValue: 0.1
+    increaseDecayRate2: 0.001
     startValue: 0.7
     midLimitValue: 0.2
     decayRate1: 0.04
-    threshold: 88
+    thresholdDEF: 88
     finalLimitValue: 0
     decayRate2: 0.001
     _skillList: []
     b_AGI: 0
     b_ATK: 0
     b_DEF: 0
-    b_HIT: 0
+    b_EYE: 0
     CharacterName: 
     ImpressionStringName: 
     NowUseSkill:
@@ -711,17 +723,23 @@ MonoBehaviour:
     InitKinderGroupingInterval: 17
     limitKinderGroupingInterval: 2
     completionFraction: 0.01
+    startIncreaseValue: 1.89
+    midLimitIncreaseValue: 0.5
+    increaseDecayRate1: 0.02
+    increaseThreshold: 100
+    finalLimitIncreaseValue: 0.1
+    increaseDecayRate2: 0.001
     startValue: 0.7
     midLimitValue: 0.2
     decayRate1: 0.04
-    threshold: 88
+    thresholdDEF: 88
     finalLimitValue: 0
     decayRate2: 0.001
     _skillList: []
     b_AGI: 0
     b_ATK: 0
     b_DEF: 0
-    b_HIT: 0
+    b_EYE: 0
     CharacterName: 
     ImpressionStringName: 
     NowUseSkill:
@@ -868,17 +886,23 @@ MonoBehaviour:
         InitKinderGroupingInterval: 17
         limitKinderGroupingInterval: 2
         completionFraction: 0.01
+        startIncreaseValue: 1.89
+        midLimitIncreaseValue: 0.5
+        increaseDecayRate1: 0.02
+        increaseThreshold: 100
+        finalLimitIncreaseValue: 0.1
+        increaseDecayRate2: 0.001
         startValue: 0.7
         midLimitValue: 0.2
         decayRate1: 0.04
-        threshold: 88
+        thresholdDEF: 88
         finalLimitValue: 0
         decayRate2: 0.001
         _skillList: []
         b_AGI: 0
         b_ATK: 0
         b_DEF: 0
-        b_HIT: 0
+        b_EYE: 0
         CharacterName: 
         ImpressionStringName: 
         NowUseSkill:
@@ -950,10 +974,16 @@ MonoBehaviour:
         InitKinderGroupingInterval: 17
         limitKinderGroupingInterval: 2
         completionFraction: 0.01
+        startIncreaseValue: 1.89
+        midLimitIncreaseValue: 0.5
+        increaseDecayRate1: 0.02
+        increaseThreshold: 100
+        finalLimitIncreaseValue: 0.1
+        increaseDecayRate2: 0.001
         startValue: 0.7
         midLimitValue: 0.2
         decayRate1: 0.04
-        threshold: 88
+        thresholdDEF: 88
         finalLimitValue: 0
         decayRate2: 0.001
         _skillList:
@@ -1002,7 +1032,7 @@ MonoBehaviour:
         b_AGI: 0
         b_ATK: 0
         b_DEF: 0
-        b_HIT: 0
+        b_EYE: 0
         CharacterName: 
         ImpressionStringName: 
         NowUseSkill:
@@ -1074,17 +1104,23 @@ MonoBehaviour:
         InitKinderGroupingInterval: 17
         limitKinderGroupingInterval: 2
         completionFraction: 0.01
+        startIncreaseValue: 1.89
+        midLimitIncreaseValue: 0.5
+        increaseDecayRate1: 0.02
+        increaseThreshold: 100
+        finalLimitIncreaseValue: 0.1
+        increaseDecayRate2: 0.001
         startValue: 0.7
         midLimitValue: 0.2
         decayRate1: 0.04
-        threshold: 88
+        thresholdDEF: 88
         finalLimitValue: 0
         decayRate2: 0.001
         _skillList: []
         b_AGI: 0
         b_ATK: 0
         b_DEF: 0
-        b_HIT: 0
+        b_EYE: 0
         CharacterName: 
         ImpressionStringName: 
         NowUseSkill:
