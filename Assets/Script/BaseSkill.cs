@@ -190,7 +190,7 @@ public class BaseSkill
     /// <summary>
     ///     スキルの精神属性
     /// </summary>
-    public SpiritualProperty SkillSpiritual { get; }
+    public SpiritualProperty SkillSpiritual;
 
 
 

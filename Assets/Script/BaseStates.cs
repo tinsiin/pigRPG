@@ -719,11 +719,61 @@ public abstract class BaseStates
     }
     /// <summary>
     /// EYE()を用いてAdaptModifyが下回らないようにする特定の下限しきい値を計算する関数
+    /// - EYE()が0～30の間ではthresholdは0.85に固定
+    /// - EYE()が30を超え、134まで増加するにつれてthresholdが非線形に0.85からmaxEyeThresholdへ減少
+    /// - EYE()が134以上ではthresholdはmaxEyeThresholdに固定
     /// </summary>
     float CalculateEYEBasedAdaptThreshold()
     {
-        return 0f;
+        // 定数の設定
+        const float initialThreshold = 0.85f;//デフォルトの下限値
+        const float maxEyeThreshold = 0.5566778f;//EYEが高いと下がる限界値
+        const float minEYE = 30f;//この値まではデフォルトのまま
+        const float maxEYE = 134f;//EYEが補正される限界値
+
+        // 現在のEYE()値を取得
+        float eyeValue = EYE();
+
+        // EYE()の値に応じてthresholdを計算
+        if (eyeValue <= minEYE)
+        {
+            // EYE()が30以下の場合
+            return initialThreshold;
+        }
+        else if (eyeValue >= maxEYE)
+        {
+            // EYE()が134以上の場合
+            return maxEyeThreshold;
+        }
+        else
+        {
+            // EYE()が30を超え134未満の場合
+
+            // EYE()を0から1に正規化（30から134を0から1にマッピング）
+            float normalizedEye = (eyeValue - minEYE) / (maxEYE - minEYE);
+
+            // シグモイド関数のパラメータ設定
+            // k: 勾配（大きいほど急激な変化）
+            // x0: シグモイドの中心点（ここでは0.5に設定）
+            float k = 10f;        // 調整可能なパラメータ
+            float x0 = 0.5f;      // 中心点
+
+            // シグモイド関数の計算
+            float sigmoid = 1 / (1 + Mathf.Exp(-k * (normalizedEye - x0)));
+
+            // thresholdを計算
+            // thresholdは初期値からmaxEyeThresholdへの変化
+            float threshold = initialThreshold - (initialThreshold - maxEyeThreshold) * sigmoid;
+
+            // クランプ（安全策としてしきい値が範囲内に収まるように）
+            threshold = Mathf.Clamp(threshold, maxEyeThreshold, initialThreshold);
+
+            return threshold;
+        }
     }
+    [Header("慣れ補正のランダム性設定")]
+    [SerializeField, Range(0.0f, 0.2f)]//インスペクタ上で調節するスライダーの範囲
+    private float randomVariationRange = 0.04f; // ±%の変動
     /// <summary>
     /// スキルに慣れる処理 慣れ補正を返す
     /// </summary>
@@ -819,7 +869,7 @@ public abstract class BaseStates
             for (var i = 0; i < rl.Count; i++)//記憶段階と範囲のサイズ分ループ
             {
                 var fo = FocusSkillList[i];
-                if (fo.skill == skill)//もし記憶範囲に今回のスキルがあるならば
+                if (fo.skill== skill)//もし記憶範囲に今回のスキルがあるならば
                 {
                     //もしスキルを使う行使者が初見なら(二人目以降の使用者)
                     //精神属性によっては戸惑って補正はない　　戸惑いフラグが立つ
@@ -862,8 +912,18 @@ public abstract class BaseStates
                         //一回計算
                         AdaptModify = 1 - (BaseValue * MemoryValue * MemoryPriority);
 
+                        // ランダムファクターの生成
+                        float randomFactor = RandomEx.Shared.NextFloat(1.0f - randomVariationRange, 1.0f + randomVariationRange);
+                        AdaptModify *= randomFactor;
+
                         //下限しきい値の設定
                         var Threshold = CalculateEYEBasedAdaptThreshold();
+
+                        //もし最終的な慣れの補正量がしきい値を下回っていた場合、しきい値に固定される
+                        if(Threshold > AdaptModify)
+                        {
+                            AdaptModify = Threshold;
+                        }
                     }
 
                     //"慣れ減衰"の計算に使用☆
@@ -871,6 +931,8 @@ public abstract class BaseStates
                     //fo.MemoryCount  //記憶回数の数(切り下げ、小数点以下切り捨て)
                     //rl[i]  //精神属性による段階
                     //EYEによる基礎量
+
+                    break;//スキルを見つけ処理を終えたので、記憶範囲ループから外れる
                 }
             }
 
@@ -913,6 +975,10 @@ public abstract class BaseStates
             //注目スキルとして記憶回数が増える。
             NowFocusSkill.Memory(MemoryIncrease);
         }
+
+        //慣れ補正がデフォルト値の-1のままだった場合、1.0として返す。
+        if (AdaptModify < 0) AdaptModify = 1.0f;
+
         return AdaptModify;
     }
 
@@ -1146,6 +1212,13 @@ public abstract class BaseStates
     ///     このキャラクターの属性 精神属性が入る
     /// </summary>
     public SpiritualProperty MyImpression { get; private set; }
+
+    /// <summary>
+    ///     このキャラクターの"デフォルト"属性 精神属性が入る
+    ///     一定数歩行するとMyImpressionがこれに戻る
+    ///     当然この属性自体もゲーム中で変化する可能性はある。
+    /// </summary>
+    public SpiritualProperty DefaultImpression { get; private set; }
 
 
 
@@ -1430,7 +1503,7 @@ public abstract class BaseStates
         var dmg = (Atker.ATK() - DEF(skill.DEFATK)) * SkillPower;//(攻撃-対象者の防御) ×スキルパワー？
 
         //慣れ補正
-        AdaptToSkill(Atker, skill, dmg);
+        dmg *= AdaptToSkill(Atker, skill, dmg);
 
         HP -= dmg;
         Debug.Log("攻撃が実行された");
@@ -1521,6 +1594,9 @@ public abstract class BaseStates
 
         SkillUseConsecutiveCountUp(NowUseSkill);//連続カウントアップ
         string txt = "";
+
+        // スキルの精神属性を自分の精神属性に変更
+        NowUseSkill.SkillSpiritual = MyImpression;
 
         for (var i = 0; i < Unders.Count; i++)
         {
