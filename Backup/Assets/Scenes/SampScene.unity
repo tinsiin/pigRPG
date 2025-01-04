@@ -546,8 +546,10 @@ MonoBehaviour:
     thresholdDEF: 88
     finalLimitValue: 0
     decayRate2: 0.001
+    randomVariationRange: 0.04
     _skillList:
-    - _name: "\u30C6\u30B9\u30C8\u30B9\u30AD\u30EB"
+    - SkillSpiritual: 0
+      _name: "\u30C6\u30B9\u30C8\u30B9\u30AD\u30EB"
       CanCancel: 0
       IsAggressiveCommit: 0
       CanSelectAggressiveCommit: 0
@@ -575,6 +577,7 @@ MonoBehaviour:
     CharacterName: "\u30B8\u30FC\u30CE"
     ImpressionStringName: 
     NowUseSkill:
+      SkillSpiritual: 0
       _name: 
       CanCancel: 1
       IsAggressiveCommit: 1
@@ -600,6 +603,7 @@ MonoBehaviour:
       HitRangePercentageDictionary:
         _list: []
     FreezeUseSkill:
+      SkillSpiritual: 0
       _name: 
       CanCancel: 1
       IsAggressiveCommit: 1
@@ -651,6 +655,7 @@ MonoBehaviour:
     thresholdDEF: 88
     finalLimitValue: 0
     decayRate2: 0.001
+    randomVariationRange: 0.04
     _skillList: []
     b_AGI: 0
     b_ATK: 0
@@ -659,6 +664,7 @@ MonoBehaviour:
     CharacterName: 
     ImpressionStringName: 
     NowUseSkill:
+      SkillSpiritual: 0
       _name: 
       CanCancel: 1
       IsAggressiveCommit: 1
@@ -684,6 +690,7 @@ MonoBehaviour:
       HitRangePercentageDictionary:
         _list: []
     FreezeUseSkill:
+      SkillSpiritual: 0
       _name: 
       CanCancel: 1
       IsAggressiveCommit: 1
@@ -735,6 +742,7 @@ MonoBehaviour:
     thresholdDEF: 88
     finalLimitValue: 0
     decayRate2: 0.001
+    randomVariationRange: 0.04
     _skillList: []
     b_AGI: 0
     b_ATK: 0
@@ -743,6 +751,7 @@ MonoBehaviour:
     CharacterName: 
     ImpressionStringName: 
     NowUseSkill:
+      SkillSpiritual: 0
       _name: 
       CanCancel: 1
       IsAggressiveCommit: 1
@@ -768,6 +777,7 @@ MonoBehaviour:
       HitRangePercentageDictionary:
         _list: []
     FreezeUseSkill:
+      SkillSpiritual: 0
       _name: 
       CanCancel: 1
       IsAggressiveCommit: 1
@@ -898,6 +908,7 @@ MonoBehaviour:
         thresholdDEF: 88
         finalLimitValue: 0
         decayRate2: 0.001
+        randomVariationRange: 0.04
         _skillList: []
         b_AGI: 0
         b_ATK: 0
@@ -906,6 +917,7 @@ MonoBehaviour:
         CharacterName: 
         ImpressionStringName: 
         NowUseSkill:
+          SkillSpiritual: 0
           _name: 
           CanCancel: 1
           IsAggressiveCommit: 1
@@ -931,6 +943,7 @@ MonoBehaviour:
           HitRangePercentageDictionary:
             _list: []
         FreezeUseSkill:
+          SkillSpiritual: 0
           _name: 
           CanCancel: 1
           IsAggressiveCommit: 1
@@ -986,8 +999,10 @@ MonoBehaviour:
         thresholdDEF: 88
         finalLimitValue: 0
         decayRate2: 0.001
+        randomVariationRange: 0.04
         _skillList:
-        - _name: 
+        - SkillSpiritual: 0
+          _name: 
           CanCancel: 0
           IsAggressiveCommit: 0
           CanSelectAggressiveCommit: 0
@@ -1008,7 +1023,8 @@ MonoBehaviour:
             _list: []
           HitRangePercentageDictionary:
             _list: []
-        - _name: 
+        - SkillSpiritual: 0
+          _name: 
           CanCancel: 0
           IsAggressiveCommit: 0
           CanSelectAggressiveCommit: 0
@@ -1036,6 +1052,7 @@ MonoBehaviour:
         CharacterName: 
         ImpressionStringName: 
         NowUseSkill:
+          SkillSpiritual: 0
           _name: 
           CanCancel: 1
           IsAggressiveCommit: 1
@@ -1061,6 +1078,7 @@ MonoBehaviour:
           HitRangePercentageDictionary:
             _list: []
         FreezeUseSkill:
+          SkillSpiritual: 0
           _name: 
           CanCancel: 1
           IsAggressiveCommit: 1
@@ -1116,6 +1134,7 @@ MonoBehaviour:
         thresholdDEF: 88
         finalLimitValue: 0
         decayRate2: 0.001
+        randomVariationRange: 0.04
         _skillList: []
         b_AGI: 0
         b_ATK: 0
@@ -1124,6 +1143,7 @@ MonoBehaviour:
         CharacterName: 
         ImpressionStringName: 
         NowUseSkill:
+          SkillSpiritual: 0
           _name: 
           CanCancel: 1
           IsAggressiveCommit: 1
@@ -1149,6 +1169,7 @@ MonoBehaviour:
           HitRangePercentageDictionary:
             _list: []
         FreezeUseSkill:
+          SkillSpiritual: 0
           _name: 
           CanCancel: 1
           IsAggressiveCommit: 1

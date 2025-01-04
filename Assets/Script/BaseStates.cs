@@ -718,6 +718,15 @@ public abstract class BaseStates
         return bValue * b_EYE;//基礎命中率で補正。　「慣れは"元々"の視力と、記憶の精神由来の構成が物を言います。」
     }
     /// <summary>
+    /// 慣れ補正割合値のデフォルトの下限しきい値
+    /// </summary>
+    const float initialAdaptThreshold = 0.85f;
+    /// <summary>
+    /// 慣れ補正割合値の下限しきい値がEYEが高いと下がる限界値
+    /// </summary>
+    const float maxEyeAdaptThreshold = 0.5566778f;
+
+    /// <summary>
     /// EYE()を用いてAdaptModifyが下回らないようにする特定の下限しきい値を計算する関数
     /// - EYE()が0～30の間ではthresholdは0.85に固定
     /// - EYE()が30を超え、134まで増加するにつれてthresholdが非線形に0.85からmaxEyeThresholdへ減少
@@ -726,8 +735,6 @@ public abstract class BaseStates
     float CalculateEYEBasedAdaptThreshold()
     {
         // 定数の設定
-        const float initialThreshold = 0.85f;//デフォルトの下限値
-        const float maxEyeThreshold = 0.5566778f;//EYEが高いと下がる限界値
         const float minEYE = 30f;//この値まではデフォルトのまま
         const float maxEYE = 134f;//EYEが補正される限界値
 
@@ -738,12 +745,12 @@ public abstract class BaseStates
         if (eyeValue <= minEYE)
         {
             // EYE()が30以下の場合
-            return initialThreshold;
+            return initialAdaptThreshold;
         }
         else if (eyeValue >= maxEYE)
         {
             // EYE()が134以上の場合
-            return maxEyeThreshold;
+            return maxEyeAdaptThreshold;
         }
         else
         {
@@ -763,14 +770,59 @@ public abstract class BaseStates
 
             // thresholdを計算
             // thresholdは初期値からmaxEyeThresholdへの変化
-            float threshold = initialThreshold - (initialThreshold - maxEyeThreshold) * sigmoid;
+            float threshold = initialAdaptThreshold - (initialAdaptThreshold - maxEyeAdaptThreshold) * sigmoid;
 
             // クランプ（安全策としてしきい値が範囲内に収まるように）
-            threshold = Mathf.Clamp(threshold, maxEyeThreshold, initialThreshold);
+            threshold = Mathf.Clamp(threshold, maxEyeAdaptThreshold, initialAdaptThreshold);
 
             return threshold;
         }
     }
+    /// <summary>
+    /// 目の瞬きをするように、
+    /// 慣れ補正がデフォルトの下限しきい値を下回っている場合、そこまで押し戻される関数
+    /// </summary>
+    /// <param name="adapt">現在の慣れ補正値 (例: 0.7 など)</param>
+    /// <param name="largestMin">最大下限しきい値(例: 0.556677)</param>
+    /// <param name="defaultMin">デフォルトの下限しきい値(例: 0.85)</param>
+    /// <param name="kMax">バネ係数の最大値(適宜調整)</param>
+    /// <returns>押し戻し後の値(一度きりで計算)</returns>    
+    float EyeBlink(
+    float adapt,
+    float largestMin,
+    float defaultMin,
+    float kMax
+)
+    {
+        // もし adapt が defaultMin 以上なら押し戻し不要なので、そのまま返す
+        if (adapt >= defaultMin)
+            return adapt;
+
+        // 1) ratio = (adapt - largestMin) / (defaultMin - largestMin)
+        //    → adapt が largestMin に近いほど ratio が小さくなり、結果として k が大きくなる
+        //    → adapt が 0.85 に近いほど ratio が 1 に近くなり、k は 0 に近づく(押しが弱い)
+        float ratio = (adapt - largestMin) / (defaultMin - largestMin);
+        ratio = Mathf.Clamp01(ratio);
+
+        // 2) k を計算：近いほど k 大きく
+        //    ここでは単純に k = kMax * (1 - ratio)
+        //    ratio=0(=adapt==largestMin付近) → k=kMax(最大)
+        //    ratio=1(=adapt==defaultMin付近) → k=0(押しなし)
+        float k = kMax * (1f - ratio);
+
+        // 3) バネ式で一度だけ押し上げ
+        float diff = defaultMin - adapt;  // 正の数(例: 0.85-0.7=0.15)
+                                          // e^(-k) を掛ける
+        float newDiff = diff * Mathf.Exp(-k);
+        // 実際に adapt を上書き
+        float newAdapt = defaultMin - newDiff; // 例: 0.85 - (0.15*exp(-k))
+
+        // 4) もし何らかの理由で newAdapt が既に defaultMin 超えるならクランプ
+        if (newAdapt > defaultMin) newAdapt = defaultMin;
+
+        return newAdapt;
+    }
+
     [Header("慣れ補正のランダム性設定")]
     [SerializeField, Range(0.0f, 0.2f)]//インスペクタ上で調節するスライダーの範囲
     private float randomVariationRange = 0.04f; // ±%の変動
@@ -918,6 +970,19 @@ public abstract class BaseStates
 
                         //下限しきい値の設定
                         var Threshold = CalculateEYEBasedAdaptThreshold();
+
+                        //もしデフォルトの下限しきい値を慣れ補正が下回っていたら
+                        if (initialAdaptThreshold > AdaptModify)
+                        {
+                            var chance = (int)(777 - b_EYE * 5);//b_eyeの0~150 0.1~3.7%推移　 以降は5.2%
+                            chance = Mathf.Max(19, chance);
+
+                            if (RandomEx.Shared.NextInt(chance) == 0)//瞬きが起きる機会
+                            {
+                                AdaptModify = EyeBlink(AdaptModify, maxEyeAdaptThreshold, initialAdaptThreshold, 2.111f);
+                            }
+                        }
+
 
                         //もし最終的な慣れの補正量がしきい値を下回っていた場合、しきい値に固定される
                         if(Threshold > AdaptModify)
@@ -1494,13 +1559,45 @@ public abstract class BaseStates
     }
 
     /// <summary>
-    ///     オーバライド可能なダメージ関数
+    /// 基礎山型分布によるダメージ補正
     /// </summary>
-    /// <param name="atkPoint"></param>
+    float GetBaseCalcDamageWithPlusMinus22Percent(float baseDamage)
+    {
+        // 1) 8d5501 を振る（8回ランダム）
+        int diceSum = 0;
+        for (int i = 0; i < 8; i++)
+        {
+            // Range(1, 5502) => [1..5501] の整数
+            diceSum += RandomEx.Shared.NextInt(1, 5502);
+        }
+
+        // 2) 平均(22008)を引いて、0.00001f を掛ける
+        //    → -0.22 ～ +0.22 (±22%)
+        float offset = (diceSum - 22008) * 0.00001f;
+
+        // 3) baseDamage に対して (1 + offset) 倍する
+        //    → (1 - 0.22)～(1 + 0.22) = 0.78～1.22 倍
+        float finalDamage = baseDamage * (1f + offset);
+
+        // 4) 必要であれば下限補正（例：0未満になれば0にする など）
+        if (finalDamage < 0f)
+        {
+            finalDamage = 0f;
+        }
+
+        // 5) float で返す（丸めたくないのでそのまま）
+        return finalDamage;
+    }
+    /// <summary>
+         ///     オーバライド可能なダメージ関数
+         /// </summary>
+         /// <param name="atkPoint"></param>
     public virtual string Damage(BaseStates Atker, float SkillPower)
     {
         var skill = Atker.NowUseSkill;
         var dmg = (Atker.ATK() - DEF(skill.DEFATK)) * SkillPower;//(攻撃-対象者の防御) ×スキルパワー？
+
+        dmg = GetBaseCalcDamageWithPlusMinus22Percent(dmg);//基礎山型補正
 
         //慣れ補正
         dmg *= AdaptToSkill(Atker, skill, dmg);
