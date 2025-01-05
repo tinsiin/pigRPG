@@ -241,6 +241,7 @@ public class BaseSkill
 
     private int _doConsecutiveCount;//スキルを連続実行した回数
     private int _doCount;//スキルを実行した回数
+    private int _recordDoCount;//スキルを実行した回数（記録する
     private int _hitCount;    // スキルがヒットした回数
     private int _hitConsecutiveCount;//スキルが連続ヒットした回数
     private int _triggerCount;//発動への－カウント　このカウント分連続でやらないと発動しなかったりする　重要なのは連続でやらなくても　一気にまたゼロからになるかはスキル次第
@@ -314,6 +315,22 @@ public class BaseSkill
     {
         get { return _doCount; }
         set { _doCount = value; }
+    }
+    /// <summary>
+    /// 行使した回数 永続的にカウントされる
+    /// </summary>    
+    public  int RecordDoCount
+    {
+        get { return _recordDoCount; }
+        set { _recordDoCount = value; }
+    }
+    /// <summary>
+    /// 永続的なものと一時的な物両方のスキル使用回数をカウントアップ
+    /// </summary>
+    public void DoSkillCountUp()
+    {
+        _doCount++;
+        _recordDoCount++;
     }
 
     /// <summary>
@@ -475,7 +492,7 @@ public class BaseSkill
         _triggerCount = _triggerCountMax;//発動カウントはカウントダウンするから最初っから
         _tmpSkillUseTurn = -1;//前回とのターン比較用の変数をnullに
 
-        SkillRivahal = 0;
+        SkillRivahal = 0;//ライバハルとレベルはポンポンリセットして平気か？
         SkillLevel = 0;
     }
     /// <summary>

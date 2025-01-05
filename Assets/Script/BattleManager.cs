@@ -25,7 +25,24 @@ public enum WhichGroup
 {
     alliy, Enemyiy
 }
+/// <summary>
+/// 行動先約リストでのステータス補正予約時の識別用
+/// </summary>
+public enum whatModify
+{
+    eye,atk,def,agi
+}
+/// <summary>
+/// 先約リストで扱うステータス補正クラス
+/// </summary>
+public class ReservationStatesModify
+{
+    public whatModify eada;//どのステータスの補正なのか。
 
+    public float modify;
+
+    public string memo;
+}
 
 /// <summary>
 /// 行動リスト
@@ -36,6 +53,7 @@ public class ACTList
     List<BaseStates> CharactorACTList;
     List<string> TopMessage;
     List<WhichGroup> FactionList;//陣営
+    List<List<ReservationStatesModify>> reservationStatesModifies;//補正リスト
 
 
     public int Count
@@ -43,11 +61,12 @@ public class ACTList
         get => CharactorACTList.Count;
     }
 
-    public void Add(BaseStates chara, WhichGroup fac, string mes = "")
+    public void Add(BaseStates chara, WhichGroup fac, string mes = "", List<ReservationStatesModify> modifys = null)
     {
         CharactorACTList.Add(chara);
         FactionList.Add(fac);
         TopMessage.Add(mes);
+        reservationStatesModifies.Add(modifys);
 
     }
 
@@ -56,6 +75,7 @@ public class ACTList
         CharactorACTList = new List<BaseStates>();
         TopMessage = new List<string>();
         FactionList = new List<WhichGroup>();
+        reservationStatesModifies = new List<List<ReservationStatesModify>>();
     }
     /// <summary>
     /// 先約リスト内から死者を取り除く
@@ -74,6 +94,7 @@ public class ACTList
         CharactorACTList.RemoveAt(index);
         TopMessage.RemoveAt(index);
         FactionList.RemoveAt(index);
+        reservationStatesModifies.RemoveAt(index);
     }
 
     public string GetAtTopMessage(int index)
@@ -553,6 +574,38 @@ public class BattleManager
         skill.SetDeltaTurn(BattleTurnCount);//スキルのdeltaTurnをセット
         CreateBattleMessage(Acter.AttackChara(unders));//攻撃の処理からメッセージが返る。
         unders = new UnderActersEntryList(this);//初期化
+
+        //慣れフラットロゼが起こるかどうかの判定
+        if (Acter.NowUseSkill.HasType(SkillType.Attack))//攻撃タイプのスキル
+        {
+            if (!IsVanguard(Acter))//前のめりでないか
+            {
+                if (Acter.NowUseSkill.IsAggressiveCommit)//その上で前のめりになる攻撃かどうか
+                {
+                    if (Acter.NowUseSkill.RecordDoCount > 20)//20回より使っているなら
+                    {
+                        Acts.Add(Acter, Faction, "淡々としたロゼ", new List<ReservationStatesModify>()
+                        {
+                            new ReservationStatesModify()
+                            {
+                                eada = whatModify.eye,
+                                modify = 1.8f,
+                                memo = "ロゼ瞳"
+                            },
+                            new ReservationStatesModify()
+                            {
+                                eada = whatModify.atk,
+                                modify = 0.5f,
+                                memo = "ロゼ威力半減"
+                            }
+                        });
+
+                        Acter.FreezeSkill();
+                    }
+                }
+            }
+        }
+
 
         //スキル実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
         if (skill.IsAggressiveCommit)

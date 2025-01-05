@@ -1648,7 +1648,7 @@ public abstract class BaseStates
         var modifier = SkillSpiritualModifier[(skill.SkillSpiritual, MyImpression)];//スキルの精神属性と自分の精神属性による補正
         var skillPower = skill.SkillPowerCalc(spread) * modifier.GetValue() / 100.0f;
         var txt = "";//メッセージテキスト用
-        skill.DoCount++;//スキルを実行した回数をカウントアップ
+        skill.DoSkillCountUp();//スキルを実行した回数をカウントアップ
 
 
         //スキルの持ってる性質を全て処理として実行
@@ -1703,6 +1703,7 @@ public abstract class BaseStates
         NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルの攻撃回数をカウントアップ
         RemoveUseThings();//特別な補正を消去
         Debug.Log("AttackChara");
+
 
         _tempUseSkill = NowUseSkill;//使ったスキルを一時保存
         return txt;
