@@ -122,6 +122,7 @@ public enum SkillConsecutiveType
     /// ターンをまたいだ連続的攻撃　連続攻撃回数分だけ単体攻撃が無理やり進む感じ
     /// </summary>
     FreezeConsecutive = 1 >> 3 ,
+
     /// <summary>
     /// ランダムな百分率でスキル実行が連続されるかどうか
     /// </summary>
@@ -130,6 +131,7 @@ public enum SkillConsecutiveType
     /// _atkCountの値に応じて連続攻撃が行われるかどうか
     /// </summary>
     FixedConsecutive =1 >> 5 ,
+
     /// <summary>
     /// スキル保存性質　
     /// **意図的に実行とは別に攻撃保存を選べて**、

@@ -30,7 +30,7 @@ public enum WhichGroup
 /// </summary>
 public enum whatModify
 {
-    eye,atk,def,agi
+    eye, atk, def, agi
 }
 /// <summary>
 /// 先約リストで扱うステータス補正クラス
@@ -54,6 +54,7 @@ public class ACTList
     List<string> TopMessage;
     List<WhichGroup> FactionList;//陣営
     List<List<ReservationStatesModify>> reservationStatesModifies;//補正リスト
+    List<bool> IsFreezeList;//スキルをフリーズ、つまり前のスキルを持続させるかどうか。
 
 
     public int Count
@@ -61,12 +62,13 @@ public class ACTList
         get => CharactorACTList.Count;
     }
 
-    public void Add(BaseStates chara, WhichGroup fac, string mes = "", List<ReservationStatesModify> modifys = null)
+    public void Add(BaseStates chara, WhichGroup fac, string mes = "", List<ReservationStatesModify> modifys = null, bool isfreeze = false)
     {
         CharactorACTList.Add(chara);
         FactionList.Add(fac);
         TopMessage.Add(mes);
         reservationStatesModifies.Add(modifys);
+        IsFreezeList.Add(isfreeze);
 
     }
 
@@ -76,6 +78,7 @@ public class ACTList
         TopMessage = new List<string>();
         FactionList = new List<WhichGroup>();
         reservationStatesModifies = new List<List<ReservationStatesModify>>();
+        IsFreezeList = new();
     }
     /// <summary>
     /// 先約リスト内から死者を取り除く
@@ -95,6 +98,7 @@ public class ACTList
         TopMessage.RemoveAt(index);
         FactionList.RemoveAt(index);
         reservationStatesModifies.RemoveAt(index);
+        IsFreezeList.RemoveAt(index);
     }
 
     public string GetAtTopMessage(int index)
@@ -108,6 +112,14 @@ public class ACTList
     public WhichGroup GetAtFaction(int index)
     {
         return FactionList[index];
+    }
+    public List<ReservationStatesModify> GetAtModifyList(int index)
+    {
+        return reservationStatesModifies[index];
+    }
+    public bool GetAtIsFreezeBool(int index)
+    {
+        return IsFreezeList[index];
     }
 
 
@@ -139,7 +151,7 @@ public class BattleManager
         {
             get
             {
-                if(_cashSpread == null)
+                if (_cashSpread == null)
                 {
                     _cashSpread = Manager.Acter.NowUseSkill.PowerSpread.ToList();
                 }
@@ -168,7 +180,7 @@ public class BattleManager
         /// <summary>
         /// 既にある対象者リストをそのまま処理。
         /// </summary>
-        public void SetList(List<BaseStates> charas) 
+        public void SetList(List<BaseStates> charas)
         {
             foreach (var chara in charas)
             {
@@ -200,7 +212,7 @@ public class BattleManager
                     }
                 }
                 //放射型、ビーム型
-                if(skill.DistributionType == AttackDistributionType.Beam)
+                if (skill.DistributionType == AttackDistributionType.Beam)
                 {
                     if (Manager.IsVanguard(chara))
                     {
@@ -209,12 +221,12 @@ public class BattleManager
                     }
                     else
                     {
-                        item = CashSpread[CashSpread.Count -1];//末尾から抽出
+                        item = CashSpread[CashSpread.Count - 1];//末尾から抽出
                         CashSpread.RemoveAt(CashSpread.Count - 1);
                     }
                 }
                 //投げる型
-                if(skill.DistributionType == AttackDistributionType.Throw)
+                if (skill.DistributionType == AttackDistributionType.Throw)
                 {
                     if (Manager.IsVanguard(chara))
                     {
@@ -228,10 +240,10 @@ public class BattleManager
                     }
                 }
                 //ランダムの場合
-                if(skill.DistributionType == AttackDistributionType.Random)
+                if (skill.DistributionType == AttackDistributionType.Random)
                 {
-                        item = CashSpread[CashSpread.Count - 1];//末尾から抽出
-                        CashSpread.RemoveAt(CashSpread.Count - 1);
+                    item = CashSpread[CashSpread.Count - 1];//末尾から抽出
+                    CashSpread.RemoveAt(CashSpread.Count - 1);
                 }
 
             }
@@ -411,10 +423,40 @@ public class BattleManager
 
         //もし先約リストにキャラクターが居たら、そのリストを先ずは消化する
         if (Acts.Count > 0)
-        {
+        {//先約リストにおいて、recovelyTurnは意味をなさないですよ
             UniqueTopMessage = Acts.GetAtTopMessage(0);//リストからメッセージとキャラクターをゲット。
             Acter = Acts.GetAtCharacter(0);
             Faction = Acts.GetAtFaction(0);
+
+            //acterの特別補正の補正予約があるなら入れる
+            List<ReservationStatesModify> modList;
+            if ((modList = Acts.GetAtModifyList(0)) != null)//リストが存在するなら
+            {
+                foreach (var mod in modList)//補正リスト内のアイテムで回す
+                {
+                    switch (mod.eada)
+                    {
+                        case whatModify.atk:
+                            Acter.SetATKPercentageModifier(mod.modify, mod.memo);
+                            break;
+                        case whatModify.def:
+                            Acter.SetDEFPercentageModifier(mod.modify, mod.memo);
+                            break;
+                        case whatModify.agi:
+                            Acter.SetAGIPercentageModifier(mod.modify, mod.memo);
+                            break;
+                        case whatModify.eye:
+                            Acter.SetHITPercentageModifier(mod.modify, mod.memo);
+                            break;
+                    }
+                }
+            }
+            //スキルがフリーズするならする
+            if (Acts.GetAtIsFreezeBool(0)) 
+            {
+                Acter.FreezeSkill();
+            }
+
             Debug.Log("俳優は先約リストから選ばれました");
         }
         else
@@ -454,7 +496,7 @@ public class BattleManager
                     case BassJackStates:
                         Walking.SKILLUI_state.Value = SkillUICharaState.normalia;
                         break;
-                        
+
                 }
                 //スキル選択ボタンを返す
                 return TabState.Skill;
@@ -584,23 +626,25 @@ public class BattleManager
                 {
                     if (Acter.NowUseSkill.RecordDoCount > 20)//20回より使っているなら
                     {
-                        Acts.Add(Acter, Faction, "淡々としたロゼ", new List<ReservationStatesModify>()
+                        if (Acter.NowUseSkill.ATKCount == 1)//連続実行回数が一回、つまり単回攻撃なら
                         {
-                            new ReservationStatesModify()
+                            Acts.Add(Acter, Faction, "淡々としたロゼ", new List<ReservationStatesModify>()
+                        {
+                            new()
                             {
                                 eada = whatModify.eye,
                                 modify = 1.8f,
                                 memo = "ロゼ瞳"
                             },
-                            new ReservationStatesModify()
+                            new()
                             {
                                 eada = whatModify.atk,
                                 modify = 0.5f,
                                 memo = "ロゼ威力半減"
                             }
-                        });
+                        },true);//先約リストからスキルを固定する。(再選択させない)
 
-                        Acter.FreezeSkill();
+                        }
                     }
                 }
             }
@@ -728,8 +772,8 @@ public class BattleManager
     /// </summary>
     public bool IsVanguard(BaseStates chara)
     {
-        if(chara == AllyGroup.InstantVanguard)return true;
-        if(chara == EnemyGroup.InstantVanguard)return true;
+        if (chara == AllyGroup.InstantVanguard) return true;
+        if (chara == EnemyGroup.InstantVanguard) return true;
         return false;
     }
     const int FrontGuardPer = 13;
@@ -1005,7 +1049,7 @@ public class BattleManager
             }
 
             //underActerがゼロ個でないと、つまりここの意志選択関数以外で直接指定してるなら、入れない。
-            if (unders.Count < 1) 
+            if (unders.Count < 1)
             {
                 UA.Shuffle();
                 unders.SetList(UA);
@@ -1047,11 +1091,11 @@ public class BattleManager
         //敵キャラは復活歩数の準備
         EnemyGroup.RecovelyStart(PlayersStates.Instance.NowProgress);
 
-        foreach(var one in AllyGroup.Ours)
+        foreach (var one in AllyGroup.Ours)
         {
             one.OnBattleEndNoArgument();
         }
-        foreach(var one in EnemyGroup.Ours)
+        foreach (var one in EnemyGroup.Ours)
         {
             one.OnBattleEndNoArgument();
         }
@@ -1080,7 +1124,7 @@ public class BattleManager
         {
             one.Managed(this);
         }
-        foreach(var one in AllyGroup.Ours)
+        foreach (var one in AllyGroup.Ours)
         {
             one.Managed(this);
         }
