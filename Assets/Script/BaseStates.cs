@@ -15,11 +15,12 @@ using static UnityEngine.Rendering.DebugUI;
 /// <summary>
 ///     キャラクター達の種別
 /// </summary>
+[Flags]
 public enum CharacterType
 {
-    TLOA,
-    Machine,
-    Life //TLOAそのもの、機械、生命
+    TLOA = 1 << 0,
+    Machine = 1 << 1,
+    Life = 1 << 2 //TLOAそのもの、機械、生命
 }
 
 /// <summary>
@@ -107,18 +108,19 @@ public class FocusedSkillAndUser
 ///     精神属性、スキル、キャラクターに依存し、キャラクターは直前に使った物が適用される
 ///     だから精神属性同士で攻撃の通りは設定される。
 /// </summary>
+[Flags]
 public enum SpiritualProperty
 {
-    doremis,
-    pillar,
-    kindergarden,
-    liminalwhitetile,
-    sacrifaith,
-    cquiest,
-    pysco,
-    godtier,
-    baledrival,
-    devil
+    doremis = 1 << 0,   // ビットパターン: 0000 0001  (1)
+    pillar = 1 << 1,   // ビットパターン: 0000 0010  (2)
+    kindergarden = 1 << 2,   // ビットパターン: 0000 0100  (4)
+    liminalwhitetile = 1 << 3,   // ビットパターン: 0000 1000  (8)
+    sacrifaith = 1 << 4,   // ビットパターン: 0001 0000  (16)
+    cquiest = 1 << 5,   // ビットパターン: 0010 0000  (32)
+    pysco = 1 << 6,   // ビットパターン: 0100 0000  (64)
+    godtier = 1 << 7,   // ビットパターン: 1000 0000  (128)
+    baledrival = 1 << 8,   // ビットパターン: 0001 0000 0000  (256)
+    devil = 1 << 9    // ビットパターン: 0010 0000 0000  (512)
 }
 
 public enum MemoryDensity
@@ -143,6 +145,21 @@ public enum MemoryDensity
 [Serializable]
 public abstract class BaseStates
 {
+    /// <summary>
+    /// このキャラの種別と一致してるかどうか
+    /// </summary>
+    public bool HasCharacterType(CharacterType type)
+    {
+        return (MyType & type) == type;
+    }/// <summary>
+     /// このキャラの印象/キャラクタ属性と一致してるかどうか
+     /// </summary>
+    public bool HasCharacterImpression(SpiritualProperty imp)
+    {
+        return (MyImpression & imp) == imp;
+    }
+
+
     /// <summary>
     /// 慣れ補正用　スキルの注目リスト
     /// </summary>
@@ -344,9 +361,9 @@ public abstract class BaseStates
 
         SacrifaithAdaptToSkillGroupingIntegerList = result;//保持リストに入れる
     }
-    [Header("自己犠牲の慣れ補正用　HPの想定範囲 基本的に初期値からいじらない")]
-    [SerializeField] int countPrimes = 77;//生成する素数の数
-    [SerializeField] double insertProbability = 0.2;
+    //[Header("自己犠牲の慣れ補正用　HPの想定範囲 基本的に初期値からいじらない")]
+    int countPrimes = 77;//生成する素数の数
+    double insertProbability = 0.2;
     /// <summary>
     /// 自己犠牲用の慣れ補正グルーピングの数列を保持するリスト
     /// </summary>
@@ -398,16 +415,16 @@ public abstract class BaseStates
         }
 
     }
-    [Header("キンダーガーデンの慣れ補正用　HPの想定範囲 基本的に初期値からいじらない")]
-    [SerializeField] float kinderGroupingMinSimHP = 1;    // ゲーム中でのHPの想定してる最小値
-    [SerializeField] float kinderGroupingMaxSimHP = 80;   // ゲーム中での想定してるHPの最大値(ここまでにキンダーガーデンの優先順位間隔が下がりきる。)
+    //[Header("キンダーガーデンの慣れ補正用　HPの想定範囲 基本的に初期値からいじらない")]
+    float kinderGroupingMinSimHP = 1;    // ゲーム中でのHPの想定してる最小値
+    float kinderGroupingMaxSimHP = 80;   // ゲーム中での想定してるHPの最大値(ここまでにキンダーガーデンの優先順位間隔が下がりきる。)
 
-    [Header("キンダーガーデンの慣れ補正用　出力値調整　基本的に初期値からいじらない")]
-    [SerializeField] float InitKinderGroupingInterval = 17;   // 最小HP時の出力値
-    [SerializeField] float limitKinderGroupingInterval = 2;    // 最大HP時に近づいていく限界値
+    //[Header("キンダーガーデンの慣れ補正用　出力値調整　基本的に初期値からいじらない")]
+    float InitKinderGroupingInterval = 17;   // 最小HP時の出力値
+    float limitKinderGroupingInterval = 2;    // 最大HP時に近づいていく限界値
 
-    [Tooltip("最大HP時点で、開始の値から限界の値までの差をどの割合まで縮めるか。\n0に近いほど限界値により近づく(下がりきる)。\n例えば0.01なら1%まで縮まる。")]
-    [SerializeField] float completionFraction = 0.01f;
+    //[Tooltip("最大HP時点で、開始の値から限界の値までの差をどの割合まで縮めるか。\n0に近いほど限界値により近づく(下がりきる)。\n例えば0.01なら1%まで縮まる。")]
+    float completionFraction = 0.01f;
 
     private float decayRate;
     /// <summary>
@@ -589,15 +606,15 @@ public abstract class BaseStates
             return finalLimitIncreaseValue + (midLimitIncreaseValue - finalLimitIncreaseValue) * Mathf.Exp(-increaseDecayRate2 * excess);
         }
     }
-    [Header("慣れ補正のDEFによる基礎上昇値パラメータ（第1段階）")]
-    [SerializeField] float startIncreaseValue = 1.89f; // DEF=0での基礎上昇値 
-    [SerializeField] float midLimitIncreaseValue = 4.444f; // 中間で収束する上昇値 
-    [SerializeField] float increaseDecayRate1 = 0.0444f; // 第1段階でstart→midLimitへ近づく速度 
-    [SerializeField] float increaseThreshold = 100f; // 第2段階移行DEF値 
+    //[Header("慣れ補正のDEFによる基礎上昇値パラメータ（第1段階）")]
+    float startIncreaseValue = 1.89f; // DEF=0での基礎上昇値 
+    float midLimitIncreaseValue = 4.444f; // 中間で収束する上昇値 
+    float increaseDecayRate1 = 0.0444f; // 第1段階でstart→midLimitへ近づく速度 
+    float increaseThreshold = 100f; // 第2段階移行DEF値 
 
-    [Header("慣れ補正のDEFによる基礎上昇値パラメータ（第2段階）")]
-    [SerializeField] float finalLimitIncreaseValue = 8.9f; // 第2段階で最終的に近づく値 
-    [SerializeField] float increaseDecayRate2 = 0.0027f; // 第2段階でmid→finalLimitへ近づく速度 
+    //[Header("慣れ補正のDEFによる基礎上昇値パラメータ（第2段階）")]
+    float finalLimitIncreaseValue = 8.9f; // 第2段階で最終的に近づく値 
+    float increaseDecayRate2 = 0.0027f; // 第2段階でmid→finalLimitへ近づく速度 
     /// <summary>
     /// DEFによる基礎減少値を返す。　これは慣れ補正の記憶回数に加算される物。
     /// </summary>
@@ -618,16 +635,16 @@ public abstract class BaseStates
             return finalLimitValue + (midLimitValue - finalLimitValue) * Mathf.Exp(-decayRate2 * excess);
         }
     }
-    [Header("慣れ補正のDEFによる基礎減少値パラメータ（第1段階）")]
-    [SerializeField] float startValue = 0.7f;   // DEF=0での基礎減少値
-    [SerializeField] float midLimitValue = 0.2f; // 中間の下限値(比較的到達しやすい値)
-    [SerializeField] float decayRate1 = 0.04f;  // 第1段階で開始値から中間の下限値へ近づく速度
-    [SerializeField] float thresholdDEF = 88f;    // 第1段階から第2段階へ移行するDEF値
+    //[Header("慣れ補正のDEFによる基礎減少値パラメータ（第1段階）")]
+    float startValue = 0.7f;   // DEF=0での基礎減少値
+    float midLimitValue = 0.2f; // 中間の下限値(比較的到達しやすい値)
+    float decayRate1 = 0.04f;  // 第1段階で開始値から中間の下限値へ近づく速度
+    float thresholdDEF = 88f;    // 第1段階から第2段階へ移行するDEF値
 
-    [Header("パラメータ（第2段階）")]
+    //[Header("パラメータ（第2段階）")]
     // 第2段階：0.2から0への超低速な減衰
-    [SerializeField] float finalLimitValue = 0.0f;//基礎減少値がDEFによって下がりきる最終下限値　　基本的に0
-    [SerializeField] float decayRate2 = 0.007f; // 非常に小さい値にしてfinalLimitValueに収束するには莫大なDEFが必要になる
+    float finalLimitValue = 0.0f;//基礎減少値がDEFによって下がりきる最終下限値　　基本的に0
+    float decayRate2 = 0.007f; // 非常に小さい値にしてfinalLimitValueに収束するには莫大なDEFが必要になる
 
     /// <summary>
     /// 前にダメージを受けたターン
@@ -823,8 +840,8 @@ public abstract class BaseStates
         return newAdapt;
     }
 
-    [Header("慣れ補正のランダム性設定")]
-    [SerializeField, Range(0.0f, 0.2f)]//インスペクタ上で調節するスライダーの範囲
+    //[Header("慣れ補正のランダム性設定")]
+    //[SerializeField, Range(0.0f, 0.2f)]//インスペクタ上で調節するスライダーの範囲
     private float randomVariationRange = 0.04f; // ±%の変動
     /// <summary>
     /// スキルに慣れる処理 慣れ補正を返す
@@ -921,7 +938,7 @@ public abstract class BaseStates
             for (var i = 0; i < rl.Count; i++)//記憶段階と範囲のサイズ分ループ
             {
                 var fo = FocusSkillList[i];
-                if (fo.skill== skill)//もし記憶範囲に今回のスキルがあるならば
+                if (fo.skill == skill)//もし記憶範囲に今回のスキルがあるならば
                 {
                     //もしスキルを使う行使者が初見なら(二人目以降の使用者)
                     //精神属性によっては戸惑って補正はない　　戸惑いフラグが立つ
@@ -985,7 +1002,7 @@ public abstract class BaseStates
 
 
                         //もし最終的な慣れの補正量がしきい値を下回っていた場合、しきい値に固定される
-                        if(Threshold > AdaptModify)
+                        if (Threshold > AdaptModify)
                         {
                             AdaptModify = Threshold;
                         }
@@ -1416,6 +1433,13 @@ public abstract class BaseStates
 
     //状態異常のリスト
     public IReadOnlyList<BasePassive> PassiveList => _passiveList;
+    /// <summary>
+    /// unityのインスペクタ上で設定したPassiveのIDからキャラが持ってるか調べる。
+    /// </summary>
+    public bool HasPassive(int id)
+    {
+        return _passiveList.Any(pas => pas.ID == id);
+    }
 
     //スキルのリスト
     public IReadOnlyList<BaseSkill> SkillList => _skillList;
@@ -1589,9 +1613,9 @@ public abstract class BaseStates
         return finalDamage;
     }
     /// <summary>
-         ///     オーバライド可能なダメージ関数
-         /// </summary>
-         /// <param name="atkPoint"></param>
+    ///     オーバライド可能なダメージ関数
+    /// </summary>
+    /// <param name="atkPoint"></param>
     public virtual string Damage(BaseStates Atker, float SkillPower)
     {
         var skill = Atker.NowUseSkill;
@@ -1617,7 +1641,19 @@ public abstract class BaseStates
         Debug.Log("ヒールが実行された");
         return "癒された";
     }
-
+    /// <summary>
+    /// 命中凌駕の判定関数　引数倍命中が回避を凌駕してるのなら、スキル命中率に影響を与える
+    /// </summary>
+    private float AccuracySupremacy(float atkerEye, float undAtkerAgi, float multiplierThreshold = 2.5f)
+    {
+        var supremacyMargin = 0f;
+        var modifyAgi = undAtkerAgi * multiplierThreshold;//補正されたagi
+        if (atkerEye >= modifyAgi)//攻撃者のEYEが特定の倍被害者のAGIを上回っているならば、
+        {
+            supremacyMargin = (atkerEye - modifyAgi) / 2;//命中が引数倍された回避を超した分　÷　2
+        }
+        return supremacyMargin;
+    }
     /// <summary>
     /// 攻撃者と防御者とスキルを利用してヒットするかの計算
     /// </summary>
@@ -1627,8 +1663,8 @@ public abstract class BaseStates
 
         if (RandomEx.Shared.NextFloat(0, Attacker.EYE() + AGI()) < Attacker.EYE())//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
         {
-            //スキルそのものの命中率
-            return skill.SkillHitCalc();
+            //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
+            return skill.SkillHitCalc(AccuracySupremacy(Attacker.EYE(), AGI()));
         }
 
         return false;
@@ -1668,7 +1704,7 @@ public abstract class BaseStates
 
         if (skill.HasType(SkillType.Heal))
         {
-            if (skill.SkillHitCalc())//スキル命中率の計算だけ行う
+            if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
             {
                 txt += Heal(skillPower);
             }
@@ -1747,20 +1783,12 @@ public abstract class BaseStates
         var typeMatch = false;
         var propertyMatch = false;
         //キャラクター種別の相性判定
-        foreach (var type in status.TypeOkList)
-            if (MyType == type)
-            {
-                typeMatch = true;
-                break;
-            }
+        if (HasCharacterType(status.OkType))
+            typeMatch = true;
 
-        //キャラクター属性と
-        foreach (var property in status.CharaPropertyOKList)
-            if (MyImpression == property)
-            {
-                propertyMatch = true;
-                break;
-            }
+        //キャラクター印象と
+        if (HasCharacterImpression(status.OkImpression))
+            propertyMatch = true;
 
         //相性条件クリアしたら
         if (typeMatch && propertyMatch)

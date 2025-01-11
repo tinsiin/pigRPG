@@ -112,7 +112,7 @@ public class Stages : MonoBehaviour
         [SerializeField] private Vector2 _mapLineE;
         [SerializeField] private string _mapsrc;
         [SerializeReference,SelectableSerializeReference] private List<NormalEnemy> _enemyList; //敵のリスト
-        [SerializeReference,SelectableSerializeReference] private List<BaseStates> _enyList; //敵のリスト
+        //[SerializeReference,SelectableSerializeReference] private List<BaseStates> _enyList; //敵のリスト
         [SerializeField] private GameObject[] _sideObject_Lefts;//左側に出現するオブジェクト
         [SerializeField] private GameObject[] _sideObject_Rights;//右側に出現するオブジェクト
 

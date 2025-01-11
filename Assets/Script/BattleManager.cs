@@ -587,7 +587,76 @@ public class BattleManager
 
         return ACTPop();
     }
+    /// <summary>
+    /// 慣れフラットロゼ用の発生確率の計算　引数にスキル命中率
+    /// x in [0..100]。xが50または60に近いほど、イージング曲線で 4.44%→27%
+    /// ただし距離>12 なら上限4.44%(さらに bc 超えれば 0%)。
+    /// alpha パラメータで曲線の急/緩を調整できる。
+    /// </summary>
+    /// <param name="x">スキルHitPerなど(0～100)</param>
+    /// <param name="alpha">曲線形状(1=線形, >1=徐々に上昇, <1=最初に急上昇)</param>
+    /// <returns>最終パーセント(0～27)</returns>
+    float Ideal50or60Easing(float x, float alpha = 4.3f)
+    {
+        // 1) 0～100 にクランプ
+        x = Mathf.Clamp(x, 0f, 100f);
 
+        // 2) 50,60 の近い方との距離 d
+        float dist50 = Mathf.Abs(x - 50f);
+        float dist60 = Mathf.Abs(x - 60f);
+        float d = Mathf.Min(dist50, dist60);
+
+        // 3) パラメータ設定
+        float ab = 12f;   // 距離が [0..12) => イージング(4.44→27)
+        float bc = 25f;   // 距離が [12..25) => 4.44→0 (線形)
+                          // その先(d>=25) => 0%
+
+        // 4) 区間判定
+
+        if (d >= bc)
+        {
+            // (C) d >= 25 => 0%
+            return 0f;
+        }
+        else if (d >= ab)
+        {
+            // (B) d in [12..25)
+            //   12 => 4.44
+            //   25 => 0
+            float t = (d - ab) / (bc - ab); // 0～1
+            return Mathf.Lerp(4.44f, 0f, t);
+        }
+        else
+        {
+            // (A) d < 12
+            //   12 => 4.44
+            //   0  => 27
+            // イージング
+            //
+            // t = (12 - d)/12 => 0～1
+            //   d=12 => t=0
+            //   d=0 => t=1
+            //
+            // ease = t^alpha
+            //   alpha=1 => 線形
+            //   alpha>1 => "ゆっくり始まる" (ease-in)
+            //   alpha<1 => "最初に急上昇" (ease-out)
+            //
+
+            float baseline = 4.44f;
+            float peak = 27f;
+
+            float t = (ab - d) / ab; // 0～1
+            float easePortion = Mathf.Pow(t, alpha);
+
+            float val = baseline + (peak - baseline) * easePortion;
+
+            // 必要に応じて clamp
+            // val = Mathf.Clamp(val, 0f, 27f);
+
+            return val;
+        }
+    }
     /// <summary>
     /// スキルアクトを実行
     /// </summary>
@@ -617,7 +686,8 @@ public class BattleManager
         CreateBattleMessage(Acter.AttackChara(unders));//攻撃の処理からメッセージが返る。
         unders = new UnderActersEntryList(this);//初期化
 
-        //慣れフラットロゼが起こるかどうかの判定
+        //慣れフラットロゼが起こるかどうかの判定　(AddFlatRozeで関数化？
+        if(Acter.HasPassive(0))
         if (Acter.NowUseSkill.HasType(SkillType.Attack))//攻撃タイプのスキル
         {
             if (!IsVanguard(Acter))//前のめりでないか
@@ -628,6 +698,7 @@ public class BattleManager
                     {
                         if (Acter.NowUseSkill.ATKCount == 1)//連続実行回数が一回、つまり単回攻撃なら
                         {
+                            if(RandomEx.Shared.NextInt(100) < Ideal50or60Easing(Acter.NowUseSkill.SkillHitPer))//50,60に近いほど発生
                             Acts.Add(Acter, Faction, "淡々としたロゼ", new List<ReservationStatesModify>()
                         {
                             new()

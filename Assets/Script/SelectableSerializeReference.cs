@@ -84,7 +84,7 @@ public sealed class SelectableSerializeReferenceAttributeDrawer : PropertyDrawer
 
     private class PropertyData
     {
-        public PropertyData(SerializedProperty property)
+        /*public PropertyData(SerializedProperty property)
         {
             var managedReferenceFieldTypenameSplit = property.managedReferenceFieldTypename.Split(' ').ToArray();
             var assemblyName = managedReferenceFieldTypenameSplit[0];
@@ -100,7 +100,40 @@ public sealed class SelectableSerializeReferenceAttributeDrawer : PropertyDrawer
                 DerivedTypeNames[i] = ObjectNames.NicifyVariableName(type.Name);
                 DerivedFullTypeNames[i] = type.FullName;
             }
+        }*/
+
+        //chatGPT o1によって書き換えられた　非抽象のベースクラスも選択可能にしたもの
+        public PropertyData(SerializedProperty property)
+        {
+            var managedReferenceFieldTypenameSplit = property.managedReferenceFieldTypename.Split(' ').ToArray();
+            var assemblyName = managedReferenceFieldTypenameSplit[0];
+            var fieldTypeName = managedReferenceFieldTypenameSplit[1];
+            var fieldType = GetAssembly(assemblyName).GetType(fieldTypeName);
+
+            // まず派生クラスを列挙
+            var derived = TypeCache.GetTypesDerivedFrom(fieldType)
+                .Where(x => !x.IsAbstract && !x.IsInterface)
+                .ToList();
+
+            // もしフィールド型 itself が実装クラスなら、それも候補に入れる
+            if (!fieldType.IsAbstract && !fieldType.IsInterface)
+            {
+                // 先頭に挿入
+                derived.Insert(0, fieldType);
+            }
+
+            DerivedTypes = derived.ToArray();
+            DerivedTypeNames = new string[DerivedTypes.Length];
+            DerivedFullTypeNames = new string[DerivedTypes.Length];
+
+            for (var i = 0; i < DerivedTypes.Length; i++)
+            {
+                var type = DerivedTypes[i];
+                DerivedTypeNames[i] = ObjectNames.NicifyVariableName(type.Name);
+                DerivedFullTypeNames[i] = type.FullName;
+            }
         }
+
 
         public Type[] DerivedTypes { get; }
 

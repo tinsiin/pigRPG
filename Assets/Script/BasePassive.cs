@@ -6,20 +6,29 @@ using System;
 ///     基礎状態の抽象クラス
 /// </summary>
 [Serializable]
-public abstract class BasePassive
+public class BasePassive
 {
-    //適合するキャラ属性(精神属性)のリスト　
-    public List<SpiritualProperty> CharaPropertyOKList;
+    /// <summary>
+    /// 適合するキャラ属性(精神属性)　
+    /// </summary>
+    public SpiritualProperty OkImpression;
+
+    /// <summary>
+    ///     適合する種別　
+    /// </summary>
+    public CharacterType OkType;
+
 
     /// <summary>
     ///     PassivePowerの設定値
     /// </summary>
-    public int MaxPassivePower;
-
+    public int MaxPassivePower = 1;
     /// <summary>
-    ///     適合する種別のリスト。　種別は一人一つなので、判断基準はこれだけでOK
+    /// パッシブの名前
     /// </summary>
-    public List<CharacterType> TypeOkList;
+    public string PassiveName;
+    public int ID;
+
 
     /// <summary>
     ///     この値はパッシブの"重ね掛け" →&lt;思え鳥4&gt;
@@ -39,10 +48,25 @@ public abstract class BasePassive
     /// <summary>
     ///     歩行時効果　basestatesでapplypassiveで購読する
     /// </summary>
-    public abstract void WalkEffect();
+    public virtual void WalkEffect()
+    {
+
+    }
 
     /// <summary>
     ///     戦闘時効果　basestatesでapplypassiveで購読する
     /// </summary>
-    public abstract void BattleEffect();
+    public virtual void BattleEffect()
+    {
+
+    }
+    /// <summary>
+    ///行動時効果
+    /// </summary>
+    public virtual void ACTEffect()
+    {
+
+    }
+
+    //↑三つで操り切れない部分は、直接baseStatesでのforeachでpassiveListから探す関数でゴリ押しすればいい。
 }

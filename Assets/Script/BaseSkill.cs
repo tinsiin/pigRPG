@@ -12,12 +12,12 @@ using UnityEngine;
 [Flags]
 public enum SkillType
 {
-    Attack =1 << 0,
+    Attack = 1 << 0,
     Heal = 1 << 1,
     addPassive = 1 << 2,
     RemovePassive = 1 << 3,
     DeathHeal = 1 << 4,
-        //攻撃、回復、状態異常付与、死回復
+    //攻撃、回復、状態異常付与、死回復
 }
 /// <summary>
 /// スキル範囲の性質
@@ -112,7 +112,7 @@ public enum SkillConsecutiveType
     /// <summary>
     /// 毎コマンドZoneTraitに従って対象者の選択可能
     /// </summary>
-    CanOprate = 1 >> 1 ,
+    CanOprate = 1 >> 1,
 
     /// <summary>
     /// 毎コマンドZoneTraitに従ったランダムな対象者の選別をする。
@@ -121,16 +121,16 @@ public enum SkillConsecutiveType
     /// <summary>
     /// ターンをまたいだ連続的攻撃　連続攻撃回数分だけ単体攻撃が無理やり進む感じ
     /// </summary>
-    FreezeConsecutive = 1 >> 3 ,
+    FreezeConsecutive = 1 >> 3,
 
     /// <summary>
     /// ランダムな百分率でスキル実行が連続されるかどうか
     /// </summary>
-    RandomPercentConsecutive = 1 >> 4 ,
+    RandomPercentConsecutive = 1 >> 4,
     /// <summary>
     /// _atkCountの値に応じて連続攻撃が行われるかどうか
     /// </summary>
-    FixedConsecutive =1 >> 5 ,
+    FixedConsecutive = 1 >> 5,
 
     /// <summary>
     /// スキル保存性質　
@@ -138,7 +138,7 @@ public enum SkillConsecutiveType
     ///その攻撃保存を**選んだ分だけ連続攻撃回数として発動**
     ///Randomな場合はパーセント補正が変わる？
     /// </summary>
-    Stockpile = 1 >> 6 ,
+    Stockpile = 1 >> 6,
 
 }
 /// <summary>
@@ -265,7 +265,7 @@ public class BaseSkill
     /// </summary>
     public void SetDeltaTurn(int nowTurn)
     {
-        if(_tmpSkillUseTurn >= 0)//前回のターンが記録されていたら
+        if (_tmpSkillUseTurn >= 0)//前回のターンが記録されていたら
         {
             DeltaTurn = Math.Abs(_tmpSkillUseTurn - nowTurn);//前回との差をdeltaTurn保持変数に記録する
         }
@@ -290,7 +290,7 @@ public class BaseSkill
     /// </summary>
     public bool CanSelectAggressiveCommit = false;
 
-  
+
 
     /// <summary>
     /// ランダムにスキル実行が継続されるかどうかの割合　
@@ -313,7 +313,7 @@ public class BaseSkill
     /// BattleManager単位で行使した回数
     /// 実行対象のreactionSkill内でインクリメント
     /// </summary>    
-    public  int DoCount
+    public int DoCount
     {
         get { return _doCount; }
         set { _doCount = value; }
@@ -321,7 +321,7 @@ public class BaseSkill
     /// <summary>
     /// 行使した回数 永続的にカウントされる
     /// </summary>    
-    public  int RecordDoCount
+    public int RecordDoCount
     {
         get { return _recordDoCount; }
         set { _recordDoCount = value; }
@@ -510,7 +510,7 @@ public class BaseSkill
     {
         var pwr = SkillPower;//基礎パワー
 
-        
+
 
         pwr *= spread;//分散値を掛ける
 
@@ -520,10 +520,13 @@ public class BaseSkill
     /// <summary>
     /// スキルにより補正された最終命中率
     /// </summary>
-    public virtual bool SkillHitCalc()
+    /// <param name="supremacyBonus">命中ボーナス　主に命中凌駕用途</param>>
+    public virtual bool SkillHitCalc(float supremacyBonus)
     {
+        var rndMin = RandomEx.Shared.NextInt(3);//ボーナスがある場合ランダムで三パーセント~0パーセント引かれる
+        if(supremacyBonus>rndMin)supremacyBonus -= rndMin;
 
-        return RandomEx.Shared.NextInt(100) < SkillHitPer;//スキルの命中率
+        return RandomEx.Shared.NextInt(100) < supremacyBonus + SkillHitPer;
     }
 
     /// <summary>
@@ -558,12 +561,12 @@ public class BaseSkill
     /// canselectRangeで範囲が複数選択できる、
     /// またはrandomRangeで範囲が複数分岐した際に使う感じ。
     /// </summary>
-    public SerializableDictionary<SkillZoneTrait, float> 
+    public SerializableDictionary<SkillZoneTrait, float>
         PowerRangePercentageDictionary;
     /// <summary>
     /// 命中率のステータスに直接かかるスキルの範囲意志による威力補正
     /// </summary>
-    public SerializableDictionary<SkillZoneTrait, float> 
+    public SerializableDictionary<SkillZoneTrait, float>
         HitRangePercentageDictionary;
 
 }
