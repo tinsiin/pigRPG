@@ -452,7 +452,7 @@ public class BattleManager
                 }
             }
             //スキルがフリーズするならする
-            if (Acts.GetAtIsFreezeBool(0)) 
+            if (Acts.GetAtIsFreezeBool(0))
             {
                 Acter.FreezeSkill();
             }
@@ -687,19 +687,19 @@ public class BattleManager
         unders = new UnderActersEntryList(this);//初期化
 
         //慣れフラットロゼが起こるかどうかの判定　(AddFlatRozeで関数化？
-        if(Acter.HasPassive(0))
-        if (Acter.NowUseSkill.HasType(SkillType.Attack))//攻撃タイプのスキル
-        {
-            if (!IsVanguard(Acter))//前のめりでないか
+        if (Acter.HasPassive(0))
+            if (Acter.NowUseSkill.HasType(SkillType.Attack))//攻撃タイプのスキル
             {
-                if (Acter.NowUseSkill.IsAggressiveCommit)//その上で前のめりになる攻撃かどうか
+                if (!IsVanguard(Acter))//前のめりでないか
                 {
-                    if (Acter.NowUseSkill.RecordDoCount > 20)//20回より使っているなら
+                    if (Acter.NowUseSkill.IsAggressiveCommit)//その上で前のめりになる攻撃かどうか
                     {
-                        if (Acter.NowUseSkill.ATKCount == 1)//連続実行回数が一回、つまり単回攻撃なら
+                        if (Acter.NowUseSkill.RecordDoCount > 20)//20回より使っているなら
                         {
-                            if(RandomEx.Shared.NextInt(100) < Ideal50or60Easing(Acter.NowUseSkill.SkillHitPer))//50,60に近いほど発生
-                            Acts.Add(Acter, Faction, "淡々としたロゼ", new List<ReservationStatesModify>()
+                            if (Acter.NowUseSkill.ATKCount == 1)//連続実行回数が一回、つまり単回攻撃なら
+                            {
+                                if (RandomEx.Shared.NextInt(100) < Ideal50or60Easing(Acter.NowUseSkill.SkillHitPer))//50,60に近いほど発生
+                                    Acts.Add(Acter, Faction, "淡々としたロゼ", new List<ReservationStatesModify>()
                         {
                             new()
                             {
@@ -713,13 +713,13 @@ public class BattleManager
                                 modify = 0.5f,
                                 memo = "ロゼ威力半減"
                             }
-                        },true);//先約リストからスキルを固定する。(再選択させない)
+                        }, true);//先約リストからスキルを固定する。(再選択させない)
 
+                            }
                         }
                     }
                 }
             }
-        }
 
 
         //スキル実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる

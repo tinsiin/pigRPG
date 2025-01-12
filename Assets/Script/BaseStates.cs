@@ -1078,6 +1078,31 @@ public abstract class BaseStates
     [SerializeField] private List<BasePassive> _passiveList;
 
     [SerializeField] List<BaseSkill> _skillList;
+
+    [SerializeField] List<BaseVitalLayer> _vitalLaerList;
+
+    /// <summary>
+    /// 状態異常のリスト
+    /// </summary>
+    public IReadOnlyList<BasePassive> PassiveList => _passiveList;
+    /// <summary>
+    /// unityのインスペクタ上で設定したPassiveのIDからキャラが持ってるか調べる。
+    /// </summary>
+    public bool HasPassive(int id)
+    {
+        return _passiveList.Any(pas => pas.ID == id);
+    }
+
+    public IReadOnlyList<BaseVitalLayer> VitalLayers => _vitalLaerList;
+    /// <summary>
+    /// インスペクタ上で設定されたIDを通じて特定の追加HPを持ってるか調べる
+    /// </summary>
+    public bool HasVitalLayer(int id)
+    {
+        return _vitalLaerList.Any(vit => vit.id == id);
+    }
+
+
     public float b_AGI;
     public float b_ATK;
 
@@ -1219,6 +1244,15 @@ public abstract class BaseStates
     [SerializeField]
     private float _maxHp;
     public float MAXHP => _maxHp;
+
+    /// <summary>
+    /// vitalLayerでHPに到達する前に攻撃値を請け負う処理
+    /// </summary>
+    public float BarrierLayers(float dmg)
+    {
+
+        return 0;
+    }
 
     /// <summary>
     /// このキャラがどの辺りを狙っているか
@@ -1431,15 +1465,6 @@ public abstract class BaseStates
 
 
 
-    //状態異常のリスト
-    public IReadOnlyList<BasePassive> PassiveList => _passiveList;
-    /// <summary>
-    /// unityのインスペクタ上で設定したPassiveのIDからキャラが持ってるか調べる。
-    /// </summary>
-    public bool HasPassive(int id)
-    {
-        return _passiveList.Any(pas => pas.ID == id);
-    }
 
     //スキルのリスト
     public IReadOnlyList<BaseSkill> SkillList => _skillList;
@@ -1772,6 +1797,37 @@ public abstract class BaseStates
         foreach (var skill in SkillList)
         {
             skill.ResetTmpProperty();//プロパティをリセットする
+        }
+    }
+
+    /// <summary>
+    ///追加HPを適用 
+    /// </summary>
+    public virtual void ApplyVitalLayer(BaseVitalLayer newLayer)
+    {
+        //リスト内に同一の物があるか判定する。
+        var sameHP = _vitalLaerList.FirstOrDefault(lay => lay.id == newLayer.id);
+        if (sameHP != null)
+        {
+            sameHP.ReplenishHP();//同一の為リストにある側を再補充する。
+        }
+        else//初物の場合
+        {
+            //優先順位にリスト内で並び替えつつ追加
+            // _vitalLaerList 内で、新しいレイヤーの Priority より大きい最初の要素のインデックスを探す
+            int insertIndex = _vitalLaerList.FindIndex(v => v.Priority > newLayer.Priority);
+
+            if (insertIndex < 0)
+            {
+                // 該当する要素が見つからなかった場合（全ての要素が新しいレイヤー以下の Priority ）
+                // リストの末尾に追加
+                _vitalLaerList.Add(newLayer);
+            }
+            else
+            {
+                // 新しいレイヤーを適切な位置に挿入
+                _vitalLaerList.Insert(insertIndex, newLayer);
+            }
         }
     }
 
