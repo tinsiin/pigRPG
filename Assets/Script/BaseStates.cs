@@ -1248,10 +1248,41 @@ public abstract class BaseStates
     /// <summary>
     /// vitalLayerでHPに到達する前に攻撃値を請け負う処理
     /// </summary>
-    public float BarrierLayers(float dmg)
+    public float BarrierLayers(float dmg,BaseSkill atkSkill)
     {
+        // 1) VitalLayer の順番どおりにダメージを適用していく
+        //    ここでは「Priority が低い方(手前)が先に処理される想定」を前提に
+        //    _vitalLaerList がすでに正しい順序でソートされていることを期待。
 
-        return 0;
+        for (int i = 0; i < _vitalLaerList.Count;)
+        {
+            var layer = _vitalLaerList[i];
+            // 2) このレイヤーに貫通させて、返り値を「残りダメージ」とする
+            dmg = layer.PenetrateLayer(dmg, atkSkill.SkillPhysical);
+
+            if (layer.LayerHP <= 0f)
+            {
+                // このレイヤーは破壊された
+                _vitalLaerList.RemoveAt(i);
+                // リストを削除したので、 i はインクリメントしない（要注意）
+            }
+            else
+            {
+                // レイヤーが残ったら i を進める
+                i++;
+            }
+
+            // 3) dmg が 0 以下になったら、もうこれ以上削る必要ない
+            if (dmg <= 0f)
+            {
+                dmg = 0f;
+                break;
+            }
+        }
+
+        // 4) 層で削りきれなかった分を戻す
+        if (dmg < 0) dmg = 0;
+        return dmg;
     }
 
     /// <summary>
@@ -1650,6 +1681,9 @@ public abstract class BaseStates
 
         //慣れ補正
         dmg *= AdaptToSkill(Atker, skill, dmg);
+
+        //vitalLayerを通る処理
+        dmg = BarrierLayers(dmg, skill);
 
         HP -= dmg;
         Debug.Log("攻撃が実行された");
