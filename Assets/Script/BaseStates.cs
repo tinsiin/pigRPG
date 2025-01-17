@@ -166,19 +166,6 @@ public abstract class BaseStates
     public List<FocusedSkillAndUser> FocusSkillList = new List<FocusedSkillAndUser>();
 
     /// <summary>
-    ///bm生成時に初期化される関数
-    /// </summary>
-    public void OnBattleStartNoArgument()
-    {
-        TempDamageTurn = 0;
-        DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
-        DecisionSacriFaithAdaptToSkillGrouping();
-    }
-    public void OnBattleEndNoArgument()
-    {
-        TempDamageTurn = 0;
-    }
-    /// <summary>
     /// ベールドライヴァル用の慣れ補正の優先順位のグルーピング
     /// グルーピングっていうか　3 を境目に二つに分かれるだけ。
     /// </summary>
@@ -1111,6 +1098,11 @@ public abstract class BaseStates
     public float b_EYE;
 
     /// <summary>
+    /// ケレケレ　外連味により増減するステータス
+    /// </summary>
+    public float KereKere;
+
+    /// <summary>
     ///     このキャラクターの名前
     /// </summary>
     public string CharacterName;
@@ -1248,8 +1240,9 @@ public abstract class BaseStates
     /// <summary>
     /// vitalLayerでHPに到達する前に攻撃値を請け負う処理
     /// </summary>
-    public float BarrierLayers(float dmg,BaseSkill atkSkill)
+    public float BarrierLayers(float dmg, BaseStates atker)
     {
+
         // 1) VitalLayer の順番どおりにダメージを適用していく
         //    ここでは「Priority が低い方(手前)が先に処理される想定」を前提に
         //    _vitalLaerList がすでに正しい順序でソートされていることを期待。
@@ -1257,14 +1250,26 @@ public abstract class BaseStates
         for (int i = 0; i < _vitalLaerList.Count;)
         {
             var layer = _vitalLaerList[i];
+            var skillPhy = atker.NowUseSkill.SkillPhysical;
             // 2) このレイヤーに貫通させて、返り値を「残りダメージ」とする
-            dmg = layer.PenetrateLayer(dmg, atkSkill.SkillPhysical);
+            dmg = layer.PenetrateLayer(dmg, skillPhy);
 
             if (layer.LayerHP <= 0f)
             {
                 // このレイヤーは破壊された
                 _vitalLaerList.RemoveAt(i);
                 // リストを削除したので、 i はインクリメントしない（要注意）
+
+                //破壊慣れまたは破壊負け
+                if (skillPhy == PhysicalProperty.heavy)//暴断なら破壊慣れ
+                {
+                    dmg += dmg * 0.015f * KereKere;
+                }
+                if (skillPhy == PhysicalProperty.volten)//vol天なら破壊負け
+                {
+                    dmg -= dmg * 0.022f * (atker.b_ATK - KereKere);
+                    //b_atk < kerekereになった際、減らずに逆に威力が増えるので、そういう場合の演出差分が必要
+                }
             }
             else
             {
@@ -1281,7 +1286,7 @@ public abstract class BaseStates
         }
 
         // 4) 層で削りきれなかった分を戻す
-        if (dmg < 0) dmg = 0;
+        if (dmg < 0) dmg = 0;//0未満チェック
         return dmg;
     }
 
@@ -1683,7 +1688,7 @@ public abstract class BaseStates
         dmg *= AdaptToSkill(Atker, skill, dmg);
 
         //vitalLayerを通る処理
-        dmg = BarrierLayers(dmg, skill);
+        dmg = BarrierLayers(dmg, Atker);
 
         HP -= dmg;
         Debug.Log("攻撃が実行された");
@@ -1769,6 +1774,18 @@ public abstract class BaseStates
             }
         }
 
+        if (skill.HasType(SkillType.addPassive))
+        {
+            foreach (var id in skill.subEffects)
+                ApplyPassive(PassiveManager.Instance.GetAtID(id));
+        }
+
+        if (skill.HasType(SkillType.AddVitalLayer))
+        {
+            foreach (var id in skill.subVitalLayers)
+                ApplyVitalLayer(VitalLayerManager.Instance.GetAtID(id));
+        }
+
         Debug.Log("ReactionSkill");
         return txt;
     }
@@ -1780,8 +1797,7 @@ public abstract class BaseStates
     /// <param name="UnderAttacker"></param>
     public virtual string AttackChara(UnderActersEntryList Unders)
     {
-        //本来この関数は今のところ無駄　BMでの処理では直接UnderActerのreactionSkill呼びだしゃいい話だし
-        //ただもしかしたらここでのunderAttackerによっての何らかの分岐処理するかもだから念のためね。
+
 
 
         SkillUseConsecutiveCountUp(NowUseSkill);//連続カウントアップ
@@ -1870,31 +1886,89 @@ public abstract class BaseStates
     /// </summary>
     public virtual void ApplyPassive(BasePassive status)
     {
-        var typeMatch = false;
-        var propertyMatch = false;
-        //キャラクター種別の相性判定
-        if (HasCharacterType(status.OkType))
-            typeMatch = true;
+        // 条件(OkType,OkImpression) は既にチェック済みならスキップ
+        if (!HasCharacterType(status.OkType)) return;
+        if (!HasCharacterImpression(status.OkImpression)) return;
 
-        //キャラクター印象と
-        if (HasCharacterImpression(status.OkImpression))
-            propertyMatch = true;
-
-        //相性条件クリアしたら
-        if (typeMatch && propertyMatch)
+        // すでに持ってるかどうか
+        var existing = _passiveList.FirstOrDefault(p => p.ID == status.ID);
+        if (existing != null)
         {
-            var isactive = false;
-            foreach (var passive in _passiveList)
-                if (passive == status)
-                {
-                    isactive = true; //既にリストに含まれているパッシブなら。
-                    passive.AddPassivePower(1); //既に含まれてるパッシブを強くする                   
-                    break;
-                }
-
-            if (!isactive) _passiveList.Add(status); //状態異常リストに直接追加
+            // 重ね掛け
+            existing.AddPassivePower(1);
         }
-    } //remove処理はR3で処理する。　
+        else
+        {
+            // 新規追加
+            _passiveList.Add(status);
+            // パッシブ側のOnApplyを呼ぶ
+            status.OnApply(this);
+        }
+    }
+
+    /// <summary>
+    /// パッシブを除去
+    /// </summary>
+    public virtual void RemovePassive(BasePassive status)
+    {
+        // パッシブがあるか確認
+        if (_passiveList.Remove(status))
+        {
+            // パッシブ側のOnRemoveを呼ぶ
+            status.OnRemove(this);
+        }
+    }
+    /// <summary>
+    /// 全パッシブのUpdateTurnSurvivalを呼ぶ ターン経過時パッシブが生存するかどうか
+    /// </summary>
+    void UpdateTurnAllPassiveSurvival()
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.UpdateTurnSurvival(this);
+        }
+    }/// <summary>
+    /// 全パッシブのUpdateWalkSurvivalを呼ぶ 歩行時パッシブが生存するかどうか
+    /// </summary>
+    void UpdateWalkAllPassiveSurvival()
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.UpdateWalkSurvival(this);
+        }
+    }
+    /// <summary>歩行時のコールバック引数なしの</summary>
+    public void OnWalkNoArgument()
+    {
+        UpdateWalkAllPassiveSurvival();
+    }
+
+    /// <summary>
+    /// 戦闘中に次のターンに進む際のコールバック
+    /// </summary>
+    public void OnNextTurnNoArgument()
+    {
+        UpdateTurnAllPassiveSurvival();
+    }
+
+    /// <summary>
+    ///bm生成時に初期化される関数
+    /// </summary>
+    public void OnBattleStartNoArgument()
+    {
+        TempDamageTurn = 0;
+        DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
+        DecisionSacriFaithAdaptToSkillGrouping();
+    }
+    public void OnBattleEndNoArgument()
+    {
+        TempDamageTurn = 0;
+    }
+
 
     //static 静的なメゾット(戦いに関する辞書データなど)
 

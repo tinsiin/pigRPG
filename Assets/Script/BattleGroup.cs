@@ -90,6 +90,17 @@ public class BattleGroup
         }
     }
     /// <summary>
+    /// グループ全員の次のターンへ進む際のコールバック
+    /// </summary>
+    public void OnPartyNextTurnNoArgument()
+    {
+        foreach (var chara in Ours)
+        {
+            chara.OnNextTurnNoArgument();
+        }
+    }
+
+    /// <summary>
     /// グループ全員の行動を可能な状態にしておく
     /// </summary>
     public void PartyRecovelyTurnOK()

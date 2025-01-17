@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,6 +8,7 @@ using UnityEngine;
 /// このクラス実体のイメージとしては、パッシブと生存条件等の意味合いで強く密接しているが、
 /// あくまでパッシブの中の一つの機能の形に過ぎず、また、パッシブがキャラに与える影響はこの追加HP層には与えられないというイメージ。
 /// </summary>
+[Serializable]
 public class BaseVitalLayer
 {
     /// <summary>
@@ -127,6 +129,13 @@ public class BaseVitalLayer
                     float cValue = dmg - tmpHP;
                     if (cValue < 0) cValue = 0;
                     return cValue;
+                case BarrierResistanceMode.C_IgnoreWhenBreak_MaxHP:
+                    // Cは元攻撃 - 現在のLayerHP
+                    // leftover(= overkill)を無視し、
+                    // "dmg - tmpHP(LayerHP)" などの再計算
+                    float cmValue = dmg - MaxLayerHP;
+                    if (cmValue < 0) cmValue = 0;
+                    return cmValue;
             }
         }
         else
@@ -151,5 +160,8 @@ public enum BarrierResistanceMode
 
     /// <summary>仕組みC: バリア破壊時に"耐性自体なかった"として計算(例: (元攻撃-HP) など)</summary>
     C_IgnoreWhenBreak,
+
+    /// <summary>仕組みC:  破壊時に爆破がある的な(元攻撃-MaxHP) </summary>
+    C_IgnoreWhenBreak_MaxHP,
 }
 

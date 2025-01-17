@@ -1136,6 +1136,10 @@ public class BattleManager
         if (!Next)
             BattleTurnCount++;
 
+        AllyGroup.OnPartyNextTurnNoArgument();//次のターンへ行く引数なしコールバック
+        EnemyGroup.OnPartyNextTurnNoArgument();
+
+
         //前のめり者が死亡してたら、nullにする処理
         AllyGroup.VanGuardDeath();
         EnemyGroup.VanGuardDeath();

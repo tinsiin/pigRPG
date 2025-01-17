@@ -17,7 +17,7 @@ public enum SkillType
     addPassive = 1 << 2,
     RemovePassive = 1 << 3,
     DeathHeal = 1 << 4,
-    //攻撃、回復、状態異常付与、死回復
+    AddVitalLayer =1 << 5,
 }
 /// <summary>
 /// スキル範囲の性質
@@ -530,9 +530,14 @@ public class BaseSkill
     }
 
     /// <summary>
-    /// スキル実行時に付与する状態異常とか
+    /// スキル実行時に付与する状態異常とか ID指定
     /// </summary>
-    public List<BasePassive> subEffects;
+    public List<int> subEffects;
+
+    /// <summary>
+    /// スキル実行時に付与する追加HP(Passive由来でない)　ID指定
+    /// </summary>
+    public List<int> subVitalLayers;
 
     //防御無視率
     public float DEFATK;

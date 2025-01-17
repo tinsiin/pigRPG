@@ -140,6 +140,8 @@ public class Walking : MonoBehaviour
         }
 
         TestProgressUIUpdate(); //テスト用進行度ui更新
+
+        
     }
 
     /// <summary>

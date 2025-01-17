@@ -57,6 +57,13 @@ public class PlayersStates:MonoBehaviour
     ///     現在のステージ内のエリア
     /// </summary>
     public int NowAreaID { get; private set; }
+    /// <summary>主人公達の歩行時コールバック</summary>
+    public void PlayersOnWalkNoArgument()
+    {
+        geino.OnWalkNoArgument();//歩行時コールバック
+        noramlia.OnWalkNoArgument();
+        sites.OnWalkNoArgument();   
+    }
 
     public BattleGroup GetParty()
     {

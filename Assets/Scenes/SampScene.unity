@@ -417,6 +417,7 @@ GameObject:
   - component: {fileID: 78173492}
   - component: {fileID: 78173493}
   - component: {fileID: 78173495}
+  - component: {fileID: 78173496}
   - component: {fileID: 78173494}
   m_Layer: 5
   m_Name: USERUI
@@ -543,7 +544,8 @@ MonoBehaviour:
       SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
-      subEffects: []
+      subEffects: 
+      subVitalLayers: 
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -553,10 +555,12 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+    _vitalLaerList: []
     b_AGI: 0
     b_ATK: 0
     b_DEF: 0
     b_EYE: 0
+    KereKere: 0
     CharacterName: "\u30B8\u30FC\u30CE"
     ImpressionStringName: 
     NowUseSkill:
@@ -576,7 +580,8 @@ MonoBehaviour:
       SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
-      subEffects: []
+      subEffects: 
+      subVitalLayers: 
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -603,7 +608,8 @@ MonoBehaviour:
       SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
-      subEffects: []
+      subEffects: 
+      subVitalLayers: 
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -623,10 +629,12 @@ MonoBehaviour:
   noramlia:
     _passiveList: []
     _skillList: []
+    _vitalLaerList: []
     b_AGI: 0
     b_ATK: 0
     b_DEF: 0
     b_EYE: 0
+    KereKere: 0
     CharacterName: 
     ImpressionStringName: 
     NowUseSkill:
@@ -646,7 +654,8 @@ MonoBehaviour:
       SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
-      subEffects: []
+      subEffects: 
+      subVitalLayers: 
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -673,7 +682,8 @@ MonoBehaviour:
       SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
-      subEffects: []
+      subEffects: 
+      subVitalLayers: 
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -693,10 +703,12 @@ MonoBehaviour:
   sites:
     _passiveList: []
     _skillList: []
+    _vitalLaerList: []
     b_AGI: 0
     b_ATK: 0
     b_DEF: 0
     b_EYE: 0
+    KereKere: 0
     CharacterName: 
     ImpressionStringName: 
     NowUseSkill:
@@ -716,7 +728,8 @@ MonoBehaviour:
       SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
-      subEffects: []
+      subEffects: 
+      subVitalLayers: 
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -743,7 +756,8 @@ MonoBehaviour:
       SkillHitPer: 0
       SkillLevel: 0
       SkillRivahal: 0
-      subEffects: []
+      subEffects: 
+      subVitalLayers: 
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -839,10 +853,12 @@ MonoBehaviour:
       data:
         _passiveList: []
         _skillList: []
+        _vitalLaerList: []
         b_AGI: 0
         b_ATK: 0
         b_DEF: 0
         b_EYE: 0
+        KereKere: 0
         CharacterName: 
         ImpressionStringName: 
         NowUseSkill:
@@ -862,7 +878,8 @@ MonoBehaviour:
           SkillHitPer: 0
           SkillLevel: 0
           SkillRivahal: 0
-          subEffects: []
+          subEffects: 
+          subVitalLayers: 
           DEFATK: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -889,7 +906,8 @@ MonoBehaviour:
           SkillHitPer: 0
           SkillLevel: 0
           SkillRivahal: 0
-          subEffects: []
+          subEffects: 
+          subVitalLayers: 
           DEFATK: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -913,10 +931,12 @@ MonoBehaviour:
       data:
         _passiveList: []
         _skillList: []
+        _vitalLaerList: []
         b_AGI: 0
         b_ATK: 0
         b_DEF: 0
         b_EYE: 0
+        KereKere: 0
         CharacterName: 
         ImpressionStringName: 
         NowUseSkill:
@@ -933,7 +953,8 @@ MonoBehaviour:
           SkillHitPer: 0
           SkillLevel: 0
           SkillRivahal: 0
-          subEffects: []
+          subEffects: 
+          subVitalLayers: 
           DEFATK: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -957,7 +978,8 @@ MonoBehaviour:
           SkillHitPer: 0
           SkillLevel: 0
           SkillRivahal: 0
-          subEffects: []
+          subEffects: 
+          subVitalLayers: 
           DEFATK: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -1001,6 +1023,39 @@ MonoBehaviour:
         MaxPassivePower: 1
         PassiveName: "\u6DE1\u3005\u3068\u3057\u305F\u30ED\u30BC"
         ID: 0
+        DurationTurn: -1
+        DurationWalk: -1
+        VitalLayers: []
+--- !u!114 &78173496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 78173487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b93f312b63a1d0e42b259a879ce86a85, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _masterList:
+  - rid: 6711005937853792256
+  references:
+    version: 2
+    RefIds:
+    - rid: 6711005937853792256
+      type: {class: BaseVitalLayer, ns: , asm: Assembly-CSharp}
+      data:
+        id: 0
+        Priority: 0
+        _layhp: 0
+        _maxLayhp: 0
+        IsBattleEndRemove: 0
+        Regen: 0
+        HeavyResistance: 1
+        voltenResistance: 1
+        DishSmackRsistance: 1
+        ResistMode: 0
 --- !u!1 &90538794
 GameObject:
   m_ObjectHideFlags: 0
