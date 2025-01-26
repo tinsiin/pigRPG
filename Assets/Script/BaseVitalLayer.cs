@@ -1,38 +1,40 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// �ǉ������HP�̑w�@������Ə�����B
-/// ���̃N���X���̂̃C���[�W�Ƃ��ẮA�p�b�V�u�Ɛ����������̈Ӗ������ŋ������ڂ��Ă��邪�A
-/// �����܂Ńp�b�V�u�̒��̈�̋@�\�̌`�ɉ߂����A�܂��A�p�b�V�u���L�����ɗ^����e���͂��̒ǉ�HP�w�ɂ͗^�����Ȃ��Ƃ����C���[�W�B
+/// 追加されるHPの層　消費されると消える。
+/// このクラス実体のイメージとしては、パッシブと生存条件等の意味合いで強く密接しているが、
+/// あくまでパッシブの中の一つの機能の形に過ぎず、また、パッシブがキャラに与える影響はこの追加HP層には与えられないというイメージ。
 /// </summary>
 [Serializable]
 public class BaseVitalLayer
 {
     /// <summary>
-    /// �}�X�^�[���X�g���甲���o�����߂̔��ʗpID
+    /// マスターリストから抜き出すための判別用ID
     /// </summary>
     public int id;
 
+    public string name;
+
     /// <summary>
-    /// �ςݏd�Ȃ�ۂ̗D�揇��
-    /// �����Ⴂ������@�����Ȃ�撅���ɐςݏd�Ȃ�B
+    /// 積み重なる際の優先順位
+    /// 数が低い方が上　同じなら先着順に積み重なる。
     /// </summary>
     public int Priority;
 
     [SerializeField]
     private float _layhp;
     /// <summary>
-    /// ���C���[HP
+    /// レイヤーHP
     /// </summary>
     public float LayerHP
     {
         get { return _layhp; }
         set
         {
-            if (value > MaxLayerHP)//�ő�l�𒴂��Ȃ��悤�ɂ���
+            if (value > MaxLayerHP)//最大値を超えないようにする
             {
                 _layhp = MaxLayerHP;
             }
@@ -45,7 +47,7 @@ public class BaseVitalLayer
     public float MaxLayerHP => _maxLayhp;
 
     /// <summary>
-    /// HP���ő�l�܂ōĕ�[
+    /// HPを最大値まで再補充
     /// </summary>
     public void ReplenishHP()
     {
@@ -54,34 +56,36 @@ public class BaseVitalLayer
 
 
     /// <summary>
-    /// �퓬�̒��f�ɂ���ď����邩�ǂ���
+    /// 戦闘の中断によって消えるかどうか
     /// </summary>
     public bool IsBattleEndRemove;
 
+    
+
     /// <summary>
-    /// ���̒ǉ�HP������Ƀ��W�F�l���邩�ǂ����B
-    /// �ǉ�HP�̓L�����N�^�[�̃p�b�V�u�Ƃ͓Ɨ��������ł���B
-    /// ������A��{HP�ɉe���͗^���Ȃ����L�������̂Ɋ|�����Ă���p�b�V�u���ǉ�HP�ɉe���͗^���Ȃ��B
+    /// この追加HPが勝手にリジェネするかどうか。
+    /// 追加HPはキャラクターのパッシブとは独立した物である。
+    /// だから、基本HPに影響は与えないしキャラ自体に掛かっているパッシブも追加HPに影響は与えない。
     /// </summary>
     public float Regen = 0f;
-    //���ۂ̃��W�F�l������BaseStates?
+    //実際のリジェネ処理はBaseStates?
 
-    //�ǉ�HP���̂̕��������ւ̑ϐ�
+    //追加HP自体の物理属性への耐性
     public float HeavyResistance = 1.0f;
     public float voltenResistance = 1.0f;
     public float DishSmackRsistance = 1.0f;
 
     /// <summary>
-    /// �o���A�̑ϐ����ǂ��������iA/B/C��؂�ւ��j
+    /// バリアの耐性をどう扱うか（A/B/Cを切り替え）
     /// </summary>
     public BarrierResistanceMode ResistMode ;
 
     /// <summary>
-    /// �_���[�W���w��ʉ߂���  �^����ꂽ�_���[�W�͒ʉ߂��Čy������Ԃ�
+    /// ダメージが層を通過する  与えられたダメージは通過して軽減され返る
     /// </summary>
     public float PenetrateLayer(float dmg, PhysicalProperty impactProperty)
     {
-        // 1) ���������ɉ������ϐ������擾
+        // 1) 物理属性に応じた耐性率を取得
         float resistRate = 1.0f;
         switch (impactProperty)
         {
@@ -96,43 +100,43 @@ public class BaseVitalLayer
                 break;
         }
 
-        // 2) �y����̎��_���[�W
+        // 2) 軽減後の実ダメージ
         float dmgAfter = dmg * resistRate;
 
-        // 3) ���C���[HP�����
-        float leftover = LayerHP - dmgAfter; // leftover "HP" => �����}�C�i�X�Ȃ�j��
+        // 3) レイヤーHPを削る
+        float leftover = LayerHP - dmgAfter; // leftover "HP" => もしマイナスなら破壊
         if (leftover <= 0f)
         {
-            // �j�󂳂ꂽ
+            // 破壊された
             float overkill = -(leftover); // -negative => positive
-            var tmpHP = LayerHP;//�d�g��C�p�ɍ���󂯂鎞��LayerHP��ۑ��B
-            LayerHP = 0f; // ������HP�̓[��
+            var tmpHP = LayerHP;//仕組みC用に今回受ける時のLayerHPを保存。
+            LayerHP = 0f; // 自分のHPはゼロ
 
-            // �d�g�݂̈Ⴂ
+            // 仕組みの違い
             switch (ResistMode)
             {
                 case BarrierResistanceMode.A_SimpleNoReturn:
-                    // A�͈�x�y���������͖߂��Ȃ�: overkill �����̂܂܎���
+                    // Aは一度軽減した分は戻さない: overkill をそのまま次へ
                     return overkill;
 
                 case BarrierResistanceMode.B_RestoreWhenBreak:
-                    // B�́u�y����_���[�W�v�������ɖ߂� => leftover �� "�� resistRate" �Ŋg��
-                    // ������ overkill �� "dmgAfter - LayerHP" �̌���
-                    // �� �d�g��B: leftoverDamage = overkill / resistRate
+                    // Bは「軽減後ダメージ」分を元に戻す => leftover を "÷ resistRate" で拡大
+                    // ここで overkill は "dmgAfter - LayerHP" の結果
+                    // → 仕組みB: leftoverDamage = overkill / resistRate
                     float restored = overkill / resistRate;
                     return restored;
 
                 case BarrierResistanceMode.C_IgnoreWhenBreak:
-                    // C�͌��U�� - ���݂�LayerHP
-                    // leftover(= overkill)�𖳎����A
-                    // "dmg - tmpHP(LayerHP)" �Ȃǂ̍Čv�Z
+                    // Cは元攻撃 - 現在のLayerHP
+                    // leftover(= overkill)を無視し、
+                    // "dmg - tmpHP(LayerHP)" などの再計算
                     float cValue = dmg - tmpHP;
                     if (cValue < 0) cValue = 0;
                     return cValue;
                 case BarrierResistanceMode.C_IgnoreWhenBreak_MaxHP:
-                    // C�͌��U�� - ���݂�LayerHP
-                    // leftover(= overkill)�𖳎����A
-                    // "dmg - tmpHP(LayerHP)" �Ȃǂ̍Čv�Z
+                    // Cは元攻撃 - 現在のLayerHP
+                    // leftover(= overkill)を無視し、
+                    // "dmg - tmpHP(LayerHP)" などの再計算
                     float cmValue = dmg - MaxLayerHP;
                     if (cmValue < 0) cmValue = 0;
                     return cmValue;
@@ -140,9 +144,9 @@ public class BaseVitalLayer
         }
         else
         {
-            // �o���A�őς����i�j�󂳂�Ȃ������j
+            // バリアで耐えた（破壊されなかった）
             LayerHP = leftover;
-            return 0f; // �]��_���[�W�Ȃ�
+            return 0f; // 余剰ダメージなし
         }
 
         // fallback
@@ -152,16 +156,16 @@ public class BaseVitalLayer
 }
 public enum BarrierResistanceMode
 {
-    /// <summary>�d�g��A: ��x�y���������͕��������Ȃ��i���̂܂܂̒ʉ߁j</summary>
+    /// <summary>仕組みA: 一度軽減した分は復活させない（今のままの通過）</summary>
     A_SimpleNoReturn,
 
-    /// <summary>�d�g��B: �o���A�j�󎞂ɑϐ���"���ϐ���"�œP�񂵂āA�c�_���[�W�𕜊�</summary>
+    /// <summary>仕組みB: バリア破壊時に耐性を"÷耐性率"で撤回して、残ダメージを復活</summary>
     B_RestoreWhenBreak,
 
-    /// <summary>�d�g��C: �o���A�j�󎞂�"�ϐ����̂Ȃ�����"�Ƃ��Čv�Z(��: (���U��-HP) �Ȃ�)</summary>
+    /// <summary>仕組みC: バリア破壊時に"耐性自体なかった"として計算(例: (元攻撃-HP) など)</summary>
     C_IgnoreWhenBreak,
 
-    /// <summary>�d�g��C:  �j�󎞂ɔ��j������I��(���U��-MaxHP) </summary>
+    /// <summary>仕組みC:  破壊時に爆破がある的な(元攻撃-MaxHP) </summary>
     C_IgnoreWhenBreak_MaxHP,
 }
 

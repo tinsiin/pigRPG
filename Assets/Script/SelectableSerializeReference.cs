@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 #if UNITY_EDITOR
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using UnityEditor;
 using UnityEngine.Assertions;
 #endif
 //https://light11.hatenadiary.com/entry/2021/11/30/190034
-//‚±‚¿‚ç‚©‚çƒRƒsƒy@
+//ã“ã¡ã‚‰ã‹ã‚‰ã‚³ãƒ”ãƒšã€€
 [AttributeUsage(AttributeTargets.Field)]
 public sealed class SelectableSerializeReferenceAttribute : PropertyAttribute
 {
@@ -102,7 +102,7 @@ public sealed class SelectableSerializeReferenceAttributeDrawer : PropertyDrawer
             }
         }*/
 
-        //chatGPT o1‚É‚æ‚Á‚Ä‘‚«Š·‚¦‚ç‚ê‚½@”ñ’ŠÛ‚Ìƒx[ƒXƒNƒ‰ƒX‚à‘I‘ğ‰Â”\‚É‚µ‚½‚à‚Ì
+        //chatGPT o1ã«ã‚ˆã£ã¦æ›¸ãæ›ãˆã‚‰ã‚ŒãŸã€€éæŠ½è±¡ã®ãƒ™ãƒ¼ã‚¹ã‚¯ãƒ©ã‚¹ã‚‚é¸æŠå¯èƒ½ã«ã—ãŸã‚‚ã®
         public PropertyData(SerializedProperty property)
         {
             var managedReferenceFieldTypenameSplit = property.managedReferenceFieldTypename.Split(' ').ToArray();
@@ -110,15 +110,15 @@ public sealed class SelectableSerializeReferenceAttributeDrawer : PropertyDrawer
             var fieldTypeName = managedReferenceFieldTypenameSplit[1];
             var fieldType = GetAssembly(assemblyName).GetType(fieldTypeName);
 
-            // ‚Ü‚¸”h¶ƒNƒ‰ƒX‚ğ—ñ‹“
+            // ã¾ãšæ´¾ç”Ÿã‚¯ãƒ©ã‚¹ã‚’åˆ—æŒ™
             var derived = TypeCache.GetTypesDerivedFrom(fieldType)
                 .Where(x => !x.IsAbstract && !x.IsInterface)
                 .ToList();
 
-            // ‚à‚µƒtƒB[ƒ‹ƒhŒ^ itself ‚ªÀ‘•ƒNƒ‰ƒX‚È‚çA‚»‚ê‚àŒó•â‚É“ü‚ê‚é
+            // ã‚‚ã—ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰å‹ itself ãŒå®Ÿè£…ã‚¯ãƒ©ã‚¹ãªã‚‰ã€ãã‚Œã‚‚å€™è£œã«å…¥ã‚Œã‚‹
             if (!fieldType.IsAbstract && !fieldType.IsInterface)
             {
-                // æ“ª‚É‘}“ü
+                // å…ˆé ­ã«æŒ¿å…¥
                 derived.Insert(0, fieldType);
             }
 

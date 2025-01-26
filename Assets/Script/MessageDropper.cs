@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,22 +12,22 @@ public class MessageDropper : MonoBehaviour
     float MessageSpaceY;
 
 
-    List<MessageBlock> messages;//ˆêŠ‡ŠÇ——p
+    List<MessageBlock> messages;//ä¸€æ‹¬ç®¡ç†ç”¨
     RectTransform rect;
 
-    public static MessageDropper Instance { get; private set; }//static‚ÈƒCƒ“ƒXƒ^ƒ“ƒX
+    public static MessageDropper Instance { get; private set; }//staticãªã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹
 
     private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); //ƒV[ƒ“‘JˆÚ‚µ‚Ä‚à”jŠü‚³‚ê‚È‚¢‚æ‚¤‚É‚·‚éB
+            DontDestroyOnLoad(gameObject); //ã‚·ãƒ¼ãƒ³é·ç§»ã—ã¦ã‚‚ç ´æ£„ã•ã‚Œãªã„ã‚ˆã†ã«ã™ã‚‹ã€‚
 
             rect = GetComponent<RectTransform>();
             messages = new List<MessageBlock>();
         }
-        else Destroy(gameObject);//null‚¶‚á‚È‚¢‚Á‚Ä‚±‚Æ‚Í‰½ˆ‚©‚Å¶¬‚³‚ê‚Ä‚é‚©‚çÁ‚·
+        else Destroy(gameObject);//nullã˜ã‚ƒãªã„ã£ã¦ã“ã¨ã¯ä½•å‡¦ã‹ã§ç”Ÿæˆã•ã‚Œã¦ã‚‹ã‹ã‚‰æ¶ˆã™
     }
 
     public void CreateMessage(string txt)
@@ -35,17 +35,17 @@ public class MessageDropper : MonoBehaviour
         var message = Instantiate(MessageBlockPrefab, transform);
         message.OnCreated(MessageUpspeed, txt,rect);
 
-        messages.RemoveAll(m => m==null);//”jŠü‚³‚ê‚½ƒIƒuƒWƒFƒNƒg‚ğƒŠƒXƒg‚©‚çÁ‹‚·‚é
+        messages.RemoveAll(m => m==null);//ç ´æ£„ã•ã‚ŒãŸã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ãƒªã‚¹ãƒˆã‹ã‚‰æ¶ˆå»ã™ã‚‹
 
-        //‚à‚µ¶¬‚µ‚½ƒƒbƒZ[ƒW‚ª’¼Œã‚É“ü‚ê‚½ƒƒbƒZ[ƒW‚Æ‹ß‚¯‚ê‚ÎAƒŠƒXƒg‘S‚Ä‚ÌƒƒbƒZ[ƒW‚ğã‚É“Ë‚«”ò‚Î‚·
+        //ã‚‚ã—ç”Ÿæˆã—ãŸãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãŒç›´å¾Œã«å…¥ã‚ŒãŸãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã¨è¿‘ã‘ã‚Œã°ã€ãƒªã‚¹ãƒˆå…¨ã¦ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’ä¸Šã«çªãé£›ã°ã™
         if (messages.Count > 0)
             if (messages[messages.Count-1].ContainBelow(message.MessageRect,MessageSpaceY))
             foreach (var m in messages)
-                    if (m != null) // null ƒ`ƒFƒbƒN‚ğ’Ç‰Á
+                    if (m != null) // null ãƒã‚§ãƒƒã‚¯ã‚’è¿½åŠ 
                         m.JumpUp(MessageSpaceY);
 
 
-        messages.Add(message);//ˆêŠ‡ŠÇ—‚ÌƒŠƒXƒg‚É“ü‚ê‚éB
+        messages.Add(message);//ä¸€æ‹¬ç®¡ç†ã®ãƒªã‚¹ãƒˆã«å…¥ã‚Œã‚‹ã€‚
 
     }
 }

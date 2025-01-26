@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// タブの状態 ゲームの状態によってそれぞれのタブも色々変わる

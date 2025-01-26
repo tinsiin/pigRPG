@@ -1,10 +1,24 @@
-using R3;
+﻿using R3;
 using RandomExtensions;
 using System;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+
+/// <summary>
+/// インスペクタで表示可能なAimStyleのリスト
+/// </summary>
+[System.Serializable]
+public class AimStyleList
+{
+    public List<AimStyle> Styles = new List<AimStyle>();
+
+    public AimStyleList(List<AimStyle> _Styles)
+    {
+        Styles = _Styles;
+    }
+}
 
 /// <summary>
 /// スキルの実行性質
@@ -246,9 +260,8 @@ public class BaseSkill
     private int _recordDoCount;//スキルを実行した回数（記録する
     private int _hitCount;    // スキルがヒットした回数
     private int _hitConsecutiveCount;//スキルが連続ヒットした回数
-    private int _triggerCount;//発動への－カウント　このカウント分連続でやらないと発動しなかったりする　重要なのは連続でやらなくても　一気にまたゼロからになるかはスキル次第
-    private int _triggerCountMax;//発動への－カウント　の指標
-    private int _atkCount;//攻撃回数
+    private int _triggerCount;//発動への−カウント　このカウント分連続でやらないと発動しなかったりする　重要なのは連続でやらなくても　一気にまたゼロからになるかはスキル次第
+    private int _triggerCountMax;//発動への−カウント　の指標
     private int _atkCountUP;//攻撃回数
 
     /// <summary>
@@ -406,10 +419,12 @@ public class BaseSkill
     /// </summary>
     public virtual int ATKCount
     {
-        get { return _atkCount; }
-        set { _atkCount = value; }
+        get { return 1 + NowMoveSet.Count; }
 
     }
+    /// <summary>
+    /// 現在の連続攻撃回数のindex
+    /// </summary>
     public virtual int ATKCountUP => _atkCountUP;
 
     /// <summary>
@@ -417,7 +432,7 @@ public class BaseSkill
     /// </summary>
     public bool NextConsecutiveATK()
     {
-        if (_atkCountUP >= _atkCount)//もし設定した値にカウントアップ値が達成してたら。
+        if (_atkCountUP >= ATKCount)//もし設定した値にカウントアップ値が達成してたら。
         {
             _atkCountUP = 0;//値初期化
             return false;//終わり
@@ -469,10 +484,7 @@ public class BaseSkill
     /// 基本的にスキルのレベルは恒常的に上がらないが、戦闘内では一時的に上がったりするのかもしれない。
     /// </summary>
     public float SkillLevel;
-    /// <summary>
-    /// スキルの現在のライバハルの値 特定の範囲でレベルが上がる？
-    /// </summary>
-    public float SkillRivahal;
+    
 
     /// <summary>
     /// 初期化コールバック関数 初期化なので起動時の最初の一回しか使わないような処理しか書かないようにして
@@ -494,7 +506,6 @@ public class BaseSkill
         _triggerCount = _triggerCountMax;//発動カウントはカウントダウンするから最初っから
         _tmpSkillUseTurn = -1;//前回とのターン比較用の変数をnullに
 
-        SkillRivahal = 0;//ライバハルとレベルはポンポンリセットして平気か？
         SkillLevel = 0;
     }
     /// <summary>
@@ -538,6 +549,52 @@ public class BaseSkill
     /// スキル実行時に付与する追加HP(Passive由来でない)　ID指定
     /// </summary>
     public List<int> subVitalLayers;
+
+    /// <summary>
+    /// スキルごとのムーブセット 戦闘規格ごとのaに対応するもの。
+    /// </summary>
+    [SerializeField]
+    List<AimStyleList> A_MoveSet;
+    /// <summary>
+    /// スキルごとのムーブセット 戦闘規格ごとのbに対応するもの。
+    /// </summary>
+    [SerializeField]
+    List<AimStyleList> B_MoveSet;
+    /// <summary>
+    /// 現在のムーブセット
+    /// </summary>
+    List<AimStyle> NowMoveSet;
+
+    /// <summary>
+    /// A-MoveSetの<AimStyleList>から現在のList<AimStyle>をランダムに取得する
+    /// なにもない場合はreturnで終わる。つまり単体攻撃前提ならmovesetが決まらない。
+    /// </summary>
+    public void DecideNowMoveSet_A()
+    {
+        if(A_MoveSet.Count == 0)return;
+        NowMoveSet = A_MoveSet[RandomEx.Shared.NextInt(A_MoveSet.Count)].Styles;
+    }
+    /// <summary>
+    /// B-MoveSetの<AimStyleList>から現在のList<AimStyle>をランダムに取得する　
+    /// なにもない場合はreturnで終わる。つまり単体攻撃前提ならmovesetが決まらない。
+    /// </summary>
+    public void DecideNowMoveSet_B()
+    {
+        if(B_MoveSet.Count == 0)return;
+        NowMoveSet = B_MoveSet[RandomEx.Shared.NextInt(B_MoveSet.Count)].Styles;
+    }
+    /// <summary>
+    /// 現在のムーブセットでのAimStyleを、現在の攻撃回数から取得する
+    /// </summary>
+    /// <returns></returns>
+    public AimStyle? NowAimStyle()
+    {
+        var nowCountUp = _atkCountUP;//今何回目の攻撃か。
+        if(nowCountUp < 1)return null;//初回攻撃ならnullを返す
+
+
+        return NowMoveSet[nowCountUp - 1];
+    }
 
     //防御無視率
     public float DEFATK;

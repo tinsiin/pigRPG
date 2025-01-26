@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using System;
 using System.Linq;
@@ -27,7 +27,7 @@ public class PassiveVitalLayerBinding
     public int VitalLayerId;
 
     /// <summary> 付与のタイミング </summary>
-    public PassiveVitalTiming Timing;
+    public PassiveVitalTiming GrantTiming;
 
     /// <summary>
     /// このレイヤーが生存条件となるかどうか
@@ -54,6 +54,11 @@ public class BasePassive
     ///     適合する種別　
     /// </summary>
     public CharacterType OkType;
+
+    /// <summary>
+    /// 存在してる間行動できないかどうか。
+    /// </summary>
+    public bool IsCantACT;
 
 
     /// <summary>
@@ -103,7 +108,7 @@ public class BasePassive
         {
             foreach (var bind in VitalLayers)
             {
-                if (bind.Timing == PassiveVitalTiming.OnApply)
+                if (bind.GrantTiming == PassiveVitalTiming.OnApply)
                 {
                     var layer = VitalLayerManager.Instance.GetAtID(bind.VitalLayerId);
                     if (layer != null)
@@ -125,7 +130,7 @@ public class BasePassive
         {
             foreach (var bind in VitalLayers)
             {
-                if (bind.Timing == PassiveVitalTiming.OnRemove)
+                if (bind.GrantTiming == PassiveVitalTiming.OnRemove)
                 {
                     var layer = VitalLayerManager.Instance.GetAtID(bind.VitalLayerId);
                     if (layer != null)

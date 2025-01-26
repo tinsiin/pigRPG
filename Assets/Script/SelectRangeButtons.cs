@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEditor.Experimental.GraphView;
@@ -15,8 +15,8 @@ public class SelectRangeButtons : MonoBehaviour
     [SerializeField]
     RectTransform parentRect;
     [Header("Layout Settings")]
-    [SerializeField] float horizontalPadding = 10f; // ƒ{ƒ^ƒ“ŠÔ‚Ì‰¡—]”’
-    [SerializeField] float verticalPadding = 10f;   // ƒ{ƒ^ƒ“ŠÔ‚Ìc—]”’
+    [SerializeField] float horizontalPadding = 10f; // ãƒœã‚¿ãƒ³é–“ã®æ¨ªä½™ç™½
+    [SerializeField] float verticalPadding = 10f;   // ãƒœã‚¿ãƒ³é–“ã®ç¸¦ä½™ç™½
 
     private void Awake()
     {
@@ -32,18 +32,18 @@ public class SelectRangeButtons : MonoBehaviour
         buttonSize = buttonPrefab.GetComponent<RectTransform>().sizeDelta;
         parentSize = parentRect.rect.size;
 
-        // eƒIƒuƒWƒFƒNƒg‚Ì¶ã‚ğŠî€‚Æ‚·‚é‚½‚ß‚ÌƒIƒtƒZƒbƒg
+        // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å·¦ä¸Šã‚’åŸºæº–ã¨ã™ã‚‹ãŸã‚ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆ
         startX = -parentSize.x / 2 + buttonSize.x / 2 + horizontalPadding;
         startY = parentSize.y / 2 - buttonSize.y + horizontalPadding;
-        //eƒIƒuƒWƒFƒNƒg‚Ì¶‰º‚ÉŒÅ’è‚·‚éˆ×‚ÌƒIƒvƒVƒ‡ƒ“—pƒIƒtƒZƒbƒg
+        //è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å·¦ä¸‹ã«å›ºå®šã™ã‚‹ç‚ºã®ã‚ªãƒ—ã‚·ãƒ§ãƒ³ç”¨ã‚ªãƒ•ã‚»ãƒƒãƒˆ
         optionStartX = -parentSize.x / 2 + buttonSize.x / 2 + horizontalPadding;
         optionStartY = -parentSize.y / 2 + buttonSize.y / 2 + horizontalPadding;
     }
-    // ƒ{ƒ^ƒ“‚ÌƒTƒCƒY‚ğæ“¾
+    // ãƒœã‚¿ãƒ³ã®ã‚µã‚¤ã‚ºã‚’å–å¾—
     Vector2 buttonSize;
-    // eƒIƒuƒWƒFƒNƒg‚ÌƒTƒCƒY‚ğæ“¾
+    // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ã‚µã‚¤ã‚ºã‚’å–å¾—
     Vector2 parentSize;
-    // eƒIƒuƒWƒFƒNƒg‚Ì¶ã‚ğŠî€‚Æ‚·‚é‚½‚ß‚ÌƒIƒtƒZƒbƒg
+    // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å·¦ä¸Šã‚’åŸºæº–ã¨ã™ã‚‹ãŸã‚ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆ
     float startX;
     float startY;
     float optionStartX;
@@ -52,7 +52,7 @@ public class SelectRangeButtons : MonoBehaviour
     BattleManager bm;
     List<Button> buttonList;
     /// <summary>
-    /// ¶¬—pƒR[ƒ‹ƒoƒbƒN
+    /// ç”Ÿæˆç”¨ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
     /// </summary>
     public void OnCreated(BattleManager _bm)
     {
@@ -60,188 +60,188 @@ public class SelectRangeButtons : MonoBehaviour
         var acter = bm.Acter;
         var skill = acter.NowUseSkill;
 
-        // Œ»İ‚ÌˆÊ’u‚ğ‰Šú‰»
+        // ç¾åœ¨ã®ä½ç½®ã‚’åˆæœŸåŒ–
         float currentX = startX;
         float currentY = startY;
 
 
-        //randomˆÈŠO‚Ì”ÍˆÍ‚Ì«¿‚ªƒXƒLƒ‹«¿‚ÉŠÜ‚Ü‚ê‚Ä‚é•ª‚¾‚¯A‚»‚Ì”ÍˆÍ‚Ì«¿‚ğ‘I‚Ô
+        //randomä»¥å¤–ã®ç¯„å›²ã®æ€§è³ªãŒã‚¹ã‚­ãƒ«æ€§è³ªã«å«ã¾ã‚Œã¦ã‚‹åˆ†ã ã‘ã€ãã®ç¯„å›²ã®æ€§è³ªã‚’é¸ã¶
 
 
-        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectSingleTarget))//‘O‚Ì‚ß‚è‚©Œã‰q“àƒ‰ƒ“ƒ_ƒ€‚©‚Å‘I‚×‚é‚È‚ç
+        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectSingleTarget))//å‰ã®ã‚ã‚Šã‹å¾Œè¡›å†…ãƒ©ãƒ³ãƒ€ãƒ ã‹ã§é¸ã¹ã‚‹ãªã‚‰
         {
-            //.CanSelectSingleTarget‚ğ¡‰ñ‚Ì”ÍˆÍ‚Æ‚·‚éƒ{ƒ^ƒ“‚ğì¬‚·‚éB
+            //.CanSelectSingleTargetã‚’ä»Šå›ã®ç¯„å›²ã¨ã™ã‚‹ãƒœã‚¿ãƒ³ã‚’ä½œæˆã™ã‚‹ã€‚
             var button = Instantiate(buttonPrefab, transform);
             var rect = button.GetComponent<RectTransform>();
 
-            // eƒIƒuƒWƒFƒNƒg‚Ì‰E’[‚ğ’´‚¦‚éê‡‚ÍŸ‚Ìs‚ÉˆÚ“®
+            // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å³ç«¯ã‚’è¶…ãˆã‚‹å ´åˆã¯æ¬¡ã®è¡Œã«ç§»å‹•
             if (currentX + buttonSize.x / 2 > parentSize.x / 2)
             {
-                // ¶’[‚ÉƒŠƒZƒbƒg
+                // å·¦ç«¯ã«ãƒªã‚»ãƒƒãƒˆ
                 currentX = startX;
 
-                // Ÿ‚Ìs‚ÉˆÚ“®
+                // æ¬¡ã®è¡Œã«ç§»å‹•
                 currentY -= (buttonSize.y + verticalPadding);
             }
 
-            // ƒ{ƒ^ƒ“‚ÌˆÊ’u‚ğİ’è
+            // ãƒœã‚¿ãƒ³ã®ä½ç½®ã‚’è¨­å®š
             rect.anchoredPosition = new Vector2(currentX, currentY);
 
-            // Ÿ‚Ìƒ{ƒ^ƒ“‚ÌXˆÊ’u‚ğXV
+            // æ¬¡ã®ãƒœã‚¿ãƒ³ã®Xä½ç½®ã‚’æ›´æ–°
             currentX += (buttonSize.x + horizontalPadding);
 
             button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectSingleTarget));
             button.GetComponentInChildren<TextMeshProUGUI>().text =
-                "‘O‚Ì‚ß‚è‚Ü‚½‚Í‚»‚êˆÈŠO‚Ì‚Ç‚¿‚ç‚©‚ğ‘_‚¤" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectSingleTarget);//ƒ{ƒ^ƒ“‚ÌƒeƒLƒXƒg
-            buttonList.Add(button);//ƒ{ƒ^ƒ“ƒŠƒXƒg‚É“ü‚ê‚é
+                "å‰ã®ã‚ã‚Šã¾ãŸã¯ãã‚Œä»¥å¤–ã®ã©ã¡ã‚‰ã‹ã‚’ç‹™ã†" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectSingleTarget);//ãƒœã‚¿ãƒ³ã®ãƒ†ã‚­ã‚¹ãƒˆ
+            buttonList.Add(button);//ãƒœã‚¿ãƒ³ãƒªã‚¹ãƒˆã«å…¥ã‚Œã‚‹
 
         }
 
-        if (skill.HasZoneTrait(SkillZoneTrait.CanPerfectSelectSingleTarget))//ŒÂX‚Å‘I‚×‚é‚È‚ç
+        if (skill.HasZoneTrait(SkillZoneTrait.CanPerfectSelectSingleTarget))//å€‹ã€…ã§é¸ã¹ã‚‹ãªã‚‰
         {
-            //.CanSelectSingleTarget‚ğ¡‰ñ‚Ì”ÍˆÍ‚Æ‚·‚éƒ{ƒ^ƒ“‚ğì¬‚·‚éB
+            //.CanSelectSingleTargetã‚’ä»Šå›ã®ç¯„å›²ã¨ã™ã‚‹ãƒœã‚¿ãƒ³ã‚’ä½œæˆã™ã‚‹ã€‚
             var button = Instantiate(buttonPrefab, transform);
             var rect = button.GetComponent<RectTransform>();
 
-            // eƒIƒuƒWƒFƒNƒg‚Ì‰E’[‚ğ’´‚¦‚éê‡‚ÍŸ‚Ìs‚ÉˆÚ“®
+            // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å³ç«¯ã‚’è¶…ãˆã‚‹å ´åˆã¯æ¬¡ã®è¡Œã«ç§»å‹•
             if (currentX + buttonSize.x / 2 > parentSize.x / 2)
             {
-                // ¶’[‚ÉƒŠƒZƒbƒg
+                // å·¦ç«¯ã«ãƒªã‚»ãƒƒãƒˆ
                 currentX = startX;
 
-                // Ÿ‚Ìs‚ÉˆÚ“®
+                // æ¬¡ã®è¡Œã«ç§»å‹•
                 currentY -= (buttonSize.y + verticalPadding);
             }
 
-            // ƒ{ƒ^ƒ“‚ÌˆÊ’u‚ğİ’è
+            // ãƒœã‚¿ãƒ³ã®ä½ç½®ã‚’è¨­å®š
             rect.anchoredPosition = new Vector2(currentX, currentY);
 
-            // Ÿ‚Ìƒ{ƒ^ƒ“‚ÌXˆÊ’u‚ğXV
+            // æ¬¡ã®ãƒœã‚¿ãƒ³ã®Xä½ç½®ã‚’æ›´æ–°
             currentX += (buttonSize.x + horizontalPadding);
 
             button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanPerfectSelectSingleTarget));
             button.GetComponentInChildren<TextMeshProUGUI>().text =
-                "ŒÂX‚ğ‘_‚¤" + AddPercentageTextOnButton(SkillZoneTrait.CanPerfectSelectSingleTarget);//ƒ{ƒ^ƒ“‚ÌƒeƒLƒXƒg
-            buttonList.Add(button);//ƒ{ƒ^ƒ“ƒŠƒXƒg‚É“ü‚ê‚é
+                "å€‹ã€…ã‚’ç‹™ã†" + AddPercentageTextOnButton(SkillZoneTrait.CanPerfectSelectSingleTarget);//ãƒœã‚¿ãƒ³ã®ãƒ†ã‚­ã‚¹ãƒˆ
+            buttonList.Add(button);//ãƒœã‚¿ãƒ³ãƒªã‚¹ãƒˆã«å…¥ã‚Œã‚‹
 
         }
-        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectMultiTarget))//‘O‚Ì‚ß‚è‚Ü‚½‚ÍŒã‰q‚Ì’c‘Ì‚©‚Å‘I‚×‚é‚È‚ç
+        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectMultiTarget))//å‰ã®ã‚ã‚Šã¾ãŸã¯å¾Œè¡›ã®å›£ä½“ã‹ã§é¸ã¹ã‚‹ãªã‚‰
         {
-            //.CanSelectSingleTarget‚ğ¡‰ñ‚Ì”ÍˆÍ‚Æ‚·‚éƒ{ƒ^ƒ“‚ğì¬‚·‚éB
+            //.CanSelectSingleTargetã‚’ä»Šå›ã®ç¯„å›²ã¨ã™ã‚‹ãƒœã‚¿ãƒ³ã‚’ä½œæˆã™ã‚‹ã€‚
             var button = Instantiate(buttonPrefab, transform);
             var rect = button.GetComponent<RectTransform>();
 
-            // eƒIƒuƒWƒFƒNƒg‚Ì‰E’[‚ğ’´‚¦‚éê‡‚ÍŸ‚Ìs‚ÉˆÚ“®
+            // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å³ç«¯ã‚’è¶…ãˆã‚‹å ´åˆã¯æ¬¡ã®è¡Œã«ç§»å‹•
             if (currentX + buttonSize.x / 2 > parentSize.x / 2)
             {
-                // ¶’[‚ÉƒŠƒZƒbƒg
+                // å·¦ç«¯ã«ãƒªã‚»ãƒƒãƒˆ
                 currentX = startX;
 
-                // Ÿ‚Ìs‚ÉˆÚ“®
+                // æ¬¡ã®è¡Œã«ç§»å‹•
                 currentY -= (buttonSize.y + verticalPadding);
             }
 
-            // ƒ{ƒ^ƒ“‚ÌˆÊ’u‚ğİ’è
+            // ãƒœã‚¿ãƒ³ã®ä½ç½®ã‚’è¨­å®š
             rect.anchoredPosition = new Vector2(currentX, currentY);
 
-            // Ÿ‚Ìƒ{ƒ^ƒ“‚ÌXˆÊ’u‚ğXV
+            // æ¬¡ã®ãƒœã‚¿ãƒ³ã®Xä½ç½®ã‚’æ›´æ–°
             currentX += (buttonSize.x + horizontalPadding);
 
             button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectMultiTarget));
             button.GetComponentInChildren<TextMeshProUGUI>().text =
-                "‘O‚Ì‚ß‚è‚©‚»‚êˆÈŠO“ñl‚ğ‘_‚¤" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectMultiTarget);//ƒ{ƒ^ƒ“‚ÌƒeƒLƒXƒg
-            buttonList.Add(button);//ƒ{ƒ^ƒ“ƒŠƒXƒg‚É“ü‚ê‚é
+                "å‰ã®ã‚ã‚Šã‹ãã‚Œä»¥å¤–äºŒäººã‚’ç‹™ã†" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectMultiTarget);//ãƒœã‚¿ãƒ³ã®ãƒ†ã‚­ã‚¹ãƒˆ
+            buttonList.Add(button);//ãƒœã‚¿ãƒ³ãƒªã‚¹ãƒˆã«å…¥ã‚Œã‚‹
 
         }
 
 
-        if (skill.HasZoneTrait(SkillZoneTrait.AllTarget))//‘S”ÍˆÍ‚È‚ç
+        if (skill.HasZoneTrait(SkillZoneTrait.AllTarget))//å…¨ç¯„å›²ãªã‚‰
         {
             var button = Instantiate(buttonPrefab, transform);
             var rect = button.GetComponent<RectTransform>();
 
-            // eƒIƒuƒWƒFƒNƒg‚Ì‰E’[‚ğ’´‚¦‚éê‡‚ÍŸ‚Ìs‚ÉˆÚ“®
+            // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å³ç«¯ã‚’è¶…ãˆã‚‹å ´åˆã¯æ¬¡ã®è¡Œã«ç§»å‹•
             if (currentX + buttonSize.x / 2 > parentSize.x / 2)
             {
-                // ¶’[‚ÉƒŠƒZƒbƒg
+                // å·¦ç«¯ã«ãƒªã‚»ãƒƒãƒˆ
                 currentX = startX;
 
-                // Ÿ‚Ìs‚ÉˆÚ“®
+                // æ¬¡ã®è¡Œã«ç§»å‹•
                 currentY -= (buttonSize.y + verticalPadding);
             }
 
-            // ƒ{ƒ^ƒ“‚ÌˆÊ’u‚ğİ’è
+            // ãƒœã‚¿ãƒ³ã®ä½ç½®ã‚’è¨­å®š
             rect.anchoredPosition = new Vector2(currentX, currentY);
 
-            // Ÿ‚Ìƒ{ƒ^ƒ“‚ÌXˆÊ’u‚ğXV
+            // æ¬¡ã®ãƒœã‚¿ãƒ³ã®Xä½ç½®ã‚’æ›´æ–°
             currentX += (buttonSize.x + horizontalPadding);
 
             button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.AllTarget));
             button.GetComponentInChildren<TextMeshProUGUI>().text =
-                "“G‚Ì‘S”ÍˆÍ‚ğ‘_‚¤" + AddPercentageTextOnButton(SkillZoneTrait.AllTarget);//ƒ{ƒ^ƒ“‚ÌƒeƒLƒXƒg
-            buttonList.Add(button);//ƒ{ƒ^ƒ“ƒŠƒXƒg‚É“ü‚ê‚é
+                "æ•µã®å…¨ç¯„å›²ã‚’ç‹™ã†" + AddPercentageTextOnButton(SkillZoneTrait.AllTarget);//ãƒœã‚¿ãƒ³ã®ãƒ†ã‚­ã‚¹ãƒˆ
+            buttonList.Add(button);//ãƒœã‚¿ãƒ³ãƒªã‚¹ãƒˆã«å…¥ã‚Œã‚‹
 
         }
 
 
-        //‚±‚±‚©‚çƒIƒvƒVƒ‡ƒ“‚Ìƒ{ƒ^ƒ“
+        //ã“ã“ã‹ã‚‰ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã®ãƒœã‚¿ãƒ³
 
         currentX = optionStartX;
         currentY = optionStartY;
 
-        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))//–¡•û‚ğ‘I‚ÔƒIƒvƒVƒ‡ƒ“‚ğ’Ç‰Á‚·‚é‚È‚ç
+        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))//å‘³æ–¹ã‚’é¸ã¶ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã‚’è¿½åŠ ã™ã‚‹ãªã‚‰
         {
             var button = Instantiate(buttonPrefab, transform);
             var rect = button.GetComponent<RectTransform>();
 
-            // eƒIƒuƒWƒFƒNƒg‚Ì‰E’[‚ğ’´‚¦‚éê‡‚ÍŸ‚Ìs‚ÉˆÚ“®
+            // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å³ç«¯ã‚’è¶…ãˆã‚‹å ´åˆã¯æ¬¡ã®è¡Œã«ç§»å‹•
             if (currentX + buttonSize.x / 2 > parentSize.x / 2)
             {
-                // ¶’[‚ÉƒŠƒZƒbƒg
+                // å·¦ç«¯ã«ãƒªã‚»ãƒƒãƒˆ
                 currentX = startX;
 
-                // Ÿ‚Ìs‚ÉˆÚ“®
+                // æ¬¡ã®è¡Œã«ç§»å‹•
                 currentY -= (buttonSize.y + verticalPadding);
             }
 
-            // ƒ{ƒ^ƒ“‚ÌˆÊ’u‚ğİ’è
+            // ãƒœã‚¿ãƒ³ã®ä½ç½®ã‚’è¨­å®š
             rect.anchoredPosition = new Vector2(currentX, currentY);
 
-            // Ÿ‚Ìƒ{ƒ^ƒ“‚ÌXˆÊ’u‚ğXV
+            // æ¬¡ã®ãƒœã‚¿ãƒ³ã®Xä½ç½®ã‚’æ›´æ–°
             currentX += (buttonSize.x + horizontalPadding);
 
             button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectAlly));
             button.GetComponentInChildren<TextMeshProUGUI>().text =
-                "–¡•û" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectAlly);//ƒ{ƒ^ƒ“‚ÌƒeƒLƒXƒg
-            buttonList.Add(button);//ƒ{ƒ^ƒ“ƒŠƒXƒg‚É“ü‚ê‚é
+                "å‘³æ–¹" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectAlly);//ãƒœã‚¿ãƒ³ã®ãƒ†ã‚­ã‚¹ãƒˆ
+            buttonList.Add(button);//ãƒœã‚¿ãƒ³ãƒªã‚¹ãƒˆã«å…¥ã‚Œã‚‹
 
         }
 
-        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectDeath))//€Ò‚ğ‘I‚ÔƒIƒvƒVƒ‡ƒ“‚ğ’Ç‰Á‚·‚é‚È‚ç
+        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectDeath))//æ­»è€…ã‚’é¸ã¶ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã‚’è¿½åŠ ã™ã‚‹ãªã‚‰
         {
             var button = Instantiate(buttonPrefab, transform);
             var rect = button.GetComponent<RectTransform>();
 
-            // eƒIƒuƒWƒFƒNƒg‚Ì‰E’[‚ğ’´‚¦‚éê‡‚ÍŸ‚Ìs‚ÉˆÚ“®
+            // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å³ç«¯ã‚’è¶…ãˆã‚‹å ´åˆã¯æ¬¡ã®è¡Œã«ç§»å‹•
             if (currentX + buttonSize.x / 2 > parentSize.x / 2)
             {
-                // ¶’[‚ÉƒŠƒZƒbƒg
+                // å·¦ç«¯ã«ãƒªã‚»ãƒƒãƒˆ
                 currentX = startX;
 
-                // Ÿ‚Ìs‚ÉˆÚ“®
+                // æ¬¡ã®è¡Œã«ç§»å‹•
                 currentY -= (buttonSize.y + verticalPadding);
             }
 
-            // ƒ{ƒ^ƒ“‚ÌˆÊ’u‚ğİ’è
+            // ãƒœã‚¿ãƒ³ã®ä½ç½®ã‚’è¨­å®š
             rect.anchoredPosition = new Vector2(currentX, currentY);
 
-            // Ÿ‚Ìƒ{ƒ^ƒ“‚ÌXˆÊ’u‚ğXV
+            // æ¬¡ã®ãƒœã‚¿ãƒ³ã®Xä½ç½®ã‚’æ›´æ–°
             currentX += (buttonSize.x + horizontalPadding);
 
             button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectDeath));
             button.GetComponentInChildren<TextMeshProUGUI>().text =
-                "€Ò" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectDeath);//ƒ{ƒ^ƒ“‚ÌƒeƒLƒXƒg
-            buttonList.Add(button);//ƒ{ƒ^ƒ“ƒŠƒXƒg‚É“ü‚ê‚é
+                "æ­»è€…" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectDeath);//ãƒœã‚¿ãƒ³ã®ãƒ†ã‚­ã‚¹ãƒˆ
+            buttonList.Add(button);//ãƒœã‚¿ãƒ³ãƒªã‚¹ãƒˆã«å…¥ã‚Œã‚‹
 
         }
 
@@ -252,18 +252,18 @@ public class SelectRangeButtons : MonoBehaviour
 
     }
     /// <summary>
-    /// ƒeƒXƒg—pƒ{ƒ^ƒ“
+    /// ãƒ†ã‚¹ãƒˆç”¨ãƒœã‚¿ãƒ³
     /// </summary>
     public void OnClickTestButton()
     {
-        // Œ»İ‚ÌˆÊ’u‚ğ‰Šú‰»
+        // ç¾åœ¨ã®ä½ç½®ã‚’åˆæœŸåŒ–
         float currentX = startX;
         float currentY = startY;
 
         const int Optioncount = 2;
         const int count = 3;
 
-        currentX = startX;//’Êíƒ{ƒ^ƒ“
+        currentX = startX;//é€šå¸¸ãƒœã‚¿ãƒ³
         currentY = startY;
 
         for (int i = 0; i < count; i++)
@@ -271,26 +271,26 @@ public class SelectRangeButtons : MonoBehaviour
             var button = Instantiate(buttonPrefab, transform);
             var rect = button.GetComponent<RectTransform>();
 
-            // eƒIƒuƒWƒFƒNƒg‚Ì‰E’[‚ğ’´‚¦‚éê‡‚ÍŸ‚Ìs‚ÉˆÚ“®
+            // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å³ç«¯ã‚’è¶…ãˆã‚‹å ´åˆã¯æ¬¡ã®è¡Œã«ç§»å‹•
             if (currentX + buttonSize.x / 2 > parentSize.x / 2)
             {
-                // ¶’[‚ÉƒŠƒZƒbƒg
+                // å·¦ç«¯ã«ãƒªã‚»ãƒƒãƒˆ
                 currentX = startX;
 
-                // Ÿ‚Ìs‚ÉˆÚ“®
+                // æ¬¡ã®è¡Œã«ç§»å‹•
                 currentY -= (buttonSize.y + verticalPadding);
             }
 
-            // ƒ{ƒ^ƒ“‚ÌˆÊ’u‚ğİ’è
+            // ãƒœã‚¿ãƒ³ã®ä½ç½®ã‚’è¨­å®š
             rect.anchoredPosition = new Vector2(currentX, currentY);
 
-            // Ÿ‚Ìƒ{ƒ^ƒ“‚ÌXˆÊ’u‚ğXV
+            // æ¬¡ã®ãƒœã‚¿ãƒ³ã®Xä½ç½®ã‚’æ›´æ–°
             currentX += (buttonSize.x + horizontalPadding);
         }
 
 
 
-        currentX = optionStartX;//ƒIƒvƒVƒ‡ƒ“ƒ{ƒ^ƒ“
+        currentX = optionStartX;//ã‚ªãƒ—ã‚·ãƒ§ãƒ³ãƒœã‚¿ãƒ³
         currentY = optionStartY;
 
         for (int i = 0; i < Optioncount; i++)
@@ -298,20 +298,20 @@ public class SelectRangeButtons : MonoBehaviour
             var button = Instantiate(buttonPrefab, transform);
             var rect = button.GetComponent<RectTransform>();
 
-            // eƒIƒuƒWƒFƒNƒg‚Ì‰E’[‚ğ’´‚¦‚éê‡‚ÍŸ‚Ìs‚ÉˆÚ“®
+            // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å³ç«¯ã‚’è¶…ãˆã‚‹å ´åˆã¯æ¬¡ã®è¡Œã«ç§»å‹•
             if (currentX + buttonSize.x / 2 > parentSize.x / 2)
             {
-                // ¶’[‚ÉƒŠƒZƒbƒg
+                // å·¦ç«¯ã«ãƒªã‚»ãƒƒãƒˆ
                 currentX = startX;
 
-                // Ÿ‚Ìs‚ÉˆÚ“®
+                // æ¬¡ã®è¡Œã«ç§»å‹•
                 currentY -= (buttonSize.y + verticalPadding);
             }
 
-            // ƒ{ƒ^ƒ“‚ÌˆÊ’u‚ğİ’è
+            // ãƒœã‚¿ãƒ³ã®ä½ç½®ã‚’è¨­å®š
             rect.anchoredPosition = new Vector2(currentX, currentY);
 
-            // Ÿ‚Ìƒ{ƒ^ƒ“‚ÌXˆÊ’u‚ğXV
+            // æ¬¡ã®ãƒœã‚¿ãƒ³ã®Xä½ç½®ã‚’æ›´æ–°
             currentX += (buttonSize.x + horizontalPadding);
         }
 
@@ -320,14 +320,14 @@ public class SelectRangeButtons : MonoBehaviour
     }
 
     /// <summary>
-    /// ƒIƒvƒVƒ‡ƒ“‚Ì”ÍˆÍ‘I‘ğƒ{ƒ^ƒ“‚É“n‚·ƒR[ƒ‹ƒoƒbƒN
+    /// ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã®ç¯„å›²é¸æŠãƒœã‚¿ãƒ³ã«æ¸¡ã™ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
     /// </summary>
     public void OnClickOptionRangeBtn(Button thisbtn, SkillZoneTrait option)
     {
         bm.Acter.RangeWill |= option;
-        Destroy(thisbtn);//ƒ{ƒ^ƒ“‚ÍÁ‚¦‚é
+        Destroy(thisbtn);//ãƒœã‚¿ãƒ³ã¯æ¶ˆãˆã‚‹
 
-        //ƒIƒvƒVƒ‡ƒ“‚È‚Ì‚Å‚±‚ê‘I‚ñ‚¾‚¾‚¯‚Å‚ÍŸ‚Öi‚Ü‚È‚¢B
+        //ã‚ªãƒ—ã‚·ãƒ§ãƒ³ãªã®ã§ã“ã‚Œé¸ã‚“ã ã ã‘ã§ã¯æ¬¡ã¸é€²ã¾ãªã„ã€‚
     }
 
     public void OnClickRangeBtn(Button thisbtn, SkillZoneTrait range)
@@ -335,40 +335,40 @@ public class SelectRangeButtons : MonoBehaviour
         bm.Acter.RangeWill |= range;
         foreach (var button in buttonList)
         {
-            Destroy(button);//ƒ{ƒ^ƒ“‘S•”íœ
+            Destroy(button);//ãƒœã‚¿ãƒ³å…¨éƒ¨å‰Šé™¤
         }
-        NextTab();//Ÿ‚Ös‚­
+        NextTab();//æ¬¡ã¸è¡Œã
 
     }
     /// <summary>
-    /// ƒ{ƒ^ƒ“‚ÉˆĞ—Í‚Ì”ÍˆÍ‚É‚æ‚éŠ„‡·•ª‚ÌƒeƒLƒXƒg‚ğ’Ç‰Á‚·‚é
-    /// ˆø”‚É”ÍˆÍ«¿‚ğ“n‚·‚ÆA‚»‚ê‚É‰‚¶‚½Š„‡·•ª‚ª‚ ‚é‚È‚ç‚ÎA”š‚ÌƒeƒLƒXƒg‚ğ•Ô‚·B
+    /// ãƒœã‚¿ãƒ³ã«å¨åŠ›ã®ç¯„å›²ã«ã‚ˆã‚‹å‰²åˆå·®åˆ†ã®ãƒ†ã‚­ã‚¹ãƒˆã‚’è¿½åŠ ã™ã‚‹
+    /// å¼•æ•°ã«ç¯„å›²æ€§è³ªã‚’æ¸¡ã™ã¨ã€ãã‚Œã«å¿œã˜ãŸå‰²åˆå·®åˆ†ãŒã‚ã‚‹ãªã‚‰ã°ã€æ•°å­—ã®ãƒ†ã‚­ã‚¹ãƒˆã‚’è¿”ã™ã€‚
     /// </summary>
     private string AddPercentageTextOnButton(SkillZoneTrait zone)
     {
         var skill = bm.Acter.NowUseSkill;
-        var txt = "";//‰½‚à‚È‚¯‚ê‚Î‹ó•¶š‚ª•Ô‚é‚Ì‚İ
-        if (skill.PowerRangePercentageDictionary.ContainsKey(zone))//‚»‚Ì”ÍˆÍ«¿‚ÌŠ„‡·•ª‚ª‚ ‚é‚È‚ç‚Î
+        var txt = "";//ä½•ã‚‚ãªã‘ã‚Œã°ç©ºæ–‡å­—ãŒè¿”ã‚‹ã®ã¿
+        if (skill.PowerRangePercentageDictionary.ContainsKey(zone))//ãã®ç¯„å›²æ€§è³ªã®å‰²åˆå·®åˆ†ãŒã‚ã‚‹ãªã‚‰ã°
         {
-            txt = "\nŠ„‡·•ª:" + (skill.PowerRangePercentageDictionary[zone] * 100).ToString() + "%";//ƒeƒLƒXƒg‚É“ü‚ê‚éB
+            txt = "\nå‰²åˆå·®åˆ†:" + (skill.PowerRangePercentageDictionary[zone] * 100).ToString() + "%";//ãƒ†ã‚­ã‚¹ãƒˆã«å…¥ã‚Œã‚‹ã€‚
         }
 
         return txt;
     }
 
     /// <summary>
-    /// Ÿ‚Ìƒ^ƒu‚Ös‚­
+    /// æ¬¡ã®ã‚¿ãƒ–ã¸è¡Œã
     /// </summary>
     private void NextTab()
     {
-        //‘S”ÍˆÍ‚È‚ç‚»‚Ì‚Ü‚ÜnextWait@@‘ÎÛ‚ğ‘I‚Ô•K—v‚ª‚È‚¢‚©‚ç‚Ë
+        //å…¨ç¯„å›²ãªã‚‰ãã®ã¾ã¾nextWaitã€€ã€€å¯¾è±¡ã‚’é¸ã¶å¿…è¦ãŒãªã„ã‹ã‚‰ã­
         if (bm.Acter.HasRangeWill(SkillZoneTrait.AllTarget))
         {
             Walking.USERUI_state.Value = TabState.NextWait;
         }
         else
         {
-            Walking.USERUI_state.Value = TabState.SelectTarget;//‚»‚¤‚Å‚È‚¢‚È‚ç‘I‘ğ‰æ–Ê‚ÖB
+            Walking.USERUI_state.Value = TabState.SelectTarget;//ãã†ã§ãªã„ãªã‚‰é¸æŠç”»é¢ã¸ã€‚
 
         }
 

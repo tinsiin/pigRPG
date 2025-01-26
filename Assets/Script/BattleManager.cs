@@ -1,4 +1,4 @@
-
+﻿
 
 using System.Collections.Generic;
 using UnityEngine;
@@ -352,7 +352,7 @@ public class BattleManager
             if (i == group.Count - 1 && CounterCharas.Count > 0 && RandomEx.Shared.NextInt(100) < 40)
             {//もし最後の先手ターンで後手グループにキンダーガーデンかゴッドティアがいて、　40%の確率が当たったら
                 //反撃グループにいるそのどちらかの印象を持ったキャラクターのターンが入る。
-                Acts.Add(RandomEx.Shared.GetItem(CounterCharas.ToArray()), _counterGroup.which, "ﾊﾝﾀｰﾅｲﾄ▼");
+                Acts.Add(RandomEx.Shared.GetItem(CounterCharas.ToArray()), _counterGroup.which, "ハンターナイト▼");
             }
             else
             {

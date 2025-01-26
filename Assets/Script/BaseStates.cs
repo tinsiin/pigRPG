@@ -1,4 +1,4 @@
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading;
@@ -33,6 +33,54 @@ public enum PhysicalProperty
     dishSmack //床ずれ、ヴぉ流転、暴断
 }
 /// <summary>
+/// 武器依存の戦闘規格
+/// </summary>
+public enum BattleProtocol
+{
+    /// <summary>地味</summary>
+    LowKey,
+    /// <summary>トライキー</summary>
+    Tricky,
+    /// <summary>派手</summary>
+    Showey
+}
+/// <summary>
+/// 防ぎ方 狙い流れとも言う　戦闘規格とスキルにセットアップされる順番や、b_defの対応に使用される。
+/// </summary>
+public enum AimStyle
+{
+
+     /// <summary>
+    /// アクロバマイナ体術1 - Acrobat Minor Technique 1
+    /// </summary>
+    AcrobatMinor,       // アクロバマイナ体術1
+
+    /// <summary>
+    /// ダブレット - Doublet
+    /// </summary>
+    Doublet,            // ダブレット
+
+    /// <summary>
+    /// 四弾差し込み - Quad Strike Insertion
+    /// </summary>
+    QuadStrike,         // 四弾差し込み
+
+    /// <summary>
+    /// ダスター - Duster
+    /// </summary>
+    Duster,             // ダスター
+
+    /// <summary>
+    /// ポタヌヴォルフのほうき術系 - Potanu Volf's Broom Technique
+    /// </summary>
+    PotanuVolf,         // ポタヌヴォルフのほうき術系
+
+    /// <summary>
+    /// 中天一弾 - Central Heaven Strike
+    /// </summary>
+    CentralHeavenStrike // 中天一弾
+}
+/// <summary>
 /// 命中率、攻撃力、回避力、防御力への補正
 /// </summary>
 public class ModifierPart
@@ -54,60 +102,9 @@ public class ModifierPart
     }
 }
 /// <summary>
-/// 慣れ補正で使用するスキルとその使用者
-/// </summary>
-public class FocusedSkillAndUser
-{
-    public FocusedSkillAndUser(BaseStates InitUser, BaseSkill askil, float InitDmg)
-    {
-        User = new List<BaseStates>();
-        User.Add(InitUser);
-        skill = askil;
-
-        //Memory();//この記憶回数の処理の後に補正するので、作った瞬間はゼロから始めた方がいい
-        DamageMemory(InitDmg);
-    }
-
-    /// <summary>
-    /// そのスキルのユーザー
-    /// </summary>
-    public List<BaseStates> User;
-
-    /// <summary>
-    /// 保存スキル
-    /// </summary>
-    public BaseSkill skill;
-
-    float _memoryCount;
-    /// <summary>
-    /// 慣れの記憶回数
-    /// </summary>
-    public float MemoryCount => _memoryCount;
-    public void Memory(float value)
-    {
-        _memoryCount += value;
-    }
-    public void Forget(float value)
-    {
-        _memoryCount -= value;
-    }
-
-
-    float _topDmg;
-    /// <summary>
-    /// このスキルが自らに施した最大限のダメージ
-    /// </summary>
-    public float TopDmg => _topDmg;
-    public void DamageMemory(float dmg)
-    {
-        if (dmg > _topDmg) _topDmg = dmg;//越してたら記録
-    }
-}
-
-/// <summary>
 ///     精神属性、スキル、キャラクターに依存し、キャラクターは直前に使った物が適用される
-///     だから精神属性同士で攻撃の通りは設定される。
-/// </summary>
+    ///     だから精神属性同士で攻撃の通りは設定される。
+    /// </summary>
 [Flags]
 public enum SpiritualProperty
 {
@@ -141,7 +138,7 @@ public enum MemoryDensity
 
 /// <summary>
 ///     基礎ステータスのクラス　　クラスそのものは使用しないので抽象クラス
-/// </summary>
+    /// </summary>
 [Serializable]
 public abstract class BaseStates
 {
@@ -159,7 +156,1113 @@ public abstract class BaseStates
         return (MyImpression & imp) == imp;
     }
 
+    private BattleManager manager;
 
+    public void Managed(BattleManager ma)
+    {
+        manager = ma;
+    }
+
+    [SerializeField] private List<BasePassive> _passiveList;
+
+    [SerializeField] List<BaseSkill> _skillList;
+
+    [SerializeField] List<BaseVitalLayer> _vitalLaerList;
+
+    /// <summary>
+    /// 状態異常のリスト
+    /// </summary>
+    public IReadOnlyList<BasePassive> PassiveList => _passiveList;
+    /// <summary>
+    /// unityのインスペクタ上で設定したPassiveのIDからキャラが持ってるか調べる。
+    /// </summary>
+    public bool HasPassive(int id)
+    {
+        return _passiveList.Any(pas => pas.ID == id);
+    }
+
+    public IReadOnlyList<BaseVitalLayer> VitalLayers => _vitalLaerList;
+    /// <summary>
+    /// インスペクタ上で設定されたIDを通じて特定の追加HPを持ってるか調べる
+    /// </summary>
+    public bool HasVitalLayer(int id)
+    {
+        return _vitalLaerList.Any(vit => vit.id == id);
+    }
+
+
+    [Header("4大ステの基礎基礎値")]
+    public float  b_b_atk = 4f;
+    public float b_b_def = 4f;
+    public float b_b_eye = 4f;
+    public float b_b_agi = 4f;
+
+    public SerializableDictionary<TenDayAbility,float> TenDayValues = new SerializableDictionary<TenDayAbility,float>();
+
+    public float b_AGI
+    {
+        get
+        {
+            var calcAGI = 0f;
+
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.3f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.3f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 0.9f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 1.0f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.FaceToHand) * 0.2f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.Vail) * 0.1f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.4f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.HeatHaze) * 0.6f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.6f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.2f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.SilentTraining) * 0.02f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.2f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * 0.03f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.1f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.04f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.1f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.UnextinguishedPath) * 0.14f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.Raincoat) * 0.1f;
+            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.Baka) * 2f;
+
+            return b_b_agi + calcAGI;
+        }
+    }
+    /// <summary>
+    /// 攻撃力を十日能力とb_b_atkから計算した値
+    /// </summary>
+    public float b_ATK
+    {
+        get 
+        {
+            var calcATK = 0f;
+
+            //共通の十日能力をまず加算する。
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.5f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 0.8f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 0.3f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Rain) * 0.058f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.FaceToHand) * 0.01f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.02f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.dokumamusi) * 0.4f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.HeatHaze) * 0.0666f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Leisure) * 0.01f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.SilentTraining) * 0.2f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.56f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.09f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight) * 0.45f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.04f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.JoeTeeth) * 0.5f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Blades) * 1.0f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Glory) * 0.1f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Smiler) * 0.02f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.23f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Enokunagi) * 3f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Raincoat) * 22f;
+            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Baka) * -11f;
+
+            //戦闘規格により分岐する
+            switch (NowBattleProtocol)
+            {
+                case BattleProtocol.LowKey:
+                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.9f;
+                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.SpringWater) * 1.7f;
+                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller) * 1.0f;
+                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.UnextinguishedPath) * 0.3f;
+                    break;
+                case BattleProtocol.Tricky:
+                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Miza) * 1.2f;
+                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.8f;
+                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.7f;
+                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Enokunagi) * 0.5f;
+                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Rain) * 0.6f;
+                    break;
+                case BattleProtocol.Showey:
+                 calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Vail) * 1.11f;
+                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.2f;
+                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller) * 1.0f;
+                    break;
+            }
+
+            
+            
+            return b_b_atk + calcATK;
+        }
+    }
+
+    //基礎攻撃防御　　　(大事なのは、基本的にこの辺りは超スキル依存なの)
+    public float b_DEF
+    {
+        get
+        {
+            var calcDEF = 0f;
+
+            // 共通の十日能力をまず加算
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 1.0f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight) * 1.3f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Raincoat) * 1.0f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.JoeTeeth) * 0.8f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 0.3f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.34f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.HeatHaze) * 0.23f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.38f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Leisure) * 0.47f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Blades) * 0.3f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 0.01f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Rain) * 0.2f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.FaceToHand) * 0.013f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Vail) * 0.02f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.04f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SpringWater) * 0.035f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SilentTraining) * 0.09f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.01f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller) * 0.07f;
+            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Baka) * -0.1f;
+
+
+
+            return b_b_def + calcDEF;
+        }
+    }
+    public float b_EYE
+    {
+        get
+        {
+            var calcEYE = 0f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.2f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.2f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Rain) * 0.1f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.FaceToHand) * 0.8f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Vail) * 0.25f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.6f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.SpringWater) * 0.04f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.dokumamusi) * 0.1f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 1.0f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Leisure) * 0.1f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.02f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.TentVoid) * 0.3f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Sort) * 0.6f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.01f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * 0.04f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.001f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Miza) * 0.5f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.JoeTeeth) * 0.03f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.2f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight) * 1.0f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller) * 0.2f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.CryoniteQuality) * 0.3f;
+            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Enokunagi) * -0.5f;
+
+            return b_b_eye + calcEYE;
+        }
+    }
+    /// <summary>
+    /// ケレケレ　外連味により増減するステータス
+    /// </summary>
+    public float KereKere;
+
+    /// <summary>
+    ///     このキャラクターの名前
+    /// </summary>
+    public string CharacterName;
+
+    /// <summary>
+    /// 裏に出す種別も考慮した彼のことの名前
+    /// </summary>
+    public string ImpressionStringName;
+    /// <summary>
+    /// 今のキャラの戦闘規格
+    /// </summary>
+    public BattleProtocol NowBattleProtocol;
+    /// <summary>
+    /// 狙い流れに対する防ぎ方プロパティ
+    /// </summary>
+    public AimStyle NowDeffenceStyle;
+
+    /// <summary>
+    ///現在のの攻撃ターンで使われる
+    /// </summary>
+    public BaseSkill NowUseSkill;
+
+    /// <summary>
+    /// 中断できない発動カウント中のスキル　nullならその状態でないということ
+    /// </summary>
+    public BaseSkill FreezeUseSkill;
+    /// <summary>
+    /// 前回使ったスキルの保持
+    /// </summary>
+    private BaseSkill _tempUseSkill;
+    /// <summary>
+    /// スキルを連続実行した回数などをスキルのクラスに記録する関数
+    /// </summary>
+    /// <param name="useSkill"></param>
+    public void SkillUseConsecutiveCountUp(BaseSkill useSkill)
+    {
+        useSkill.SkillHitCount();//スキルのヒット回数の計算
+
+        if (useSkill == _tempUseSkill)//前回使ったスキルと同じなら
+        {
+            useSkill.DoConsecutiveCount++;//連続実行回数を増やす
+            useSkill.HitConsecutiveCount++;//連続ヒット回数を増やす
+        }
+        else//違ったら
+        {
+            if (_tempUseSkill != null)//nullじゃなかったら
+            {
+                _tempUseSkill.DoConsecutiveCount = 0;//リセット
+                _tempUseSkill.HitConsecutiveCount++;//連続ヒット回数をリセット　
+            }
+            useSkill.DoConsecutiveCount++;//最初の一回目として
+            useSkill.HitConsecutiveCount++;//連続ヒット回数を増やす
+        }
+    }
+    public int MAXP;
+
+    //ポイント
+    public int P;
+
+    /// <summary>
+    ///     リカバリターン/再行動クールタイムの設定値。
+    /// </summary>
+    public int maxRecoveryTurn;
+
+    /// <summary>
+    ///     recovelyTurnの基礎バッキングフィールド
+    /// </summary>
+    private int recoveryTurn;
+
+    /// <summary>
+    /// skillDidWaitCountなどで一時的に通常recovelyTurnに追加される一時的に再行動クールタイム/追加硬直値
+    /// </summary>
+    private int tmpTurnsToAdd;
+    /// <summary>
+    /// 一時保存用のリカバリターン判別用の前ターン変数
+    /// </summary>
+    private int tmp_EncountTurn;
+    /// <summary>
+    /// recovelyCountという行動クールタイムに一時的に値を加える
+    /// </summary>
+    public void RecovelyCountTmpAdd(int addTurn)
+    {
+        tmpTurnsToAdd += addTurn;
+    }
+    /// <summary>
+    /// このキャラが戦場にて再行動を取れるかどうかと時間を唱える関数
+    /// </summary>
+    public bool RecovelyBattleField(int nowTurn)
+    {
+        var difference = Math.Abs(nowTurn - tmp_EncountTurn);//前ターンと今回のターンの差異から経過ターン
+        tmp_EncountTurn = nowTurn;//一時保存
+        if ((recoveryTurn += difference) >= maxRecoveryTurn + tmpTurnsToAdd)//累計ターン経過が最大値を超えたら
+        {
+            //ここでrecovelyTurnを初期化すると　リストで一括処理した時にカウントアップだけじゃなくて、
+            //選ばれたことになっちゃうから、0に初期化する部分はBattleManagerで選ばれた時に処理する。
+            return true;
+        }
+        return false;
+    }
+    /// <summary>
+    /// 戦場へ参戦回復出来るまでのカウントスタート
+    /// </summary>
+    public void RecovelyWaitStart()
+    {
+        recoveryTurn = 0;
+        RemoveRecovelyTmpAddTurn();
+    }
+    /// <summary>
+    /// キャラに設定された追加硬直値をリセットする
+    /// </summary>
+    public void RemoveRecovelyTmpAddTurn()
+    {
+        tmpTurnsToAdd = 0;
+    }
+    /// <summary>
+    /// 戦場へ参戦回復が出来るようにする
+    /// </summary>
+    public void RecovelyOK()
+    {
+        recoveryTurn = maxRecoveryTurn;
+    }
+
+    //HP
+    [SerializeField]
+    private float _hp;
+    public float HP
+    {
+        get { return _hp; }
+        set
+        {
+            if (value > MAXHP)//最大値を超えないようにする
+            {
+                _hp = MAXHP;
+            }
+            else _hp = value;
+        }
+    }
+    [SerializeField]
+    private float _maxHp;
+    public float MAXHP => _maxHp;
+
+    /// <summary>
+    /// vitalLayerでHPに到達する前に攻撃値を請け負う処理
+    /// </summary>
+    public float BarrierLayers(float dmg, BaseStates atker)
+    {
+
+        // 1) VitalLayer の順番どおりにダメージを適用していく
+        //    ここでは「Priority が低い方(手前)が先に処理される想定」を前提に
+        //    _vitalLaerList がすでに正しい順序でソートされていることを期待。
+
+        for (int i = 0; i < _vitalLaerList.Count;)
+        {
+            var layer = _vitalLaerList[i];
+            var skillPhy = atker.NowUseSkill.SkillPhysical;
+            // 2) このレイヤーに貫通させて、返り値を「残りダメージ」とする
+            dmg = layer.PenetrateLayer(dmg, skillPhy);
+
+            if (layer.LayerHP <= 0f)
+            {
+                // このレイヤーは破壊された
+                _vitalLaerList.RemoveAt(i);
+                // リストを削除したので、 i はインクリメントしない（要注意）
+
+                //破壊慣れまたは破壊負け
+                if (skillPhy == PhysicalProperty.heavy)//暴断なら破壊慣れ
+                {
+                    dmg += dmg * 0.015f * KereKere;
+                }
+                if (skillPhy == PhysicalProperty.volten)//vol天なら破壊負け
+                {
+                    dmg -= dmg * 0.022f * (atker.b_ATK - KereKere);
+                    //b_atk < kerekereになった際、減らずに逆に威力が増えるので、そういう場合の演出差分が必要
+                }
+            }
+            else
+            {
+                // レイヤーが残ったら i を進める
+                i++;
+            }
+
+            // 3) dmg が 0 以下になったら、もうこれ以上削る必要ない
+            if (dmg <= 0f)
+            {
+                dmg = 0f;
+                break;
+            }
+        }
+
+        // 4) 層で削りきれなかった分を戻す
+        if (dmg < 0) dmg = 0;//0未満チェック
+        return dmg;
+    }
+
+    /// <summary>
+    /// このキャラがどの辺りを狙っているか
+    /// </summary>
+    public DirectedWill Target;
+
+    /// <summary>
+    /// このキャラの現在の範囲の意思　　複数持てる
+    /// スキルの範囲性質にcanSelectRangeがある場合のみ、ない場合はskillのzoneTraitをそのまま代入される。
+    /// </summary>
+    public SkillZoneTrait RangeWill;
+
+    /// <summary>
+    /// スキル範囲性質を持ってるかどうか
+    /// 複数指定した場合は全て当てはまってるかどうかで判断
+    /// </summary>
+    public bool HasRangeWill(params SkillZoneTrait[] skills)
+    {
+        SkillZoneTrait combinedSkills = 0;
+        foreach (SkillZoneTrait skill in skills)
+        {
+            combinedSkills |= skill;
+        }
+        return (RangeWill & combinedSkills) == combinedSkills;
+    }
+
+    /// <summary>
+    /// 指定されたスキルフラグのうち、一つでもRangeWillに含まれている場合はfalseを返し、
+    /// 全く含まれていない場合はtrueを返します。
+    /// </summary>
+    public bool DontHasRangeWill(params SkillZoneTrait[] skills)
+    {
+        // 受け取ったスキルフラグをビット単位で結合
+        SkillZoneTrait combinedSkills = 0;
+        foreach (SkillZoneTrait skill in skills)
+        {
+            combinedSkills |= skill;
+        }
+
+        // RangeWillに含まれるフラグとcombinedSkillsのビットAND演算
+        // 結果が0でなければ、一つ以上のフラグが含まれている
+        bool containsAny = (RangeWill & combinedSkills) != 0;
+
+        // 一つでも含まれていればfalse、含まれていなければtrueを返す
+        return !containsAny;
+    }
+
+
+
+    /// <summary>
+    /// 使用中のスキルを強制続行中のスキルとする。　
+    /// 例えばスキルの連続実行中の処理や発動カウント中のキャンセル不可能なスキルなどで使う
+    /// </summary>
+    public void FreezeSkill()
+    {
+        FreezeUseSkill = NowUseSkill;
+    }
+    /// <summary>
+    /// 強制続行中のスキルをなくす
+    /// </summary>
+    public void Defrost()
+    {
+        FreezeUseSkill = null;
+    }
+
+    /// <summary>
+    ///     このキャラクターの種別
+    /// </summary>
+    public CharacterType MyType { get; }
+
+
+    /// <summary>
+    ///     このキャラクターの属性 精神属性が入る
+    /// </summary>
+    public SpiritualProperty MyImpression { get; private set; }
+
+    /// <summary>
+    ///     このキャラクターの"デフォルト"属性 精神属性が入る
+    ///     一定数歩行するとMyImpressionがこれに戻る
+    ///     当然この属性自体もゲーム中で変化する可能性はある。
+    /// </summary>
+    public SpiritualProperty DefaultImpression { get; private set; }
+
+
+
+    /// <summary>
+    /// 次に使用する命中率へのパーセント補正用保持リスト
+    /// </summary>
+    private List<ModifierPart> _useHITPercentageModifiers;
+    /// <summary>
+    /// 次に使用する攻撃力へのパーセント補正用保持リスト
+    /// </summary>
+    private List<ModifierPart> _useATKPercentageModifiers;
+    /// <summary>
+    /// 次に使用する回避率へのパーセント補正用保持リスト
+    /// </summary>
+    private List<ModifierPart> _useAGIPercentageModifiers;
+    /// <summary>
+    /// 次に使用する防御力へのパーセント補正用保持リスト
+    /// </summary>
+    private List<ModifierPart> _useDEFPercentageModifiers;
+
+    /// <summary>
+    /// 命中率補正をセットする。
+    /// </summary>
+    public void SetHITPercentageModifier(float value, string memo)
+    {
+        if (_useHITPercentageModifiers == null) _useHITPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
+        _useHITPercentageModifiers.Add(new ModifierPart(memo, value));
+    }
+    /// <summary>
+    /// 攻撃力補正をセットする。
+    /// </summary>
+    public void SetATKPercentageModifier(float value, string memo)
+    {
+        if (_useATKPercentageModifiers == null) _useATKPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
+        _useATKPercentageModifiers.Add(new ModifierPart(memo, value));
+    }
+    /// <summary>
+    /// 回避率補正をセットする。
+    /// </summary>
+    public void SetAGIPercentageModifier(float value, string memo)
+    {
+        if (_useAGIPercentageModifiers == null) _useAGIPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
+        _useAGIPercentageModifiers.Add(new ModifierPart(memo, value));
+    }
+    /// <summary>
+    /// 防御力補正をセットする。
+    /// </summary>
+    public void SetDEFPercentageModifier(float value, string memo)
+    {
+        if (_useDEFPercentageModifiers == null) _useDEFPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
+        _useDEFPercentageModifiers.Add(new ModifierPart(memo, value));
+    }
+
+    /// <summary>
+    /// 特別な命中率補正
+    /// </summary>
+    /// <param name="per"></param>
+    public float UseHITPercentageModifier
+    {
+        get => _useHITPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
+    }
+
+    /// <summary>
+    /// 特別な攻撃力補正
+    /// </summary>
+    public float UseATKPercentageModifier
+    {
+        get => _useATKPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
+    }
+
+    /// <summary>
+    /// 特別な回避率補正
+    /// </summary>
+    public float UseAGIPercentageModifier
+    {
+        get => _useAGIPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
+    }
+
+    /// <summary>
+    /// 特別な防御力補正
+    /// </summary>
+    public float UseDEFPercentageModifier
+    {
+        get => _useDEFPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
+    }
+    /// <summary>
+    /// 特別な命中率補正の保持リストを返す。　主にフレーバー要素用。
+    /// </summary>
+    public List<ModifierPart> UseHitPercentageModifiers
+    {
+        get => _useHITPercentageModifiers;
+    }
+
+    /// <summary>
+    /// 特別な攻撃力補正の保持リストを返す。　主にフレーバー要素用。
+    /// </summary>
+    public List<ModifierPart> UseATKPercentageModifiers
+    {
+        get => _useATKPercentageModifiers;
+    }
+
+    /// <summary>
+    /// 特別な回避率補正の保持リストを返す。　主にフレーバー要素用。
+    /// </summary>
+    public List<ModifierPart> UseAGIPercentageModifiers
+    {
+        get => _useAGIPercentageModifiers;
+    }
+
+    /// <summary>
+    /// 特別な防御力補正の保持リストを返す。　主にフレーバー要素用。
+    /// </summary>
+    public List<ModifierPart> UseDEFPercentageModifiers
+    {
+        get => _useDEFPercentageModifiers;
+    }
+
+    /// <summary>
+    /// 一時的な補正などをすべて消す
+    /// </summary>
+    public void RemoveUseThings()
+    {
+        _useHITPercentageModifiers = new List<ModifierPart>();
+        _useATKPercentageModifiers = new List<ModifierPart>();
+        _useAGIPercentageModifiers = new List<ModifierPart>();
+        _useDEFPercentageModifiers = new List<ModifierPart>();
+    }
+
+
+
+
+    //スキルのリスト
+    public IReadOnlyList<BaseSkill> SkillList => _skillList;
+    /// <summary>
+    /// 完全な単体攻撃かどうか
+    /// (例えばControlByThisSituationの場合はrangeWillにそのままskillのzoneTraitが入るので、
+    /// そこに範囲系の性質(事故で範囲攻撃に変化)がある場合はfalseが返る
+    /// </summary>
+    /// <returns></returns>
+    private bool IsSingleATK()
+    {
+        return DontHasRangeWill(SkillZoneTrait.CanSelectMultiTarget,
+            SkillZoneTrait.RandomSelectMultiTarget, SkillZoneTrait.RandomMultiTarget,
+            SkillZoneTrait.AllTarget);
+    }
+
+    /// <summary>
+    /// 命中率計算
+    /// </summary>
+    /// <returns></returns>
+    public virtual float EYE()
+    {
+        float eye = b_EYE;//基礎命中率
+
+        eye *= UseHITPercentageModifier;//命中率補正。リスト内がゼロならちゃんと1.0fが返る。
+
+        //範囲意志によるボーナス
+        foreach (KeyValuePair<SkillZoneTrait, float> entry
+            in NowUseSkill.HitRangePercentageDictionary)//辞書に存在する物全てをループ
+        {
+            if (HasRangeWill(entry.Key))//キーの内容が範囲意志と合致した場合
+            {
+                eye += entry.Value;//範囲意志による補正が掛かる
+
+                //基本的に範囲は一つだけのはずなので無用なループは避けてここで終了
+                break;
+            }
+        }
+
+        //単体攻撃による命中補正
+        //複数性質を持っていない、完全なる単体の攻撃なら
+        if (IsSingleATK())
+        //ControlBySituationでの事故性質でも複数性質で複数事故が起こるかもしれないので、それも加味してる。
+        {
+            var agiPer = 6;//攻撃者のAgiの命中補正用 割る数
+            if (NowUseSkill.SkillPhysical == PhysicalProperty.heavy)//暴断攻撃なら
+            {
+                agiPer *= 2;//割る数が二倍に
+            }
+            eye += AGI() / agiPer;
+        }
+
+
+
+        return eye;
+    }
+
+    /// <summary>
+    /// 回避率計算
+    /// </summary>
+    public virtual float AGI()
+    {
+        float agi = b_AGI;//基礎回避率
+
+        agi *= UseAGIPercentageModifier;//回避率補正。リスト内がゼロならちゃんと1.0fが返る。
+
+        if (manager.IsVanguard(this))//自分が前のめりなら
+        {
+            agi /= 2;//回避率半減
+        }
+
+        return agi;
+    }
+
+    public virtual float ATK()
+    {
+        float atk = b_ATK;//基礎攻撃力
+
+        atk *= UseATKPercentageModifier;//攻撃力補正
+
+        //範囲意志によるボーナス
+        foreach (KeyValuePair<SkillZoneTrait, float> entry
+            in NowUseSkill.PowerRangePercentageDictionary)//辞書に存在する物全てをループ
+        {
+            if (HasRangeWill(entry.Key))//キーの内容が範囲意志と合致した場合
+            {
+                atk += entry.Value;//範囲意志による補正が掛かる
+
+                //基本的に範囲は一つだけのはずなので無用なループは避けてここで終了
+                break;
+            }
+        }
+
+        //単体攻撃で暴断物理攻撃の場合のAgi攻撃補正
+        if (IsSingleATK())
+        {
+            if (NowUseSkill.SkillPhysical == PhysicalProperty.heavy)
+            {
+                atk += AGI() / 6;
+            }
+        }
+
+
+        return atk;
+    }
+
+    /// <summary>
+    ///     防御力計算
+    /// </summary>
+    /// <returns></returns>
+    public virtual float DEF(float minusPer)
+    {
+        var def = b_DEF; //基礎防御力が基本。
+
+        def *= UseDEFPercentageModifier;//防御力補正
+
+        var minusAmount = def * minusPer;//防御低減率
+
+
+        return def - minusAmount;
+    }
+
+
+    /// <summary>
+    ///初期精神属性決定関数(基本は印象を持ってるスキルリストから適当に選び出す
+    /// </summary>
+    public virtual void InitializeMyImpression()
+    {
+        SpiritualProperty that;
+
+        if (SkillList != null)
+        {
+            var rnd = RandomEx.Shared.NextInt(0, SkillList.Count);
+            that = SkillList[rnd].SkillSpiritual; //スキルの精神属性を抽出
+            MyImpression = that; //印象にセット
+        }
+        else
+        {
+            Debug.Log(CharacterName + " のスキルが空です。");
+        }
+    }
+
+    /// <summary>
+    /// 基礎山型分布によるダメージ補正
+    /// </summary>
+    float GetBaseCalcDamageWithPlusMinus22Percent(float baseDamage)
+    {
+        // 1) 8d5501 を振る（8回ランダム）
+        int diceSum = 0;
+        for (int i = 0; i < 8; i++)
+        {
+            // Range(1, 5502) => [1..5501] の整数
+            diceSum += RandomEx.Shared.NextInt(1, 5502);
+        }
+
+        // 2) 平均(22008)を引いて、0.00001f を掛ける
+        //    → -0.22 ～ +0.22 (±22%)
+        float offset = (diceSum - 22008) * 0.00001f;
+
+        // 3) baseDamage に対して (1 + offset) 倍する
+        //    → (1 - 0.22)～(1 + 0.22) = 0.78～1.22 倍
+        float finalDamage = baseDamage * (1f + offset);
+
+        // 4) 必要であれば下限補正（例：0未満になれば0にする など）
+        if (finalDamage < 0f)
+        {
+            finalDamage = 0f;
+        }
+
+        // 5) float で返す（丸めたくないのでそのまま）
+        return finalDamage;
+    }
+    /// <summary>
+    ///     オーバライド可能なダメージ関数
+    /// </summary>
+    /// <param name="atkPoint"></param>
+    public virtual string Damage(BaseStates Atker, float SkillPower)
+    {
+        var skill = Atker.NowUseSkill;
+        var dmg = (Atker.ATK() - DEF(skill.DEFATK)) * SkillPower;//(攻撃-対象者の防御) ×スキルパワー？
+
+        dmg = GetBaseCalcDamageWithPlusMinus22Percent(dmg);//基礎山型補正
+
+        //慣れ補正
+        dmg *= AdaptToSkill(Atker, skill, dmg);
+
+        //vitalLayerを通る処理
+        dmg = BarrierLayers(dmg, Atker);
+
+        HP -= dmg;
+        Debug.Log("攻撃が実行された");
+        return "-+~*⋮¦";
+    }
+
+    /// <summary>
+    /// ヒールは防御できない、つまりヒールが逆効果のキャラクターならヒールは有効打ってこと
+    /// </summary>
+    /// <param name="HealPoint"></param>
+    public virtual string Heal(float HealPoint)
+    {
+        HP += HealPoint;
+        Debug.Log("ヒールが実行された");
+        return "癒された";
+    }
+    /// <summary>
+    /// 命中凌駕の判定関数　引数倍命中が回避を凌駕してるのなら、スキル命中率に影響を与える
+    /// </summary>
+    private float AccuracySupremacy(float atkerEye, float undAtkerAgi, float multiplierThreshold = 2.5f)
+    {
+        var supremacyMargin = 0f;
+        var modifyAgi = undAtkerAgi * multiplierThreshold;//補正されたagi
+        if (atkerEye >= modifyAgi)//攻撃者のEYEが特定の倍被害者のAGIを上回っているならば、
+        {
+            supremacyMargin = (atkerEye - modifyAgi) / 2;//命中が引数倍された回避を超した分　÷　2
+        }
+        return supremacyMargin;
+    }
+    /// <summary>
+    /// 攻撃者と防御者とスキルを利用してヒットするかの計算
+    /// </summary>
+    private bool IsReactHIT(BaseStates Attacker)
+    {
+        var skill = Attacker.NowUseSkill;
+
+        if (RandomEx.Shared.NextFloat(0, Attacker.EYE() + AGI()) < Attacker.EYE())//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
+        {
+            //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
+            return skill.SkillHitCalc(AccuracySupremacy(Attacker.EYE(), AGI()));
+        }
+
+        return false;
+    }
+    /// <summary>防ぎ方の切り替え/// </summary>
+    private void SwitchDefenceStyle(BaseStates atker)
+    {
+        var skill = atker.NowUseSkill;
+        var pattern = DefaultDefensePatternPerProtocol[atker.NowBattleProtocol];
+
+        if(!skill.NowConsecutiveATKFromTheSecondTimeOnward()){//単回攻撃または初回攻撃なら
+           if(RandomEx.Shared.NextFloat(1) < pattern.a)
+           {
+            NowDeffenceStyle =  pattern.aStyle;//単体攻撃は現在の防ぎ方に100%の確率で切り替えです
+            skill.DecideNowMoveSet_A();//初回攻撃ならどのムーブセットを使うか決定する。
+           }
+           else
+           {
+            NowDeffenceStyle =  pattern.bStyle;//aの確率外れたらbstyleで。
+            skill.DecideNowMoveSet_B();
+           }
+        }else{
+            var AtkAimStyle = skill.NowAimStyle();//攻撃者のNowMoveSetの回数目のAimStyleを取得
+            
+        }
+
+
+
+    }
+
+    /// <summary>
+    /// スキルに対するリアクション ここでスキルの解釈をする。
+    /// </summary>
+    /// <param name="skill"></param>
+    /// <param name="UnderIndex">攻撃される人の順番　スキルのPowerSpreadの順番に同期している</param>
+    public virtual string ReactionSkill(BaseStates attacker, float spread)
+    {
+        var skill = attacker.NowUseSkill;
+
+        //防ぎ方の切り替え
+        SwitchDefenceStyle(attacker);
+
+        //スキルパワーの精神属性による計算
+        var modifier = SkillSpiritualModifier[(skill.SkillSpiritual, MyImpression)];//スキルの精神属性と自分の精神属性による補正
+        var skillPower = skill.SkillPowerCalc(spread) * modifier.GetValue() / 100.0f;
+        var txt = "";//メッセージテキスト用
+        skill.DoSkillCountUp();//スキルを実行した回数をカウントアップ
+
+
+        //スキルの持ってる性質を全て処理として実行
+
+        if (skill.HasType(SkillType.Attack))
+        {
+            if (IsReactHIT(attacker))
+            {
+                //成功されるとダメージを受ける
+                txt += Damage(attacker, skillPower);
+            }
+            else
+            {//外したら
+                skill.HitConsecutiveCount = 0;//連続ヒット回数がゼロ　
+            }
+        }
+
+        if (skill.HasType(SkillType.Heal))
+        {
+            if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
+            {
+                txt += Heal(skillPower);
+            }
+        }
+
+        if (skill.HasType(SkillType.addPassive))
+        {
+            foreach (var id in skill.subEffects)
+                ApplyPassive(PassiveManager.Instance.GetAtID(id));
+        }
+
+        if (skill.HasType(SkillType.AddVitalLayer))
+        {
+            foreach (var id in skill.subVitalLayers)
+                ApplyVitalLayer(VitalLayerManager.Instance.GetAtID(id));
+        }
+
+        Debug.Log("ReactionSkill");
+        return txt;
+    }
+
+
+    /// <summary>
+    /// クラスを通じて相手を攻撃する
+    /// </summary>
+    /// <param name="UnderAttacker"></param>
+    public virtual string AttackChara(UnderActersEntryList Unders)
+    {
+
+
+
+        SkillUseConsecutiveCountUp(NowUseSkill);//連続カウントアップ
+        string txt = "";
+
+        // スキルの精神属性を自分の精神属性に変更
+        NowUseSkill.SkillSpiritual = MyImpression;
+
+        for (var i = 0; i < Unders.Count; i++)
+        {
+            txt += Unders.GetAtCharacter(i).ReactionSkill(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
+        }
+
+        NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルの攻撃回数をカウントアップ
+        RemoveUseThings();//特別な補正を消去
+        Debug.Log("AttackChara");
+
+
+        _tempUseSkill = NowUseSkill;//使ったスキルを一時保存
+        return txt;
+    }
+
+    /// <summary>
+    ///     死を判定するオーバライド可能な関数
+    /// </summary>
+    /// <returns></returns>
+    public virtual bool Death()
+    {
+        if (HP <= 0) return true;
+        return false;
+    }
+    /// <summary>
+    /// 持ってるスキルリストを初期化する
+    /// </summary>
+    public void SkillsInitialize()
+    {
+        foreach (var skill in SkillList)
+        {
+            skill.OnInitialize(this);
+        }
+    }
+    /// <summary>
+    /// 全スキルの一時保存系プロパティをリセットする
+    /// </summary>
+    public void SkillsTmpReset()
+    {
+        foreach (var skill in SkillList)
+        {
+            skill.ResetTmpProperty();//プロパティをリセットする
+        }
+    }
+
+    /// <summary>
+    ///追加HPを適用 
+    /// </summary>
+    public virtual void ApplyVitalLayer(BaseVitalLayer newLayer)
+    {
+        //リスト内に同一の物があるか判定する。
+        var sameHP = _vitalLaerList.FirstOrDefault(lay => lay.id == newLayer.id);
+        if (sameHP != null)
+        {
+            sameHP.ReplenishHP();//同一の為リストにある側を再補充する。
+        }
+        else//初物の場合
+        {
+            //優先順位にリスト内で並び替えつつ追加
+            // _vitalLaerList 内で、新しいレイヤーの Priority より大きい最初の要素のインデックスを探す
+            int insertIndex = _vitalLaerList.FindIndex(v => v.Priority > newLayer.Priority);
+
+            if (insertIndex < 0)
+            {
+                // 該当する要素が見つからなかった場合（全ての要素が新しいレイヤー以下の Priority ）
+                // リストの末尾に追加
+                _vitalLaerList.Add(newLayer);
+            }
+            else
+            {
+                // 新しいレイヤーを適切な位置に挿入
+                _vitalLaerList.Insert(insertIndex, newLayer);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     パッシブを適用
+    /// </summary>
+    public virtual void ApplyPassive(BasePassive status)
+    {
+        // 条件(OkType,OkImpression) は既にチェック済みならスキップ
+        if (!HasCharacterType(status.OkType)) return;
+        if (!HasCharacterImpression(status.OkImpression)) return;
+
+        // すでに持ってるかどうか
+        var existing = _passiveList.FirstOrDefault(p => p.ID == status.ID);
+        if (existing != null)
+        {
+            // 重ね掛け
+            existing.AddPassivePower(1);
+        }
+        else
+        {
+            // 新規追加
+            _passiveList.Add(status);
+            // パッシブ側のOnApplyを呼ぶ
+            status.OnApply(this);
+        }
+    }
+
+    /// <summary>
+    /// パッシブを除去
+    /// </summary>
+    public virtual void RemovePassive(BasePassive status)
+    {
+        // パッシブがあるか確認
+        if (_passiveList.Remove(status))
+        {
+            // パッシブ側のOnRemoveを呼ぶ
+            status.OnRemove(this);
+        }
+    }
+    /// <summary>
+    /// 全パッシブのUpdateTurnSurvivalを呼ぶ ターン経過時パッシブが生存するかどうか
+    /// </summary>
+    void UpdateTurnAllPassiveSurvival()
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.UpdateTurnSurvival(this);
+        }
+    }/// <summary>
+    /// 全パッシブのUpdateWalkSurvivalを呼ぶ 歩行時パッシブが生存するかどうか
+    /// </summary>
+    void UpdateWalkAllPassiveSurvival()
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.UpdateWalkSurvival(this);
+        }
+    }
+    /// <summary>歩行時のコールバック引数なしの</summary>
+    public void OnWalkNoArgument()
+    {
+        UpdateWalkAllPassiveSurvival();
+    }
+
+    /// <summary>
+    /// 戦闘中に次のターンに進む際のコールバック
+    /// </summary>
+    public void OnNextTurnNoArgument()
+    {
+        UpdateTurnAllPassiveSurvival();
+    }
+
+    /// <summary>
+    ///bm生成時に初期化される関数
+    /// </summary>
+    public void OnBattleStartNoArgument()
+    {
+        TempDamageTurn = 0;
+        DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
+        DecisionSacriFaithAdaptToSkillGrouping();
+    }
+    public void OnBattleEndNoArgument()
+    {
+        TempDamageTurn = 0;
+    }
+
+    //慣れ補正ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー慣れ補正ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     /// <summary>
     /// 慣れ補正用　スキルの注目リスト
     /// </summary>
@@ -782,6 +1885,7 @@ public abstract class BaseStates
             return threshold;
         }
     }
+
     /// <summary>
     /// 目の瞬きをするように、
     /// 慣れ補正がデフォルトの下限しきい値を下回っている場合、そこまで押し戻される関数
@@ -1034,7 +2138,7 @@ public abstract class BaseStates
             if (DeltaDamageTurn < 4) TurnBonus += 0.45f;//3ターン以内
             if (DeltaDamageTurn < 3) TurnBonus += 0.7f;//2ターン以内
 
-            //記憶回数による微加算　(これは掛けるのではなく最終計算結果に加算する￥)
+            //記憶回数による微加算　(これは掛けるのではなく最終計算結果に加算する¥)
             float MemoryAdjust = 0.08f * NowFocusSkill.MemoryCount;
 
             // 最終的な増加量計算
@@ -1051,926 +2155,16 @@ public abstract class BaseStates
         return AdaptModify;
     }
 
-
-
-
-
-    private BattleManager manager;
-
-    public void Managed(BattleManager ma)
-    {
-        manager = ma;
-    }
-
-    [SerializeField] private List<BasePassive> _passiveList;
-
-    [SerializeField] List<BaseSkill> _skillList;
-
-    [SerializeField] List<BaseVitalLayer> _vitalLaerList;
-
-    /// <summary>
-    /// 状態異常のリスト
-    /// </summary>
-    public IReadOnlyList<BasePassive> PassiveList => _passiveList;
-    /// <summary>
-    /// unityのインスペクタ上で設定したPassiveのIDからキャラが持ってるか調べる。
-    /// </summary>
-    public bool HasPassive(int id)
-    {
-        return _passiveList.Any(pas => pas.ID == id);
-    }
-
-    public IReadOnlyList<BaseVitalLayer> VitalLayers => _vitalLaerList;
-    /// <summary>
-    /// インスペクタ上で設定されたIDを通じて特定の追加HPを持ってるか調べる
-    /// </summary>
-    public bool HasVitalLayer(int id)
-    {
-        return _vitalLaerList.Any(vit => vit.id == id);
-    }
-
-
-    public float b_AGI;
-    public float b_ATK;
-
-    //基礎攻撃防御　　(大事なのは、基本的にこの辺りは超スキル依存なの)
-    public float b_DEF;
-    public float b_EYE;
-
-    /// <summary>
-    /// ケレケレ　外連味により増減するステータス
-    /// </summary>
-    public float KereKere;
-
-    /// <summary>
-    ///     このキャラクターの名前
-    /// </summary>
-    public string CharacterName;
-
-    /// <summary>
-    /// 裏に出す種別も考慮した彼のことの名前
-    /// </summary>
-    public string ImpressionStringName;
-
-
-    /// <summary>
-    ///現在のの攻撃ターンで使われる
-    /// </summary>
-    public BaseSkill NowUseSkill;
-
-    /// <summary>
-    /// 中断できない発動カウント中のスキル　nullならその状態でないということ
-    /// </summary>
-    public BaseSkill FreezeUseSkill;
-    /// <summary>
-    /// 前回使ったスキルの保持
-    /// </summary>
-    private BaseSkill _tempUseSkill;
-    /// <summary>
-    /// スキルを連続実行した回数などをスキルのクラスに記録する関数
-    /// </summary>
-    /// <param name="useSkill"></param>
-    public void SkillUseConsecutiveCountUp(BaseSkill useSkill)
-    {
-        useSkill.SkillHitCount();//スキルのヒット回数の計算
-
-        if (useSkill == _tempUseSkill)//前回使ったスキルと同じなら
-        {
-            useSkill.DoConsecutiveCount++;//連続実行回数を増やす
-            useSkill.HitConsecutiveCount++;//連続ヒット回数を増やす
-        }
-        else//違ったら
-        {
-            if (_tempUseSkill != null)//nullじゃなかったら
-            {
-                _tempUseSkill.DoConsecutiveCount = 0;//リセット
-                _tempUseSkill.HitConsecutiveCount++;//連続ヒット回数をリセット　
-            }
-            useSkill.DoConsecutiveCount++;//最初の一回目として
-            useSkill.HitConsecutiveCount++;//連続ヒット回数を増やす
-        }
-    }
-    public int MAXP;
-
-    //ポイント
-    public int P;
-
-    /// <summary>
-    ///     リカバリターン/再行動クールタイムの設定値。
-    /// </summary>
-    public int maxRecoveryTurn;
-
-    /// <summary>
-    ///     recovelyTurnの基礎バッキングフィールド
-    /// </summary>
-    private int recoveryTurn;
-
-    /// <summary>
-    /// skillDidWaitCountなどで一時的に通常recovelyTurnに追加される一時的に再行動クールタイム/追加硬直値
-    /// </summary>
-    private int tmpTurnsToAdd;
-    /// <summary>
-    /// 一時保存用のリカバリターン判別用の前ターン変数
-    /// </summary>
-    private int tmp_EncountTurn;
-    /// <summary>
-    /// recovelyCountという行動クールタイムに一時的に値を加える
-    /// </summary>
-    public void RecovelyCountTmpAdd(int addTurn)
-    {
-        tmpTurnsToAdd += addTurn;
-    }
-    /// <summary>
-    /// このキャラが戦場にて再行動を取れるかどうかと時間を唱える関数
-    /// </summary>
-    public bool RecovelyBattleField(int nowTurn)
-    {
-        var difference = Math.Abs(nowTurn - tmp_EncountTurn);//前ターンと今回のターンの差異から経過ターン
-        tmp_EncountTurn = nowTurn;//一時保存
-        if ((recoveryTurn += difference) >= maxRecoveryTurn + tmpTurnsToAdd)//累計ターン経過が最大値を超えたら
-        {
-            //ここでrecovelyTurnを初期化すると　リストで一括処理した時にカウントアップだけじゃなくて、
-            //選ばれたことになっちゃうから、0に初期化する部分はBattleManagerで選ばれた時に処理する。
-            return true;
-        }
-        return false;
-    }
-    /// <summary>
-    /// 戦場へ参戦回復出来るまでのカウントスタート
-    /// </summary>
-    public void RecovelyWaitStart()
-    {
-        recoveryTurn = 0;
-        RemoveRecovelyTmpAddTurn();
-    }
-    /// <summary>
-    /// キャラに設定された追加硬直値をリセットする
-    /// </summary>
-    public void RemoveRecovelyTmpAddTurn()
-    {
-        tmpTurnsToAdd = 0;
-    }
-    /// <summary>
-    /// 戦場へ参戦回復が出来るようにする
-    /// </summary>
-    public void RecovelyOK()
-    {
-        recoveryTurn = maxRecoveryTurn;
-    }
-
-    //HP
-    [SerializeField]
-    private float _hp;
-    public float HP
-    {
-        get { return _hp; }
-        set
-        {
-            if (value > MAXHP)//最大値を超えないようにする
-            {
-                _hp = MAXHP;
-            }
-            else _hp = value;
-        }
-    }
-    [SerializeField]
-    private float _maxHp;
-    public float MAXHP => _maxHp;
-
-    /// <summary>
-    /// vitalLayerでHPに到達する前に攻撃値を請け負う処理
-    /// </summary>
-    public float BarrierLayers(float dmg, BaseStates atker)
-    {
-
-        // 1) VitalLayer の順番どおりにダメージを適用していく
-        //    ここでは「Priority が低い方(手前)が先に処理される想定」を前提に
-        //    _vitalLaerList がすでに正しい順序でソートされていることを期待。
-
-        for (int i = 0; i < _vitalLaerList.Count;)
-        {
-            var layer = _vitalLaerList[i];
-            var skillPhy = atker.NowUseSkill.SkillPhysical;
-            // 2) このレイヤーに貫通させて、返り値を「残りダメージ」とする
-            dmg = layer.PenetrateLayer(dmg, skillPhy);
-
-            if (layer.LayerHP <= 0f)
-            {
-                // このレイヤーは破壊された
-                _vitalLaerList.RemoveAt(i);
-                // リストを削除したので、 i はインクリメントしない（要注意）
-
-                //破壊慣れまたは破壊負け
-                if (skillPhy == PhysicalProperty.heavy)//暴断なら破壊慣れ
-                {
-                    dmg += dmg * 0.015f * KereKere;
-                }
-                if (skillPhy == PhysicalProperty.volten)//vol天なら破壊負け
-                {
-                    dmg -= dmg * 0.022f * (atker.b_ATK - KereKere);
-                    //b_atk < kerekereになった際、減らずに逆に威力が増えるので、そういう場合の演出差分が必要
-                }
-            }
-            else
-            {
-                // レイヤーが残ったら i を進める
-                i++;
-            }
-
-            // 3) dmg が 0 以下になったら、もうこれ以上削る必要ない
-            if (dmg <= 0f)
-            {
-                dmg = 0f;
-                break;
-            }
-        }
-
-        // 4) 層で削りきれなかった分を戻す
-        if (dmg < 0) dmg = 0;//0未満チェック
-        return dmg;
-    }
-
-    /// <summary>
-    /// このキャラがどの辺りを狙っているか
-    /// </summary>
-    public DirectedWill Target;
-
-    /// <summary>
-    /// このキャラの現在の範囲の意思　　複数持てる
-    /// スキルの範囲性質にcanSelectRangeがある場合のみ、ない場合はskillのzoneTraitをそのまま代入される。
-    /// </summary>
-    public SkillZoneTrait RangeWill;
-
-    /// <summary>
-    /// スキル範囲性質を持ってるかどうか
-    /// 複数指定した場合は全て当てはまってるかどうかで判断
-    /// </summary>
-    public bool HasRangeWill(params SkillZoneTrait[] skills)
-    {
-        SkillZoneTrait combinedSkills = 0;
-        foreach (SkillZoneTrait skill in skills)
-        {
-            combinedSkills |= skill;
-        }
-        return (RangeWill & combinedSkills) == combinedSkills;
-    }
-
-    /// <summary>
-    /// 指定されたスキルフラグのうち、一つでもRangeWillに含まれている場合はfalseを返し、
-    /// 全く含まれていない場合はtrueを返します。
-    /// </summary>
-    public bool DontHasRangeWill(params SkillZoneTrait[] skills)
-    {
-        // 受け取ったスキルフラグをビット単位で結合
-        SkillZoneTrait combinedSkills = 0;
-        foreach (SkillZoneTrait skill in skills)
-        {
-            combinedSkills |= skill;
-        }
-
-        // RangeWillに含まれるフラグとcombinedSkillsのビットAND演算
-        // 結果が0でなければ、一つ以上のフラグが含まれている
-        bool containsAny = (RangeWill & combinedSkills) != 0;
-
-        // 一つでも含まれていればfalse、含まれていなければtrueを返す
-        return !containsAny;
-    }
-
-
-
-    /// <summary>
-    /// 使用中のスキルを強制続行中のスキルとする。　
-    /// 例えばスキルの連続実行中の処理や発動カウント中のキャンセル不可能なスキルなどで使う
-    /// </summary>
-    public void FreezeSkill()
-    {
-        FreezeUseSkill = NowUseSkill;
-    }
-    /// <summary>
-    /// 強制続行中のスキルをなくす
-    /// </summary>
-    public void Defrost()
-    {
-        FreezeUseSkill = null;
-    }
-
-    /// <summary>
-    ///     このキャラクターの種別
-    /// </summary>
-    public CharacterType MyType { get; }
-
-
-    /// <summary>
-    ///     このキャラクターの属性 精神属性が入る
-    /// </summary>
-    public SpiritualProperty MyImpression { get; private set; }
-
-    /// <summary>
-    ///     このキャラクターの"デフォルト"属性 精神属性が入る
-    ///     一定数歩行するとMyImpressionがこれに戻る
-    ///     当然この属性自体もゲーム中で変化する可能性はある。
-    /// </summary>
-    public SpiritualProperty DefaultImpression { get; private set; }
-
-
-
-    /// <summary>
-    /// 次に使用する命中率へのパーセント補正用保持リスト
-    /// </summary>
-    private List<ModifierPart> _useHITPercentageModifiers;
-    /// <summary>
-    /// 次に使用する攻撃力へのパーセント補正用保持リスト
-    /// </summary>
-    private List<ModifierPart> _useATKPercentageModifiers;
-    /// <summary>
-    /// 次に使用する回避率へのパーセント補正用保持リスト
-    /// </summary>
-    private List<ModifierPart> _useAGIPercentageModifiers;
-    /// <summary>
-    /// 次に使用する防御力へのパーセント補正用保持リスト
-    /// </summary>
-    private List<ModifierPart> _useDEFPercentageModifiers;
-
-    /// <summary>
-    /// 命中率補正をセットする。
-    /// </summary>
-    public void SetHITPercentageModifier(float value, string memo)
-    {
-        if (_useHITPercentageModifiers == null) _useHITPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
-        _useHITPercentageModifiers.Add(new ModifierPart(memo, value));
-    }
-    /// <summary>
-    /// 攻撃力補正をセットする。
-    /// </summary>
-    public void SetATKPercentageModifier(float value, string memo)
-    {
-        if (_useATKPercentageModifiers == null) _useATKPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
-        _useATKPercentageModifiers.Add(new ModifierPart(memo, value));
-    }
-    /// <summary>
-    /// 回避率補正をセットする。
-    /// </summary>
-    public void SetAGIPercentageModifier(float value, string memo)
-    {
-        if (_useAGIPercentageModifiers == null) _useAGIPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
-        _useAGIPercentageModifiers.Add(new ModifierPart(memo, value));
-    }
-    /// <summary>
-    /// 防御力補正をセットする。
-    /// </summary>
-    public void SetDEFPercentageModifier(float value, string memo)
-    {
-        if (_useDEFPercentageModifiers == null) _useDEFPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
-        _useDEFPercentageModifiers.Add(new ModifierPart(memo, value));
-    }
-
-    /// <summary>
-    /// 特別な命中率補正
-    /// </summary>
-    /// <param name="per"></param>
-    public float UseHITPercentageModifier
-    {
-        get => _useHITPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
-    }
-
-    /// <summary>
-    /// 特別な攻撃力補正
-    /// </summary>
-    public float UseATKPercentageModifier
-    {
-        get => _useATKPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
-    }
-
-    /// <summary>
-    /// 特別な回避率補正
-    /// </summary>
-    public float UseAGIPercentageModifier
-    {
-        get => _useAGIPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
-    }
-
-    /// <summary>
-    /// 特別な防御力補正
-    /// </summary>
-    public float UseDEFPercentageModifier
-    {
-        get => _useDEFPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
-    }
-    /// <summary>
-    /// 特別な命中率補正の保持リストを返す。　主にフレーバー要素用。
-    /// </summary>
-    public List<ModifierPart> UseHitPercentageModifiers
-    {
-        get => _useHITPercentageModifiers;
-    }
-
-    /// <summary>
-    /// 特別な攻撃力補正の保持リストを返す。　主にフレーバー要素用。
-    /// </summary>
-    public List<ModifierPart> UseATKPercentageModifiers
-    {
-        get => _useATKPercentageModifiers;
-    }
-
-    /// <summary>
-    /// 特別な回避率補正の保持リストを返す。　主にフレーバー要素用。
-    /// </summary>
-    public List<ModifierPart> UseAGIPercentageModifiers
-    {
-        get => _useAGIPercentageModifiers;
-    }
-
-    /// <summary>
-    /// 特別な防御力補正の保持リストを返す。　主にフレーバー要素用。
-    /// </summary>
-    public List<ModifierPart> UseDEFPercentageModifiers
-    {
-        get => _useDEFPercentageModifiers;
-    }
-
-    /// <summary>
-    /// 一時的な補正などをすべて消す
-    /// </summary>
-    public void RemoveUseThings()
-    {
-        _useHITPercentageModifiers = new List<ModifierPart>();
-        _useATKPercentageModifiers = new List<ModifierPart>();
-        _useAGIPercentageModifiers = new List<ModifierPart>();
-        _useDEFPercentageModifiers = new List<ModifierPart>();
-    }
-
-
-
-
-    //スキルのリスト
-    public IReadOnlyList<BaseSkill> SkillList => _skillList;
-    /// <summary>
-    /// 完全な単体攻撃かどうか
-    /// (例えばControlByThisSituationの場合はrangeWillにそのままskillのzoneTraitが入るので、
-    /// そこに範囲系の性質(事故で範囲攻撃に変化)がある場合はfalseが返る
-    /// </summary>
-    /// <returns></returns>
-    private bool IsSingleATK()
-    {
-        return DontHasRangeWill(SkillZoneTrait.CanSelectMultiTarget,
-            SkillZoneTrait.RandomSelectMultiTarget, SkillZoneTrait.RandomMultiTarget,
-            SkillZoneTrait.AllTarget);
-    }
-
-    /// <summary>
-    /// 命中率計算
-    /// </summary>
-    /// <returns></returns>
-    public virtual float EYE()
-    {
-        float eye = b_EYE;//基礎命中率
-
-        eye *= UseHITPercentageModifier;//命中率補正。リスト内がゼロならちゃんと1.0fが返る。
-
-        //範囲意志によるボーナス
-        foreach (KeyValuePair<SkillZoneTrait, float> entry
-            in NowUseSkill.HitRangePercentageDictionary)//辞書に存在する物全てをループ
-        {
-            if (HasRangeWill(entry.Key))//キーの内容が範囲意志と合致した場合
-            {
-                eye += entry.Value;//範囲意志による補正が掛かる
-
-                //基本的に範囲は一つだけのはずなので無用なループは避けてここで終了
-                break;
-            }
-        }
-
-        //単体攻撃による命中補正
-        //複数性質を持っていない、完全なる単体の攻撃なら
-        if (IsSingleATK())
-        //ControlBySituationでの事故性質でも複数性質で複数事故が起こるかもしれないので、それも加味してる。
-        {
-            var agiPer = 6;//攻撃者のAgiの命中補正用 割る数
-            if (NowUseSkill.SkillPhysical == PhysicalProperty.heavy)//暴断攻撃なら
-            {
-                agiPer *= 2;//割る数が二倍に
-            }
-            eye += AGI() / agiPer;
-        }
-
-
-
-        return eye;
-    }
-
-    /// <summary>
-    /// 回避率計算
-    /// </summary>
-    public virtual float AGI()
-    {
-        float agi = b_AGI;//基礎回避率
-
-        agi *= UseAGIPercentageModifier;//回避率補正。リスト内がゼロならちゃんと1.0fが返る。
-
-        if (manager.IsVanguard(this))//自分が前のめりなら
-        {
-            agi /= 2;//回避率半減
-        }
-
-        return agi;
-    }
-
-    public virtual float ATK()
-    {
-        float atk = b_ATK;//基礎攻撃力
-
-        atk *= UseATKPercentageModifier;//攻撃力補正
-
-        //範囲意志によるボーナス
-        foreach (KeyValuePair<SkillZoneTrait, float> entry
-            in NowUseSkill.PowerRangePercentageDictionary)//辞書に存在する物全てをループ
-        {
-            if (HasRangeWill(entry.Key))//キーの内容が範囲意志と合致した場合
-            {
-                atk += entry.Value;//範囲意志による補正が掛かる
-
-                //基本的に範囲は一つだけのはずなので無用なループは避けてここで終了
-                break;
-            }
-        }
-
-        //単体攻撃で暴断物理攻撃の場合のAgi攻撃補正
-        if (IsSingleATK())
-        {
-            if (NowUseSkill.SkillPhysical == PhysicalProperty.heavy)
-            {
-                atk += AGI() / 6;
-            }
-        }
-
-
-        return atk;
-    }
-
-    /// <summary>
-    ///     防御力計算
-    /// </summary>
-    /// <returns></returns>
-    public virtual float DEF(float minusPer)
-    {
-        var def = b_DEF; //基礎防御力が基本。
-
-        def *= UseDEFPercentageModifier;//防御力補正
-
-        var minusAmount = def * minusPer;//防御低減率
-
-
-        return def - minusAmount;
-    }
-
-
-    /// <summary>
-    ///初期精神属性決定関数(基本は印象を持ってるスキルリストから適当に選び出す
-    /// </summary>
-    public virtual void InitializeMyImpression()
-    {
-        SpiritualProperty that;
-
-        if (SkillList != null)
-        {
-            var rnd = RandomEx.Shared.NextInt(0, SkillList.Count);
-            that = SkillList[rnd].SkillSpiritual; //スキルの精神属性を抽出
-            MyImpression = that; //印象にセット
-        }
-        else
-        {
-            Debug.Log(CharacterName + " のスキルが空です。");
-        }
-    }
-
-    /// <summary>
-    /// 基礎山型分布によるダメージ補正
-    /// </summary>
-    float GetBaseCalcDamageWithPlusMinus22Percent(float baseDamage)
-    {
-        // 1) 8d5501 を振る（8回ランダム）
-        int diceSum = 0;
-        for (int i = 0; i < 8; i++)
-        {
-            // Range(1, 5502) => [1..5501] の整数
-            diceSum += RandomEx.Shared.NextInt(1, 5502);
-        }
-
-        // 2) 平均(22008)を引いて、0.00001f を掛ける
-        //    → -0.22 ～ +0.22 (±22%)
-        float offset = (diceSum - 22008) * 0.00001f;
-
-        // 3) baseDamage に対して (1 + offset) 倍する
-        //    → (1 - 0.22)～(1 + 0.22) = 0.78～1.22 倍
-        float finalDamage = baseDamage * (1f + offset);
-
-        // 4) 必要であれば下限補正（例：0未満になれば0にする など）
-        if (finalDamage < 0f)
-        {
-            finalDamage = 0f;
-        }
-
-        // 5) float で返す（丸めたくないのでそのまま）
-        return finalDamage;
-    }
-    /// <summary>
-    ///     オーバライド可能なダメージ関数
-    /// </summary>
-    /// <param name="atkPoint"></param>
-    public virtual string Damage(BaseStates Atker, float SkillPower)
-    {
-        var skill = Atker.NowUseSkill;
-        var dmg = (Atker.ATK() - DEF(skill.DEFATK)) * SkillPower;//(攻撃-対象者の防御) ×スキルパワー？
-
-        dmg = GetBaseCalcDamageWithPlusMinus22Percent(dmg);//基礎山型補正
-
-        //慣れ補正
-        dmg *= AdaptToSkill(Atker, skill, dmg);
-
-        //vitalLayerを通る処理
-        dmg = BarrierLayers(dmg, Atker);
-
-        HP -= dmg;
-        Debug.Log("攻撃が実行された");
-        return "-+~*⋮¦";
-    }
-
-    /// <summary>
-    /// ヒールは防御できない、つまりヒールが逆効果のキャラクターならヒールは有効打ってこと
-    /// </summary>
-    /// <param name="HealPoint"></param>
-    public virtual string Heal(float HealPoint)
-    {
-        HP += HealPoint;
-        Debug.Log("ヒールが実行された");
-        return "癒された";
-    }
-    /// <summary>
-    /// 命中凌駕の判定関数　引数倍命中が回避を凌駕してるのなら、スキル命中率に影響を与える
-    /// </summary>
-    private float AccuracySupremacy(float atkerEye, float undAtkerAgi, float multiplierThreshold = 2.5f)
-    {
-        var supremacyMargin = 0f;
-        var modifyAgi = undAtkerAgi * multiplierThreshold;//補正されたagi
-        if (atkerEye >= modifyAgi)//攻撃者のEYEが特定の倍被害者のAGIを上回っているならば、
-        {
-            supremacyMargin = (atkerEye - modifyAgi) / 2;//命中が引数倍された回避を超した分　÷　2
-        }
-        return supremacyMargin;
-    }
-    /// <summary>
-    /// 攻撃者と防御者とスキルを利用してヒットするかの計算
-    /// </summary>
-    private bool IsReactHIT(BaseStates Attacker)
-    {
-        var skill = Attacker.NowUseSkill;
-
-        if (RandomEx.Shared.NextFloat(0, Attacker.EYE() + AGI()) < Attacker.EYE())//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
-        {
-            //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
-            return skill.SkillHitCalc(AccuracySupremacy(Attacker.EYE(), AGI()));
-        }
-
-        return false;
-    }
-
-
-    /// <summary>
-    /// スキルに対するリアクション ここでスキルの解釈をする。
-    /// </summary>
-    /// <param name="skill"></param>
-    /// <param name="UnderIndex">攻撃される人の順番　スキルのPowerSpreadの順番に同期している</param>
-    public virtual string ReactionSkill(BaseStates attacker, float spread)
-    {
-        var skill = attacker.NowUseSkill;
-
-        //スキルパワーの精神属性による計算
-        var modifier = SkillSpiritualModifier[(skill.SkillSpiritual, MyImpression)];//スキルの精神属性と自分の精神属性による補正
-        var skillPower = skill.SkillPowerCalc(spread) * modifier.GetValue() / 100.0f;
-        var txt = "";//メッセージテキスト用
-        skill.DoSkillCountUp();//スキルを実行した回数をカウントアップ
-
-
-        //スキルの持ってる性質を全て処理として実行
-
-        if (skill.HasType(SkillType.Attack))
-        {
-            if (IsReactHIT(attacker))
-            {
-                //成功されるとダメージを受ける
-                txt += Damage(attacker, skillPower);
-            }
-            else
-            {//外したら
-                skill.HitConsecutiveCount = 0;//連続ヒット回数がゼロ　
-            }
-        }
-
-        if (skill.HasType(SkillType.Heal))
-        {
-            if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
-            {
-                txt += Heal(skillPower);
-            }
-        }
-
-        if (skill.HasType(SkillType.addPassive))
-        {
-            foreach (var id in skill.subEffects)
-                ApplyPassive(PassiveManager.Instance.GetAtID(id));
-        }
-
-        if (skill.HasType(SkillType.AddVitalLayer))
-        {
-            foreach (var id in skill.subVitalLayers)
-                ApplyVitalLayer(VitalLayerManager.Instance.GetAtID(id));
-        }
-
-        Debug.Log("ReactionSkill");
-        return txt;
-    }
-
-
-    /// <summary>
-    /// クラスを通じて相手を攻撃する
-    /// </summary>
-    /// <param name="UnderAttacker"></param>
-    public virtual string AttackChara(UnderActersEntryList Unders)
-    {
-
-
-
-        SkillUseConsecutiveCountUp(NowUseSkill);//連続カウントアップ
-        string txt = "";
-
-        // スキルの精神属性を自分の精神属性に変更
-        NowUseSkill.SkillSpiritual = MyImpression;
-
-        for (var i = 0; i < Unders.Count; i++)
-        {
-            txt += Unders.GetAtCharacter(i).ReactionSkill(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
-        }
-
-        NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルの攻撃回数をカウントアップ
-        RemoveUseThings();//特別な補正を消去
-        Debug.Log("AttackChara");
-
-
-        _tempUseSkill = NowUseSkill;//使ったスキルを一時保存
-        return txt;
-    }
-
-    /// <summary>
-    ///     死を判定するオーバライド可能な関数
-    /// </summary>
-    /// <returns></returns>
-    public virtual bool Death()
-    {
-        if (HP <= 0) return true;
-        return false;
-    }
-    /// <summary>
-    /// 持ってるスキルリストを初期化する
-    /// </summary>
-    public void SkillsInitialize()
-    {
-        foreach (var skill in SkillList)
-        {
-            skill.OnInitialize(this);
-        }
-    }
-    /// <summary>
-    /// 全スキルの一時保存系プロパティをリセットする
-    /// </summary>
-    public void SkillsTmpReset()
-    {
-        foreach (var skill in SkillList)
-        {
-            skill.ResetTmpProperty();//プロパティをリセットする
-        }
-    }
-
-    /// <summary>
-    ///追加HPを適用 
-    /// </summary>
-    public virtual void ApplyVitalLayer(BaseVitalLayer newLayer)
-    {
-        //リスト内に同一の物があるか判定する。
-        var sameHP = _vitalLaerList.FirstOrDefault(lay => lay.id == newLayer.id);
-        if (sameHP != null)
-        {
-            sameHP.ReplenishHP();//同一の為リストにある側を再補充する。
-        }
-        else//初物の場合
-        {
-            //優先順位にリスト内で並び替えつつ追加
-            // _vitalLaerList 内で、新しいレイヤーの Priority より大きい最初の要素のインデックスを探す
-            int insertIndex = _vitalLaerList.FindIndex(v => v.Priority > newLayer.Priority);
-
-            if (insertIndex < 0)
-            {
-                // 該当する要素が見つからなかった場合（全ての要素が新しいレイヤー以下の Priority ）
-                // リストの末尾に追加
-                _vitalLaerList.Add(newLayer);
-            }
-            else
-            {
-                // 新しいレイヤーを適切な位置に挿入
-                _vitalLaerList.Insert(insertIndex, newLayer);
-            }
-        }
-    }
-
-    /// <summary>
-    ///     パッシブを適用
-    /// </summary>
-    public virtual void ApplyPassive(BasePassive status)
-    {
-        // 条件(OkType,OkImpression) は既にチェック済みならスキップ
-        if (!HasCharacterType(status.OkType)) return;
-        if (!HasCharacterImpression(status.OkImpression)) return;
-
-        // すでに持ってるかどうか
-        var existing = _passiveList.FirstOrDefault(p => p.ID == status.ID);
-        if (existing != null)
-        {
-            // 重ね掛け
-            existing.AddPassivePower(1);
-        }
-        else
-        {
-            // 新規追加
-            _passiveList.Add(status);
-            // パッシブ側のOnApplyを呼ぶ
-            status.OnApply(this);
-        }
-    }
-
-    /// <summary>
-    /// パッシブを除去
-    /// </summary>
-    public virtual void RemovePassive(BasePassive status)
-    {
-        // パッシブがあるか確認
-        if (_passiveList.Remove(status))
-        {
-            // パッシブ側のOnRemoveを呼ぶ
-            status.OnRemove(this);
-        }
-    }
-    /// <summary>
-    /// 全パッシブのUpdateTurnSurvivalを呼ぶ ターン経過時パッシブが生存するかどうか
-    /// </summary>
-    void UpdateTurnAllPassiveSurvival()
-    {
-        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
-        var copy = _passiveList.ToArray();
-        foreach (var pas in copy)
-        {
-            pas.UpdateTurnSurvival(this);
-        }
-    }/// <summary>
-    /// 全パッシブのUpdateWalkSurvivalを呼ぶ 歩行時パッシブが生存するかどうか
-    /// </summary>
-    void UpdateWalkAllPassiveSurvival()
-    {
-        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
-        var copy = _passiveList.ToArray();
-        foreach (var pas in copy)
-        {
-            pas.UpdateWalkSurvival(this);
-        }
-    }
-    /// <summary>歩行時のコールバック引数なしの</summary>
-    public void OnWalkNoArgument()
-    {
-        UpdateWalkAllPassiveSurvival();
-    }
-
-    /// <summary>
-    /// 戦闘中に次のターンに進む際のコールバック
-    /// </summary>
-    public void OnNextTurnNoArgument()
-    {
-        UpdateTurnAllPassiveSurvival();
-    }
-
-    /// <summary>
-    ///bm生成時に初期化される関数
-    /// </summary>
-    public void OnBattleStartNoArgument()
-    {
-        TempDamageTurn = 0;
-        DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
-        DecisionSacriFaithAdaptToSkillGrouping();
-    }
-    public void OnBattleEndNoArgument()
-    {
-        TempDamageTurn = 0;
-    }
-
-
     //static 静的なメゾット(戦いに関する辞書データなど)
+
+    //戦闘規格ごとのデフォルトa,bの狙い流れ
+    public static readonly Dictionary<BattleProtocol, (AimStyle aStyle,float a,AimStyle bStyle)> DefaultDefensePatternPerProtocol =
+        new Dictionary<BattleProtocol, (AimStyle aStyle,float a,AimStyle bStyle)>
+        {
+            {BattleProtocol.LowKey,(AimStyle.AcrobatMinor,0.6f,AimStyle.Doublet)},
+            {BattleProtocol.Tricky,(AimStyle.Duster,0.9f,AimStyle.QuadStrike)},
+            {BattleProtocol.Showey,(AimStyle.CentralHeavenStrike,0.8f,AimStyle.Doublet)}
+        };
 
     /// <summary>
     /// 精神属性でのスキルの補正値　スキルの精神属性→キャラクター属性
@@ -2090,7 +2284,7 @@ public abstract class BaseStates
 
         /*Debug.Log("読み込まれたキャラクター精神スキル補正値\n" +
               string.Join(", ",
-                  SkillSpiritualModifier.Select(kvp => $"[{kvp.Key}: {kvp.Value.GetValue()} rndMax({kvp.Value.rndMax})]" + "\n"))); //デバックで全内容羅列。*/
+                  SkillSpiritualModifier.Select(kvp => $"[{kvp.Key}: {kvp.Value.GetValue()} rndMax({kvp.Value.rndMax})]" + "\n")); //デバックで全内容羅列。*/
     }
 }
 
@@ -2125,5 +2319,56 @@ public class FixedOrRandomValue
 
         return RandomEx.Shared.NextInt(rndMinOrFixed, rndMax + 1);//ランダムなら
 
+    }
+}
+
+/// <summary>
+/// 慣れ補正で使用するスキルとその使用者
+/// </summary>
+public class FocusedSkillAndUser
+{
+    public FocusedSkillAndUser(BaseStates InitUser, BaseSkill askil, float InitDmg)
+    {
+        User = new List<BaseStates>();
+        User.Add(InitUser);
+        skill = askil;
+
+        //Memory();//この記憶回数の処理の後に補正するので、作った瞬間はゼロから始めた方がいい
+        DamageMemory(InitDmg);
+    }
+
+    /// <summary>
+    /// そのスキルのユーザー
+    /// </summary>
+    public List<BaseStates> User;
+
+    /// <summary>
+    /// 保存スキル
+    /// </summary>
+    public BaseSkill skill;
+
+    float _memoryCount;
+    /// <summary>
+    /// 慣れの記憶回数
+    /// </summary>
+    public float MemoryCount => _memoryCount;
+    public void Memory(float value)
+    {
+        _memoryCount += value;
+    }
+    public void Forget(float value)
+    {
+        _memoryCount -= value;
+    }
+
+
+    float _topDmg;
+    /// <summary>
+    /// このスキルが自らに施した最大限のダメージ
+    /// </summary>
+    public float TopDmg => _topDmg;
+    public void DamageMemory(float dmg)
+    {
+        if (dmg > _topDmg) _topDmg = dmg;//越してたら記録
     }
 }

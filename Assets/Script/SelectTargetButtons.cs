@@ -1,4 +1,4 @@
-using RandomExtensions;
+ï»¿using RandomExtensions;
 using RandomExtensions.Linq;
 using System.Collections;
 using System.Collections.Generic;
@@ -21,8 +21,8 @@ public class SelectTargetButtons : MonoBehaviour
     RectTransform parentRect;
 
     [Header("Layout Settings")]
-    [SerializeField] float horizontalPadding = 10f; // ƒ{ƒ^ƒ“ŠÔ‚Ì‰¡—]”’
-    [SerializeField] float verticalPadding = 10f;   // ƒ{ƒ^ƒ“ŠÔ‚Ìc—]”’
+    [SerializeField] float horizontalPadding = 10f; // ãƒœã‚¿ãƒ³é–“ã®æ¨ªä½™ç™½
+    [SerializeField] float verticalPadding = 10f;   // ãƒœã‚¿ãƒ³é–“ã®ç¸¦ä½™ç™½
 
     public void Awake()
     {
@@ -39,27 +39,27 @@ public class SelectTargetButtons : MonoBehaviour
         buttonSize = buttonPrefab.GetComponent<RectTransform>().sizeDelta;
         parentSize = parentRect.rect.size;
 
-        // eƒIƒuƒWƒFƒNƒg‚Ì¶ã‚ğŠî€‚Æ‚·‚é‚½‚ß‚ÌƒIƒtƒZƒbƒg
+        // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å·¦ä¸Šã‚’åŸºæº–ã¨ã™ã‚‹ãŸã‚ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆ
         startX = -parentSize.x / 2 + buttonSize.x / 2 + horizontalPadding;
         startY = parentSize.y / 2 - buttonSize.y + horizontalPadding;
     }
-    // ƒ{ƒ^ƒ“‚ÌƒTƒCƒY‚ğæ“¾
+    // ãƒœã‚¿ãƒ³ã®ã‚µã‚¤ã‚ºã‚’å–å¾—
     Vector2 buttonSize;
-    // eƒIƒuƒWƒFƒNƒg‚ÌƒTƒCƒY‚ğæ“¾
+    // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ã‚µã‚¤ã‚ºã‚’å–å¾—
     Vector2 parentSize;
-    // eƒIƒuƒWƒFƒNƒg‚Ì¶ã‚ğŠî€‚Æ‚·‚é‚½‚ß‚ÌƒIƒtƒZƒbƒg
+    // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å·¦ä¸Šã‚’åŸºæº–ã¨ã™ã‚‹ãŸã‚ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆ
     float startX;
     float startY;
 
     BattleManager bm;
-    int NeedSelectCountAlly;//‚±‚Ìneedcount‚ÍŠî–{“I‚É‚Í‘ÎÛ‘I‘ğ‚Ì‚İ
+    int NeedSelectCountAlly;//ã“ã®needcountã¯åŸºæœ¬çš„ã«ã¯å¯¾è±¡é¸æŠã®ã¿
     int NeedSelectCountEnemy;
     List<Button> AllybuttonList;
     List<Button> EnemybuttonList;
 
-    List<BaseStates> CashUnders;//•ªU’l‚É‘Î‚·‚éƒ‰ƒ“ƒ_ƒ€«‚ğƒ^ƒ“ƒ|ƒ|‚·‚é‚½‚ß‚Ì‘ÎÛÒƒLƒƒƒbƒVƒ…
+    List<BaseStates> CashUnders;//åˆ†æ•£å€¤ã«å¯¾ã™ã‚‹ãƒ©ãƒ³ãƒ€ãƒ æ€§ã‚’æ‹…ä¿ã™ã‚‹ãŸã‚ã®å¯¾è±¡è€…ã‚­ãƒ£ãƒƒã‚·ãƒ¥
     /// <summary>
-    /// ¶¬—pƒR[ƒ‹ƒoƒbƒN
+    /// ç”Ÿæˆç”¨ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
     /// </summary>
     public void OnCreated(BattleManager _bm)
     {
@@ -68,128 +68,128 @@ public class SelectTargetButtons : MonoBehaviour
         var skill = acter.NowUseSkill;
         CashUnders = new List<BaseStates>();
 
-        //‚à‚µƒXƒLƒ‹‚Ì”ÍˆÍ«¿‚ÉcanSelectTarget‚ª‚È‚¢ê‡
+        //ã‚‚ã—ã‚¹ã‚­ãƒ«ã®ç¯„å›²æ€§è³ªã«canSelectRangeãŒãªã„å ´åˆ (=ç¯„å›²é¸æŠã®å¿…è¦ãŒãªã„ã‚¹ã‚­ãƒ«ãªã®ã§ç¯„å›²é¸æŠãŒç™ºç”Ÿã›ãšä»£å…¥ã•ã‚Œãªã„ã®ã§ã“ã“ã§å…¥ã‚Œã‚‹)
         if (!skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))
         {
-            acter.RangeWill |= skill.ZoneTrait;//ÀsÒ‚Ì”ÍˆÍˆÓu‚É‚»‚Ì‚Ü‚ÜƒXƒLƒ‹‚Ì”ÍˆÍ«¿‚ğ“ü‚ê‚éB
+            acter.RangeWill |= skill.ZoneTrait;//å®Ÿè¡Œè€…ã®ç¯„å›²æ„å¿—ã«ãã®ã¾ã¾ã‚¹ã‚­ãƒ«ã®ç¯„å›²æ€§è³ªã‚’å…¥ã‚Œã‚‹ã€‚
         }
 
-        // Œ»İ‚ÌˆÊ’u‚ğ‰Šú‰»
+        // ç¾åœ¨ã®ä½ç½®ã‚’åˆæœŸåŒ–
         float currentX = startX;
         float currentY = startY;
 
 
-        //buttonPrefab‚ğƒXƒLƒ‹«¿‚É‰‚¶‚Äbm‚ÌƒOƒ‹[ƒv‚ğ“Á’è‚Ìl”•ª‚¾‚¯ì‚Á‚Ä¶¬‚·‚é
-        bool EnemyTargeting = false;//“G‚Ì‘ÎÛ‘I‘ğ
-        bool AllyTargeting = false;//–¡•û‚Ì‘ÎÛ‘I‘ğ
-        bool EnemyVanguardOrBackLine = false;//“G‚Ì‘O‚Ì‚ß‚èorŒã‰q
+        //buttonPrefabã‚’ã‚¹ã‚­ãƒ«æ€§è³ªã«å¿œã˜ã¦bmã®ã‚°ãƒ«ãƒ¼ãƒ—ã‚’ç‰¹å®šã®äººæ•°åˆ†ã ã‘ä½œã£ã¦ç”Ÿæˆã™ã‚‹
+        bool EnemyTargeting = false;//æ•µã®å¯¾è±¡é¸æŠ
+        bool AllyTargeting = false;//å‘³æ–¹ã®å¯¾è±¡é¸æŠ
+        bool EnemyVanguardOrBackLine = false;//æ•µã®å‰ã®ã‚ã‚Šorå¾Œè¡›
 
-        if (acter.HasRangeWill(SkillZoneTrait.CanPerfectSelectSingleTarget))//‘I‘ğ‰Â”\‚È’P‘Ì‘ÎÛ
+        if (acter.HasRangeWill(SkillZoneTrait.CanPerfectSelectSingleTarget))//é¸æŠå¯èƒ½ãªå˜ä½“å¯¾è±¡
         {
             EnemyTargeting = true;
             NeedSelectCountEnemy = 1;
 
             if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))
             {
-                AllyTargeting = true;//–¡•û‚à‘I‚×‚½‚ç–¡•û‚à’Ç‰Á
+                AllyTargeting = true;//å‘³æ–¹ã‚‚é¸ã¹ãŸã‚‰å‘³æ–¹ã‚‚è¿½åŠ 
                 NeedSelectCountAlly = 1;
             }
 
         }
-        if (acter.HasRangeWill(SkillZoneTrait.CanSelectSingleTarget))//‘O‚Ì‚ß‚è‚©Œã‰q(ƒ‰ƒ“ƒ_ƒ€’P‘Ì)‚ğ‘_‚¤‚©
+        if (acter.HasRangeWill(SkillZoneTrait.CanSelectSingleTarget))//å‰ã®ã‚ã‚Šã‹å¾Œè¡›(ãƒ©ãƒ³ãƒ€ãƒ å˜ä½“)ã‚’ç‹™ã†ã‹
         {
             EnemyVanguardOrBackLine = true;
-            if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//–¡•û‚à‘I‚×‚é‚È‚ç
+            if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//å‘³æ–¹ã‚‚é¸ã¹ã‚‹ãªã‚‰
             {
-                AllyTargeting = true;//–¡•û‚Í’P‘Ì‚Å‚µ‚©‘I‚×‚È‚¢
-                //ˆêl‚Ü‚½‚Í“ñl’PˆÊ 
+                AllyTargeting = true;//å‘³æ–¹ã¯å˜ä½“ã§ã—ã‹é¸ã¹ãªã„
+                //ä¸€äººã¾ãŸã¯äºŒäººå˜ä½ 
                 NeedSelectCountAlly = Random.Range(1, 3);
             }
         }
 
-        if (acter.HasRangeWill(SkillZoneTrait.CanSelectMultiTarget))//‘O‚Ì‚ß‚è‚©Œã‰q(”ÍˆÍ)‚ğ‘_‚¤‚©
+        if (acter.HasRangeWill(SkillZoneTrait.CanSelectMultiTarget))//å‰ã®ã‚ã‚Šã‹å¾Œè¡›(ç¯„å›²)ã‚’ç‹™ã†ã‹
         {
             EnemyVanguardOrBackLine = true;
-            if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//–¡•û‚à‘I‚×‚é‚È‚ç
+            if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//å‘³æ–¹ã‚‚é¸ã¹ã‚‹ãªã‚‰
             {
-                AllyTargeting = true;//–¡•û‚Í’P‘Ì‚Å‚µ‚©‘I‚×‚È‚¢
-                //“ñl”ÍˆÍ 
+                AllyTargeting = true;//å‘³æ–¹ã¯å˜ä½“ã§ã—ã‹é¸ã¹ãªã„
+                //äºŒäººç¯„å›² 
                 NeedSelectCountAlly = 2;
             }
         }
 
-        //ƒ{ƒ^ƒ“ì¬ƒtƒF[ƒY™™™™™™™™™™™™™™™™™™™™™™™™™™™™™™™™™™
+        //ãƒœã‚¿ãƒ³ä½œæˆãƒ•ã‚§ãƒ¼ã‚ºâ˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†â˜†
 
 
-        if (EnemyVanguardOrBackLine) //‘O‚Ì‚ß‚è‚©Œã‰q‚©‚ğ“G‚©‚ç‘I‚Ô‚É‚Í
+        if (EnemyVanguardOrBackLine) //å‰ã®ã‚ã‚Šã‹å¾Œè¡›ã‹ã‚’æ•µã‹ã‚‰é¸ã¶ã«ã¯
         {
-            //‘O‚Ì‚ß‚è‚ª‘¶İ‚·‚é‚©‚µ‚È‚¢‚©A‚»‚à‚»‚àˆêl‚©‚Ç‚¤‚©‚¾‚Æ‹­§“I‚ÉBackOrAny‚ÉDirectedWill‚É‚È‚Á‚Ä‘ÎÛ‘I‘ğ‰æ–Ê‚ğ”ò‚Î‚·B
-            //‚Â‚Ü‚èƒ{ƒ^ƒ“‚ğì‚ç‚¸‚»‚Ì‚Ü‚ÜNextWait‚Ö
+            //å‰ã®ã‚ã‚ŠãŒå­˜åœ¨ã™ã‚‹ã‹ã—ãªã„ã‹ã€ãã‚‚ãã‚‚ä¸€äººã‹ã©ã†ã‹ã ã¨å¼·åˆ¶çš„ã«BackOrAnyã«DirectedWillã«ãªã£ã¦å¯¾è±¡é¸æŠç”»é¢ã‚’é£›ã°ã™ã€‚
+            //ã¤ã¾ã‚Šãƒœã‚¿ãƒ³ã‚’ä½œã‚‰ãšãã®ã¾ã¾NextWaitã¸
 
-            var enemyLives = bm.RemoveDeathCharacters(bm.EnemyGroup.Ours);//¶‚«‚Ä‚é“G‚¾‚¯
-            if((bm.EnemyGroup.InstantVanguard == null || enemyLives.Count < 2)) //‘O‚Ì‚ß‚è‚ª‚¢‚È‚¢‚©@“G‚Ì¶‚«‚Ä‚él”‚ª“ñl–¢–
+            var enemyLives = bm.RemoveDeathCharacters(bm.EnemyGroup.Ours);//ç”Ÿãã¦ã‚‹æ•µã ã‘
+            if((bm.EnemyGroup.InstantVanguard == null || enemyLives.Count < 2)) //å‰ã®ã‚ã‚ŠãŒã„ãªã„ã‹ã€€æ•µã®ç”Ÿãã¦ã‚‹äººæ•°ãŒäºŒäººæœªæº€
             {
-                if (!AllyTargeting)//–¡•û‘I‘ğ‚ª‚È‚¢‚È‚ç
+                if (!AllyTargeting)//å‘³æ–¹é¸æŠãŒãªã„ãªã‚‰
                 {
-                    ReturnNextWaitView();//‚»‚Ì‚Ü‚ÜŸ‚Ì‰æ–Ê‚Ö
-                    //bm‚Éˆ—‚ğ”C‚¹‚é
+                    ReturnNextWaitView();//ãã®ã¾ã¾æ¬¡ã®ç”»é¢ã¸
+                    //bmã«å‡¦ç†ã‚’ä»»ã›ã‚‹
                 }
-                else//–¡•û‚à‘I‘ğ‚Å‚«‚é‚È‚ç
+                else//å‘³æ–¹ã‚‚é¸æŠã§ãã‚‹ãªã‚‰
                 {
-                    //“Gˆêl‚ğ‘I‘ğ‰Â”\‚Èƒ{ƒ^ƒ“‚Æ‚µ‚Ä”z’u‚·‚é
+                    //æ•µä¸€äººã‚’é¸æŠå¯èƒ½ãªãƒœã‚¿ãƒ³ã¨ã—ã¦é…ç½®ã™ã‚‹
                     var button = Instantiate(buttonPrefab, transform);
                     var rect = button.GetComponent<RectTransform>();
 
-                    // eƒIƒuƒWƒFƒNƒg‚Ì‰E’[‚ğ’´‚¦‚éê‡‚ÍŸ‚Ìs‚ÉˆÚ“®
+                    // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å³ç«¯ã‚’è¶…ãˆã‚‹å ´åˆã¯æ¬¡ã®è¡Œã«ç§»å‹•
                     if (currentX + buttonSize.x / 2 > parentSize.x / 2)
                     {
-                        // ¶’[‚ÉƒŠƒZƒbƒg
+                        // å·¦ç«¯ã«ãƒªã‚»ãƒƒãƒˆ
                         currentX = startX;
 
-                        // Ÿ‚Ìs‚ÉˆÚ“®
+                        // æ¬¡ã®è¡Œã«ç§»å‹•
                         currentY -= (buttonSize.y + verticalPadding);
                     }
 
-                    // ƒ{ƒ^ƒ“‚ÌˆÊ’u‚ğİ’è
+                    // ãƒœã‚¿ãƒ³ã®ä½ç½®ã‚’è¨­å®š
                     rect.anchoredPosition = new Vector2(currentX, currentY);
 
-                    // Ÿ‚Ìƒ{ƒ^ƒ“‚ÌXˆÊ’u‚ğXV
+                    // æ¬¡ã®ãƒœã‚¿ãƒ³ã®Xä½ç½®ã‚’æ›´æ–°
                     currentX += (buttonSize.x + horizontalPadding);
 
                     button.onClick.AddListener(() => OnClickSelectVanguardOrBacklines(button, DirectedWill.BacklineOrAny));
-                    button.GetComponentInChildren<TextMeshProUGUI>().text = "“G";//ƒ{ƒ^ƒ“‚ÌƒeƒLƒXƒg
-                    EnemybuttonList.Add(button);//“G‚Ìƒ{ƒ^ƒ“ƒŠƒXƒg‚É“ü‚ê‚é
+                    button.GetComponentInChildren<TextMeshProUGUI>().text = "æ•µ";//ãƒœã‚¿ãƒ³ã®ãƒ†ã‚­ã‚¹ãƒˆ
+                    EnemybuttonList.Add(button);//æ•µã®ãƒœã‚¿ãƒ³ãƒªã‚¹ãƒˆã«å…¥ã‚Œã‚‹
                 }
             }
-            else//‘O‚Ì‚ß‚è‚ª‚¢‚Ä“ñlˆÈã‚¢‚é‚È‚ç
+            else//å‰ã®ã‚ã‚ŠãŒã„ã¦äºŒäººä»¥ä¸Šã„ã‚‹ãªã‚‰
             {
-                DirectedWill[] WillSet = new DirectedWill[] { DirectedWill.InstantVanguard, DirectedWill.BacklineOrAny };//for•¶‚Åˆ—‚·‚é‚½‚ß”z—ñ
-                string[] BtnStringSet = new string[] { "‘O‚Ì‚ß‚è", "‚»‚êˆÈŠO" };
+                DirectedWill[] WillSet = new DirectedWill[] { DirectedWill.InstantVanguard, DirectedWill.BacklineOrAny };//foræ–‡ã§å‡¦ç†ã™ã‚‹ãŸã‚é…åˆ—
+                string[] BtnStringSet = new string[] { "å‰ã®ã‚ã‚Š", "ãã‚Œä»¥å¤–" };
 
                 for (var i = 0; i < 2; i++)
                 {
                     var button = Instantiate(buttonPrefab, transform);
                     var rect = button.GetComponent<RectTransform>();
 
-                    // eƒIƒuƒWƒFƒNƒg‚Ì‰E’[‚ğ’´‚¦‚éê‡‚ÍŸ‚Ìs‚ÉˆÚ“®
+                    // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å³ç«¯ã‚’è¶…ãˆã‚‹å ´åˆã¯æ¬¡ã®è¡Œã«ç§»å‹•
                     if (currentX + buttonSize.x / 2 > parentSize.x / 2)
                     {
-                        // ¶’[‚ÉƒŠƒZƒbƒg
+                        // å·¦ç«¯ã«ãƒªã‚»ãƒƒãƒˆ
                         currentX = startX;
 
-                        // Ÿ‚Ìs‚ÉˆÚ“®
+                        // æ¬¡ã®è¡Œã«ç§»å‹•
                         currentY -= (buttonSize.y + verticalPadding);
                     }
 
-                    // ƒ{ƒ^ƒ“‚ÌˆÊ’u‚ğİ’è
+                    // ãƒœã‚¿ãƒ³ã®ä½ç½®ã‚’è¨­å®š
                     rect.anchoredPosition = new Vector2(currentX, currentY);
 
-                    // Ÿ‚Ìƒ{ƒ^ƒ“‚ÌXˆÊ’u‚ğXV
+                    // æ¬¡ã®ãƒœã‚¿ãƒ³ã®Xä½ç½®ã‚’æ›´æ–°
                     currentX += (buttonSize.x + horizontalPadding);
 
                     button.onClick.AddListener(() => OnClickSelectVanguardOrBacklines(button, WillSet[i]));
-                    button.GetComponentInChildren<TextMeshProUGUI>().text = BtnStringSet[i];//ƒ{ƒ^ƒ“‚ÌƒeƒLƒXƒg‚É‘O‚Ì‚ß‚è“™‚Ì‹Lq
-                    EnemybuttonList.Add(button);//“G‚Ìƒ{ƒ^ƒ“ƒŠƒXƒg‚É“ü‚ê‚é
+                    button.GetComponentInChildren<TextMeshProUGUI>().text = BtnStringSet[i];//ãƒœã‚¿ãƒ³ã®ãƒ†ã‚­ã‚¹ãƒˆã«å‰ã®ã‚ã‚Šç­‰ã®è¨˜è¿°
+                    EnemybuttonList.Add(button);//æ•µã®ãƒœã‚¿ãƒ³ãƒªã‚¹ãƒˆã«å…¥ã‚Œã‚‹
 
                 }
 
@@ -199,19 +199,19 @@ public class SelectTargetButtons : MonoBehaviour
 
 
 
-        if (EnemyTargeting)//“G‘Sˆõ‚ğ“ü‚ê‚é
+        if (EnemyTargeting)//æ•µå…¨å“¡ã‚’å…¥ã‚Œã‚‹
         {
             var selects = bm.EnemyGroup.Ours;
 
-            if (!acter.HasRangeWill(SkillZoneTrait.CanSelectDeath))//€–SÒ‘I‘ğ•s‰Â”\‚È‚ç
+            if (!acter.HasRangeWill(SkillZoneTrait.CanSelectDeath))//æ­»äº¡è€…é¸æŠä¸å¯èƒ½ãªã‚‰
             {
-                selects = bm.RemoveDeathCharacters(selects);//È‚­
+                selects = bm.RemoveDeathCharacters(selects);//çœã
             }
 
-            if (selects.Count < 2 && AllyTargeting)//“G‚Ì¶‚«‚Ä‚él”‚ª“ñl–¢–‚ÅA–¡•û‚Ì‘I‘ğ‚à‚È‚¯‚ê‚Î
+            if (selects.Count < 2 && AllyTargeting)//æ•µã®ç”Ÿãã¦ã‚‹äººæ•°ãŒäºŒäººæœªæº€ã§ã€å‘³æ–¹ã®é¸æŠã‚‚ãªã‘ã‚Œã°
             {
-                ReturnNextWaitView();//‚»‚Ì‚Ü‚ÜŸ‚Ì‰æ–Ê‚Ö
-                                     //bm‚Éˆ—‚ğ”C‚¹‚é
+                ReturnNextWaitView();//ãã®ã¾ã¾æ¬¡ã®ç”»é¢ã¸
+                                     //bmã«å‡¦ç†ã‚’ä»»ã›ã‚‹
             }
             else
             {
@@ -220,39 +220,39 @@ public class SelectTargetButtons : MonoBehaviour
                     var button = Instantiate(buttonPrefab, transform);
                     var rect = button.GetComponent<RectTransform>();
 
-                    // eƒIƒuƒWƒFƒNƒg‚Ì‰E’[‚ğ’´‚¦‚éê‡‚ÍŸ‚Ìs‚ÉˆÚ“®
+                    // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å³ç«¯ã‚’è¶…ãˆã‚‹å ´åˆã¯æ¬¡ã®è¡Œã«ç§»å‹•
                     if (currentX + buttonSize.x / 2 > parentSize.x / 2)
                     {
-                        // ¶’[‚ÉƒŠƒZƒbƒg
+                        // å·¦ç«¯ã«ãƒªã‚»ãƒƒãƒˆ
                         currentX = startX;
 
-                        // Ÿ‚Ìs‚ÉˆÚ“®
+                        // æ¬¡ã®è¡Œã«ç§»å‹•
                         currentY -= (buttonSize.y + verticalPadding);
                     }
 
-                    // ƒ{ƒ^ƒ“‚ÌˆÊ’u‚ğİ’è
+                    // ãƒœã‚¿ãƒ³ã®ä½ç½®ã‚’è¨­å®š
                     rect.anchoredPosition = new Vector2(currentX, currentY);
 
-                    // Ÿ‚Ìƒ{ƒ^ƒ“‚ÌXˆÊ’u‚ğXV
+                    // æ¬¡ã®ãƒœã‚¿ãƒ³ã®Xä½ç½®ã‚’æ›´æ–°
                     currentX += (buttonSize.x + horizontalPadding);
 
-                    button.onClick.AddListener(() => OnClickSelectTarget(selects[i], button, WhichGroup.Enemyiy, DirectedWill.One));//ŠÖ”‚ğ“o˜^
-                    button.GetComponentInChildren<TextMeshProUGUI>().text = selects[i].CharacterName;//ƒ{ƒ^ƒ“‚ÌƒeƒLƒXƒg‚ÉƒLƒƒƒ‰–¼
-                    EnemybuttonList.Add(button);//“G‚Ìƒ{ƒ^ƒ“ƒŠƒXƒg‚ğ“ü‚ê‚é
+                    button.onClick.AddListener(() => OnClickSelectTarget(selects[i], button, WhichGroup.Enemyiy, DirectedWill.One));//é–¢æ•°ã‚’ç™»éŒ²
+                    button.GetComponentInChildren<TextMeshProUGUI>().text = selects[i].CharacterName;//ãƒœã‚¿ãƒ³ã®ãƒ†ã‚­ã‚¹ãƒˆã«ã‚­ãƒ£ãƒ©å
+                    EnemybuttonList.Add(button);//æ•µã®ãƒœã‚¿ãƒ³ãƒªã‚¹ãƒˆã‚’å…¥ã‚Œã‚‹
 
                 }
 
             }
         }
 
-        if (AllyTargeting)//–¡•û‘Sˆõ‚ğ“ü‚ê‚é
+        if (AllyTargeting)//å‘³æ–¹å…¨å“¡ã‚’å…¥ã‚Œã‚‹
         {
             var selects = bm.AllyGroup.Ours;
 
 
-            if(!acter.HasRangeWill(SkillZoneTrait.CanSelectDeath))//€–SÒ‘I‘ğ•s‰Â”\‚È‚ç
+            if(!acter.HasRangeWill(SkillZoneTrait.CanSelectDeath))//æ­»äº¡è€…é¸æŠä¸å¯èƒ½ãªã‚‰
             {
-                selects = bm.RemoveDeathCharacters(selects);//È‚­
+                selects = bm.RemoveDeathCharacters(selects);//çœã
             }
 
 
@@ -261,39 +261,39 @@ public class SelectTargetButtons : MonoBehaviour
                 var button = Instantiate(buttonPrefab, transform);
                 var rect = button.GetComponent<RectTransform>();
 
-                // eƒIƒuƒWƒFƒNƒg‚Ì‰E’[‚ğ’´‚¦‚éê‡‚ÍŸ‚Ìs‚ÉˆÚ“®
+                // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å³ç«¯ã‚’è¶…ãˆã‚‹å ´åˆã¯æ¬¡ã®è¡Œã«ç§»å‹•
                 if (currentX + buttonSize.x / 2 > parentSize.x / 2)
                 {
-                    // ¶’[‚ÉƒŠƒZƒbƒg
+                    // å·¦ç«¯ã«ãƒªã‚»ãƒƒãƒˆ
                     currentX = startX;
 
-                    // Ÿ‚Ìs‚ÉˆÚ“®
+                    // æ¬¡ã®è¡Œã«ç§»å‹•
                     currentY -= (buttonSize.y + verticalPadding);
                 }
 
-                // ƒ{ƒ^ƒ“‚ÌˆÊ’u‚ğİ’è
+                // ãƒœã‚¿ãƒ³ã®ä½ç½®ã‚’è¨­å®š
                 rect.anchoredPosition = new Vector2(currentX, currentY);
 
-                // Ÿ‚Ìƒ{ƒ^ƒ“‚ÌXˆÊ’u‚ğXV
+                // æ¬¡ã®ãƒœã‚¿ãƒ³ã®Xä½ç½®ã‚’æ›´æ–°
                 currentX += (buttonSize.x + horizontalPadding);
 
-                button.onClick.AddListener(() => OnClickSelectTarget(selects[i], button, WhichGroup.alliy, DirectedWill.One));//ŠÖ”‚ğ“o˜^
-                button.GetComponentInChildren<TextMeshProUGUI>().text = selects[i].CharacterName;//ƒ{ƒ^ƒ“‚ÌƒeƒLƒXƒg‚ÉƒLƒƒƒ‰–¼
-                EnemybuttonList.Add(button);//“G‚Ìƒ{ƒ^ƒ“ƒŠƒXƒg‚ğ“ü‚ê‚é
+                button.onClick.AddListener(() => OnClickSelectTarget(selects[i], button, WhichGroup.alliy, DirectedWill.One));//é–¢æ•°ã‚’ç™»éŒ²
+                button.GetComponentInChildren<TextMeshProUGUI>().text = selects[i].CharacterName;//ãƒœã‚¿ãƒ³ã®ãƒ†ã‚­ã‚¹ãƒˆã«ã‚­ãƒ£ãƒ©å
+                EnemybuttonList.Add(button);//æ•µã®ãƒœã‚¿ãƒ³ãƒªã‚¹ãƒˆã‚’å…¥ã‚Œã‚‹
 
             }
 
         }
 
-        //‘I‘ğ‚ğ“r’†‚ÅI‚¦‚éƒ{ƒ^ƒ“
-        SelectEndBtn.gameObject.SetActive(false);//Œ©‚¦‚È‚­‚·‚éB
+        //é¸æŠã‚’é€”ä¸­ã§çµ‚ãˆã‚‹ãƒœã‚¿ãƒ³
+        SelectEndBtn.gameObject.SetActive(false);//è¦‹ãˆãªãã™ã‚‹ã€‚
     }
     /// <summary>
-    /// ƒ{ƒ^ƒ“‚Ì•À‚Ñ•ûƒeƒXƒg—pƒ{ƒ^ƒ“
+    /// ãƒœã‚¿ãƒ³ã®ä¸¦ã³æ–¹ãƒ†ã‚¹ãƒˆç”¨ãƒœã‚¿ãƒ³
     /// </summary>
     public void OnClickTestButton()
     {
-        // Œ»İ‚ÌˆÊ’u‚ğ‰Šú‰»
+        // ç¾åœ¨ã®ä½ç½®ã‚’åˆæœŸåŒ–
         float currentX = startX;
         float currentY = startY;
 
@@ -304,20 +304,20 @@ public class SelectTargetButtons : MonoBehaviour
             var button = Instantiate(buttonPrefab, transform);
             var rect = button.GetComponent<RectTransform>();
 
-            // eƒIƒuƒWƒFƒNƒg‚Ì‰E’[‚ğ’´‚¦‚éê‡‚ÍŸ‚Ìs‚ÉˆÚ“®
+            // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å³ç«¯ã‚’è¶…ãˆã‚‹å ´åˆã¯æ¬¡ã®è¡Œã«ç§»å‹•
             if (currentX + buttonSize.x / 2 > parentSize.x / 2)
             {
-                // ¶’[‚ÉƒŠƒZƒbƒg
+                // å·¦ç«¯ã«ãƒªã‚»ãƒƒãƒˆ
                 currentX = startX;
 
-                // Ÿ‚Ìs‚ÉˆÚ“®
+                // æ¬¡ã®è¡Œã«ç§»å‹•
                 currentY -= (buttonSize.y + verticalPadding);
             }
 
-            // ƒ{ƒ^ƒ“‚ÌˆÊ’u‚ğİ’è
+            // ãƒœã‚¿ãƒ³ã®ä½ç½®ã‚’è¨­å®š
             rect.anchoredPosition = new Vector2(currentX, currentY);
 
-            // Ÿ‚Ìƒ{ƒ^ƒ“‚ÌXˆÊ’u‚ğXV
+            // æ¬¡ã®ãƒœã‚¿ãƒ³ã®Xä½ç½®ã‚’æ›´æ–°
             currentX += (buttonSize.x + horizontalPadding);
 
         }
@@ -325,91 +325,91 @@ public class SelectTargetButtons : MonoBehaviour
 
     }
     /// <summary>
-    /// “r’†‚Å•¡”‘I‘ğ‚ğ~‚ß‚éƒ{ƒ^ƒ“
+    /// é€”ä¸­ã§è¤‡æ•°é¸æŠã‚’æ­¢ã‚ã‚‹ãƒœã‚¿ãƒ³
     /// </summary>
     public void OnClickSelectEndBtn()
     {
         ReturnNextWaitView();
     }
     /// <summary>
-    /// ‘O‚Ì‚ß‚è‚©Œã‰q‚©‚ğ‘I‘ğ‚·‚éƒ{ƒ^ƒ“B
+    /// å‰ã®ã‚ã‚Šã‹å¾Œè¡›ã‹ã‚’é¸æŠã™ã‚‹ãƒœã‚¿ãƒ³ã€‚
     /// </summary>
     void OnClickSelectVanguardOrBacklines(Button thisBtn,DirectedWill will)
     {
-        bm.Acter.Target = will;//“n‚³‚ê‚½‘O‚Ì‚ß‚è‚©Œã‰q‚©‚ÌˆÓv‚ğ“ü‚ê‚éB
+        bm.Acter.Target = will;//æ¸¡ã•ã‚ŒãŸå‰ã®ã‚ã‚Šã‹å¾Œè¡›ã‹ã®æ„æ€ã‚’å…¥ã‚Œã‚‹ã€‚
 
         ReturnNextWaitView();
     }
 
     /// <summary>
-    /// "l•¨‚ğ‘ÎÛ‚Æ‚µ‚Ä‘I‚ÔƒNƒŠƒbƒNŠÖ”"
+    /// "äººç‰©ã‚’å¯¾è±¡ã¨ã—ã¦é¸ã¶ã‚¯ãƒªãƒƒã‚¯é–¢æ•°"
     /// </summary>
     void OnClickSelectTarget(BaseStates target, Button thisBtn, WhichGroup faction,DirectedWill will)
     {
         CashUnders.Add(target);
 
-        if (AllybuttonList.Count > 0 && faction == WhichGroup.Enemyiy)///“G‚Ìƒ{ƒ^ƒ“‚Å–¡•û‚Ìƒ{ƒ^ƒ“‚ªˆê‚ÂˆÈã‚ ‚Á‚½‚ç
+        if (AllybuttonList.Count > 0 && faction == WhichGroup.Enemyiy)///æ•µã®ãƒœã‚¿ãƒ³ã§å‘³æ–¹ã®ãƒœã‚¿ãƒ³ãŒä¸€ã¤ä»¥ä¸Šã‚ã£ãŸã‚‰
         {
             foreach (var button in AllybuttonList)
             {
-                Destroy(button);//–¡•û‚Ìƒ{ƒ^ƒ“‚ğ‘S•”Á‚·
+                Destroy(button);//å‘³æ–¹ã®ãƒœã‚¿ãƒ³ã‚’å…¨éƒ¨æ¶ˆã™
             }
         }
 
-        if (EnemybuttonList.Count > 0 && faction == WhichGroup.alliy)///–¡•û‚Ìƒ{ƒ^ƒ“‚Å“G‚Ìƒ{ƒ^ƒ“‚ªˆê‚ÂˆÈã‚ ‚Á‚½‚ç
+        if (EnemybuttonList.Count > 0 && faction == WhichGroup.alliy)///å‘³æ–¹ã®ãƒœã‚¿ãƒ³ã§æ•µã®ãƒœã‚¿ãƒ³ãŒä¸€ã¤ä»¥ä¸Šã‚ã£ãŸã‚‰
         {
             foreach (var button in EnemybuttonList)
             {
-                Destroy(button);//–¡•û‚Ìƒ{ƒ^ƒ“‚ğ‘S•”Á‚·
+                Destroy(button);//å‘³æ–¹ã®ãƒœã‚¿ãƒ³ã‚’å…¨éƒ¨æ¶ˆã™
             }
         }
 
-        //l•¨ƒZƒŒƒNƒgƒJƒEƒ“ƒg‚ğƒfƒNƒŠƒƒ“ƒg
+        //äººç‰©ã‚»ãƒ¬ã‚¯ãƒˆã‚«ã‚¦ãƒ³ãƒˆã‚’ãƒ‡ã‚¯ãƒªãƒ¡ãƒ³ãƒˆ
         if (faction == WhichGroup.alliy)
             NeedSelectCountAlly--;
         if (faction == WhichGroup.Enemyiy)
             NeedSelectCountEnemy--;
 
-        //Šew‰c‚²‚Æ‚É‘®‚µ‚½ƒ{ƒ^ƒ“‚ª“ñ‚ÂˆÈã‚È‚­‚Ä‚àI‚í‚è (ˆê‚Â‚¾‚¯‚ ‚Á‚Ä‚à‚»‚ê‚Í”pŠü—\’è‚Ì"‚±‚ÌƒIƒuƒWƒFƒNƒg"‚¾‚©‚ç)
-        //‚Â‚Ü‚è‚à‚¤‘I‚Ôƒ{ƒ^ƒ“‚ª‚È‚¢‚È‚ç
+        //å„é™£å–¶ã”ã¨ã«å±ã—ãŸãƒœã‚¿ãƒ³ãŒäºŒã¤ä»¥ä¸Šãªãã¦ã‚‚çµ‚ã‚ã‚Š (ä¸€ã¤ã ã‘ã‚ã£ã¦ã‚‚ãã‚Œã¯å»ƒæ£„äºˆå®šã®"ã“ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ"ã ã‹ã‚‰)
+        //ã¤ã¾ã‚Šã‚‚ã†é¸ã¶ãƒœã‚¿ãƒ³ãŒãªã„ãªã‚‰
         if (faction == WhichGroup.alliy)
-        {//–¡•ûƒ{ƒ^ƒ“‚È‚ç
-            if (AllybuttonList.Count > 1 || NeedSelectCountAlly <= 0)//–¡•ûƒ{ƒ^ƒ“‚ª“ñ‚ÂˆÈã‚È‚¢‚©A–¡•û‘I‘ğ•K—vƒJƒEƒ“ƒgƒ_ƒEƒ“‚ªƒ[ƒˆÈ‰º‚È‚çŸs‚­ˆ—
+        {//å‘³æ–¹ãƒœã‚¿ãƒ³ãªã‚‰
+            if (AllybuttonList.Count > 1 || NeedSelectCountAlly <= 0)//å‘³æ–¹ãƒœã‚¿ãƒ³ãŒäºŒã¤ä»¥ä¸Šãªã„ã‹ã€å‘³æ–¹é¸æŠå¿…è¦ã‚«ã‚¦ãƒ³ãƒˆãƒ€ã‚¦ãƒ³ãŒã‚¼ãƒ­ä»¥ä¸‹ãªã‚‰æ¬¡è¡Œãå‡¦ç†
             {
                 ReturnNextWaitView();
             }
             else
             {
-                //‚Ü‚¾‘I‚×‚é‚Ì‚È‚çA“r’†‚Å‘I‘ğ‚ğ~‚ß‚ç‚ê‚éƒ{ƒ^ƒ“‚ğ•\¦‚·‚éB
+                //ã¾ã é¸ã¹ã‚‹ã®ãªã‚‰ã€é€”ä¸­ã§é¸æŠã‚’æ­¢ã‚ã‚‰ã‚Œã‚‹ãƒœã‚¿ãƒ³ã‚’è¡¨ç¤ºã™ã‚‹ã€‚
                 SelectEndBtn.gameObject.SetActive(true);
             }
         }
         else if (faction == WhichGroup.Enemyiy)
-        {//“Gƒ{ƒ^ƒ“‚È‚ç
-            if (EnemybuttonList.Count > 1 || NeedSelectCountEnemy <= 0) //“Gƒ{ƒ^ƒ“‚ª“ñ‚ÂˆÈã‚È‚¢‚È‚çA“G‘I‘ğ•K—vƒJƒEƒ“ƒgƒ_ƒEƒ“‚ªƒ[ƒˆÈ‰º‚È‚çŸs‚­ˆ—
+        {//æ•µãƒœã‚¿ãƒ³ãªã‚‰
+            if (EnemybuttonList.Count > 1 || NeedSelectCountEnemy <= 0) //æ•µãƒœã‚¿ãƒ³ãŒäºŒã¤ä»¥ä¸Šãªã„ãªã‚‰ã€æ•µé¸æŠå¿…è¦ã‚«ã‚¦ãƒ³ãƒˆãƒ€ã‚¦ãƒ³ãŒã‚¼ãƒ­ä»¥ä¸‹ãªã‚‰æ¬¡è¡Œãå‡¦ç†
             {
                 ReturnNextWaitView();
             }
             else
             {
-                //‚Ü‚¾‘I‚×‚é‚Ì‚È‚çA“r’†‚Å‘I‘ğ‚ğ~‚ß‚ç‚ê‚éƒ{ƒ^ƒ“‚ğ•\¦‚·‚éB
+                //ã¾ã é¸ã¹ã‚‹ã®ãªã‚‰ã€é€”ä¸­ã§é¸æŠã‚’æ­¢ã‚ã‚‰ã‚Œã‚‹ãƒœã‚¿ãƒ³ã‚’è¡¨ç¤ºã™ã‚‹ã€‚
                 SelectEndBtn.gameObject.SetActive(true);
             }
 
 
-            bm.Acter.Target = will;//‘I‘ğˆÓv‚ğ“ü‚ê‚é
-            Destroy(thisBtn);//‚±‚Ìƒ{ƒ^ƒ“‚Í”jŠü
+            bm.Acter.Target = will;//é¸æŠæ„æ€ã‚’å…¥ã‚Œã‚‹
+            Destroy(thisBtn);//ã“ã®ãƒœã‚¿ãƒ³ã¯ç ´æ£„
         }
     }
     /// <summary>
-    /// Še‘ÎÛÒƒ{ƒ^ƒ“‚É“n‚·NextWait‚ÉtabState‚ğ–ß‚·ˆ—
+    /// å„å¯¾è±¡è€…ãƒœã‚¿ãƒ³ã«æ¸¡ã™NextWaitã«tabStateã‚’æˆ»ã™å‡¦ç†
     /// </summary>
     private void ReturnNextWaitView()
     {
         Walking.USERUI_state.Value = TabState.NextWait;
 
-        //bm‚Ì‘ÎÛÒƒŠƒXƒg‚ÉƒLƒƒƒbƒVƒ…ƒŠƒXƒg‚ğ“ü‚ê‚é
-        CashUnders.Shuffle();//•ªU’l‚Ìƒ‰ƒ“ƒ_ƒ€«‚Ì‚½‚ßƒVƒƒƒbƒtƒ‹
+        //bmã®å¯¾è±¡è€…ãƒªã‚¹ãƒˆã«ã‚­ãƒ£ãƒƒã‚·ãƒ¥ãƒªã‚¹ãƒˆã‚’å…¥ã‚Œã‚‹
+        CashUnders.Shuffle();//åˆ†æ•£å€¤ã®ãƒ©ãƒ³ãƒ€ãƒ æ€§ã®ãŸã‚ã‚·ãƒ£ãƒƒãƒ•ãƒ«
         foreach(var cash in CashUnders)
         {
             bm.unders.CharaAdd(cash);
@@ -417,11 +417,11 @@ public class SelectTargetButtons : MonoBehaviour
 
         foreach (var button in AllybuttonList)
         {
-            Destroy(button);//ƒ{ƒ^ƒ“‘S•”íœ
+            Destroy(button);//ãƒœã‚¿ãƒ³å…¨éƒ¨å‰Šé™¤
         }
         foreach (var button in EnemybuttonList)
         {
-            Destroy(button);//ƒ{ƒ^ƒ“‘S•”íœ
+            Destroy(button);//ãƒœã‚¿ãƒ³å…¨éƒ¨å‰Šé™¤
         }
     }
 }

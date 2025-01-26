@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -7,7 +7,7 @@ public class VitalLayerManager : MonoBehaviour
 {
     public static VitalLayerManager Instance;
 
-    void Awake()//ƒVƒ“ƒOƒ‹ƒgƒ“ƒIƒuƒWƒFƒNƒg
+    void Awake()//ã‚·ãƒ³ã‚°ãƒ«ãƒˆãƒ³ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
     {
         if (Instance == null)
         {
@@ -21,13 +21,13 @@ public class VitalLayerManager : MonoBehaviour
 
     }
 
-    [SerializeReference, SelectableSerializeReference]//’Ç‰ÁHP‚ğŠÇ—‚·‚éƒŠƒXƒg
+    [SerializeReference, SelectableSerializeReference]//è¿½åŠ HPã‚’ç®¡ç†ã™ã‚‹ãƒªã‚¹ãƒˆ
     private List<BaseVitalLayer> _masterList;
     /// <summary>
-    /// ƒpƒbƒVƒu‚ğID‚Å“üè
+    /// ãƒ‘ãƒƒã‚·ãƒ–ã‚’IDã§å…¥æ‰‹
     /// </summary>
     public BaseVitalLayer GetAtID(int id)
     {
-        return _masterList.FirstOrDefault(lay => lay.id == id);//id‚ªˆê’v‚·‚éÅ‰ƒAƒCƒeƒ€‚ğ“üè
+        return _masterList.FirstOrDefault(lay => lay.id == id);//idãŒä¸€è‡´ã™ã‚‹æœ€åˆã‚¢ã‚¤ãƒ†ãƒ ã‚’å…¥æ‰‹
     }
 }

@@ -1,4 +1,4 @@
-using System.Collections;
+Ôªøusing System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,7 +8,7 @@ public class MainContent : TabContents
     {
         switch (state)
         {
-            case TabState.walk://ï‡Ç´É{É^Éì
+            case TabState.walk://Ê≠©„Åç„Éú„Çø„É≥
                 WalkObject.SetActive(true);
                 TalkObject.SetActive(false);
                 NextObject.SetActive(false);

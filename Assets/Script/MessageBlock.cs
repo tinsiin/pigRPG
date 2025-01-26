@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
 using TMPro;
@@ -15,18 +15,18 @@ public class MessageBlock : MonoBehaviour
 
 
     public RectTransform MessageRect;
-    //—]”’‚Í’¼Ú@q‚Ìtmp‚Ìmargin‚©‚çİ’è‚·‚éB
+    //ä½™ç™½ã¯ç›´æ¥ã€€å­ã®tmpã®marginã‹ã‚‰è¨­å®šã™ã‚‹ã€‚
     public void OnCreated(float speed,string text,RectTransform parent)
     {
         _upSpeed = speed;
         tmpText.text = text;
         _parentRect = parent;
         MessageRect = GetComponent<RectTransform>();
-        Debug.Log("ƒƒbƒZ[ƒWƒuƒƒbƒN‚Ì¶¬ƒR[ƒ‹ƒoƒbƒN");
+        Debug.Log("ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãƒ–ãƒ­ãƒƒã‚¯ã®ç”Ÿæˆæ™‚ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯");
     }
 
     /// <summary>
-    /// ƒIƒuƒWƒFƒNƒg‚ÌY‚ğw’è‚µ‚½ƒXƒy[ƒX•ª”ò‚Î‚·
+    /// ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®Yã‚’æŒ‡å®šã—ãŸã‚¹ãƒšãƒ¼ã‚¹åˆ†é£›ã°ã™
     /// </summary>
     public void JumpUp(float SpaceY)
     {
@@ -36,25 +36,25 @@ public class MessageBlock : MonoBehaviour
     }
 
     /// <summary>
-    /// ƒIƒuƒWƒFƒNƒg‚Ì‰º•û‚Ìw’è‚³‚ê‚½ŠÔŠu‚É“n‚³‚ê‚½transform‚ªŠÜ‚Ü‚ê‚Ä‚¢‚é‚©‚Ç‚¤‚©
+    /// ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ä¸‹æ–¹ã®æŒ‡å®šã•ã‚ŒãŸé–“éš”ã«æ¸¡ã•ã‚ŒãŸtransformãŒå«ã¾ã‚Œã¦ã„ã‚‹ã‹ã©ã†ã‹
     /// </summary>
     public bool  ContainBelow(RectTransform otherRect,float spaceY)
     {
-        // ‚±‚ÌƒIƒuƒWƒFƒNƒg‚Ì‰º’[ˆÊ’uiYÀ•Wj‚ğŒvZ
+        // ã“ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ä¸‹ç«¯ä½ç½®ï¼ˆYåº§æ¨™ï¼‰ã‚’è¨ˆç®—
         var thisSpaceBottom = MessageRect.localPosition.y - (MessageRect.rect.height * 0.5f);
 
-        // w’è‚³‚ê‚½‘¼‚ÌƒIƒuƒWƒFƒNƒg‚Ìã’[ˆÊ’uiYÀ•Wj‚ğŒvZ
+        // æŒ‡å®šã•ã‚ŒãŸä»–ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ä¸Šç«¯ä½ç½®ï¼ˆYåº§æ¨™ï¼‰ã‚’è¨ˆç®—
         float otherTopY = otherRect.localPosition.y + (otherRect.rect.height * 0.5f);
 
 
 
-        // otherRect‚Ìã’[‚ªAthisBottomY - spaceY ‚æ‚èã‚É‚ ‚é‚©‚Ç‚¤‚©‚ğ”»’è@@ƒIƒuƒWƒFƒNƒg+space‚æ‚è‰º‚É‚¢‚éê‡‚ªfalse‚Á‚Ä‚±‚ÆB
+        // otherRectã®ä¸Šç«¯ãŒã€thisBottomY - spaceY ã‚ˆã‚Šä¸Šã«ã‚ã‚‹ã‹ã©ã†ã‹ã‚’åˆ¤å®šã€€ã€€ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ+spaceã‚ˆã‚Šä¸‹ã«ã„ã‚‹å ´åˆãŒfalseã£ã¦ã“ã¨ã€‚
         return otherTopY >= (thisSpaceBottom - spaceY);
     }
 
     void Start()
     {
-        //tmpText.text = "‚„‚³‚‹‚„‚³‚„‚³‚„‚©‚»‚¾";
+        //tmpText.text = "ï½„ã•ï½‹ï½„ã•ï½„ã•ï½„ã‹ãã ";
         _upSpeed = 0.1f;
         MessageRect = GetComponent<RectTransform>();
         AdjustBackgroundSize();
@@ -66,36 +66,36 @@ public class MessageBlock : MonoBehaviour
         newPosition.y += _upSpeed ;
         MessageRect .localPosition = newPosition;
 
-        // eƒIƒuƒWƒFƒNƒg‚Ì‹«ŠE’liƒ[ƒJƒ‹À•Wj
+        // è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å¢ƒç•Œå€¤ï¼ˆãƒ­ãƒ¼ã‚«ãƒ«åº§æ¨™ï¼‰
         float parentTop = _parentRect.rect.height * 0.5f;
         float parentBottom = -_parentRect.rect.height * 0.5f;
 
-        // ‚±‚ÌƒIƒuƒWƒFƒNƒg‚Ì‹«ŠE’l
+        // ã“ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å¢ƒç•Œå€¤
         float childTop = MessageRect.localPosition.y + MessageRect.rect.height * 0.5f;
         float childBottom = MessageRect.localPosition.y - MessageRect.rect.height * 0.5f;
 
         if (childBottom > parentTop)
         {
-            // ã•ûŒü‚ÉˆÚ“®’†‚ÉqƒIƒuƒWƒFƒNƒg‚ªãŒÀ‚ğ’´‚¦‚½ê‡
-            Destroy(gameObject);//Á‚·
+            // ä¸Šæ–¹å‘ã«ç§»å‹•ä¸­ã«å­ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆãŒä¸Šé™ã‚’è¶…ãˆãŸå ´åˆ
+            Destroy(gameObject);//æ¶ˆã™
         }
     }
 
     /// <summary>
-    /// ”wŒiImage‚ÌƒTƒCƒY‚ğTextMeshPro‚ÌƒTƒCƒY‚ÉŠî‚Ã‚¢‚Ä’²®‚µA—]”’‚ğ’Ç‰Á‚µ‚Ü‚·B
+    /// èƒŒæ™¯Imageã®ã‚µã‚¤ã‚ºã‚’TextMeshProã®ã‚µã‚¤ã‚ºã«åŸºã¥ã„ã¦èª¿æ•´ã—ã€ä½™ç™½ã‚’è¿½åŠ ã—ã¾ã™ã€‚
     /// </summary>
     private void AdjustBackgroundSize()
     {
-        // TextMeshPro‚Ì„§ƒTƒCƒY‚ğæ“¾
+        // TextMeshProã®æ¨å¥¨ã‚µã‚¤ã‚ºã‚’å–å¾—
         Vector2 tmpPreferredSize = tmpText.GetPreferredValues();
 
-        // ”wŒiImage‚ÌƒTƒCƒY‚ğİ’èiŠe•ûŒü‚Ì—]”’‚ğ’Ç‰Áj
-        float backgroundWidth = tmpPreferredSize.x; // ¶ + Right
+        // èƒŒæ™¯Imageã®ã‚µã‚¤ã‚ºã‚’è¨­å®šï¼ˆå„æ–¹å‘ã®ä½™ç™½ã‚’è¿½åŠ ï¼‰
+        float backgroundWidth = tmpPreferredSize.x; // å·¦ + Right
         float backgroundHeight = tmpPreferredSize.y; // Top + Bottom
         MessageRect.sizeDelta = new Vector2(backgroundWidth, backgroundHeight);
 
-        // TextMeshPro‚ÌˆÊ’u‚ğ¶‰º‚ÉƒIƒtƒZƒbƒg
-        // ƒAƒ“ƒJ[‚ª’†‰›‚Ìê‡‚ÍˆÈ‰º‚Ì‚æ‚¤‚É’²®
+        // TextMeshProã®ä½ç½®ã‚’å·¦ä¸‹ã«ã‚ªãƒ•ã‚»ãƒƒãƒˆ
+        // ã‚¢ãƒ³ã‚«ãƒ¼ãŒä¸­å¤®ã®å ´åˆã¯ä»¥ä¸‹ã®ã‚ˆã†ã«èª¿æ•´
         /*tmpRectTransform.anchorMin = new Vector2(0.5f, 0.5f);
         tmpRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
         tmpRectTransform.pivot = new Vector2(0.5f, 0.5f);

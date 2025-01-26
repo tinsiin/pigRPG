@@ -543,9 +543,10 @@ MonoBehaviour:
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
-      SkillRivahal: 0
       subEffects: 
       subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -556,13 +557,17 @@ MonoBehaviour:
       HitRangePercentageDictionary:
         _list: []
     _vitalLaerList: []
-    b_AGI: 0
-    b_ATK: 0
-    b_DEF: 0
-    b_EYE: 0
+    b_b_atk: 4
+    b_b_def: 4
+    b_b_eye: 4
+    b_b_agi: 4
+    TenDayValues:
+      _list: []
     KereKere: 0
     CharacterName: "\u30B8\u30FC\u30CE"
     ImpressionStringName: 
+    NowBattleProtocol: 0
+    NowDeffenceStyle: 0
     NowUseSkill:
       SkillSpiritual: 0
       _name: 
@@ -579,9 +584,10 @@ MonoBehaviour:
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
-      SkillRivahal: 0
       subEffects: 
       subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -607,9 +613,10 @@ MonoBehaviour:
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
-      SkillRivahal: 0
       subEffects: 
       subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -630,13 +637,17 @@ MonoBehaviour:
     _passiveList: []
     _skillList: []
     _vitalLaerList: []
-    b_AGI: 0
-    b_ATK: 0
-    b_DEF: 0
-    b_EYE: 0
+    b_b_atk: 4
+    b_b_def: 4
+    b_b_eye: 4
+    b_b_agi: 4
+    TenDayValues:
+      _list: []
     KereKere: 0
     CharacterName: 
     ImpressionStringName: 
+    NowBattleProtocol: 0
+    NowDeffenceStyle: 0
     NowUseSkill:
       SkillSpiritual: 0
       _name: 
@@ -653,9 +664,10 @@ MonoBehaviour:
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
-      SkillRivahal: 0
       subEffects: 
       subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -681,9 +693,10 @@ MonoBehaviour:
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
-      SkillRivahal: 0
       subEffects: 
       subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -704,13 +717,17 @@ MonoBehaviour:
     _passiveList: []
     _skillList: []
     _vitalLaerList: []
-    b_AGI: 0
-    b_ATK: 0
-    b_DEF: 0
-    b_EYE: 0
+    b_b_atk: 4
+    b_b_def: 4
+    b_b_eye: 4
+    b_b_agi: 4
+    TenDayValues:
+      _list: []
     KereKere: 0
     CharacterName: 
     ImpressionStringName: 
+    NowBattleProtocol: 0
+    NowDeffenceStyle: 0
     NowUseSkill:
       SkillSpiritual: 0
       _name: 
@@ -727,9 +744,11 @@ MonoBehaviour:
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
-      SkillRivahal: 0
       subEffects: 
       subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet:
+      - Styles: 00000000
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -755,9 +774,10 @@ MonoBehaviour:
       SkillPower: 0
       SkillHitPer: 0
       SkillLevel: 0
-      SkillRivahal: 0
       subEffects: 
       subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -854,13 +874,17 @@ MonoBehaviour:
         _passiveList: []
         _skillList: []
         _vitalLaerList: []
-        b_AGI: 0
-        b_ATK: 0
-        b_DEF: 0
-        b_EYE: 0
+        b_b_atk: 4
+        b_b_def: 4
+        b_b_eye: 4
+        b_b_agi: 4
+        TenDayValues:
+          _list: []
         KereKere: 0
         CharacterName: 
         ImpressionStringName: 
+        NowBattleProtocol: 0
+        NowDeffenceStyle: 0
         NowUseSkill:
           SkillSpiritual: 0
           _name: 
@@ -877,9 +901,10 @@ MonoBehaviour:
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
-          SkillRivahal: 0
           subEffects: 
           subVitalLayers: 
+          A_MoveSet: []
+          B_MoveSet: []
           DEFATK: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -905,9 +930,10 @@ MonoBehaviour:
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
-          SkillRivahal: 0
           subEffects: 
           subVitalLayers: 
+          A_MoveSet: []
+          B_MoveSet: []
           DEFATK: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -932,13 +958,17 @@ MonoBehaviour:
         _passiveList: []
         _skillList: []
         _vitalLaerList: []
-        b_AGI: 0
-        b_ATK: 0
-        b_DEF: 0
-        b_EYE: 0
+        b_b_atk: 4
+        b_b_def: 4
+        b_b_eye: 4
+        b_b_agi: 4
+        TenDayValues:
+          _list: []
         KereKere: 0
         CharacterName: 
         ImpressionStringName: 
+        NowBattleProtocol: 0
+        NowDeffenceStyle: 0
         NowUseSkill:
           SkillSpiritual: 0
           _name: 
@@ -952,9 +982,10 @@ MonoBehaviour:
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
-          SkillRivahal: 0
           subEffects: 
           subVitalLayers: 
+          A_MoveSet: []
+          B_MoveSet: []
           DEFATK: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -977,9 +1008,10 @@ MonoBehaviour:
           SkillPower: 0
           SkillHitPer: 0
           SkillLevel: 0
-          SkillRivahal: 0
           subEffects: 
           subVitalLayers: 
+          A_MoveSet: []
+          B_MoveSet: []
           DEFATK: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -1020,12 +1052,17 @@ MonoBehaviour:
       data:
         OkImpression: -1
         OkType: -1
+        IsCantACT: 0
         MaxPassivePower: 1
         PassiveName: "\u6DE1\u3005\u3068\u3057\u305F\u30ED\u30BC"
         ID: 0
         DurationTurn: -1
         DurationWalk: -1
-        VitalLayers: []
+        VitalLayers:
+        - VitalLayerId: 0
+          GrantTiming: 0
+          IsSurvivalCondition: 0
+          RemoveOnPassiveRemove: 0
 --- !u!114 &78173496
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1047,9 +1084,10 @@ MonoBehaviour:
       type: {class: BaseVitalLayer, ns: , asm: Assembly-CSharp}
       data:
         id: 0
+        name: "\u4E0D\u8001\u4E0D\u6B7B\u306E\u5316\u77F3\u7528"
         Priority: 0
         _layhp: 0
-        _maxLayhp: 0
+        _maxLayhp: 6
         IsBattleEndRemove: 0
         Regen: 0
         HeavyResistance: 1

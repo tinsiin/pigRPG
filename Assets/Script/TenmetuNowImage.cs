@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 ///     マップ画像上に二点を定義して、その上に現在進行度とエリアの終わりの割合をその二点上にベクトルポジションとして表し、

@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -7,7 +7,7 @@ public class PassiveManager : MonoBehaviour
 {
     public static PassiveManager Instance;
 
-    void Awake()//ƒVƒ“ƒOƒ‹ƒgƒ“ƒIƒuƒWƒFƒNƒg
+    void Awake()//ã‚·ãƒ³ã‚°ãƒ«ãƒˆãƒ³ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
     {
         if (Instance == null)
         {
@@ -21,14 +21,14 @@ public class PassiveManager : MonoBehaviour
 
     }
 
-    [SerializeReference, SelectableSerializeReference]//ƒpƒbƒVƒu‚ğŠÇ—‚·‚éƒŠƒXƒg
+    [SerializeReference, SelectableSerializeReference]//ãƒ‘ãƒƒã‚·ãƒ–ã‚’ç®¡ç†ã™ã‚‹ãƒªã‚¹ãƒˆ
     private List<BasePassive> _masterList;
     /// <summary>
-    /// ƒpƒbƒVƒu‚ğID‚Å“üè
+    /// ãƒ‘ãƒƒã‚·ãƒ–ã‚’IDã§å…¥æ‰‹
     /// </summary>
     public BasePassive GetAtID(int id)
     {
-        return _masterList.FirstOrDefault(pas => pas.ID == id);//id‚ªˆê’v‚·‚éÅ‰ƒAƒCƒeƒ€‚ğ“üè
+        return _masterList.FirstOrDefault(pas => pas.ID == id);//idãŒä¸€è‡´ã™ã‚‹æœ€åˆã‚¢ã‚¤ãƒ†ãƒ ã‚’å…¥æ‰‹
     }
 
 }

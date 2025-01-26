@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -47,6 +47,6 @@ public class SerializableDictionary<TKey, TValue> ://https://zenn.dev/tmb/articl
     /// </summary>
     void ISerializationCallbackReceiver.OnBeforeSerialize()
     {
-        // ˆ—‚È‚µ
+        // å‡¦ç†ãªã—
     }
 }
