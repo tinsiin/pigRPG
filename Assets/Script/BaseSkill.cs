@@ -587,12 +587,12 @@ public class BaseSkill
     /// 現在のムーブセットでのAimStyleを、現在の攻撃回数から取得する
     /// </summary>
     /// <returns></returns>
-    public AimStyle? NowAimStyle()
+    public AimStyle NowAimStyle()
     {
         var nowCountUp = _atkCountUP;//今何回目の攻撃か。
-        if(nowCountUp < 1)return null;//初回攻撃ならnullを返す
-
-
+        //if(nowCountUp < 1)return null;//初回攻撃ならnullを返す
+        //初回攻撃で参照しないようにする。　SwitchDeffenceStyleでnull前提の処理するのがめんどくさいから
+        //null許容型の?を外しました。
         return NowMoveSet[nowCountUp - 1];
     }
 

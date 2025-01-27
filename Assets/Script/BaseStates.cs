@@ -380,6 +380,11 @@ public abstract class BaseStates
     public AimStyle NowDeffenceStyle;
 
     /// <summary>
+    /// 狙い流れ(AimStyle)に対する短期記憶
+    /// </summary>
+    private AimStyleMemory _aimStyleMemory;
+
+    /// <summary>
     ///現在のの攻撃ターンで使われる
     /// </summary>
     public BaseSkill NowUseSkill;
@@ -999,6 +1004,67 @@ public abstract class BaseStates
 
         return false;
     }
+
+    /// <summary>
+/// nightinknightの値に応じて現在の「引き締める」補正段階を返す関数 </summary>
+/// <returns>補正段階 は増えていく。/returns>
+int GetTightenMindCorrectionStage()
+{
+    float nightinknightValue = TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight);
+
+    return (int)Math.Floor(nightinknightValue) / 10;
+}
+
+/// <summary>
+/// 今回攻撃された際のAimStyle で短期記憶(TransformCount など)を更新する
+/// </summary>
+private void UpdateAimStyleMemory(AimStyle newAimStyle, int tightenStage)
+{
+    // 現在の短期記憶
+    var mem = _aimStyleMemory;
+
+    // 1) まだ何も対応していない or 前回の TargetAimStyle と違う ならリセット
+    if (mem.TargetAimStyle == null || mem.TargetAimStyle.Value != newAimStyle)
+    {
+        // 新しく対応を始める
+        mem.TargetAimStyle      = newAimStyle;
+        mem.TransformCount      = 0;
+
+        // TightenStage を加味して「対応に必要なカウントMax」を求める
+        mem.TransformCountMax   = CalcTransformCountMax(tightenStage, newAimStyle);
+
+    }
+    else
+    {
+        // 2) 同じ AimStyle なので、変革カウントを進める（or ランダムで+1～+2など）
+        int increment = CalcTransformCountIncrement(tightenStage);
+
+        mem.TransformCount += increment;
+    }
+
+    // 更新を反映
+    _aimStyleMemory = mem;
+}
+/// <summary>
+/// 同じAimStyleを再度食らった時、何カウント増やすかを決める
+/// ※ tightenStageが高いほど変革スピードが速い、など
+/// </summary>
+private int CalcTransformCountIncrement(int tightenStage)
+{
+    var rndmin = 0;
+    if(tightenStage <2)return 1;//1以下なら基本値のみ
+    if(tightenStage>5) rndmin = tightenStage/6;//6以上なら、補正段階の1/6が最小値
+    return 1 + RandomEx.Shared.NextInt(rndmin, tightenStage);//2以降なら補正段階分乱数の最大値が増える
+}
+/// <summary>
+/// 引き締め段階(tightenStage)と、新AimStyle に応じて必要な最大カウントを算出
+/// </summary>
+private int CalcTransformCountMax(int tightenStage, AimStyle style)
+{
+    //AIMSTYLEの組み合わせ辞書により、必要な最大カウントを計算する
+    return 1;
+}
+
     /// <summary>防ぎ方の切り替え/// </summary>
     private void SwitchDefenceStyle(BaseStates atker)
     {
@@ -1018,7 +1084,12 @@ public abstract class BaseStates
            }
         }else{
             var AtkAimStyle = skill.NowAimStyle();//攻撃者のNowMoveSetの回数目のAimStyleを取得
-            
+            var TightenMind = GetTightenMindCorrectionStage();//現在の自分の引き締め値を入手
+
+            UpdateAimStyleMemory(AtkAimStyle, TightenMind);//まず短期記憶を更新または新生する処理
+
+            //実際に適用する処理。(UpdateAimStyleMemory 内でやってもいいかも)
+            //カウントアップ完了したなら、nowDeffenceStyleに記録されたAimStyleを適用するだけ
         }
 
 
@@ -2371,4 +2442,24 @@ public class FocusedSkillAndUser
     {
         if (dmg > _topDmg) _topDmg = dmg;//越してたら記録
     }
+}
+
+/// <summary>
+/// 狙い流れ(AimStyle)に対する短期記憶・対応進行度をまとめた構造体
+/// </summary>
+[Serializable]
+public struct AimStyleMemory
+{
+    /// <summary>いま対応しようとしている相手の AimStyle==そのまま自分のNowDeffenceStyleに代入されます。</summary>
+    public AimStyle? TargetAimStyle;
+
+    /// <summary>現在の変革カウント(対応がどこまで進んでいるか)</summary>
+    public int TransformCount;
+
+    /// <summary>変革カウントの最大値。ここに達したら対応完了</summary>
+    public int TransformCountMax;
+
+    
+
+
 }

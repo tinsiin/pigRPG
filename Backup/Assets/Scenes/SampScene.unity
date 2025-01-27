@@ -545,6 +545,8 @@ MonoBehaviour:
       SkillLevel: 0
       subEffects: 
       subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -584,6 +586,8 @@ MonoBehaviour:
       SkillLevel: 0
       subEffects: 
       subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -611,6 +615,8 @@ MonoBehaviour:
       SkillLevel: 0
       subEffects: 
       subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -660,6 +666,8 @@ MonoBehaviour:
       SkillLevel: 0
       subEffects: 
       subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -687,6 +695,8 @@ MonoBehaviour:
       SkillLevel: 0
       subEffects: 
       subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -736,6 +746,9 @@ MonoBehaviour:
       SkillLevel: 0
       subEffects: 
       subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet:
+      - Styles: 00000000
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -763,6 +776,8 @@ MonoBehaviour:
       SkillLevel: 0
       subEffects: 
       subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
       DEFATK: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -888,6 +903,8 @@ MonoBehaviour:
           SkillLevel: 0
           subEffects: 
           subVitalLayers: 
+          A_MoveSet: []
+          B_MoveSet: []
           DEFATK: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -915,6 +932,8 @@ MonoBehaviour:
           SkillLevel: 0
           subEffects: 
           subVitalLayers: 
+          A_MoveSet: []
+          B_MoveSet: []
           DEFATK: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -944,9 +963,7 @@ MonoBehaviour:
         b_b_eye: 4
         b_b_agi: 4
         TenDayValues:
-          _list:
-          - key: 0
-            value: 0
+          _list: []
         KereKere: 0
         CharacterName: 
         ImpressionStringName: 
@@ -967,6 +984,8 @@ MonoBehaviour:
           SkillLevel: 0
           subEffects: 
           subVitalLayers: 
+          A_MoveSet: []
+          B_MoveSet: []
           DEFATK: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -991,6 +1010,8 @@ MonoBehaviour:
           SkillLevel: 0
           subEffects: 
           subVitalLayers: 
+          A_MoveSet: []
+          B_MoveSet: []
           DEFATK: 0
           WhatSkill: 0
           ConsecutiveType: 0
