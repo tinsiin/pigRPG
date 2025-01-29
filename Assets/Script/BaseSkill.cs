@@ -6,19 +6,6 @@ using Unity.VisualScripting;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
-/// <summary>
-/// インスペクタで表示可能なAimStyleのリスト
-/// </summary>
-[System.Serializable]
-public class AimStyleList
-{
-    public List<AimStyle> Styles = new List<AimStyle>();
-
-    public AimStyleList(List<AimStyle> _Styles)
-    {
-        Styles = _Styles;
-    }
-}
 
 /// <summary>
 /// スキルの実行性質
@@ -419,7 +406,7 @@ public class BaseSkill
     /// </summary>
     public virtual int ATKCount
     {
-        get { return 1 + NowMoveSet.Count; }
+        get { return 1 + NowMoveSetState.States.Count; }
 
     }
     /// <summary>
@@ -554,34 +541,34 @@ public class BaseSkill
     /// スキルごとのムーブセット 戦闘規格ごとのaに対応するもの。
     /// </summary>
     [SerializeField]
-    List<AimStyleList> A_MoveSet;
+    List<MoveSet> A_MoveSet;
     /// <summary>
     /// スキルごとのムーブセット 戦闘規格ごとのbに対応するもの。
     /// </summary>
     [SerializeField]
-    List<AimStyleList> B_MoveSet;
+    List<MoveSet> B_MoveSet;
     /// <summary>
     /// 現在のムーブセット
     /// </summary>
-    List<AimStyle> NowMoveSet;
+    MoveSet NowMoveSetState;
 
     /// <summary>
-    /// A-MoveSetの<AimStyleList>から現在のList<AimStyle>をランダムに取得する
+    /// A-MoveSetのList<MoveSet>から現在のMoveSetをランダムに取得する
     /// なにもない場合はreturnで終わる。つまり単体攻撃前提ならmovesetが決まらない。
     /// </summary>
     public void DecideNowMoveSet_A()
     {
         if(A_MoveSet.Count == 0)return;
-        NowMoveSet = A_MoveSet[RandomEx.Shared.NextInt(A_MoveSet.Count)].Styles;
+        NowMoveSetState = A_MoveSet[RandomEx.Shared.NextInt(A_MoveSet.Count)];
     }
     /// <summary>
-    /// B-MoveSetの<AimStyleList>から現在のList<AimStyle>をランダムに取得する　
+    /// B-MoveSetのList<MoveSet>から現在のMoveSetをランダムに取得する　
     /// なにもない場合はreturnで終わる。つまり単体攻撃前提ならmovesetが決まらない。
     /// </summary>
     public void DecideNowMoveSet_B()
     {
         if(B_MoveSet.Count == 0)return;
-        NowMoveSet = B_MoveSet[RandomEx.Shared.NextInt(B_MoveSet.Count)].Styles;
+        NowMoveSetState = B_MoveSet[RandomEx.Shared.NextInt(B_MoveSet.Count)];
     }
     /// <summary>
     /// 現在のムーブセットでのAimStyleを、現在の攻撃回数から取得する
@@ -593,11 +580,30 @@ public class BaseSkill
         //if(nowCountUp < 1)return null;//初回攻撃ならnullを返す
         //初回攻撃で参照しないようにする。　SwitchDeffenceStyleでnull前提の処理するのがめんどくさいから
         //null許容型の?を外しました。
-        return NowMoveSet[nowCountUp - 1];
+
+        return NowMoveSetState.GetAtState(nowCountUp - 1); 
+    }
+    /// <summary>
+    /// 現在のムーブセットでのDEFATKを、現在の攻撃回数から取得する
+    /// </summary>
+    public float NowAimDefATK()
+    {
+        var nowCountUp = _atkCountUP;//今何回目の攻撃か。
+        return NowMoveSetState.GetAtDEFATK(nowCountUp - 1); 
     }
 
+    [SerializeField]
+    float _defAtk;
     //防御無視率
-    public float DEFATK;
+    public float DEFATK{
+        get{
+            var result = _defAtk;
+            if(NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃中ならば、
+            result *= NowAimDefATK();//連続攻撃に設定されているDEFATKを乗算する
+
+            return result;
+        }
+    }
 
     /// <summary>
     /// スキルの攻撃性質
@@ -630,5 +636,54 @@ public class BaseSkill
     /// </summary>
     public SerializableDictionary<SkillZoneTrait, float>
         HitRangePercentageDictionary;
+
+}
+/// <summary>
+/// インスペクタで表示可能なAimStyleのリストの一つのステータスとDEFATKのペア
+/// </summary>
+[Serializable]
+public class MoveSet: ISerializationCallbackReceiver
+{
+    public List<AimStyle> States = new List<AimStyle>();
+    public List<float> DEFATKList = new List<float>();
+    public AimStyle GetAtState(int index)
+    {
+        return States[index];
+    }
+    public float GetAtDEFATK(int index)
+    {
+        return DEFATKList[index];
+    }
+
+    //Unityインスペクタ上で新しく防御無視率を設定した際に、デフォルトで何も起こらない(=1.0f)値が入るようにするための処理。
+
+    // 旧サイズを保持しておくための変数
+    [NonSerialized]
+    private int oldSizeDEFATK = 0;
+
+// シリアライズ直前に呼ばれる
+    public void OnBeforeSerialize()
+    {
+        // 新規追加があった場合、そのぶんだけ1.0fを代入
+        if (DEFATKList.Count > oldSizeDEFATK)
+        {
+            for (int i = oldSizeDEFATK; i < DEFATKList.Count; i++)
+            {
+                // 新しく挿入された分
+                DEFATKList[i] = 1.0f;
+            }
+        }
+
+        // 今回のリストサイズを保存
+        oldSizeDEFATK = DEFATKList.Count;
+    }
+
+    // デシリアライズ後に呼ばれる
+    public void OnAfterDeserialize()
+    {
+        // 特に何もしない場合は空でOK
+    }
+
+
 
 }

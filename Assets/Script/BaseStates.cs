@@ -31,6 +31,7 @@ public enum PhysicalProperty
     heavy,
     volten,
     dishSmack //床ずれ、ヴぉ流転、暴断
+    ,none
 }
 /// <summary>
 /// 武器依存の戦闘規格
@@ -1012,13 +1013,16 @@ int GetTightenMindCorrectionStage()
 {
     float nightinknightValue = TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight);
 
-    return (int)Math.Floor(nightinknightValue) / 10;
+    nightinknightValue /= 10;
+    nightinknightValue = Mathf.Floor(nightinknightValue);
+
+    return (int)nightinknightValue;
 }
 
 /// <summary>
 /// 今回攻撃された際のAimStyle で短期記憶(TransformCount など)を更新する
 /// </summary>
-private void UpdateAimStyleMemory(AimStyle newAimStyle, int tightenStage)
+private bool UpdateAimStyleMemory(AimStyle newAimStyle, int tightenStage)
 {
     // 現在の短期記憶
     var mem = _aimStyleMemory;
@@ -1034,16 +1038,26 @@ private void UpdateAimStyleMemory(AimStyle newAimStyle, int tightenStage)
         mem.TransformCountMax   = CalcTransformCountMax(tightenStage, newAimStyle);
 
     }
-    else
-    {
-        // 2) 同じ AimStyle なので、変革カウントを進める（or ランダムで+1～+2など）
+    
+        // 変革カウントを進める
         int increment = CalcTransformCountIncrement(tightenStage);
 
         mem.TransformCount += increment;
-    }
 
-    // 更新を反映
-    _aimStyleMemory = mem;
+        // 更新を反映
+        _aimStyleMemory = mem;
+
+        if(mem.TransformCount >= mem.TransformCountMax)//カウント上限を超えたらリセットし変更成功の項を返す
+        {
+            mem.TransformCount = 0;
+            mem.TargetAimStyle = null;
+            mem.TransformCountMax = 0;
+            // 更新を反映
+            _aimStyleMemory = mem;
+           return true;
+        }
+    return false;
+    
 }
 /// <summary>
 /// 同じAimStyleを再度食らった時、何カウント増やすかを決める
@@ -1059,41 +1073,91 @@ private int CalcTransformCountIncrement(int tightenStage)
 /// <summary>
 /// 引き締め段階(tightenStage)と、新AimStyle に応じて必要な最大カウントを算出
 /// </summary>
-private int CalcTransformCountMax(int tightenStage, AimStyle style)
-{
-    //AIMSTYLEの組み合わせ辞書により、必要な最大カウントを計算する
-    return 1;
-}
+    private int CalcTransformCountMax(int tightenStage, AimStyle AttackerStyle)
+    {
+        //AIMSTYLEの組み合わせ辞書により、必要な最大カウントを計算する
+        var count = DefenseTransformationThresholds[(AttackerStyle, NowDeffenceStyle)];
+        if(tightenStage>=2)
+        {
+            if(RandomEx.Shared.NextFloat(1)<0.31f + TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight)*0.01f)
+        {
+                count -= 1;
 
-    /// <summary>防ぎ方の切り替え/// </summary>
+        }
+        }
+        
+        if(tightenStage >= 5){
+            if(RandomEx.Shared.NextFloat(1)<0.8f)
+                {
+                    count-=1;
+                }
+        }
+
+    return  count;
+    }
+
+    /// <summary>防ぎ方の切り替え </summary>
     private void SwitchDefenceStyle(BaseStates atker)
     {
         var skill = atker.NowUseSkill;
         var pattern = DefaultDefensePatternPerProtocol[atker.NowBattleProtocol];
 
         if(!skill.NowConsecutiveATKFromTheSecondTimeOnward()){//単回攻撃または初回攻撃なら
+
+            var per = 1f;
+            if(GetTightenMindCorrectionStage()>=2)per=0.75f;//補正段階が2以上になるまで75%の確率で切り替えます、それ以降は100%で完全対応
            if(RandomEx.Shared.NextFloat(1) < pattern.a)
            {
-            NowDeffenceStyle =  pattern.aStyle;//単体攻撃は現在の防ぎ方に100%の確率で切り替えです
-            skill.DecideNowMoveSet_A();//初回攻撃ならどのムーブセットを使うか決定する。
+            skill.DecideNowMoveSet_A();//初回攻撃なら『以降』、どのムーブセットを使うか決定する。
+
+            if(RandomEx.Shared.NextFloat(1)<per){
+                NowDeffenceStyle =  pattern.aStyle;
+            }else{
+                NowDeffenceStyle = GetRandomAimStyleExcept(pattern.aStyle);//aStyle以外のAimStyleをランダムに選びます
+            }
            }
            else
            {
-            NowDeffenceStyle =  pattern.bStyle;//aの確率外れたらbstyleで。
             skill.DecideNowMoveSet_B();
+
+            if(RandomEx.Shared.NextFloat(1)<per){
+                NowDeffenceStyle =  pattern.bStyle;
+            }else{
+                NowDeffenceStyle = GetRandomAimStyleExcept(pattern.bStyle);//bStyle以外のAimStyleをランダムに選びます
+            }
            }
         }else{
-            var AtkAimStyle = skill.NowAimStyle();//攻撃者のNowMoveSetの回数目のAimStyleを取得
+            var AtkAimStyle = skill.NowAimStyle();//攻撃者の現在のAimStyleを取得
+            
+            if (AtkAimStyle == NowDeffenceStyle) return;// 既に同じAimStyleなら何もしない
+
             var TightenMind = GetTightenMindCorrectionStage();//現在の自分の引き締め値を入手
 
-            UpdateAimStyleMemory(AtkAimStyle, TightenMind);//まず短期記憶を更新または新生する処理
-
-            //実際に適用する処理。(UpdateAimStyleMemory 内でやってもいいかも)
-            //カウントアップ完了したなら、nowDeffenceStyleに記録されたAimStyleを適用するだけ
+            if(UpdateAimStyleMemory(AtkAimStyle, TightenMind))//まず短期記憶を更新または新生する処理
+            {
+                NowDeffenceStyle = AtkAimStyle;
+            }//カウントアップ完了したなら、nowDeffenceStyleに記録されたAimStyleを適用するだけ
+            
         }
 
 
 
+    }
+    /// <summary>
+    /// 連続攻撃時、狙い流れの物理属性適正とスキルの物理属性の一致による1.1倍ブーストがあるかどうかを判定し行使する関数です
+    /// </summary>
+    /// <param name="attacker"></param>
+    void CheckPhysicsConsecutiveAimBoost(BaseStates attacker)
+    {
+        var skill = attacker.NowUseSkill;
+        if(!skill.NowConsecutiveATKFromTheSecondTimeOnward())return;//連続攻撃でないなら何もしない
+
+        if((skill.NowAimStyle() ==AimStyle.Doublet && skill.SkillPhysical == PhysicalProperty.volten) ||
+            ( skill.NowAimStyle() ==AimStyle.PotanuVolf && skill.SkillPhysical == PhysicalProperty.volten) ||
+            (skill.NowAimStyle() ==AimStyle.Duster) && skill.SkillPhysical == PhysicalProperty.dishSmack)
+            {
+                attacker.SetATKPercentageModifier(1.1f, "連続攻撃時、狙い流れの物理属性適正とスキルの物理属性の一致による1.1倍ブースト")
+            }
     }
 
     /// <summary>
@@ -1105,15 +1169,10 @@ private int CalcTransformCountMax(int tightenStage, AimStyle style)
     {
         var skill = attacker.NowUseSkill;
 
-        //防ぎ方の切り替え
-        SwitchDefenceStyle(attacker);
-
         //スキルパワーの精神属性による計算
         var modifier = SkillSpiritualModifier[(skill.SkillSpiritual, MyImpression)];//スキルの精神属性と自分の精神属性による補正
         var skillPower = skill.SkillPowerCalc(spread) * modifier.GetValue() / 100.0f;
         var txt = "";//メッセージテキスト用
-        skill.DoSkillCountUp();//スキルを実行した回数をカウントアップ
-
 
         //スキルの持ってる性質を全て処理として実行
 
@@ -1121,6 +1180,11 @@ private int CalcTransformCountMax(int tightenStage, AimStyle style)
         {
             if (IsReactHIT(attacker))
             {
+                //防ぎ方の切り替え
+                SwitchDefenceStyle(attacker);
+                //連続攻撃の物理属性ブースト判定
+                CheckPhysicsConsecutiveAimBoost(attacker);
+                
                 //成功されるとダメージを受ける
                 txt += Damage(attacker, skillPower);
             }
@@ -1176,6 +1240,7 @@ private int CalcTransformCountMax(int tightenStage, AimStyle style)
         }
 
         NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルの攻撃回数をカウントアップ
+        NowUseSkill.DoSkillCountUp();//使用したスキルの使用回数をカウントアップ
         RemoveUseThings();//特別な補正を消去
         Debug.Log("AttackChara");
 
@@ -2228,7 +2293,9 @@ private int CalcTransformCountMax(int tightenStage, AimStyle style)
 
     //static 静的なメゾット(戦いに関する辞書データなど)
 
-    //戦闘規格ごとのデフォルトa,bの狙い流れ
+    /// <summary>
+    /// 戦闘規格ごとのデフォルトa,bの狙い流れ
+    /// </summary>
     public static readonly Dictionary<BattleProtocol, (AimStyle aStyle,float a,AimStyle bStyle)> DefaultDefensePatternPerProtocol =
         new Dictionary<BattleProtocol, (AimStyle aStyle,float a,AimStyle bStyle)>
         {
@@ -2237,8 +2304,62 @@ private int CalcTransformCountMax(int tightenStage, AimStyle style)
             {BattleProtocol.Showey,(AimStyle.CentralHeavenStrike,0.8f,AimStyle.Doublet)}
         };
 
+
     /// <summary>
-    /// 精神属性でのスキルの補正値　スキルの精神属性→キャラクター属性
+    /// 指定したAimStyleを除いた中からランダムに1つ選択する
+    /// </summary>
+    private AimStyle GetRandomAimStyleExcept(AimStyle excludeStyle)
+    {
+        // 全てのAimStyleの値を配列として取得
+        var allStyles = Enum.GetValues(typeof(AimStyle))
+                        .Cast<AimStyle>()
+                        .Where(style => style != excludeStyle)
+                        .ToArray();
+        
+        // ランダムに1つ選択して返す
+        return RandomEx.Shared.GetItem(allStyles);
+    }
+    /// <summary>
+    /// 攻撃者の狙い流れ(Aimstyle)、受け手の"現在の変更前の"防ぎ方(Aimstyle)の組み合わせによって受け手の防ぎ方変更までの最大ターン数を算出する辞書。
+    /// 【その狙い流れを受けて、現在の防ぎ方がそのAimStyleに対応するまでのカウント】であって、決して前の防ぎ方から今回の防ぎ方への変化ではない。(複雑なニュアンスの違い)
+    /// </summary>
+    public static readonly Dictionary<(AimStyle attackerAIM, AimStyle nowDefenderAIM), int> DefenseTransformationThresholds =  
+    new Dictionary<(AimStyle attackerAIM, AimStyle defenderAIM), int>()
+    {
+    { (AimStyle.AcrobatMinor, AimStyle.Doublet), 2 },         // アクロバマイナ体術1 ← ダブレット
+    { (AimStyle.AcrobatMinor, AimStyle.QuadStrike), 6 },      // アクロバマイナ体術1 ← 四弾差し込み
+    { (AimStyle.AcrobatMinor, AimStyle.Duster), 4 },          // アクロバマイナ体術1 ← ダスター
+    { (AimStyle.AcrobatMinor, AimStyle.PotanuVolf), 7 },      // アクロバマイナ体術1 ← ポタヌヴォルフのほうき術系
+    { (AimStyle.AcrobatMinor, AimStyle.CentralHeavenStrike), 4 }, // アクロバマイナ体術1 ← 中天一弾
+    { (AimStyle.Doublet, AimStyle.AcrobatMinor), 3 },         // ダブレット ← アクロバマイナ体術1
+    { (AimStyle.Doublet, AimStyle.QuadStrike), 6 },           // ダブレット ← 四弾差し込み
+    { (AimStyle.Doublet, AimStyle.Duster), 8 },               // ダブレット ← ダスター
+    { (AimStyle.Doublet, AimStyle.PotanuVolf), 4 },           // ダブレット ← ポタヌヴォルフのほうき術系
+    { (AimStyle.Doublet, AimStyle.CentralHeavenStrike), 7 },  // ダブレット ← 中天一弾
+    { (AimStyle.QuadStrike, AimStyle.AcrobatMinor), 4 },      // 四弾差し込み ← アクロバマイナ体術1
+    { (AimStyle.QuadStrike, AimStyle.Doublet), 2 },           // 四弾差し込み ← ダブレット
+    { (AimStyle.QuadStrike, AimStyle.Duster), 5 },            // 四弾差し込み ← ダスター
+    { (AimStyle.QuadStrike, AimStyle.PotanuVolf), 6 },        // 四弾差し込み ← ポタヌヴォルフのほうき術系
+    { (AimStyle.QuadStrike, AimStyle.CentralHeavenStrike), 4 }, // 四弾差し込み ← 中天一弾
+    { (AimStyle.Duster, AimStyle.AcrobatMinor), 3 },          // ダスター ← アクロバマイナ体術1
+    { (AimStyle.Duster, AimStyle.Doublet), 8 },               // ダスター ← ダブレット
+    { (AimStyle.Duster, AimStyle.QuadStrike), 4 },            // ダスター ← 四弾差し込み
+    { (AimStyle.Duster, AimStyle.PotanuVolf), 7 },            // ダスター ← ポタヌヴォルフのほうき術系
+    { (AimStyle.Duster, AimStyle.CentralHeavenStrike), 5 },   // ダスター ← 中天一弾
+    { (AimStyle.PotanuVolf, AimStyle.AcrobatMinor), 2 },      // ポタヌヴォルフのほうき術系 ← アクロバマイナ体術1
+    { (AimStyle.PotanuVolf, AimStyle.Doublet), 3 },           // ポタヌヴォルフのほうき術系 ← ダブレット
+    { (AimStyle.PotanuVolf, AimStyle.QuadStrike), 5 },        // ポタヌヴォルフのほうき術系 ← 四弾差し込み
+    { (AimStyle.PotanuVolf, AimStyle.Duster), 4 },            // ポタヌヴォルフのほうき術系 ← ダスター
+    { (AimStyle.PotanuVolf, AimStyle.CentralHeavenStrike), 5 }, // ポタヌヴォルフのほうき術系 ← 中天一弾
+    { (AimStyle.CentralHeavenStrike, AimStyle.AcrobatMinor), 4 }, // 中天一弾 ← アクロバマイナ体術1
+    { (AimStyle.CentralHeavenStrike, AimStyle.Doublet), 3 },      // 中天一弾 ← ダブレット
+    { (AimStyle.CentralHeavenStrike, AimStyle.QuadStrike), 6 },   // 中天一弾 ← 四弾差し込み
+    { (AimStyle.CentralHeavenStrike, AimStyle.Duster), 8 },       // 中天一弾 ← ダスター
+    { (AimStyle.CentralHeavenStrike, AimStyle.PotanuVolf), 2 }    // 中天一弾 ← ポタヌヴォルフのほうき術系
+    };
+
+    /// <summary>
+    /// 精神属性でのスキルの補正値　スキルの精神属性→キャラクター属性 csvDataからロード
     /// </summary>
     protected static Dictionary<(SpiritualProperty, SpiritualProperty), FixedOrRandomValue> SkillSpiritualModifier;
 
@@ -2392,7 +2513,6 @@ public class FixedOrRandomValue
 
     }
 }
-
 /// <summary>
 /// 慣れ補正で使用するスキルとその使用者
 /// </summary>
@@ -2447,7 +2567,6 @@ public class FocusedSkillAndUser
 /// <summary>
 /// 狙い流れ(AimStyle)に対する短期記憶・対応進行度をまとめた構造体
 /// </summary>
-[Serializable]
 public struct AimStyleMemory
 {
     /// <summary>いま対応しようとしている相手の AimStyle==そのまま自分のNowDeffenceStyleに代入されます。</summary>

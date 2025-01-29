@@ -547,7 +547,7 @@ MonoBehaviour:
       subVitalLayers: 
       A_MoveSet: []
       B_MoveSet: []
-      DEFATK: 0
+      _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
@@ -588,7 +588,7 @@ MonoBehaviour:
       subVitalLayers: 
       A_MoveSet: []
       B_MoveSet: []
-      DEFATK: 0
+      _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
@@ -617,7 +617,7 @@ MonoBehaviour:
       subVitalLayers: 
       A_MoveSet: []
       B_MoveSet: []
-      DEFATK: 0
+      _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
@@ -668,7 +668,7 @@ MonoBehaviour:
       subVitalLayers: 
       A_MoveSet: []
       B_MoveSet: []
-      DEFATK: 0
+      _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
@@ -697,7 +697,7 @@ MonoBehaviour:
       subVitalLayers: 
       A_MoveSet: []
       B_MoveSet: []
-      DEFATK: 0
+      _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
@@ -722,12 +722,14 @@ MonoBehaviour:
     b_b_eye: 4
     b_b_agi: 4
     TenDayValues:
-      _list: []
+      _list:
+      - key: 0
+        value: 0
     KereKere: 0
     CharacterName: 
     ImpressionStringName: 
     NowBattleProtocol: 0
-    NowDeffenceStyle: 0
+    NowDeffenceStyle: 2
     NowUseSkill:
       SkillSpiritual: 0
       _name: 
@@ -747,9 +749,8 @@ MonoBehaviour:
       subEffects: 
       subVitalLayers: 
       A_MoveSet: []
-      B_MoveSet:
-      - Styles: 00000000
-      DEFATK: 0
+      B_MoveSet: []
+      _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
@@ -778,7 +779,7 @@ MonoBehaviour:
       subVitalLayers: 
       A_MoveSet: []
       B_MoveSet: []
-      DEFATK: 0
+      _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
       ZoneTrait: 0
@@ -905,7 +906,7 @@ MonoBehaviour:
           subVitalLayers: 
           A_MoveSet: []
           B_MoveSet: []
-          DEFATK: 0
+          _defAtk: 0
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
@@ -934,7 +935,7 @@ MonoBehaviour:
           subVitalLayers: 
           A_MoveSet: []
           B_MoveSet: []
-          DEFATK: 0
+          _defAtk: 0
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
@@ -986,7 +987,7 @@ MonoBehaviour:
           subVitalLayers: 
           A_MoveSet: []
           B_MoveSet: []
-          DEFATK: 0
+          _defAtk: 0
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
@@ -1012,7 +1013,7 @@ MonoBehaviour:
           subVitalLayers: 
           A_MoveSet: []
           B_MoveSet: []
-          DEFATK: 0
+          _defAtk: 0
           WhatSkill: 0
           ConsecutiveType: 0
           ZoneTrait: 0
