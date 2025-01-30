@@ -34,6 +34,21 @@ public enum PhysicalProperty
     ,none
 }
 /// <summary>
+/// パワー、元気、気力値　歩行やその他イベントなどで短期的に上げ下げし、
+/// 狙い流れ等の防ぎ方切り替え処理などで、さらに上下する値として導入されたりする。
+/// </summary>
+public enum ThePower
+{
+        /// <summary>たるい</summary>
+    lowlow,
+        /// <summary>低い</summary>
+    low,
+    /// <summary>普通</summary>
+    medium,
+    /// <summary>高い</summary>
+    high
+}
+/// <summary>
 /// 武器依存の戦闘規格
 /// </summary>
 public enum BattleProtocol
@@ -191,6 +206,7 @@ public abstract class BaseStates
         return _vitalLaerList.Any(vit => vit.id == id);
     }
 
+    public ThePower NowPower;
 
     [Header("4大ステの基礎基礎値")]
     public float  b_b_atk = 4f;
@@ -290,15 +306,14 @@ public abstract class BaseStates
             return b_b_atk + calcATK;
         }
     }
-
-    //基礎攻撃防御　　　(大事なのは、基本的にこの辺りは超スキル依存なの)
-    public float b_DEF
+    /// <summary>
+    /// 指定したAimStyleでの基礎防御力を計算する
+    /// </summary>
+    private float CalcBaseDefenseForAimStyle(AimStyle style)
     {
-        get
-        {
-            var calcDEF = 0f;
+        float calcDEF = 0;
 
-            // 共通の十日能力をまず加算
+                    // 共通の十日能力をまず加算
             calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 1.0f;
             calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight) * 1.3f;
             calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Raincoat) * 1.0f;
@@ -321,9 +336,97 @@ public abstract class BaseStates
             calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Baka) * -0.1f;
 
 
+        
+        switch (style)
+        {
+                case AimStyle.CentralHeavenStrike: // 中天一弾
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Smiler) * 0.78f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.CryoniteQuality) * 1.0f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SilentTraining) * 0.4f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Vail) * 0.5f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.JoeTeeth) * 0.9f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.3f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.1f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 0.6f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * -0.3f;
+                break;
 
-            return b_b_def + calcDEF;
+                case AimStyle.AcrobatMinor: // アクロバマイナ体術1
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 1.0f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.1f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Blades) * 1.1f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.1f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.3f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.6f;
+                    break;
+
+                case AimStyle.Doublet: // ダブレット
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.HeatHaze) * 0.7f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Sort) * 0.3f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * 0.4f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight) * 0.3f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 1.0f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.2f;
+                    break;
+
+                case AimStyle.QuadStrike: // 四弾差し込み
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * 1.0f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Rain) * 0.2f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SpringWater) * 0.3f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.6f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Enokunagi) * 0.5f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.17f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.TentVoid) * 0.4f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * -0.2f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) * -1.0f;
+                    break;
+
+                case AimStyle.Duster: // ダスター
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Miza) * 0.6f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Glory) * 0.8f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.TentVoid) * -0.2f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * -0.2f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Raincoat) * 0.4f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Sort) * 0.1f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SilentTraining) * 0.4f;
+                    break;
+
+                case AimStyle.PotanuVolf: // ポタヌヴォルフのほうき術
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.4f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.2f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull) * 1.4f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.2f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * -0.2f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.3f;
+                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Vond) * -0.2f;
+                    break;
         }
+        
+        return calcDEF;
+    }
+
+
+    /// <summary>
+    /// 基礎攻撃防御　(大事なのは、基本的にこの辺りは超スキル依存なの)
+    /// オプションのAimStyleに値を入れるとそのAimStyleでシミュレート
+    /// </summary>
+    /// <param name="SimulateAimStyle"></param>
+    /// <returns></returns>
+    public float b_DEF(AimStyle? SimulateAimStyle = null)
+    {
+        var calcDEF = 0f;
+
+        if(SimulateAimStyle == null)
+        {
+            calcDEF += CalcBaseDefenseForAimStyle(NowDeffenceStyle);
+        }
+        else
+        {
+            calcDEF += CalcBaseDefenseForAimStyle(SimulateAimStyle.Value);
+
+        }
+
+        return b_b_def + calcDEF;
     }
     public float b_EYE
     {
@@ -880,12 +983,18 @@ public abstract class BaseStates
     }
 
     /// <summary>
-    ///     防御力計算
+    ///     防御力計算 シミュレートも含む(AimStyle不一致によるクランプのため)
+    ///     オプションのAimStyleに値を入れるとそのAimStyleでシミュレート
     /// </summary>
     /// <returns></returns>
-    public virtual float DEF(float minusPer)
+    public virtual float DEF(float minusPer=1f, AimStyle? SimulateAimStyle = null)
     {
-        var def = b_DEF; //基礎防御力が基本。
+        var def = b_DEF(); //基礎防御力が基本。
+
+        if(SimulateAimStyle != null)//シミュレートするなら
+        {
+            def = b_DEF(SimulateAimStyle);//b_defをシミュレート
+        }
 
         def *= UseDEFPercentageModifier;//防御力補正
 
@@ -894,6 +1003,10 @@ public abstract class BaseStates
 
         return def - minusAmount;
     }
+
+
+
+    
 
 
     /// <summary>
@@ -952,8 +1065,35 @@ public abstract class BaseStates
     public virtual string Damage(BaseStates Atker, float SkillPower)
     {
         var skill = Atker.NowUseSkill;
-        var dmg = (Atker.ATK() - DEF(skill.DEFATK)) * SkillPower;//(攻撃-対象者の防御) ×スキルパワー？
+        var def = DEF(skill.DEFATK);
 
+        //防ぎ方(AimStyle)の不一致がある場合、クランプする
+        if(skill.NowAimStyle() != NowDeffenceStyle)
+        {
+            var MatchedMaxClampDef = DEF(skill.DEFATK, skill.NowAimStyle())*0.7f;//適切な防御力の0.7倍がクランプ最大値
+
+            if(NowPower>ThePower.medium)//パワーが高い場合は 「適切な防御力をこしてた場合のみ」適切防御力の0.7倍にクランプ
+            {
+                //まず比較する、超していた場合にクランプ
+                if(DEF()>DEF(1,skill.NowAimStyle()))//今回の防御力が適切な防御力を超してた場合、
+                {
+                    def = MatchedMaxClampDef;//クランプされる。
+                }
+            }else//そうでない場合は、「適切な防御力を超してる越してない関係なく」適切防御力の0.7倍にクランプ(その最大値を絶対に超えない。)
+            {
+                
+                if(def > MatchedMaxClampDef)
+                {
+                    def = MatchedMaxClampDef;//最大値を超えたら最大値にクランプ
+                }
+            }
+        }
+
+
+
+        var dmg = (Atker.ATK() - def) * SkillPower;//(攻撃-対象者の防御) ×スキルパワー？
+
+        if(NowPower > ThePower.lowlow)//たるくなければ基礎山形補正がある。
         dmg = GetBaseCalcDamageWithPlusMinus22Percent(dmg);//基礎山型補正
 
         //慣れ補正
@@ -1015,6 +1155,7 @@ int GetTightenMindCorrectionStage()
 
     nightinknightValue /= 10;
     nightinknightValue = Mathf.Floor(nightinknightValue);
+    if(NowPower == ThePower.high && RandomEx.Shared.NextFloat(1) < 0.5f)  nightinknightValue += 1;//パワーが高く、二分の一の確率を当てると、補正段階が1増える
 
     return (int)nightinknightValue;
 }
@@ -1066,9 +1207,11 @@ private bool UpdateAimStyleMemory(AimStyle newAimStyle, int tightenStage)
 private int CalcTransformCountIncrement(int tightenStage)
 {
     var rndmin = 0;
+    var rndmax = tightenStage;
+    if(NowPower< ThePower.medium)rndmax -= 1;
     if(tightenStage <2)return 1;//1以下なら基本値のみ
     if(tightenStage>5) rndmin = tightenStage/6;//6以上なら、補正段階の1/6が最小値
-    return 1 + RandomEx.Shared.NextInt(rndmin, tightenStage);//2以降なら補正段階分乱数の最大値が増える
+    return 1 + RandomEx.Shared.NextInt(rndmin, rndmax);//2以降なら補正段階分乱数の最大値が増える
 }
 /// <summary>
 /// 引き締め段階(tightenStage)と、新AimStyle に応じて必要な最大カウントを算出
@@ -1146,7 +1289,6 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>
     /// 連続攻撃時、狙い流れの物理属性適正とスキルの物理属性の一致による1.1倍ブーストがあるかどうかを判定し行使する関数です
     /// </summary>
-    /// <param name="attacker"></param>
     void CheckPhysicsConsecutiveAimBoost(BaseStates attacker)
     {
         var skill = attacker.NowUseSkill;
@@ -1156,7 +1298,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             ( skill.NowAimStyle() ==AimStyle.PotanuVolf && skill.SkillPhysical == PhysicalProperty.volten) ||
             (skill.NowAimStyle() ==AimStyle.Duster) && skill.SkillPhysical == PhysicalProperty.dishSmack)
             {
-                attacker.SetATKPercentageModifier(1.1f, "連続攻撃時、狙い流れの物理属性適正とスキルの物理属性の一致による1.1倍ブースト")
+                attacker.SetATKPercentageModifier(1.1f, "連続攻撃時、狙い流れの物理属性適正とスキルの物理属性の一致による1.1倍ブースト");
             }
     }
 
