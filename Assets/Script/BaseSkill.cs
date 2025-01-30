@@ -249,7 +249,9 @@ public class BaseSkill
     private int _hitConsecutiveCount;//スキルが連続ヒットした回数
     private int _triggerCount;//発動への−カウント　このカウント分連続でやらないと発動しなかったりする　重要なのは連続でやらなくても　一気にまたゼロからになるかはスキル次第
     private int _triggerCountMax;//発動への−カウント　の指標
-    private int _atkCountUP;//攻撃回数
+    private int _atkCountUP;//連続攻撃中のインデックス的回数
+    private float _RandomConsecutivePer;//連続実行の確率判定のパーセント
+    
 
     /// <summary>
     /// 前回のスキル行使の戦闘ターン ない状態は-1
@@ -419,12 +421,32 @@ public class BaseSkill
     /// </summary>
     public bool NextConsecutiveATK()
     {
-        if (_atkCountUP >= ATKCount)//もし設定した値にカウントアップ値が達成してたら。
+        if(HasConsecutiveType(SkillConsecutiveType.FixedConsecutive))//回数による連続性質の場合
         {
-            _atkCountUP = 0;//値初期化
-            return false;//終わり
+            if (_atkCountUP >= ATKCount)//もし設定した値にカウントアップ値が達成してたら。
+            {
+                _atkCountUP = 0;//値初期化
+                return false;//終わり
+            }
+            return true;//まだ達成してないから次の攻撃がある。
+
+        }else if(HasConsecutiveType(SkillConsecutiveType.RandomPercentConsecutive))//確率によるなら
+        {
+            if (_atkCountUP >= ATKCount)//もし設定した値にカウントアップ値が達成してたら。
+            {
+                _atkCountUP = 0;//値初期化
+                return false;//終わり
+            }
+
+            if(RandomEx.Shared.NextFloat(1)<_RandomConsecutivePer)//確率があったら、
+            {
+                
+                return true;
+            }
+            return false;
         }
-        return true;//まだ達成してないから次の攻撃がある。
+
+        return false;
     }
     /// <summary>
     /// 現在が連続攻撃中(二回目以降)かどうか

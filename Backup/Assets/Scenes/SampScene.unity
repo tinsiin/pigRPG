@@ -749,7 +749,10 @@ MonoBehaviour:
       subEffects: 
       subVitalLayers: 
       A_MoveSet: []
-      B_MoveSet: []
+      B_MoveSet:
+      - States: 
+        DEFATKList: []
+        PhysicalAptitudeList: 
       _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0

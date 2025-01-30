@@ -686,41 +686,8 @@ public class BattleManager
         CreateBattleMessage(Acter.AttackChara(unders));//攻撃の処理からメッセージが返る。
         unders = new UnderActersEntryList(this);//初期化
 
-        //慣れフラットロゼが起こるかどうかの判定　(AddFlatRozeで関数化？
-        if (Acter.HasPassive(0))
-            if (Acter.NowUseSkill.HasType(SkillType.Attack))//攻撃タイプのスキル
-            {
-                if (!IsVanguard(Acter))//前のめりでないか
-                {
-                    if (Acter.NowUseSkill.IsAggressiveCommit)//その上で前のめりになる攻撃かどうか
-                    {
-                        if (Acter.NowUseSkill.RecordDoCount > 20)//20回より使っているなら
-                        {
-                            if (Acter.NowUseSkill.ATKCount == 1)//連続実行回数が一回、つまり単回攻撃なら
-                            {
-                                if (RandomEx.Shared.NextInt(100) < Ideal50or60Easing(Acter.NowUseSkill.SkillHitPer))//50,60に近いほど発生
-                                    Acts.Add(Acter, Faction, "淡々としたロゼ", new List<ReservationStatesModify>()
-                        {
-                            new()
-                            {
-                                eada = whatModify.eye,
-                                modify = 1.8f,
-                                memo = "ロゼ瞳"
-                            },
-                            new()
-                            {
-                                eada = whatModify.atk,
-                                modify = 0.5f,
-                                memo = "ロゼ威力半減"
-                            }
-                        }, true);//先約リストからスキルを固定する。(再選択させない)
-
-                            }
-                        }
-                    }
-                }
-            }
-
+        //慣れフラットロゼが起こるかどうかの判定　
+        TryAddFlatRoze();
 
         //スキル実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
         if (skill.IsAggressiveCommit)
@@ -757,6 +724,49 @@ public class BattleManager
 
         return ACTPop();
 
+    }
+    /// <summary>
+    /// 慣れフラットロゼの発生判定と処理を行う
+    /// 条件：
+    /// 1. パッシブ0を持っている
+    /// 2. 攻撃タイプのスキル
+    /// 3. 前のめりでない
+    /// 4. 前のめりになる攻撃
+    /// 5. スキル使用回数が20回以上
+    /// 6. 単回攻撃である
+    /// 7. 命中率が50か60に近いほど発生しやすい
+    /// </summary>
+    /// <returns>フラットロゼが発生したかどうか</returns>
+    private bool TryAddFlatRoze()
+    {
+        if (!Acter.HasPassive(0)) return false;
+        if (!Acter.NowUseSkill.HasType(SkillType.Attack)) return false;
+        if (IsVanguard(Acter)) return false;
+        if (!Acter.NowUseSkill.IsAggressiveCommit) return false;
+        if (Acter.NowUseSkill.RecordDoCount <= 20) return false;
+        if (Acter.NowUseSkill.NowConsecutiveATKFromTheSecondTimeOnward()) return false;
+        
+        // 命中率による発生判定
+        if (RandomEx.Shared.NextInt(100) >= Ideal50or60Easing(Acter.NowUseSkill.SkillHitPer)) return false;
+
+        // フラットロゼの効果を付与
+        Acts.Add(Acter, Faction, "淡々としたロゼ", new List<ReservationStatesModify>()
+        {
+            new()
+            {
+                eada = whatModify.eye,
+                modify = 1.8f,
+                memo = "ロゼ瞳"
+            },
+            new()
+            {
+                eada = whatModify.atk,
+                modify = 0.5f,
+                memo = "ロゼ威力半減"
+            }
+        }, true);
+
+        return true;
     }
     /// <summary>
     /// スキルの性質が範囲ランダムだった場合、

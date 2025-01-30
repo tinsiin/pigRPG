@@ -557,6 +557,7 @@ MonoBehaviour:
       HitRangePercentageDictionary:
         _list: []
     _vitalLaerList: []
+    NowPower: 0
     b_b_atk: 4
     b_b_def: 4
     b_b_eye: 4
@@ -637,6 +638,7 @@ MonoBehaviour:
     _passiveList: []
     _skillList: []
     _vitalLaerList: []
+    NowPower: 0
     b_b_atk: 4
     b_b_def: 4
     b_b_eye: 4
@@ -717,6 +719,7 @@ MonoBehaviour:
     _passiveList: []
     _skillList: []
     _vitalLaerList: []
+    NowPower: 0
     b_b_atk: 4
     b_b_def: 4
     b_b_eye: 4
@@ -752,7 +755,6 @@ MonoBehaviour:
       B_MoveSet:
       - States: 
         DEFATKList: []
-        PhysicalAptitudeList: 
       _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -878,6 +880,7 @@ MonoBehaviour:
         _passiveList: []
         _skillList: []
         _vitalLaerList: []
+        NowPower: 0
         b_b_atk: 4
         b_b_def: 4
         b_b_eye: 4
@@ -962,6 +965,7 @@ MonoBehaviour:
         _passiveList: []
         _skillList: []
         _vitalLaerList: []
+        NowPower: 0
         b_b_atk: 4
         b_b_def: 4
         b_b_eye: 4
