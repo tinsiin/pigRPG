@@ -400,27 +400,10 @@ public class BattleManager
         UniqueTopMessage = "";
     }
     /// <summary>
-    /// 行動準備 次のボタンを決める
+    /// ランダムターンかまたは先約リストからActerを取得する
     /// </summary>
-    public TabState ACTPop()
+    void CharacterAddFromListOrRandom()
     {
-        ResetManagerTemp();//一時保存要素をリセット
-        Acts.RemoveDeathCharacters();//先約リストから死者を取り除く
-
-        //パーティーの死亡判定
-        if (AllyGroup.PartyDeath())
-        {
-            Wipeout = true;
-            Faction = WhichGroup.alliy;
-            return TabState.NextWait;//押して処理
-        }
-        else if (EnemyGroup.PartyDeath())
-        {
-            Wipeout = true;
-            Faction = WhichGroup.Enemyiy;
-            return TabState.NextWait;//押して処理
-        }
-
         //もし先約リストにキャラクターが居たら、そのリストを先ずは消化する
         if (Acts.Count > 0)
         {//先約リストにおいて、recovelyTurnは意味をなさないですよ
@@ -466,50 +449,105 @@ public class BattleManager
             Debug.Log("俳優はランダムに選ばれました");
         }
 
-        //俳優が味方なら
+    }
+    /// <summary>
+    /// 行動準備 次のボタンを決める
+    /// </summary>
+    public TabState ACTPop()
+    {
+        ResetManagerTemp();//一時保存要素をリセット
+        Acts.RemoveDeathCharacters();//先約リストから死者を取り除く
+
+        //パーティーの死亡判定
+        if (AllyGroup.PartyDeath())
+        {
+            Wipeout = true;
+            Faction = WhichGroup.alliy;
+            return TabState.NextWait;//押して処理
+        }
+        else if (EnemyGroup.PartyDeath())
+        {
+            Wipeout = true;
+            Faction = WhichGroup.Enemyiy;
+            return TabState.NextWait;//押して処理
+        }
+
+        CharacterAddFromListOrRandom();//Acterが選ばれる
+
+        //俳優が味方なら 後々の選択画面に移動した時に、適切な画面が発生するようにする準備
         var ps = PlayersStates.Instance;
         if (Acter == ps.geino || Acter == ps.sites || Acter == ps.noramlia)
-        {
+        {//味方が行動するならば
+
             if (Acter.FreezeUseSkill == null)//強制続行中のスキルがなければ
             {
-                //味方が行動するならば
-                if (Walking.disposableCreateTarget != null) Walking.disposableCreateTarget.Dispose();//既に入ってたらnullする。
-                Walking.disposableCreateTarget = Walking.USERUI_state.Subscribe(
-                    state =>
-                    {
-                        if (state == TabState.SelectTarget) SelectTargetButtons.Instance.OnCreated(this);
-                        //対象者画面に移動したときに生成コールが実行されるようにする
+                //選択画面と範囲画面の自動生成準備
+                SubscribeToRangeAndTargetUIStateChanges();
 
-                        if (state == TabState.SelectRange) SelectRangeButtons.Instance.OnCreated(this);
-                    });
+                //スキル選択ボタンを各キャラの物にしてから
+                SwitchAllySkillUiState();
 
-
-                switch (Acter)//スキル選択ボタンを各キャラの物にしてから
-                {
-                    case StairStates:
-                        Walking.SKILLUI_state.Value = SkillUICharaState.geino;
-                        break;
-
-                    case SateliteProcessStates:
-                        Walking.SKILLUI_state.Value = SkillUICharaState.sites;
-                        break;
-                    case BassJackStates:
-                        Walking.SKILLUI_state.Value = SkillUICharaState.normalia;
-                        break;
-
-                }
                 //スキル選択ボタンを返す
                 return TabState.Skill;
             }
             else//スキル強制続行中なら、
             {
-                Acter.NowUseSkill = Acter.FreezeUseSkill;//操作の代わりに使用スキルに強制続行スキルを入れとく
+                var skill = Acter.FreezeUseSkill;
+                Acter.NowUseSkill = skill;//操作の代わりに使用スキルに強制続行スキルを入れとく
 
-                //ここでもスキル選択出来る様にしとく？
+                //連続攻撃中に操作可能なスキルなら、
+                if (skill.NowConsecutiveATKFromTheSecondTimeOnward()
+                && skill.HasConsecutiveType(SkillConsecutiveType.CanOprate))
+                {
+                    //選択画面と範囲画面の自動生成準備
+                    SubscribeToRangeAndTargetUIStateChanges();
+
+                    //範囲画面と対象者選択画面どちらに向かうかの判定
+                    return AllyClass.DetermineNextUIState(skill);
+                }
             }
         }
 
         return TabState.NextWait;
+
+
+    }
+    /// <summary>
+    /// スキルボタンのUIを各キャラクターの物にする。
+    /// </summary>
+    void SwitchAllySkillUiState()
+    {
+        switch (Acter)
+        {
+             case StairStates:
+                Walking.SKILLUI_state.Value = SkillUICharaState.geino;
+                break;
+
+            case SateliteProcessStates:
+                Walking.SKILLUI_state.Value = SkillUICharaState.sites;
+                break;
+            case BassJackStates:
+                Walking.SKILLUI_state.Value = SkillUICharaState.normalia;
+                break;
+
+        }
+
+    }
+    /// <summary>
+    /// 範囲、対象者選択ボタンに移行した際、battlemanager(ここ)の情報を持って生成コールバックが
+    /// 生成されるようにする。
+    /// </summary>
+    void SubscribeToRangeAndTargetUIStateChanges()
+    {
+        if (Walking.disposableCreateTarget != null) Walking.disposableCreateTarget.Dispose();//既に入ってたらnullする。
+        Walking.disposableCreateTarget = Walking.USERUI_state.Subscribe(
+            state =>
+            {
+                if (state == TabState.SelectTarget) SelectTargetButtons.Instance.OnCreated(this);
+                //それぞれ画面に移動したときに生成コールが実行されるようにする
+
+                if (state == TabState.SelectRange) SelectRangeButtons.Instance.OnCreated(this);
+            });
 
 
     }
@@ -705,13 +743,24 @@ public class BattleManager
 
         if (skill.NextConsecutiveATK())//まだ連続実行するなら
         {
-            NextTurn(false);
+            if(skill.HasConsecutiveType(SkillConsecutiveType.SameTurnConsecutive))//同一ターン内での連続攻撃　つまり普通の連続攻撃
+            {
+                NextTurn(false);
 
-            if (Acts.Count <= 0)//先約リストに今回の実行者を入れとく
-                Acts.Add(Acter, Faction);
+                if (Acts.Count <= 0)//先約リストに今回の実行者を入れとく
+                    Acts.Add(Acter, Faction);
 
-            Acter.FreezeSkill();//連続実行の為凍結
+                Acter.FreezeSkill();//連続実行の為凍結
 
+            }else if(skill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive))//ターンをまたいだ連続攻撃
+            {
+                NextTurn(true);
+
+                //混戦の中に身を任せるイメージなので、次にランダムターンなどで挟んだ連続攻撃だから　先約リストで次回予告はしない。
+                //_atkCountupは【連続攻撃実行完了】以外ではBattlemanager単位での戦闘終了時にしかリセットされないので、次回引っ掛かってもそのまま連続攻撃の途中と認識される。
+
+                Acter.FreezeSkill();//連続実行の為凍結
+            }
         }
         else //複数実行が終わり
         {

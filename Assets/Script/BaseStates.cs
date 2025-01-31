@@ -494,7 +494,7 @@ public abstract class BaseStates
     public BaseSkill NowUseSkill;
 
     /// <summary>
-    /// 中断できない発動カウント中のスキル　nullならその状態でないということ
+    /// 強制続行中のスキル　nullならその状態でないということ
     /// </summary>
     public BaseSkill FreezeUseSkill;
     /// <summary>
@@ -1201,7 +1201,7 @@ private bool UpdateAimStyleMemory(AimStyle newAimStyle, int tightenStage)
     
 }
 /// <summary>
-/// 同じAimStyleを再度食らった時、何カウント増やすかを決める
+/// AimStyleを食らった時、何カウント増やすかを決める
 /// ※ tightenStageが高いほど変革スピードが速い、など
 /// </summary>
 private int CalcTransformCountIncrement(int tightenStage)
@@ -1249,9 +1249,10 @@ private int CalcTransformCountIncrement(int tightenStage)
 
             var per = 1f;
             if(GetTightenMindCorrectionStage()>=2)per=0.75f;//補正段階が2以上になるまで75%の確率で切り替えます、それ以降は100%で完全対応
-           if(RandomEx.Shared.NextFloat(1) < pattern.a)
+
+           if(RandomEx.Shared.NextFloat(1) < pattern.a)//パターンAなら 
            {
-            skill.DecideNowMoveSet_A();//初回攻撃なら『以降』、どのムーブセットを使うか決定する。
+            skill.DecideNowMoveSet_A0_B1(0);
 
             if(RandomEx.Shared.NextFloat(1)<per){
                 NowDeffenceStyle =  pattern.aStyle;
@@ -1259,9 +1260,9 @@ private int CalcTransformCountIncrement(int tightenStage)
                 NowDeffenceStyle = GetRandomAimStyleExcept(pattern.aStyle);//aStyle以外のAimStyleをランダムに選びます
             }
            }
-           else
+           else                                         //パターンBなら
            {
-            skill.DecideNowMoveSet_B();
+            skill.DecideNowMoveSet_A0_B1(1);
 
             if(RandomEx.Shared.NextFloat(1)<per){
                 NowDeffenceStyle =  pattern.bStyle;
@@ -1269,6 +1270,8 @@ private int CalcTransformCountIncrement(int tightenStage)
                 NowDeffenceStyle = GetRandomAimStyleExcept(pattern.bStyle);//bStyle以外のAimStyleをランダムに選びます
             }
            }
+
+           skill.SetSingleAimStyle(NowDeffenceStyle);//スキルのAimStyleとしても記録する。
         }else{
             var AtkAimStyle = skill.NowAimStyle();//攻撃者の現在のAimStyleを取得
             
@@ -1278,6 +1281,10 @@ private int CalcTransformCountIncrement(int tightenStage)
 
             if(UpdateAimStyleMemory(AtkAimStyle, TightenMind))//まず短期記憶を更新または新生する処理
             {
+                if(atker.NowUseSkill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive))
+                {
+                    if(RandomEx.Shared.NextFloat(1)<0.3f)return;
+                }
                 NowDeffenceStyle = AtkAimStyle;
             }//カウントアップ完了したなら、nowDeffenceStyleに記録されたAimStyleを適用するだけ
             

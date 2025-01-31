@@ -106,32 +106,32 @@ public enum SkillZoneTrait
 public enum SkillConsecutiveType
 {
     /// <summary>
-    /// 最初に選ばれた敵を攻撃し続ける
+    /// 毎コマンドZoneTraitに従って対象者の選択可能　ランダムだったらそれに従う感じ
     /// </summary>
-    AttackTargetContinuously = 1 >> 0,
+    CanOprate = 1 << 0,
 
-    /// <summary>
-    /// 毎コマンドZoneTraitに従って対象者の選択可能
-    /// </summary>
-    CanOprate = 1 >> 1,
+    /// <summary>CanOprateの対局的なもの、つまり最初しかZoneTraitでできることを選べない
+    /// 要は普通の連続攻撃の挙動です。
+    CantOprate = 1 << 1, 
 
-    /// <summary>
-    /// 毎コマンドZoneTraitに従ったランダムな対象者の選別をする。
-    /// </summary>
-    RandomOprate = 1 >> 2,
     /// <summary>
     /// ターンをまたいだ連続的攻撃　連続攻撃回数分だけ単体攻撃が無理やり進む感じ
     /// </summary>
-    FreezeConsecutive = 1 >> 3,
+    FreezeConsecutive = 1 << 2,
+
+    /// <summary>
+    /// 同一ターンで連続攻撃が行われるかどうか
+    /// </summary>
+    SameTurnConsecutive = 1 << 3,
 
     /// <summary>
     /// ランダムな百分率でスキル実行が連続されるかどうか
     /// </summary>
-    RandomPercentConsecutive = 1 >> 4,
+    RandomPercentConsecutive = 1 << 4, 
     /// <summary>
     /// _atkCountの値に応じて連続攻撃が行われるかどうか
     /// </summary>
-    FixedConsecutive = 1 >> 5,
+    FixedConsecutive = 1 << 5,
 
     /// <summary>
     /// スキル保存性質　
@@ -139,7 +139,12 @@ public enum SkillConsecutiveType
     ///その攻撃保存を**選んだ分だけ連続攻撃回数として発動**
     ///Randomな場合はパーセント補正が変わる？
     /// </summary>
-    Stockpile = 1 >> 6,
+    Stockpile = 1 << 6,
+    /// <summary>
+    /// 連続攻撃の中断可能性質
+    /// 中断した際、何も行動せずターンが進む
+    /// </summary>
+    CanStopConsecutive = 1 << 7,
 
 }
 /// <summary>
@@ -396,7 +401,7 @@ public class BaseSkill
         _triggerCount = _triggerCountMax;//基本的に一回でもやんなかったらすぐ戻る感じ
     }
     /// <summary>
-    /// 実行に成功した際の発動カウントのリセット
+    /// 実行に成功した際の発動カウントのリセット 0ばら
     /// </summary>
     public virtual void DoneTrigger()
     {
@@ -408,7 +413,10 @@ public class BaseSkill
     /// </summary>
     public virtual int ATKCount
     {
-        get { return 1 + NowMoveSetState.States.Count; }
+        get { 
+            
+            return 1 + NowMoveSetState.States.Count; 
+            }
 
     }
     /// <summary>
@@ -572,25 +580,45 @@ public class BaseSkill
     /// <summary>
     /// 現在のムーブセット
     /// </summary>
+    [NonSerialized]
     MoveSet NowMoveSetState;
 
     /// <summary>
     /// A-MoveSetのList<MoveSet>から現在のMoveSetをランダムに取得する
     /// なにもない場合はreturnで終わる。つまり単体攻撃前提ならmovesetが決まらない。
+    /// aOrB 0:A 1:B
     /// </summary>
-    public void DecideNowMoveSet_A()
+    public void DecideNowMoveSet_A0_B1(int aOrB)
     {
-        if(A_MoveSet.Count == 0)return;
-        NowMoveSetState = A_MoveSet[RandomEx.Shared.NextInt(A_MoveSet.Count)];
+        if(aOrB == 0)
+        {
+            if(A_MoveSet.Count == 0)
+            {
+                NowMoveSetState = new();
+                return;
+            }
+            NowMoveSetState = A_MoveSet[RandomEx.Shared.NextInt(A_MoveSet.Count)];
+        }
+        else if(aOrB == 1)
+        {
+            if(B_MoveSet.Count == 0)
+            {
+                NowMoveSetState = new();
+                return;
+            }
+            NowMoveSetState = B_MoveSet[RandomEx.Shared.NextInt(B_MoveSet.Count)];
+        }
     }
     /// <summary>
-    /// B-MoveSetのList<MoveSet>から現在のMoveSetをランダムに取得する　
-    /// なにもない場合はreturnで終わる。つまり単体攻撃前提ならmovesetが決まらない。
+    /// 単体攻撃時のAimStyle保存用
     /// </summary>
-    public void DecideNowMoveSet_B()
+    AimStyle _nowSingleAimStyle;
+    /// <summary>
+    /// 単体攻撃時のAimStyle設定
+    /// </summary>
+    public void SetSingleAimStyle(AimStyle style)
     {
-        if(B_MoveSet.Count == 0)return;
-        NowMoveSetState = B_MoveSet[RandomEx.Shared.NextInt(B_MoveSet.Count)];
+        _nowSingleAimStyle = style;
     }
     /// <summary>
     /// 現在のムーブセットでのAimStyleを、現在の攻撃回数から取得する
@@ -598,32 +626,31 @@ public class BaseSkill
     /// <returns></returns>
     public AimStyle NowAimStyle()
     {
-        var nowCountUp = _atkCountUP;//今何回目の攻撃か。
-        //if(nowCountUp < 1)return null;//初回攻撃ならnullを返す
-        //初回攻撃で参照しないようにする。　SwitchDeffenceStyleでnull前提の処理するのがめんどくさいから
-        //null許容型の?を外しました。
+        if(!NowConsecutiveATKFromTheSecondTimeOnward())return _nowSingleAimStyle;//初回攻撃なら単体保存した変数を返す
 
-        return NowMoveSetState.GetAtState(nowCountUp - 1); 
+        return NowMoveSetState.GetAtState(_atkCountUP - 1); 
     }
     /// <summary>
     /// 現在のムーブセットでのDEFATKを、現在の攻撃回数から取得する
+    /// 初回攻撃を指定したらエラー出るます
     /// </summary>
-    public float NowAimDefATK()
+    float NowAimDefATK()
     {
         var nowCountUp = _atkCountUP;//今何回目の攻撃か。
-        return NowMoveSetState.GetAtDEFATK(nowCountUp - 1); 
+        return NowMoveSetState.GetAtDEFATK(_atkCountUP - 1); 
     }
 
     [SerializeField]
     float _defAtk;
-    //防御無視率
+    /// <summary>
+    /// 連続攻撃時にはそれ用の、それ以外はスキル自体の防御無視率が返ります。
+    /// </summary>
     public float DEFATK{
         get{
-            var result = _defAtk;
             if(NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃中ならば、
-            result *= NowAimDefATK();//連続攻撃に設定されているDEFATKを乗算する
+            return NowAimDefATK();//連続攻撃に設定されているDEFATKを乗算する
 
-            return result;
+            return _defAtk;
         }
     }
 
@@ -676,7 +703,11 @@ public class MoveSet: ISerializationCallbackReceiver
     {
         return DEFATKList[index];
     }
-
+    public MoveSet()
+    {
+        States.Clear();
+        DEFATKList.Clear();
+    }
     //Unityインスペクタ上で新しく防御無視率を設定した際に、デフォルトで何も起こらない(=1.0f)値が入るようにするための処理。
 
     // 旧サイズを保持しておくための変数

@@ -154,6 +154,10 @@ public class PlayersStates:MonoBehaviour
 }
 public class AllyClass : BaseStates
 {
+    /// <summary>
+    /// スキルボタンからそのスキルの範囲や対象者の画面に移る
+    /// </summary>
+    /// <param name="skillListIndex"></param>
     public void OnSkillBtnCallBack(int skillListIndex)
     {
         NowUseSkill = SkillList[skillListIndex];//使用スキルに代入する
@@ -161,21 +165,34 @@ public class AllyClass : BaseStates
 
         //スキルの性質によるボタンの行く先の分岐
 
-        if (NowUseSkill.HasZoneTrait(SkillZoneTrait.CanSelectRange))//範囲を選べるのなら
+        Walking.USERUI_state.Value = DetermineNextUIState(NowUseSkill);
+        
+    }
+        /// <summary>
+    /// スキルの性質に基づいて、次に遷移すべき画面状態を判定する
+    /// </summary>
+    /// <param name="skill">判定対象のスキル</param>
+    /// <returns>遷移先のTabState</returns>
+    public static TabState DetermineNextUIState(BaseSkill skill)
+    {
+        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))//範囲を選べるのなら
         {
-            Walking.USERUI_state.Value = TabState.SelectRange;//範囲選択画面へ飛ぶ
+            return TabState.SelectRange;//範囲選択画面へ飛ぶ
         }
-        else if (NowUseSkill.HasZoneTrait(SkillZoneTrait.CanPerfectSelectSingleTarget) || 
-            NowUseSkill.HasZoneTrait(SkillZoneTrait.CanSelectSingleTarget) || 
-            NowUseSkill.HasZoneTrait(SkillZoneTrait.CanSelectMultiTarget))//選択できる系なら
+        else if (skill.HasZoneTrait(SkillZoneTrait.CanPerfectSelectSingleTarget) || 
+                skill.HasZoneTrait(SkillZoneTrait.CanSelectSingleTarget) || 
+                skill.HasZoneTrait(SkillZoneTrait.CanSelectMultiTarget))//選択できる系なら
         {
-            Walking.USERUI_state.Value = TabState.SelectTarget;//選択画面へ飛ぶ
+            return TabState.SelectTarget;//選択画面へ飛ぶ
         }
-        else if (NowUseSkill.HasZoneTrait(SkillZoneTrait.ControlByThisSituation))
+        else if (skill.HasZoneTrait(SkillZoneTrait.ControlByThisSituation))
         {
-            Walking.USERUI_state.Value = TabState.NextWait;//何もないなら事象ボタンへ
+            return TabState.NextWait;//何もないなら事象ボタンへ
         }
-    }　
+        
+        return TabState.NextWait; // デフォルトの遷移先
+    }
+
 
 }
 
