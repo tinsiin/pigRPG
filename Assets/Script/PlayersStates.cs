@@ -42,6 +42,22 @@ public class PlayersStates:MonoBehaviour
     [SerializeField]
     private List<Button> skillButtonList;//スキルボタン用リスト
 
+    //連続実行スキル(FreezeConsecutive)の停止予約のボタン
+    public void StarirStopFreezeConsecutiveButton()
+    {
+        geino.TurnOnDeleteMyFreezeConsecutiveFlag();
+    }
+    public void BassJackStopFreezeConsecutiveButton()
+    {
+        noramlia.TurnOnDeleteMyFreezeConsecutiveFlag();
+    }
+
+    public void SateliteStopFreezeConsecutiveButton()
+    {
+        sites.TurnOnDeleteMyFreezeConsecutiveFlag();
+    }
+
+
 
     /// <summary>
     ///     現在進行度
@@ -192,13 +208,21 @@ public class AllyClass : BaseStates
         
         return TabState.NextWait; // デフォルトの遷移先
     }
-
+    /// <summary>
+    /// ターンをまたぐ連続実行スキル(FreezeConsecutiveの性質持ち)が実行中なのを次回のターンで消す予約をする
+    /// </summary>
+    public void TurnOnDeleteMyFreezeConsecutiveFlag()
+    {
+        Debug.Log("TurnOnDeleteMyFreezeConsecutiveFlag を呼び出しました。");
+        IsDeleteMyFreezeConsecutive = IsNeedDeleteMyFreezeConsecutive();
+    }
 
 }
 
 [Serializable]
 public class BassJackStates : AllyClass //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
 {
+    
 }
 [Serializable]
 public class SateliteProcessStates : AllyClass //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理

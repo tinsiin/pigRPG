@@ -474,7 +474,7 @@ public class BattleManager
 
         CharacterAddFromListOrRandom();//Acterが選ばれる
 
-        //俳優が味方なら 後々の選択画面に移動した時に、適切な画面が発生するようにする準備
+        //俳優が味方なら
         var ps = PlayersStates.Instance;
         if (Acter == ps.geino || Acter == ps.sites || Acter == ps.noramlia)
         {//味方が行動するならば
@@ -709,6 +709,15 @@ public class BattleManager
             var ene = Acter as NormalEnemy;
             ene.SkillAI();//ここで決めないとスキル可変オプションが下記の対象者選択で反映されないから
         }
+
+        //俳優が自分のFreezeConsecutiveを削除する予約をしているのなら、
+        if (Acter.IsDeleteMyFreezeConsecutive)
+        {
+            //無音の灰色円縮小エフェクトを入れる
+            Acter.DeleteMyFreezeConsecutive();//連続実行FreezeConsecutiveを削除
+            return ACTPop();
+        }
+
 
         //もしランダム範囲ならこの段階で範囲意志にランダム範囲を入れる。
         if (skill.HasZoneTrait(SkillZoneTrait.RandomRange))

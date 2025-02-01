@@ -8,8 +8,6 @@ public class CharaConfigContent : TabContents
     {
         switch (state)
         {
-            case TabState.walk://歩きボタン
-                break;
         }
     }
 

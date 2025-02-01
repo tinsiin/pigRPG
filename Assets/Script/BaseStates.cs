@@ -525,6 +525,12 @@ public abstract class BaseStates
             useSkill.HitConsecutiveCount++;//連続ヒット回数を増やす
         }
     }
+
+        /// <summary>
+    /// 現在の自分自身の実行中のFreezeConsecutiveを削除するかどうかのフラグ
+    /// </summary>
+    public bool IsDeleteMyFreezeConsecutive;
+    
     public int MAXP;
 
     //ポイント
@@ -1398,13 +1404,68 @@ private int CalcTransformCountIncrement(int tightenStage)
         return txt;
     }
 
+    //FreezeConsecutiveの処理------------------------------------------------------------------------------------FreezeConsecutiveの消去、フラグの処理など-----------------------------------
+    /// <summary>
+    /// FreezeConsecutive、ターンをまたぐ連続実行スキルが実行中かどうか。
+    /// </summary>
+    /// <returns></returns>
+    public bool IsNeedDeleteMyFreezeConsecutive()
+    {
+        if(NowUseSkill.NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃中で、
+        {
+            if(NowUseSkill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    /// <summary>
+    /// freezeconsecutiveの消去
+    /// </summary>
+    public void DeleteMyFreezeConsecutive()
+    {
+        FreezeUseSkill.ResetAtkCountUp();//強制実行中のスキルの攻撃カウントアップをリセット
+        Defrost();//解除
+        IsDeleteMyFreezeConsecutive = false;
+
+    }
+    /// <summary>
+    /// freezeConsecutiveの後処理とかチェックを各コールバックで呼び出すためにパッケージングされた関数
+    /// </summary>
+    void CallBackCheckDeleteMyFreezeConsecutive()
+    {
+        //freezeconsecutiveの消去予約を消去
+        IsDeleteMyFreezeConsecutive = false;//DeleteMyFreezeConsecutiveでfalseにされるが、念のためここでもこのフラグはfalseにしとく
+        //もしFreezeConsecutiveのスキルが実行中なら、消す
+        if(IsNeedDeleteMyFreezeConsecutive())
+        {
+            DeleteMyFreezeConsecutive();
+        }
+
+    }
+    //---------------------------------------------------------------------------------------------FreezeConsecutiveのフラグ、後処理など終わり------------------------------------------------------------
+    
+    
+    /// <summary>
+    /// 死亡時のコールバック　
+    /// </summary>
+    public virtual void DeathCallBack()
+    {
+        CallBackCheckDeleteMyFreezeConsecutive();
+    }
+
     /// <summary>
     ///     死を判定するオーバライド可能な関数
     /// </summary>
     /// <returns></returns>
     public virtual bool Death()
     {
-        if (HP <= 0) return true;
+        if (HP <= 0) 
+        {
+            DeathCallBack();
+            return true;
+        }
         return false;
     }
     /// <summary>
@@ -1541,10 +1602,12 @@ private int CalcTransformCountIncrement(int tightenStage)
         TempDamageTurn = 0;
         DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
         DecisionSacriFaithAdaptToSkillGrouping();
+        
     }
     public void OnBattleEndNoArgument()
     {
         TempDamageTurn = 0;
+        CallBackCheckDeleteMyFreezeConsecutive();
     }
 
     //慣れ補正ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー慣れ補正ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー

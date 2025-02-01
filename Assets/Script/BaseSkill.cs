@@ -140,11 +140,6 @@ public enum SkillConsecutiveType
     ///Randomな場合はパーセント補正が変わる？
     /// </summary>
     Stockpile = 1 << 6,
-    /// <summary>
-    /// 連続攻撃の中断可能性質
-    /// 中断した際、何も行動せずターンが進む
-    /// </summary>
-    CanStopConsecutive = 1 << 7,
 
 }
 /// <summary>
@@ -425,6 +420,14 @@ public class BaseSkill
     public virtual int ATKCountUP => _atkCountUP;
 
     /// <summary>
+    /// 攻撃回数カウントをリセットする
+    /// </summary>
+    public void ResetAtkCountUp()
+    {
+        _atkCountUP = 0;
+    }
+
+    /// <summary>
     /// 現在の連続攻撃回数を参照して次回の連続攻撃があるかどうか
     /// </summary>
     public bool NextConsecutiveATK()
@@ -519,7 +522,7 @@ public class BaseSkill
         _doConsecutiveCount = 0;
         _hitCount = 0;
         _hitConsecutiveCount = 0;
-        _atkCountUP = 0;
+        ResetAtkCountUp();
         _triggerCount = _triggerCountMax;//発動カウントはカウントダウンするから最初っから
         _tmpSkillUseTurn = -1;//前回とのターン比較用の変数をnullに
 
