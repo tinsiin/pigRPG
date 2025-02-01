@@ -80,13 +80,13 @@ public class BattleGroup
     }
 
     /// <summary>
-    /// グループ全員の全スキルをリセットする
+    /// グループ全員の全スキルをリセットする　BattleManager終了時
     /// </summary>
-    public void ResetCharactersSkillsProperty()
+    public void OnBattleEndCharactersSkills()
     {
         foreach (var chara in Ours) 
         {
-            chara.SkillsTmpReset();
+            chara.OnBattleEndSkills();
         }
     }
     /// <summary>

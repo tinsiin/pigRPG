@@ -15,6 +15,9 @@ public class TabContentsChanger<TView, TKind>
 
     public List<ContentHolder> Contents;
 
+    /// <summary>
+    ///     切り替え時のコールバック
+    /// </summary>
     public Observable<(ContentHolder content, bool active)> OnChangeStateAsObservable =>
         _onChangeStateSubject; //公開フィールド?　ラムダでget専用プロパティ
 

@@ -251,7 +251,34 @@ public class BaseSkill
     private int _triggerCountMax;//発動への−カウント　の指標
     private int _atkCountUP;//連続攻撃中のインデックス的回数
     private float _RandomConsecutivePer;//連続実行の確率判定のパーセント
-    
+
+    //stockpile用　最大値はランダム確率の連続攻撃と同じように、ATKCountを参照する。
+    private int _nowStockCount;//現在のストック数
+
+    [SerializeField]
+    private int _defaultStockCount = 1;//ストックデフォルト
+    ///<summary> ストックデフォルト値。DefaultAtkCount を超えないように調整された値を返す</summary> ///
+    int DefaultStockCount => _defaultStockCount > DefaultAtkCount ? DefaultAtkCount : _defaultStockCount;
+
+    [SerializeField]
+    private int _stockPower = 1;//ストック単位
+    /// <summary>
+    /// ストック単位を手に入れる
+    /// </summary>
+    protected virtual int GetStcokPower()
+    {
+        return _stockPower;
+    }
+    [SerializeField]
+    private int _stockForgetPower = 1;//ストック忘れ単位
+    /// <summary>
+    /// ストック忘れ単位を手に入れる
+    /// </summary>
+    protected virtual int GetStcokForgetPower()
+    {
+        return _stockForgetPower;
+    }
+
 
     /// <summary>
     /// 前回のスキル行使の戦闘ターン ない状態は-1
@@ -402,15 +429,54 @@ public class BaseSkill
     {
         _triggerCount = _triggerCountMax;//基本的にもう一回最初から
     }
+    /// <summary>
+    /// ストック数をデフォルトにリセット
+    /// </summary>
+    public void ResetStock()
+    {
+        _nowStockCount = DefaultStockCount;
+    }
+    /// <summary>
+    /// 攻撃回数をストック
+    /// </summary>
+    public void ATKCountStock()
+    {
 
+        _nowStockCount += GetStcokPower();
+        if(_nowStockCount > DefaultAtkCount)_nowStockCount = DefaultAtkCount;//想定される最大値を超えないようにする
+        
+    }
+    /// <summary>
+    /// ストックを忘れる
+    /// </summary>
+    public void ForgetStock()
+    {
+        _nowStockCount -= GetStcokForgetPower();
+        if(_nowStockCount < DefaultStockCount)_nowStockCount = DefaultStockCount;//ストック数はデフォルト値を下回らないようにする
+    }
+    /// <summary>
+    /// ストックが満杯かどうか
+    /// </summary>
+    public bool IsFullStock()
+    {
+        return _nowStockCount >= DefaultAtkCount;//最大値以上ならばストックが満杯とする
+    }
+
+    /// <summary>
+    /// 通常の攻撃回数
+    /// </summary>
+    int DefaultAtkCount =>  1 + NowMoveSetState.States.Count;
     /// <summary>
     /// オーバライド可能な攻撃回数
     /// </summary>
     public virtual int ATKCount
     {
         get { 
-            
-            return 1 + NowMoveSetState.States.Count; 
+            if(HasConsecutiveType(SkillConsecutiveType.Stockpile))
+            {
+                return _nowStockCount;//stockpileの場合は現在ストック数を参照する
+            }
+            return DefaultAtkCount; 
             }
 
     }
@@ -512,11 +578,20 @@ public class BaseSkill
     public void OnInitialize(BaseStates owner)
     {
         Doer = owner;//管理者を記録
+        ResetStock();//_nowstockは最初は0になってるので、初期化でdefaultstockと同じ数にする。
     }
     /// <summary>
-    /// スキルの"一時保存"系プロパティをリセットする(主にbattleManager系で)
+    /// 行使者 doerが死亡したときdoer側で呼ばれるコールバック
     /// </summary>
-    public void ResetTmpProperty()
+    public void OnDeath()
+    {
+        ResetStock();
+    }
+
+    /// <summary>
+    /// スキルの"一時保存"系プロパティをリセットする　BattleManager終了時など
+    /// </summary>
+    public void OnBattleEnd()
     {
         _doCount = 0;
         _doConsecutiveCount = 0;
@@ -525,6 +600,7 @@ public class BaseSkill
         ResetAtkCountUp();
         _triggerCount = _triggerCountMax;//発動カウントはカウントダウンするから最初っから
         _tmpSkillUseTurn = -1;//前回とのターン比較用の変数をnullに
+        ResetStock();
 
         SkillLevel = 0;
     }
@@ -584,7 +660,7 @@ public class BaseSkill
     /// 現在のムーブセット
     /// </summary>
     [NonSerialized]
-    MoveSet NowMoveSetState;
+    MoveSet NowMoveSetState=new();
 
     /// <summary>
     /// A-MoveSetのList<MoveSet>から現在のMoveSetをランダムに取得する

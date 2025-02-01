@@ -170,7 +170,12 @@ public class Stages : MonoBehaviour
         {
             foreach (var chara in _enemyList)
             {
-                chara.SkillsInitialize();
+                if(chara != null)
+                chara.OnInitializeSkillsAndChara();
+                else
+                Debug.LogWarning("enemyList 内に null 要素が存在します。");
+
+                //chara.OnInitializeSkillsAndChara();
             }
         }
 

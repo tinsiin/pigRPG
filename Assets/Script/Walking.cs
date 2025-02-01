@@ -53,12 +53,18 @@ public class Walking : MonoBehaviour
     private PlayersStates ps;
     private  void Start()
     {
-        ps=PlayersStates.Instance;//変数にキャッシュして使用
+        ps = PlayersStates.Instance;//変数にキャッシュして使用
         BaseStates.CsvLoad();
         stages = GetComponent<Stages>();
         
         //初期UI更新　最適化のため最終開発の段階で初期UIの更新だけをするようにする。
         TestProgressUIUpdate();
+
+        // キャラコンフィグ選択時の処理
+        ToggleButtons.OnCharaConfigSelectAsObservable.Subscribe(_ => 
+        {       
+            ps.VisiableSettingStopFreezeConsecutiveButtons();
+        }).AddTo(this);
     }
 
     /// <summary>
@@ -77,7 +83,7 @@ public class Walking : MonoBehaviour
         USERUI_state.Value = bm.CharacterActBranching();
     }
 
-    BattleManager bm;
+    public static BattleManager bm;
     private  void Encount()
     {
         BattleGroup enemyGroup = null; //敵グループ

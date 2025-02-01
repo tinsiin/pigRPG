@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -27,12 +28,16 @@ public class PlayersStates:MonoBehaviour
         NowStageID = 0;
         NowAreaID = 0;
 
-        geino.SkillsInitialize();//スキル初期化
-        noramlia.SkillsInitialize();
-        sites.SkillsInitialize();
+        geino.OnInitializeSkillsAndChara();//スキル初期化
+        noramlia.OnInitializeSkillsAndChara();
+        sites.OnInitializeSkillsAndChara();
 
         //ボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
         skillButtonList[0].onClick.AddListener(() => geino.OnSkillBtnCallBack(0));
+
+        //ストックボタンに「ストックを各キャラの使用スキル変数と結びつける関数」　を登録する
+        skillStockButtonList[0].onClick.AddListener(() => geino.OnSkillStockBtnCallBack(0));
+        Debug.Log("ボタンは読み込まれたはず");
 
     }
     public StairStates geino;
@@ -41,20 +46,52 @@ public class PlayersStates:MonoBehaviour
 
     [SerializeField]
     private List<Button> skillButtonList;//スキルボタン用リスト
+    [SerializeField]
+    private List<Button> skillStockButtonList;//該当のスキルの攻撃ストックボタン用リスト
+
+
+
 
     //連続実行スキル(FreezeConsecutive)の停止予約のボタン
-    public void StarirStopFreezeConsecutiveButton()
+    [SerializeField]
+    Button StopFreezeConsecutiveButton_geino;
+    [SerializeField]
+    Button StopFreezeConsecutiveButton_Bassjack;
+    [SerializeField]
+    Button StopFreezeConsecutiveButton_Sites;
+    public void StarirStopFreezeConsecutiveButtonCallBack()
     {
         geino.TurnOnDeleteMyFreezeConsecutiveFlag();
+        StopFreezeConsecutiveButton_geino.gameObject.SetActive(false);
     }
-    public void BassJackStopFreezeConsecutiveButton()
+    public void BassJackStopFreezeConsecutiveButtonCallBack()
     {
         noramlia.TurnOnDeleteMyFreezeConsecutiveFlag();
+        StopFreezeConsecutiveButton_Bassjack.gameObject.SetActive(false);
+
     }
 
-    public void SateliteStopFreezeConsecutiveButton()
+    public void SateliteStopFreezeConsecutiveButtonCallBack()
     {
         sites.TurnOnDeleteMyFreezeConsecutiveFlag();
+        StopFreezeConsecutiveButton_Sites.gameObject.SetActive(false);
+    }
+    /// <summary>
+    /// FreezeConsecutiveを消去予約するボタンの表示設定
+    /// </summary>
+    public void VisiableSettingStopFreezeConsecutiveButtons()
+    {
+        if(!geino.IsDeleteMyFreezeConsecutive)//現在消去予約をしていなくて、
+        StopFreezeConsecutiveButton_geino.gameObject.SetActive(geino.IsNeedDeleteMyFreezeConsecutive());//消去予約が可能ならボタンを表示する
+
+        if(!noramlia.IsDeleteMyFreezeConsecutive)//現在消去予約をしていなくて、
+        StopFreezeConsecutiveButton_Bassjack.gameObject.SetActive(noramlia.IsNeedDeleteMyFreezeConsecutive());//消去予約が可能ならボタンを表示する
+
+
+        if(!sites.IsDeleteMyFreezeConsecutive)//現在消去予約をしていなくて、
+        StopFreezeConsecutiveButton_Sites.gameObject.SetActive(sites.IsNeedDeleteMyFreezeConsecutive());//消去予約が可能ならボタンを表示する
+
+
     }
 
 
@@ -184,6 +221,34 @@ public class AllyClass : BaseStates
         Walking.USERUI_state.Value = DetermineNextUIState(NowUseSkill);
         
     }
+        /// <summary>
+    /// スキル攻撃回数ストックボタンからはそのまま次のターンへ移行する(対象者選択や範囲選択などはない。)
+    /// </summary>
+    /// <param name="skillListIndex"></param>
+    public void OnSkillStockBtnCallBack(int skillListIndex)
+    {
+        var skill = SkillList[skillListIndex];
+        if(skill.IsFullStock())
+        {
+            Debug.Log(skill.SkillName + "をストックが満杯。");
+            return;//ストックが満杯なら何もしない
+        } 
+        skill.ATKCountStock();;//該当のスキルをストックする。
+        Debug.Log(skill.SkillName + "をストックしました。");
+
+        var list = SkillList.Where((skill,index) => index != skillListIndex && skill.HasConsecutiveType(SkillConsecutiveType.Stockpile)).ToList();
+        
+        foreach(var stockSkill in list)
+        {
+            stockSkill.ForgetStock();//今回選んだストックスキル以外のストックが減る。
+        }
+
+        Walking.bm.DoNothing = true;//ACTBranchingで何もしないようにするboolをtrueに。
+
+        Walking.USERUI_state.Value = TabState.NextWait;//CharacterACTBranchingへ
+        
+    }
+
         /// <summary>
     /// スキルの性質に基づいて、次に遷移すべき画面状態を判定する
     /// </summary>

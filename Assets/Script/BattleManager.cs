@@ -279,6 +279,7 @@ public class BattleManager
     WhichGroup Faction;//陣営
     bool Wipeout = false;//全滅したかどうか
     bool RunOut = false;//逃走
+    public bool DoNothing = false;//何もしない
 
 
     /// <summary>
@@ -475,8 +476,7 @@ public class BattleManager
         CharacterAddFromListOrRandom();//Acterが選ばれる
 
         //俳優が味方なら
-        var ps = PlayersStates.Instance;
-        if (Acter == ps.geino || Acter == ps.sites || Acter == ps.noramlia)
+        if (Faction == WhichGroup.alliy)
         {//味方が行動するならば
 
             if (Acter.FreezeUseSkill == null)//強制続行中のスキルがなければ
@@ -507,6 +507,21 @@ public class BattleManager
                 }
             }
         }
+
+        //敵ならここで思考して決める
+        if (Faction == WhichGroup.Enemyiy)
+        {
+            var ene = Acter as NormalEnemy;
+            ene.SkillAI();//ここで決めないとスキル可変オプションが下記の対象者選択で反映されないから
+        }
+
+        //俳優が自分のFreezeConsecutiveを削除する予約をしているのなら、
+        if (Acter.IsDeleteMyFreezeConsecutive)
+        {
+            Acter.DeleteMyFreezeConsecutive();//連続実行FreezeConsecutiveを削除
+            DoNothing = true;//何もしない
+        }
+
 
         return TabState.NextWait;
 
@@ -558,13 +573,21 @@ public class BattleManager
     /// <returns></returns>
     public TabState CharacterActBranching()
     {
+        var skill = Acter.NowUseSkill;
+
         if (Wipeout || RunOut) //全滅か逃走かで終了アクトへ
         {
+            //Bmは終了へ向かうので、RunOutもWipeOutもfalseにする必要はない。
             return DialogEndACT();
         }
 
-        //スキル実行処理
-        var skill = Acter.NowUseSkill;
+        if(DoNothing)
+        {
+            //小さなアイコン辺りに無音の灰色円縮小エフェクトを入れる     何もしないエフェクト
+            DoNothing = false;
+            return ACTPop();//何もせず行動準備へ
+        }
+
         int count;//メッセージテキスト用のカウント数字
         if ((count = skill.TrigerCount()) >= 0)//発動カウントが0以上ならまだカウント中
         {
@@ -704,19 +727,6 @@ public class BattleManager
         Debug.Log("スキル行使実行");
         var skill = Acter.NowUseSkill;
 
-        if (Faction == WhichGroup.Enemyiy)//敵ならここで思考して決める
-        {
-            var ene = Acter as NormalEnemy;
-            ene.SkillAI();//ここで決めないとスキル可変オプションが下記の対象者選択で反映されないから
-        }
-
-        //俳優が自分のFreezeConsecutiveを削除する予約をしているのなら、
-        if (Acter.IsDeleteMyFreezeConsecutive)
-        {
-            //無音の灰色円縮小エフェクトを入れる
-            Acter.DeleteMyFreezeConsecutive();//連続実行FreezeConsecutiveを削除
-            return ACTPop();
-        }
 
 
         //もしランダム範囲ならこの段階で範囲意志にランダム範囲を入れる。
@@ -775,6 +785,7 @@ public class BattleManager
         {
             Acter.Defrost();//凍結されてもされてなくても空にしておく
             Acter.RecovelyCountTmpAdd(skill.SKillDidWaitCount);//スキルに追加硬直値があるならキャラクターの再行動クールタイムに追加
+            Acter.NowUseSkill.ResetStock();//ストックをリセット　stockpileじゃなくても影響ないのでif文とかなくて平気
 
             NextTurn(true);
         }
@@ -1220,8 +1231,8 @@ public class BattleManager
     private void OnBattleEnd()
     {
         //全てのキャラクターのスキルのTurn系プロパティをリセットする
-        EnemyGroup.ResetCharactersSkillsProperty();
-        AllyGroup.ResetCharactersSkillsProperty();
+        EnemyGroup.OnBattleEndCharactersSkills();
+        AllyGroup.OnBattleEndCharactersSkills();
 
         //全てのキャラクターの追加硬直値をリセットする
         EnemyGroup.ResetCharactersRecovelyStepTmpToAdd();

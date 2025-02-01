@@ -1448,14 +1448,6 @@ private int CalcTransformCountIncrement(int tightenStage)
     
     
     /// <summary>
-    /// 死亡時のコールバック　
-    /// </summary>
-    public virtual void DeathCallBack()
-    {
-        CallBackCheckDeleteMyFreezeConsecutive();
-    }
-
-    /// <summary>
     ///     死を判定するオーバライド可能な関数
     /// </summary>
     /// <returns></returns>
@@ -1469,9 +1461,23 @@ private int CalcTransformCountIncrement(int tightenStage)
         return false;
     }
     /// <summary>
+    /// 死亡時のコールバック　SkillsTmpResetでスキルの方からリセットできるような簡単じゃない奴をここで処理する。
+    /// </summary>
+    public virtual void DeathCallBack()
+    {
+        CallBackCheckDeleteMyFreezeConsecutive();
+        foreach (var skill in SkillList)
+        {
+            skill.OnDeath();
+        }
+
+    }
+
+
+    /// <summary>
     /// 持ってるスキルリストを初期化する
     /// </summary>
-    public void SkillsInitialize()
+    public void OnInitializeSkillsAndChara()
     {
         foreach (var skill in SkillList)
         {
@@ -1479,13 +1485,13 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
     }
     /// <summary>
-    /// 全スキルの一時保存系プロパティをリセットする
+    /// BM終了時に全スキルの一時保存系プロパティをリセットする
     /// </summary>
-    public void SkillsTmpReset()
+    public void OnBattleEndSkills()
     {
         foreach (var skill in SkillList)
         {
-            skill.ResetTmpProperty();//プロパティをリセットする
+            skill.OnBattleEnd();//プロパティをリセットする
         }
     }
 
