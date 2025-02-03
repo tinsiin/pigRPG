@@ -10,6 +10,8 @@ using R3;
 using Cysharp.Threading.Tasks;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.Rendering.Universal;
+using Mono.Cecil.Cil;
+using TMPro;
 
 /// <summary>
 /// 戦闘の先手が起ったかどうか
@@ -62,10 +64,10 @@ public class ACTList
         get => CharactorACTList.Count;
     }
 
-    public void Add(BaseStates chara, WhichGroup fac, string mes = "", List<ReservationStatesModify> modifys = null, bool isfreeze = false)
+    public void Add(BaseStates chara, WhichGroup charasFac, string mes = "", List<ReservationStatesModify> modifys = null, bool isfreeze = false)
     {
         CharactorACTList.Add(chara);
-        FactionList.Add(fac);
+        FactionList.Add(charasFac);
         TopMessage.Add(mes);
         reservationStatesModifies.Add(modifys);
         IsFreezeList.Add(isfreeze);
@@ -276,16 +278,33 @@ public class BattleManager
     /// 行動を受ける人 
     /// </summary>
     public UnderActersEntryList unders;
-    WhichGroup Faction;//陣営
+    WhichGroup ActerFaction;//陣営
     bool Wipeout = false;//全滅したかどうか
     bool RunOut = false;//逃走
     public bool DoNothing = false;//何もしない
+
+    /// <summary>
+    /// 渡されたキャラクタのbm内での陣営を表す。
+    /// </summary>
+    public WhichGroup GetCharacterFaction(BaseStates chara)
+    {
+        foreach(var one in AllyGroup.Ours)
+        {
+            if(one == chara)return WhichGroup.alliy;
+        }
+        foreach(var one in EnemyGroup.Ours)
+        {
+            if(one == chara)return WhichGroup.Enemyiy;
+        }
+
+        return 0;
+    }
 
 
     /// <summary>
     /// 行動リスト　ここではrecovelyTurnの制約などは存在しません
     /// </summary>
-    private ACTList Acts;//行動先約リスト？
+    public ACTList Acts;//行動先約リスト？
 
     public int BattleTurnCount;//バトルの経過ターン
 
@@ -378,12 +397,12 @@ public class BattleManager
         if (RandomEx.Shared.NextBool())//キャラリストから選ぶの決める
         {
             Charas = AllyGroup.Ours;
-            Faction = WhichGroup.alliy;
+            ActerFaction = WhichGroup.alliy;
         }
         else
         {
             Charas = EnemyGroup.Ours;
-            Faction = WhichGroup.Enemyiy;
+            ActerFaction = WhichGroup.Enemyiy;
         }
 
         Charas = RemoveDeathCharacters(Charas);//死者を取り除く
@@ -410,7 +429,7 @@ public class BattleManager
         {//先約リストにおいて、recovelyTurnは意味をなさないですよ
             UniqueTopMessage = Acts.GetAtTopMessage(0);//リストからメッセージとキャラクターをゲット。
             Acter = Acts.GetAtCharacter(0);
-            Faction = Acts.GetAtFaction(0);
+            ActerFaction = Acts.GetAtFaction(0);
 
             //acterの特別補正の補正予約があるなら入れる
             List<ReservationStatesModify> modList;
@@ -463,20 +482,20 @@ public class BattleManager
         if (AllyGroup.PartyDeath())
         {
             Wipeout = true;
-            Faction = WhichGroup.alliy;
+            ActerFaction = WhichGroup.alliy;
             return TabState.NextWait;//押して処理
         }
         else if (EnemyGroup.PartyDeath())
         {
             Wipeout = true;
-            Faction = WhichGroup.Enemyiy;
+            ActerFaction = WhichGroup.Enemyiy;
             return TabState.NextWait;//押して処理
         }
 
         CharacterAddFromListOrRandom();//Acterが選ばれる
 
         //俳優が味方なら
-        if (Faction == WhichGroup.alliy)
+        if (ActerFaction == WhichGroup.alliy)
         {//味方が行動するならば
 
             if (Acter.FreezeUseSkill == null)//強制続行中のスキルがなければ
@@ -509,7 +528,7 @@ public class BattleManager
         }
 
         //敵ならここで思考して決める
-        if (Faction == WhichGroup.Enemyiy)
+        if (ActerFaction == WhichGroup.Enemyiy)
         {
             var ene = Acter as NormalEnemy;
             ene.SkillAI();//ここで決めないとスキル可変オプションが下記の対象者選択で反映されないから
@@ -518,7 +537,7 @@ public class BattleManager
         //俳優が自分のFreezeConsecutiveを削除する予約をしているのなら、
         if (Acter.IsDeleteMyFreezeConsecutive)
         {
-            Acter.DeleteMyFreezeConsecutive();//連続実行FreezeConsecutiveを削除
+            Acter.DeleteConsecutiveATK();//連続実行FreezeConsecutiveを削除
             DoNothing = true;//何もしない
         }
 
@@ -607,7 +626,7 @@ public class BattleManager
     {
         if (Wipeout)
         {
-            if (Faction == WhichGroup.alliy)
+            if (ActerFaction == WhichGroup.alliy)
             {
                 MessageDropper.Instance.CreateMessage("死んだ");
             }
@@ -749,7 +768,7 @@ public class BattleManager
         //スキル実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
         if (skill.IsAggressiveCommit)
         {
-            if (Faction == WhichGroup.alliy)
+            if (ActerFaction == WhichGroup.alliy)
             {
                 AllyGroup.InstantVanguard = Acter;
             }
@@ -767,7 +786,7 @@ public class BattleManager
                 NextTurn(false);
 
                 if (Acts.Count <= 0)//先約リストに今回の実行者を入れとく
-                    Acts.Add(Acter, Faction);
+                    Acts.Add(Acter, ActerFaction);
 
                 Acter.FreezeSkill();//連続実行の為凍結
 
@@ -776,18 +795,21 @@ public class BattleManager
                 NextTurn(true);
 
                 //混戦の中に身を任せるイメージなので、次にランダムターンなどで挟んだ連続攻撃だから　先約リストで次回予告はしない。
-                //_atkCountupは【連続攻撃実行完了】以外ではBattlemanager単位での戦闘終了時にしかリセットされないので、次回引っ掛かってもそのまま連続攻撃の途中と認識される。
+                //_atkCountupは【連続攻撃実行完了】以外ではBattlemanager単位での戦闘終了時と死亡時にしかリセットされないので、次回引っ掛かってもそのまま連続攻撃の途中と認識される。
 
                 Acter.FreezeSkill();//連続実行の為凍結
             }
         }
         else //複数実行が終わり
         {
+            
             Acter.Defrost();//凍結されてもされてなくても空にしておく
             Acter.RecovelyCountTmpAdd(skill.SKillDidWaitCount);//スキルに追加硬直値があるならキャラクターの再行動クールタイムに追加
             Acter.NowUseSkill.ResetStock();//ストックをリセット　stockpileじゃなくても影響ないのでif文とかなくて平気
 
             NextTurn(true);
+
+            //もし連続攻撃があった場合、それはここでは完了したので、自動で_atkCountUpは0になってる
         }
 
 
@@ -819,7 +841,7 @@ public class BattleManager
         if (RandomEx.Shared.NextInt(100) >= Ideal50or60Easing(Acter.NowUseSkill.SkillHitPer)) return false;
 
         // フラットロゼの効果を付与
-        Acts.Add(Acter, Faction, "淡々としたロゼ", new List<ReservationStatesModify>()
+        Acts.Add(Acter, ActerFaction, "淡々としたロゼ", new List<ReservationStatesModify>()
         {
             new()
             {
@@ -939,7 +961,7 @@ public class BattleManager
         List<BaseStates> UA = null;
 
         //選抜グループ決定する処理☆☆☆☆☆☆☆☆☆☆☆
-        if (Faction == WhichGroup.alliy)
+        if (ActerFaction == WhichGroup.alliy)
         {//味方なら敵グループから、
             SelectGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);
 
@@ -1222,6 +1244,8 @@ public class BattleManager
         //前のめり者が死亡してたら、nullにする処理
         AllyGroup.VanGuardDeath();
         EnemyGroup.VanGuardDeath();
+
+        Acter.IsActiveCancelInSkillACT = false;//キャンセルフラグをオフ
 
     }
 

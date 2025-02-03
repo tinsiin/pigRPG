@@ -586,6 +586,7 @@ public class BaseSkill
     public void OnDeath()
     {
         ResetStock();
+        ResetAtkCountUp();
     }
 
     /// <summary>

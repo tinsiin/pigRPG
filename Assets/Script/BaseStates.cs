@@ -11,6 +11,7 @@ using UnityEditor.Experimental.GraphView;
 using static BattleManager;
 using Unity.Burst.CompilerServices;
 using static UnityEngine.Rendering.DebugUI;
+using UnityEditor.UIElements;
 
 /// <summary>
 ///     キャラクター達の種別
@@ -177,6 +178,10 @@ public abstract class BaseStates
     public void Managed(BattleManager ma)
     {
         manager = ma;
+    }
+    public void LostManaged()
+    {
+        manager = null;
     }
 
     [SerializeField] private List<BasePassive> _passiveList;
@@ -559,7 +564,10 @@ public abstract class BaseStates
     /// </summary>
     public void RecovelyCountTmpAdd(int addTurn)
     {
-        tmpTurnsToAdd += addTurn;
+        if(!IsActiveCancelInSkillACT)//行動がキャンセルされていないなら
+        {
+            tmpTurnsToAdd += addTurn;
+        }
     }
     /// <summary>
     /// このキャラが戦場にて再行動を取れるかどうかと時間を唱える関数
@@ -734,6 +742,12 @@ public abstract class BaseStates
     {
         FreezeUseSkill = null;
     }
+
+    /// <summary>
+    /// SkillACT内(damage関数やReactionSkill)などで行動をキャンセルされたかどうか。
+    /// </summary>
+    /// <returns></returns>
+    public bool IsActiveCancelInSkillACT;
 
     /// <summary>
     ///     このキャラクターの種別
@@ -993,7 +1007,7 @@ public abstract class BaseStates
     ///     オプションのAimStyleに値を入れるとそのAimStyleでシミュレート
     /// </summary>
     /// <returns></returns>
-    public virtual float DEF(float minusPer=1f, AimStyle? SimulateAimStyle = null)
+    public virtual float DEF(float minusPer=0f, AimStyle? SimulateAimStyle = null)
     {
         var def = b_DEF(); //基礎防御力が基本。
 
@@ -1065,6 +1079,34 @@ public abstract class BaseStates
         return finalDamage;
     }
     /// <summary>
+    /// 防ぎ方(AimStyle)の不一致がある場合、クランプする
+    /// </summary>
+    private float ClampDefenseByAimStyle(BaseSkill skill,float def)
+    {
+        if(skill.NowAimStyle() != NowDeffenceStyle)
+        {
+            var MatchedMaxClampDef = DEF(skill.DEFATK, skill.NowAimStyle())*0.7f;//適切な防御力の0.7倍がクランプ最大値
+
+            if(NowPower>ThePower.medium)//パワーが高い場合は 「適切な防御力をこしてた場合のみ」適切防御力の0.7倍にクランプ
+            {
+                //まず比較する、超していた場合にクランプ
+                if(DEF()>DEF(0,skill.NowAimStyle()))//今回の防御力が適切な防御力を超してた場合、
+                {
+                    return MatchedMaxClampDef;//クランプされる。
+                }
+            }else//そうでない場合は、「適切な防御力を超してる越してない関係なく」適切防御力の0.7倍にクランプ(その最大値を絶対に超えない。)
+            {
+                
+                if(def > MatchedMaxClampDef)
+                {
+                    return MatchedMaxClampDef;//最大値を超えたら最大値にクランプ
+                }
+            }
+        }
+        return def;//そのまま返す。
+    }
+
+    /// <summary>
     ///     オーバライド可能なダメージ関数
     /// </summary>
     /// <param name="atkPoint"></param>
@@ -1073,29 +1115,7 @@ public abstract class BaseStates
         var skill = Atker.NowUseSkill;
         var def = DEF(skill.DEFATK);
 
-        //防ぎ方(AimStyle)の不一致がある場合、クランプする
-        if(skill.NowAimStyle() != NowDeffenceStyle)
-        {
-            var MatchedMaxClampDef = DEF(skill.DEFATK, skill.NowAimStyle())*0.7f;//適切な防御力の0.7倍がクランプ最大値
-
-            if(NowPower>ThePower.medium)//パワーが高い場合は 「適切な防御力をこしてた場合のみ」適切防御力の0.7倍にクランプ
-            {
-                //まず比較する、超していた場合にクランプ
-                if(DEF()>DEF(1,skill.NowAimStyle()))//今回の防御力が適切な防御力を超してた場合、
-                {
-                    def = MatchedMaxClampDef;//クランプされる。
-                }
-            }else//そうでない場合は、「適切な防御力を超してる越してない関係なく」適切防御力の0.7倍にクランプ(その最大値を絶対に超えない。)
-            {
-                
-                if(def > MatchedMaxClampDef)
-                {
-                    def = MatchedMaxClampDef;//最大値を超えたら最大値にクランプ
-                }
-            }
-        }
-
-
+        def = ClampDefenseByAimStyle(skill,def);//防ぎ方(AimStyle)の不一致がある場合、クランプする
 
         var dmg = (Atker.ATK() - def) * SkillPower;//(攻撃-対象者の防御) ×スキルパワー？
 
@@ -1143,7 +1163,7 @@ public abstract class BaseStates
     {
         var skill = Attacker.NowUseSkill;
 
-        if (RandomEx.Shared.NextFloat(0, Attacker.EYE() + AGI()) < Attacker.EYE())//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
+        if (RandomEx.Shared.NextFloat(Attacker.EYE() + AGI()) < Attacker.EYE())//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
         {
             //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
             return skill.SkillHitCalc(AccuracySupremacy(Attacker.EYE(), AGI()));
@@ -1316,6 +1336,56 @@ private int CalcTransformCountIncrement(int tightenStage)
     }
 
     /// <summary>
+    /// 連続攻撃中の割り込みカウンターが可能かどうかを判定する
+    /// </summary>
+    private bool TryInterruptCounter(BaseStates attacker)
+    {
+        var skill = attacker.NowUseSkill;
+        if(NowPower >= ThePower.medium)//普通のパワー以上で
+        {
+            var eneVond = attacker.TenDayValues.GetValueOrZero(TenDayAbility.Vond);
+            var myVond =  TenDayValues.GetValueOrZero(TenDayAbility.Vond);
+            var plusAtkChance = myVond> eneVond ? myVond - eneVond : 0f;//ヴォンドの差による微加算値
+            if(RandomEx.Shared.NextFloat(1) < skill.DEFATK/3 + plusAtkChance*0.01f)
+            {
+                var mypersonDiver = TenDayValues.GetValueOrZero(TenDayAbility.PersonaDivergence);
+                var myTentvoid = TenDayValues.GetValueOrZero(TenDayAbility.TentVoid);
+                var eneSort = attacker.TenDayValues.GetValueOrZero(TenDayAbility.Sort);
+                var eneRain = attacker.TenDayValues.GetValueOrZero(TenDayAbility.Rain);
+                var eneCold = attacker.TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm);
+                var ExVoid = PlayersStates.Instance.ExplosionVoid;
+                var counterValue = (myVond + mypersonDiver/(myVond-ExVoid)) * 0.9f;//カウンターする側の特定能力値
+                var attackerValue = Mathf.Max(eneSort - eneRain/3,0)+eneCold;//攻撃者の特定能力値
+
+
+                if(RandomEx.Shared.NextFloat(counterValue+attackerValue) < counterValue && RandomEx.Shared.NextFloat(1)<0.5f)
+                {
+                    //まず連続攻撃の無効化
+                    attacker.DeleteConsecutiveATK();
+                    attacker.IsActiveCancelInSkillACT = true;//スキルの行動を無効化された。
+                    
+                    //無効化のみ、次のターンで攻撃可能、それに加えて割り込みカウンターのパッシブが加わる。
+                    //その三パターンで分かれる。　　最後のパッシブ条件のみ直接割り込みカウンターPassiveの方で設定している。
+
+                    //割り込みカウンターのパッシブ付与しますが、適合するかどうかはそのpassiveの条件次第です。
+                    ApplyPassive(PassiveManager.Instance.GetAtID(1));
+
+                    //次のターンで攻撃、つまり先約リストの予約を判定する。　
+                    if(HasCharacterType(CharacterType.Life))
+                    {//生命なら、必ず反撃可能
+                        manager.Acts.Add(this,manager.GetCharacterFaction(this));//通常の行動予約
+                    }
+
+                    //無効化は誰でも可能です　以下のtrueを返して、呼び出し側で無効化は行います。
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+    /// <summary>
     /// スキルに対するリアクション ここでスキルの解釈をする。
     /// </summary>
     /// <param name="skill"></param>
@@ -1335,6 +1405,15 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             if (IsReactHIT(attacker))
             {
+                //割り込みカウンターの判定
+                if(skill.NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃されてる途中なら
+                {
+                    if(!skill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive))//ターンをまたいだ物じゃないなら
+                    {
+                        TryInterruptCounter(attacker);//割り込みカウンターの判定
+                    }
+                }
+
                 //防ぎ方の切り替え
                 SwitchDefenceStyle(attacker);
                 //連続攻撃の物理属性ブースト判定
@@ -1421,27 +1500,13 @@ private int CalcTransformCountIncrement(int tightenStage)
         return false;
     }
     /// <summary>
-    /// freezeconsecutiveの消去
+    /// consecutiveな連続攻撃の消去
     /// </summary>
-    public void DeleteMyFreezeConsecutive()
+    public void DeleteConsecutiveATK()
     {
         FreezeUseSkill.ResetAtkCountUp();//強制実行中のスキルの攻撃カウントアップをリセット
         Defrost();//解除
         IsDeleteMyFreezeConsecutive = false;
-
-    }
-    /// <summary>
-    /// freezeConsecutiveの後処理とかチェックを各コールバックで呼び出すためにパッケージングされた関数
-    /// </summary>
-    void CallBackCheckDeleteMyFreezeConsecutive()
-    {
-        //freezeconsecutiveの消去予約を消去
-        IsDeleteMyFreezeConsecutive = false;//DeleteMyFreezeConsecutiveでfalseにされるが、念のためここでもこのフラグはfalseにしとく
-        //もしFreezeConsecutiveのスキルが実行中なら、消す
-        if(IsNeedDeleteMyFreezeConsecutive())
-        {
-            DeleteMyFreezeConsecutive();
-        }
 
     }
     //---------------------------------------------------------------------------------------------FreezeConsecutiveのフラグ、後処理など終わり------------------------------------------------------------
@@ -1465,7 +1530,9 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     public virtual void DeathCallBack()
     {
-        CallBackCheckDeleteMyFreezeConsecutive();
+        DeleteConsecutiveATK();
+        //あるかわからないが続行中のスキルを消し、
+        //以外のそれ以外のスキルの連続攻撃回数消去(基本的に一個しか増えないはずだが)は以下のforeachループで行う
         foreach (var skill in SkillList)
         {
             skill.OnDeath();
@@ -1613,7 +1680,8 @@ private int CalcTransformCountIncrement(int tightenStage)
     public void OnBattleEndNoArgument()
     {
         TempDamageTurn = 0;
-        CallBackCheckDeleteMyFreezeConsecutive();
+        DeleteConsecutiveATK();
+        LostManaged();
     }
 
     //慣れ補正ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー慣れ補正ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
@@ -2037,7 +2105,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     float GetBaseMemoryIncreaseValue()
     {
-        var def = DEF(1);
+        var def = DEF();
         if (def <= increaseThreshold)
         {
             // 第1段階: startIncreaseValueからmidLimitIncreaseValueへ収束
@@ -2064,7 +2132,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     float GetBaseMemoryReducationValue()
     {
-        var def = DEF(1);//攻撃によって減少されないまっさらな防御力
+        var def = DEF();//攻撃によって減少されないまっさらな防御力
         if (def <= thresholdDEF)
         {
             // 第1段階: StartValueからmidLimitValueへ収束

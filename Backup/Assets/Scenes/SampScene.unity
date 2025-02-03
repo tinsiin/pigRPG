@@ -644,6 +644,7 @@ MonoBehaviour:
     _maxHp: 3
     Target: 0
     RangeWill: 0
+    IsActiveCancelInSkillACT: 0
   noramlia:
     _passiveList: []
     _skillList: []
@@ -732,6 +733,7 @@ MonoBehaviour:
     _maxHp: 0
     Target: 0
     RangeWill: 0
+    IsActiveCancelInSkillACT: 0
   sites:
     _passiveList: []
     _skillList: []
@@ -824,6 +826,7 @@ MonoBehaviour:
     _maxHp: 0
     Target: 0
     RangeWill: 0
+    IsActiveCancelInSkillACT: 0
   skillButtonList:
   - {fileID: 602005237}
   skillStockButtonList:
@@ -831,6 +834,7 @@ MonoBehaviour:
   StopFreezeConsecutiveButton_geino: {fileID: 294146446}
   StopFreezeConsecutiveButton_Bassjack: {fileID: 1385335785}
   StopFreezeConsecutiveButton_Sites: {fileID: 1833282123}
+  ExplosionVoid: 0
 --- !u!114 &78173494
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -993,6 +997,7 @@ MonoBehaviour:
         _maxHp: 0
         Target: 0
         RangeWill: 0
+        IsActiveCancelInSkillACT: 0
         RecovelySteps: 0
         broken: 0
     - rid: 6711005805807403016
@@ -1079,6 +1084,7 @@ MonoBehaviour:
         _maxHp: 0
         Target: 0
         RangeWill: 0
+        IsActiveCancelInSkillACT: 0
         RecovelySteps: 0
         broken: 0
 --- !u!114 &78173495
@@ -1095,6 +1101,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _masterList:
   - rid: 6711005805807403020
+  - rid: 8980149129752084480
   references:
     version: 2
     RefIds:
@@ -1114,6 +1121,18 @@ MonoBehaviour:
           GrantTiming: 0
           IsSurvivalCondition: 0
           RemoveOnPassiveRemove: 0
+    - rid: 8980149129752084480
+      type: {class: BasePassive, ns: , asm: Assembly-CSharp}
+      data:
+        OkImpression: 790
+        OkType: 6
+        IsCantACT: 0
+        MaxPassivePower: 1
+        PassiveName: "\u5272\u308A\u8FBC\u307F\u30AB\u30A6\u30F3\u30BF\u30FC"
+        ID: 1
+        DurationTurn: 1
+        DurationWalk: 0
+        VitalLayers: []
 --- !u!114 &78173496
 MonoBehaviour:
   m_ObjectHideFlags: 0

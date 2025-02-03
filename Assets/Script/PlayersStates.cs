@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RandomExtensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -23,6 +24,8 @@ public class PlayersStates:MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        CreateDecideValues();//中央決定値をゲーム開始時一回だけ生成
 
         NowProgress = 0;//ステージ関連のステータス初期化
         NowStageID = 0;
@@ -203,6 +206,16 @@ public class PlayersStates:MonoBehaviour
     {
         NowAreaID = id;
         Debug.Log(id + "をPlayerStatesに記録");
+    }
+
+    //中央決定値など---------------------------------------------------------中央決定値
+    /// <summary>
+    /// 中央決定値　空洞爆発の値　割り込みカウンター用
+    /// </summary>
+    public float ExplosionVoid;
+    void CreateDecideValues()
+    {
+        ExplosionVoid = RandomEx.Shared.NextFloat(10,61);
     }
 }
 public class AllyClass : BaseStates
