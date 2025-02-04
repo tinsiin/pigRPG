@@ -24,7 +24,7 @@ public class VitalLayerManager : MonoBehaviour
     [SerializeReference, SelectableSerializeReference]//追加HPを管理するリスト
     private List<BaseVitalLayer> _masterList;
     /// <summary>
-    /// パッシブをIDで入手
+    /// 追加HPをIDで入手
     /// </summary>
     public BaseVitalLayer GetAtID(int id)
     {

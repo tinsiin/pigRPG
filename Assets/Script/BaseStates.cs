@@ -59,7 +59,11 @@ public enum BattleProtocol
     /// <summary>トライキー</summary>
     Tricky,
     /// <summary>派手</summary>
-    Showey
+    Showey,
+    /// <summary>
+    /// この戦闘規格には狙い流れ(AimStyle)がないため、には防ぎ方(AimStyleごとに対応される防御排他ステ)もなく、追加攻撃力(戦闘規格による排他ステ)もない
+    /// </summary>
+    none
 }
 /// <summary>
 /// 防ぎ方 狙い流れとも言う　戦闘規格とスキルにセットアップされる順番や、b_defの対応に使用される。
@@ -95,7 +99,12 @@ public enum AimStyle
     /// <summary>
     /// 中天一弾 - Central Heaven Strike
     /// </summary>
-    CentralHeavenStrike // 中天一弾
+    CentralHeavenStrike, // 中天一弾
+
+    /// <summary>
+    /// 戦闘規格のnoneに対して変化する防ぎ方
+    /// </summary>
+    none
 }
 /// <summary>
 /// 命中率、攻撃力、回避力、防御力への補正
@@ -304,6 +313,7 @@ public abstract class BaseStates
                     calcATK += TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.2f;
                     calcATK += TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller) * 1.0f;
                     break;
+                //noneの場合、そもそもこの追加攻撃力がない。
             }
 
             
@@ -405,6 +415,7 @@ public abstract class BaseStates
                     calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.3f;
                     calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Vond) * -0.2f;
                     break;
+                //none 掴んで投げるスキルの場合はこの排他ステはない。
         }
         
         return calcDEF;
@@ -479,6 +490,10 @@ public abstract class BaseStates
     /// 裏に出す種別も考慮した彼のことの名前
     /// </summary>
     public string ImpressionStringName;
+    /// <summary>
+    /// 装備中の武器
+    /// </summary>
+    public BaseWeapon NowUseWeapon;
     /// <summary>
     /// 今のキャラの戦闘規格
     /// </summary>
@@ -948,7 +963,11 @@ public abstract class BaseStates
             eye += AGI() / agiPer;
         }
 
-
+        //割り込みカウンターパッシブなら+100
+        if (HasPassive(1))
+        {
+            eye += 100;
+        }
 
         return eye;
     }
@@ -996,6 +1015,12 @@ public abstract class BaseStates
             {
                 atk += AGI() / 6;
             }
+        }
+
+        //割り込みカウンターパッシブがあるなら二倍の攻撃力
+        if(HasPassive(1))
+        {
+            atk *= 2;
         }
 
 
@@ -1268,10 +1293,15 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>防ぎ方の切り替え </summary>
     private void SwitchDefenceStyle(BaseStates atker)
     {
+        if(atker.NowBattleProtocol == BattleProtocol.none)
+        {
+            NowDeffenceStyle = AimStyle.none;//戦闘規格がない(フリーハンドスキル)なら、防ぎ方もnone(防御排他ステがない)
+            return;
+        } 
         var skill = atker.NowUseSkill;
         var pattern = DefaultDefensePatternPerProtocol[atker.NowBattleProtocol];
 
-        if(!skill.NowConsecutiveATKFromTheSecondTimeOnward()){//単回攻撃または初回攻撃なら
+        if(!skill.NowConsecutiveATKFromTheSecondTimeOnward()){//単回攻撃または初回攻撃なら  (戦闘規格noneが入ることを想定)
 
             var per = 1f;
             if(GetTightenMindCorrectionStage()>=2)per=0.75f;//補正段階が2以上になるまで75%の確率で切り替えます、それ以降は100%で完全対応
@@ -1298,7 +1328,7 @@ private int CalcTransformCountIncrement(int tightenStage)
            }
 
            skill.SetSingleAimStyle(NowDeffenceStyle);//スキルのAimStyleとしても記録する。
-        }else{
+        }else{                                              //連続攻撃中なら　　(戦闘規格noneを連続攻撃のmovesetに入れないこと前提)
             var AtkAimStyle = skill.NowAimStyle();//攻撃者の現在のAimStyleを取得
             
             if (AtkAimStyle == NowDeffenceStyle) return;// 既に同じAimStyleなら何もしない
@@ -1373,10 +1403,19 @@ private int CalcTransformCountIncrement(int tightenStage)
                     //次のターンで攻撃、つまり先約リストの予約を判定する。　
                     if(HasCharacterType(CharacterType.Life))
                     {//生命なら、必ず反撃可能
-                        manager.Acts.Add(this,manager.GetCharacterFaction(this));//通常の行動予約
+
+                        //攻撃を食らった際、中断不可能なカウンターまたはfreezeConecutiveの場合、武器スキルでしか返せない。
+                        var isfreeze = false;
+                        if(NowUseSkill.NowConsecutiveATKFromTheSecondTimeOnward() && NowUseSkill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive) ||
+                        NowUseSkill.IsTriggering()) 
+                        {
+                        NowUseSkill = NowUseWeapon.WeaponSkill;
+                        isfreeze = true;
+                        }
+                        manager.Acts.Add(this,manager.GetCharacterFaction(this),"割り込みカウンター",null,isfreeze);//通常の行動予約 
                     }
 
-                    //無効化は誰でも可能です　以下のtrueを返して、呼び出し側で無効化は行います。
+                    //無効化は誰でも可能です　以下のtrueを返して、呼び出し側で今回の攻撃の無効化は行います。
                     return true;
                 }
             }
@@ -1405,22 +1444,26 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             if (IsReactHIT(attacker))
             {
+                var thisAtkTurn = true;
                 //割り込みカウンターの判定
                 if(skill.NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃されてる途中なら
                 {
                     if(!skill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive))//ターンをまたいだ物じゃないなら
                     {
-                        TryInterruptCounter(attacker);//割り込みカウンターの判定
+                        thisAtkTurn = !TryInterruptCounter(attacker);//割り込みカウンターの判定
                     }
                 }
 
-                //防ぎ方の切り替え
-                SwitchDefenceStyle(attacker);
-                //連続攻撃の物理属性ブースト判定
-                CheckPhysicsConsecutiveAimBoost(attacker);
-                
-                //成功されるとダメージを受ける
-                txt += Damage(attacker, skillPower);
+                if(thisAtkTurn)
+                {
+                    //防ぎ方の切り替え
+                    SwitchDefenceStyle(attacker);
+                    //連続攻撃の物理属性ブースト判定
+                    CheckPhysicsConsecutiveAimBoost(attacker);
+                    
+                    //成功されるとダメージを受ける
+                    txt += Damage(attacker, skillPower);
+                }
             }
             else
             {//外したら

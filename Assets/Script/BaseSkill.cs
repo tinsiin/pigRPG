@@ -416,16 +416,26 @@ public class BaseSkill
     }
 
     /// <summary>
-    /// 選ばれなかった時の発動カウントが戻っちゃう処理
+    /// 発動カウントが実行中かどうかを判定する
     /// </summary>
-    public virtual void ReturnTrigger()
+    /// <returns>発動カウントが開始済みで、まだカウント中ならtrue、それ以外はfalse</returns>
+    public virtual bool IsTriggering()
     {
-        _triggerCount = _triggerCountMax;//基本的に一回でもやんなかったらすぐ戻る感じ
+        // 発動カウントが0以下の場合は即時実行なのでfalse
+        if (_triggerCountMax <= 0) return false;
+        
+        // カウントが開始されていない場合はfalse
+        // カウントが開始されると_triggerCountは_triggerCountMaxより小さくなる
+        if (_triggerCount >= _triggerCountMax) return false;
+        
+        // カウントが開始済みで、まだカウントが残っている場合はtrue
+        return _triggerCount  > -1;
     }
+
     /// <summary>
     /// 実行に成功した際の発動カウントのリセット 0ばら
     /// </summary>
-    public virtual void DoneTrigger()
+    public virtual void ReturnTrigger()
     {
         _triggerCount = _triggerCountMax;//基本的にもう一回最初から
     }
@@ -599,7 +609,7 @@ public class BaseSkill
         _hitCount = 0;
         _hitConsecutiveCount = 0;
         ResetAtkCountUp();
-        _triggerCount = _triggerCountMax;//発動カウントはカウントダウンするから最初っから
+        ReturnTrigger();//発動カウントはカウントダウンするから最初っから
         _tmpSkillUseTurn = -1;//前回とのターン比較用の変数をnullに
         ResetStock();
 
@@ -631,6 +641,10 @@ public class BaseSkill
     /// <param name="supremacyBonus">命中ボーナス　主に命中凌駕用途</param>>
     public virtual bool SkillHitCalc(float supremacyBonus)
     {
+        //割り込みカウンターなら確実
+        if(Doer.HasPassive(1)) return true;
+
+        //通常計算
         var rndMin = RandomEx.Shared.NextInt(3);//ボーナスがある場合ランダムで三パーセント~0パーセント引かれる
         if(supremacyBonus>rndMin)supremacyBonus -= rndMin;
 

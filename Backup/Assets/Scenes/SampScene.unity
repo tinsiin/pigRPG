@@ -417,6 +417,7 @@ GameObject:
   - component: {fileID: 78173492}
   - component: {fileID: 78173493}
   - component: {fileID: 78173495}
+  - component: {fileID: 78173497}
   - component: {fileID: 78173496}
   - component: {fileID: 78173494}
   m_Layer: 5
@@ -1164,6 +1165,18 @@ MonoBehaviour:
         voltenResistance: 1
         DishSmackRsistance: 1
         ResistMode: 0
+--- !u!114 &78173497
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 78173487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b66f8990bc717ec4bb3bbcd0c2a747d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &90538794
 GameObject:
   m_ObjectHideFlags: 0

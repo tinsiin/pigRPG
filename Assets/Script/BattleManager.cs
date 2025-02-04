@@ -614,7 +614,7 @@ public class BattleManager
         }
         else//発動カウントが-1以下　つまりカウントしてないまたは終わったなら
         {
-            skill.DoneTrigger();//トリガーのカウントを成功したときの戻らせ方させて
+            skill.ReturnTrigger();//トリガーのカウントを成功したときの戻らせ方させて
             return SkillACT();
         }
 
