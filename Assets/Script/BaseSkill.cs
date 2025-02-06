@@ -2,6 +2,7 @@
 using RandomExtensions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -145,7 +146,7 @@ public enum SkillConsecutiveType
 /// <summary>
 /// 対象を選別する意思状態の列挙体 各手順で選ばれた末の結果なので、単一の結果のみだからビット演算とかでない
 /// この列挙体は**状況内で選別するシチュエーション的な変数**という側面が強い。
-/// 要はbattleManagerでそれぞれの状況に応じてキャラを選別するって感じ
+/// 要はbattleManagerでそれらの状況に応じてキャラを選別するって感じ
 /// </summary>
 public enum DirectedWill
 {
@@ -211,6 +212,14 @@ public class BaseSkill
         return (WhatSkill & combinedSkills) == combinedSkills;
     }
     /// <summary>
+    /// スキル性質のいずれかを持ってるかどうか
+    /// 複数指定の場合は一つでも持ってればtrueを返します。
+    /// </summary>
+    public bool HasTypeAny(params SkillType[] skills)
+    {
+        return skills.Any(skill => (WhatSkill & skill) != 0);    
+    }
+    /// <summary>
     /// そのスキル連続性質を持ってるかどうか
     /// </summary>
     public bool HasConsecutiveType(SkillConsecutiveType skill)
@@ -229,6 +238,14 @@ public class BaseSkill
             combinedSkills |= skill;
         }
         return (ZoneTrait & combinedSkills) == combinedSkills;
+    }
+     /// <summary>
+    /// スキル範囲性質のいずれかを持ってるかどうか
+    /// 複数指定した場合はどれか一つでも当てはまればtrueを返す
+    /// </summary>
+    public bool HasZoneTraitAny(params SkillZoneTrait[] skills)
+    {
+        return skills.Any(skill => (ZoneTrait & skill) != 0);
     }
 
 

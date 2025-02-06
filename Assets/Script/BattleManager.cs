@@ -1,5 +1,5 @@
-﻿
 
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using RandomExtensions;
@@ -57,6 +57,7 @@ public class ACTList
     List<WhichGroup> FactionList;//陣営
     List<List<ReservationStatesModify>> reservationStatesModifies;//補正リスト
     List<bool> IsFreezeList;//スキルをフリーズ、つまり前のスキルを持続させるかどうか。
+    List<BaseStates> SingleTargetList;//単体で狙うのを確定するリスト
 
 
     public int Count
@@ -64,13 +65,14 @@ public class ACTList
         get => CharactorACTList.Count;
     }
 
-    public void Add(BaseStates chara, WhichGroup charasFac, string mes = "", List<ReservationStatesModify> modifys = null, bool isfreeze = false)
+    public void Add(BaseStates chara, WhichGroup charasFac, string mes = "", List<ReservationStatesModify> modifys = null, bool isfreeze = false,BaseStates SingleTarget = null)
     {
         CharactorACTList.Add(chara);
         FactionList.Add(charasFac);
         TopMessage.Add(mes);
         reservationStatesModifies.Add(modifys);
         IsFreezeList.Add(isfreeze);
+        SingleTargetList.Add(SingleTarget);
 
     }
 
@@ -81,6 +83,7 @@ public class ACTList
         FactionList = new List<WhichGroup>();
         reservationStatesModifies = new List<List<ReservationStatesModify>>();
         IsFreezeList = new();
+        SingleTargetList = new();
     }
     /// <summary>
     /// 先約リスト内から死者を取り除く
@@ -101,6 +104,7 @@ public class ACTList
         FactionList.RemoveAt(index);
         reservationStatesModifies.RemoveAt(index);
         IsFreezeList.RemoveAt(index);
+        SingleTargetList.RemoveAt(index);
     }
 
     public string GetAtTopMessage(int index)
@@ -122,6 +126,10 @@ public class ACTList
     public bool GetAtIsFreezeBool(int index)
     {
         return IsFreezeList[index];
+    }
+    public BaseStates GetAtSingleTarget(int index)
+    {
+        return SingleTargetList[index];
     }
 
 
@@ -282,6 +290,7 @@ public class BattleManager
     bool Wipeout = false;//全滅したかどうか
     bool RunOut = false;//逃走
     public bool DoNothing = false;//何もしない
+    public bool VoidTurn = false;//そのターンは無かったことに
 
     /// <summary>
     /// 渡されたキャラクタのbm内での陣営を表す。
@@ -454,11 +463,27 @@ public class BattleManager
                     }
                 }
             }
+            //単体固定の狙うべきキャラがいたら
+            var singleTarget = Acts.GetAtSingleTarget(0);
+            if (singleTarget != null)
+            {
+                //もし死んでたら、このターンは無かったことになる。
+                if (singleTarget.Death())
+                {
+                    VoidTurn =true;
+                }/*else
+                {
+                    Acter.Target = DirectedWill.One;
+                    unders.CharaAdd(singleTarget);
+                }*///
+            }
+
             //スキルがフリーズするならする
             if (Acts.GetAtIsFreezeBool(0))
             {
                 Acter.FreezeSkill();
             }
+            
 
             Debug.Log("俳優は先約リストから選ばれました");
         }
@@ -493,6 +518,8 @@ public class BattleManager
         }
 
         CharacterAddFromListOrRandom();//Acterが選ばれる
+
+        //スキルと範囲の思考--------------------------------------------------------------------------------------------------------スキルと範囲の思考-----------------------------------------------------------
 
         //俳優が味方なら
         if (ActerFaction == WhichGroup.alliy)
@@ -533,6 +560,7 @@ public class BattleManager
             var ene = Acter as NormalEnemy;
             ene.SkillAI();//ここで決めないとスキル可変オプションが下記の対象者選択で反映されないから
         }
+        //スキルと範囲の思考--------------------------------------------------------------------------------------------------------スキルと範囲の思考-----------------------------------------------------------
 
         //俳優が自分のFreezeConsecutiveを削除する予約をしているのなら、
         if (Acter.IsDeleteMyFreezeConsecutive)
@@ -551,16 +579,43 @@ public class BattleManager
     /// </summary>
     void SwitchAllySkillUiState()
     {
+        var ps = PlayersStates.Instance;
+
+        //もしActs,先約リストで単体指定SingleTargetがあるならば、
+        var singleTarget = Acts.GetAtSingleTarget(0);
+        var OnlyRemainButtonByType = Enum.GetValues(typeof(SkillType))
+                                    .Cast<SkillType>()
+                                    .Aggregate((current, next) => current | next);
+        var OnlyRemainButtonByZoneTrait =(SkillZoneTrait)((1 << 16) - 1);//全てのZoneTraitを代入しておく
+        if (singleTarget != null)
+        {
+            OnlyRemainButtonByZoneTrait = 0;//まず空にする
+            OnlyRemainButtonByType =0;
+            
+            OnlyRemainButtonByZoneTrait |= SkillZoneTrait.CanPerfectSelectSingleTarget//単体系の範囲性質を全て入れる
+                                       | SkillZoneTrait.CanSelectSingleTarget
+                                       | SkillZoneTrait.RandomSingleTarget
+                                       | SkillZoneTrait.RandomTargetALLSituation
+                                       | SkillZoneTrait.RandomTargetMultiOrSingle
+                                       | SkillZoneTrait.RandomTargetALLorSingle;
+
+            OnlyRemainButtonByType |= SkillType.Attack;//攻撃性質を持つもの限定
+        }
+
         switch (Acter)
         {
              case StairStates:
+                //ここでスキルを指定した範囲性質を持つもののみinteractable=trueになるようにする。
+                ps.OnlyInteractHasZoneTraitSkills_geino(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);//ボタンのオンオフをするコールバック
                 Walking.SKILLUI_state.Value = SkillUICharaState.geino;
                 break;
 
             case SateliteProcessStates:
+                ps.OnlyInteractHasZoneTraitSkills_sites(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);
                 Walking.SKILLUI_state.Value = SkillUICharaState.sites;
                 break;
             case BassJackStates:
+                ps.OnlyInteractHasZoneTraitSkills_normalia(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);
                 Walking.SKILLUI_state.Value = SkillUICharaState.normalia;
                 break;
 
@@ -605,6 +660,11 @@ public class BattleManager
             //小さなアイコン辺りに無音の灰色円縮小エフェクトを入れる     何もしないエフェクト
             DoNothing = false;
             return ACTPop();//何もせず行動準備へ
+        }
+        if(VoidTurn)
+        {
+            VoidTurn = false;//ターン消しとび　エフェクトなし
+            return ACTPop();
         }
 
         int count;//メッセージテキスト用のカウント数字
@@ -990,6 +1050,14 @@ public class BattleManager
             }
         }
 
+        //もしActs,先約リストでsingleTargetを予約しているのなら(死亡チェックはactbranchingのCharacterAddFromListOrRandomで行っています。)
+        var singleTarget = Acts.GetAtSingleTarget(0);
+        if (singleTarget != null)
+        {   
+            Acter.Target = DirectedWill.One;//ここで単体選択し、尚且つしたの行動者決定☆の処理を飛ばせる
+            unders.CharaAdd(singleTarget);//対象者に追加
+        }
+
         //行動者決定☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
 
         if (Acter.Target == DirectedWill.One)//単体指定をしているのなら
@@ -1297,15 +1365,6 @@ public class BattleManager
 
 
 
-        //全キャラにbmセット
-        foreach (var one in EnemyGroup.Ours)
-        {
-            one.Managed(this);
-        }
-        foreach (var one in AllyGroup.Ours)
-        {
-            one.Managed(this);
-        }
     }
 
 }

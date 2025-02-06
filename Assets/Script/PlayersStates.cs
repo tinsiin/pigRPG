@@ -2,8 +2,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
+
+public class ButtonAndSkillIDHold
+{
+    public Button button;
+    public int skillID;
+    public void AddButtonFunc(UnityAction<int> call)
+    {
+        button.onClick.AddListener(() => call(skillID));
+    }
+}
 
 /// <summary>
 ///セーブでセーブされるような事柄とかメインループで操作するためのステータス太刀　シングルトン
@@ -35,11 +47,7 @@ public class PlayersStates:MonoBehaviour
         noramlia.OnInitializeSkillsAndChara();
         sites.OnInitializeSkillsAndChara();
 
-        //ボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
-        skillButtonList[0].onClick.AddListener(() => geino.OnSkillBtnCallBack(0));
-
-        //ストックボタンに「ストックを各キャラの使用スキル変数と結びつける関数」　を登録する
-        skillStockButtonList[0].onClick.AddListener(() => geino.OnSkillStockBtnCallBack(0));
+        ApplySkillButtons();
         Debug.Log("ボタンは読み込まれたはず");
 
     }
@@ -47,10 +55,90 @@ public class PlayersStates:MonoBehaviour
     public BassJackStates noramlia;
     public SateliteProcessStates sites;
 
+    void ApplySkillButtons()
+    {
+                //ボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
+        foreach (var button in skillButtonList_geino)
+        {
+            button.AddButtonFunc(geino.OnSkillBtnCallBack);
+        }
+
+        //ストックボタンに「ストックを各キャラの使用スキル変数と結びつける関数」　を登録する
+        foreach (var button in skillStockButtonList_geino)
+        {
+            button.AddButtonFunc(geino.OnSkillStockBtnCallBack);
+        }
+
+        //ボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
+        foreach (var button in skillButtonList_noramlia)
+        {
+            button.AddButtonFunc(noramlia.OnSkillBtnCallBack);
+        }
+
+        //ストックボタンに「ストックを各キャラの使用スキル変数と結びつける関数」　を登録する
+        foreach (var button in skillStockButtonList_noramlia)
+        {
+            button.AddButtonFunc(noramlia.OnSkillStockBtnCallBack);
+        }
+
+        //ボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
+        foreach (var button in skillButtonList_sites)
+        {
+            button.AddButtonFunc(sites.OnSkillBtnCallBack);
+        }
+
+        //ストックボタンに「ストックを各キャラの使用スキル変数と結びつける関数」　を登録する
+        foreach (var button in skillStockButtonList_sites)
+        {
+            button.AddButtonFunc(sites.OnSkillStockBtnCallBack);
+        }
+
+
+    }
+
     [SerializeField]
-    private List<Button> skillButtonList;//スキルボタン用リスト
+    private List<ButtonAndSkillIDHold> skillButtonList_geino;//ジーノ用スキルボタン用リスト
     [SerializeField]
-    private List<Button> skillStockButtonList;//該当のスキルの攻撃ストックボタン用リスト
+    private List<ButtonAndSkillIDHold> skillButtonList_noramlia;//ノーマリア用スキルボタン用リスト
+    [SerializeField]
+    private List<ButtonAndSkillIDHold> skillButtonList_sites;//サテライト用スキルボタン用リスト
+
+    [SerializeField]
+    private List<ButtonAndSkillIDHold> skillStockButtonList;//該当のスキルの攻撃ストックボタン用リスト
+    [SerializeField]
+    private List<ButtonAndSkillIDHold> skillStockButtonList_geino;//ジーノの該当のスキルの攻撃ストックボタン用リスト
+    [SerializeField]
+    private List<ButtonAndSkillIDHold> skillStockButtonList_noramlia;//ノーマリアの該当のスキルの攻撃ストックボタン用リスト
+    [SerializeField]
+    private List<ButtonAndSkillIDHold> skillStockButtonList_sites;//サテライトの該当のスキルの攻撃ストックボタン用リスト
+
+    /// <summary>
+    /// 指定したZoneTraitとスキル性質を所持するスキルのみを、有効化しそれ以外を無効化するコールバック
+    /// </summary>
+    public void OnlyInteractHasZoneTraitSkills_geino(SkillZoneTrait trait,SkillType type)
+    {
+        foreach(var hold in skillButtonList_geino)
+        {
+            var skill = geino.SkillList[hold.skillID];
+            hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);//一つでも持ってればOK
+        }
+    }
+    public void OnlyInteractHasZoneTraitSkills_normalia(SkillZoneTrait trait,SkillType type)
+    {
+        foreach(var hold in skillButtonList_noramlia)
+        {
+            var skill = noramlia.SkillList[hold.skillID];
+            hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);//一つでも持ってればOK
+        }
+    }
+    public void OnlyInteractHasZoneTraitSkills_sites(SkillZoneTrait trait,SkillType type)
+    {
+        foreach(var hold in skillButtonList_sites)
+        {
+            var skill = sites.SkillList[hold.skillID];
+            hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);//一つでも持ってればOK
+        }
+    }
 
 
 
@@ -229,9 +317,16 @@ public class AllyClass : BaseStates
         NowUseSkill = SkillList[skillListIndex];//使用スキルに代入する
         Debug.Log(SkillList[skillListIndex].SkillName + "を" + CharacterName +" のNowUseSkillにボタンを押して登録しました。");
 
-        //スキルの性質によるボタンの行く先の分岐
+        //もし先約リストによる単体指定ならば、範囲や対象者選択画面にはいかず、直接actbranchiへ移行
+        if(manager.Acts.GetAtSingleTarget(0)!= null)
+        {
+            Walking.USERUI_state.Value = TabState.NextWait;
+        }else
+        {
+                    //スキルの性質によるボタンの行く先の分岐
+            Walking.USERUI_state.Value = DetermineNextUIState(NowUseSkill);
+        }
 
-        Walking.USERUI_state.Value = DetermineNextUIState(NowUseSkill);
         
     }
         /// <summary>

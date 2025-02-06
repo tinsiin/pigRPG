@@ -571,6 +571,39 @@ MonoBehaviour:
     KereKere: 0
     CharacterName: "\u30B8\u30FC\u30CE"
     ImpressionStringName: 
+    NowUseWeapon:
+      id: 0
+      name: 
+      protocol: 0
+      WeaponSkill:
+        SkillSpiritual: 0
+        _name: 
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        CanCancel: 1
+        IsAggressiveCommit: 1
+        CanSelectAggressiveCommit: 0
+        ConsecutivePercentage: 0
+        SKillDidWaitCount: 0
+        IsTLOA: 0
+        PowerSpread: []
+        SkillPower: 0
+        SkillHitPer: 0
+        SkillLevel: 0
+        subEffects: 
+        subVitalLayers: 
+        A_MoveSet: []
+        B_MoveSet: []
+        _defAtk: 0
+        WhatSkill: 0
+        ConsecutiveType: 0
+        ZoneTrait: 0
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
     NowBattleProtocol: 0
     NowDeffenceStyle: 0
     NowUseSkill:
@@ -660,6 +693,39 @@ MonoBehaviour:
     KereKere: 0
     CharacterName: 
     ImpressionStringName: 
+    NowUseWeapon:
+      id: 0
+      name: 
+      protocol: 0
+      WeaponSkill:
+        SkillSpiritual: 0
+        _name: 
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        CanCancel: 1
+        IsAggressiveCommit: 1
+        CanSelectAggressiveCommit: 0
+        ConsecutivePercentage: 0
+        SKillDidWaitCount: 0
+        IsTLOA: 0
+        PowerSpread: []
+        SkillPower: 0
+        SkillHitPer: 0
+        SkillLevel: 0
+        subEffects: 
+        subVitalLayers: 
+        A_MoveSet: []
+        B_MoveSet: []
+        _defAtk: 0
+        WhatSkill: 0
+        ConsecutiveType: 0
+        ZoneTrait: 0
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
     NowBattleProtocol: 0
     NowDeffenceStyle: 0
     NowUseSkill:
@@ -751,6 +817,39 @@ MonoBehaviour:
     KereKere: 0
     CharacterName: 
     ImpressionStringName: 
+    NowUseWeapon:
+      id: 0
+      name: 
+      protocol: 0
+      WeaponSkill:
+        SkillSpiritual: 0
+        _name: 
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        CanCancel: 1
+        IsAggressiveCommit: 1
+        CanSelectAggressiveCommit: 0
+        ConsecutivePercentage: 0
+        SKillDidWaitCount: 0
+        IsTLOA: 0
+        PowerSpread: []
+        SkillPower: 0
+        SkillHitPer: 0
+        SkillLevel: 0
+        subEffects: 
+        subVitalLayers: 
+        A_MoveSet: []
+        B_MoveSet: []
+        _defAtk: 0
+        WhatSkill: 0
+        ConsecutiveType: 0
+        ZoneTrait: 0
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
     NowBattleProtocol: 0
     NowDeffenceStyle: 2
     NowUseSkill:
@@ -828,10 +927,6 @@ MonoBehaviour:
     Target: 0
     RangeWill: 0
     IsActiveCancelInSkillACT: 0
-  skillButtonList:
-  - {fileID: 602005237}
-  skillStockButtonList:
-  - {fileID: 841515318}
   StopFreezeConsecutiveButton_geino: {fileID: 294146446}
   StopFreezeConsecutiveButton_Bassjack: {fileID: 1385335785}
   StopFreezeConsecutiveButton_Sites: {fileID: 1833282123}
@@ -924,6 +1019,39 @@ MonoBehaviour:
         KereKere: 0
         CharacterName: 
         ImpressionStringName: 
+        NowUseWeapon:
+          id: 0
+          name: 
+          protocol: 0
+          WeaponSkill:
+            SkillSpiritual: 0
+            _name: 
+            _defaultStockCount: 1
+            _stockPower: 1
+            _stockForgetPower: 1
+            CanCancel: 1
+            IsAggressiveCommit: 1
+            CanSelectAggressiveCommit: 0
+            ConsecutivePercentage: 0
+            SKillDidWaitCount: 0
+            IsTLOA: 0
+            PowerSpread: []
+            SkillPower: 0
+            SkillHitPer: 0
+            SkillLevel: 0
+            subEffects: 
+            subVitalLayers: 
+            A_MoveSet: []
+            B_MoveSet: []
+            _defAtk: 0
+            WhatSkill: 0
+            ConsecutiveType: 0
+            ZoneTrait: 0
+            DistributionType: 0
+            PowerRangePercentageDictionary:
+              _list: []
+            HitRangePercentageDictionary:
+              _list: []
         NowBattleProtocol: 0
         NowDeffenceStyle: 0
         NowUseSkill:
@@ -1017,6 +1145,39 @@ MonoBehaviour:
         KereKere: 0
         CharacterName: 
         ImpressionStringName: 
+        NowUseWeapon:
+          id: 0
+          name: 
+          protocol: 0
+          WeaponSkill:
+            SkillSpiritual: 0
+            _name: 
+            _defaultStockCount: 1
+            _stockPower: 1
+            _stockForgetPower: 1
+            CanCancel: 1
+            IsAggressiveCommit: 1
+            CanSelectAggressiveCommit: 0
+            ConsecutivePercentage: 0
+            SKillDidWaitCount: 0
+            IsTLOA: 0
+            PowerSpread: []
+            SkillPower: 0
+            SkillHitPer: 0
+            SkillLevel: 0
+            subEffects: 
+            subVitalLayers: 
+            A_MoveSet: []
+            B_MoveSet: []
+            _defAtk: 0
+            WhatSkill: 0
+            ConsecutiveType: 0
+            ZoneTrait: 0
+            DistributionType: 0
+            PowerRangePercentageDictionary:
+              _list: []
+            HitRangePercentageDictionary:
+              _list: []
         NowBattleProtocol: 0
         NowDeffenceStyle: 0
         NowUseSkill:
@@ -1102,7 +1263,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _masterList:
   - rid: 6711005805807403020
-  - rid: 8980149129752084480
+  - rid: 8980149206437855232
   references:
     version: 2
     RefIds:
@@ -1112,7 +1273,7 @@ MonoBehaviour:
         OkImpression: -1
         OkType: -1
         IsCantACT: 0
-        MaxPassivePower: 1
+        MaxPassivePower: 0
         PassiveName: "\u6DE1\u3005\u3068\u3057\u305F\u30ED\u30BC"
         ID: 0
         DurationTurn: -1
@@ -1122,18 +1283,20 @@ MonoBehaviour:
           GrantTiming: 0
           IsSurvivalCondition: 0
           RemoveOnPassiveRemove: 0
-    - rid: 8980149129752084480
-      type: {class: BasePassive, ns: , asm: Assembly-CSharp}
+    - rid: 8980149206437855232
+      type: {class: InterruptCounterPassive, ns: , asm: Assembly-CSharp}
       data:
-        OkImpression: 790
-        OkType: 6
+        OkImpression: 242
+        OkType: 4
         IsCantACT: 0
-        MaxPassivePower: 1
+        MaxPassivePower: 11
         PassiveName: "\u5272\u308A\u8FBC\u307F\u30AB\u30A6\u30F3\u30BF\u30FC"
         ID: 1
         DurationTurn: 1
-        DurationWalk: 0
+        DurationWalk: -1
         VitalLayers: []
+        _attackMultipiler: 2
+        _eyeBonus: 100
 --- !u!114 &78173496
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1177,6 +1340,46 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b66f8990bc717ec4bb3bbcd0c2a747d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _masterList:
+  - rid: 8980149175994810368
+  references:
+    version: 2
+    RefIds:
+    - rid: 8980149175994810368
+      type: {class: BaseWeapon, ns: , asm: Assembly-CSharp}
+      data:
+        id: 0
+        name: "\u30D5\u30EA\u30FC\u30CF\u30F3\u30C9"
+        protocol: 3
+        WeaponSkill:
+          SkillSpiritual: 0
+          _name: "\u63B4\u3093\u3067\u6295\u3052\u308B"
+          _defaultStockCount: 1
+          _stockPower: 1
+          _stockForgetPower: 1
+          CanCancel: 1
+          IsAggressiveCommit: 1
+          CanSelectAggressiveCommit: 0
+          ConsecutivePercentage: 0
+          SKillDidWaitCount: 0
+          IsTLOA: 0
+          PowerSpread: []
+          SkillPower: 0
+          SkillHitPer: 15
+          SkillLevel: 0
+          subEffects: 
+          subVitalLayers: 
+          A_MoveSet: []
+          B_MoveSet: []
+          _defAtk: 0
+          WhatSkill: 0
+          ConsecutiveType: 0
+          ZoneTrait: 0
+          DistributionType: 0
+          PowerRangePercentageDictionary:
+            _list: []
+          HitRangePercentageDictionary:
+            _list: []
 --- !u!1 &90538794
 GameObject:
   m_ObjectHideFlags: 0

@@ -64,7 +64,7 @@ public class BasePassive
     /// <summary>
     ///     PassivePowerの設定値
     /// </summary>
-    public int MaxPassivePower = 1;
+    public int MaxPassivePower = 0;
     /// <summary>
     /// パッシブの名前
     /// </summary>
@@ -87,6 +87,14 @@ public class BasePassive
     ///     この値はパッシブの"重ね掛け" →&lt;思え鳥4&gt;
     /// </summary>
     public int PassivePower { get; private set; }
+
+    /// <summary>
+    /// PassivePowerを上書きする
+    /// </summary>
+    public void SetPassivePower(int value)
+    {
+        PassivePower = value;
+    }
 
     /// <summary>
     ///     パッシブを重ね掛けする。
@@ -180,6 +188,8 @@ public class BasePassive
         }
     }
 
+
+
     /// <summary>
     ///     毎ターンこのパッシブが生存するかどうか(戦闘中)
     /// </summary>
@@ -192,7 +202,7 @@ public class BasePassive
             DurationTurn--;
             if (DurationTurn <= 0)
             {
-                // user からこのパッシブをRemove
+                // userのpassivelist からこのパッシブをRemove
                 user.RemovePassive(this);
                 return; // ここで処理打ち切り
             }

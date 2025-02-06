@@ -927,10 +927,6 @@ MonoBehaviour:
     Target: 0
     RangeWill: 0
     IsActiveCancelInSkillACT: 0
-  skillButtonList:
-  - {fileID: 602005237}
-  skillStockButtonList:
-  - {fileID: 841515318}
   StopFreezeConsecutiveButton_geino: {fileID: 294146446}
   StopFreezeConsecutiveButton_Bassjack: {fileID: 1385335785}
   StopFreezeConsecutiveButton_Sites: {fileID: 1833282123}
@@ -1267,7 +1263,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _masterList:
   - rid: 6711005805807403020
-  - rid: 8980149129752084480
+  - rid: 8980149206437855232
   references:
     version: 2
     RefIds:
@@ -1277,7 +1273,7 @@ MonoBehaviour:
         OkImpression: -1
         OkType: -1
         IsCantACT: 0
-        MaxPassivePower: 1
+        MaxPassivePower: 0
         PassiveName: "\u6DE1\u3005\u3068\u3057\u305F\u30ED\u30BC"
         ID: 0
         DurationTurn: -1
@@ -1287,18 +1283,20 @@ MonoBehaviour:
           GrantTiming: 0
           IsSurvivalCondition: 0
           RemoveOnPassiveRemove: 0
-    - rid: 8980149129752084480
-      type: {class: BasePassive, ns: , asm: Assembly-CSharp}
+    - rid: 8980149206437855232
+      type: {class: InterruptCounterPassive, ns: , asm: Assembly-CSharp}
       data:
-        OkImpression: 790
-        OkType: 6
+        OkImpression: 242
+        OkType: 4
         IsCantACT: 0
-        MaxPassivePower: 1
+        MaxPassivePower: 11
         PassiveName: "\u5272\u308A\u8FBC\u307F\u30AB\u30A6\u30F3\u30BF\u30FC"
         ID: 1
         DurationTurn: 1
-        DurationWalk: 0
+        DurationWalk: -1
         VitalLayers: []
+        _attackMultipiler: 2
+        _eyeBonus: 100
 --- !u!114 &78173496
 MonoBehaviour:
   m_ObjectHideFlags: 0

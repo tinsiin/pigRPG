@@ -182,16 +182,16 @@ public abstract class BaseStates
         return (MyImpression & imp) == imp;
     }
 
-    private BattleManager manager;
+    protected BattleManager manager => Walking.bm;
 
-    public void Managed(BattleManager ma)
+    /*public void Managed(BattleManager ma)
     {
         manager = ma;
     }
     public void LostManaged()
     {
         manager = null;
-    }
+    }*/
 
     [SerializeField] private List<BasePassive> _passiveList;
 
@@ -210,6 +210,104 @@ public abstract class BaseStates
     {
         return _passiveList.Any(pas => pas.ID == id);
     }
+
+    /// <summary>
+    /// 指定したIDのパッシブを取得する。存在しない場合はnullを返す
+    /// </summary>
+    /// <param name="passiveId">取得したいパッシブのID</param>
+    /// <returns>パッシブのインスタンス。存在しない場合はnull</returns>
+    public BasePassive GetPassiveByID(int passiveId)
+    {
+        return _passiveList.FirstOrDefault(p => p.ID == passiveId);
+    }
+
+    /// <summary>
+    ///     パッシブを適用
+    /// </summary>
+    public virtual void ApplyPassive(BasePassive status)
+    {
+        // 条件(OkType,OkImpression) は既にチェック済みならスキップ
+        if (!HasCharacterType(status.OkType)) return;
+        if (!HasCharacterImpression(status.OkImpression)) return;
+
+        // すでに持ってるかどうか
+        var existing = _passiveList.FirstOrDefault(p => p.ID == status.ID);
+        if (existing != null)
+        {
+            // 重ね掛け
+            existing.AddPassivePower(1);
+        }
+        else
+        {
+            // 新規追加
+            _passiveList.Add(status);
+            // パッシブ側のOnApplyを呼ぶ
+            status.OnApply(this);
+        }
+    }
+
+    /// <summary>
+    /// パッシブをIDで除去
+    /// </summary>
+    void RemovePassiveByID(int id)
+    {
+        var passive = PassiveManager.Instance.GetAtID(id);
+        // パッシブがあるか確認
+        if (_passiveList.Remove(passive))
+        {
+            // パッシブ側のOnRemoveを呼ぶ
+            passive.OnRemove(this);
+        }
+    }
+
+    /// <summary>
+    /// パッシブを指定して除去
+    /// </summary>
+    public void RemovePassive(BasePassive passive)
+    {
+        // パッシブがあるか確認
+        if (_passiveList.Remove(passive))
+        {
+            // パッシブ側のOnRemoveを呼ぶ
+            passive.OnRemove(this);
+        }
+    }
+    /// <summary>
+    /// パッシブをidで指定し、存在するかチェックしてから、除去する。
+    /// </summary>
+    /// <param name="passiveId"></param>
+    public void TryRemovePassiveByID(int passiveId)
+    {
+    if (HasPassive(passiveId))
+    {
+        RemovePassiveByID(passiveId);
+    }
+    }
+
+    /// <summary>
+    /// 全パッシブのUpdateTurnSurvivalを呼ぶ ターン経過時パッシブが生存するかどうか
+    /// </summary>
+    void UpdateTurnAllPassiveSurvival()
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.UpdateTurnSurvival(this);
+        }
+    }/// <summary>
+    /// 全パッシブのUpdateWalkSurvivalを呼ぶ 歩行時パッシブが生存するかどうか
+    /// </summary>
+    void UpdateWalkAllPassiveSurvival()
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.UpdateWalkSurvival(this);
+        }
+    }
+
 
     public IReadOnlyList<BaseVitalLayer> VitalLayers => _vitalLaerList;
     /// <summary>
@@ -964,9 +1062,11 @@ public abstract class BaseStates
         }
 
         //割り込みカウンターパッシブなら+100
-        if (HasPassive(1))
+        var CounterPower = GetPassiveByID(1) as InterruptCounterPassive;
+        if (CounterPower != null)
         {
-            eye += 100;
+            
+            eye += CounterPower.EyeBonus;
         }
 
         return eye;
@@ -1018,9 +1118,11 @@ public abstract class BaseStates
         }
 
         //割り込みカウンターパッシブがあるなら二倍の攻撃力
-        if(HasPassive(1))
+                //割り込みカウンターパッシブなら+100
+        var CounterPower = GetPassiveByID(1) as InterruptCounterPassive;
+        if (CounterPower != null)
         {
-            atk *= 2;
+            atk *= CounterPower.AttackMultiplier;
         }
 
 
@@ -1155,6 +1257,15 @@ public abstract class BaseStates
 
         HP -= dmg;
         Debug.Log("攻撃が実行された");
+
+        //もし"攻撃者が"割り込みカウンターパッシブだったらこの攻撃でパッシブは効果半減する。
+        var CounterPower = Atker.GetPassiveByID(1) as InterruptCounterPassive;
+        if (CounterPower != null)
+        {
+            CounterPower.DecayEffects();//割り込みカウンターパッシブ効果半減　sameturnの連続攻撃で発揮する。(パッシブ自体は1ターンで終わる)
+        }
+
+
         return "-+~*⋮¦";
     }
 
@@ -1400,6 +1511,17 @@ private int CalcTransformCountIncrement(int tightenStage)
                     //割り込みカウンターのパッシブ付与しますが、適合するかどうかはそのpassiveの条件次第です。
                     ApplyPassive(PassiveManager.Instance.GetAtID(1));
 
+                    var CounterPower = GetPassiveByID(1);//適合したなら
+                    if (CounterPower != null)
+                    {
+                        var attackerCounterPower = attacker.GetPassiveByID(1);
+                        if(attackerCounterPower != null) //もし攻撃者が割り込みカウンターパッシブなら、
+                        {
+                            //攻撃者の割り込みカウンターパッシブのパワー+1で生成
+                            CounterPower.SetPassivePower(attackerCounterPower.PassivePower +1);
+                        }
+                    }
+
                     //次のターンで攻撃、つまり先約リストの予約を判定する。　
                     if(HasCharacterType(CharacterType.Life))
                     {//生命なら、必ず反撃可能
@@ -1553,8 +1675,11 @@ private int CalcTransformCountIncrement(int tightenStage)
 
     }
     //---------------------------------------------------------------------------------------------FreezeConsecutiveのフラグ、後処理など終わり------------------------------------------------------------
-    
-    
+    /// <summary>
+    /// 死んだ瞬間を判断するためのフラグ
+    /// </summary>
+    bool hasDied =false;
+
     /// <summary>
     ///     死を判定するオーバライド可能な関数
     /// </summary>
@@ -1563,7 +1688,11 @@ private int CalcTransformCountIncrement(int tightenStage)
     {
         if (HP <= 0) 
         {
+            if(!hasDied)
+            {
+            hasDied =true;
             DeathCallBack();
+            }
             return true;
         }
         return false;
@@ -1636,66 +1765,6 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
     }
 
-    /// <summary>
-    ///     パッシブを適用
-    /// </summary>
-    public virtual void ApplyPassive(BasePassive status)
-    {
-        // 条件(OkType,OkImpression) は既にチェック済みならスキップ
-        if (!HasCharacterType(status.OkType)) return;
-        if (!HasCharacterImpression(status.OkImpression)) return;
-
-        // すでに持ってるかどうか
-        var existing = _passiveList.FirstOrDefault(p => p.ID == status.ID);
-        if (existing != null)
-        {
-            // 重ね掛け
-            existing.AddPassivePower(1);
-        }
-        else
-        {
-            // 新規追加
-            _passiveList.Add(status);
-            // パッシブ側のOnApplyを呼ぶ
-            status.OnApply(this);
-        }
-    }
-
-    /// <summary>
-    /// パッシブを除去
-    /// </summary>
-    public virtual void RemovePassive(BasePassive status)
-    {
-        // パッシブがあるか確認
-        if (_passiveList.Remove(status))
-        {
-            // パッシブ側のOnRemoveを呼ぶ
-            status.OnRemove(this);
-        }
-    }
-    /// <summary>
-    /// 全パッシブのUpdateTurnSurvivalを呼ぶ ターン経過時パッシブが生存するかどうか
-    /// </summary>
-    void UpdateTurnAllPassiveSurvival()
-    {
-        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
-        var copy = _passiveList.ToArray();
-        foreach (var pas in copy)
-        {
-            pas.UpdateTurnSurvival(this);
-        }
-    }/// <summary>
-    /// 全パッシブのUpdateWalkSurvivalを呼ぶ 歩行時パッシブが生存するかどうか
-    /// </summary>
-    void UpdateWalkAllPassiveSurvival()
-    {
-        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
-        var copy = _passiveList.ToArray();
-        foreach (var pas in copy)
-        {
-            pas.UpdateWalkSurvival(this);
-        }
-    }
     /// <summary>歩行時のコールバック引数なしの</summary>
     public void OnWalkNoArgument()
     {
@@ -1724,7 +1793,6 @@ private int CalcTransformCountIncrement(int tightenStage)
     {
         TempDamageTurn = 0;
         DeleteConsecutiveATK();
-        LostManaged();
     }
 
     //慣れ補正ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー慣れ補正ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
