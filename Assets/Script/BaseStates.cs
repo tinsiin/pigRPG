@@ -23,6 +23,19 @@ public enum CharacterType
     Machine = 1 << 1,
     Life = 1 << 2 //TLOAそのもの、機械、生命
 }
+/// <summary>
+/// スキルの行動記録　リストで記録する
+/// </summary>
+public class ACTSkillData
+{
+    public bool IsDone;
+    public BaseSkill Skill;
+    public ACTSkillData(bool isdone,BaseSkill skill)
+    {
+        IsDone = isdone;
+        Skill = skill;
+    }
+}
 
 /// <summary>
 ///     物理属性、スキルに依存し、キャラクター達の種別や個人との相性で攻撃の通りが変わる
@@ -183,15 +196,11 @@ public abstract class BaseStates
     }
 
     protected BattleManager manager => Walking.bm;
+    /// <summary>
+    /// キャラクターの行動記録
+    /// </summary>
+    public List<ACTSkillData> skillDatas;
 
-    /*public void Managed(BattleManager ma)
-    {
-        manager = ma;
-    }
-    public void LostManaged()
-    {
-        manager = null;
-    }*/
 
     [SerializeField] private List<BasePassive> _passiveList;
 
@@ -212,7 +221,7 @@ public abstract class BaseStates
     }
 
     /// <summary>
-    /// 指定したIDのパッシブを取得する。存在しない場合はnullを返す
+    /// 所持してるリストの中から指定したIDのパッシブを取得する。存在しない場合はnullを返す
     /// </summary>
     /// <param name="passiveId">取得したいパッシブのID</param>
     /// <returns>パッシブのインスタンス。存在しない場合はnull</returns>
@@ -224,8 +233,10 @@ public abstract class BaseStates
     /// <summary>
     ///     パッシブを適用
     /// </summary>
-    public virtual void ApplyPassive(BasePassive status)
+    public virtual void ApplyPassive(int id)
     {
+        var status = PassiveManager.Instance.GetAtID(id);//idを元にpassiveManagerから取得
+
         // 条件(OkType,OkImpression) は既にチェック済みならスキップ
         if (!HasCharacterType(status.OkType)) return;
         if (!HasCharacterImpression(status.OkImpression)) return;
@@ -1061,6 +1072,16 @@ public abstract class BaseStates
             eye += AGI() / agiPer;
         }
 
+        //パッシブ「食らわせ」による命中低下
+        var HurtDownPower = GetPassiveByID(2);
+        if(HurtDownPower != null)
+        {
+            eye -= 10;
+            eye *= 0.8f;
+        }
+
+
+
         //割り込みカウンターパッシブなら+100
         var CounterPower = GetPassiveByID(1) as InterruptCounterPassive;
         if (CounterPower != null)
@@ -1125,6 +1146,12 @@ public abstract class BaseStates
             atk *= CounterPower.AttackMultiplier;
         }
 
+        //パッシブ「食らわせ」による威力低下
+        var HurtDownPower = GetPassiveByID(2);
+        if(HurtDownPower != null)
+        {
+            atk *= 0.81f;
+        }
 
         return atk;
     }
@@ -1258,11 +1285,26 @@ public abstract class BaseStates
         HP -= dmg;
         Debug.Log("攻撃が実行された");
 
-        //もし"攻撃者が"割り込みカウンターパッシブだったらこの攻撃でパッシブは効果半減する。
+        //もし"攻撃者が"割り込みカウンターパッシブだったら
         var CounterPower = Atker.GetPassiveByID(1) as InterruptCounterPassive;
         if (CounterPower != null)
         {
+            //攻撃者の割り込みカウンターパッシブの威力が下がる
             CounterPower.DecayEffects();//割り込みカウンターパッシブ効果半減　sameturnの連続攻撃で発揮する。(パッシブ自体は1ターンで終わる)
+
+            //割り込みカウンターをされた = さっき「自分は連続攻撃」をしていた
+            //その連続攻撃の追加硬直値分だけ、「食らわせ」というパッシブを食らう。
+            var DurationTurn = skillDatas[skillDatas.Count - 1].Skill.SKillDidWaitCount;//食らうターン
+            if(DurationTurn > 0)//持続ターンが存在すれば、
+            {
+                ApplyPassive(2);//パッシブ、食らわせを入手する。
+                var hurt = GetPassiveByID(2);//適合したなら(適合条件がある)
+                if(hurt != null)
+                {
+                    hurt.DurationTurn = DurationTurn;//持続ターンを入れる
+                }
+            }
+
         }
 
 
@@ -1509,7 +1551,7 @@ private int CalcTransformCountIncrement(int tightenStage)
                     //その三パターンで分かれる。　　最後のパッシブ条件のみ直接割り込みカウンターPassiveの方で設定している。
 
                     //割り込みカウンターのパッシブ付与しますが、適合するかどうかはそのpassiveの条件次第です。
-                    ApplyPassive(PassiveManager.Instance.GetAtID(1));
+                    ApplyPassive(1);
 
                     var CounterPower = GetPassiveByID(1);//適合したなら
                     if (CounterPower != null)
@@ -1559,6 +1601,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         var modifier = SkillSpiritualModifier[(skill.SkillSpiritual, MyImpression)];//スキルの精神属性と自分の精神属性による補正
         var skillPower = skill.SkillPowerCalc(spread) * modifier.GetValue() / 100.0f;
         var txt = "";//メッセージテキスト用
+        var thisAtkTurn = true;
 
         //スキルの持ってる性質を全て処理として実行
 
@@ -1566,7 +1609,6 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             if (IsReactHIT(attacker))
             {
-                var thisAtkTurn = true;
                 //割り込みカウンターの判定
                 if(skill.NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃されてる途中なら
                 {
@@ -1601,10 +1643,10 @@ private int CalcTransformCountIncrement(int tightenStage)
             }
         }
 
-        if (skill.HasType(SkillType.addPassive))
+        if (skill.HasType(SkillType.addPassive))//atktypeがある場合とそうでない場合で、命中率計算を変える？---------------------------------------------------------
         {
             foreach (var id in skill.subEffects)
-                ApplyPassive(PassiveManager.Instance.GetAtID(id));
+                ApplyPassive(id);
         }
 
         if (skill.HasType(SkillType.AddVitalLayer))
@@ -1614,6 +1656,9 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
 
         Debug.Log("ReactionSkill");
+        //ここで攻撃者の攻撃記録を記録する
+        attacker.skillDatas.Add(new ACTSkillData(thisAtkTurn,skill));//発動したのか、何のスキルなのかを記録
+        
         return txt;
     }
 
@@ -1787,6 +1832,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         TempDamageTurn = 0;
         DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
         DecisionSacriFaithAdaptToSkillGrouping();
+        skillDatas = new List<ACTSkillData>();//スキルの行動記録はbm単位で記録する。
         
     }
     public void OnBattleEndNoArgument()

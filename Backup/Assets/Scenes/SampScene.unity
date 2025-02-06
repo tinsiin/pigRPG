@@ -1264,6 +1264,7 @@ MonoBehaviour:
   _masterList:
   - rid: 6711005805807403020
   - rid: 8980149206437855232
+  - rid: 8980149223421378560
   references:
     version: 2
     RefIds:
@@ -1297,6 +1298,18 @@ MonoBehaviour:
         VitalLayers: []
         _attackMultipiler: 2
         _eyeBonus: 100
+    - rid: 8980149223421378560
+      type: {class: BasePassive, ns: , asm: Assembly-CSharp}
+      data:
+        OkImpression: 1019
+        OkType: 5
+        IsCantACT: 0
+        MaxPassivePower: 0
+        PassiveName: "\u98DF\u3089\u308F\u305B"
+        ID: 2
+        DurationTurn: 1
+        DurationWalk: -1
+        VitalLayers: []
 --- !u!114 &78173496
 MonoBehaviour:
   m_ObjectHideFlags: 0
