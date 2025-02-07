@@ -586,11 +586,6 @@ public abstract class BaseStates
         }
     }
     /// <summary>
-    /// ケレケレ　外連味により増減するステータス
-    /// </summary>
-    public float KereKere;
-
-    /// <summary>
     ///     このキャラクターの名前
     /// </summary>
     public string CharacterName;
@@ -699,7 +694,13 @@ public abstract class BaseStates
     public bool RecovelyBattleField(int nowTurn)
     {
         var difference = Math.Abs(nowTurn - tmp_EncountTurn);//前ターンと今回のターンの差異から経過ターン
-        tmp_EncountTurn = nowTurn;//一時保存
+        //もし前のめりならば、二倍で進む
+        if(manager.IsVanguard(this))
+        {
+            difference *= 2;
+        }
+
+        tmp_EncountTurn = nowTurn;//今回のターンを次回の差異計算のために一時保存
         if ((recoveryTurn += difference) >= maxRecoveryTurn + tmpTurnsToAdd)//累計ターン経過が最大値を超えたら
         {
             //ここでrecovelyTurnを初期化すると　リストで一括処理した時にカウントアップだけじゃなくて、
@@ -772,15 +773,15 @@ public abstract class BaseStates
                 // このレイヤーは破壊された
                 _vitalLaerList.RemoveAt(i);
                 // リストを削除したので、 i はインクリメントしない（要注意）
-
                 //破壊慣れまたは破壊負け
+                var kerekere = TenDayValues.GetValueOrZero(TenDayAbility.KereKere);
                 if (skillPhy == PhysicalProperty.heavy)//暴断なら破壊慣れ
                 {
-                    dmg += dmg * 0.015f * KereKere;
+                    dmg += dmg * 0.015f * kerekere;
                 }
                 if (skillPhy == PhysicalProperty.volten)//vol天なら破壊負け
                 {
-                    dmg -= dmg * 0.022f * (atker.b_ATK - KereKere);
+                    dmg -= dmg * 0.022f * (atker.b_ATK - kerekere);
                     //b_atk < kerekereになった際、減らずに逆に威力が増えるので、そういう場合の演出差分が必要
                 }
             }
@@ -1259,6 +1260,31 @@ public abstract class BaseStates
         }
         return def;//そのまま返す。
     }
+    /// <summary>
+    /// ダメージを渡し、がむしゃらの補正をかけて返す
+    /// </summary>
+    float GetFrenzyBoost(BaseStates atker,float dmg)
+    {
+        var boost =1.0f;
+        var skill = atker.NowUseSkill;
+        if(skill.NowConsecutiveATKFromTheSecondTimeOnward())//2回目以降の連続攻撃なら
+        {
+            var StrongFootEye = (EYE() + AGI()) /2f;
+            var WeekEye = atker.EYE();
+            var boostCoef = 0f;//ブースト係数
+
+            if(StrongFootEye > WeekEye)//ちゃんと被害者側の命中回避平均値が攻撃者の命中より高い場合に限定する
+            {
+                boostCoef = Mathf.Floor((StrongFootEye - WeekEye) / 5);
+                boost += boostCoef * 0.01f;
+                for(int i =0;i<skill.ATKCountUP-1;i++)//初回=単回攻撃の恐れがある場合は、がむしゃらは発動しないので、二回目から一回ずつ乗算されるようにしたいから-1
+                {
+                    dmg *= boost;
+                }
+            }
+        }
+        return dmg;//連続攻撃でないなら、そのまま返す
+    }
 
     /// <summary>
     ///     オーバライド可能なダメージ関数
@@ -1276,12 +1302,16 @@ public abstract class BaseStates
         if(NowPower > ThePower.lowlow)//たるくなければ基礎山形補正がある。
         dmg = GetBaseCalcDamageWithPlusMinus22Percent(dmg);//基礎山型補正
 
+        //がむしゃらな補正
+        dmg = GetFrenzyBoost(Atker,dmg);
+
         //慣れ補正
         dmg *= AdaptToSkill(Atker, skill, dmg);
 
         //vitalLayerを通る処理
         dmg = BarrierLayers(dmg, Atker);
 
+        if(dmg < 0)dmg = 0;//0未満は0にする　逆に回復してしまうのを防止
         HP -= dmg;
         Debug.Log("攻撃が実行された");
 
@@ -1571,7 +1601,7 @@ private int CalcTransformCountIncrement(int tightenStage)
                         //攻撃を食らった際、中断不可能なカウンターまたはfreezeConecutiveの場合、武器スキルでしか返せない。
                         var isfreeze = false;
                         if(NowUseSkill.NowConsecutiveATKFromTheSecondTimeOnward() && NowUseSkill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive) ||
-                        NowUseSkill.IsTriggering()) 
+                        NowUseSkill.IsTriggering) 
                         {
                         NowUseSkill = NowUseWeapon.WeaponSkill;
                         isfreeze = true;
@@ -1635,6 +1665,11 @@ private int CalcTransformCountIncrement(int tightenStage)
             }
         }
 
+        if(skill.HasType(SkillType.DeathHeal))
+        {
+            Angel();//降臨　アイコンがノイズで満たされるようなエフェクト
+        }
+
         if (skill.HasType(SkillType.Heal))
         {
             if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
@@ -1654,6 +1689,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             foreach (var id in skill.subVitalLayers)
                 ApplyVitalLayer(VitalLayerManager.Instance.GetAtID(id));
         }
+
 
         Debug.Log("ReactionSkill");
         //ここで攻撃者の攻撃記録を記録する
@@ -1741,6 +1777,14 @@ private int CalcTransformCountIncrement(int tightenStage)
             return true;
         }
         return false;
+    }
+    /// <summary>
+    /// 復活する際の関数
+    /// </summary>
+    public virtual void Angel()
+    {
+        hasDied =false;
+        HP = float.Epsilon;//生きてるか生きてないか=Angel
     }
     /// <summary>
     /// 死亡時のコールバック　SkillsTmpResetでスキルの方からリセットできるような簡単じゃない奴をここで処理する。
@@ -2740,7 +2784,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// 戦闘規格ごとのデフォルトa,bの狙い流れ
     /// </summary>
     public static readonly Dictionary<BattleProtocol, (AimStyle aStyle,float a,AimStyle bStyle)> DefaultDefensePatternPerProtocol =
-        new Dictionary<BattleProtocol, (AimStyle aStyle,float a,AimStyle bStyle)>
+        new ()
         {
             {BattleProtocol.LowKey,(AimStyle.AcrobatMinor,0.6f,AimStyle.Doublet)},
             {BattleProtocol.Tricky,(AimStyle.Duster,0.9f,AimStyle.QuadStrike)},

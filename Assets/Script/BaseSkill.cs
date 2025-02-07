@@ -265,8 +265,15 @@ public class BaseSkill
     private int _hitCount;    // スキルがヒットした回数
     private int _hitConsecutiveCount;//スキルが連続ヒットした回数
     private int _triggerCount;//発動への−カウント　このカウント分連続でやらないと発動しなかったりする　重要なのは連続でやらなくても　一気にまたゼロからになるかはスキル次第
+    [SerializeField]
     private int _triggerCountMax;//発動への−カウント　の指標
+    /// <summary>
+    /// 発動カウント中に他のスキルを選んだ際に巻き戻るカウントの量
+    /// </summary>
+    [SerializeField]
+    private int _triggerRollBackCount;
     private int _atkCountUP;//連続攻撃中のインデックス的回数
+    [SerializeField]
     private float _RandomConsecutivePer;//連続実行の確率判定のパーセント
 
     //stockpile用　最大値はランダム確率の連続攻撃と同じように、ATKCountを参照する。
@@ -431,22 +438,32 @@ public class BaseSkill
         //発動カウントが0に設定されている場合、そのまま実行される。
         return -1;
     }
+    /// <summary>
+    /// トリガーカウントをスキルの巻き戻しカウント数に応じて巻き戻す処理
+    /// </summary>
+    public void RollBackTrigger()
+    {
+        _triggerCount += _triggerRollBackCount;
+        if (_triggerCount > _triggerCountMax)_triggerCount = _triggerCountMax;//最大値を超えないようにする
+    }
 
     /// <summary>
     /// 発動カウントが実行中かどうかを判定する
     /// </summary>
     /// <returns>発動カウントが開始済みで、まだカウント中ならtrue、それ以外はfalse</returns>
-    public virtual bool IsTriggering()
+    public bool IsTriggering
     {
-        // 発動カウントが0以下の場合は即時実行なのでfalse
-        if (_triggerCountMax <= 0) return false;
-        
-        // カウントが開始されていない場合はfalse
-        // カウントが開始されると_triggerCountは_triggerCountMaxより小さくなる
-        if (_triggerCount >= _triggerCountMax) return false;
-        
-        // カウントが開始済みで、まだカウントが残っている場合はtrue
-        return _triggerCount  > -1;
+        get{
+            // 発動カウントが0以下の場合は即時実行なのでfalse
+            if (_triggerCountMax <= 0) return false;
+            
+            // カウントが開始されていない場合はfalse
+            // カウントが開始されると_triggerCountは_triggerCountMaxより小さくなる
+            if (_triggerCount >= _triggerCountMax) return false;
+            
+            // カウントが開始済みで、まだカウントが残っている場合はtrue
+            return _triggerCount  > -1;
+        }
     }
 
     /// <summary>
@@ -510,7 +527,7 @@ public class BaseSkill
     /// <summary>
     /// 現在の連続攻撃回数のindex
     /// </summary>
-    public virtual int ATKCountUP => _atkCountUP;
+    public int ATKCountUP => _atkCountUP;
 
     /// <summary>
     /// 攻撃回数カウントをリセットする
@@ -614,6 +631,7 @@ public class BaseSkill
     {
         ResetStock();
         ResetAtkCountUp();
+        ReturnTrigger();
     }
 
     /// <summary>

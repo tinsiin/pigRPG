@@ -296,6 +296,101 @@ public class PlayersStates:MonoBehaviour
         Debug.Log(id + "をPlayerStatesに記録");
     }
 
+    //パワーのが歩行時にどう変化するかのSpiritualPropertyによる切り替え対応辞書
+    public Dictionary<SpiritualProperty,Dictionary<ThePower,(float upChance,float downChance)>> WalkToPowerTransitionByCharacterImpression = new()
+    {
+        {
+            SpiritualProperty.doremis,new()
+            {
+                {ThePower.high, (0.5f,0.5f)},
+                {ThePower.medium, (0.5f,0.5f)},
+                {ThePower.low, (0.5f,0.5f)},
+                {ThePower.lowlow, (0.5f,0.5f)},
+            }
+        },
+        {
+            SpiritualProperty.pillar,new()
+            {
+                {ThePower.high, (0.5f,0.5f)},
+                {ThePower.medium, (0.5f,0.5f)},
+                {ThePower.low, (0.5f,0.5f)},
+                {ThePower.lowlow, (0.5f,0.5f)},
+            }
+        },
+        {
+            SpiritualProperty.kindergarden,new()
+            {
+                {ThePower.high, (0.5f,0.5f)},
+                {ThePower.medium, (0.5f,0.5f)},
+                {ThePower.low, (0.5f,0.5f)},
+                {ThePower.lowlow, (0.5f,0.5f)},
+            }
+        },
+        {
+            SpiritualProperty.liminalwhitetile,new()
+            {
+                {ThePower.high, (0.5f,0.5f)},
+                {ThePower.medium, (0.5f,0.5f)},
+                {ThePower.low, (0.5f,0.5f)},
+                {ThePower.lowlow, (0.5f,0.5f)},
+            }
+        },
+        {
+            SpiritualProperty.sacrifaith,new()
+            {
+                {ThePower.high, (0.5f,0.5f)},
+                {ThePower.medium, (0.5f,0.5f)},
+                {ThePower.low, (0.5f,0.5f)},
+                {ThePower.lowlow, (0.5f,0.5f)},
+            }
+        },
+        {
+            SpiritualProperty.cquiest,new()
+            {
+                {ThePower.high, (0.5f,0.5f)},
+                {ThePower.medium, (0.5f,0.5f)},
+                {ThePower.low, (0.5f,0.5f)},
+                {ThePower.lowlow, (0.5f,0.5f)},
+            }
+        },
+        {
+            SpiritualProperty.pysco,new()
+            {
+                {ThePower.high, (0.5f,0.5f)},
+                {ThePower.medium, (0.5f,0.5f)},
+                {ThePower.low, (0.5f,0.5f)},
+                {ThePower.lowlow, (0.5f,0.5f)},
+            }
+        },
+        {
+            SpiritualProperty.godtier,new()
+            {
+                {ThePower.high, (0.5f,0.5f)},
+                {ThePower.medium, (0.5f,0.5f)},
+                {ThePower.low, (0.5f,0.5f)},
+                {ThePower.lowlow, (0.5f,0.5f)},
+            }
+        },
+        {
+            SpiritualProperty.baledrival,new()
+            {
+                {ThePower.high, (0.5f,0.5f)},
+                {ThePower.medium, (0.5f,0.5f)},
+                {ThePower.low, (0.5f,0.5f)},
+                {ThePower.lowlow, (0.5f,0.5f)},
+            }
+        },
+        {
+            SpiritualProperty.devil,new()
+            {
+                {ThePower.high, (0.5f,0.5f)},
+                {ThePower.medium, (0.5f,0.5f)},
+                {ThePower.low, (0.5f,0.5f)},
+                {ThePower.lowlow, (0.5f,0.5f)},
+            }
+        },
+    };
+
     //中央決定値など---------------------------------------------------------中央決定値
     /// <summary>
     /// 中央決定値　空洞爆発の値　割り込みカウンター用

@@ -363,6 +363,7 @@ public class BattleManager
         while (!(Charas = Charas.Where(chara => chara.RecovelyBattleField(BattleTurnCount)).ToList()).Any())
         {
             BattleTurnCount++;//全員再行動までのクールタイム中なら、全員硬直したまま時間が進む
+            //メッセージで戦闘は膠着している　みたいなのを出すと雰囲気出るよね
         }
         return Charas;
     }
@@ -708,6 +709,19 @@ public class BattleManager
     {
         MessageDropper.Instance.CreateMessage(UniqueTopMessage + txt);
     }
+    /// <summary>
+    /// 発動カウント時にTriggerACTでカウントされるスキル以外のスキルの発動カウントが巻き戻る
+    /// </summary>
+    void OtherSkillsTriggerRollBack()
+    {
+        foreach (var skill in Acter.SkillList)
+        {
+            if (skill.IsTriggering)//トリガーされてる最中なら、
+            {
+                skill.RollBackTrigger();//巻き戻す
+            }
+        }
+    }
 
     /// <summary>
     /// 発動カウントを実行
@@ -720,12 +734,34 @@ public class BattleManager
         {
             Acter.FreezeSkill();//このスキルがキャンセル不可能として俳優に凍結される。
         }
-        CreateBattleMessage($"{skill.SkillName}の発動カウント！残り{count}回。");//発動カウントのメッセージ
-
+        //他のスキルの発動カウントを巻き戻す
+        OtherSkillsTriggerRollBack();
+        //発動カウントのメッセージ
+        CreateBattleMessage($"{skill.SkillName}の発動カウント！残り{count}回。");
         //発動カウント時はスキルの複数回連続実行がありえないから、普通にターンが進む
         NextTurn(true);
 
         return ACTPop();
+    }
+    /// <summary>
+    /// 慣れフラットロゼの泉水由来の発生確率
+    /// </summary>
+    /// <returns></returns>
+    float GetCoolnessFlatRozeChance()
+    {
+        var coolPower = Acter.TenDayValues.GetValueOrZero(TenDayAbility.SpringWater);//泉水取得
+
+        return Mathf.Floor(coolPower / 16.7f) * 0.01f;
+    }
+    /// <summary>
+    /// 慣れフラットロゼの泉水由来の命中補正
+    /// </summary>
+    /// <returns></returns>
+    float GetCoolnesFlatRozePower()
+    {
+        var coolPower = Acter.TenDayValues.GetValueOrZero(TenDayAbility.SpringWater);//泉水取得
+
+        return coolPower * 0.005f;
     }
     /// <summary>
     /// 慣れフラットロゼ用の発生確率の計算　引数にスキル命中率
@@ -738,6 +774,7 @@ public class BattleManager
     /// <returns>最終パーセント(0～27)</returns>
     float Ideal50or60Easing(float x, float alpha = 4.3f)
     {
+        float CoolChance = GetCoolnessFlatRozeChance();//泉水による補正
         // 1) 0～100 にクランプ
         x = Mathf.Clamp(x, 0f, 100f);
 
@@ -756,7 +793,7 @@ public class BattleManager
         if (d >= bc)
         {
             // (C) d >= 25 => 0%
-            return 0f;
+            return 0f + CoolChance;
         }
         else if (d >= ab)
         {
@@ -764,7 +801,7 @@ public class BattleManager
             //   12 => 4.44
             //   25 => 0
             float t = (d - ab) / (bc - ab); // 0～1
-            return Mathf.Lerp(4.44f, 0f, t);
+            return Mathf.Lerp(4.44f, 0f, t)+CoolChance;
         }
         else
         {
@@ -794,7 +831,7 @@ public class BattleManager
             // 必要に応じて clamp
             // val = Mathf.Clamp(val, 0f, 27f);
 
-            return val;
+            return val+CoolChance;
         }
     }
     /// <summary>
@@ -906,7 +943,7 @@ public class BattleManager
             new()
             {
                 eada = whatModify.eye,
-                modify = 1.8f,
+                modify = 1.6f + GetCoolnesFlatRozePower(),
                 memo = "ロゼ瞳"
             },
             new()
