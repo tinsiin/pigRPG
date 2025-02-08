@@ -12,6 +12,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine.Rendering.Universal;
 using Mono.Cecil.Cil;
 using TMPro;
+using UnityEditor;
 
 /// <summary>
 /// 戦闘の先手が起ったかどうか
@@ -690,14 +691,20 @@ public class BattleManager
             if (ActerFaction == WhichGroup.alliy)
             {
                 MessageDropper.Instance.CreateMessage("死んだ");
+                PlayersStates.Instance.PlayersOnLost();
             }
             else
             {
                 MessageDropper.Instance.CreateMessage("勝ち抜いた");
+                PlayersStates.Instance.PlayersOnWin();
             }
         }
-        if (RunOut) MessageDropper.Instance.CreateMessage("逃げた");
+        if (RunOut) 
+        {
+            MessageDropper.Instance.CreateMessage("逃げた");
+            PlayersStates.Instance.PlayersOnRunOut();
 
+        }
         OnBattleEnd();
         return TabState.walk;
     }

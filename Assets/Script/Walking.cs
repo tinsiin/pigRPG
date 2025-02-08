@@ -126,6 +126,9 @@ public class Walking : MonoBehaviour
         //ps.AddProgress(footnumber); //進行度を増やす。
         StageDataUpdate();
 
+        //主人公達の歩行時の処理
+        ps.PlayersOnWalks();
+
         //エンカウント
         Encount();
 

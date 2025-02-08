@@ -534,6 +534,9 @@ MonoBehaviour:
     _skillList:
     - SkillSpiritual: 0
       _name: "\u30C6\u30B9\u30C8\u30B9\u30AD\u30EB"
+      _triggerCountMax: 0
+      _triggerRollBackCount: 0
+      _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
@@ -568,7 +571,6 @@ MonoBehaviour:
     b_b_agi: 4
     TenDayValues:
       _list: []
-    KereKere: 0
     CharacterName: "\u30B8\u30FC\u30CE"
     ImpressionStringName: 
     NowUseWeapon:
@@ -578,6 +580,9 @@ MonoBehaviour:
       WeaponSkill:
         SkillSpiritual: 0
         _name: 
+        _triggerCountMax: 0
+        _triggerRollBackCount: 0
+        _RandomConsecutivePer: 0
         _defaultStockCount: 1
         _stockPower: 1
         _stockForgetPower: 1
@@ -609,6 +614,9 @@ MonoBehaviour:
     NowUseSkill:
       SkillSpiritual: 0
       _name: 
+      _triggerCountMax: 0
+      _triggerRollBackCount: 0
+      _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
@@ -641,6 +649,9 @@ MonoBehaviour:
     FreezeUseSkill:
       SkillSpiritual: 0
       _name: 
+      _triggerCountMax: 0
+      _triggerRollBackCount: 0
+      _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
@@ -690,7 +701,6 @@ MonoBehaviour:
     b_b_agi: 4
     TenDayValues:
       _list: []
-    KereKere: 0
     CharacterName: 
     ImpressionStringName: 
     NowUseWeapon:
@@ -700,6 +710,9 @@ MonoBehaviour:
       WeaponSkill:
         SkillSpiritual: 0
         _name: 
+        _triggerCountMax: 0
+        _triggerRollBackCount: 0
+        _RandomConsecutivePer: 0
         _defaultStockCount: 1
         _stockPower: 1
         _stockForgetPower: 1
@@ -731,6 +744,9 @@ MonoBehaviour:
     NowUseSkill:
       SkillSpiritual: 0
       _name: 
+      _triggerCountMax: 0
+      _triggerRollBackCount: 0
+      _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
@@ -763,6 +779,9 @@ MonoBehaviour:
     FreezeUseSkill:
       SkillSpiritual: 0
       _name: 
+      _triggerCountMax: 0
+      _triggerRollBackCount: 0
+      _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
@@ -814,7 +833,6 @@ MonoBehaviour:
       _list:
       - key: 0
         value: 0
-    KereKere: 0
     CharacterName: 
     ImpressionStringName: 
     NowUseWeapon:
@@ -824,6 +842,9 @@ MonoBehaviour:
       WeaponSkill:
         SkillSpiritual: 0
         _name: 
+        _triggerCountMax: 0
+        _triggerRollBackCount: 0
+        _RandomConsecutivePer: 0
         _defaultStockCount: 1
         _stockPower: 1
         _stockForgetPower: 1
@@ -855,6 +876,9 @@ MonoBehaviour:
     NowUseSkill:
       SkillSpiritual: 0
       _name: 
+      _triggerCountMax: 0
+      _triggerRollBackCount: 0
+      _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
@@ -889,6 +913,9 @@ MonoBehaviour:
     FreezeUseSkill:
       SkillSpiritual: 0
       _name: 
+      _triggerCountMax: 0
+      _triggerRollBackCount: 0
+      _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
@@ -1016,7 +1043,6 @@ MonoBehaviour:
         b_b_agi: 4
         TenDayValues:
           _list: []
-        KereKere: 0
         CharacterName: 
         ImpressionStringName: 
         NowUseWeapon:
@@ -1026,6 +1052,9 @@ MonoBehaviour:
           WeaponSkill:
             SkillSpiritual: 0
             _name: 
+            _triggerCountMax: 0
+            _triggerRollBackCount: 0
+            _RandomConsecutivePer: 0
             _defaultStockCount: 1
             _stockPower: 1
             _stockForgetPower: 1
@@ -1057,6 +1086,9 @@ MonoBehaviour:
         NowUseSkill:
           SkillSpiritual: 0
           _name: 
+          _triggerCountMax: 0
+          _triggerRollBackCount: 0
+          _RandomConsecutivePer: 0
           _defaultStockCount: 1
           _stockPower: 1
           _stockForgetPower: 1
@@ -1089,6 +1121,9 @@ MonoBehaviour:
         FreezeUseSkill:
           SkillSpiritual: 0
           _name: 
+          _triggerCountMax: 0
+          _triggerRollBackCount: 0
+          _RandomConsecutivePer: 0
           _defaultStockCount: 1
           _stockPower: 1
           _stockForgetPower: 1
@@ -1142,7 +1177,6 @@ MonoBehaviour:
         b_b_agi: 4
         TenDayValues:
           _list: []
-        KereKere: 0
         CharacterName: 
         ImpressionStringName: 
         NowUseWeapon:
@@ -1152,6 +1186,9 @@ MonoBehaviour:
           WeaponSkill:
             SkillSpiritual: 0
             _name: 
+            _triggerCountMax: 0
+            _triggerRollBackCount: 0
+            _RandomConsecutivePer: 0
             _defaultStockCount: 1
             _stockPower: 1
             _stockForgetPower: 1
@@ -1183,6 +1220,9 @@ MonoBehaviour:
         NowUseSkill:
           SkillSpiritual: 0
           _name: 
+          _triggerCountMax: 0
+          _triggerRollBackCount: 0
+          _RandomConsecutivePer: 0
           _defaultStockCount: 1
           _stockPower: 1
           _stockForgetPower: 1
@@ -1212,6 +1252,9 @@ MonoBehaviour:
         FreezeUseSkill:
           SkillSpiritual: 0
           _name: 
+          _triggerCountMax: 0
+          _triggerRollBackCount: 0
+          _RandomConsecutivePer: 0
           _defaultStockCount: 1
           _stockPower: 1
           _stockForgetPower: 1
@@ -1367,6 +1410,9 @@ MonoBehaviour:
         WeaponSkill:
           SkillSpiritual: 0
           _name: "\u63B4\u3093\u3067\u6295\u3052\u308B"
+          _triggerCountMax: 0
+          _triggerRollBackCount: 0
+          _RandomConsecutivePer: 0
           _defaultStockCount: 1
           _stockPower: 1
           _stockForgetPower: 1

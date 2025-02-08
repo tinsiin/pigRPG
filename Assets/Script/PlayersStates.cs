@@ -1,4 +1,4 @@
-﻿using RandomExtensions;
+using RandomExtensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-
+using static CommonCalc;
 public class ButtonAndSkillIDHold
 {
     public Button button;
@@ -295,101 +295,40 @@ public class PlayersStates:MonoBehaviour
         NowAreaID = id;
         Debug.Log(id + "をPlayerStatesに記録");
     }
-
-    //パワーのが歩行時にどう変化するかのSpiritualPropertyによる切り替え対応辞書
-    public Dictionary<SpiritualProperty,Dictionary<ThePower,(float upChance,float downChance)>> WalkToPowerTransitionByCharacterImpression = new()
+    /// <summary>
+    /// 主人公達の勝利時のコールバック
+    /// </summary>
+    public void PlayersOnWin()
     {
-        {
-            SpiritualProperty.doremis,new()
-            {
-                {ThePower.high, (0.5f,0.5f)},
-                {ThePower.medium, (0.5f,0.5f)},
-                {ThePower.low, (0.5f,0.5f)},
-                {ThePower.lowlow, (0.5f,0.5f)},
-            }
-        },
-        {
-            SpiritualProperty.pillar,new()
-            {
-                {ThePower.high, (0.5f,0.5f)},
-                {ThePower.medium, (0.5f,0.5f)},
-                {ThePower.low, (0.5f,0.5f)},
-                {ThePower.lowlow, (0.5f,0.5f)},
-            }
-        },
-        {
-            SpiritualProperty.kindergarden,new()
-            {
-                {ThePower.high, (0.5f,0.5f)},
-                {ThePower.medium, (0.5f,0.5f)},
-                {ThePower.low, (0.5f,0.5f)},
-                {ThePower.lowlow, (0.5f,0.5f)},
-            }
-        },
-        {
-            SpiritualProperty.liminalwhitetile,new()
-            {
-                {ThePower.high, (0.5f,0.5f)},
-                {ThePower.medium, (0.5f,0.5f)},
-                {ThePower.low, (0.5f,0.5f)},
-                {ThePower.lowlow, (0.5f,0.5f)},
-            }
-        },
-        {
-            SpiritualProperty.sacrifaith,new()
-            {
-                {ThePower.high, (0.5f,0.5f)},
-                {ThePower.medium, (0.5f,0.5f)},
-                {ThePower.low, (0.5f,0.5f)},
-                {ThePower.lowlow, (0.5f,0.5f)},
-            }
-        },
-        {
-            SpiritualProperty.cquiest,new()
-            {
-                {ThePower.high, (0.5f,0.5f)},
-                {ThePower.medium, (0.5f,0.5f)},
-                {ThePower.low, (0.5f,0.5f)},
-                {ThePower.lowlow, (0.5f,0.5f)},
-            }
-        },
-        {
-            SpiritualProperty.pysco,new()
-            {
-                {ThePower.high, (0.5f,0.5f)},
-                {ThePower.medium, (0.5f,0.5f)},
-                {ThePower.low, (0.5f,0.5f)},
-                {ThePower.lowlow, (0.5f,0.5f)},
-            }
-        },
-        {
-            SpiritualProperty.godtier,new()
-            {
-                {ThePower.high, (0.5f,0.5f)},
-                {ThePower.medium, (0.5f,0.5f)},
-                {ThePower.low, (0.5f,0.5f)},
-                {ThePower.lowlow, (0.5f,0.5f)},
-            }
-        },
-        {
-            SpiritualProperty.baledrival,new()
-            {
-                {ThePower.high, (0.5f,0.5f)},
-                {ThePower.medium, (0.5f,0.5f)},
-                {ThePower.low, (0.5f,0.5f)},
-                {ThePower.lowlow, (0.5f,0.5f)},
-            }
-        },
-        {
-            SpiritualProperty.devil,new()
-            {
-                {ThePower.high, (0.5f,0.5f)},
-                {ThePower.medium, (0.5f,0.5f)},
-                {ThePower.low, (0.5f,0.5f)},
-                {ThePower.lowlow, (0.5f,0.5f)},
-            }
-        },
-    };
+        geino.OnAllyWinCallBack();
+        sites.OnAllyWinCallBack();
+        noramlia.OnAllyWinCallBack();
+    }
+    /// <summary>
+    /// 主人公達の負けたときのコールバック
+    /// </summary>
+    public void PlayersOnLost()
+    {
+        geino.OnAllyLostCallBack();
+        sites.OnAllyLostCallBack();
+        noramlia.OnAllyLostCallBack();
+    }
+    /// <summary>
+    /// 主人公達の逃げ出した時のコールバック
+    /// </summary>
+    public void PlayersOnRunOut()
+    {
+        geino.OnAllyRunOutCallBack();
+        sites.OnAllyRunOutCallBack();
+        noramlia.OnAllyRunOutCallBack();
+    }
+
+    public void PlayersOnWalks()
+    {
+        geino.OnWalkCallBack();
+        sites.OnWalkCallBack();
+        noramlia.OnWalkCallBack();
+    }
 
     //中央決定値など---------------------------------------------------------中央決定値
     /// <summary>
@@ -483,6 +422,579 @@ public class AllyClass : BaseStates
     {
         Debug.Log("TurnOnDeleteMyFreezeConsecutiveFlag を呼び出しました。");
         IsDeleteMyFreezeConsecutive = IsNeedDeleteMyFreezeConsecutive();
+    }
+    /// <summary>
+    /// 味方キャラの歩く際に呼び出されるコールバック
+    /// </summary>
+    public void OnWalkCallBack()
+    {
+        TransitionPowerOnWalkByCharacterImpression();
+    }
+    public void OnAllyWinCallBack()
+    {
+        TransitionPowerOnBattleWinByCharacterImpression();
+    }
+    public void OnAllyLostCallBack()
+    {
+        TransitionPowerOnBattleLostByCharacterImpression();
+    }
+    public void OnAllyRunOutCallBack()
+    {
+        TransitionPowerOnBattleRunOutByCharacterImpression();
+    }
+    
+    /// <summary>
+    /// キャラクターのパワーが歩行によって変化する関数
+    /// </summary>
+    void TransitionPowerOnWalkByCharacterImpression()
+    {
+        switch(MyImpression)
+        {
+            case SpiritualProperty.doremis:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(35))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(25))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        if(rollper(6))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(6))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        if(rollper(2.7f))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(7.55f))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.pillar:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(2.23f))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(5))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        if(rollper(20))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(6.09f))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        if(rollper(15))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(8))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+
+                break;
+            case SpiritualProperty.kindergarden:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(25))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(31))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        if(rollper(28))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(25))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+
+                        if(rollper(20))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(30))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.liminalwhitetile:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(17))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(3))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        if(rollper(3.1f))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(13))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+
+                        if(rollper(2))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(40))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.sacrifaith:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        //不変
+                    case ThePower.medium:
+                        if(rollper(14))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(20))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(26))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.cquiest:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(14))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(3))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        if(rollper(3.1f))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(13))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(4.3f))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.pysco:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(77.77f))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(6.7f))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        if(rollper(3))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(90))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+
+                        if(rollper(10))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(80))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.godtier:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(4.26f))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(3))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        if(rollper(30))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(28))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+
+                        if(rollper(8))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(100))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.baledrival:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(9))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(25))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        if(rollper(11))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(26.5f))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+
+                        if(rollper(8))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(50))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.devil:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(5))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(6))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        if(rollper(4.1f))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(15))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+
+                        if(rollper(7))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(22))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+        }
+    }
+    /// <summary>
+    /// キャラクターのパワーが勝利時にどう変化するか
+    /// </summary>
+    void TransitionPowerOnBattleWinByCharacterImpression()
+    {
+        switch(MyImpression)
+        {
+            case SpiritualProperty.doremis:
+                switch(NowPower)
+                {
+                    case ThePower.lowlow:
+                        NowPower = ThePower.medium;
+                        break;
+                }
+                break;
+            case SpiritualProperty.pillar:
+                switch(NowPower)
+                {
+                    case ThePower.low:
+                        NowPower =ThePower.medium;
+                        break;
+                    default:
+                        NowPower = ThePower.high;
+                        break;
+                }
+                break;
+            case SpiritualProperty.kindergarden:
+                NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.medium,ThePower.low,ThePower.lowlow,
+                ThePower.high, ThePower.medium,ThePower.low,});//←三つは、lowlowの確率を下げるため
+                break;
+            case SpiritualProperty.liminalwhitetile:
+            case SpiritualProperty.sacrifaith:
+            case SpiritualProperty.cquiest:
+                switch(NowPower)
+                {
+                    case ThePower.low:
+                        NowPower = ThePower.medium;
+                        break;
+                    case ThePower.lowlow:
+                        NowPower = ThePower.low;
+                        break;
+                }
+                break;
+            case SpiritualProperty.godtier:
+                switch(NowPower)
+                {
+                    case ThePower.lowlow:
+                        NowPower = ThePower.medium;
+                        break;
+                    default:
+                        NowPower = ThePower.high;
+                    break;
+                }
+                break;
+            case SpiritualProperty.baledrival:
+                NowPower = ThePower.high;
+                break;
+            case SpiritualProperty.devil:
+                switch(NowPower)
+                {
+                    case ThePower.medium:
+                        NowPower = ThePower.high;
+                        break;
+                    case ThePower.low:
+                        NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.medium});
+                        break;
+                    case ThePower.lowlow:
+                        NowPower = ThePower.medium;
+                        break;
+                }
+                break;
+        }
+    }
+    /// <summary>
+    /// キャラクターのパワーが負けたときに(死んだときに)変化する関数
+    /// </summary>
+    void TransitionPowerOnBattleLostByCharacterImpression()
+    {
+        switch(MyImpression)
+        {
+            case SpiritualProperty.pillar:
+                if (NowPower != ThePower.low)
+                {
+                    NowPower = ThePower.high;
+                }
+                break;
+            case SpiritualProperty.kindergarden:
+                NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.medium,ThePower.low,ThePower.lowlow,
+                ThePower.high, ThePower.medium,ThePower.low,});//←三つは、lowlowの確率を下げるため
+                break;
+            case SpiritualProperty.liminalwhitetile:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                    case ThePower.medium:
+                        NowPower = ThePower.low;
+                        break;
+                    case ThePower.low:
+                        NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.lowlow, ThePower.low});
+                        break;
+                    case ThePower.lowlow:
+                        NowPower = ThePower.low;
+                    break;
+                }
+                break;
+            case SpiritualProperty.sacrifaith:
+                NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.medium});
+                break;
+            case SpiritualProperty.cquiest:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        NowPower = ThePower.lowlow;
+                        break;
+                }
+                break;
+            case SpiritualProperty.baledrival:
+                NowPower = ThePower.lowlow;
+                break;
+            case SpiritualProperty.devil:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.medium});
+                        break;
+                    case ThePower.medium:
+                        NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.low, ThePower.medium,ThePower.lowlow});
+                        break;
+                    case ThePower.low:
+                        NowPower = ThePower.lowlow;
+                        break;
+                    case ThePower.lowlow:
+                        NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.lowlow});
+                        break;
+                }
+                break;
+        }
+    }
+    /// <summary>
+    /// キャラクターのパワーが戦闘から逃げ出したときに変化する関数
+    /// </summary>
+    void TransitionPowerOnBattleRunOutByCharacterImpression()
+    {
+        switch(MyImpression)
+        {
+            case SpiritualProperty.pillar:
+                NowPower =ThePower.medium;
+                break;
+            case SpiritualProperty.kindergarden:
+                NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.medium,ThePower.low,ThePower.lowlow,
+                ThePower.high, ThePower.medium,ThePower.low,});//←三つは、lowlowの確率を下げるため
+                break;
+            case SpiritualProperty.sacrifaith:
+                NowPower = ThePower.high;
+                break;
+            case SpiritualProperty.godtier:
+                switch(NowPower)
+                {
+                    case ThePower.medium:
+                        NowPower = ThePower.low;
+                        break;
+                    case ThePower.low:
+                        NowPower = ThePower.lowlow;
+                        break;
+                }
+                break;
+            case SpiritualProperty.devil:
+                switch(NowPower)
+                {
+                    case ThePower.medium:
+                        NowPower = ThePower.high;
+                        break;
+                    case ThePower.low:
+                        NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.medium});
+                        break;
+                    case ThePower.lowlow:
+                        NowPower = ThePower.medium;
+                        break;
+                }
+                break;
+        }
     }
 
 }
