@@ -156,7 +156,8 @@ public enum SpiritualProperty
     pysco = 1 << 6,   // ビットパターン: 0100 0000  (64)
     godtier = 1 << 7,   // ビットパターン: 1000 0000  (128)
     baledrival = 1 << 8,   // ビットパターン: 0001 0000 0000  (256)
-    devil = 1 << 9    // ビットパターン: 0010 0000 0000  (512)
+    devil = 1 << 9,    // ビットパターン: 0010 0000 0000  (512)
+    none = 1 << 10    // ビットパターン: 0100 0000 0000  (1024)
 }
 
 public enum MemoryDensity
@@ -890,7 +891,7 @@ public abstract class BaseStates
     ///     一定数歩行するとMyImpressionがこれに戻る
     ///     当然この属性自体もゲーム中で変化する可能性はある。
     /// </summary>
-    public SpiritualProperty DefaultImpression { get; private set; }
+    public SpiritualProperty DefaultImpression;
 
 
 
@@ -1347,9 +1348,14 @@ public abstract class BaseStates
     /// <param name="HealPoint"></param>
     public virtual string Heal(float HealPoint)
     {
-        HP += HealPoint;
-        Debug.Log("ヒールが実行された");
-        return "癒された";
+        if(!Death())
+        {
+            HP += HealPoint;
+            Debug.Log("ヒールが実行された");
+            return "癒された";
+        }
+
+        return "死んでいる";
     }
     /// <summary>
     /// 命中凌駕の判定関数　引数倍命中が回避を凌駕してるのなら、スキル命中率に影響を与える
@@ -1890,6 +1896,10 @@ private int CalcTransformCountIncrement(int tightenStage)
     {
         hasDied =false;
         HP = float.Epsilon;//生きてるか生きてないか=Angel
+        if(NowPower == ThePower.high)
+        {
+            HP = 30;//気力が高いと多少回復
+        }
     }
     /// <summary>
     /// 死亡時のコールバック　SkillsTmpResetでスキルの方からリセットできるような簡単じゃない奴をここで処理する。
@@ -2904,6 +2914,24 @@ private int CalcTransformCountIncrement(int tightenStage)
     }
 
     //static 静的なメゾット(戦いに関する辞書データなど)
+
+    /// <summary>
+    /// 精神属性と十日能力の互換表
+    /// </summary>
+    public static readonly Dictionary<SpiritualProperty, List<TenDayAbility>> SpritualTenDayAbilitysMap = 
+    new()
+    {
+        {SpiritualProperty.doremis, new List<TenDayAbility>(){TenDayAbility.Enokunagi, TenDayAbility.PersonaDivergence, TenDayAbility.KereKere, TenDayAbility.Rain, TenDayAbility.BlazingFire}},
+        {SpiritualProperty.pillar, new List<TenDayAbility>(){TenDayAbility.JoeTeeth, TenDayAbility.Sort, TenDayAbility.SilentTraining, TenDayAbility.Leisure, TenDayAbility.Vond}},
+        {SpiritualProperty.kindergarden, new List<TenDayAbility>(){TenDayAbility.dokumamusi, TenDayAbility.Baka, TenDayAbility.TentVoid, TenDayAbility.SpringNap, TenDayAbility.WaterThunderNerve}},
+        {SpiritualProperty.liminalwhitetile, new List<TenDayAbility>(){TenDayAbility.FlameBreathingWife, TenDayAbility.NightDarkness, TenDayAbility.StarTersi, TenDayAbility.FaceToHand, TenDayAbility.Pilmagreatifull}},
+        {SpiritualProperty.sacrifaith, new List<TenDayAbility>(){TenDayAbility.UnextinguishedPath, TenDayAbility.Miza, TenDayAbility.JoeTeeth, TenDayAbility.SpringNap}},
+        {SpiritualProperty.cquiest, new List<TenDayAbility>(){TenDayAbility.ColdHeartedCalm, TenDayAbility.NightDarkness, TenDayAbility.NightInkKnight, TenDayAbility.Glory, TenDayAbility.SpringNap}},
+        {SpiritualProperty.pysco, new List<TenDayAbility>(){TenDayAbility.Raincoat, TenDayAbility.TentVoid, TenDayAbility.Blades, TenDayAbility.Smiler, TenDayAbility.StarTersi}},
+        {SpiritualProperty.godtier, new List<TenDayAbility>(){TenDayAbility.HeavenAndEndWar, TenDayAbility.Vail, TenDayAbility.BlazingFire, TenDayAbility.FlameBreathingWife, TenDayAbility.SpringWater}},
+        {SpiritualProperty.baledrival, new List<TenDayAbility>(){TenDayAbility.Smiler, TenDayAbility.Miza, TenDayAbility.HeatHaze, TenDayAbility.Vail}},
+        {SpiritualProperty.devil, new List<TenDayAbility>(){TenDayAbility.CryoniteQuality, TenDayAbility.HumanKiller, TenDayAbility.HeatHaze, TenDayAbility.FaceToHand}},
+    };
 
     /// <summary>
     /// 戦闘規格ごとのデフォルトa,bの狙い流れ

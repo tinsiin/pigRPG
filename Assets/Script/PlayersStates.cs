@@ -1,8 +1,11 @@
 using RandomExtensions;
+using RandomExtensions.Collections;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEditor;
+using UnityEditorInternal.Profiling.Memory.Experimental;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -340,8 +343,87 @@ public class PlayersStates:MonoBehaviour
         ExplosionVoid = RandomEx.Shared.NextFloat(10,61);
     }
 }
+
 public class AllyClass : BaseStates
 {
+    
+    /// <summary>
+    /// キャラクターのデフォルト精神属性を決定する関数
+    /// </summary>
+    void DecideDefaultMyImpression()
+    {
+        //1~4の範囲で合致しきい値が決まる。
+        var Threshold = RandomEx.Shared.NextInt(1,5);
+
+        //キャラクターの持つ十日能力を多い順に重み付き抽選リストに入れ、処理をする。\
+        var AbilityList = new WeightedList<TenDayAbility>();
+        //linqで値の多い順にゲット
+        foreach(var ability in TenDayValues.OrderByDescending(x => x.Value))
+        {
+            AbilityList.Add(ability.Key,ability.Value);//キーが十日能力の列挙体　重みの部分に能力の値が入る。
+        }
+
+        var SpiritualMatchCounts = new Dictionary<SpiritualProperty,int>()//一時保存用データ
+        {
+            {SpiritualProperty.doremis, 0},
+            {SpiritualProperty.pillar, 0},
+            {SpiritualProperty.kindergarden, 0},
+            {SpiritualProperty.liminalwhitetile, 0},
+            {SpiritualProperty.sacrifaith, 0},
+            {SpiritualProperty.cquiest, 0},
+            {SpiritualProperty.pysco, 0},
+            {SpiritualProperty.godtier, 0},
+            {SpiritualProperty.baledrival, 0},
+            {SpiritualProperty.devil, 0}
+        };
+        TenDayAbility selectedAbility;//重み付き抽選リストから抜き出す"恐らく多い順に"出てくるであろうキャラクターの十日能力変数
+        
+        //ここからwhileループ
+        while(true)
+        {
+            if(AbilityList.Count <= 0)//十日能力の重み付き抽選リストが空になったら
+            {
+                DefaultImpression = SpiritualProperty.none;
+                break;
+            }
+            AbilityList.RemoveRandom(out selectedAbility);//比較用能力値変数に重み付き抽選リストから消しながら抜き出し
+
+            
+
+
+            foreach(var map in SpritualTenDayAbilitysMap)
+            {
+                //現在回してる互換表の、「十日能力値の必要合致リスト」の添え字に一時保存している各精神属性の合致数を渡し、必要な十日能力を抜き出す。
+                //合致リストの能力と今回の多い順から数えた能力値が合ってるかを比較。
+                if(selectedAbility == map.Value[SpiritualMatchCounts[map.Key]])
+                {
+                    SpiritualMatchCounts[map.Key]++; //合致したら合致数を1増やす
+                }
+            }
+
+            //合致しきい値を超えた精神属性があるかどうかを確認する。
+            //あるならその精神属性のデータをリストにまとめる。
+            
+            var SpOkList = new List<SpiritualProperty>();
+
+            foreach(var sp in SpiritualMatchCounts)
+            {
+                if(sp.Value >= Threshold)
+                {
+                    SpOkList.Add(sp.Key);//超えている精神属性を記録。
+                }
+            }
+
+            if(SpOkList.Count > 0)
+            {
+                //複数ダブっても、どれか一つをランダムで選ぶ
+                DefaultImpression = RandomEx.Shared.GetItem(SpOkList.ToArray());
+                break;
+            }
+        }
+        
+
+    }
     /// <summary>
     /// スキルボタンからそのスキルの範囲や対象者の画面に移る
     /// </summary>
