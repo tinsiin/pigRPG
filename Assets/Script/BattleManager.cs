@@ -841,6 +841,21 @@ public class BattleManager
             return val+CoolChance;
         }
     }
+    void BeVanguard()
+    {
+        //スキル実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
+        if (Acter.NowUseSkill.IsAggressiveCommit)
+        {
+            if (ActerFaction == WhichGroup.alliy)
+            {
+                AllyGroup.InstantVanguard = Acter;
+            }
+            else
+            {
+                EnemyGroup.InstantVanguard = Acter;
+            }
+        }
+    }
     /// <summary>
     /// スキルアクトを実行
     /// </summary>
@@ -861,6 +876,9 @@ public class BattleManager
         //人数やスキルの攻撃傾向によって、被攻撃者の選別をする
         SelectTargetFromWill();
 
+        //前のめりになるスキルなら前のめりになる。
+        BeVanguard();
+
         //実行処理
         skill.SetDeltaTurn(BattleTurnCount);//スキルのdeltaTurnをセット
         CreateBattleMessage(Acter.AttackChara(unders));//攻撃の処理からメッセージが返る。
@@ -869,18 +887,7 @@ public class BattleManager
         //慣れフラットロゼが起こるかどうかの判定　
         TryAddFlatRoze();
 
-        //スキル実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
-        if (skill.IsAggressiveCommit)
-        {
-            if (ActerFaction == WhichGroup.alliy)
-            {
-                AllyGroup.InstantVanguard = Acter;
-            }
-            else
-            {
-                EnemyGroup.InstantVanguard = Acter;
-            }
-        }
+        
 
 
         if (skill.NextConsecutiveATK())//まだ連続実行するなら

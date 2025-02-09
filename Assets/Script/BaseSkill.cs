@@ -20,6 +20,7 @@ public enum SkillType
     RemovePassive = 1 << 3,
     DeathHeal = 1 << 4,
     AddVitalLayer =1 << 5,
+    RemoveVitalLayer =1 << 6
 }
 /// <summary>
 /// スキル範囲の性質

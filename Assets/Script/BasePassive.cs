@@ -59,7 +59,11 @@ public class BasePassive
     /// 存在してる間行動できないかどうか。
     /// </summary>
     public bool IsCantACT;
-
+    /// <summary>
+    /// trueなら悪いパッシブで、SkillType.RemovePassiveでSkillHitCalcだけで解除される。
+    /// falseならIsReactHitの判定(良いパッシブを無理やり外すっていう攻撃だからね)
+    /// </summary>
+    public bool IsBad;
 
     /// <summary>
     ///     PassivePowerの設定値
@@ -118,11 +122,7 @@ public class BasePassive
             {
                 if (bind.GrantTiming == PassiveVitalTiming.OnApply)
                 {
-                    var layer = VitalLayerManager.Instance.GetAtID(bind.VitalLayerId);
-                    if (layer != null)
-                    {
-                        user.ApplyVitalLayer(layer);
-                    }
+                    user.ApplyVitalLayer(bind.VitalLayerId);
                 }
             }
         }
@@ -140,11 +140,7 @@ public class BasePassive
             {
                 if (bind.GrantTiming == PassiveVitalTiming.OnRemove)
                 {
-                    var layer = VitalLayerManager.Instance.GetAtID(bind.VitalLayerId);
-                    if (layer != null)
-                    {
-                        user.ApplyVitalLayer(layer);
-                    }
+                    user.ApplyVitalLayer(bind.VitalLayerId);
                 }
 
                 //パッシブ削除時にこのレイヤーも消す場合 vitalLayerのRemoveOnPassiveRemoveで判断

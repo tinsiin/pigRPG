@@ -19,6 +19,11 @@ public class BaseVitalLayer
     public string name;
 
     /// <summary>
+    /// パッシブと同じプロパティ
+    /// </summary>
+    public bool IsBad;
+
+    /// <summary>
     /// 積み重なる際の優先順位
     /// 数が低い方が上　同じなら先着順に積み重なる。
     /// </summary>
