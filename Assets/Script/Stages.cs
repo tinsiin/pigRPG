@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using RandomExtensions;
@@ -197,6 +197,8 @@ public class Stages : MonoBehaviour
         /// </summary>
         public BattleGroup EnemyCollectAI()
         {
+            var CompatibilityData = new Dictionary<(BaseStates,BaseStates),int>();//相性値のデータ保存用
+            
             if (!EncountCheck()) return null; //エンカウント失敗したら、nullを返す
 
             var ResultList = new List<NormalEnemy>(); //返す用のリスト
@@ -295,8 +297,26 @@ public class Stages : MonoBehaviour
                 }
             }
 
+            // 複数キャラがいる場合のみ、各キャラペアの相性値を計算して格納する
+    if (ResultList.Count >= 2)
+    {
+    for (int i = 0; i < ResultList.Count; i++)
+    {
+        for (int j = i + 1; j < ResultList.Count; j++)
+        {
+            // ここで、EnemyCollectManager などに用意されている相性計算メソッドを使う
+            var compatibilityValue = EnemyCollectManager.Instance.GetImpressionMatchPercent(ResultList[i].MyImpression, ResultList[j].MyImpression);
+            CompatibilityData[(ResultList[i], ResultList[j])] = compatibilityValue;
+            //逆にどう思われてるか　
+            compatibilityValue = EnemyCollectManager.Instance.GetImpressionMatchPercent(ResultList[j].MyImpression, ResultList[i].MyImpression);
+            CompatibilityData[(ResultList[j], ResultList[i])] = compatibilityValue;
+        }
+    }
+}
 
-            return new BattleGroup(ResultList.Cast<BaseStates>().ToList(), ourImpression, WhichGroup.Enemyiy); //バトルグループを制作 
+
+
+            return new BattleGroup(ResultList.Cast<BaseStates>().ToList(), ourImpression, WhichGroup.Enemyiy,CompatibilityData); //バトルグループを制作 
         }
 
         /// <summary>

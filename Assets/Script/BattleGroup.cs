@@ -33,11 +33,12 @@ public class BattleGroup
     /// <summary>
     ///     コンストラクタ
     /// </summary>
-    public BattleGroup(List<BaseStates> ours, PartyProperty ourImpression,WhichGroup _which)
+    public BattleGroup(List<BaseStates> ours, PartyProperty ourImpression,WhichGroup _which,Dictionary<(BaseStates,BaseStates),int> CompatibilityData = null)
     {
         Ours = ours;
         OurImpression = ourImpression;
         which = _which;
+        CharaCompatibility = CompatibilityData;
     }
 
     /// <summary>
@@ -150,6 +151,11 @@ public class BattleGroup
     ///     集団の人員リスト
     /// </summary>
     public List<BaseStates> Ours {  get; private set; }
+
+    ///<summary>
+    ///グループの人員同士の相性値
+    ///</summary>
+    public Dictionary<(BaseStates,BaseStates),int> CharaCompatibility = new();
 
     public void SetCharactersList(List<BaseStates> list)
     {

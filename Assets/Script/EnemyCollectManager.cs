@@ -190,7 +190,7 @@ public class EnemyCollectManager : MonoBehaviour
     /// <summary>
     ///     デフォルトの値も含めて、キャラクター属性同士の相性値を取得する関数。
     /// </summary>
-    private int GetImpressionMatchPercent(SpiritualProperty I, SpiritualProperty You)
+    public int GetImpressionMatchPercent(SpiritualProperty I, SpiritualProperty You)
     {
         // 順序が重要なので、順序をそのままにしてマッチを確認
         var key = (I, You);
