@@ -59,13 +59,14 @@ public class BattleGroup
         }
     }
     /// <summary>
-    /// グループ全キャラの追加硬直値をリセットする
+    /// グループ全キャラの追加硬直値と短縮ターンをリセットする
     /// </summary>
     public void ResetCharactersRecovelyStepTmpToAdd()
     {
         foreach (var chara in Ours)
         {
             chara.RemoveRecovelyTmpAddTurn();
+            chara.RemoveRecovelyTmpMinusTurn();
         }
 
     }

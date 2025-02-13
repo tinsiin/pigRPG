@@ -298,21 +298,21 @@ public class Stages : MonoBehaviour
             }
 
             // 複数キャラがいる場合のみ、各キャラペアの相性値を計算して格納する
-    if (ResultList.Count >= 2)
-    {
-    for (int i = 0; i < ResultList.Count; i++)
-    {
-        for (int j = i + 1; j < ResultList.Count; j++)
-        {
-            // ここで、EnemyCollectManager などに用意されている相性計算メソッドを使う
-            var compatibilityValue = EnemyCollectManager.Instance.GetImpressionMatchPercent(ResultList[i].MyImpression, ResultList[j].MyImpression);
-            CompatibilityData[(ResultList[i], ResultList[j])] = compatibilityValue;
-            //逆にどう思われてるか　
-            compatibilityValue = EnemyCollectManager.Instance.GetImpressionMatchPercent(ResultList[j].MyImpression, ResultList[i].MyImpression);
-            CompatibilityData[(ResultList[j], ResultList[i])] = compatibilityValue;
-        }
-    }
-}
+            if (ResultList.Count >= 2)
+            {
+                for (int i = 0; i < ResultList.Count; i++)
+                {
+                    for (int j = i + 1; j < ResultList.Count; j++)
+                    {
+                        // ここで、EnemyCollectManager などに用意されている相性計算メソッドを使う
+                        var compatibilityValue = EnemyCollectManager.Instance.GetImpressionMatchPercent(ResultList[i].MyImpression, ResultList[j].MyImpression);
+                        CompatibilityData[(ResultList[i], ResultList[j])] = compatibilityValue;
+                        //逆にどう思われてるか　
+                        compatibilityValue = EnemyCollectManager.Instance.GetImpressionMatchPercent(ResultList[j].MyImpression, ResultList[i].MyImpression);
+                        CompatibilityData[(ResultList[j], ResultList[i])] = compatibilityValue;
+                    }
+                }
+            }
 
 
 

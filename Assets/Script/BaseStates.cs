@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading;
@@ -30,10 +30,64 @@ public class ACTSkillData
 {
     public bool IsDone;
     public BaseSkill Skill;
-    public ACTSkillData(bool isdone,BaseSkill skill)
+    public BaseStates Target;   
+    public ACTSkillData(bool isdone,BaseSkill skill,BaseStates target)
     {
         IsDone = isdone;
         Skill = skill;
+        Target = target;
+    }
+}
+/// <summary>
+/// 被害記録
+/// </summary>
+public class DamageData
+{
+    public BaseStates Attacker;
+    /// <summary>
+    /// 攻撃自体がヒットしたかどうかで、atktypeなら攻撃で全部ひっくるめてあたるから
+    /// atktypeじゃないなら、falseで
+    /// </summary>
+    public bool IsAtkHit;
+    public bool IsBadPassiveHit;
+    public bool IsBadPassiveRemove;
+    public bool IsGoodPassiveHit;
+    public bool IsGoodPassiveRemove;
+
+
+    public bool IsGoodVitalLayerHit;
+    public bool IsGoodVitalLayerRemove;
+    public bool IsBadVitalLayerHit;
+    public bool IsBadVitalLayerRemove;
+
+
+    /// <summary>
+    /// 死回復も含める
+    /// </summary>
+    public bool IsHeal;
+    //public bool IsConsecutive;　これは必要なし、なぜなら相性値の判断は毎ターン行われるから、連続ならちゃんと連続毎ターンで結果的に多く相性値関連の処理は加算される。
+    public float Damage;
+    public float Heal;
+    //public BasePassive whatPassive;  多いしまだ必要ないから一旦コメントアウト
+    //public int DamagePercent　最大HPはBaseStates側にあるからそっちから取得する
+    public BaseSkill Skill;
+    public DamageData(bool isAtkHit,bool isBadPassiveHit,bool isBadPassiveRemove,bool isGoodPassiveHit,bool isGoodPassiveRemove,bool isGoodVitalLayerHit,bool isGoodVitalLayerRemove,bool isBadVitalLayerHit,bool isBadVitalLayerRemove,bool isHeal,BaseSkill skill,float damage,float heal,BaseStates attacker)
+    {
+        IsAtkHit = isAtkHit;
+        IsBadPassiveHit = isBadPassiveHit;
+        IsBadPassiveRemove = isBadPassiveRemove;
+        IsGoodPassiveHit = isGoodPassiveHit;
+        IsGoodPassiveRemove = isGoodPassiveRemove;
+        IsGoodVitalLayerHit = isGoodVitalLayerHit;
+        IsGoodVitalLayerRemove = isGoodVitalLayerRemove;
+        IsBadVitalLayerHit = isBadVitalLayerHit;
+        IsBadVitalLayerRemove = isBadVitalLayerRemove;
+        IsHeal = isHeal;
+
+        Skill = skill;
+        Damage = damage;
+        Heal = heal;
+        Attacker = attacker;
     }
 }
 
@@ -198,9 +252,22 @@ public abstract class BaseStates
 
     protected BattleManager manager => Walking.bm;
     /// <summary>
+    /// キャラクターの被害記録
+    /// </summary>
+    public List<DamageData> damageDatas;
+    /// <summary>
     /// キャラクターの行動記録
     /// </summary>
     public List<ACTSkillData> skillDatas;
+
+    /// <summary>
+    /// 直近の行動記録
+    /// </summary>
+    public ACTSkillData RecentSkillData => skillDatas[skillDatas.Count - 1];
+    /// <summary>
+    /// 直近の被害記録
+    /// </summary>
+    public DamageData RecentDamageData => damageDatas[damageDatas.Count - 1];
 
 
     [SerializeField] private List<BasePassive> _passiveList;
@@ -234,13 +301,13 @@ public abstract class BaseStates
     /// <summary>
     ///     パッシブを適用
     /// </summary>
-    public virtual void ApplyPassive(int id)
+    public bool ApplyPassive(int id)
     {
         var status = PassiveManager.Instance.GetAtID(id);//idを元にpassiveManagerから取得
 
         // 条件(OkType,OkImpression) は既にチェック済みならスキップ
-        if (!HasCharacterType(status.OkType)) return;
-        if (!HasCharacterImpression(status.OkImpression)) return;
+        if (!HasCharacterType(status.OkType)) return false;
+        if (!HasCharacterImpression(status.OkImpression)) return false;
 
         // すでに持ってるかどうか
         var existing = _passiveList.FirstOrDefault(p => p.ID == status.ID);
@@ -256,6 +323,8 @@ public abstract class BaseStates
             // パッシブ側のOnApplyを呼ぶ
             status.OnApply(this);
         }
+
+        return true;
     }
 
     /// <summary>
@@ -674,11 +743,22 @@ public abstract class BaseStates
     /// <summary>
     /// skillDidWaitCountなどで一時的に通常recovelyTurnに追加される一時的に再行動クールタイム/追加硬直値
     /// </summary>
-    private int tmpTurnsToAdd;
+    private int _tmpTurnsToAdd;
+    /// <summary>
+    /// 一時的に必要ターン数から引く短縮ターン
+    /// </summary>
+    private int _tmpTurnsToMinus;
     /// <summary>
     /// 一時保存用のリカバリターン判別用の前ターン変数
     /// </summary>
-    private int tmp_EncountTurn;
+    private int _tmp_EncountTurn;
+    /// <summary>
+    /// recovelyTurnTmpMinusという行動クールタイムが一時的に短縮
+    /// </summary>
+    public void RecovelyTurnTmpMinus(int MinusTurn)
+    {
+        _tmpTurnsToMinus += MinusTurn;
+    }
     /// <summary>
     /// recovelyCountという行動クールタイムに一時的に値を加える
     /// </summary>
@@ -686,7 +766,7 @@ public abstract class BaseStates
     {
         if(!IsActiveCancelInSkillACT)//行動がキャンセルされていないなら
         {
-            tmpTurnsToAdd += addTurn;
+            _tmpTurnsToAdd += addTurn;
         }
     }
     /// <summary>
@@ -694,15 +774,15 @@ public abstract class BaseStates
     /// </summary>
     public bool RecovelyBattleField(int nowTurn)
     {
-        var difference = Math.Abs(nowTurn - tmp_EncountTurn);//前ターンと今回のターンの差異から経過ターン
+        var difference = Math.Abs(nowTurn - _tmp_EncountTurn);//前ターンと今回のターンの差異から経過ターン
         //もし前のめりならば、二倍で進む
         if(manager.IsVanguard(this))
         {
             difference *= 2;
         }
 
-        tmp_EncountTurn = nowTurn;//今回のターンを次回の差異計算のために一時保存
-        if ((recoveryTurn += difference) >= maxRecoveryTurn + tmpTurnsToAdd)//累計ターン経過が最大値を超えたら
+        _tmp_EncountTurn = nowTurn;//今回のターンを次回の差異計算のために一時保存
+        if ((recoveryTurn += difference) >= maxRecoveryTurn + _tmpTurnsToAdd -_tmpTurnsToMinus)//累計ターン経過が最大値を超えたら
         {
             //ここでrecovelyTurnを初期化すると　リストで一括処理した時にカウントアップだけじゃなくて、
             //選ばれたことになっちゃうから、0に初期化する部分はBattleManagerで選ばれた時に処理する。
@@ -716,14 +796,22 @@ public abstract class BaseStates
     public void RecovelyWaitStart()
     {
         recoveryTurn = 0;
-        RemoveRecovelyTmpAddTurn();
+        RemoveRecovelyTmpAddTurn();//一時追加ターンをリセット
+        RemoveRecovelyTmpMinusTurn();//一時短縮ターンをリセット
     }
     /// <summary>
     /// キャラに設定された追加硬直値をリセットする
     /// </summary>
     public void RemoveRecovelyTmpAddTurn()
     {
-        tmpTurnsToAdd = 0;
+        _tmpTurnsToAdd = 0;
+    }
+    /// <summary>
+    /// キャラに設定された再行動短縮ターンをリセットする
+    /// </summary>
+    public void RemoveRecovelyTmpMinusTurn()
+    {
+        _tmpTurnsToMinus = 0;
     }
     /// <summary>
     /// 戦場へ参戦回復が出来るようにする
@@ -1291,7 +1379,7 @@ public abstract class BaseStates
     ///     オーバライド可能なダメージ関数
     /// </summary>
     /// <param name="atkPoint"></param>
-    public virtual string Damage(BaseStates Atker, float SkillPower)
+    public virtual float Damage(BaseStates Atker, float SkillPower)
     {
         var skill = Atker.NowUseSkill;
         var def = DEF(skill.DEFATK);
@@ -1339,7 +1427,7 @@ public abstract class BaseStates
         }
 
 
-        return "-+~*⋮¦";
+        return dmg;
     }
 
     /// <summary>
@@ -1634,8 +1722,129 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
         return false;
     }
+    /// <summary>
+    /// 悪いパッシブ付与処理
+    /// </summary>
+    bool BadPassiveHit(BaseSkill skill)
+    {
+        var hit = false;
+        foreach (var id in skill.subEffects.Where(id => PassiveManager.Instance.GetAtID(id).IsBad))
+        {
+            hit |= ApplyPassive(id);//or演算だとtrueを一回でも発生すればfalseが来てもずっとtrueのまま
+        }
+        return hit;
+    }
+    /// <summary>
+    /// 悪いパッシブ解除処理
+    /// </summary>
+    void BadPassiveRemove(BaseSkill skill)
+    {
+        foreach (var id in skill.subEffects.Where(id => PassiveManager.Instance.GetAtID(id).IsBad))
+        {
+            RemovePassiveByID(id);
+        }
+    }
+    /// <summary>
+    /// 悪い追加HP付与処理
+    /// </summary>
+    void BadVitalLayerHit(BaseSkill skill)
+    {
+        foreach (var id in skill.subVitalLayers.Where(id => VitalLayerManager.Instance.GetAtID(id).IsBad))
+        {
+            ApplyVitalLayer(id);
+        }
+    }
+    /// <summary>
+    /// 悪い追加HP解除処理
+    /// </summary>
+    void BadVitalLayerRemove(BaseSkill skill)
+    {
+        foreach (var id in skill.subVitalLayers.Where(id => VitalLayerManager.Instance.GetAtID(id).IsBad))
+        {
+            RemoveVitalLayerByID(id);
+        }
+    }
+    /// <summary>
+    /// 良いパッシブ付与処理
+    /// </summary>
+    bool GoodPassiveHit(BaseSkill skill)
+    {
+        var hit = false;
+        foreach (var id in skill.subEffects.Where(id => !PassiveManager.Instance.GetAtID(id).IsBad))
+        {
+            hit |= ApplyPassive(id);
+        }
+        return hit;
+    }
+    /// <summary>
+    /// 良いパッシブ解除処理
+    /// </summary>
+    void GoodPassiveRemove(BaseSkill skill)
+    {
+        foreach (var id in skill.subEffects.Where(id => !PassiveManager.Instance.GetAtID(id).IsBad))
+        {
+            RemovePassiveByID(id);
+        }
+    }
+    /// <summary>
+    /// 良い追加HP付与処理
+    /// </summary>
+    /// <param name="skill"></param>
+    void GoodVitalLayerHit(BaseSkill skill)
+    {
+        foreach (var id in skill.subVitalLayers.Where(id => !VitalLayerManager.Instance.GetAtID(id).IsBad))
+        {
+            ApplyVitalLayer(id);
+        }
+    }
+    /// <summary>
+    /// 良い追加HP解除処理
+    /// </summary>
+    /// <param name="skill"></param>
+    void GoodVitalLayerRemove(BaseSkill skill)
+    {
+        foreach (var id in skill.subVitalLayers.Where(id => !VitalLayerManager.Instance.GetAtID(id).IsBad))
+        {
+            RemoveVitalLayerByID(id);
+        }
+    }
+    /// <summary>
+    /// 直接攻撃じゃない敵対行動系
+    /// </summary>
+    void ApplyNonDamageHostileEffects(BaseSkill skill,out bool isBadPassiveHit, out bool isBadVitalLayerHit, out bool isGoodPassiveRemove, out bool isGoodVitalLayerRemove)
+    {
+        isBadPassiveHit = false;
+        isBadVitalLayerHit = false;
+        isGoodPassiveRemove = false;
+        isGoodVitalLayerRemove = false;
 
+        if (skill.HasType(SkillType.addPassive))//atktypeがあるからここで発生
+        {
+            //悪いパッシブを付与しようとしてるのなら、命中回避計算
+            isBadPassiveHit = BadPassiveHit(skill);
+        }
 
+        if (skill.HasType(SkillType.AddVitalLayer))
+        {
+            //悪い追加HPを付与しようとしてるのなら、命中回避計算
+            BadVitalLayerHit(skill);
+            isBadVitalLayerHit = true;
+        }
+        if(skill.HasType(SkillType.RemovePassive))
+        {
+            //良いパッシブを取り除こうとしてるのなら、命中回避計算
+            GoodPassiveRemove(skill);
+            isGoodPassiveRemove = true;
+        }
+        if (skill.HasType(SkillType.RemoveVitalLayer))
+        {
+            //良い追加HPを取り除こうとしてるのなら、命中回避計算
+            GoodVitalLayerRemove(skill);
+            isGoodVitalLayerRemove = true;
+        }
+        
+    }
+    
     /// <summary>
     /// スキルに対するリアクション ここでスキルの解釈をする。
     /// </summary>
@@ -1650,6 +1859,20 @@ private int CalcTransformCountIncrement(int tightenStage)
         var skillPower = skill.SkillPowerCalc(spread) * modifier.GetValue() / 100.0f;
         var txt = "";//メッセージテキスト用
         var thisAtkTurn = true;
+
+        //被害記録用の一時保存boolなど
+        var isBadPassiveHit = false;
+        var isBadPassiveRemove = false;
+        var isGoodPassiveRemove = false;
+        var isGoodPassiveHit = false;
+        var isBadVitalLayerHit = false;
+        var isBadVitalLayerRemove = false;
+        var isGoodVitalLayerHit = false;
+        var isGoodVitalLayerRemove = false;
+        var isHeal = false;
+        var isAtkHit = false;
+        var healAmount = 0f;
+        var damageAmount = 0f;
 
         //スキルの持ってる性質を全て処理として実行
 
@@ -1674,70 +1897,19 @@ private int CalcTransformCountIncrement(int tightenStage)
                     CheckPhysicsConsecutiveAimBoost(attacker);
                     
                     //成功されるとダメージを受ける
-                    txt += Damage(attacker, skillPower);
+                    damageAmount = Damage(attacker, skillPower);
+                    isAtkHit = true;//攻撃を受けたからtrue
 
-                    if (skill.HasType(SkillType.addPassive))//atktypeがあるからここで発生
-                    {
-                        //悪いパッシブを付与しようとしてるのなら、命中回避計算
-                        foreach (var id in skill.subEffects.Where(id => PassiveManager.Instance.GetAtID(id).IsBad))
-                        ApplyPassive(id);
-                    }
-
-                    if (skill.HasType(SkillType.AddVitalLayer))
-                    {
-                        //悪い追加HPを付与しようとしてるのなら、命中回避計算
-                        foreach (var id in skill.subVitalLayers.Where(id => VitalLayerManager.Instance.GetAtID(id).IsBad))
-                        ApplyVitalLayer(id);
-                    }
-                    if(skill.HasType(SkillType.RemovePassive))
-                    {
-                        //良いパッシブを取り除こうとしてるのなら、命中回避計算
-                        foreach (var id in skill.subEffects.Where(id => !PassiveManager.Instance.GetAtID(id).IsBad))
-                        RemovePassiveByID(id);
-                    }
-                    if (skill.HasType(SkillType.RemoveVitalLayer))
-                    {
-                        //良い追加HPを取り除こうとしてるのなら、命中回避計算
-                        foreach (var id in skill.subVitalLayers.Where(id => !VitalLayerManager.Instance.GetAtID(id).IsBad))
-                        RemoveVitalLayerByID(id);
-                    }
-        
+                    ApplyNonDamageHostileEffects(skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove);
                 }
             }
         }
         else//atktypeがないと各自で判定
         {
-            
              if (IsReactHIT(attacker))
             {
-                if (skill.HasType(SkillType.addPassive))
-                {
-                    //悪いパッシブを付与しようとしてるのなら、命中回避計算
-                    foreach (var id in skill.subEffects.Where(id => PassiveManager.Instance.GetAtID(id).IsBad))
-                    ApplyPassive(id);
-                }
-
-                if (skill.HasType(SkillType.AddVitalLayer))
-                {
-                    //悪い追加HPを付与しようとしてるのなら、命中回避計算
-                    foreach (var id in skill.subVitalLayers.Where(id => VitalLayerManager.Instance.GetAtID(id).IsBad))
-                    ApplyVitalLayer(id);
-                }
-                if(skill.HasType(SkillType.RemovePassive))
-                {
-                    //良いパッシブを取り除こうとしてるのなら、命中回避計算
-                    foreach (var id in skill.subEffects.Where(id => !PassiveManager.Instance.GetAtID(id).IsBad))
-                    RemovePassiveByID(id);
-                }
-                if (skill.HasType(SkillType.RemoveVitalLayer))
-                {
-                    //良い追加HPを取り除こうとしてるのなら、命中回避計算
-                    foreach (var id in skill.subVitalLayers.Where(id => !VitalLayerManager.Instance.GetAtID(id).IsBad))
-                    RemoveVitalLayerByID(id);
-                }
-        
+                ApplyNonDamageHostileEffects(skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove);        
             }
-
         }
 
         //回復系は常に独立
@@ -1746,6 +1918,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
             {
                 Angel();//降臨　アイコンがノイズで満たされるようなエフェクト
+                isHeal = true;
             }
         }
 
@@ -1754,6 +1927,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
             {
                 txt += Heal(skillPower);
+                isHeal = true;
             }
         }
 
@@ -1762,8 +1936,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
             {
                 //良いパッシブを付与しようとしてるのなら、スキル命中計算のみ
-                foreach (var id in skill.subEffects.Where(id => !PassiveManager.Instance.GetAtID(id).IsBad))
-                ApplyPassive(id);
+                isGoodPassiveHit = GoodPassiveHit(skill);
             }
         }
         if (skill.HasType(SkillType.AddVitalLayer))
@@ -1771,8 +1944,8 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
             {
                 //良い追加HPを付与しようとしてるのなら、スキル命中のみ
-                foreach (var id in skill.subVitalLayers.Where(id => !VitalLayerManager.Instance.GetAtID(id).IsBad))
-                ApplyVitalLayer(id);
+               GoodVitalLayerHit(skill);
+                isGoodVitalLayerHit = true;
             }
         }
 
@@ -1783,8 +1956,8 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
             {
                 //悪いパッシブを取り除くのなら、スキル命中のみ
-                foreach (var id in skill.subEffects.Where(id => PassiveManager.Instance.GetAtID(id).IsBad))
-                RemovePassiveByID(id);
+                BadPassiveRemove(skill);
+                isBadPassiveRemove = true;
             }
         }
         if (skill.HasType(SkillType.RemoveVitalLayer))
@@ -1792,8 +1965,8 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
             {
                 //悪い追加HPを取り除こうとしてるのなら、スキル命中のみ
-                foreach (var id in skill.subVitalLayers.Where(id => VitalLayerManager.Instance.GetAtID(id).IsBad))
-                RemoveVitalLayerByID(id);
+                BadVitalLayerRemove(skill);
+                isBadVitalLayerRemove = true;
             }
         }
 
@@ -1804,8 +1977,11 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         Debug.Log("ReactionSkill");
         //ここで攻撃者の攻撃記録を記録する
-        attacker.skillDatas.Add(new ACTSkillData(thisAtkTurn,skill));//発動したのか、何のスキルなのかを記録
-        
+        attacker.skillDatas.Add(new ACTSkillData(thisAtkTurn,skill,this));//発動したのか、何のスキルなのかを記録
+        //被害の記録
+        damageDatas.Add(new DamageData//クソ長い
+        (isAtkHit,isBadPassiveHit,isBadPassiveRemove,isGoodPassiveHit,isGoodPassiveRemove,isGoodVitalLayerHit,isGoodVitalLayerRemove,isBadVitalLayerHit,isBadVitalLayerRemove,isHeal,skill,damageAmount,healAmount,attacker));
+
         return txt;
     }
 
@@ -1939,9 +2115,9 @@ private int CalcTransformCountIncrement(int tightenStage)
     }
 
     /// <summary>
-    ///追加HPを適用 
+    ///追加HPを適用  passiveと違い適合条件がないからvoid
     /// </summary>
-    public virtual void ApplyVitalLayer(int id)
+    public void ApplyVitalLayer(int id)
     {
         //リスト内に同一の物があるか判定する。
         var sameHP = _vitalLaerList.FirstOrDefault(lay => lay.id == id);

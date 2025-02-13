@@ -13,6 +13,7 @@ using UnityEngine.Rendering.Universal;
 using Mono.Cecil.Cil;
 using TMPro;
 using UnityEditor;
+using static CommonCalc;
 
 /// <summary>
 /// 戦闘の先手が起ったかどうか
@@ -278,21 +279,24 @@ public class BattleManager
     /// </summary>
     public BattleGroup EnemyGroup;
 
-    private BattleStartSituation firstSituation;
-
-
-    string UniqueTopMessage;//通常メッセージの冠詞？
-    public BaseStates Acter;//今回の俳優
     /// <summary>
-    /// 行動を受ける人 
+    /// factionのグループを返す
     /// </summary>
-    public UnderActersEntryList unders;
-    WhichGroup ActerFaction;//陣営
-    bool Wipeout = false;//全滅したかどうか
-    bool RunOut = false;//逃走
-    public bool DoNothing = false;//何もしない
-    public bool VoidTurn = false;//そのターンは無かったことに
-
+    BattleGroup FactionToGroup(WhichGroup faction)
+    {
+        switch(faction)
+        {
+            case WhichGroup.alliy:
+                return AllyGroup;
+            case WhichGroup.Enemyiy:
+                return EnemyGroup;
+        }
+        return null;
+    }
+    /// <summary>
+    /// キャラクターのグループを取得
+    /// </summary>
+    BattleGroup MyGroup(BaseStates chara) => FactionToGroup(GetCharacterFaction(chara));
     /// <summary>
     /// 渡されたキャラクタのbm内での陣営を表す。
     /// </summary>
@@ -310,6 +314,26 @@ public class BattleManager
         return 0;
     }
 
+    /// <summary>
+    /// そのキャラクターと同じパーティーの生存者のリストを取得(自分自身を除く)
+    /// </summary>
+    List<BaseStates> GetOtherAlliesAlive(BaseStates chara) => 
+    RemoveDeathCharacters(FactionToGroup(GetCharacterFaction(chara)).Ours).Where(x => x != chara).ToList();
+
+    private BattleStartSituation firstSituation;
+
+
+    string UniqueTopMessage;//通常メッセージの冠詞？
+    public BaseStates Acter;//今回の俳優
+    /// <summary>
+    /// 行動を受ける人 
+    /// </summary>
+    public UnderActersEntryList unders;
+    WhichGroup ActerFaction;//陣営
+    bool Wipeout = false;//全滅したかどうか
+    bool RunOut = false;//逃走
+    public bool DoNothing = false;//何もしない
+    public bool VoidTurn = false;//そのターンは無かったことに
 
     /// <summary>
     /// 行動リスト　ここではrecovelyTurnの制約などは存在しません
@@ -846,13 +870,85 @@ public class BattleManager
         //スキル実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
         if (Acter.NowUseSkill.IsAggressiveCommit)
         {
-            if (ActerFaction == WhichGroup.alliy)
+            FactionToGroup(ActerFaction).InstantVanguard = Acter;
+        }
+    }
+    /// <summary>
+    /// 相性値由来の被害者への仲間の救済意図での再行動短縮処理
+    /// </summary>
+    void TryHelpMinusRecovelyTurnByCompatibility()
+    {
+        for (var i = 0; i < unders.Count; i++)//被害者全員分ループ
+        {
+            var chara = unders.GetAtCharacter(i);
+            var HelpGroup = MyGroup(chara);//所属するBattleGroupを取得
+            var LiveAllyGroupList = GetOtherAlliesAlive(chara);//被害者の生きている味方
+            if(LiveAllyGroupList.Count < 1)continue;//味方がいなければスキップ
+
+            //60%以上の相性値が被害者に対してある味方のみに絞る　味方→被害者　への相性値
+            LiveAllyGroupList = LiveAllyGroupList.Where(ally => 
+            HelpGroup.CharaCompatibility.ContainsKey((ally, chara)) && HelpGroup.CharaCompatibility[(ally, chara)] >= 60).ToList();
+            if(LiveAllyGroupList.Count < 1)continue;//60以上の相性値を持ってる味方がいなければスキップ
+            var data = chara.RecentDamageData;//被害者のダメージ記録
+            var DamageRate = data.Damage/chara.MAXHP;//被害者のダメージ率
+            foreach(var ally in LiveAllyGroupList)//60%以上の相性値を持ってる味方全員分ループ
             {
-                AllyGroup.InstantVanguard = Acter;
-            }
-            else
-            {
-                EnemyGroup.InstantVanguard = Acter;
+                var Compatibility = HelpGroup.CharaCompatibility[(ally, chara)];//味方→被害者への相性値
+                var occurrenceProbability = 0f;//発生確率
+                var baseChance = 0f;//基本発生確率
+
+                if (Compatibility > 130)
+                {
+                    baseChance = 0.47f;
+                }
+                else if (Compatibility < 60)
+                {
+                    baseChance = 0f;
+                }
+                else
+                {
+                    //60以上130以下なら計算
+
+                    // 60 で 0、130 で 70 となる変換
+                    float compOffset = Compatibility - 60f;  // 0～70 の範囲
+                    // x = A*(compOffset) - C
+                    // sigmoid(u)=1/(1+ e^-u)
+                    // scale (0.34f) を掛けて 0..0.34 を出力
+                    float x = 0.2f * compOffset - 4.0f;   
+                    float sig = 1f/(1f+ Mathf.Exp(-x));
+                    baseChance = 0.34f * sig;       // 0..0.34
+                }
+                    var HelpRate = DamageRate;
+                    //非攻撃の敵対的行動を取っていた場合、計算用のダメージ割合に加算
+                    if(data.IsBadPassiveHit || data.IsBadVitalLayerHit || data.IsGoodPassiveRemove || data.IsGoodVitalLayerRemove) 
+                    {
+                        HelpRate += RandomEx.Shared.NextFloat(0.07f,0.15f);//7%~15%加算
+                    }
+                    HelpRate = Mathf.Clamp01(HelpRate);//0~1にクランプ
+                    
+                    //複合方式　加算と乗算のいいとこどりでダメージ割合と掛け合わせる。
+                    float k = 2f;
+                    occurrenceProbability = baseChance * (1f + k * HelpRate);
+                    occurrenceProbability = Mathf.Min(occurrenceProbability, 1f);//最大値1にクランプ
+
+                //救済意図での再行動短縮を判定    
+                if(rollper(occurrenceProbability * 100))
+                {
+                     //短縮ターンの計算
+                    float expectedShorten= occurrenceProbability * 4f; // 最大短縮ターン=4
+                    var baseShorten = Mathf.Floor(expectedShorten);//基本短縮ターン
+                    var ratio = expectedShorten - baseShorten;//小数点以下の端数
+                    var upChance = ratio / 3;//上昇確率
+                    float finalShorten = baseShorten;
+                    if(RandomEx.Shared.NextFloat(1) < upChance)
+                    {
+                        finalShorten = baseShorten + 1;
+                    }
+
+
+                    //finalshortenを利用してこのループの仲間キャラのrecovelyturnを短縮する処理。
+                    ally.RecovelyTurnTmpMinus((int)finalShorten);
+                }
             }
         }
     }
@@ -882,12 +978,13 @@ public class BattleManager
         //実行処理
         skill.SetDeltaTurn(BattleTurnCount);//スキルのdeltaTurnをセット
         CreateBattleMessage(Acter.AttackChara(unders));//攻撃の処理からメッセージが返る。
-        unders = new UnderActersEntryList(this);//初期化
+        
 
         //慣れフラットロゼが起こるかどうかの判定　
         TryAddFlatRoze();
 
-        
+        //相性値による被害者への救済意図での再行動ターン
+        TryHelpMinusRecovelyTurnByCompatibility();
 
 
         if (skill.NextConsecutiveATK())//まだ連続実行するなら
@@ -922,6 +1019,8 @@ public class BattleManager
 
             //もし連続攻撃があった場合、それはここでは完了したので、自動で_atkCountUpは0になってる
         }
+
+        unders = new UnderActersEntryList(this);//対象者リスト初期化
 
 
         return ACTPop();

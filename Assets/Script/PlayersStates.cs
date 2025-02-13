@@ -216,8 +216,15 @@ public class PlayersStates:MonoBehaviour
     {
         var playerGroup = new List<BaseStates> { geino, sites, noramlia }; //キャラ
         var nowOurImpression = GetPartyImpression(); //パーティー属性を彼らのHPから決定
+        var CompatibilityData = new Dictionary<(BaseStates,BaseStates),int>();//相性値のデータ保存用
 
-        return new BattleGroup(playerGroup, nowOurImpression,WhichGroup.alliy); //パーティー属性を返す
+        // 複数キャラがいる場合のみ、各キャラペアの相性値を計算して格納する
+        if (playerGroup.Count >= 2)
+        {
+            //ストーリー依存
+        }
+
+        return new BattleGroup(playerGroup, nowOurImpression,WhichGroup.alliy,CompatibilityData); //パーティー属性を返す
     }
 
     /// <summary>
