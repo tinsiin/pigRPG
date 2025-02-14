@@ -870,6 +870,10 @@ public abstract class BaseStates
 
     //ポイント
     public int P;
+    /// <summary>
+    /// 前回ターンが前のめりかの記録
+    /// </summary>
+    public bool _tempVanguard;
 
     /// <summary>
     ///     リカバリターン/再行動クールタイムの設定値。
@@ -2338,6 +2342,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     public void OnBattleStartNoArgument()
     {
         TempDamageTurn = 0;
+        _tempVanguard = false;
         DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
         DecisionSacriFaithAdaptToSkillGrouping();
         skillDatas = new List<ACTSkillData>();//スキルの行動記録はbm単位で記録する。

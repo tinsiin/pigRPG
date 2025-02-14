@@ -557,9 +557,6 @@ public class BattleManager
 
             if (Acter.FreezeUseSkill == null)//強制続行中のスキルがなければ
             {
-                //選択画面と範囲画面の自動生成準備
-                SubscribeToRangeAndTargetUIStateChanges();
-
                 //スキル選択ボタンを各キャラの物にしてから
                 SwitchAllySkillUiState();
 
@@ -575,9 +572,6 @@ public class BattleManager
                 if (skill.NowConsecutiveATKFromTheSecondTimeOnward()
                 && skill.HasConsecutiveType(SkillConsecutiveType.CanOprate))
                 {
-                    //選択画面と範囲画面の自動生成準備
-                    SubscribeToRangeAndTargetUIStateChanges();
-
                     //範囲画面と対象者選択画面どちらに向かうかの判定
                     return AllyClass.DetermineNextUIState(skill);
                 }
@@ -648,24 +642,6 @@ public class BattleManager
                 break;
 
         }
-
-    }
-    /// <summary>
-    /// 範囲、対象者選択ボタンに移行した際、battlemanager(ここ)の情報を持って生成コールバックが
-    /// 生成されるようにする。
-    /// </summary>
-    void SubscribeToRangeAndTargetUIStateChanges()
-    {
-        if (Walking.disposableCreateTarget != null) Walking.disposableCreateTarget.Dispose();//既に入ってたらnullする。
-        Walking.disposableCreateTarget = Walking.USERUI_state.Subscribe(
-            state =>
-            {
-                if (state == TabState.SelectTarget) SelectTargetButtons.Instance.OnCreated();
-                //それぞれ画面に移動したときに生成コールが実行されるようにする
-
-                if (state == TabState.SelectRange) SelectRangeButtons.Instance.OnCreated();
-            });
-
 
     }
 
@@ -1059,7 +1035,7 @@ public class BattleManager
         TryHelpMinusRecovelyTurnByCompatibility();
 
         //被害者と相性値の高いキャラが攻撃者に対して対象者ボーナスを得るかどうか 復讐ボーナス的な
-TryAddRevengeBonus();
+        TryAddRevengeBonus();
         
 
 
@@ -1107,8 +1083,8 @@ TryAddRevengeBonus();
     /// 条件：
     /// 1. パッシブ0を持っている
     /// 2. 攻撃タイプのスキル
-    /// 3. 前のめりでない
-    /// 4. 前のめりになる攻撃
+    /// 3. 前回前のめりでない
+    /// 4. 前のめりになったら(今回のisagressivecommitスキルで後衛から前のめりに転じたなら)
     /// 5. スキル使用回数が20回以上
     /// 6. 単回攻撃である
     /// 7. 命中率が50か60に近いほど発生しやすい
@@ -1118,8 +1094,8 @@ TryAddRevengeBonus();
     {
         if (!Acter.HasPassive(0)) return false;
         if (!Acter.NowUseSkill.HasType(SkillType.Attack)) return false;
-        if (IsVanguard(Acter)) return false;
-        if (!Acter.NowUseSkill.IsAggressiveCommit) return false;
+        if (Acter._tempVanguard) return false;
+        if (!IsVanguard(Acter)) return false;
         if (Acter.NowUseSkill.RecordDoCount <= 20) return false;
         if (Acter.NowUseSkill.NowConsecutiveATKFromTheSecondTimeOnward()) return false;
         
@@ -1531,9 +1507,13 @@ TryAddRevengeBonus();
         if (Next)
         {
             BattleTurnCount++;
-            //全てのキャラクターの対象者ボーナスの持続ターンの処理
+
+            
             foreach(var chara in AllCharacters)
             {
+                chara._tempVanguard = IsVanguard(chara);//前のめりの前回記録
+
+                //全てのキャラクターの対象者ボーナスの持続ターンの処理
                 chara.TargetBonusDatas.AllDecrementDurationTurn();//持続ターンがゼロ以下になったら削除
             }
         }

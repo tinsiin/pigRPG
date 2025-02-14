@@ -26,7 +26,6 @@ public class Walking : MonoBehaviour
     /// </summary>
     public static ReactiveProperty<SkillUICharaState> SKILLUI_state = new();
 
-    public static IDisposable disposableCreateTarget;
 
 
     /// <summary>
@@ -65,6 +64,16 @@ public class Walking : MonoBehaviour
         {       
             ps.VisiableSettingStopFreezeConsecutiveButtons();
         }).AddTo(this);
+
+        //USERUIの状態のsubscribe
+        USERUI_state.Subscribe(
+            state =>
+            {
+                if (state == TabState.SelectTarget) SelectTargetButtons.Instance.OnCreated();
+                //それぞれ画面に移動したときに生成コールが実行されるようにする
+
+                if (state == TabState.SelectRange) SelectRangeButtons.Instance.OnCreated();
+            });
     }
 
     /// <summary>
