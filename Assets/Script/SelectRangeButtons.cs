@@ -49,14 +49,13 @@ public class SelectRangeButtons : MonoBehaviour
     float optionStartX;
     float optionStartY;
 
-    BattleManager bm;
+    BattleManager bm => Walking.bm;
     List<Button> buttonList;
     /// <summary>
     /// 生成用コールバック
     /// </summary>
-    public void OnCreated(BattleManager _bm)
+    public void OnCreated()
     {
-        bm = _bm;
         var acter = bm.Acter;
         var skill = acter.NowUseSkill;
 

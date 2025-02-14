@@ -14,6 +14,142 @@ using static UnityEngine.Rendering.DebugUI;
 using UnityEditor.UIElements;
 
 /// <summary>
+/// 対象者ボーナスのデータ
+/// </summary>
+public class TargetBonusDatas
+{
+    /// <summary>
+    /// 持続ターン
+    /// </summary>
+    List<int> DurationTurns { get; set; }
+    /// <summary>
+    /// スキルのパワーボーナス倍率
+    /// </summary>
+    List<float> PowerBonusPercentages { get; set; }
+    /// <summary>
+    /// 対象者
+    /// </summary>
+    List<BaseStates> Targets { get; set; }
+    /// <summary>
+    /// 対象者がボーナスに含まれているか
+    /// </summary>
+    public bool DoIHaveTargetBonus(BaseStates target)
+    {
+        return Targets.Contains(target);
+    }
+    /// <summary>
+    /// 対象者のインデックスを取得
+    /// </summary>
+    public int GetTargetIndex(BaseStates target)
+    {
+        return Targets.FindIndex(x => x == target);
+    }
+    /// <summary>
+    /// 対象者ボーナスが発動しているか
+    /// </summary>
+    //public List<bool> IsTriggered { get; set; }     ーーーーーーーーーーーー一回自動で発動するようにするから消す、明確に対象者ボーナスの適用を手動にするなら解除
+    /// <summary>
+    /// 発動してるかどうかを取得
+    /// </summary>
+    /*public bool GetAtIsTriggered(int index)
+    {
+        return IsTriggered[index];
+    }*/
+    /// <summary>
+    /// 対象者ボーナスの持続ターンを取得
+    /// </summary>
+    public int GetAtDurationTurns(int index)
+    {
+        return DurationTurns[index];
+    }
+    /// <summary>
+    /// 全てのボーナスをデクリメントと自動削除の処理
+    /// </summary>
+    public void AllDecrementDurationTurn()
+    {
+        for (int i = 0; i < DurationTurns.Count; i++)
+        {
+            DecrementDurationTurn(i);
+        }
+    }
+    /// <summary>
+    /// 持続ターンをデクリメントし、0以下になったら削除する。全ての対象者ボーナスを削除する。
+    /// </summary>
+    void DecrementDurationTurn(int index)
+    {
+        DurationTurns[index]--;
+        if (DurationTurns[index] <= 0)
+        {
+            DurationTurns.RemoveAt(index);
+            PowerBonusPercentages.RemoveAt(index);
+            Targets.RemoveAt(index);
+        }
+    }
+    /// <summary>
+    /// 対象者ボーナスのパワーボーナス倍率を取得
+    /// </summary>
+    public float GetAtPowerBonusPercentage(int index)
+    {
+        return PowerBonusPercentages[index];
+    }
+    /// <summary>
+    /// 対象者ボーナスの対象者を取得
+    /// </summary>
+    public BaseStates GetAtTargets(int index)
+    {
+        return Targets[index];
+    }
+
+    public TargetBonusDatas()
+    {
+        DurationTurns =  new();
+        PowerBonusPercentages = new();
+        Targets = new();
+        //IsTriggered = new();
+    }
+
+    public void Add(int duration, float powerBonusPercentage, BaseStates target)
+    {
+        //targetの重複確認
+        if (Targets.Contains(target))
+        {
+            int index = Targets.IndexOf(target);//同じインデックスの物をすべて消す
+            DurationTurns.RemoveAt(index);
+            PowerBonusPercentages.RemoveAt(index);
+            Targets.RemoveAt(index);
+            //IsTriggered.RemoveAt(index);
+            return;
+        }
+
+        //追加
+        DurationTurns.Add(duration);
+        PowerBonusPercentages.Add(powerBonusPercentage);
+        Targets.Add(target);
+        //IsTriggered.Add(false);
+    }
+    /// <summary>
+    /// 全削除
+    /// </summary>
+    public void AllClear()
+    {
+        DurationTurns.Clear();
+        PowerBonusPercentages.Clear();
+        Targets.Clear();
+        //IsTriggered.Clear();
+    }
+    /// <summary>
+    /// 該当のインデックスのボーナスを削除
+    /// </summary>
+    public void BonusClear(int index)
+    {
+        DurationTurns.RemoveAt(index);
+        PowerBonusPercentages.RemoveAt(index);
+        Targets.RemoveAt(index);
+        //IsTriggered.RemoveAt(index);
+    }
+}
+
+/// <summary>
 ///     キャラクター達の種別
 /// </summary>
 [Flags]
@@ -259,6 +395,10 @@ public abstract class BaseStates
     /// キャラクターの行動記録
     /// </summary>
     public List<ACTSkillData> skillDatas;
+    /// <summary>
+    /// 現在持ってる対象者のボーナスデータ
+    /// </summary>
+    public TargetBonusDatas TargetBonusDatas ;
 
     /// <summary>
     /// 直近の行動記録
@@ -268,6 +408,7 @@ public abstract class BaseStates
     /// 直近の被害記録
     /// </summary>
     public DamageData RecentDamageData => damageDatas[damageDatas.Count - 1];
+
 
 
     [SerializeField] private List<BasePassive> _passiveList;
@@ -1844,7 +1985,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
         
     }
-    
+
     /// <summary>
     /// スキルに対するリアクション ここでスキルの解釈をする。
     /// </summary>
@@ -1984,22 +2125,35 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         return txt;
     }
-
-
     /// <summary>
     /// クラスを通じて相手を攻撃する
     /// </summary>
-    /// <param name="UnderAttacker"></param>
     public virtual string AttackChara(UnderActersEntryList Unders)
     {
-
-
-
         SkillUseConsecutiveCountUp(NowUseSkill);//連続カウントアップ
         string txt = "";
 
         // スキルの精神属性を自分の精神属性に変更
         NowUseSkill.SkillSpiritual = MyImpression;
+
+        //対象者ボーナスの適用
+        if(Unders.Count == 1)//結果として一人だけを選び、
+        {
+            if(NowUseSkill.HasZoneTraitAny(SkillZoneTrait.CanPerfectSelectSingleTarget,SkillZoneTrait.CanSelectSingleTarget,
+            SkillZoneTrait.RandomSingleTarget,SkillZoneTrait.ControlByThisSituation))//単体スキルなら
+            {
+                var ene =Unders.GetAtCharacter(0);
+                if(TargetBonusDatas.DoIHaveTargetBonus(ene))//対象者ボーナスを持っていれば
+                {
+                    //適用
+                    var index = TargetBonusDatas.GetTargetIndex(ene);
+                    SetATKPercentageModifier(TargetBonusDatas.GetAtPowerBonusPercentage(index),"対象者ボーナス");
+
+                    //適用した対象者ボーナスの削除　該当インデックスのclear関数の制作
+                    TargetBonusDatas.BonusClear(index);
+                }
+            }
+        }
 
         for (var i = 0; i < Unders.Count; i++)
         {
@@ -2089,6 +2243,9 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             skill.OnDeath();
         }
+
+        //対象者ボーナス全削除
+        TargetBonusDatas.AllClear();
 
     }
 
@@ -2184,6 +2341,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
         DecisionSacriFaithAdaptToSkillGrouping();
         skillDatas = new List<ACTSkillData>();//スキルの行動記録はbm単位で記録する。
+        damageDatas = new();
+        TargetBonusDatas = new();
         
     }
     public void OnBattleEndNoArgument()

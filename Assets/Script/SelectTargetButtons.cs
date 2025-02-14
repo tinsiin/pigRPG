@@ -51,7 +51,7 @@ public class SelectTargetButtons : MonoBehaviour
     float startX;
     float startY;
 
-    BattleManager bm;
+    BattleManager bm => Walking.bm;
     int NeedSelectCountAlly;//このneedcountは基本的には対象選択のみ
     int NeedSelectCountEnemy;
     List<Button> AllybuttonList;
@@ -61,9 +61,8 @@ public class SelectTargetButtons : MonoBehaviour
     /// <summary>
     /// 生成用コールバック
     /// </summary>
-    public void OnCreated(BattleManager _bm)
+    public void OnCreated()
     {
-        bm = _bm;
         var acter = bm.Acter;
         var skill = acter.NowUseSkill;
         CashUnders = new List<BaseStates>();
@@ -127,7 +126,7 @@ public class SelectTargetButtons : MonoBehaviour
             //つまりボタンを作らずそのままNextWaitへ
 
             var enemyLives = bm.RemoveDeathCharacters(bm.EnemyGroup.Ours);//生きてる敵だけ
-            if((bm.EnemyGroup.InstantVanguard == null || enemyLives.Count < 2)) //前のめりがいないか　敵の生きてる人数が二人未満
+            if(bm.EnemyGroup.InstantVanguard == null || enemyLives.Count < 2) //前のめりがいないか　敵の生きてる人数が二人未満
             {
                 if (!AllyTargeting)//味方選択がないなら
                 {
@@ -147,24 +146,52 @@ public class SelectTargetButtons : MonoBehaviour
                         currentX = startX;
 
                         // 次の行に移動
-                        currentY -= (buttonSize.y + verticalPadding);
+                        currentY -= buttonSize.y + verticalPadding;
                     }
 
                     // ボタンの位置を設定
                     rect.anchoredPosition = new Vector2(currentX, currentY);
 
                     // 次のボタンのX位置を更新
-                    currentX += (buttonSize.x + horizontalPadding);
+                    currentX += buttonSize.x + horizontalPadding;
+
+                    //テキスト
+                    var txt = "敵";
+
+                    //対象者ボーナスの発動範囲なのでテキストに記す
+                    if (acter.HasRangeWill(SkillZoneTrait.CanSelectSingleTarget) && enemyLives.Count == 1)
+                    {
+                        var data = acter.TargetBonusDatas;
+                        var singleEne = enemyLives[0];
+                        if(data.DoIHaveTargetBonus(singleEne))//対象者ボーナスに該当の敵キャラが含まれてるのなら
+                        {
+                            //その対象者のボーナス倍率を取得し、ボタンテキストに追加
+                            var percentage = data.GetAtPowerBonusPercentage(data.GetTargetIndex(singleEne));//対象者ボーナス
+                            txt += "\n " + percentage + "倍";
+                        }
+                        
+                    }
 
                     button.onClick.AddListener(() => OnClickSelectVanguardOrBacklines(button, DirectedWill.BacklineOrAny));
-                    button.GetComponentInChildren<TextMeshProUGUI>().text = "敵";//ボタンのテキスト
+                    button.GetComponentInChildren<TextMeshProUGUI>().text = txt;//ボタンのテキスト
                     EnemybuttonList.Add(button);//敵のボタンリストに入れる
                 }
             }
             else//前のめりがいて二人以上いるなら
             {
+                //前のめりのキャラクターが対象者ボーナスに含まれているか調査
+                var vanguard = bm.EnemyGroup.InstantVanguard;
+                var data = acter.TargetBonusDatas;
+                var txt = "前のめり";
+                if(data.DoIHaveTargetBonus(vanguard))//対象者ボーナスに含まれてるのなら
+                {
+                    //その対象者のボーナス倍率を取得し、ボタンテキストに追加
+                    var percentage = data.GetAtPowerBonusPercentage(data.GetTargetIndex(vanguard));//対象者ボーナス
+                    txt += "\n " + percentage + "倍";
+                }
+
                 DirectedWill[] WillSet = new DirectedWill[] { DirectedWill.InstantVanguard, DirectedWill.BacklineOrAny };//for文で処理するため配列
-                string[] BtnStringSet = new string[] { "前のめり", "それ以外" };
+                string[] BtnStringSet = new string[] { txt, "それ以外" };
 
                 for (var i = 0; i < 2; i++)
                 {
@@ -178,14 +205,14 @@ public class SelectTargetButtons : MonoBehaviour
                         currentX = startX;
 
                         // 次の行に移動
-                        currentY -= (buttonSize.y + verticalPadding);
+                        currentY -= buttonSize.y + verticalPadding;
                     }
 
                     // ボタンの位置を設定
                     rect.anchoredPosition = new Vector2(currentX, currentY);
 
                     // 次のボタンのX位置を更新
-                    currentX += (buttonSize.x + horizontalPadding);
+                    currentX += buttonSize.x + horizontalPadding;
 
                     button.onClick.AddListener(() => OnClickSelectVanguardOrBacklines(button, WillSet[i]));
                     button.GetComponentInChildren<TextMeshProUGUI>().text = BtnStringSet[i];//ボタンのテキストに前のめり等の記述
@@ -227,17 +254,28 @@ public class SelectTargetButtons : MonoBehaviour
                         currentX = startX;
 
                         // 次の行に移動
-                        currentY -= (buttonSize.y + verticalPadding);
+                        currentY -= buttonSize.y + verticalPadding;
                     }
 
                     // ボタンの位置を設定
                     rect.anchoredPosition = new Vector2(currentX, currentY);
 
                     // 次のボタンのX位置を更新
-                    currentX += (buttonSize.x + horizontalPadding);
+                    currentX += buttonSize.x + horizontalPadding;
+
+                    var ene = selects[i];
+                    var txt = ene.CharacterName;//テキストにキャラ名
+                    var data = acter.TargetBonusDatas;
+                    if(data.DoIHaveTargetBonus(ene))//対象者ボーナスに含まれてるのなら
+                    {
+                        //その対象者のボーナス倍率を取得し、ボタンテキストに追加
+                        var percentage = data.GetAtPowerBonusPercentage(data.GetTargetIndex(ene));//対象者ボーナス
+                        txt += "\n " + percentage + "倍";
+                    }
+
 
                     button.onClick.AddListener(() => OnClickSelectTarget(selects[i], button, WhichGroup.Enemyiy, DirectedWill.One));//関数を登録
-                    button.GetComponentInChildren<TextMeshProUGUI>().text = selects[i].CharacterName;//ボタンのテキストにキャラ名
+                    button.GetComponentInChildren<TextMeshProUGUI>().text = txt;//ボタンのテキスト
                     EnemybuttonList.Add(button);//敵のボタンリストを入れる
 
                 }
@@ -268,14 +306,14 @@ public class SelectTargetButtons : MonoBehaviour
                     currentX = startX;
 
                     // 次の行に移動
-                    currentY -= (buttonSize.y + verticalPadding);
+                    currentY -= buttonSize.y + verticalPadding;
                 }
 
                 // ボタンの位置を設定
                 rect.anchoredPosition = new Vector2(currentX, currentY);
 
                 // 次のボタンのX位置を更新
-                currentX += (buttonSize.x + horizontalPadding);
+                currentX += buttonSize.x + horizontalPadding;
 
                 button.onClick.AddListener(() => OnClickSelectTarget(selects[i], button, WhichGroup.alliy, DirectedWill.One));//関数を登録
                 button.GetComponentInChildren<TextMeshProUGUI>().text = selects[i].CharacterName;//ボタンのテキストにキャラ名

@@ -487,6 +487,9 @@ public class AllyClass : BaseStates
     /// <returns>遷移先のTabState</returns>
     public static TabState DetermineNextUIState(BaseSkill skill)
     {
+        
+
+
         if (skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))//範囲を選べるのなら
         {
             return TabState.SelectRange;//範囲選択画面へ飛ぶ

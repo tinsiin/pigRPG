@@ -278,6 +278,10 @@ public class BattleManager
     ///     敵側のバトルグループ　ここに敵グループのバトルグループオブジェクトをリンクする？
     /// </summary>
     public BattleGroup EnemyGroup;
+    /// <summary>
+    ///全キャラクターのリスト
+    /// </summary>
+    public List<BaseStates> AllCharacters => AllyGroup.Ours.Concat(EnemyGroup.Ours).ToList();
 
     /// <summary>
     /// factionのグループを返す
@@ -621,9 +625,7 @@ public class BattleManager
             OnlyRemainButtonByZoneTrait |= SkillZoneTrait.CanPerfectSelectSingleTarget//単体系の範囲性質を全て入れる
                                        | SkillZoneTrait.CanSelectSingleTarget
                                        | SkillZoneTrait.RandomSingleTarget
-                                       | SkillZoneTrait.RandomTargetALLSituation
-                                       | SkillZoneTrait.RandomTargetMultiOrSingle
-                                       | SkillZoneTrait.RandomTargetALLorSingle;
+                                       | SkillZoneTrait.ControlByThisSituation;
 
             OnlyRemainButtonByType |= SkillType.Attack;//攻撃性質を持つもの限定
         }
@@ -658,10 +660,10 @@ public class BattleManager
         Walking.disposableCreateTarget = Walking.USERUI_state.Subscribe(
             state =>
             {
-                if (state == TabState.SelectTarget) SelectTargetButtons.Instance.OnCreated(this);
+                if (state == TabState.SelectTarget) SelectTargetButtons.Instance.OnCreated();
                 //それぞれ画面に移動したときに生成コールが実行されるようにする
 
-                if (state == TabState.SelectRange) SelectRangeButtons.Instance.OnCreated(this);
+                if (state == TabState.SelectRange) SelectRangeButtons.Instance.OnCreated();
             });
 
 
@@ -953,6 +955,76 @@ public class BattleManager
         }
     }
     /// <summary>
+    /// 被害者との相性値の高いキャラが攻撃者に対して対象者ボーナスを得るかどうか　復讐ボーナス
+    /// </summary>
+    void TryAddRevengeBonus()
+    {
+        for (var i = 0; i < unders.Count; i++)//被害者全員分ループ
+        {
+            var chara = unders.GetAtCharacter(i);
+            var HelpGroup = MyGroup(chara);//所属するBattleGroupを取得
+            var LiveAllyGroupList = GetOtherAlliesAlive(chara);//被害者の生きている味方
+            if(LiveAllyGroupList.Count < 1)continue;//味方がいなければスキップ
+
+            //特定の相性値%以上の相性値が被害者に対してある味方のみに絞る　味方→被害者　への相性値
+            LiveAllyGroupList = LiveAllyGroupList.Where(ally => 
+            HelpGroup.CharaCompatibility.ContainsKey((ally, chara)) && HelpGroup.CharaCompatibility[(ally, chara)] >= 86).ToList();
+            if(LiveAllyGroupList.Count < 1)continue;//60以上の相性値を持ってる味方がいなければスキップ
+            var data = chara.RecentDamageData;//被害者のダメージ記録
+            var DamageRate = data.Damage/chara.MAXHP;//被害者のダメージ率
+
+            foreach(var ally in LiveAllyGroupList)//特定の相性値以上の相性値を持ってる味方全員分ループ
+            {
+                if(ally.NowPower < ThePower.medium)continue;//パワーが普通未満ならスキップ
+
+                // 1. 相性値取得（味方→被害者）
+                float compatibility = HelpGroup.CharaCompatibility[(ally, chara)];
+                // 有効な相性値は86以上。相性値が高いほど効果が大きくなるよう、線形補正
+                // ここでは86で0%、130で1.0とする（130未満は0～1のグラデーション）
+                float compatibilityFactor = Mathf.Clamp01((compatibility - 86f) / (130f - 86f));
+                // 3. 最大を0.7に制限
+                compatibilityFactor = Mathf.Clamp01(compatibilityFactor) * 0.7f; // 0～0.7
+
+                // 2. 気力パワー補正（実行者の気力パワー）
+                float powerFactor = 0.5f;//普通なら半分
+                if(ally.NowPower > ThePower.medium)powerFactor = 1f;//高いならそのまま
+
+                // 3. 発生確率の算出（複合方式：）
+                // 複合係数 k を導入（ダメージ割合の影響度）
+                float k = 1.5f; // 大きいほど DamageRate の影響が強くなる
+
+                // 複合方式
+                float occurrenceProbability = compatibilityFactor * (1f + k * DamageRate) * powerFactor;
+                occurrenceProbability = Mathf.Clamp01(occurrenceProbability);// 0~1 に収める
+
+                // 発生判定：発生確率が一定値以上なら復讐ボーナス発動
+                if (rollper(occurrenceProbability * 100)) // rollperは%で判定
+                {
+                    // 4. 持続ターンの計算（最大12ターン）
+                    // ここでは、発生確率に応じて期待値として計算し、離散化
+                    float expectedDuration = occurrenceProbability * 12f;
+                    int baseDuration = Mathf.FloorToInt(expectedDuration);
+                    float extraChance = expectedDuration - baseDuration;
+                    int duration = baseDuration;
+                    if (RandomEx.Shared.NextFloat(1f) < extraChance/2.3f)//離散化の上振れを2.3で割って半減している
+                    {
+                        duration++;
+                    }
+
+                    // 5. ボーナス倍率の計算
+                    // 例として、1.0倍からスタートし、発生確率に応じて上乗せする
+                    // ここでは、発生確率が1.0でつまり一番大きいと、右の倍率がフルで上乗せ
+                    float bonusMultiplier = 1f + occurrenceProbability * 0.4f;
+
+                    // 6. 敵（攻撃者）に対して復讐ボーナスを適用する
+                    ally.TargetBonusDatas.Add(duration+1, bonusMultiplier,data.Attacker);
+                    //ほとんどターンの最後の方で指定されるため、持続ターン+1にして入れておく、
+
+                }
+            }
+        }
+    }
+    /// <summary>
     /// スキルアクトを実行
     /// </summary>
     /// <returns></returns>
@@ -985,6 +1057,10 @@ public class BattleManager
 
         //相性値による被害者への救済意図での再行動ターン
         TryHelpMinusRecovelyTurnByCompatibility();
+
+        //被害者と相性値の高いキャラが攻撃者に対して対象者ボーナスを得るかどうか 復讐ボーナス的な
+TryAddRevengeBonus();
+        
 
 
         if (skill.NextConsecutiveATK())//まだ連続実行するなら
@@ -1452,9 +1528,15 @@ public class BattleManager
             Acts.RemoveAt(0);
 
         //Turnを進める
-        if (!Next)
+        if (Next)
+        {
             BattleTurnCount++;
-
+            //全てのキャラクターの対象者ボーナスの持続ターンの処理
+            foreach(var chara in AllCharacters)
+            {
+                chara.TargetBonusDatas.AllDecrementDurationTurn();//持続ターンがゼロ以下になったら削除
+            }
+        }
         AllyGroup.OnPartyNextTurnNoArgument();//次のターンへ行く引数なしコールバック
         EnemyGroup.OnPartyNextTurnNoArgument();
 
