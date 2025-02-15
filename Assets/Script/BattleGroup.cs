@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
+using static CommonCalc;
 
 /// <summary>
 ///     パーティー属性
@@ -128,6 +129,49 @@ public class BattleGroup
         }
         return true;//全員死んでるからtrue
     }
+        /// <summary>
+    /// このターンで死んだキャラクターのリストに変換
+    /// </summary>
+    /// <returns></returns>
+    List<BaseStates> ThisTurnToDieCharactersList(List<BaseStates> notYetCheckedCharacters)
+    {
+        var DeathCharacters = OnlyDeathCharacters(notYetCheckedCharacters);//まず死亡者のみに
+
+        return DeathCharacters.Where(chara => chara._tempLive).ToList();//前回生きていたキャラクターのみを残す
+    }
+
+    /// <summary>
+    /// パーティー全員分相性値の高い敵が死んだときの人間状況の変化処理を行う。
+    /// BaseStatesの_tempLiveの記録が行われる前に実行する必要がある。
+    /// </summary>
+    public void PartyApplyConditionChangeOnCloseAllyDeath()
+    {
+        var thisTurnDeathCharacters = ThisTurnToDieCharactersList(Ours);
+        var LiveCharacters = RemoveDeathCharacters(Ours);//生きてる味方のみ
+        if(LiveCharacters.Count == 0)
+        {
+            Debug.LogWarning("生存者がいないのに、PartApplyConditionChangeOnCloseAllyDeathが呼び出された。");
+            return;
+        }
+
+        foreach(var LiveAlly in LiveCharacters)
+        {
+            var DeathCount = 0;
+            foreach(var DeathAlly in thisTurnDeathCharacters)//今回の死んだ味方で回す。
+            {
+                if(CharaCompatibility[(LiveAlly,DeathAlly)] >= 90)//生きてる味方から死んでる味方への相性が90以上なら
+                {
+                    DeathCount++;//相性値の高い死者数を増やす
+                }
+            }
+            if(DeathCount > 0)//生きてる味方とと相性値が高い今回の死者がいたら
+            {
+                LiveAlly.ApplyConditionChangeOnCloseAllyDeath(DeathCount);//味方の人間状況を変更
+            }
+        }
+    }
+
+
     /// <summary>
     /// oursがnormalEnemyの時だけ利用する。リカバリーステップのカウント準備の処理
     /// </summary>
@@ -156,7 +200,7 @@ public class BattleGroup
     ///<summary>
     ///グループの人員同士の相性値
     ///</summary>
-    public Dictionary<(BaseStates,BaseStates),int> CharaCompatibility = new();
+    public Dictionary<(BaseStates I,BaseStates You),int> CharaCompatibility = new();
 
     public void SetCharactersList(List<BaseStates> list)
     {

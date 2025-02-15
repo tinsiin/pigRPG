@@ -375,13 +375,7 @@ public class BattleManager
         //noraml、つまり普通に始まったら先約リスト二は何も始まらない
 
     }
-    /// <summary>
-    /// BaseStatesを継承したキャラクターのListから死亡者を省いたリストに変換する
-    /// </summary>
-    public List<BaseStates> RemoveDeathCharacters(List<BaseStates> Charas)
-    {
-        return Charas.Where(chara => !chara.Death()).ToList();
-    }
+    
 
     /// <summary>
     /// BaseStatesを継承したキャラクターのListからrecovelyTurnのカウントアップして行動状態に回復出来る奴だけを選別する
@@ -1045,8 +1039,9 @@ public class BattleManager
             {
                 NextTurn(false);
 
-                if (Acts.Count <= 0)//先約リストに今回の実行者を入れとく
-                    Acts.Add(Acter, ActerFaction);
+                //先約リストに今回の実行者を入れとく
+                //if (Acts.Count <= 0) //このコードいらなくね
+                Acts.Add(Acter, ActerFaction);
 
                 Acter.FreezeSkill();//連続実行の為凍結
 
@@ -1506,9 +1501,13 @@ public class BattleManager
         //Turnを進める
         if (Next)
         {
+            //キャラの死によるそのキャラに対する味方の相性値が高ければ、人間状況の変化が起こる処理
+            AllyGroup.PartyApplyConditionChangeOnCloseAllyDeath();
+            EnemyGroup.PartyApplyConditionChangeOnCloseAllyDeath();
+
+            //ターン数加算
             BattleTurnCount++;
 
-            
             foreach(var chara in AllCharacters)
             {
                 chara._tempVanguard = IsVanguard(chara);//前のめりの前回記録
@@ -1516,10 +1515,11 @@ public class BattleManager
                 //全てのキャラクターの対象者ボーナスの持続ターンの処理
                 chara.TargetBonusDatas.AllDecrementDurationTurn();//持続ターンがゼロ以下になったら削除
             }
-        }
-        AllyGroup.OnPartyNextTurnNoArgument();//次のターンへ行く引数なしコールバック
-        EnemyGroup.OnPartyNextTurnNoArgument();
+            AllyGroup.OnPartyNextTurnNoArgument();//次のターンへ行く引数なしコールバック
+            EnemyGroup.OnPartyNextTurnNoArgument();
 
+        }
+        
 
         //前のめり者が死亡してたら、nullにする処理
         AllyGroup.VanGuardDeath();

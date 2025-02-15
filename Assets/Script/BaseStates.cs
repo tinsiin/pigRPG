@@ -12,143 +12,7 @@ using static BattleManager;
 using Unity.Burst.CompilerServices;
 using static UnityEngine.Rendering.DebugUI;
 using UnityEditor.UIElements;
-
-/// <summary>
-/// 対象者ボーナスのデータ
-/// </summary>
-public class TargetBonusDatas
-{
-    /// <summary>
-    /// 持続ターン
-    /// </summary>
-    List<int> DurationTurns { get; set; }
-    /// <summary>
-    /// スキルのパワーボーナス倍率
-    /// </summary>
-    List<float> PowerBonusPercentages { get; set; }
-    /// <summary>
-    /// 対象者
-    /// </summary>
-    List<BaseStates> Targets { get; set; }
-    /// <summary>
-    /// 対象者がボーナスに含まれているか
-    /// </summary>
-    public bool DoIHaveTargetBonus(BaseStates target)
-    {
-        return Targets.Contains(target);
-    }
-    /// <summary>
-    /// 対象者のインデックスを取得
-    /// </summary>
-    public int GetTargetIndex(BaseStates target)
-    {
-        return Targets.FindIndex(x => x == target);
-    }
-    /// <summary>
-    /// 対象者ボーナスが発動しているか
-    /// </summary>
-    //public List<bool> IsTriggered { get; set; }     ーーーーーーーーーーーー一回自動で発動するようにするから消す、明確に対象者ボーナスの適用を手動にするなら解除
-    /// <summary>
-    /// 発動してるかどうかを取得
-    /// </summary>
-    /*public bool GetAtIsTriggered(int index)
-    {
-        return IsTriggered[index];
-    }*/
-    /// <summary>
-    /// 対象者ボーナスの持続ターンを取得
-    /// </summary>
-    public int GetAtDurationTurns(int index)
-    {
-        return DurationTurns[index];
-    }
-    /// <summary>
-    /// 全てのボーナスをデクリメントと自動削除の処理
-    /// </summary>
-    public void AllDecrementDurationTurn()
-    {
-        for (int i = 0; i < DurationTurns.Count; i++)
-        {
-            DecrementDurationTurn(i);
-        }
-    }
-    /// <summary>
-    /// 持続ターンをデクリメントし、0以下になったら削除する。全ての対象者ボーナスを削除する。
-    /// </summary>
-    void DecrementDurationTurn(int index)
-    {
-        DurationTurns[index]--;
-        if (DurationTurns[index] <= 0)
-        {
-            DurationTurns.RemoveAt(index);
-            PowerBonusPercentages.RemoveAt(index);
-            Targets.RemoveAt(index);
-        }
-    }
-    /// <summary>
-    /// 対象者ボーナスのパワーボーナス倍率を取得
-    /// </summary>
-    public float GetAtPowerBonusPercentage(int index)
-    {
-        return PowerBonusPercentages[index];
-    }
-    /// <summary>
-    /// 対象者ボーナスの対象者を取得
-    /// </summary>
-    public BaseStates GetAtTargets(int index)
-    {
-        return Targets[index];
-    }
-
-    public TargetBonusDatas()
-    {
-        DurationTurns =  new();
-        PowerBonusPercentages = new();
-        Targets = new();
-        //IsTriggered = new();
-    }
-
-    public void Add(int duration, float powerBonusPercentage, BaseStates target)
-    {
-        //targetの重複確認
-        if (Targets.Contains(target))
-        {
-            int index = Targets.IndexOf(target);//同じインデックスの物をすべて消す
-            DurationTurns.RemoveAt(index);
-            PowerBonusPercentages.RemoveAt(index);
-            Targets.RemoveAt(index);
-            //IsTriggered.RemoveAt(index);
-            return;
-        }
-
-        //追加
-        DurationTurns.Add(duration);
-        PowerBonusPercentages.Add(powerBonusPercentage);
-        Targets.Add(target);
-        //IsTriggered.Add(false);
-    }
-    /// <summary>
-    /// 全削除
-    /// </summary>
-    public void AllClear()
-    {
-        DurationTurns.Clear();
-        PowerBonusPercentages.Clear();
-        Targets.Clear();
-        //IsTriggered.Clear();
-    }
-    /// <summary>
-    /// 該当のインデックスのボーナスを削除
-    /// </summary>
-    public void BonusClear(int index)
-    {
-        DurationTurns.RemoveAt(index);
-        PowerBonusPercentages.RemoveAt(index);
-        Targets.RemoveAt(index);
-        //IsTriggered.RemoveAt(index);
-    }
-}
-
+using static CommonCalc;
 /// <summary>
 ///     キャラクター達の種別
 /// </summary>
@@ -237,6 +101,44 @@ public enum PhysicalProperty
     dishSmack //床ずれ、ヴぉ流転、暴断
     ,none
 }
+/// <summary>
+/// 人間状況　全員持つけど例えばLife以外なんかは固定されてたりしたりする。
+/// </summary>
+public enum HumanConditionCircumstances
+{
+    /// <summary>
+    /// 辛い状態を表します。
+    /// </summary>
+    Painful,
+    /// <summary>
+    /// 楽観的な状態を表します。
+    /// </summary>
+    Optimistic,
+    /// <summary>
+    /// 高揚した状態を表します。
+    /// </summary>
+    Elated,
+    /// <summary>
+    /// 覚悟を決めた状態を表します。
+    /// </summary>
+    Resolved,
+    /// <summary>
+    /// 怒りの状態を表します。
+    /// </summary>
+    Angry,
+    /// <summary>
+    /// 状況への疑念を抱いている状態を表します。
+    /// </summary>
+    Doubtful,
+    /// <summary>
+    /// 混乱した状態を表します。
+    /// </summary>
+    Confused,
+    /// <summary>
+    /// 普段の状態を表します。
+    /// </summary>
+    Normal
+    }
 /// <summary>
 /// パワー、元気、気力値　歩行やその他イベントなどで短期的に上げ下げし、
 /// 狙い流れ等の防ぎ方切り替え処理などで、さらに上下する値として導入されたりする。
@@ -874,6 +776,10 @@ public abstract class BaseStates
     /// 前回ターンが前のめりかの記録
     /// </summary>
     public bool _tempVanguard;
+    /// <summary>
+    /// 前回ターンに生きてたかどうかの比較のため
+    /// </summary>
+    public bool _tempLive;
 
     /// <summary>
     ///     リカバリターン/再行動クールタイムの設定値。
@@ -1126,6 +1032,398 @@ public abstract class BaseStates
     /// </summary>
     public SpiritualProperty DefaultImpression;
 
+    /// <summary>
+    /// 現在のこのキャラの人間状況
+    /// </summary>
+    public HumanConditionCircumstances NowCondition;
+
+    /// <summary>
+    /// 相性値の高い仲間が死んだ際の人間状況の変化
+    /// </summary>
+    public void ApplyConditionChangeOnCloseAllyDeath(int deathCount)
+    {
+        if(MyType == CharacterType.Life)//基本的に生命のみ
+        {
+            switch (NowCondition)//死によって、どの状況からどの状況へ変化するか
+            {
+                case HumanConditionCircumstances.Painful://辛い
+                    NowCondition = HumanConditionCircumstances.Confused;//辛いと誰でも混乱する
+                    break;
+                case HumanConditionCircumstances.Optimistic://楽観的
+                    switch(MyImpression)
+                    {
+                        case SpiritualProperty.kindergarden:
+                            if(rollper(36))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            else
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }
+                        break;
+                        case SpiritualProperty.pysco:
+                            if(deathCount > 1)
+                            {//二人なら危機感を感じて普調になる
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }
+                            else
+                            {
+                                //変化なし
+                            }
+                        break;
+                        case SpiritualProperty.baledrival:
+                            if(deathCount > 1)
+                            {//二人なら怒り
+                                NowCondition = HumanConditionCircumstances.Angry;
+                            }
+                            else
+                            {
+                                //そうでないなら変化なし
+                            }
+                        break;
+                        case SpiritualProperty.devil:
+                        case SpiritualProperty.sacrifaith:
+                        case SpiritualProperty.cquiest:
+                        case SpiritualProperty.godtier:
+                        case SpiritualProperty.pillar:
+                        case SpiritualProperty.doremis:
+                            NowCondition = HumanConditionCircumstances.Angry;
+                        break;
+                        case SpiritualProperty.liminalwhitetile:
+                            if(deathCount>1 && rollper(10))
+                            {
+                                //変化なし
+                            }else
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }
+                        break;
+                    }
+                    break;
+                case HumanConditionCircumstances.Elated:
+                    switch(MyImpression)
+                    {
+                        case SpiritualProperty.liminalwhitetile:
+                            if(deathCount>1)
+                            {//二人なら混乱
+                                NowCondition = HumanConditionCircumstances.Confused;
+                            }else
+                            {
+                                //変化なし
+                            }
+                        break;
+                        case SpiritualProperty.kindergarden:
+                            NowCondition = HumanConditionCircumstances.Confused;
+                        break;
+                        case SpiritualProperty.doremis:
+                            if(deathCount == 1)
+                            {//一人なら混乱する
+                                NowCondition = HumanConditionCircumstances.Confused;
+                            }else
+                            {
+                                //変化なし
+                            }
+                        break;
+                        case SpiritualProperty.sacrifaith:
+                        case SpiritualProperty.godtier:
+                        case SpiritualProperty.devil:
+                            NowCondition = HumanConditionCircumstances.Normal;
+                        break;
+                        case SpiritualProperty.baledrival:
+                            if(deathCount == 1)
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }
+                            else
+                            {
+                                //変化なし　
+                            }
+                        break;
+                        case SpiritualProperty.pillar:
+                            if(deathCount > 1)
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }
+                            else
+                            {
+                                //変化なし　
+                            }
+                        break;
+                        //シークイエストとサイコパスは変化なし
+                    }
+                    break;
+                case HumanConditionCircumstances.Resolved:
+                    switch(MyImpression)
+                    {
+                        case SpiritualProperty.devil:
+                            if(deathCount>1)
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }
+                            else
+                            {
+                                //変化なし
+                            }
+                        break;
+                        case SpiritualProperty.kindergarden:
+                            if(rollper(44))
+                            {
+                                NowCondition =HumanConditionCircumstances.Optimistic;
+                            }
+                            else
+                            {
+                                //変化なし
+                            }
+                        break;
+                        //後は全て変化なし
+                    }
+                    break;
+                case HumanConditionCircumstances.Angry:
+                    switch(MyImpression)
+                    {
+                        case SpiritualProperty.devil:
+                            if(rollper(66.66f))
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }
+                            else
+                            {
+                                //変化なし
+                            }
+                        break;
+                        case SpiritualProperty.kindergarden:
+                            if(rollper(28))
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }
+                            else
+                            {
+                                //変化なし
+                            }
+                        break;
+                        case SpiritualProperty.sacrifaith:
+                            NowCondition = HumanConditionCircumstances.Resolved;
+                        break;
+                        //後は全て変化なし
+                    }
+
+                    break;
+                case HumanConditionCircumstances.Doubtful:
+                    switch(MyImpression)
+                    {
+                        case SpiritualProperty.sacrifaith:
+                            if(deathCount == 1)
+                            {
+                                NowCondition = HumanConditionCircumstances.Angry;
+                            }
+                            else if(deathCount > 1)
+                            {
+                                NowCondition = HumanConditionCircumstances.Resolved;
+                            }
+                        break;
+                        case SpiritualProperty.liminalwhitetile:
+                            if(deathCount > 1 && rollper(40))
+                            {
+                                NowCondition = HumanConditionCircumstances.Angry;
+                            }
+                            else
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }
+                        break; 
+                        case SpiritualProperty.devil:  
+                            if(deathCount > 1 && rollper(21.666f))
+                            {
+                                NowCondition = HumanConditionCircumstances.Angry;
+                            }
+                            else
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }
+                        break;
+                        case SpiritualProperty.kindergarden:
+                            if(rollper(20))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }
+                            else
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }
+                        break;
+                        case SpiritualProperty.baledrival:
+                            if(deathCount > 1)
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }
+                            else
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }
+                        break;
+                        case SpiritualProperty.godtier:
+                            NowCondition = HumanConditionCircumstances.Resolved;
+                        break;
+                        case SpiritualProperty.doremis:
+                            if(deathCount > 1)
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }
+                            else
+                            {
+                                //変化なし
+                            }
+                        break;
+                        case SpiritualProperty.pysco:
+                            switch(RandomEx.Shared.NextInt(5))
+                            {
+                                case 0:
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                break;
+                                case 1:
+                                NowCondition = HumanConditionCircumstances.Resolved;
+                                break;
+                                case 2:
+                                //変化なし
+                                break;
+                                case 3:
+                                NowCondition = HumanConditionCircumstances.Doubtful;
+                                break;
+                                case 4:
+                                NowCondition = HumanConditionCircumstances.Angry;
+                                break;
+                            }
+                        break;
+                        case SpiritualProperty.pillar:
+                        case SpiritualProperty.cquiest:
+                            NowCondition = HumanConditionCircumstances.Normal;
+                        break;
+                    }
+                    break;
+                case HumanConditionCircumstances.Confused:
+                    switch(MyImpression)
+                    {
+                        case SpiritualProperty.cquiest:
+                        case SpiritualProperty.pillar:
+                            NowCondition = HumanConditionCircumstances.Resolved;
+                        break;   
+                        case SpiritualProperty.devil:
+                            if(deathCount > 1)
+                            {
+                                NowCondition = HumanConditionCircumstances.Resolved;
+                            }
+                            else
+                            {
+                                //変化なし
+                            }
+                        break;
+                        case SpiritualProperty.godtier:
+                            if(deathCount == 1)
+                            {
+                                NowCondition = HumanConditionCircumstances.Resolved;
+                            }
+                            else
+                            {
+                                //変化なし
+                            }
+                        break;
+                        //後は全て変化なし
+                    }
+                    break;
+                case HumanConditionCircumstances.Normal:
+                    switch(MyImpression)
+                    {
+                        case SpiritualProperty.sacrifaith:
+                            if(deathCount == 1)
+                            {
+                                NowCondition = HumanConditionCircumstances.Angry;
+                            }
+                            else if(deathCount > 1)
+                            {
+                                NowCondition = HumanConditionCircumstances.Resolved;
+                            }
+                        break;
+                        case SpiritualProperty.liminalwhitetile:
+                            if(deathCount > 1 && rollper(40))
+                            {
+                                NowCondition = HumanConditionCircumstances.Angry;
+                            }
+                            else
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }
+                        break; 
+                        case SpiritualProperty.devil:  
+                            if(deathCount > 1 && rollper(21.666f))
+                            {
+                                NowCondition = HumanConditionCircumstances.Angry;
+                            }
+                            else
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }
+                        break;
+                        case SpiritualProperty.kindergarden:
+                            if(rollper(20))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }
+                            else
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }
+                        break;
+                        case SpiritualProperty.baledrival:
+                            if(deathCount > 1)
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }
+                            else
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }
+                        break;
+                        case SpiritualProperty.godtier:
+                            NowCondition = HumanConditionCircumstances.Resolved;
+                        break;
+                        case SpiritualProperty.doremis:
+                            if(deathCount > 1)
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }
+                            else
+                            {
+                                //変化なし
+                            }
+                        break;
+                        case SpiritualProperty.pysco:
+                            switch(RandomEx.Shared.NextInt(5))
+                            {
+                                case 0:
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                break;
+                                case 1:
+                                NowCondition = HumanConditionCircumstances.Resolved;
+                                break;
+                                case 2:
+                                //変化なし
+                                break;
+                                case 3:
+                                NowCondition = HumanConditionCircumstances.Doubtful;
+                                break;
+                                case 4:
+                                NowCondition = HumanConditionCircumstances.Angry;
+                                break;
+                            }
+                        break;
+                        //支柱とシークイエストは変化なし
+                    }
+                break;
+            }
+
+        }
+    }
 
 
     /// <summary>
@@ -2334,6 +2632,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     public void OnNextTurnNoArgument()
     {
         UpdateTurnAllPassiveSurvival();
+        _tempLive = !Death();//死んでない = 生きてるからtrue
     }
 
     /// <summary>
@@ -2343,6 +2642,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     {
         TempDamageTurn = 0;
         _tempVanguard = false;
+        _tempLive = true;
         DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
         DecisionSacriFaithAdaptToSkillGrouping();
         skillDatas = new List<ACTSkillData>();//スキルの行動記録はbm単位で記録する。
@@ -3562,3 +3862,139 @@ public struct AimStyleMemory
 
 
 }
+/// <summary>
+/// 対象者ボーナスのデータ
+/// </summary>
+public class TargetBonusDatas
+{
+    /// <summary>
+    /// 持続ターン
+    /// </summary>
+    List<int> DurationTurns { get; set; }
+    /// <summary>
+    /// スキルのパワーボーナス倍率
+    /// </summary>
+    List<float> PowerBonusPercentages { get; set; }
+    /// <summary>
+    /// 対象者
+    /// </summary>
+    List<BaseStates> Targets { get; set; }
+    /// <summary>
+    /// 対象者がボーナスに含まれているか
+    /// </summary>
+    public bool DoIHaveTargetBonus(BaseStates target)
+    {
+        return Targets.Contains(target);
+    }
+    /// <summary>
+    /// 対象者のインデックスを取得
+    /// </summary>
+    public int GetTargetIndex(BaseStates target)
+    {
+        return Targets.FindIndex(x => x == target);
+    }
+    /// <summary>
+    /// 対象者ボーナスが発動しているか
+    /// </summary>
+    //public List<bool> IsTriggered { get; set; }     ーーーーーーーーーーーー一回自動で発動するようにするから消す、明確に対象者ボーナスの適用を手動にするなら解除
+    /// <summary>
+    /// 発動してるかどうかを取得
+    /// </summary>
+    /*public bool GetAtIsTriggered(int index)
+    {
+        return IsTriggered[index];
+    }*/
+    /// <summary>
+    /// 対象者ボーナスの持続ターンを取得
+    /// </summary>
+    public int GetAtDurationTurns(int index)
+    {
+        return DurationTurns[index];
+    }
+    /// <summary>
+    /// 全てのボーナスをデクリメントと自動削除の処理
+    /// </summary>
+    public void AllDecrementDurationTurn()
+    {
+        for (int i = 0; i < DurationTurns.Count; i++)
+        {
+            DecrementDurationTurn(i);
+        }
+    }
+    /// <summary>
+    /// 持続ターンをデクリメントし、0以下になったら削除する。全ての対象者ボーナスを削除する。
+    /// </summary>
+    void DecrementDurationTurn(int index)
+    {
+        DurationTurns[index]--;
+        if (DurationTurns[index] <= 0)
+        {
+            DurationTurns.RemoveAt(index);
+            PowerBonusPercentages.RemoveAt(index);
+            Targets.RemoveAt(index);
+        }
+    }
+    /// <summary>
+    /// 対象者ボーナスのパワーボーナス倍率を取得
+    /// </summary>
+    public float GetAtPowerBonusPercentage(int index)
+    {
+        return PowerBonusPercentages[index];
+    }
+    /// <summary>
+    /// 対象者ボーナスの対象者を取得
+    /// </summary>
+    public BaseStates GetAtTargets(int index)
+    {
+        return Targets[index];
+    }
+
+    public TargetBonusDatas()
+    {
+        DurationTurns =  new();
+        PowerBonusPercentages = new();
+        Targets = new();
+        //IsTriggered = new();
+    }
+
+    public void Add(int duration, float powerBonusPercentage, BaseStates target)
+    {
+        //targetの重複確認
+        if (Targets.Contains(target))
+        {
+            int index = Targets.IndexOf(target);//同じインデックスの物をすべて消す
+            DurationTurns.RemoveAt(index);
+            PowerBonusPercentages.RemoveAt(index);
+            Targets.RemoveAt(index);
+            //IsTriggered.RemoveAt(index);
+            return;
+        }
+
+        //追加
+        DurationTurns.Add(duration);
+        PowerBonusPercentages.Add(powerBonusPercentage);
+        Targets.Add(target);
+        //IsTriggered.Add(false);
+    }
+    /// <summary>
+    /// 全削除
+    /// </summary>
+    public void AllClear()
+    {
+        DurationTurns.Clear();
+        PowerBonusPercentages.Clear();
+        Targets.Clear();
+        //IsTriggered.Clear();
+    }
+    /// <summary>
+    /// 該当のインデックスのボーナスを削除
+    /// </summary>
+    public void BonusClear(int index)
+    {
+        DurationTurns.RemoveAt(index);
+        PowerBonusPercentages.RemoveAt(index);
+        Targets.RemoveAt(index);
+        //IsTriggered.RemoveAt(index);
+    }
+}
+

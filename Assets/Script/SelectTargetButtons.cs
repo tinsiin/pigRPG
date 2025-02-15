@@ -8,6 +8,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UI;
 using static UnityEngine.GraphicsBuffer;
+using static CommonCalc;
 
 public class SelectTargetButtons : MonoBehaviour
 {
@@ -125,7 +126,7 @@ public class SelectTargetButtons : MonoBehaviour
             //前のめりが存在するかしないか、そもそも一人かどうかだと強制的にBackOrAnyにDirectedWillになって対象選択画面を飛ばす。
             //つまりボタンを作らずそのままNextWaitへ
 
-            var enemyLives = bm.RemoveDeathCharacters(bm.EnemyGroup.Ours);//生きてる敵だけ
+            var enemyLives = RemoveDeathCharacters(bm.EnemyGroup.Ours);//生きてる敵だけ
             if(bm.EnemyGroup.InstantVanguard == null || enemyLives.Count < 2) //前のめりがいないか　敵の生きてる人数が二人未満
             {
                 if (!AllyTargeting)//味方選択がないなら
@@ -232,7 +233,7 @@ public class SelectTargetButtons : MonoBehaviour
 
             if (!acter.HasRangeWill(SkillZoneTrait.CanSelectDeath))//死亡者選択不可能なら
             {
-                selects = bm.RemoveDeathCharacters(selects);//省く
+                selects = RemoveDeathCharacters(selects);//省く
             }
 
             if (selects.Count < 2 && AllyTargeting)//敵の生きてる人数が二人未満で、味方の選択もなければ
@@ -290,7 +291,7 @@ public class SelectTargetButtons : MonoBehaviour
 
             if(!acter.HasRangeWill(SkillZoneTrait.CanSelectDeath))//死亡者選択不可能なら
             {
-                selects = bm.RemoveDeathCharacters(selects);//省く
+                selects = RemoveDeathCharacters(selects);//省く
             }
 
 

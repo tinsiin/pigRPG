@@ -17,7 +17,7 @@ public class EnemyCollectManager : MonoBehaviour
     /// <summary>
     ///     キャラ属性同士の敵集まりAIの相性の辞書データ　方向がある為順序の情報も含む。
     /// </summary>
-    private Dictionary<(SpiritualProperty, SpiritualProperty), int> ImpressionMatchupTable;
+    private Dictionary<(SpiritualProperty I, SpiritualProperty You), int> ImpressionMatchupTable;
 
 
     /// <summary>
