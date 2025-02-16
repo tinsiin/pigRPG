@@ -13,6 +13,7 @@ using Unity.Burst.CompilerServices;
 using static UnityEngine.Rendering.DebugUI;
 using UnityEditor.UIElements;
 using static CommonCalc;
+using Unity.VisualScripting.Dependencies.NCalc;
 /// <summary>
 ///     キャラクター達の種別
 /// </summary>
@@ -1424,8 +1425,759 @@ public abstract class BaseStates
 
         }
     }
+    /// <summary>
+    /// 敵を倒した際の人間状況の変化
+    /// </summary>
+    public void ApplyConditionChangeOnKillEnemy(BaseStates ene)
+    {
+        if (MyType == CharacterType.Life) // 基本的に生命のみ
+        {
+            switch (NowCondition)
+            {
+                case HumanConditionCircumstances.Painful:
+                    switch (MyImpression)
+                    {
+                        case SpiritualProperty.liminalwhitetile:
+                            if(rollper(66))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }
+                            else if(rollper(10))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }
+                            else if(rollper(10))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.kindergarden:
+                            if(rollper(33))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(57))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(33))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.sacrifaith:
+                            var OptimisticPer = 0;//楽観的に行く確率
+                            var eneKereKere = ene.TenDayValues.GetValueOrZero(TenDayAbility.KereKere);
+                            var eneWif = ene.TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife);
+                            var KereKere = TenDayValues.GetValueOrZero(TenDayAbility.KereKere);
+                            var Wif = TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife);
+                            if(KereKere >= eneKereKere && Wif > eneWif)
+                            {
+                                OptimisticPer = (int)(Wif - eneWif);
+                            }
+                            if(rollper(40))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(OptimisticPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(30))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.pysco:
+                            var NormalPer = 0;
+                            var EneLeisure = ene.TenDayValues.GetValueOrZero(TenDayAbility.Leisure);
+                            var Leisure = TenDayValues.GetValueOrZero(TenDayAbility.Leisure);
+                            if(Leisure > EneLeisure)
+                            {
+                                NormalPer = (int)(Leisure - EneLeisure);
+                            }
+                            if(rollper(90 + NormalPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(15))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(9))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
 
+                            break;
+                        case SpiritualProperty.baledrival:
+                            if(rollper(40))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(30))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(50))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.devil:
+                            if(rollper(35))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(50))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(7))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.cquiest:
+                            var C_NormalEndWarPer = 0;
+                            var C_NormalNightPer = 0;
+                            var C_EneEndWar = ene.TenDayValues.GetValueOrZero(TenDayAbility.HeavenAndEndWar);
+                            var C_EneNight = ene.TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight);
+                            var C_EndWar = TenDayValues.GetValueOrZero(TenDayAbility.HeavenAndEndWar);
+                            var C_Night = TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight);
+                            if(C_EndWar > C_EneEndWar)
+                            {
+                                C_NormalEndWarPer = (int)(C_EndWar - C_EneEndWar);
+                            }
+                            if(C_Night > C_EneNight)
+                            {
+                                C_NormalNightPer = (int)(C_Night - C_EneNight);
+                            }
 
+                            if(rollper(80 + C_NormalEndWarPer + C_NormalNightPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(20))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(22))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.godtier:
+                            if(rollper(78))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(75))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(5))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.pillar:
+                            var VondPer = 0;
+                            var Vond = TenDayValues.GetValueOrZero(TenDayAbility.Vond);
+                            var EneVond = ene.TenDayValues.GetValueOrZero(TenDayAbility.Vond);
+                            if(Vond > EneVond)
+                            {
+                                VondPer = (int)(Vond - EneVond);
+                            }
+                            if(rollper(97 + VondPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(4))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.doremis:
+                            if(rollper(40))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(30))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(25))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+
+                case HumanConditionCircumstances.Optimistic:
+                    switch (MyImpression)
+                    {
+                        case SpiritualProperty.liminalwhitetile:
+                            if(rollper(11))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.kindergarden:
+                            var KinderOptimToElated_PersonaPer = TenDayValues.GetValueOrZero(TenDayAbility.PersonaDivergence);
+                            if(KinderOptimToElated_PersonaPer> 776)KinderOptimToElated_PersonaPer = 776;//最低でも1%残るようにする
+                            if(rollper(777 - KinderOptimToElated_PersonaPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.sacrifaith:
+                            var SacrifaithOptimToElated_HumanKillerPer = TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller);
+                            if(rollper(-50 + SacrifaithOptimToElated_HumanKillerPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.pysco:
+                            if(rollper(5))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.baledrival:
+                            var baledrivalOptimToElated_HumanKillerPer = TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller);
+                            if(rollper(3 + baledrivalOptimToElated_HumanKillerPer*2))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.devil:
+                            var DevilOptimToElatedPer = TenDayValues.GetValueOrZero(TenDayAbility.TentVoid) - TenDayValues.GetValueOrZero(TenDayAbility.Enokunagi);
+                            if(rollper(60 - DevilOptimToElatedPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.cquiest:
+                            if(rollper(1))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.godtier:
+                            if(rollper(6))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.pillar:
+                            if(rollper(2))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }
+                            break;
+                        case SpiritualProperty.doremis:
+                            if(rollper(4))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(38)){
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+
+                case HumanConditionCircumstances.Elated:
+                    //変わらない
+                    break;
+
+                case HumanConditionCircumstances.Resolved:
+                    var ResolvedToOptimisticPer = TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) - ene.TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife);
+                    if(ResolvedToOptimisticPer < 0)
+                    {
+                        ResolvedToOptimisticPer = 0;
+                    }
+                    ResolvedToOptimisticPer = Mathf.Sqrt(ResolvedToOptimisticPer) * 2;
+                    switch (MyImpression)
+                    {
+                        case SpiritualProperty.liminalwhitetile:
+                            if(rollper(11 + ResolvedToOptimisticPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }
+                            break;
+                        case SpiritualProperty.kindergarden:
+                            var ResolvedToOptimisticKinder_luck = TenDayValues.GetValueOrZero(TenDayAbility.Lucky);
+                            if(rollper(77 + ResolvedToOptimisticKinder_luck + ResolvedToOptimisticPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }
+                            break;
+                        case SpiritualProperty.sacrifaith:
+                            var ResolvedToOptimisticSacrifaith_UnextinguishedPath = TenDayValues.GetValueOrZero(TenDayAbility.UnextinguishedPath);
+                            if(rollper(15 -ResolvedToOptimisticSacrifaith_UnextinguishedPath + ResolvedToOptimisticPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }
+                            break;
+                        case SpiritualProperty.pysco:
+                            if(rollper(10 + TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.9f + ResolvedToOptimisticPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }
+                            break;
+                        case SpiritualProperty.baledrival:
+                            if(rollper(40 + ResolvedToOptimisticPer + TenDayValues.GetValueOrZero(TenDayAbility.SpringWater)))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }
+                            break;
+                        case SpiritualProperty.devil:
+                            var ResolvedToOptimisticDevil_BalePer= TenDayValues.GetValueOrZero(TenDayAbility.Vail) - ene.TenDayValues.GetValueOrZero(TenDayAbility.Vail);
+                            var ResolvedToOptimisticDevil_FaceToHandPer= TenDayValues.GetValueOrZero(TenDayAbility.FaceToHand) - ene.TenDayValues.GetValueOrZero(TenDayAbility.FaceToHand);
+                            if(rollper(40 + ResolvedToOptimisticPer + (ResolvedToOptimisticDevil_BalePer - ResolvedToOptimisticDevil_FaceToHandPer)))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }
+                            break;
+                        case SpiritualProperty.cquiest:
+                            if(rollper(12 + (TenDayValues.GetValueOrZero(TenDayAbility.SpringWater) - TenDayValues.GetValueOrZero(TenDayAbility.Taraiton)) + ResolvedToOptimisticPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }
+                            break;
+                        case SpiritualProperty.godtier:
+                            if(rollper(4 + ResolvedToOptimisticPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }
+                            break;
+                        case SpiritualProperty.pillar:
+                            // 変化なし
+                            break;
+                        case SpiritualProperty.doremis:
+                            if(rollper(7 + ResolvedToOptimisticPer))
+                            {
+                                NowCondition =HumanConditionCircumstances.Optimistic;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+
+                case HumanConditionCircumstances.Angry:
+                    switch (MyImpression)
+                    {
+                        case SpiritualProperty.liminalwhitetile:
+                            if(rollper(10))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.kindergarden:
+                            var AngryEneVail = ene.TenDayValues.GetValueOrZero(TenDayAbility.Vail);
+                            var AngryVail = TenDayValues.GetValueOrZero(TenDayAbility.Vail);
+                            var AngryEneWaterThunder = ene.TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve);
+                            var AngryWaterThunder = TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve);
+                            var AngryToElated_KinderPer = AngryVail - AngryEneVail + (AngryWaterThunder - AngryEneWaterThunder);
+                            if(rollper(50 + AngryToElated_KinderPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.sacrifaith:
+                            if(rollper(30 - TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire)))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.pysco:
+                            if(rollper(TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller)))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.baledrival:
+                            const float Threshold = 37.5f;
+                            var AngryToElated_BaledrivalPer = Threshold;
+                            var AngryToElated_Baledrival_VailValue = TenDayValues.GetValueOrZero(TenDayAbility.Vail)/2;
+                            if(AngryToElated_Baledrival_VailValue >Threshold)AngryToElated_BaledrivalPer = AngryToElated_Baledrival_VailValue;
+                            if(rollper(AngryToElated_BaledrivalPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.devil:
+                            if(rollper(40 + (20 - TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire))))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.cquiest:
+                            if(rollper(19))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.godtier:
+                            if(rollper(14))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.pillar:
+                            if(rollper(2))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.doremis:
+                            if(rollper(27))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+
+                case HumanConditionCircumstances.Doubtful:
+                    switch (MyImpression)
+                    {
+                        case SpiritualProperty.liminalwhitetile:
+                            if(rollper(30 + TenDayValues.GetValueOrZero(TenDayAbility.SpringNap)))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(46))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }
+                            break;
+                        case SpiritualProperty.kindergarden:
+                            if(rollper(30))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(77))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }
+                            break;
+                        case SpiritualProperty.sacrifaith:
+                            if(rollper(10))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(50))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(1 + TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) + TenDayValues.GetValueOrZero(TenDayAbility.Smiler)))
+                            {
+                                NowCondition = HumanConditionCircumstances.Resolved;
+                            }
+                            break;
+                        case SpiritualProperty.pysco:
+                            var eneRainCoat = ene.TenDayValues.GetValueOrZero(TenDayAbility.Raincoat);
+                            var EndWar = TenDayValues.GetValueOrZero(TenDayAbility.HeavenAndEndWar);
+                            if(rollper(40 - (EndWar - eneRainCoat)))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(44))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }
+                            break;
+                        case SpiritualProperty.baledrival:
+                            if(rollper(80 + TenDayValues.GetValueOrZero(TenDayAbility.Rain)))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(90 + TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) / 4))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 1.2f))
+                            {
+                                NowCondition = HumanConditionCircumstances.Resolved;
+                            }
+                            break;
+                        case SpiritualProperty.devil:
+                            if(rollper(32 + TenDayValues.GetValueOrZero(TenDayAbility.Leisure)))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(50))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper((TenDayValues.GetValueOrZero(TenDayAbility.UnextinguishedPath)-2) / 5))
+                            {
+                                NowCondition = HumanConditionCircumstances.Resolved;
+                            }
+                            break;
+                        case SpiritualProperty.cquiest:
+                            var DoubtfulToOptimistic_CPer = 0f;
+                            if(ene.TenDayValues.GetValueOrZero(TenDayAbility.Leisure) < TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight) * 0.3f)
+                            {
+                                DoubtfulToOptimistic_CPer = TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower);
+                            }
+
+                            if(rollper(38 + DoubtfulToOptimistic_CPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(33))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper((TenDayValues.GetValueOrZero(TenDayAbility.HeavenAndEndWar) - 6) / 2))
+                            {
+                                NowCondition = HumanConditionCircumstances.Resolved;
+                            }
+                            break;
+                        case SpiritualProperty.godtier:
+                            if(rollper(27 - TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight)))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(85))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }
+                            break;
+                        case SpiritualProperty.pillar:
+                            if(rollper(70))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(20))
+                            {
+                                NowCondition = HumanConditionCircumstances.Resolved;
+                            }
+                            break;
+                        case SpiritualProperty.doremis:
+                            const float Threshold = 49f;
+                            var DoubtfulToNorml_Doremis_nightDarknessAndVoidValue = TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) + TenDayValues.GetValueOrZero(TenDayAbility.TentVoid);
+                            var DoubtfulToNorml_DoremisPer = Threshold;
+                            if(DoubtfulToNorml_Doremis_nightDarknessAndVoidValue < Threshold) DoubtfulToNorml_DoremisPer = DoubtfulToNorml_Doremis_nightDarknessAndVoidValue;
+                            if(rollper(TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) + 30))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(DoubtfulToNorml_DoremisPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) / 1.7f))
+                            {
+                                NowCondition = HumanConditionCircumstances.Resolved;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+
+                case HumanConditionCircumstances.Confused:
+                    switch (MyImpression)
+                    {
+                        case SpiritualProperty.liminalwhitetile:
+                            if(rollper(70))
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }else if(rollper(44))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }
+                            break;
+                        case SpiritualProperty.kindergarden:
+                            var ConfusedToPainful_Kindergarden_DokumamusiAndRainCoatAverage = 
+                            (TenDayValues.GetValueOrZero(TenDayAbility.dokumamusi) + TenDayValues.GetValueOrZero(TenDayAbility.Raincoat)) / 2;
+                            if(rollper(20))
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }else if(rollper(80 - (ConfusedToPainful_Kindergarden_DokumamusiAndRainCoatAverage - TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm))))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(20 + TenDayValues.GetValueOrZero(TenDayAbility.Raincoat) * 0.4f + TenDayValues.GetValueOrZero(TenDayAbility.dokumamusi) * 0.6f))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.sacrifaith:
+                            if(rollper(40))
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }else if(rollper(70 + (TenDayValues.GetValueOrZero(TenDayAbility.Sort)-4)))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(60))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.pysco:
+                            if(rollper(80))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(11))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.baledrival:
+                            if(rollper(34))
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }else if(rollper(40))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(75))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.devil:
+                            if(rollper(6))
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }else if(rollper(27))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(20))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.cquiest:
+                            if(rollper(40))
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }else if(rollper(64))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(2))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.godtier:
+                            if(rollper(50))
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }else if(rollper(50))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(7))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.pillar:
+                            if(rollper(60))
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }else if(rollper(60))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(3 - TenDayValues.GetValueOrZero(TenDayAbility.SpringWater)))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.doremis:
+                            if(rollper(90))
+                            {
+                                NowCondition = HumanConditionCircumstances.Painful;
+                            }else if(rollper(50))
+                            {
+                                NowCondition = HumanConditionCircumstances.Normal;
+                            }else if(rollper(67))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+
+                case HumanConditionCircumstances.Normal:
+                    var y = TenDayValues.GetValueOrZero(TenDayAbility.Leisure) - ene.TenDayValues.GetValueOrZero(TenDayAbility.Leisure);//余裕の差
+                    switch (MyImpression)
+                    {
+                        case SpiritualProperty.liminalwhitetile:
+                            if(rollper(30 + y*0.8f))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(20 - y))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.kindergarden:
+                            if(rollper(40 + y*2))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(70))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.sacrifaith:
+                            if(rollper(50))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.pysco:
+                            if(rollper(14))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(2))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.baledrival:
+                            if(rollper(30 +y))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(80))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.devil:
+                            if(rollper(35 + y*1.1f))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(50))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.cquiest:
+                            if(rollper(30 + y*0.1f))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(20))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.godtier:
+                            if(rollper(20 + y/4))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(15 + y * 0.95f))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        case SpiritualProperty.pillar:
+                            if(rollper(12))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }
+                            break;
+                        case SpiritualProperty.doremis:
+                            var NormalToElated_DoremisPer = 0f;
+                            if(y > 0) NormalToElated_DoremisPer = TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) + TenDayValues.GetValueOrZero(TenDayAbility.Miza);
+                            if(rollper(38 + y/2))
+                            {
+                                NowCondition = HumanConditionCircumstances.Optimistic;
+                            }else if(rollper(20 + NormalToElated_DoremisPer))
+                            {
+                                NowCondition = HumanConditionCircumstances.Elated;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+            }
+        }
+    }
+        
     /// <summary>
     /// 次に使用する命中率へのパーセント補正用保持リスト
     /// </summary>
@@ -1846,6 +2598,12 @@ public abstract class BaseStates
         if(dmg < 0)dmg = 0;//0未満は0にする　逆に回復してしまうのを防止
         HP -= dmg;
         Debug.Log("攻撃が実行された");
+
+        //死んだら攻撃者のOnKillを発生
+        if(Death())
+        {
+            Atker.OnKill(this);
+        }
 
         //もし"攻撃者が"割り込みカウンターパッシブだったら
         var CounterPower = Atker.GetPassiveByID(1) as InterruptCounterPassive;
@@ -2549,6 +3307,14 @@ private int CalcTransformCountIncrement(int tightenStage)
         //対象者ボーナス全削除
         TargetBonusDatas.AllClear();
 
+    }
+    /// <summary>
+    /// 攻撃した相手が死んだ場合のコールバック
+    /// </summary>
+    void OnKill(BaseStates target)
+    {
+        //人間状況の変化
+        ApplyConditionChangeOnKillEnemy(target);
     }
 
 

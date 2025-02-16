@@ -8,6 +8,7 @@ public static class CommonCalc
     /// </summary>
     public static bool rollper(float percentage)
     {
+        if (percentage < 0)percentage = 0;
         return RandomEx.Shared.NextFloat(100) < percentage;
     }
     /// <summary>
