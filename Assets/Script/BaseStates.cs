@@ -2177,7 +2177,150 @@ public abstract class BaseStates
             }
         }
     }
-        
+
+    /// <summary>
+    /// 相性値の高い味方が復活した際の人間状況の変化
+    /// </summary>    
+    public void ApplyConditionChangeOnCloseAllyAngel()
+    {
+        if (MyType == CharacterType.Life) // 基本的に生命のみ
+        {
+            switch (NowCondition)
+            {
+                case HumanConditionCircumstances.Painful:
+                    switch (MyImpression)
+                    {
+                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.sacrifaith:
+                        case SpiritualProperty.baledrival:
+                            NowCondition = HumanConditionCircumstances.Elated;
+                            break;
+                        case SpiritualProperty.pysco:
+                        case SpiritualProperty.liminalwhitetile:
+                        case SpiritualProperty.cquiest:
+                        case SpiritualProperty.pillar:
+                        case SpiritualProperty.doremis:
+                            NowCondition = HumanConditionCircumstances.Normal;
+                            break;
+                        case SpiritualProperty.godtier:
+                        case SpiritualProperty.devil:
+                            NowCondition = HumanConditionCircumstances.Optimistic;
+                            break;
+                    }
+                    break;
+
+                case HumanConditionCircumstances.Optimistic:
+                    switch (MyImpression)
+                    {
+                        case SpiritualProperty.godtier:
+                            NowCondition = HumanConditionCircumstances.Elated;
+                            break;
+                        case SpiritualProperty.pillar:
+                        case SpiritualProperty.baledrival:
+                            NowCondition = HumanConditionCircumstances.Normal;
+                            break;
+                    }
+                    break;
+
+                case HumanConditionCircumstances.Elated:
+                    switch (MyImpression)
+                    {
+                        case SpiritualProperty.pillar:
+                        case SpiritualProperty.devil:
+                        case SpiritualProperty.baledrival:
+                        case SpiritualProperty.kindergarden:
+                            NowCondition = HumanConditionCircumstances.Optimistic;
+                            break;
+                        case SpiritualProperty.doremis:
+                        case SpiritualProperty.cquiest:
+                            NowCondition = HumanConditionCircumstances.Normal;
+                            break;
+                    }
+                    break;
+
+                case HumanConditionCircumstances.Resolved:
+                    switch (MyImpression)
+                    {
+                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.liminalwhitetile:
+                            NowCondition = HumanConditionCircumstances.Normal;
+                            break;
+                        case SpiritualProperty.doremis:
+                        case SpiritualProperty.baledrival:
+                            NowCondition = HumanConditionCircumstances.Optimistic;
+                            break;
+                    }
+                    break;
+
+                case HumanConditionCircumstances.Angry:
+                    switch (MyImpression)
+                    {
+                        case SpiritualProperty.devil:
+                        case SpiritualProperty.baledrival:
+                        case SpiritualProperty.liminalwhitetile:
+                            NowCondition = HumanConditionCircumstances.Elated;
+                            break;
+                        case SpiritualProperty.cquiest:
+                        case SpiritualProperty.pysco:
+                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.godtier:
+                        case SpiritualProperty.pillar:
+                        case SpiritualProperty.doremis:
+                            NowCondition = HumanConditionCircumstances.Normal;
+                            break;
+                    }//自己犠牲だけ変化なし
+                    break;
+
+                case HumanConditionCircumstances.Doubtful:
+                    switch (MyImpression)
+                    {
+                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.baledrival:
+                        case SpiritualProperty.cquiest:
+                            NowCondition = HumanConditionCircumstances.Optimistic;
+                            break;
+                        default:
+                            NowCondition = HumanConditionCircumstances.Normal;
+                            break;
+                    }
+                    break;
+
+                case HumanConditionCircumstances.Confused:
+                    switch (MyImpression)
+                    {
+                        case SpiritualProperty.liminalwhitetile:
+                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.sacrifaith:
+                        case SpiritualProperty.baledrival:
+                        case SpiritualProperty.devil:
+                        case SpiritualProperty.cquiest:
+                        case SpiritualProperty.godtier:
+                        case SpiritualProperty.pillar:
+                            NowCondition = HumanConditionCircumstances.Normal;
+                            break;
+                        case SpiritualProperty.doremis:
+                            NowCondition = HumanConditionCircumstances.Optimistic;
+                            break;
+                    }
+                    break;
+
+                case HumanConditionCircumstances.Normal:
+                    switch (MyImpression)
+                    {
+                        case SpiritualProperty.pysco:
+                        case SpiritualProperty.liminalwhitetile:
+                        case SpiritualProperty.godtier:
+                            NowCondition = HumanConditionCircumstances.Optimistic;
+                            break;
+                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.devil:
+                            NowCondition = HumanConditionCircumstances.Elated;
+                            break;
+                    }
+                    break;
+            }
+        }
+    } 
     /// <summary>
     /// 次に使用する命中率へのパーセント補正用保持リスト
     /// </summary>
@@ -3120,6 +3263,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             {
                 Angel();//降臨　アイコンがノイズで満たされるようなエフェクト
                 isHeal = true;
+                manager.MyGroup(this).PartyApplyConditionChangeOnCloseAllyAngel(this);//所属してるグループが自分の復活により相性値の高い味方の人間状況の変化
             }
         }
 

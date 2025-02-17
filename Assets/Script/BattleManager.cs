@@ -300,7 +300,7 @@ public class BattleManager
     /// <summary>
     /// キャラクターのグループを取得
     /// </summary>
-    BattleGroup MyGroup(BaseStates chara) => FactionToGroup(GetCharacterFaction(chara));
+    public BattleGroup MyGroup(BaseStates chara) => FactionToGroup(GetCharacterFaction(chara));
     /// <summary>
     /// 渡されたキャラクタのbm内での陣営を表す。
     /// </summary>

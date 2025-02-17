@@ -170,6 +170,27 @@ public class BattleGroup
             }
         }
     }
+    /// <summary>
+    /// パーティー全員分相性値の高い敵が復活したときの人間状況の変化処理を行う。
+    /// Angelされた瞬間に行う。
+    /// </summary>
+    public void PartyApplyConditionChangeOnCloseAllyAngel(BaseStates angel)
+    {
+        var LiveCharacters = RemoveDeathCharacters(Ours).Where(x => x != angel).ToList();//生きてる味方のみ 今回復活したばかりのangelを除く
+        if(LiveCharacters.Count == 0)
+        {
+            Debug.LogWarning("生存者がいないのに、PartApplyConditionChangeOnCloseAllyAngelが呼び出された。");
+            return;
+        }
+
+        foreach(var LiveAlly in LiveCharacters)//angel以外の味方全員分ループ処理
+        {
+            if(CharaCompatibility[(LiveAlly,angel)] >= 77)//生きてる味方からangelへの相性判定
+            {
+                LiveAlly.ApplyConditionChangeOnCloseAllyAngel();//味方の人間状況を変更
+            }
+        }
+    }
 
 
     /// <summary>
