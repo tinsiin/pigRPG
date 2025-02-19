@@ -453,6 +453,10 @@ public abstract class BaseStates
     public float b_b_agi = 4f;
 
     public SerializableDictionary<TenDayAbility,float> TenDayValues = new SerializableDictionary<TenDayAbility,float>();
+    /// <summary>
+    /// 十日能力の総量
+    /// </summary>
+    public float TenDayValuesSum => TenDayValues.Values.Sum();
 
     public float b_AGI
     {
@@ -1066,13 +1070,6 @@ public abstract class BaseStates
         TotalTurnsInSameCondition = 0;
     }
     /// <summary>
-    /// 今回のターンを記録する
-    /// </summary>
-    void RecordCondition()
-    {
-        PreviousCondition = NowCondition;
-    }
-    /// <summary>
     /// 人間状況が変わった際に必要な処理
     /// </summary>
     void ConditionTransition()
@@ -1086,7 +1083,7 @@ public abstract class BaseStates
     void ConditionInNextTurn() 
     {
         // 状態が変わってたら
-        if (PreviousCondition != NowCondition) 
+        if (PreviousCondition != NowCondition)
         {
             ConditionTransition();
         }else
@@ -1097,6 +1094,165 @@ public abstract class BaseStates
 
         //ターン数が増えた後に時間変化の関数を実行  
         ApplyConditionChangeOnTimePass();
+    }
+    /// <summary>
+    /// 戦闘開始時に決まる人間状況の初期値
+    /// </summary>
+    public void ApplyConditionOnBattleStart(float eneTenDays)
+    {
+        var myTenDays = TenDayValuesSum;
+        // 安全策として、0除算を避ける
+        float ratio = (eneTenDays == 0) 
+            ? 999999f // 敵が0なら自分が勝ってる扱い(∞倍勝ち)
+            : myTenDays / eneTenDays;
+
+        // パワー(NowPower)は ThePower 型 (lowlow, low, medium, high など)
+        // MyImpression は精神属性
+
+        // 初期値はとりあえず普調にしておいて、後で条件を満たせば上書きする
+        NowCondition = HumanConditionCircumstances.Normal;
+
+        switch (MyImpression)
+        {
+            //--------------------------------
+            // 1) ベール (baledrival)
+            //--------------------------------
+            case SpiritualProperty.baledrival:
+                // 「高揚」：パワーが高 && 2倍負け( ratio <= 0.5 )
+                if (NowPower == ThePower.high && ratio <= 0.5f)
+                {
+                    NowCondition = HumanConditionCircumstances.Elated;
+                }
+                else
+                {
+                    // それ以外は「楽観的」
+                    NowCondition = HumanConditionCircumstances.Optimistic;
+                }
+                break;
+
+            //--------------------------------
+            // 2) デビル (devil)
+            //--------------------------------
+            case SpiritualProperty.devil:
+                // 「高揚」：1.8倍勝ち ( ratio >= 1.8 )
+                if (ratio >= 1.8f)
+                {
+                    NowCondition = HumanConditionCircumstances.Elated;
+                }
+                else
+                {
+                    // それ以外 => 「普調」 (疑念にはならない)
+                    NowCondition = HumanConditionCircumstances.Normal;
+                }
+                break;
+
+            //--------------------------------
+            // 3) 自己犠牲 (sacrifaith)
+            //--------------------------------
+            case SpiritualProperty.sacrifaith:
+                // 覚悟：パワーが low より上(=low以上) かつ 2倍負け( ratio <= 0.5 )
+                //   ※「パワーがlow“以上”」= (low, medium, highのいずれか)
+                if (NowPower >= ThePower.low && ratio <= 0.5f)
+                {
+                    NowCondition = HumanConditionCircumstances.Resolved;
+                }
+                // 疑念：パワーがlowlow && 1.6倍負け( ratio <= 1/1.6≒0.625 )
+                else if (NowPower == ThePower.lowlow && ratio <= 0.625f)
+                {
+                    NowCondition = HumanConditionCircumstances.Doubtful;
+                }
+                else
+                {
+                    // それ以外 => 普調
+                    NowCondition = HumanConditionCircumstances.Normal;
+                }
+                break;
+
+            //--------------------------------
+            // 4) ゴッドティア (godtier)
+            //--------------------------------
+            case SpiritualProperty.godtier:
+                // 「楽観的」: 総量2.5倍勝ち( ratio >= 2.5 )
+                if (ratio >= 2.5f)
+                {
+                    NowCondition = HumanConditionCircumstances.Optimistic;
+                }
+                // 「覚悟」 : パワーがmedium以上 && 2倍負け( ratio <= 0.5 )
+                else if (NowPower >= ThePower.medium && ratio <= 0.5f)
+                {
+                    NowCondition = HumanConditionCircumstances.Resolved;
+                }
+                else
+                {
+                    // それ以外 => 普調
+                    NowCondition = HumanConditionCircumstances.Normal;
+                }
+                break;
+
+            //--------------------------------
+            // 5) リーミナルホワイトタイル (liminalwhitetile)
+            //--------------------------------
+            case SpiritualProperty.liminalwhitetile:
+                // 「楽観的」: 総量2倍勝ち( ratio >= 2.0 )
+                if (ratio >= 2.0f)
+                {
+                    NowCondition = HumanConditionCircumstances.Optimistic;
+                }
+                // 「疑念」 : 2倍負け( ratio <= 0.5 )
+                else if (ratio <= 0.5f)
+                {
+                    NowCondition = HumanConditionCircumstances.Doubtful;
+                }
+                else
+                {
+                    NowCondition = HumanConditionCircumstances.Normal;
+                }
+                break;
+
+            //--------------------------------
+            // 6) キンダーガーデン (kindergarden)
+            //--------------------------------
+            case SpiritualProperty.kindergarden:
+                // 「楽観的」: 1.7倍勝ち
+                if (ratio >= 1.7f)
+                {
+                    NowCondition = HumanConditionCircumstances.Optimistic;
+                }
+                // 「疑念」 : 1.5倍負け ( ratio <= 2/3 = 0.6667 )
+                else if (ratio <= 0.6667f)
+                {
+                    NowCondition = HumanConditionCircumstances.Doubtful;
+                }
+                else
+                {
+                    NowCondition = HumanConditionCircumstances.Normal;
+                }
+                break;
+
+            //--------------------------------
+            // 7) 支柱 (pillar) 
+            //    戦闘開始時は「普調」だけ
+            //--------------------------------
+            case SpiritualProperty.pillar:
+                NowCondition = HumanConditionCircumstances.Normal;
+                break;
+
+            //--------------------------------
+            // 8) サイコパス (pysco)
+            //    戦闘開始時は常に落ち着く => 普調
+            //--------------------------------
+            case SpiritualProperty.pysco:
+                NowCondition = HumanConditionCircumstances.Normal;
+                break;
+
+            //--------------------------------
+            // 9) ドレミス, シークイエスト, etc. 
+            //    仕様外 or 未指定なら一旦「普調」にする
+            //--------------------------------
+            default:
+                NowCondition = HumanConditionCircumstances.Normal;
+                break;
+        }
     }
     /// <summary>
     /// 人間状況の時間変化
@@ -2851,6 +3007,279 @@ public abstract class BaseStates
         }
     } 
     /// <summary>
+    /// 死亡と復活の間は何もないも同然なので復活時の変化はなく、死亡時のみ。
+    /// つまり==復活した直後にその人間状況のまま開始すること前提==で考える。
+    /// </summary>
+    public void ApplyConditionChangeOnDeath()
+    {
+        switch (NowCondition)
+        {
+            //------------------------------
+            // 辛い (Painful)
+            //------------------------------
+            case HumanConditionCircumstances.Painful:
+                // 普調 (一律50%)
+                if (rollper(50))
+                {
+                    NowCondition = HumanConditionCircumstances.Normal;
+                }
+                else
+                {
+                    // 変化なし
+                    ResetConditionConsecutiveTurn();
+                }
+                break;
+
+            //------------------------------
+            // 楽観的 (Optimistic)
+            //------------------------------
+            case HumanConditionCircumstances.Optimistic:
+                switch (MyImpression)
+                {
+                    // 楽観的 → 辛い
+                    case SpiritualProperty.devil:
+                    case SpiritualProperty.sacrifaith:
+                        NowCondition = HumanConditionCircumstances.Painful;
+                        break;
+
+                    // 楽観的 → 普調
+                    case SpiritualProperty.pillar:
+                    case SpiritualProperty.godtier:
+                    case SpiritualProperty.liminalwhitetile:
+                    case SpiritualProperty.kindergarden:
+                        NowCondition = HumanConditionCircumstances.Normal;
+                        break;
+
+                    case SpiritualProperty.pysco:
+                        // サイコパスは 50% 普調 / 50% 変化なし
+                        if (rollper(50))
+                        {
+                            NowCondition = HumanConditionCircumstances.Normal;
+                        }
+                        else
+                        {
+                            // 変化なし
+                            ResetConditionConsecutiveTurn();
+                        }
+                        break;
+
+                    // 楽観的 → 変化なし
+                    case SpiritualProperty.baledrival:
+                    case SpiritualProperty.cquiest:
+                    case SpiritualProperty.doremis:
+                        ResetConditionConsecutiveTurn();
+                        break;
+
+                    default:
+                        // 変化なし
+                        ResetConditionConsecutiveTurn();
+                        break;
+                }
+                break;
+
+            //------------------------------
+            // 高揚 (Elated)
+            //------------------------------
+            case HumanConditionCircumstances.Elated:
+                switch (MyImpression)
+                {
+                    // 変化なし
+                    case SpiritualProperty.sacrifaith:
+                    case SpiritualProperty.godtier:
+                    case SpiritualProperty.devil:
+                        ResetConditionConsecutiveTurn();
+                        break;
+
+                    // 普調
+                    case SpiritualProperty.cquiest:
+                    case SpiritualProperty.liminalwhitetile:
+                    case SpiritualProperty.pillar:
+                    case SpiritualProperty.kindergarden:
+                    case SpiritualProperty.doremis:
+                    case SpiritualProperty.pysco:
+                        NowCondition = HumanConditionCircumstances.Normal;
+                        break;
+
+                    // 楽観的
+                    case SpiritualProperty.baledrival:
+                        NowCondition = HumanConditionCircumstances.Optimistic;
+                        break;
+
+                    // 辛いにはいかなそう => default で変化なし
+                    default:
+                        ResetConditionConsecutiveTurn();
+                        break;
+                }
+                break;
+
+            //------------------------------
+            // 覚悟 (Resolved)
+            //------------------------------
+            case HumanConditionCircumstances.Resolved:
+                switch (MyImpression)
+                {
+                    // 変化なし => ベール
+                    case SpiritualProperty.baledrival:
+                        ResetConditionConsecutiveTurn();
+                        break;
+
+                    // 普調 => シークイエスト, ドレミス, デビル, ゴッドティア, キンダー
+                    case SpiritualProperty.cquiest:
+                    case SpiritualProperty.doremis:
+                    case SpiritualProperty.devil:
+                    case SpiritualProperty.godtier:
+                    case SpiritualProperty.kindergarden:
+                        NowCondition = HumanConditionCircumstances.Normal;
+                        break;
+
+                    // 辛い => 支柱, リーミナル
+                    case SpiritualProperty.pillar:
+                    case SpiritualProperty.liminalwhitetile:
+                        NowCondition = HumanConditionCircumstances.Painful;
+                        break;
+
+                    // 疑念 => 自己犠牲, サイコ
+                    case SpiritualProperty.sacrifaith:
+                    case SpiritualProperty.pysco:
+                        NowCondition = HumanConditionCircumstances.Doubtful;
+                        break;
+
+                    default:
+                        // 変化なし
+                        ResetConditionConsecutiveTurn();
+                        break;
+                }
+                break;
+
+            //------------------------------
+            // 怒り (Angry)
+            //------------------------------
+            case HumanConditionCircumstances.Angry:
+                switch (MyImpression)
+                {
+                    // 変化なし => リーミナル, 自己犠牲
+                    case SpiritualProperty.liminalwhitetile:
+                    case SpiritualProperty.sacrifaith:
+                        ResetConditionConsecutiveTurn();
+                        break;
+
+                    // 楽観的 => サイコ
+                    case SpiritualProperty.pysco:
+                        NowCondition = HumanConditionCircumstances.Optimistic;
+                        break;
+
+                    // 普調 => else
+                    default:
+                        NowCondition = HumanConditionCircumstances.Normal;
+                        break;
+                }
+                break;
+
+            //------------------------------
+            // 疑念 (Doubtful)
+            //------------------------------
+            case HumanConditionCircumstances.Doubtful:
+                switch (MyImpression)
+                {
+                    // 怒り => 自己犠牲, ベール, デビル
+                    case SpiritualProperty.sacrifaith:
+                    case SpiritualProperty.baledrival:
+                    case SpiritualProperty.devil:
+                        NowCondition = HumanConditionCircumstances.Angry;
+                        break;
+
+                    // 普調 => サイコ, リーミナル, 支柱
+                    case SpiritualProperty.pysco:
+                    case SpiritualProperty.liminalwhitetile:
+                    case SpiritualProperty.pillar:
+                        NowCondition = HumanConditionCircumstances.Normal;
+                        break;
+
+                    // 楽観的 => ドレミス, シークイエスト, キンダー, ゴッドティア
+                    case SpiritualProperty.doremis:
+                    case SpiritualProperty.cquiest:
+                    case SpiritualProperty.kindergarden:
+                    case SpiritualProperty.godtier:
+                        NowCondition = HumanConditionCircumstances.Optimistic;
+                        break;
+
+                    // 辛いにはいかない => default => 変化なし
+                    default:
+                        ResetConditionConsecutiveTurn();
+                        break;
+                }
+                break;
+
+            //------------------------------
+            // 混乱 (Confused)
+            //------------------------------
+            case HumanConditionCircumstances.Confused:
+                switch (MyImpression)
+                {
+                    // 変化なし => キンダー
+                    case SpiritualProperty.kindergarden:
+                        ResetConditionConsecutiveTurn();
+                        break;
+
+                    // 高揚 => ベール, リーミナル
+                    case SpiritualProperty.baledrival:
+                    case SpiritualProperty.liminalwhitetile:
+                        NowCondition = HumanConditionCircumstances.Elated;
+                        break;
+
+                    // 普調 => else
+                    default:
+                        NowCondition = HumanConditionCircumstances.Normal;
+                        break;
+                }
+                break;
+
+            //------------------------------
+            // 普調 (Normal)
+            //------------------------------
+            case HumanConditionCircumstances.Normal:
+                switch (MyImpression)
+                {
+                    // 変化なし => 支柱, サイコ
+                    case SpiritualProperty.pillar:
+                    case SpiritualProperty.pysco:
+                        ResetConditionConsecutiveTurn();
+                        break;
+
+                    // 楽観的 => ゴッドティア
+                    case SpiritualProperty.godtier:
+                        NowCondition = HumanConditionCircumstances.Optimistic;
+                        break;
+
+                    // 疑念 => リーミナル, キンダー, デビル
+                    case SpiritualProperty.liminalwhitetile:
+                    case SpiritualProperty.kindergarden:
+                    case SpiritualProperty.devil:
+                        NowCondition = HumanConditionCircumstances.Doubtful;
+                        break;
+
+                    // 怒り => 自己犠牲, シークイエスト, ベール
+                    case SpiritualProperty.sacrifaith:
+                    case SpiritualProperty.cquiest:
+                    case SpiritualProperty.baledrival:
+                        NowCondition = HumanConditionCircumstances.Angry;
+                        break;
+
+                    default:
+                        // 変化なし
+                        ResetConditionConsecutiveTurn();
+                        break;
+                }
+                break;
+
+            default:
+                // それ以外(例えば none) => 変化なし
+                ResetConditionConsecutiveTurn();
+                break;
+        }
+    }
+        
+    /// <summary>
     /// 次に使用する命中率へのパーセント補正用保持リスト
     /// </summary>
     private List<ModifierPart> _useHITPercentageModifiers;
@@ -3970,6 +4399,8 @@ private int CalcTransformCountIncrement(int tightenStage)
     public virtual void DeathCallBack()
     {
         DeleteConsecutiveATK();
+        ApplyConditionChangeOnDeath();
+
         //あるかわからないが続行中のスキルを消し、
         //以外のそれ以外のスキルの連続攻撃回数消去(基本的に一個しか増えないはずだが)は以下のforeachループで行う
         foreach (var skill in SkillList)
@@ -4072,11 +4503,15 @@ private int CalcTransformCountIncrement(int tightenStage)
     {
         UpdateTurnAllPassiveSurvival();
 
-        ConditionInNextTurn();
+        //生きている場合にのみする処理
+        if(!Death())
+        {
+             ConditionInNextTurn();
+        }
+       
         
 
         //記録系
-        RecordCondition();
         _tempLive = !Death();//死んでない = 生きてるからtrue
     }
 

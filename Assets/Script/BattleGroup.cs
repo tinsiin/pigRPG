@@ -41,6 +41,18 @@ public class BattleGroup
         which = _which;
         CharaCompatibility = CompatibilityData;
     }
+    /// <summary>
+    /// グループの十日能力の総量の平均値を返す　強さの指標
+    /// </summary>
+    public float OurAvarageTenDayPower()
+    {
+        float sum = 0f;
+        foreach(var chara in Ours)
+        {
+            sum += chara.TenDayValuesSum;
+        }
+        return sum / Ours.Count;
+    }
 
     /// <summary>
     /// 前のめり消す処理　前のめりした人間が死亡したときなど

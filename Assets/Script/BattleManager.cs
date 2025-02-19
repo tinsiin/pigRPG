@@ -374,6 +374,17 @@ public class BattleManager
         else Debug.Log("お互い向き合って戦闘は始まった");
         //noraml、つまり普通に始まったら先約リスト二は何も始まらない
 
+        //全員の人間状況を初期化
+        //AllCharactersを使うよりもallyとenemygroupを使うほうが引数として渡すためのロジックが分かりやすい気がする
+        foreach (var chara in AllyGroup.Ours)
+        {
+            chara.ApplyConditionOnBattleStart(EnemyGroup.OurAvarageTenDayPower());
+        }
+        foreach (var chara in EnemyGroup.Ours)
+        {
+            chara.ApplyConditionOnBattleStart(AllyGroup.OurAvarageTenDayPower());
+        }
+
     }
     
 
