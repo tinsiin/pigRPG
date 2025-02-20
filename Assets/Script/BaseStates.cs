@@ -3588,6 +3588,225 @@ public abstract class BaseStates
         }
     }
 
+    //互角一撃の生存処理--------------------------------------------------------------------------互角一撃の生存処理------------------------------ーーーーーーーーーーー
+
+    /// <summary>
+    /// 互角一撃の状況で「即死しかけたが奇跡的に生き残る」確率(%)を返す。
+    ///
+    /// ◆大まかな流れ：
+    ///  1) 精神属性 × パワー条件 を満たしているかどうか
+    ///      - 満たしていなければ 0%
+    ///  2) 人間状況ごとの基本値をベースにする
+    ///      - 怒り/高揚/辛い/混乱 → 0%
+    ///      - 覚悟 → 7%
+    ///      - 楽観的 → 2%
+    ///      - 普調 → 4%
+    ///      - 疑念 → 1%
+    ///  3) 特定の「精神属性 × 人間状況」組み合わせでさらに上書き
+    ///      - 例: ゴッドティア × 楽観的 = 12% など
+    /// </summary>
+    public int GetMutualKillSurvivalChance()
+    {
+        var property = MyImpression;
+        var power = NowPower;
+        var condition = NowCondition;
+        // (A) まず "パワー条件" をチェックして、
+        //     クリアしていなければ0%を返す
+        //     （属性ごとに分岐。ゴッドティアなど「パワー条件なし」はスルー）
+        if (!CheckPowerCondition(property, power))
+        {
+            return 0; 
+        }
+
+        // (B) 次に "人間状況" ごとの基本値を設定
+        int baseChance = GetBaseChanceByCondition(condition);
+
+        // (C) 最後に「特定の属性×状況」で上書き（例: デビル×楽観的=0% など）
+        baseChance = OverrideByPropertyAndCondition(property, condition, baseChance);
+
+        // 返却値を 0～100 にクランプ（負になったり100超えたりしないように）
+        if (baseChance < 0) baseChance = 0;
+        if (baseChance > 100) baseChance = 100;
+
+        return baseChance;
+    }
+
+
+    /// <summary>
+    /// 属性ごとの「パワー条件」をチェックし、満たしていればtrue、ダメならfalseを返す。
+    /// </summary>
+    private bool CheckPowerCondition(SpiritualProperty property, ThePower power)
+    {
+        switch (property)
+        {
+            case SpiritualProperty.liminalwhitetile:
+                // パワーが普通以上 (>= medium)
+                return (power >= ThePower.medium);
+
+            case SpiritualProperty.kindergarden:
+                // パワーが高い (== high)
+                return (power == ThePower.high);
+
+            case SpiritualProperty.sacrifaith:
+                // パワーが普通以上 (>= medium)
+                return (power >= ThePower.medium);
+
+            case SpiritualProperty.cquiest:
+                // 「低い以上」と書かれていたため (>= low)
+                // 低い(low), 普通(medium), 高い(high) はOK。 たるい(lowlow)はNG
+                return (power >= ThePower.low);
+
+            case SpiritualProperty.devil:
+                // 本文に「パワーが高いと」としか書かれていない→ここでは「高いでないとダメ」と仮定
+                return (power == ThePower.high);
+
+            case SpiritualProperty.doremis:
+                // パワーが普通以上
+                return (power >= ThePower.medium);
+
+            case SpiritualProperty.pillar:
+                // パワーが普通以上
+                return (power >= ThePower.medium);
+
+            case SpiritualProperty.godtier:
+                // 「パワー条件なし」
+                return true;
+
+            case SpiritualProperty.baledrival:
+                // 「パワーが低い以上」→ ここでは (power >= ThePower.low) と解釈
+                return (power >= ThePower.low);
+
+            case SpiritualProperty.pysco:
+                // パワーが普通以上
+                return (power >= ThePower.medium);
+
+            default:
+                // それ以外( none など) は特に定義されていない場合、0%扱い
+                return false;
+        }
+    }
+
+
+    /// <summary>
+    /// 人間状況ごとの「基本値」を返す。
+    /// </summary>
+    private int GetBaseChanceByCondition(HumanConditionCircumstances condition)
+    {
+        switch (condition)
+        {
+            case HumanConditionCircumstances.Angry:
+            case HumanConditionCircumstances.Elated:
+            case HumanConditionCircumstances.Painful:
+            case HumanConditionCircumstances.Confused:
+                return 0;
+
+            case HumanConditionCircumstances.Resolved:
+                return 7;
+            case HumanConditionCircumstances.Optimistic:
+                return 2;
+            case HumanConditionCircumstances.Normal:
+                return 4;
+            case HumanConditionCircumstances.Doubtful:
+                return 1;
+
+            default:
+                // ここに来ることはあまり想定外だが、念のため0%
+                return 0;
+        }
+    }
+
+    /// <summary>
+    /// 属性 × 状況 の特別な組み合わせで「上書き」する。
+    /// 例：ゴッドティア × 楽観的 => 12% など
+    /// </summary>
+    private int OverrideByPropertyAndCondition(
+        SpiritualProperty property,
+        HumanConditionCircumstances condition,
+        int baseChance
+    )
+    {
+        switch (property)
+        {
+            //=======================================
+            // ■ゴッドティア (godtier)
+            //=======================================
+            case SpiritualProperty.godtier:
+                // 楽観的なら 12% (通常2%を上書き)
+                if (condition == HumanConditionCircumstances.Optimistic)
+                {
+                    return 12;
+                }
+                break;
+
+            //=======================================
+            // ■デビル (devil)
+            //=======================================
+            case SpiritualProperty.devil:
+                // 楽観的なら 0% (通常2% => 0% 上書き)
+                if (condition == HumanConditionCircumstances.Optimistic)
+                {
+                    return 0;
+                }
+                break;
+
+            //=======================================
+            // ■自己犠牲 (sacrifaith)
+            //=======================================
+            case SpiritualProperty.sacrifaith:
+                // 怒り => 6% (通常 怒りは0% => 6%で上書き)
+                if (condition == HumanConditionCircumstances.Angry)
+                {
+                    return 6;
+                }
+                break;
+
+            //=======================================
+            // ■ドレミス (doremis)
+            //=======================================
+            case SpiritualProperty.doremis:
+                // 疑念 => 14% (通常1% => 14%)
+                if (condition == HumanConditionCircumstances.Doubtful)
+                {
+                    return 14;
+                }
+                break;
+
+            //=======================================
+            // ■支柱 (pillar)
+            //=======================================
+            case SpiritualProperty.pillar:
+                // 辛い => 6% (通常0% => 6%)
+                if (condition == HumanConditionCircumstances.Painful)
+                {
+                    return 6;
+                }
+                break;
+
+            //=======================================
+            // ■ベールドライヴァル (baledrival)
+            //=======================================
+            case SpiritualProperty.baledrival:
+                // 高揚 => 11% (通常0% => 11%)
+                if (condition == HumanConditionCircumstances.Elated)
+                {
+                    return 11;
+                }
+                break;
+
+            //=======================================
+            // ■その他のケース
+            //   (サイコパスやキンダーガーデン、リーミナルホワイトタイルなど)
+            //   特に指定がなければ、 baseChance のまま
+            //=======================================
+            default:
+                break;
+        }
+
+        // 上記で特に上書きされなければ baseChance のまま
+        return baseChance;
+    }
+    //互角一撃の生存処理--------------------------------------------------------------------------互角一撃の生存処理------------------------------ーーーーーーーーーーー
+
     /// <summary>
     /// 基礎山型分布によるダメージ補正
     /// </summary>
@@ -3670,6 +3889,28 @@ public abstract class BaseStates
         }
         return dmg;//連続攻撃でないなら、そのまま返す
     }
+    /// <summary>
+    /// 互角一撃の生存判定
+    /// </summary>
+    void CalculateMutualKillSurvivalChance(float LiveHP,float dmg,BaseStates atker)
+    {
+        //deathの判定が入る前に、互角一撃の生存判定を行い、HP再代入
+        //ダメージの大きさからして絶対に死んでるからDeath判定は要らず、だからDeath辺りでの判定がいらない。
+        if(LiveHP >= _maxHp*0.2f)//HPが二割以上の時に、
+        {
+            if(atker.TenDayValuesSum <= TenDayValuesSum * 1.6f)//自分の十日能力の総量の1.6倍以下なら
+            {
+                if (dmg >= _maxHp * 0.34f && dmg <= _maxHp * 0.66f )//大体半分くらいの攻撃なら  
+                {
+                    //生存判定が入る
+                    if(rollper(GetMutualKillSurvivalChance()))
+                    {
+                        HP = _maxHp * 0.07f;
+                    }
+                }
+            }
+        }
+    }
 
     /// <summary>
     ///     オーバライド可能なダメージ関数
@@ -3697,8 +3938,11 @@ public abstract class BaseStates
         dmg = BarrierLayers(dmg, Atker);
 
         if(dmg < 0)dmg = 0;//0未満は0にする　逆に回復してしまうのを防止
+        var tempHP = HP;//計算用にダメージ受ける前のHPを記録
         HP -= dmg;
         Debug.Log("攻撃が実行された");
+
+        CalculateMutualKillSurvivalChance(tempHP,dmg,Atker);//互角一撃の生存によるHP再代入の可能性
 
         //死んだら攻撃者のOnKillを発生
         if(Death())
