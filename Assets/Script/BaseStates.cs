@@ -3895,7 +3895,7 @@ public abstract class BaseStates
     void CalculateMutualKillSurvivalChance(float LiveHP,float dmg,BaseStates atker)
     {
         //deathの判定が入る前に、互角一撃の生存判定を行い、HP再代入
-        //ダメージの大きさからして絶対に死んでるからDeath判定は要らず、だからDeath辺りでの判定がいらない。
+        //ダメージの大きさからして絶対に死んでるからDeath判定は要らず、だからDeath辺りでの判定がいらない。(DeathCallBackが起こらない)
         if(LiveHP >= _maxHp*0.2f)//HPが二割以上の時に、
         {
             if(atker.TenDayValuesSum <= TenDayValuesSum * 1.6f)//自分の十日能力の総量の1.6倍以下なら
@@ -3911,6 +3911,7 @@ public abstract class BaseStates
             }
         }
     }
+
 
     /// <summary>
     ///     オーバライド可能なダメージ関数
@@ -4656,13 +4657,60 @@ private int CalcTransformCountIncrement(int tightenStage)
         TargetBonusDatas.AllClear();
 
     }
+    void HighNessChance(BaseStates deathEne)
+    {
+        var matchSkillCount = 0;
+        foreach(var skill in deathEne.SkillList)//倒した敵のスキルで回す
+        {
+            if(skill.IsTLOA && skill.SkillSpiritual == MyImpression)//スキルがTLOAで自分の精神属性と一致するなら
+            {
+                matchSkillCount++;
+            }
+        }
+
+        if(matchSkillCount > 0 && rollper(GetPowerUpChanceOnKillEnemy(matchSkillCount)))//合致数が一個以上あり、ハイネスチャンスの確率を通過すれば。
+        {
+            NowPower = NowPower switch
+            {
+                ThePower.lowlow => ThePower.low,
+                ThePower.low => ThePower.medium,
+                ThePower.medium => ThePower.high,
+                ThePower.high => ThePower.high, // 既に最高値の場合は変更なし
+                _ => NowPower//ここはdefault句らしい
+            };
+        }
+    }
+    /// <summary>
+    /// 敵を倒した時のパワー増加確率(%)を返す関数。 「ハイネスチャンスの確率」
+    /// 精神属性ごとに分岐し、一致スキルの数 × 5% を加算する。
+    /// </summary>
+    float GetPowerUpChanceOnKillEnemy(int matchingSkillCount)
+    {
+        // 基礎確率を設定
+        float baseChance = MyImpression switch
+        {
+            SpiritualProperty.kindergarden => 40f,
+            SpiritualProperty.liminalwhitetile => 30f,
+            _ => 20f
+        };
+
+        // 一致スキル数 × 5% を加算
+        float totalChance = baseChance + matchingSkillCount * 5f;
+
+        // 必要に応じて上限100%に丸めるなら下記をアンコメント
+        // if (totalChance > 100f) totalChance = 100f;
+
+        return totalChance;
+    }
+
     /// <summary>
     /// 攻撃した相手が死んだ場合のコールバック
     /// </summary>
     void OnKill(BaseStates target)
     {
-        //人間状況の変化
-        ApplyConditionChangeOnKillEnemy(target);
+        HighNessChance(target);//ハイネスチャンス(ThePowerの増加判定)
+        ApplyConditionChangeOnKillEnemy(target);//人間状況の変化
+        
     }
 
 
