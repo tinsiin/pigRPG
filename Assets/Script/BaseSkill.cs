@@ -20,7 +20,8 @@ public enum SkillType
     RemovePassive = 1 << 3,
     DeathHeal = 1 << 4,
     AddVitalLayer =1 << 5,
-    RemoveVitalLayer =1 << 6
+    RemoveVitalLayer =1 << 6,
+    MentalHeal = 1 << 7
 }
 /// <summary>
 /// スキル範囲の性質
@@ -601,10 +602,21 @@ public class BaseSkill
     /// </summary>
     public float[] PowerSpread;
 
+    [SerializeField]
+    float _skillPower;//バッキングフィールド
     /// <summary>
     /// スキルのパワー
     /// </summary>
-    public float SkillPower;
+    public float SkillPower => _skillPower * (1.0f - MentalDamageRatio);
+    /// <summary>
+    /// 精神HPへのスキルのパワー
+    /// </summary>
+    public float SkillPowerForMental=> _skillPower * MentalDamageRatio;
+
+    /// <summary>
+    /// 精神攻撃率　100だとSkillPower全てが精神HPの方に行くよ。
+    /// </summary>
+    public float MentalDamageRatio;
 
     /// <summary>
     /// スキルの命中補正 int 百分率
@@ -659,12 +671,22 @@ public class BaseSkill
 
     }
 
-    //スキルパワーの計算
+    /// <summary>
+    /// スキルパワーの計算
+    /// </summary>
     public virtual float SkillPowerCalc(float spread)
     {
         var pwr = SkillPower;//基礎パワー
 
 
+
+        pwr *= spread;//分散値を掛ける
+
+        return pwr;
+    }
+    public virtual float SkillPowerForMentalCalc(float spread)
+    {
+        var pwr = SkillPowerForMental;//基礎パワー
 
         pwr *= spread;//分散値を掛ける
 

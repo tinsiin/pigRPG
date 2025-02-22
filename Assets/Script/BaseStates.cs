@@ -15,6 +15,7 @@ using UnityEditor.UIElements;
 using static CommonCalc;
 using Unity.VisualScripting.Dependencies.NCalc;
 using UnityEditor.Rendering;
+using UnityEditor.ShaderGraph.Internal;
 /// <summary>
 ///     キャラクター達の種別
 /// </summary>
@@ -897,10 +898,61 @@ public abstract class BaseStates
     private float _maxHp;
     public float MAXHP => _maxHp;
 
+    //精神HP
+    [SerializeField]
+    float _mentalHP;
+    /// <summary>
+    /// 精神HP
+    /// </summary>
+    public float MentalHP 
+    {
+        get 
+        {
+            if(_mentalHP > MentalMaxHP)//最大値超えてたらカットする。
+            {
+                _mentalHP = MentalMaxHP;
+            }
+            return _mentalHP;
+        }
+        set
+        {
+            if(value > MentalMaxHP)//最大値を超えないようにする。
+            {
+                _mentalHP = MentalMaxHP;
+            }
+            else _mentalHP = value;
+        }
+    }
+    /// <summary>
+    /// 精神HP最大値
+    /// </summary>
+    public float MentalMaxHP => CalcMentalMaxHP();
+
+    /// <summary>
+    /// 精神HPの最大値を設定する　パワーでの分岐やHP最大値に影響される
+    /// </summary>
+    float CalcMentalMaxHP()
+    {
+        if(NowPower == ThePower.high)
+        {
+            return _hp * 1.3f + _maxHp *0.08f;
+        }else
+        {
+            return _hp;
+        }
+    }
+    /// <summary>
+    /// 精神HPは攻撃時にb_atk分だけ回復する
+    /// </summary>
+    void MentalHealOnAttack()
+    {
+        MentalHP += b_ATK;
+    }
+
     /// <summary>
     /// vitalLayerでHPに到達する前に攻撃値を請け負う処理
     /// </summary>
-    public float BarrierLayers(float dmg, BaseStates atker)
+    public float BarrierLayers(ref float dmg, ref float mentalDmg,BaseStates atker)
     {
 
         // 1) VitalLayer の順番どおりにダメージを適用していく
@@ -912,7 +964,7 @@ public abstract class BaseStates
             var layer = _vitalLaerList[i];
             var skillPhy = atker.NowUseSkill.SkillPhysical;
             // 2) このレイヤーに貫通させて、返り値を「残りダメージ」とする
-            dmg = layer.PenetrateLayer(dmg, skillPhy);
+            layer.PenetrateLayer(ref dmg, ref mentalDmg, skillPhy);
 
             if (layer.LayerHP <= 0f)
             {
@@ -3563,6 +3615,20 @@ public abstract class BaseStates
 
         return def - minusAmount;
     }
+    /// <summary>
+    /// 精神HP用の防御力
+    /// </summary>
+    public virtual float MentalDEF()
+    {
+        return b_DEF() * 0.7f * NowPower switch
+        {
+            ThePower.high => 1.4f,
+            ThePower.medium => 1f,
+            ThePower.low => 0.7f,
+            ThePower.lowlow => 0.4f,
+            _ => -4444444,//エラーだ
+        };
+    }
 
 
 
@@ -3917,7 +3983,7 @@ public abstract class BaseStates
     ///     オーバライド可能なダメージ関数
     /// </summary>
     /// <param name="atkPoint"></param>
-    public virtual float Damage(BaseStates Atker, float SkillPower)
+    public virtual float Damage(BaseStates Atker, float SkillPower,float SkillPowerForMental)
     {
         var skill = Atker.NowUseSkill;
         var def = DEF(skill.DEFATK);
@@ -3925,6 +3991,7 @@ public abstract class BaseStates
         def = ClampDefenseByAimStyle(skill,def);//防ぎ方(AimStyle)の不一致がある場合、クランプする
 
         var dmg = ((Atker.ATK() - def) * SkillPower) + SkillPower;//(攻撃-対象者の防御) にスキルパワー加算と乗算
+        var mentalDmg = ((Atker.ATK() - MentalDEF()) * SkillPowerForMental) + SkillPowerForMental;//精神攻撃
 
         if(NowPower > ThePower.lowlow)//たるくなければ基礎山形補正がある。
         dmg = GetBaseCalcDamageWithPlusMinus22Percent(dmg);//基礎山型補正
@@ -3936,14 +4003,18 @@ public abstract class BaseStates
         dmg *= AdaptToSkill(Atker, skill, dmg);
 
         //vitalLayerを通る処理
-        dmg = BarrierLayers(dmg, Atker);
+        BarrierLayers(ref dmg,ref mentalDmg, Atker);
 
         if(dmg < 0)dmg = 0;//0未満は0にする　逆に回復してしまうのを防止
         var tempHP = HP;//計算用にダメージ受ける前のHPを記録
         HP -= dmg;
         Debug.Log("攻撃が実行された");
 
+        if(mentalDmg < 0)mentalDmg = 0;//0未満は0にする
+        MentalHP -= mentalDmg;//実ダメージで精神HPの最大値がクランプされた後に、精神攻撃が行われる。
+
         CalculateMutualKillSurvivalChance(tempHP,dmg,Atker);//互角一撃の生存によるHP再代入の可能性
+        Atker.MentalHealOnAttack();//精神HPの攻撃時回復
 
         //死んだら攻撃者のOnKillを発生
         if(Death())
@@ -3978,7 +4049,7 @@ public abstract class BaseStates
     }
 
     /// <summary>
-    /// ヒールは防御できない、つまりヒールが逆効果のキャラクターならヒールは有効打ってこと
+    /// ヒール
     /// </summary>
     /// <param name="HealPoint"></param>
     public virtual string Heal(float HealPoint)
@@ -3991,6 +4062,18 @@ public abstract class BaseStates
         }
 
         return "死んでいる";
+    }
+    /// <summary>
+    /// 精神HPのヒール処理
+    /// </summary>
+    /// <param name="HealPoint"></param>
+    public virtual void MentalHeal(float HealPoint)
+    {
+        if(!Death())
+        {
+            MentalHP += HealPoint;
+            Debug.Log("精神ヒールが実行された");
+        }
     }
     /// <summary>
     /// 命中凌駕の判定関数　引数倍命中が回避を凌駕してるのなら、スキル命中率に影響を与える
@@ -4404,6 +4487,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         //スキルパワーの精神属性による計算
         var modifier = SkillSpiritualModifier[(skill.SkillSpiritual, MyImpression)];//スキルの精神属性と自分の精神属性による補正
         var skillPower = skill.SkillPowerCalc(spread) * modifier.GetValue() / 100.0f;
+        var skillPowerForMental = skill.SkillPowerForMentalCalc(spread) * modifier.GetValue() / 100.0f;//精神HPへのパワー
         var txt = "";//メッセージテキスト用
         var thisAtkTurn = true;
 
@@ -4444,7 +4528,7 @@ private int CalcTransformCountIncrement(int tightenStage)
                     CheckPhysicsConsecutiveAimBoost(attacker);
                     
                     //成功されるとダメージを受ける
-                    damageAmount = Damage(attacker, skillPower);
+                    damageAmount = Damage(attacker, skillPower,skillPowerForMental);
                     isAtkHit = true;//攻撃を受けたからtrue
 
                     ApplyNonDamageHostileEffects(skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove);
@@ -4475,6 +4559,15 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
             {
                 txt += Heal(skillPower);
+                isHeal = true;
+            }
+        }
+
+        if (skill.HasType(SkillType.MentalHeal))
+        {
+            if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
+            {
+                MentalHeal(skillPower);
                 isHeal = true;
             }
         }

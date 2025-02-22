@@ -81,6 +81,11 @@ public class BaseVitalLayer
     public float DishSmackRsistance = 1.0f;
 
     /// <summary>
+    /// 精神DMGの通過率 100%なら影響されずそのまま通る
+    /// </summary>
+    public float MentalPenetrateRatio = 1.0f;
+
+    /// <summary>
     /// バリアの耐性をどう扱うか（A/B/Cを切り替え）
     /// </summary>
     public BarrierResistanceMode ResistMode ;
@@ -88,7 +93,7 @@ public class BaseVitalLayer
     /// <summary>
     /// ダメージが層を通過する  与えられたダメージは通過して軽減され返る
     /// </summary>
-    public float PenetrateLayer(float dmg, PhysicalProperty impactProperty)
+    public void PenetrateLayer(ref float dmg, ref float mentalDmg, PhysicalProperty impactProperty)
     {
         // 1) 物理属性に応じた耐性率を取得
         float resistRate = 1.0f;
@@ -110,10 +115,14 @@ public class BaseVitalLayer
 
         // 3) レイヤーHPを削る
         float leftover = LayerHP - dmgAfter; // leftover "HP" => もしマイナスなら破壊
+
+        //精神dmgが現存する攻撃に削られる前のLayerを通る
+        mentalDmg -= LayerHP * (1 - MentalPenetrateRatio);//精神HPの通過率の分だけ通るので、つまり100%ならmentalDMgの低減はないということ。
+
         if (leftover <= 0f)
         {
             // 破壊された
-            float overkill = -(leftover); // -negative => positive
+            float overkill = -leftover; // -negative => positive
             var tmpHP = LayerHP;//仕組みC用に今回受ける時のLayerHPを保存。
             LayerHP = 0f; // 自分のHPはゼロ
 
@@ -122,14 +131,16 @@ public class BaseVitalLayer
             {
                 case BarrierResistanceMode.A_SimpleNoReturn:
                     // Aは一度軽減した分は戻さない: overkill をそのまま次へ
-                    return overkill;
+                    dmg = overkill;
+                    return;
 
                 case BarrierResistanceMode.B_RestoreWhenBreak:
                     // Bは「軽減後ダメージ」分を元に戻す => leftover を "÷ resistRate" で拡大
                     // ここで overkill は "dmgAfter - LayerHP" の結果
                     // → 仕組みB: leftoverDamage = overkill / resistRate
                     float restored = overkill / resistRate;
-                    return restored;
+                    dmg = restored;
+                    return;
 
                 case BarrierResistanceMode.C_IgnoreWhenBreak:
                     // Cは元攻撃 - 現在のLayerHP
@@ -137,25 +148,25 @@ public class BaseVitalLayer
                     // "dmg - tmpHP(LayerHP)" などの再計算
                     float cValue = dmg - tmpHP;
                     if (cValue < 0) cValue = 0;
-                    return cValue;
+                    dmg = cValue;
+                    return;
                 case BarrierResistanceMode.C_IgnoreWhenBreak_MaxHP:
                     // Cは元攻撃 - 現在のLayerHP
                     // leftover(= overkill)を無視し、
                     // "dmg - tmpHP(LayerHP)" などの再計算
                     float cmValue = dmg - MaxLayerHP;
                     if (cmValue < 0) cmValue = 0;
-                    return cmValue;
+                    dmg = cmValue;
+                    return;
             }
         }
         else
         {
             // バリアで耐えた（破壊されなかった）
             LayerHP = leftover;
-            return 0f; // 余剰ダメージなし
+            dmg = 0f; // 余剰ダメージなし
         }
 
-        // fallback
-        return 0f;
     }
 
 }
