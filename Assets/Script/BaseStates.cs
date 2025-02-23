@@ -447,6 +447,37 @@ public abstract class BaseStates
 
     public ThePower NowPower;
 
+    /// <summary>
+    /// NowPowerが一段階上がる。
+    /// </summary>
+    void Power1Up()
+    {
+        NowPower = NowPower switch
+            {
+                ThePower.lowlow => ThePower.low,
+                ThePower.low => ThePower.medium,
+                ThePower.medium => ThePower.high,
+                ThePower.high => ThePower.high, // 既に最高値の場合は変更なし
+                _ => NowPower//ここはdefault句らしい
+            };
+
+    }
+
+    /// <summary>
+    /// NowPowerが一段階下がる。
+    /// </summary>
+    void Power1Down()
+    {
+        NowPower = NowPower switch
+            {
+                ThePower.high => ThePower.medium,
+                ThePower.medium => ThePower.low,
+                ThePower.low => ThePower.lowlow,
+                ThePower.lowlow => ThePower.lowlow, // 既に最低値の場合は変更なし
+                _ => NowPower//ここはdefault句らしい
+            };
+    }
+    
     [Header("4大ステの基礎基礎値")]
     public float  b_b_atk = 4f;
     public float b_b_def = 4f;
@@ -948,6 +979,133 @@ public abstract class BaseStates
     {
         MentalHP += b_ATK;
     }
+    void MentalHPHealOnTurn()
+    {
+        MentalHP += TenDayValues.GetValueOrZero(TenDayAbility.Rain);
+    }
+    /// <summary>
+    /// 実HPに比べて何倍離れているのだろうか。
+    /// </summary>
+    /// <returns></returns>
+    float GetMentalDivergenceThreshold()
+    {
+        var ExtraValue = (TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) - TenDayValues.GetValueOrZero(TenDayAbility.KereKere)) * 0.01f;//0クランプいらない
+        var EnokunagiValue = TenDayValues.GetValueOrZero(TenDayAbility.Enokunagi) * 0.005f;
+        switch (NowCondition)
+        {
+            case HumanConditionCircumstances.Angry:
+                return 0.47f + ExtraValue;
+            case HumanConditionCircumstances.Elated:
+                return 2.6f+ ExtraValue;
+            case HumanConditionCircumstances.Painful:
+                return 0.6f+ ExtraValue;
+            case HumanConditionCircumstances.Confused:
+                return 0.3f+ ExtraValue;
+            case HumanConditionCircumstances.Resolved:
+                return 1.2f+ ExtraValue;
+            case HumanConditionCircumstances.Optimistic:
+                return 1.4f+ ExtraValue;
+            case HumanConditionCircumstances.Normal:
+                return 0.9f+ ExtraValue;
+            case HumanConditionCircumstances.Doubtful:
+                return 0.7f+ ExtraValue - EnokunagiValue;//疑念だとエノクナギの影響で乖離しやすくなっちゃうよ
+            default:
+                return 0f;
+        }
+    }
+    /// <summary>
+    /// 精神HPの乖離が起こるまでの発動持続ターン最大値を取得
+    /// </summary>
+    int GetMentalDivergenceMaxCount()
+    {
+        if(TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness)> 0)//ゼロ除算対策
+        {
+            var maxCount = (int)((TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) - TenDayValues.GetValueOrZero(TenDayAbility.TentVoid ) / 2) / TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness));
+            if(maxCount > 0)return maxCount;//0より大きければ返す
+        }
+        return 0 ;
+
+    }
+    /// <summary>
+    /// 精神HPと実HPの乖離発生処理全般
+    /// </summary>
+    void MentalDiverGence()
+    {
+        // 乖離率は 実HPに対する精神HPの割合で決まる。
+        float divergenceRatio = Mathf.Abs(MentalHP - HP) / HP;
+
+        if(divergenceRatio > GetMentalDivergenceThreshold())//乖離してるなら
+        {
+            if(_mentalDivergenceCount >= GetMentalDivergenceMaxCount())//カウントが最大値を超えたら
+            {
+                _mentalDivergenceRefilCount = GetMentalDivergenceRefulMaxCount();//再度行われないようにカウント開始
+                //精神HPが現在HPより上に乖離してるなら アッパー系の乖離メゾット
+                if(MentalHP > HP)
+                {
+                    MentalUpperDiverGenceEffect();
+                }else
+                {//精神HPが現在HPより下に乖離してるなら ダウナ系の乖離メゾット
+                    MentalDownerDiverGenceEffect();
+                }
+            }
+            _mentalDivergenceCount++;//持続カウントをプラス
+        }else
+        {
+            _mentalDivergenceCount = 0;//乖離から外れたらカウントをリセット
+        }
+
+    }
+    /// <summary>
+    /// 精神HPの乖離の再充填までのターン数を取得
+    /// </summary>
+    int GetMentalDivergenceRefulMaxCount()
+    {
+        var refil = TenDayValues.GetValueOrZero(TenDayAbility.TentVoid) * 3 - TenDayValues.GetValueOrZero(TenDayAbility.Miza) / 4 * TenDayValues.GetValueOrZero(TenDayAbility.Smiler);
+        if(refil < 0)return 0;
+        return (int)refil;
+    }
+    /// <summary>
+    /// 再充填カウントがゼロより多いならばカウントダウンし、そうでなければtrue、つまり再充填されている。
+    /// </summary>
+    /// <returns></returns>
+    bool IsMentalDiverGenceRefilCountDown()
+    {
+        if(_mentalDivergenceRefilCount > 0)
+        {
+            _mentalDivergenceRefilCount--;
+            return true;
+        }
+        return false;//カウントは終わっている。
+    }
+    int _mentalDivergenceRefilCount = 0;
+    int _mentalDivergenceCount = 0;
+
+    /// <summary>
+    /// 精神HPのアッパー乖離で起こる変化
+    /// </summary>
+    protected virtual void MentalUpperDiverGenceEffect()
+    {//ここに書かれるのは基本効果
+        ApplyPassive(4);//アッパーのパッシブを付与
+    }
+    /// <summary>
+    /// 精神HPのダウナー乖離で起こる変化
+    /// </summary>
+    protected virtual void MentalDownerDiverGenceEffect()
+    {//ここに書かれるのは基本効果
+        
+        if(MyType == CharacterType.TLOA)
+        {
+            HP = _hp * 0.76f;
+        }else
+        {//TLOA以外の種別なら
+            ApplyPassive(3);//強制ダウナーのパッシブを付与
+            if(rollper(50))
+            {
+                Power1Down();//二分の一でパワーが下がる。
+            }
+        }
+    }
+    
 
     /// <summary>
     /// vitalLayerでHPに到達する前に攻撃値を請け負う処理
@@ -3528,6 +3686,10 @@ public abstract class BaseStates
             eye += CounterPower.EyeBonus;
         }
 
+        //パッシブの補正　固定値
+        eye += _passiveList.Sum(p => p.EYEFixedValueEffect());
+
+        if(eye < 0) eye = 0;
         return eye;
     }
 
@@ -3544,7 +3706,10 @@ public abstract class BaseStates
         {
             agi /= 2;//回避率半減
         }
+        //パッシブの補正　固定値
+        agi += _passiveList.Sum(p => p.AGIFixedValueEffect());
 
+        if(agi < 0) agi = 0;
         return agi;
     }
 
@@ -3591,6 +3756,10 @@ public abstract class BaseStates
             atk *= 0.81f;
         }
 
+        //パッシブの補正　固定値を加算する
+        atk += _passiveList.Sum(p => p.ATKFixedValueEffect());
+
+        if(atk < 0) atk = 0;
         return atk;
     }
 
@@ -3612,8 +3781,13 @@ public abstract class BaseStates
 
         var minusAmount = def * minusPer;//防御低減率
 
+        //パッシブの補正　固定値
+        def += _passiveList.Sum(p => p.DEFFixedValueEffect());
 
-        return def - minusAmount;
+        def -= minusAmount;//低減
+
+        if(def < 0) def = 0;
+        return def;
     }
     /// <summary>
     /// 精神HP用の防御力
@@ -3991,7 +4165,9 @@ public abstract class BaseStates
         def = ClampDefenseByAimStyle(skill,def);//防ぎ方(AimStyle)の不一致がある場合、クランプする
 
         var dmg = ((Atker.ATK() - def) * SkillPower) + SkillPower;//(攻撃-対象者の防御) にスキルパワー加算と乗算
-        var mentalDmg = ((Atker.ATK() - MentalDEF()) * SkillPowerForMental) + SkillPowerForMental;//精神攻撃
+        var mentalATKBoost = Mathf.Max(Atker.TenDayValues.GetValueOrZero(TenDayAbility.Leisure) - TenDayValues.GetValueOrZero(TenDayAbility.Leisure),0)
+        * Atker.MentalHP * 0.2f;//相手との余裕の差と精神HPの0.2倍を掛ける 
+        var mentalDmg = ((Atker.ATK() - MentalDEF()) * SkillPowerForMental) + SkillPowerForMental * mentalATKBoost;//精神攻撃
 
         if(NowPower > ThePower.lowlow)//たるくなければ基礎山形補正がある。
         dmg = GetBaseCalcDamageWithPlusMinus22Percent(dmg);//基礎山型補正
@@ -4763,14 +4939,7 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         if(matchSkillCount > 0 && rollper(GetPowerUpChanceOnKillEnemy(matchSkillCount)))//合致数が一個以上あり、ハイネスチャンスの確率を通過すれば。
         {
-            NowPower = NowPower switch
-            {
-                ThePower.lowlow => ThePower.low,
-                ThePower.low => ThePower.medium,
-                ThePower.medium => ThePower.high,
-                ThePower.high => ThePower.high, // 既に最高値の場合は変更なし
-                _ => NowPower//ここはdefault句らしい
-            };
+            Power1Up();
         }
     }
     /// <summary>
@@ -4891,7 +5060,17 @@ private int CalcTransformCountIncrement(int tightenStage)
         //生きている場合にのみする処理
         if(!Death())
         {
-             ConditionInNextTurn();
+            ConditionInNextTurn();
+
+            if(IsMentalDiverGenceRefilCountDown() == false)//再充填とそのカウントダウンが終わってるのなら
+            {
+                MentalDiverGence();
+                if(_mentalDivergenceRefilCount > 0)//乖離が発生した直後に回復が起こらないようにするif カウントダウンがセットされたら始まってるから
+                {
+                    MentalHPHealOnTurn();//精神HP自動回復
+                }
+               
+            }
         }
        
         
@@ -4899,6 +5078,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         //記録系
         _tempLive = !Death();//死んでない = 生きてるからtrue
     }
+
 
     /// <summary>
     ///bm生成時に初期化される関数
@@ -4914,6 +5094,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         damageDatas = new();
         TargetBonusDatas = new();
         ConditionTransition();
+        _mentalDivergenceRefilCount = 0;//精神HP乖離の再充填カウントをゼロに戻す
+        _mentalDivergenceCount = 0;//精神HP乖離のカウントをゼロに戻す
         
     }
     public void OnBattleEndNoArgument()

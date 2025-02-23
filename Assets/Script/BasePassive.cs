@@ -92,6 +92,8 @@ public class BasePassive
     /// </summary>
     public int PassivePower { get; private set; }
 
+    protected BaseStates _owner;//オーナー
+
     /// <summary>
     /// PassivePowerを上書きする
     /// </summary>
@@ -126,6 +128,8 @@ public class BasePassive
                 }
             }
         }
+
+        _owner = user;
     }
 
     /// <summary>
@@ -152,6 +156,8 @@ public class BasePassive
                 }
             }
         }
+
+        _owner = null;
     }
     /// <summary>
     /// 特定のキャラからidを通じて追加HPを消す。
@@ -260,5 +266,38 @@ public class BasePassive
 
     }
 
-    //↑三つで操り切れない部分は、直接baseStatesでのforeachでpassiveListから探す関数でゴリ押しすればいい。
+    /// <summary>
+    /// 固定値でATKに作用する効果
+    /// </summary>
+    /// <returns></returns>
+    public virtual float ATKFixedValueEffect()
+    {
+        return 0f;
+    }
+    /// <summary>
+    /// 固定値でDEFに作用する効果
+    /// </summary>
+    /// <returns></returns>
+    public virtual float DEFFixedValueEffect()
+    {
+        return 0f;
+    }
+    /// <summary>
+    /// 固定値でEYEに作用する効果
+    /// </summary>
+    /// <returns></returns>
+    public virtual float EYEFixedValueEffect()
+    {
+        return 0f;
+    }
+    /// <summary>
+    /// 固定値でAGIに作用する効果
+    /// </summary>
+    /// <returns></returns>
+    public virtual float AGIFixedValueEffect()
+    {
+        return 0f;
+    }
+
+    //これらで操り切れない部分は、直接baseStatesでのforeachでpassiveListから探す関数でゴリ押しすればいい。
 }
