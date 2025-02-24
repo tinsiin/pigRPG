@@ -1376,7 +1376,7 @@ MonoBehaviour:
         MaxPassivePower: 3
         PassiveName: "\u5F37\u5236\u30C0\u30A6\u30CA\u30FC"
         ID: 3
-        DurationTurn: 6
+        DurationTurn: 12
         DurationWalk: -1
         VitalLayers: []
     - rid: 8285219776706641921
@@ -1389,7 +1389,7 @@ MonoBehaviour:
         MaxPassivePower: 4
         PassiveName: "\u30A2\u30C3\u30D1\u30FC"
         ID: 4
-        DurationTurn: 7
+        DurationTurn: 14
         DurationWalk: -1
         VitalLayers: []
     - rid: 8980149206437855232

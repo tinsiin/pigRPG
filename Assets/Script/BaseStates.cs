@@ -434,6 +434,19 @@ public abstract class BaseStates
             pas.UpdateWalkSurvival(this);
         }
     }
+    /// <summary>
+    /// 全パッシブの歩行時効果を呼ぶ
+    /// </summary>
+    void AllPassiveWalkEffect()
+    {
+        foreach (var pas in _passiveList)
+        {
+            if(pas.DurationWalk > 0)
+            {
+                pas.WalkEffect();//歩行残存ターンが1以上でないと動作しない。
+            }
+        }
+    }
 
 
     public IReadOnlyList<BaseVitalLayer> VitalLayers => _vitalLaerList;
@@ -3641,6 +3654,7 @@ public abstract class BaseStates
         float eye = b_EYE;//基礎命中率
 
         eye *= UseHITPercentageModifier;//命中率補正。リスト内がゼロならちゃんと1.0fが返る。
+        eye *= _passiveList.Aggregate(1.0f, (total, m) => total * m.EYEPercentageModifier());//パッシブの乗算補正
 
         //範囲意志によるボーナス
         foreach (KeyValuePair<SkillZoneTrait, float> entry
@@ -3701,6 +3715,7 @@ public abstract class BaseStates
         float agi = b_AGI;//基礎回避率
 
         agi *= UseAGIPercentageModifier;//回避率補正。リスト内がゼロならちゃんと1.0fが返る。
+        agi *= _passiveList.Aggregate(1.0f, (total, m) => total * m.AGIPercentageModifier());//パッシブの乗算補正
 
         if (manager.IsVanguard(this))//自分が前のめりなら
         {
@@ -3718,6 +3733,7 @@ public abstract class BaseStates
         float atk = b_ATK;//基礎攻撃力
 
         atk *= UseATKPercentageModifier;//攻撃力補正
+        atk *= _passiveList.Aggregate(1.0f, (total, m) => total * m.ATKPercentageModifier());//パッシブの乗算補正
 
         //範囲意志によるボーナス
         foreach (KeyValuePair<SkillZoneTrait, float> entry
@@ -3778,6 +3794,7 @@ public abstract class BaseStates
         }
 
         def *= UseDEFPercentageModifier;//防御力補正
+        def *= _passiveList.Aggregate(1.0f, (total, m) => total * m.DEFPercentageModifier());//パッシブの乗算補正
 
         var minusAmount = def * minusPer;//防御低減率
 
@@ -5047,6 +5064,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>歩行時のコールバック引数なしの</summary>
     public void OnWalkNoArgument()
     {
+        AllPassiveWalkEffect();//全パッシブの歩行効果を呼ぶ
         UpdateWalkAllPassiveSurvival();
     }
 
@@ -5105,6 +5123,10 @@ private int CalcTransformCountIncrement(int tightenStage)
         foreach(var layer in _vitalLaerList.Where(lay => lay.IsBattleEndRemove))
         {
             RemoveVitalLayerByID(layer.id);//戦闘の終了で消える追加HPを持ってる追加HPリストから全部消す
+        }
+        foreach(var passive in _passiveList.Where(pas => pas.DurationWalk < 0))
+        {
+            RemovePassive(passive);//歩行残存ターンが-1の場合戦闘終了時に消える。
         }
     }
 

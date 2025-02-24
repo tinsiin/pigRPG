@@ -78,7 +78,7 @@ public class BasePassive
     /// <summary> このパッシブが有効な残りターン数（-1なら無効 </summary>
     public int DurationTurn = -1;
 
-    /// <summary> このパッシブが有効な残り歩数（-1なら無効） </summary>
+    /// <summary> このパッシブが有効な残り歩数（-1なら戦闘終了時に消え、0なら戦闘終了後歩行した瞬間に歩行効果なしに消え、1以上なら効果発生） </summary>
     public int DurationWalk = -1;
 
     /// <summary>
@@ -297,6 +297,34 @@ public class BasePassive
     public virtual float AGIFixedValueEffect()
     {
         return 0f;
+    }
+    /// <summary>
+    ///ATKに作用する補正値の倍率
+    /// </summary>
+    public virtual float ATKPercentageModifier()
+    {
+        return 1f;
+    }
+    /// <summary>
+    ///DEFに作用する補正値の倍率
+    /// </summary>
+    public virtual float DEFPercentageModifier()
+    {
+        return 1f;
+    }
+    /// <summary>
+    ///EYEに作用する補正値の倍率
+    /// </summary>
+    public virtual float EYEPercentageModifier()
+    {
+        return 1f;
+    }
+    /// <summary>
+    ///AGIに作用する補正値の倍率
+    /// </summary>
+    public virtual float AGIPercentageModifier()
+    {
+        return 1f;
     }
 
     //これらで操り切れない部分は、直接baseStatesでのforeachでpassiveListから探す関数でゴリ押しすればいい。
