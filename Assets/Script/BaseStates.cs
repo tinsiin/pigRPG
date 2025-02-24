@@ -819,10 +819,93 @@ public abstract class BaseStates
     /// </summary>
     public bool IsDeleteMyFreezeConsecutive;
     
-    public int MAXP;
+    const int HP_TO_MaxP_CONVERSION_FACTOR = 80;
+    const int MentalHP_TO_P_Recovely_CONVERSION_FACTOR = 120;
+    /// <summary>
+    /// 最大ポイントは実HPの最大値を定数で割ったもの。　この定数はHPのスケールの変更などに応じて、適宜調整する
+    /// </summary>
+    public int MAXP => (int)_maxhp / HP_TO_MaxP_CONVERSION_FACTOR;
 
-    //ポイント
-    public int P;
+    int _p;//バッキングフィールド
+    /// <summary>
+    /// ポイント
+    /// </summary>
+    public int P
+    {
+        get
+        {
+            if(_p > MAXP)//最大値超えてたらカット
+            {
+                _p = MAXP;
+            };
+            return _p;
+        }
+        set
+        {
+            if(value > MAXP)
+            {
+                _p = MAXP;
+            }else
+            {
+                _p = value;
+            }
+        }
+    }
+    /// <summary>
+    /// 精神HPに応じてポイントを自然回復する関数。
+    /// 回復量は精神Hp現在値を割った数とそれの実HP最大値との割合によるカット
+    /// </summary>
+    void MentalNaturalRecovelyPont()
+    {
+         // 精神HPを定数で割り回復量に変換する
+        var baseRecovelyP = (int)MentalHP / MentalHP_TO_P_Recovely_CONVERSION_FACTOR;
+        
+        // 精神HPと実HP最大値との割合
+        var mentalToMaxHPRatio = MentalHP / MAXHP;
+        
+        var RecovelyValue = baseRecovelyP * mentalToMaxHPRatio;//回復量
+        
+        if(RecovelyValue < 0)RecovelyValue = 0;
+        // ポイント回復
+        P += (int)RecovelyValue;
+    }
+    /// <summary>
+    /// 精神HPによるポイント自然回復のカウントアップ用変数
+    /// </summary>
+    int _mentalPointRecoveryCountUp;
+    /// <summary>
+    /// 精神HPによるポイント自然回復の最大カウント = 回復頻度
+    /// </summary>
+    int MentalPointRecovelyMaxCount 
+    {
+        get
+        {
+            // テント空洞と夜暗黒の基本値計算
+            var tentVoidValue = TenDayValues.GetValueOrZero(TenDayAbility.TentVoid) * 2;
+            var nightDarknessValue = TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 1.6f;
+            
+            // ミザとスマイラー、元素信仰力の減算値計算
+            var mizaValue = TenDayValues.GetValueOrZero(TenDayAbility.Miza) / 4f * TenDayValues.GetValueOrZero(TenDayAbility.Smiler);
+            var elementFaithValue = TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.7f;
+        
+            // 最終計算
+            var finalValue = (int)(tentVoidValue + nightDarknessValue - (mizaValue + elementFaithValue));
+            if(finalValue < 2) finalValue = 2;//最低回復頻度ターンは2
+            return finalValue;
+        }
+    }
+    /// <summary>
+    /// 精神HPによるポイント自然回復の判定と処理
+    /// </summary>
+    void TryMentalPointRecovery()
+    {
+        _mentalPointRecoveryCountUp++;
+        if(_mentalPointRecoveryCountUp >= MentalPointRecovelyMaxCount)
+        {
+            _mentalPointRecoveryCountUp = 0;
+            MentalNaturalRecovelyPont();
+        }
+    }
     /// <summary>
     /// 前回ターンが前のめりかの記録
     /// </summary>
@@ -939,8 +1022,8 @@ public abstract class BaseStates
         }
     }
     [SerializeField]
-    private float _maxHp;
-    public float MAXHP => _maxHp;
+    private float _maxhp;
+    public float MAXHP => _maxhp;
 
     //精神HP
     [SerializeField]
@@ -979,7 +1062,7 @@ public abstract class BaseStates
     {
         if(NowPower == ThePower.high)
         {
-            return _hp * 1.3f + _maxHp *0.08f;
+            return _hp * 1.3f + _maxhp *0.08f;
         }else
         {
             return _hp;
@@ -4153,16 +4236,16 @@ public abstract class BaseStates
     {
         //deathの判定が入る前に、互角一撃の生存判定を行い、HP再代入
         //ダメージの大きさからして絶対に死んでるからDeath判定は要らず、だからDeath辺りでの判定がいらない。(DeathCallBackが起こらない)
-        if(LiveHP >= _maxHp*0.2f)//HPが二割以上の時に、
+        if(LiveHP >= _maxhp*0.2f)//HPが二割以上の時に、
         {
             if(atker.TenDayValuesSum <= TenDayValuesSum * 1.6f)//自分の十日能力の総量の1.6倍以下なら
             {
-                if (dmg >= _maxHp * 0.34f && dmg <= _maxHp * 0.66f )//大体半分くらいの攻撃なら  
+                if (dmg >= _maxhp * 0.34f && dmg <= _maxhp * 0.66f )//大体半分くらいの攻撃なら  
                 {
                     //生存判定が入る
                     if(rollper(GetMutualKillSurvivalChance()))
                     {
-                        HP = _maxHp * 0.07f;
+                        HP = _maxhp * 0.07f;
                     }
                 }
             }
@@ -5079,6 +5162,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         if(!Death())
         {
             ConditionInNextTurn();
+            TryMentalPointRecovery();//精神HPが自動回復される前に精神HPによるポイント自然回復の判定
 
             if(IsMentalDiverGenceRefilCountDown() == false)//再充填とそのカウントダウンが終わってるのなら
             {
@@ -5114,6 +5198,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         ConditionTransition();
         _mentalDivergenceRefilCount = 0;//精神HP乖離の再充填カウントをゼロに戻す
         _mentalDivergenceCount = 0;//精神HP乖離のカウントをゼロに戻す
+        _mentalPointRecoveryCountUp = 0;//精神HP自然回復のカウントをゼロに戻す
         
     }
     public void OnBattleEndNoArgument()
@@ -5396,7 +5481,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     float GetKinderGroupingIntervalRndMax()
     {
         // f(hp) = limitValue + (startValue - limitValue) * exp(-decayRate * (キャラの最大HP - minHP))
-        float result = limitKinderGroupingInterval + (InitKinderGroupingInterval - limitKinderGroupingInterval) * Mathf.Exp(-decayRate * (_maxHp - kinderGroupingMinSimHP));
+        float result = limitKinderGroupingInterval + (InitKinderGroupingInterval - limitKinderGroupingInterval) * Mathf.Exp(-decayRate * (_maxhp - kinderGroupingMinSimHP));
         return result;
     }
     /// <summary>
