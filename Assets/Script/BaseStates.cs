@@ -852,6 +852,22 @@ public abstract class BaseStates
         }
     }
     /// <summary>
+    /// パワーに応じて戦闘開始時にポイントを初期化する関数
+    /// </summary>
+    void InitPByNowPower()
+    {
+        var lowlowMinus = 3;
+        if (rollper(37))lowlowMinus = 0;
+        P = NowPower switch
+        {
+            ThePower.lowlow => 3 - lowlowMinus,
+            ThePower.low => (int)(MAXP * 0.15),
+            ThePower.medium => (int)(MAXP * 0.5),
+            ThePower.high => (int)(MAXP * 0.7),
+            _ => 0
+        };
+    }
+    /// <summary>
     /// 精神HPに応じてポイントを自然回復する関数。
     /// 回復量は精神Hp現在値を割った数とそれの実HP最大値との割合によるカット
     /// </summary>
@@ -5199,6 +5215,11 @@ private int CalcTransformCountIncrement(int tightenStage)
         _mentalDivergenceRefilCount = 0;//精神HP乖離の再充填カウントをゼロに戻す
         _mentalDivergenceCount = 0;//精神HP乖離のカウントをゼロに戻す
         _mentalPointRecoveryCountUp = 0;//精神HP自然回復のカウントをゼロに戻す
+
+        InitPByNowPower();//Pの初期値設定
+
+        //初期精神HPは常に戦闘開始時に最大値
+        MentalHP = MentalMaxHP;
         
     }
     public void OnBattleEndNoArgument()

@@ -358,7 +358,7 @@ public class BattleManager
         Acts = new ACTList();
         unders = new UnderActersEntryList(this);
 
-        OnBattleStart();//初期化コールバック
+        
 
         //敵か味方どちらかが先手を取ったかによって、
         if (first == BattleStartSituation.alliFirst)
@@ -384,6 +384,8 @@ public class BattleManager
         {
             chara.ApplyConditionOnBattleStart(AllyGroup.OurAvarageTenDayPower());
         }
+
+        OnBattleStart();//初期化コールバック
 
     }
     
@@ -1560,11 +1562,7 @@ public class BattleManager
         //敵キャラは復活歩数の準備
         EnemyGroup.RecovelyStart(PlayersStates.Instance.NowProgress);
 
-        foreach (var one in AllyGroup.Ours)
-        {
-            one.OnBattleEndNoArgument();
-        }
-        foreach (var one in EnemyGroup.Ours)
+        foreach (var one in AllCharacters)
         {
             one.OnBattleEndNoArgument();
         }

@@ -525,6 +525,7 @@ public class AllyClass : BaseStates
     public void OnAllyWinCallBack()
     {
         TransitionPowerOnBattleWinByCharacterImpression();
+        HP += MAXHP * 0.3f;//HPの自然回復
     }
     public void OnAllyLostCallBack()
     {
