@@ -204,13 +204,6 @@ public class PlayersStates:MonoBehaviour
     ///     現在のステージ内のエリア
     /// </summary>
     public int NowAreaID { get; private set; }
-    /// <summary>主人公達の歩行時コールバック</summary>
-    public void PlayersOnWalkNoArgument()
-    {
-        geino.OnWalkNoArgument();//歩行時コールバック
-        noramlia.OnWalkNoArgument();
-        sites.OnWalkNoArgument();   
-    }
 
     public BattleGroup GetParty()
     {
@@ -355,14 +348,14 @@ public class AllyClass : BaseStates
 {
     
     /// <summary>
-    /// キャラクターのデフォルト精神属性を決定する関数
+    /// キャラクターのデフォルト精神属性を決定する関数　十日能力が変動するたびに決まる。
     /// </summary>
     void DecideDefaultMyImpression()
     {
         //1~4の範囲で合致しきい値が決まる。
         var Threshold = RandomEx.Shared.NextInt(1,5);
 
-        //キャラクターの持つ十日能力を多い順に重み付き抽選リストに入れ、処理をする。\
+        //キャラクターの持つ十日能力を多い順に重み付き抽選リストに入れ、処理をする。
         var AbilityList = new WeightedList<TenDayAbility>();
         //linqで値の多い順にゲット
         foreach(var ability in TenDayValues.OrderByDescending(x => x.Value))
@@ -515,12 +508,56 @@ public class AllyClass : BaseStates
         Debug.Log("TurnOnDeleteMyFreezeConsecutiveFlag を呼び出しました。");
         IsDeleteMyFreezeConsecutive = IsNeedDeleteMyFreezeConsecutive();
     }
+
+    /// <summary>
+    /// 2歩ごとに回復するポイントカウンター
+    /// </summary>
+    private int _walkPointRecoveryCounter = 0;
+
+    /// <summary>
+    /// 歩行時にポイントを回復する処理
+    /// </summary>
+    void RecoverPointOnWalk()
+    {
+        // 2歩ごとに処理
+        _walkPointRecoveryCounter++;
+        if (_walkPointRecoveryCounter >= 2)
+        {
+            _walkPointRecoveryCounter = 0;
+            
+            // 精神HPがマックスであることを前提に回復
+            if (MentalHP >= MentalMaxHP)
+            {
+                // ポイント回復（回復量は調整可能）
+                MentalNaturalRecovelyPont();
+                
+            }
+        }
+    }
+    void RecoverMentalHPOnWalk()
+    {
+        if(MentalHP < MentalMaxHP)
+        {
+            MentalHP += TenDayValues.GetValueOrZero(TenDayAbility.Rain) + MentalMaxHP * 0.16f;
+        }
+    }
+    public override void OnBattleEndNoArgument()
+    {
+        base.OnBattleEndNoArgument();
+        _walkPointRecoveryCounter = 0;//歩行のポイント回復用カウンターをゼロに
+    }
+
     /// <summary>
     /// 味方キャラの歩く際に呼び出されるコールバック
     /// </summary>
     public void OnWalkCallBack()
     {
+        AllPassiveWalkEffect();//全パッシブの歩行効果を呼ぶ
+        UpdateWalkAllPassiveSurvival();
         TransitionPowerOnWalkByCharacterImpression();
+
+        RecoverMentalHPOnWalk();//歩行時精神HP回復
+        RecoverPointOnWalk();//歩行時ポイント回復
     }
     public void OnAllyWinCallBack()
     {

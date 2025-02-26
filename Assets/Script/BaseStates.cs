@@ -425,7 +425,7 @@ public abstract class BaseStates
     }/// <summary>
     /// 全パッシブのUpdateWalkSurvivalを呼ぶ 歩行時パッシブが生存するかどうか
     /// </summary>
-    void UpdateWalkAllPassiveSurvival()
+    protected void UpdateWalkAllPassiveSurvival()
     {
         // 途中でRemoveされる可能性があるのでコピーを取ってから回す
         var copy = _passiveList.ToArray();
@@ -437,7 +437,7 @@ public abstract class BaseStates
     /// <summary>
     /// 全パッシブの歩行時効果を呼ぶ
     /// </summary>
-    void AllPassiveWalkEffect()
+    protected void AllPassiveWalkEffect()
     {
         foreach (var pas in _passiveList)
         {
@@ -871,7 +871,7 @@ public abstract class BaseStates
     /// 精神HPに応じてポイントを自然回復する関数。
     /// 回復量は精神Hp現在値を割った数とそれの実HP最大値との割合によるカット
     /// </summary>
-    void MentalNaturalRecovelyPont()
+    protected void MentalNaturalRecovelyPont()
     {
          // 精神HPを定数で割り回復量に変換する
         var baseRecovelyP = (int)MentalHP / MentalHP_TO_P_Recovely_CONVERSION_FACTOR;
@@ -5160,12 +5160,6 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
     }
 
-    /// <summary>歩行時のコールバック引数なしの</summary>
-    public void OnWalkNoArgument()
-    {
-        AllPassiveWalkEffect();//全パッシブの歩行効果を呼ぶ
-        UpdateWalkAllPassiveSurvival();
-    }
 
     /// <summary>
     /// 戦闘中に次のターンに進む際のコールバック
@@ -5222,7 +5216,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         MentalHP = MentalMaxHP;
         
     }
-    public void OnBattleEndNoArgument()
+    public virtual void OnBattleEndNoArgument()
     {
         TempDamageTurn = 0;
         DeleteConsecutiveATK();
