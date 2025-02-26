@@ -257,6 +257,11 @@ public class BaseSkill
     public PhysicalProperty SkillPhysical { get; }
 
     public BaseStates Doer;//行使者
+    /// <summary>
+    /// スキルの印象構造　十日能力値
+    /// </summary>
+    public SerializableDictionary<TenDayAbility,float> TenDayValues = new SerializableDictionary<TenDayAbility,float>();
+
 
     [SerializeField]
     private string _name;

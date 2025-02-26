@@ -53,6 +53,21 @@ public class BattleGroup
         }
         return sum / Ours.Count;
     }
+    /// <summary>
+    /// グループの十日能力の総量
+    /// </summary>
+    public float OurTenDayPowerSum
+    {
+        get
+        {
+            float sum = 0f;
+            foreach(var chara in Ours)
+            {
+                sum += chara.TenDayValuesSum;
+            }
+            return sum;
+        }
+    }
 
     /// <summary>
     /// 前のめり消す処理　前のめりした人間が死亡したときなど

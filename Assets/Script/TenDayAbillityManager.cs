@@ -96,7 +96,7 @@ public static class TenDayAbilityPosition
     private static readonly Dictionary<TenDayAbility, Vector2> positions =
         new Dictionary<TenDayAbility, Vector2>
         {
-             { TenDayAbility.TentVoid,            new Vector2(7,  0) },
+        { TenDayAbility.TentVoid,            new Vector2(7,  0) },
         { TenDayAbility.NightDarkness,       new Vector2(6,  1) },
         { TenDayAbility.SpringWater,         new Vector2(10, 1) },
         { TenDayAbility.StarTersi,           new Vector2(5,  2) },
@@ -131,7 +131,7 @@ public static class TenDayAbilityPosition
         { TenDayAbility.HeavenAndEndWar,     new Vector2(11, 11) },
         { TenDayAbility.Enokunagi,           new Vector2(1,  12) },
         { TenDayAbility.Vond,                new Vector2(6,  12) }
-        };
+        };//距離は最大15辺り
 
     /// <summary>
     /// 二つの十日能力間の距離を計算
@@ -143,6 +143,28 @@ public static class TenDayAbilityPosition
     {
         return Vector2.Distance(positions[a], positions[b]);
     }
+    /// <summary>
+    /// 十日能力のスキルと精神属性の距離による成長値の算出用
+    /// 距離 d をもとに、単純な線形減衰係数(1 → 0)を返す。
+    /// maxDistanceで閾値を決めて、「ある一定以上の距離が離れてると伸びない」
+    /// </summary>
+    /// <param name="distance">ユークリッド距離などで計算された値</param>
+    /// <param name="maxDistance">この距離に達したら係数が0になる上限</param>
+    /// <returns>減衰係数(0～1)</returns>
+    public static float GetLinearAttenuation(float distance, float maxDistance)
+    {
+        if (distance >= maxDistance)
+        {
+            // 距離が maxDistance を超えたら 0
+            return 0f;
+        }
+        else
+        {
+            // それ以外は 1 - (distance / maxDistance)
+            return 1f - (distance / maxDistance);
+        }
+    }
+
     /// <summary>
     /// 十日能力の値を取得。存在しない場合は0を返す
     /// </summary>

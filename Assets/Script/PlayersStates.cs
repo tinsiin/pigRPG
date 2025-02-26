@@ -306,6 +306,7 @@ public class PlayersStates:MonoBehaviour
         geino.OnAllyWinCallBack();
         sites.OnAllyWinCallBack();
         noramlia.OnAllyWinCallBack();
+
     }
     /// <summary>
     /// 主人公達の負けたときのコールバック
@@ -332,6 +333,16 @@ public class PlayersStates:MonoBehaviour
         sites.OnWalkCallBack();
         noramlia.OnWalkCallBack();
     }
+    /// <summary>
+    /// 主人公陣の勝利時ブースト
+    /// </summary>
+    public void PlayersVictoryBoost(float multiplier)
+    {
+        geino.VictoryBoost(multiplier);
+        sites.VictoryBoost(multiplier);
+        noramlia.VictoryBoost(multiplier);
+    }
+    
 
     //中央決定値など---------------------------------------------------------中央決定値
     /// <summary>
@@ -346,7 +357,41 @@ public class PlayersStates:MonoBehaviour
 
 public class AllyClass : BaseStates
 {
+    /// <summary>
+    /// 十日能力成長値を勝利ブースト用に記録する
+    /// </summary>
+    Dictionary<TenDayAbility, float> battleGain;
+    /// <summary>
+    /// 勝利時の十日能力ブースト倍化処理
+    /// </summary>
+    public void VictoryBoost(float multiplier)
+    {
+        foreach (var kv in battleGain)
+        {
+            var ability = kv.Key;
+            float totalGained = kv.Value; // 戦闘中に合計で上がった量
+            float extra = totalGained * (multiplier - 1f);//リアルタイムで加算済みなので倍率から1減らす
+            
+            // 追加で足す
+            TenDayValues[ability] += extra;
+        }
+
+    }
+
     
+    protected override void TenDayGrow(TenDayAbility ability, float growthAmount)
+    {
+       base.TenDayGrow(ability, growthAmount);
+        if (battleGain.ContainsKey(ability))
+        {
+            battleGain[ability] += growthAmount;//主人公キャラなら勝利用ブーストのために記録する。
+        }
+        else
+        {
+            // 存在しない場合は新しく追加
+            battleGain[ability] = growthAmount;
+        }
+    }
     /// <summary>
     /// キャラクターのデフォルト精神属性を決定する関数　十日能力が変動するたびに決まる。
     /// </summary>
@@ -480,9 +525,6 @@ public class AllyClass : BaseStates
     /// <returns>遷移先のTabState</returns>
     public static TabState DetermineNextUIState(BaseSkill skill)
     {
-        
-
-
         if (skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))//範囲を選べるのなら
         {
             return TabState.SelectRange;//範囲選択画面へ飛ぶ
@@ -534,6 +576,9 @@ public class AllyClass : BaseStates
             }
         }
     }
+    /// <summary>
+    /// 歩行時に精神HPを回復する
+    /// </summary>
     void RecoverMentalHPOnWalk()
     {
         if(MentalHP < MentalMaxHP)
@@ -545,6 +590,12 @@ public class AllyClass : BaseStates
     {
         base.OnBattleEndNoArgument();
         _walkPointRecoveryCounter = 0;//歩行のポイント回復用カウンターをゼロに
+        battleGain.Clear();
+    }
+    public override void OnBattleStartNoArgument()
+    {
+        base.OnBattleStartNoArgument();
+        battleGain = new();//バトルが開始するたびに勝利ブースト用の値を初期化
     }
 
     /// <summary>

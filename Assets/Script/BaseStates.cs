@@ -32,13 +32,15 @@ public enum CharacterType
 public class ACTSkillData
 {
     public bool IsDone;
+    public bool IsHit;
     public BaseSkill Skill;
     public BaseStates Target;   
-    public ACTSkillData(bool isdone,BaseSkill skill,BaseStates target)
+    public ACTSkillData(bool isdone,BaseSkill skill,BaseStates target,bool ishit)
     {
         IsDone = isdone;
         Skill = skill;
         Target = target;
+        IsHit = ishit;
     }
 }
 /// <summary>
@@ -502,6 +504,95 @@ public abstract class BaseStates
     /// 十日能力の総量
     /// </summary>
     public float TenDayValuesSum => TenDayValues.Values.Sum();
+    /// <summary>
+    /// 十日能力の成長する、能力値を加算する関数
+    /// </summary>
+    virtual protected void TenDayGrow(TenDayAbility ability, float growthAmount)
+    {
+        if (TenDayValues.ContainsKey(ability))
+            {
+                TenDayValues[ability] += growthAmount;
+            }
+            else
+            {
+                TenDayValues[ability] = growthAmount;
+            }
+    }
+
+    /// <summary>
+    /// スキル成長 引数で渡す倍率から直接増加値を調整する。
+    /// </summary>
+    void GrowTenDayAbilityBySkill(BaseSkill skill,float Factor)
+    {
+        const float topValueThresholdRate = 0.6f;//トップ能力のしきい値　どのくらいの大きいのと同じような能力値をスキルの十日能力として比較するかの指標
+        //精神属性を実際に構成している十日能力が実際にスキルの十日能力値と比較されるイメージ
+
+        const float distanceAttenuationLimit = 15f;//距離をグラデーション係数に変える際の、一定以上の距離から0にカットオフし成長しないようにする値
+
+        //現在の精神属性を構成する十日能力の中で最も大きいものを算出
+        float topTenDayValue = 0f;
+        foreach(var ten in SpritualTenDayAbilitysMap[MyImpression])
+        {
+            topTenDayValue = TenDayValues.GetValueOrZero(ten) > topTenDayValue ? TenDayValues.GetValueOrZero(ten) : topTenDayValue;
+        }
+
+        //トップ能力の60%以内の「十日能力の列挙体と値」を該当スキルの該当能力値との距離比較用にピックアップ
+        List<(TenDayAbility,float)> pickupSpiritualTenDays = new List<(TenDayAbility,float)>();
+        foreach(var ten in SpritualTenDayAbilitysMap[MyImpression])
+        {
+            var value = TenDayValues.GetValueOrZero(ten);
+            if(value > topTenDayValue * topValueThresholdRate)
+            {
+                pickupSpiritualTenDays.Add((ten,value));
+            }
+        }
+
+        foreach(var SkillTenDayValue in skill.TenDayValues)//実行したスキルに含まれてる全ての印象構造の十日能力分処理する。
+        {
+            // 加重平均用の変数
+            float totalWeight = 0f;
+            float weightedDistanceSum = 0f;
+            
+            // ピックアップした十日能力値全ての距離を加重平均する。
+            foreach(var (myImpTen, value) in pickupSpiritualTenDays)
+            {
+                // 十日能力間の距離を計算
+                float dist = TenDayAbilityPosition.GetDistance(myImpTen, SkillTenDayValue.Key);
+                
+                // 能力値を重みとして使用
+                totalWeight += value;
+                weightedDistanceSum += dist * value;
+            }
+            
+            // 加重平均距離を計算（totalWeightが0の場合は0とする）
+            float averageDistance = totalWeight > 0 ? weightedDistanceSum / totalWeight : 0f;//全ての能力値がゼロだった場合の対策
+            
+            // 距離からグラデーション係数を計算（距離が遠いほど成長しにくくなる）
+            float growthFactor = TenDayAbilityPosition.GetLinearAttenuation(averageDistance, distanceAttenuationLimit); // 15は最大距離の目安
+
+            //グラデーション係数のデフォルト精神属性による救済処理
+            if(growthFactor < 0.3f)
+            {
+                var isHelp = true;
+                foreach(var ten in SpritualTenDayAbilitysMap[DefaultImpression])//デフォルト精神属性の構成する十日能力で回す.
+                {
+                    //スキルの回してる十日能力とデフォルト精神属性の回してる十日能力間の距離が10より多いなら
+                    if(TenDayAbilityPosition.GetDistance(ten, SkillTenDayValue.Key) > 10)
+                    {
+                        isHelp = false;//foreachで一回でも当てはまってしまうと、falseとなり、救済は発生しません、
+                        break;
+                    }
+                }
+                if(isHelp) growthFactor = 0.35f;
+            }
+            
+            // 成長量を計算（スキルの該当能力値と減衰係数から）
+            float growthAmount = growthFactor * SkillTenDayValue.Value * Factor; // グラデーション係数 × スキルの該当能力値 × 引数から渡された倍率
+            
+            // 十日能力値を更新
+            TenDayGrow(SkillTenDayValue.Key, growthAmount);
+        }
+    }
 
     public float b_AGI
     {
@@ -4344,16 +4435,16 @@ public abstract class BaseStates
     /// ヒール
     /// </summary>
     /// <param name="HealPoint"></param>
-    public virtual string Heal(float HealPoint)
+    public virtual float Heal(float HealPoint)
     {
         if(!Death())
         {
             HP += HealPoint;
             Debug.Log("ヒールが実行された");
-            return "癒された";
+            return HealPoint;
         }
 
-        return "死んでいる";
+        return 0f;
     }
     /// <summary>
     /// 精神HPのヒール処理
@@ -4850,7 +4941,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
             {
-                txt += Heal(skillPower);
+                healAmount= Heal(skillPower);
                 isHeal = true;
             }
         }
@@ -4909,11 +5000,22 @@ private int CalcTransformCountIncrement(int tightenStage)
 
 
         Debug.Log("ReactionSkill");
+        //攻撃者がヒットしたかどうかをタイプにより記録
+        bool isAttackerHit;
+        if (skill.HasType(SkillType.Attack))
+        {
+            isAttackerHit = thisAtkTurn;
+        }else{
+                isAttackerHit = isBadPassiveHit || isBadPassiveRemove || isGoodPassiveHit || isGoodPassiveRemove || 
+                isGoodVitalLayerHit || isGoodVitalLayerRemove || isBadVitalLayerHit || isBadVitalLayerRemove || isHeal;
+        }
+
         //ここで攻撃者の攻撃記録を記録する
-        attacker.skillDatas.Add(new ACTSkillData(thisAtkTurn,skill,this));//発動したのか、何のスキルなのかを記録
+        attacker.skillDatas.Add(new ACTSkillData(thisAtkTurn,skill,this,isAttackerHit));//発動したのか、何のスキルなのかを記録
         //被害の記録
         damageDatas.Add(new DamageData//クソ長い
-        (isAtkHit,isBadPassiveHit,isBadPassiveRemove,isGoodPassiveHit,isGoodPassiveRemove,isGoodVitalLayerHit,isGoodVitalLayerRemove,isBadVitalLayerHit,isBadVitalLayerRemove,isHeal,skill,damageAmount,healAmount,attacker));
+        (isAtkHit,isBadPassiveHit,isBadPassiveRemove,isGoodPassiveHit,isGoodPassiveRemove,isGoodVitalLayerHit,isGoodVitalLayerRemove,
+        isBadVitalLayerHit,isBadVitalLayerRemove,isHeal,skill,damageAmount,healAmount,attacker));
 
         return txt;
     }
@@ -4922,6 +5024,14 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     public virtual string AttackChara(UnderActersEntryList Unders)
     {
+        //素振り分のスキルの印象構造の十日能力が上昇する。
+        if(NowUseSkill.HasType(SkillType.Attack))
+        {
+            GrowTenDayAbilityBySkill(NowUseSkill,0.3f);
+        }else{
+            GrowTenDayAbilityBySkill(NowUseSkill,0.1f);
+        }
+
         SkillUseConsecutiveCountUp(NowUseSkill);//連続カウントアップ
         string txt = "";
 
@@ -4957,9 +5067,70 @@ private int CalcTransformCountIncrement(int tightenStage)
         RemoveUseThings();//特別な補正を消去
         Debug.Log("AttackChara");
 
+        //HIT分のスキルの印象構造の十日能力が上昇する。
+        if (IsAnyHitInRecentSkillData(NowUseSkill, Unders.Count))// 今回の攻撃で一回でもヒットしていれば成長処理
+        {
+            float growRate;
+            if (NowUseSkill.HasType(SkillType.Attack))
+            {
+                growRate = 0.7f;
+            }
+            else
+            {
+                growRate = 0.9f;
+            }
+
+            // Undersの全キャラクターのTenDayValuesSumの平均を計算　複数範囲の攻撃ならその平均値分の強さとの比率分の成長をする。
+            float totalTenDayValuesSum = 0f;
+            int characterCount = 0;
+            foreach (var character in Unders.charas)
+            {
+                totalTenDayValuesSum += character.TenDayValuesSum;
+                characterCount++;
+            }
+            float averageTenDayValuesSum = characterCount > 0 ? totalTenDayValuesSum / characterCount : 0;//平均の十日能力総量
+
+            // 自分と攻撃相手平均の総量の比率を使用して比率を計算
+            float clampedRatio = CalculateClampedStrengthRatio(averageTenDayValuesSum);
+
+            GrowTenDayAbilityBySkill(NowUseSkill, growRate * clampedRatio); //攻撃相手との強さの比率を計算して成長させる   
+        }
 
         _tempUseSkill = NowUseSkill;//使ったスキルを一時保存
         return txt;
+    }
+
+    /// <summary>
+    /// 対象の十日能力総量と自分の十日能力総量の比率を計算し返す
+    /// </summary>
+    private float CalculateClampedStrengthRatio(float targetSum)
+    {
+        // 自分のTenDayValuesSumとの比率を計算（自分の値が0の場合は1とする）
+        float strengthRatio = TenDayValuesSum > 0 ? targetSum / TenDayValuesSum : 1f;
+        
+        return strengthRatio;
+    }
+
+    /// <summary>
+    /// 指定したスキルが最近のスキルデータでヒットしたかどうかを調べる
+    /// </summary>
+    private bool IsAnyHitInRecentSkillData(BaseSkill skill, int targetCount)
+    {
+        // 最新のtargetCount分のスキルデータを取得
+        var recentSkillDatas = skillDatas.Count >= targetCount 
+            ? skillDatas.GetRange(skillDatas.Count - targetCount, targetCount) 
+            : skillDatas;
+
+        // 最新のスキルデータでIsHitがtrueのものがあるか確認
+        foreach (var data in recentSkillDatas)
+        {
+            if (data.IsHit && data.Skill == skill)
+            {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     //FreezeConsecutiveの処理------------------------------------------------------------------------------------FreezeConsecutiveの消去、フラグの処理など-----------------------------------
@@ -5195,7 +5366,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>
     ///bm生成時に初期化される関数
     /// </summary>
-    public void OnBattleStartNoArgument()
+    public virtual void OnBattleStartNoArgument()
     {
         TempDamageTurn = 0;
         _tempVanguard = false;
