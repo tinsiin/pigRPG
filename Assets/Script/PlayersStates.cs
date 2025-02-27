@@ -586,6 +586,23 @@ public class AllyClass : BaseStates
             MentalHP += TenDayValues.GetValueOrZero(TenDayAbility.Rain) + MentalMaxHP * 0.16f;
         }
     }
+    /// <summary>
+    /// 歩行によって自信ブーストがフェードアウトする、
+    /// </summary>
+    void FadeConfidenceBoostByWalking()
+    {
+        //辞書のキーをリストにしておく (そのまま foreach で書き換えるとエラーになる可能性がある)
+        var keys = ConfidenceBoosts.Keys.ToList();
+
+        //キーを回して、値を取り出し -1 して戻す
+        foreach (var key in keys)
+        {
+            ConfidenceBoosts[key]--;
+            
+            //もし歩行ターンが0以下になったら削除する
+            if (ConfidenceBoosts[key] <= 0) { ConfidenceBoosts.Remove(key); }
+        }
+    }
     public override void OnBattleEndNoArgument()
     {
         base.OnBattleEndNoArgument();
@@ -609,6 +626,7 @@ public class AllyClass : BaseStates
 
         RecoverMentalHPOnWalk();//歩行時精神HP回復
         RecoverPointOnWalk();//歩行時ポイント回復
+        FadeConfidenceBoostByWalking();//歩行によって自信ブーストがフェードアウトする
     }
     public void OnAllyWinCallBack()
     {

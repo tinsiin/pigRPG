@@ -16,6 +16,7 @@ using static CommonCalc;
 using Unity.VisualScripting.Dependencies.NCalc;
 using UnityEditor.Rendering;
 using UnityEditor.ShaderGraph.Internal;
+using UnityEditorInternal.Profiling.Memory.Experimental;
 /// <summary>
 ///     キャラクター達の種別
 /// </summary>
@@ -501,9 +502,35 @@ public abstract class BaseStates
 
     public SerializableDictionary<TenDayAbility,float> TenDayValues = new SerializableDictionary<TenDayAbility,float>();
     /// <summary>
+    /// ある程度の自信ブーストを記録する辞書
+    /// </summary>
+    protected Dictionary<TenDayAbility, int> ConfidenceBoosts = new Dictionary<TenDayAbility, int>();
+    /// <summary>
+    /// そのキャラクターを殺すまでに与えたダメージ
+    /// </summary>
+    Dictionary<BaseStates, float> DamageDealtToEnemyUntilKill = new Dictionary<BaseStates, float>();
+    /// <summary>
+    /// キャラクターを殺すまでに与えるダメージを記録する辞書に記録する
+    /// </summary>
+    /// <param name="dmg"></param>
+    /// <param name="target"></param>
+    void RecordDamageDealtToEnemyUntilKill(float dmg,BaseStates target)//戦闘開始時にそのキャラクターを殺すまでに与えたダメージを記録する辞書に記録する
+    {
+        if (DamageDealtToEnemyUntilKill.ContainsKey(target))
+        {
+            DamageDealtToEnemyUntilKill[target] += dmg;
+        }
+        else
+        {
+            DamageDealtToEnemyUntilKill[target] = dmg;
+        }
+    }
+
+    /// <summary>
     /// 十日能力の総量
     /// </summary>
     public float TenDayValuesSum => TenDayValues.Values.Sum();
+    
     /// <summary>
     /// 十日能力の成長する、能力値を加算する関数
     /// </summary>
@@ -585,9 +612,17 @@ public abstract class BaseStates
                 }
                 if(isHelp) growthFactor = 0.35f;
             }
+
+            //ある程度の自信ブーストを適用する
+            var confidenceBoost = 1.0f;
+            if(ConfidenceBoosts.ContainsKey(SkillTenDayValue.Key))//自信ブーストの辞書に今回の能力値が含まれていたら
+            {
+                confidenceBoost = 1.3f + TenDayValues.GetValueOrZero(TenDayAbility.Baka) * 0.01f;
+            }
             
             // 成長量を計算（スキルの該当能力値と減衰係数から）
-            float growthAmount = growthFactor * SkillTenDayValue.Value * Factor; // グラデーション係数 × スキルの該当能力値 × 引数から渡された倍率
+            float growthAmount = growthFactor * SkillTenDayValue.Value * Factor * confidenceBoost; 
+            // グラデーション係数 × スキルの該当能力値 × 引数から渡された倍率　× 自信ブースト
             
             // 十日能力値を更新
             TenDayGrow(SkillTenDayValue.Key, growthAmount);
@@ -4358,8 +4393,6 @@ public abstract class BaseStates
             }
         }
     }
-
-
     /// <summary>
     ///     オーバライド可能なダメージ関数
     /// </summary>
@@ -4392,6 +4425,9 @@ public abstract class BaseStates
         var tempHP = HP;//計算用にダメージ受ける前のHPを記録
         HP -= dmg;
         Debug.Log("攻撃が実行された");
+
+        //攻撃者がダメージを殺すまでに与えたダメージ辞書に記録する
+        Atker.RecordDamageDealtToEnemyUntilKill(dmg,this);
 
         if(mentalDmg < 0)mentalDmg = 0;//0未満は0にする
         MentalHP -= mentalDmg;//実ダメージで精神HPの最大値がクランプされた後に、精神攻撃が行われる。
@@ -5251,14 +5287,83 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         return totalChance;
     }
+    /// <summary>
+    /// ある程度の自信ブーストの相手の強さによって持続ターンを返す関数
+    /// </summary>
+    /// <returns></returns>
+    int GetConfidenceBoostDuration(float ratio)
+    {
+        return ratio switch
+        {
+            < 1.77f => 2,
+            < 1.85f => 3,
+            < 2.0f => 4,
+            < 2.2f => 5,
+            < 2.4f => 6,
+            < 2.7f => 9,
+            < 3.0f => 12,
+            < 3.3f => 14,
+            < 3.4f => 16,
+            < 3.6f => 17,
+            < 3.8f => 20,
+            < 3.9f => 21,
+            < 4.0f => 23,
+            _ => 23 + ((int)Math.Floor(ratio - 4.0f) * 2)  // 4以降は1増えるごとに2歩増える
+        };
+    }
+    /// <summary>
+    /// ある程度の自信ブーストを記録する。
+    /// </summary>
+    void RecordConfidenceBoost(BaseStates target,float allkilldmg)
+    {
+        // 相手との強さの比率を計算
+        float opponentStrengthRatio = target.TenDayValuesSum / TenDayValuesSum;
+        //自分より1.7倍以上強い敵かどうか そうじゃないならreturn
+        if(opponentStrengthRatio < 1.7f)return;
+        //与えたダメージが敵の最大HPの半分以上与えてるかどうか、そうじゃないならreturn
+        if(allkilldmg < target.MAXHP * 0.5f)return;
+
+        //ブーストする十日能力を敵のデフォルト精神属性を構成する一番大きいの達から取得
+
+        //デフォルト精神属性の十日能力たちを候補リストにする
+        var candidateAbilitiesList = SpritualTenDayAbilitysMap[target.DefaultImpression];
+        //倒したキャラの十日能力値と合わせたリストにする。
+        var candidateAbilitiyValuesList = new List<(TenDayAbility ability , float value)>();
+        foreach(var ability in candidateAbilitiesList)
+        {
+            candidateAbilitiyValuesList.Add((ability, TenDayValues.GetValueOrZero(ability)));//列挙体と能力値を持つタプルのリストに変換
+        }
+
+        //複数ある場合は最大から降順で　何個ブーストされるかはパッシブや何かしらで補正されます。
+        var boostCount = 1;//基本
+        var walkturn = GetConfidenceBoostDuration(opponentStrengthRatio);
+        for(var i = 0; i< boostCount; i++)
+        {
+            var MaxTenDayValue = candidateAbilitiyValuesList.Max(x => x.value);//リスト内で一番大きい値
+            var MaxTenDayAbilities = candidateAbilitiyValuesList.Where(x => x.value == MaxTenDayValue).ToList();//最大キーと等しい値の能力値を全て取得
+
+            //最大の値を持つデフォルト精神属性を構成する十日能力の内、同じ最大の値でダブってるからランダムで
+            var boostAbility = RandomEx.Shared.GetItem(MaxTenDayAbilities.ToArray());
+            //ブーストを記録する
+            ConfidenceBoosts.Add(boostAbility.ability,walkturn);//ブースト倍率は固定なので列挙体のみ記録すればok
+
+            candidateAbilitiyValuesList.Remove(boostAbility);//今回取得した能力値と列挙体の候補セットリストを削除
+        }
+    }
 
     /// <summary>
     /// 攻撃した相手が死んだ場合のコールバック
     /// </summary>
     void OnKill(BaseStates target)
     {
+        //まず殺すまでのダメージを取得する。
+        var AllKillDmg = DamageDealtToEnemyUntilKill[target];
+        DamageDealtToEnemyUntilKill.Remove(target);//殺したので消す(angelしたらもう一回最初から記録する)
+
         HighNessChance(target);//ハイネスチャンス(ThePowerの増加判定)
         ApplyConditionChangeOnKillEnemy(target);//人間状況の変化
+
+        RecordConfidenceBoost(target,AllKillDmg);
         
     }
 
@@ -5380,6 +5485,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         _mentalDivergenceRefilCount = 0;//精神HP乖離の再充填カウントをゼロに戻す
         _mentalDivergenceCount = 0;//精神HP乖離のカウントをゼロに戻す
         _mentalPointRecoveryCountUp = 0;//精神HP自然回復のカウントをゼロに戻す
+        DamageDealtToEnemyUntilKill = new();//戦闘開始時にキャラクターを殺すまでに与えたダメージを記録する辞書を初期化する
 
         InitPByNowPower();//Pの初期値設定
 
