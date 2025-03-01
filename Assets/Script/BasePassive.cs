@@ -36,6 +36,16 @@ public class PassiveVitalLayerBinding
 
     /// <summary> パッシブがRemoveされた際、このVitalLayerを消すならtrue </summary>
     public bool RemoveOnPassiveRemove;
+    public PassiveVitalLayerBinding DeepCopy()
+    {
+        return new PassiveVitalLayerBinding()
+        {
+            VitalLayerId = VitalLayerId,
+            GrantTiming = GrantTiming,
+            IsSurvivalCondition = IsSurvivalCondition,
+            RemoveOnPassiveRemove = RemoveOnPassiveRemove
+        };
+    }
 }
 
 
@@ -84,7 +94,7 @@ public class BasePassive
     /// <summary>
     /// パッシブが持つ追加HP　IDで扱う。
     /// </summary>
-    public List<PassiveVitalLayerBinding> VitalLayers;
+    public List<PassiveVitalLayerBinding> VitalLayers = new();
 
 
     /// <summary>
@@ -328,4 +338,30 @@ public class BasePassive
     }
 
     //これらで操り切れない部分は、直接baseStatesでのforeachでpassiveListから探す関数でゴリ押しすればいい。
+
+    /// <summary>
+    /// インスタンス共有するとターン処理が共有されてヤバいし、
+    /// これやると自由に敵のパッシブを壊すこととか実装できるようになる
+    /// </summary>
+    public BasePassive DeepCopy()
+    {
+        var copy = new BasePassive();
+        copy.OkImpression = OkImpression;
+        copy.OkType = OkType;
+        copy.IsCantACT = IsCantACT;
+        copy.IsBad = IsBad;
+        copy.MaxPassivePower = MaxPassivePower;
+        copy.PassiveName = PassiveName;
+        copy.ID = ID;
+        copy.DurationTurn = DurationTurn;
+        copy.DurationWalk = DurationWalk;
+        
+        foreach (var vital in VitalLayers)
+        {
+            copy.VitalLayers.Add(vital.DeepCopy());
+        }
+        copy.PassivePower = PassivePower;
+        
+        return copy;
+    }
 }

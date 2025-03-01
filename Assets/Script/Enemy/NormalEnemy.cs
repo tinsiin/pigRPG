@@ -24,7 +24,7 @@ public class NormalEnemy : BaseStates
     /// <summary>
     /// 完全死滅してるかどうか。
     /// </summary>
-    public bool broken = false;　
+    public bool broken = false;
 
     private int _recovelyStepCount;//実際のカウント
     //このカウントは死んだ状態でバトルが終わると、入る　Death()ではまだバトル内で復活する恐れがあるから。
@@ -70,6 +70,26 @@ public class NormalEnemy : BaseStates
     }
 
 
+        /// <summary>
+        ///     NormalEnemy を深いコピーする
+        ///     BaseStates のフィールドも含めてコピーする
+        /// </summary>
+    public NormalEnemy DeepCopy()
+    {
+        // 1. 新しい NormalEnemy インスタンスを生成
+        var clone = new NormalEnemy();
 
+        // 2. BaseStates のフィールドをコピー
+        InitBaseStatesDeepCopy(clone);
+
+        // 3. NormalEnemy 独自フィールドをコピー
+        clone.RecovelySteps = this.RecovelySteps;
+        clone.broken = this.broken;
+        clone._recovelyStepCount = this._recovelyStepCount;
+        clone._lastEncountProgress = this._lastEncountProgress;
+
+        // 4. 戻り値
+        return clone;
+    }
 
 }

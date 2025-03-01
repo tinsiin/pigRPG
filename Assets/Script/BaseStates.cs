@@ -18,263 +18,6 @@ using UnityEditor.Rendering;
 using UnityEditor.ShaderGraph.Internal;
 using UnityEditorInternal.Profiling.Memory.Experimental;
 /// <summary>
-///     キャラクター達の種別
-/// </summary>
-[Flags]
-public enum CharacterType
-{
-    TLOA = 1 << 0,
-    Machine = 1 << 1,
-    Life = 1 << 2 //TLOAそのもの、機械、生命
-}
-/// <summary>
-/// スキルの行動記録　リストで記録する
-/// </summary>
-public class ACTSkillData
-{
-    public bool IsDone;
-    public bool IsHit;
-    public BaseSkill Skill;
-    public BaseStates Target;   
-    public ACTSkillData(bool isdone,BaseSkill skill,BaseStates target,bool ishit)
-    {
-        IsDone = isdone;
-        Skill = skill;
-        Target = target;
-        IsHit = ishit;
-    }
-}
-/// <summary>
-/// 被害記録
-/// </summary>
-public class DamageData
-{
-    public BaseStates Attacker;
-    /// <summary>
-    /// 攻撃自体がヒットしたかどうかで、atktypeなら攻撃で全部ひっくるめてあたるから
-    /// atktypeじゃないなら、falseで
-    /// </summary>
-    public bool IsAtkHit;
-    public bool IsBadPassiveHit;
-    public bool IsBadPassiveRemove;
-    public bool IsGoodPassiveHit;
-    public bool IsGoodPassiveRemove;
-
-
-    public bool IsGoodVitalLayerHit;
-    public bool IsGoodVitalLayerRemove;
-    public bool IsBadVitalLayerHit;
-    public bool IsBadVitalLayerRemove;
-
-
-    /// <summary>
-    /// 死回復も含める
-    /// </summary>
-    public bool IsHeal;
-    //public bool IsConsecutive;　これは必要なし、なぜなら相性値の判断は毎ターン行われるから、連続ならちゃんと連続毎ターンで結果的に多く相性値関連の処理は加算される。
-    public float Damage;
-    public float Heal;
-    //public BasePassive whatPassive;  多いしまだ必要ないから一旦コメントアウト
-    //public int DamagePercent　最大HPはBaseStates側にあるからそっちから取得する
-    public BaseSkill Skill;
-    public DamageData(bool isAtkHit,bool isBadPassiveHit,bool isBadPassiveRemove,bool isGoodPassiveHit,bool isGoodPassiveRemove,bool isGoodVitalLayerHit,bool isGoodVitalLayerRemove,bool isBadVitalLayerHit,bool isBadVitalLayerRemove,bool isHeal,BaseSkill skill,float damage,float heal,BaseStates attacker)
-    {
-        IsAtkHit = isAtkHit;
-        IsBadPassiveHit = isBadPassiveHit;
-        IsBadPassiveRemove = isBadPassiveRemove;
-        IsGoodPassiveHit = isGoodPassiveHit;
-        IsGoodPassiveRemove = isGoodPassiveRemove;
-        IsGoodVitalLayerHit = isGoodVitalLayerHit;
-        IsGoodVitalLayerRemove = isGoodVitalLayerRemove;
-        IsBadVitalLayerHit = isBadVitalLayerHit;
-        IsBadVitalLayerRemove = isBadVitalLayerRemove;
-        IsHeal = isHeal;
-
-        Skill = skill;
-        Damage = damage;
-        Heal = heal;
-        Attacker = attacker;
-    }
-}
-
-/// <summary>
-///     物理属性、スキルに依存し、キャラクター達の種別や個人との相性で攻撃の通りが変わる
-/// </summary>
-public enum PhysicalProperty
-{
-    heavy,
-    volten,
-    dishSmack //床ずれ、ヴぉ流転、暴断
-    ,none
-}
-/// <summary>
-/// 人間状況　全員持つけど例えばLife以外なんかは固定されてたりしたりする。
-/// </summary>
-public enum HumanConditionCircumstances
-{
-    /// <summary>
-    /// 辛い状態を表します。
-    /// </summary>
-    Painful,
-    /// <summary>
-    /// 楽観的な状態を表します。
-    /// </summary>
-    Optimistic,
-    /// <summary>
-    /// 高揚した状態を表します。
-    /// </summary>
-    Elated,
-    /// <summary>
-    /// 覚悟を決めた状態を表します。
-    /// </summary>
-    Resolved,
-    /// <summary>
-    /// 怒りの状態を表します。
-    /// </summary>
-    Angry,
-    /// <summary>
-    /// 状況への疑念を抱いている状態を表します。
-    /// </summary>
-    Doubtful,
-    /// <summary>
-    /// 混乱した状態を表します。
-    /// </summary>
-    Confused,
-    /// <summary>
-    /// 普段の状態を表します。
-    /// </summary>
-    Normal
-    }
-/// <summary>
-/// パワー、元気、気力値　歩行やその他イベントなどで短期的に上げ下げし、
-/// 狙い流れ等の防ぎ方切り替え処理などで、さらに上下する値として導入されたりする。
-/// </summary>
-public enum ThePower
-{
-        /// <summary>たるい</summary>
-    lowlow,
-        /// <summary>低い</summary>
-    low,
-    /// <summary>普通</summary>
-    medium,
-    /// <summary>高い</summary>
-    high
-}
-/// <summary>
-/// 武器依存の戦闘規格
-/// </summary>
-public enum BattleProtocol
-{
-    /// <summary>地味</summary>
-    LowKey,
-    /// <summary>トライキー</summary>
-    Tricky,
-    /// <summary>派手</summary>
-    Showey,
-    /// <summary>
-    /// この戦闘規格には狙い流れ(AimStyle)がないため、には防ぎ方(AimStyleごとに対応される防御排他ステ)もなく、追加攻撃力(戦闘規格による排他ステ)もない
-    /// </summary>
-    none
-}
-/// <summary>
-/// 防ぎ方 狙い流れとも言う　戦闘規格とスキルにセットアップされる順番や、b_defの対応に使用される。
-/// </summary>
-public enum AimStyle
-{
-
-     /// <summary>
-    /// アクロバマイナ体術1 - Acrobat Minor Technique 1
-    /// </summary>
-    AcrobatMinor,       // アクロバマイナ体術1
-
-    /// <summary>
-    /// ダブレット - Doublet
-    /// </summary>
-    Doublet,            // ダブレット
-
-    /// <summary>
-    /// 四弾差し込み - Quad Strike Insertion
-    /// </summary>
-    QuadStrike,         // 四弾差し込み
-
-    /// <summary>
-    /// ダスター - Duster
-    /// </summary>
-    Duster,             // ダスター
-
-    /// <summary>
-    /// ポタヌヴォルフのほうき術系 - Potanu Volf's Broom Technique
-    /// </summary>
-    PotanuVolf,         // ポタヌヴォルフのほうき術系
-
-    /// <summary>
-    /// 中天一弾 - Central Heaven Strike
-    /// </summary>
-    CentralHeavenStrike, // 中天一弾
-
-    /// <summary>
-    /// 戦闘規格のnoneに対して変化する防ぎ方
-    /// </summary>
-    none
-}
-/// <summary>
-/// 命中率、攻撃力、回避力、防御力への補正
-/// </summary>
-public class ModifierPart
-{
-    /// <summary>
-    /// どういう補正かを保存する　攻撃時にunderに出てくる
-    /// </summary>
-    public string whatModifier;
-
-    /// <summary>
-    /// 補正率
-    /// </summary>
-    public float Modifier;
-
-    public ModifierPart(string txt, float value)
-    {
-        whatModifier = txt;
-        Modifier = value;
-    }
-}
-/// <summary>
-///     精神属性、スキル、キャラクターに依存し、キャラクターは直前に使った物が適用される
-    ///     だから精神属性同士で攻撃の通りは設定される。
-    /// </summary>
-[Flags]
-public enum SpiritualProperty
-{
-    doremis = 1 << 0,   // ビットパターン: 0000 0001  (1)
-    pillar = 1 << 1,   // ビットパターン: 0000 0010  (2)
-    kindergarden = 1 << 2,   // ビットパターン: 0000 0100  (4)
-    liminalwhitetile = 1 << 3,   // ビットパターン: 0000 1000  (8)
-    sacrifaith = 1 << 4,   // ビットパターン: 0001 0000  (16)
-    cquiest = 1 << 5,   // ビットパターン: 0010 0000  (32)
-    pysco = 1 << 6,   // ビットパターン: 0100 0000  (64)
-    godtier = 1 << 7,   // ビットパターン: 1000 0000  (128)
-    baledrival = 1 << 8,   // ビットパターン: 0001 0000 0000  (256)
-    devil = 1 << 9,    // ビットパターン: 0010 0000 0000  (512)
-    none = 1 << 10    // ビットパターン: 0100 0000 0000  (1024)
-}
-
-public enum MemoryDensity
-{
-    /// <summary>
-    /// 薄い
-    /// </summary>
-    Low,
-    /// <summary>
-    /// 普通
-    /// </summary>
-    Medium,
-    /// <summary>
-    /// しっかりと
-    /// </summary>
-    High,
-}
-
-/// <summary>
 ///     基礎ステータスのクラス　　クラスそのものは使用しないので抽象クラス
     /// </summary>
 [Serializable]
@@ -318,12 +61,24 @@ public abstract class BaseStates
     public DamageData RecentDamageData => damageDatas[damageDatas.Count - 1];
 
 
-
-    [SerializeField] private List<BasePassive> _passiveList;
+    /// <summary>
+    /// インスペクタからいじれないように、パッシブのmanagerから来たものがbaseStatesに保存されるpassive保存用
+    /// </summary>
+    List<BasePassive> _passiveList = new();
+    /// <summary>
+    /// 初期所持のパッシブのIDリスト
+    /// </summary>
+    [SerializeField]
+    List<int> InitpassiveIDList;
 
     [SerializeField] List<BaseSkill> _skillList;
 
-    [SerializeField] List<BaseVitalLayer> _vitalLaerList;
+    List<BaseVitalLayer> _vitalLayerList = new();
+    /// <summary>
+    /// 初期所持のVitalLayerのIDリスト
+    /// </summary>
+    [SerializeField] List<int> InitVitalLaerIDList;
+
 
     /// <summary>
     /// 状態異常のリスト
@@ -352,7 +107,7 @@ public abstract class BaseStates
     /// </summary>
     public bool ApplyPassive(int id)
     {
-        var status = PassiveManager.Instance.GetAtID(id);//idを元にpassiveManagerから取得
+        var status = PassiveManager.Instance.GetAtID(id).DeepCopy();//idを元にpassiveManagerから取得 ディープコピーでないとインスタンス共有される
 
         // 条件(OkType,OkImpression) は既にチェック済みならスキップ
         if (!HasCharacterType(status.OkType)) return false;
@@ -381,7 +136,7 @@ public abstract class BaseStates
     /// </summary>
     void RemovePassiveByID(int id)
     {
-        var passive = PassiveManager.Instance.GetAtID(id);
+        var passive = _passiveList.FirstOrDefault(p => p.ID == id);
         // パッシブがあるか確認
         if (_passiveList.Remove(passive))
         {
@@ -452,16 +207,16 @@ public abstract class BaseStates
     }
 
 
-    public IReadOnlyList<BaseVitalLayer> VitalLayers => _vitalLaerList;
+    public IReadOnlyList<BaseVitalLayer> VitalLayers => _vitalLayerList;
     /// <summary>
     /// インスペクタ上で設定されたIDを通じて特定の追加HPを持ってるか調べる
     /// </summary>
     public bool HasVitalLayer(int id)
     {
-        return _vitalLaerList.Any(vit => vit.id == id);
+        return _vitalLayerList.Any(vit => vit.id == id);
     }
 
-    public ThePower NowPower;
+    public ThePower NowPower = ThePower.medium;//初期値は中
 
     /// <summary>
     /// NowPowerが一段階上がる。
@@ -943,7 +698,7 @@ public abstract class BaseStates
         /// <summary>
     /// 現在の自分自身の実行中のFreezeConsecutiveを削除するかどうかのフラグ
     /// </summary>
-    public bool IsDeleteMyFreezeConsecutive;
+    public bool IsDeleteMyFreezeConsecutive = false;
     
     const int HP_TO_MaxP_CONVERSION_FACTOR = 80;
     const int MentalHP_TO_P_Recovely_CONVERSION_FACTOR = 120;
@@ -1355,9 +1110,9 @@ public abstract class BaseStates
         //    ここでは「Priority が低い方(手前)が先に処理される想定」を前提に
         //    _vitalLaerList がすでに正しい順序でソートされていることを期待。
 
-        for (int i = 0; i < _vitalLaerList.Count;)
+        for (int i = 0; i < _vitalLayerList.Count;)
         {
-            var layer = _vitalLaerList[i];
+            var layer = _vitalLayerList[i];
             var skillPhy = atker.NowUseSkill.SkillPhysical;
             // 2) このレイヤーに貫通させて、返り値を「残りダメージ」とする
             layer.PenetrateLayer(ref dmg, ref mentalDmg, skillPhy);
@@ -1365,7 +1120,7 @@ public abstract class BaseStates
             if (layer.LayerHP <= 0f)
             {
                 // このレイヤーは破壊された
-                _vitalLaerList.RemoveAt(i);
+                _vitalLayerList.RemoveAt(i);
                 // リストを削除したので、 i はインクリメントしない（要注意）
                 //破壊慣れまたは破壊負け
                 var kerekere = TenDayValues.GetValueOrZero(TenDayAbility.KereKere);
@@ -1471,7 +1226,7 @@ public abstract class BaseStates
     /// <summary>
     ///     このキャラクターの種別
     /// </summary>
-    public CharacterType MyType { get; }
+    public CharacterType MyType;
 
 
     /// <summary>
@@ -4778,7 +4533,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     {
         var hit = false;
         foreach (var id in skill.subEffects.Where(id => PassiveManager.Instance.GetAtID(id).IsBad))
-        {
+        {//付与する瞬間はインスタンス作成のディープコピーがまだないので、passivemanagerで調査する
             hit |= ApplyPassive(id);//or演算だとtrueを一回でも発生すればfalseが来てもずっとtrueのまま
         }
         return hit;
@@ -4788,9 +4543,17 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     void BadPassiveRemove(BaseSkill skill)
     {
-        foreach (var id in skill.subEffects.Where(id => PassiveManager.Instance.GetAtID(id).IsBad))
+        // skill.subEffects のIDを順にチェックして、
+        // _passiveList の中で同じIDを持つパッシブを検索
+        // そのパッシブが IsBad == true なら Remove する
+        foreach (var id in skill.subEffects)
         {
-            RemovePassiveByID(id);
+            // ID が一致するパッシブを検索 (存在しない場合は null)
+            var found = _passiveList.FirstOrDefault(p => p.ID == id);//解除するときはちゃんとインスタンスがあるので、passiveList内のインスタンスを調査する
+            if (found != null && found.IsBad)
+            {
+                RemovePassiveByID(id);
+            }
         }
     }
     /// <summary>
@@ -4808,9 +4571,13 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     void BadVitalLayerRemove(BaseSkill skill)
     {
-        foreach (var id in skill.subVitalLayers.Where(id => VitalLayerManager.Instance.GetAtID(id).IsBad))
+        foreach (var id in skill.subVitalLayers)
         {
-            RemoveVitalLayerByID(id);
+            var found = _vitalLayerList.FirstOrDefault(v => v.id == id);
+            if (found != null && found.IsBad)
+            {
+                RemoveVitalLayerByID(id);
+            }
         }
     }
     /// <summary>
@@ -4830,9 +4597,13 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     void GoodPassiveRemove(BaseSkill skill)
     {
-        foreach (var id in skill.subEffects.Where(id => !PassiveManager.Instance.GetAtID(id).IsBad))
+        foreach(var id in skill.subEffects)
         {
-            RemovePassiveByID(id);
+            var found = _passiveList.FirstOrDefault(p => p.ID == id);
+            if(found != null && !found.IsBad)
+            {
+                RemovePassiveByID(id);
+            }
         }
     }
     /// <summary>
@@ -4852,9 +4623,13 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <param name="skill"></param>
     void GoodVitalLayerRemove(BaseSkill skill)
     {
-        foreach (var id in skill.subVitalLayers.Where(id => !VitalLayerManager.Instance.GetAtID(id).IsBad))
+        foreach (var id in skill.subVitalLayers)
         {
-            RemoveVitalLayerByID(id);
+            var found = _vitalLayerList.FirstOrDefault(v => v.id == id);
+            if (found != null && !found.IsBad)
+            {
+                RemoveVitalLayerByID(id);
+            }
         }
     }
     /// <summary>
@@ -5395,28 +5170,28 @@ private int CalcTransformCountIncrement(int tightenStage)
     public void ApplyVitalLayer(int id)
     {
         //リスト内に同一の物があるか判定する。
-        var sameHP = _vitalLaerList.FirstOrDefault(lay => lay.id == id);
+        var sameHP = _vitalLayerList.FirstOrDefault(lay => lay.id == id);
         if (sameHP != null)
         {
             sameHP.ReplenishHP();//同一の為リストにある側を再補充する。
         }
         else//初物の場合
         {
-            var newLayer = VitalLayerManager.Instance.GetAtID(id);//マネージャーから取得
+            var newLayer = VitalLayerManager.Instance.GetAtID(id).DeepCopy();//マネージャーから取得 当然ディープコピー
             //優先順位にリスト内で並び替えつつ追加
             // _vitalLaerList 内で、新しいレイヤーの Priority より大きい最初の要素のインデックスを探す
-            int insertIndex = _vitalLaerList.FindIndex(v => v.Priority > newLayer.Priority);
+            int insertIndex = _vitalLayerList.FindIndex(v => v.Priority > newLayer.Priority);
 
             if (insertIndex < 0)
             {
                 // 該当する要素が見つからなかった場合（全ての要素が新しいレイヤー以下の Priority ）
                 // リストの末尾に追加
-                _vitalLaerList.Add(newLayer);
+                _vitalLayerList.Add(newLayer);
             }
             else
             {
                 // 新しいレイヤーを適切な位置に挿入
-                _vitalLaerList.Insert(insertIndex, newLayer);
+                _vitalLayerList.Insert(insertIndex, newLayer);
             }
         }
     }
@@ -5425,10 +5200,10 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     public void RemoveVitalLayerByID(int id)
     {
-        var layer = _vitalLaerList.FirstOrDefault(lay => lay.id == id);
+        var layer = _vitalLayerList.FirstOrDefault(lay => lay.id == id);
         if (layer != null)//あったら消す
         {
-            _vitalLaerList.Remove(layer);
+            _vitalLayerList.Remove(layer);
         }
         else
         {
@@ -5497,7 +5272,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     {
         TempDamageTurn = 0;
         DeleteConsecutiveATK();
-        foreach(var layer in _vitalLaerList.Where(lay => lay.IsBattleEndRemove))
+        foreach(var layer in _vitalLayerList.Where(lay => lay.IsBattleEndRemove))
         {
             RemoveVitalLayerByID(layer.id);//戦闘の終了で消える追加HPを持ってる追加HPリストから全部消す
         }
@@ -6605,6 +6380,59 @@ private int CalcTransformCountIncrement(int tightenStage)
               string.Join(", ",
                   SkillSpiritualModifier.Select(kvp => $"[{kvp.Key}: {kvp.Value.GetValue()} rndMax({kvp.Value.rndMax})]" + "\n")); //デバックで全内容羅列。*/
     }
+    /// <summary>
+    ///派生クラスのディープコピーでBaseStatesのフィールドをコピーする関数 
+    ///ゲーム開始時セーブデータがない時前提のディープコピー(戦闘中に扱われる値などのコピーの必要がないものは省略)
+    /// </summary>
+    protected void InitBaseStatesDeepCopy(BaseStates dst)
+    {
+        //_passiveListは戦闘されないと入らない
+        //初期所持パッシブがあるのなら、_passiveListに入れて渡す
+        if(InitpassiveIDList.Count > 0)
+        {
+            foreach (var passiveID in InitpassiveIDList)
+            {
+                ApplyPassive(passiveID);//applyする
+            }
+        }
+        //VitalLayerのコピー　追加HP
+        if(InitVitalLaerIDList.Count > 0){
+            foreach (var vitalLayerID in InitVitalLaerIDList)
+            {
+                ApplyVitalLayer(vitalLayerID);
+            }
+        }
+
+        //スキルのコピー
+        foreach (var skill in _skillList)
+        {
+            dst._skillList.Add(skill.InitDeepCopy());
+        }
+
+        //NowPowerは戦闘開始時や歩行で切り替わるから、コピーしない
+
+        dst.b_b_atk = b_b_atk;
+        dst.b_b_def = b_b_def;
+        dst.b_b_eye = b_b_eye;
+        dst.b_b_agi = b_b_agi;
+        foreach(var tenDay in TenDayValues)
+        {
+            dst.TenDayValues.Add(tenDay.Key,tenDay.Value);
+        }
+        dst.CharacterName = CharacterName;
+        dst.ImpressionStringName = ImpressionStringName;
+        dst.NowUseWeapon = NowUseWeapon;
+        dst.NowBattleProtocol = NowUseWeapon.protocol;//ここで初期武器の戦闘規格を設定 基本は武器選択で切り替わる
+        dst._p = _p;
+        dst.maxRecoveryTurn = maxRecoveryTurn;
+        dst._hp = _hp;
+        dst._maxhp = _maxhp;
+        dst._mentalHP = _mentalHP;
+        dst.MyType = MyType;
+        dst.MyImpression = DefaultImpression;//デフォルト精神属性を最初の精神属性にする　-> エンカウント時に持ってるスキルの中でランダムに決まるけどまぁ一応ね
+        dst.DefaultImpression = DefaultImpression;
+
+    }
 }
 
 /// <summary>
@@ -6638,6 +6466,12 @@ public class FixedOrRandomValue
 
         return RandomEx.Shared.NextInt(rndMinOrFixed, rndMax + 1);//ランダムなら
 
+    }
+    public FixedOrRandomValue DeepCopy()
+    {
+        var newData = new FixedOrRandomValue(rndMinOrFixed);
+        newData.SetMax(rndMax);
+        return newData;
     }
 }
 /// <summary>
@@ -6843,5 +6677,261 @@ public class TargetBonusDatas
         Targets.RemoveAt(index);
         //IsTriggered.RemoveAt(index);
     }
+}
+/// <summary>
+///     キャラクター達の種別
+/// </summary>
+[Flags]
+public enum CharacterType
+{
+    TLOA = 1 << 0,
+    Machine = 1 << 1,
+    Life = 1 << 2 //TLOAそのもの、機械、生命
+}
+/// <summary>
+/// スキルの行動記録　リストで記録する
+/// </summary>
+public class ACTSkillData
+{
+    public bool IsDone;
+    public bool IsHit;
+    public BaseSkill Skill;
+    public BaseStates Target;   
+    public ACTSkillData(bool isdone,BaseSkill skill,BaseStates target,bool ishit)
+    {
+        IsDone = isdone;
+        Skill = skill;
+        Target = target;
+        IsHit = ishit;
+    }
+}
+/// <summary>
+/// 被害記録
+/// </summary>
+public class DamageData
+{
+    public BaseStates Attacker;
+    /// <summary>
+    /// 攻撃自体がヒットしたかどうかで、atktypeなら攻撃で全部ひっくるめてあたるから
+    /// atktypeじゃないなら、falseで
+    /// </summary>
+    public bool IsAtkHit;
+    public bool IsBadPassiveHit;
+    public bool IsBadPassiveRemove;
+    public bool IsGoodPassiveHit;
+    public bool IsGoodPassiveRemove;
+
+
+    public bool IsGoodVitalLayerHit;
+    public bool IsGoodVitalLayerRemove;
+    public bool IsBadVitalLayerHit;
+    public bool IsBadVitalLayerRemove;
+
+
+    /// <summary>
+    /// 死回復も含める
+    /// </summary>
+    public bool IsHeal;
+    //public bool IsConsecutive;　これは必要なし、なぜなら相性値の判断は毎ターン行われるから、連続ならちゃんと連続毎ターンで結果的に多く相性値関連の処理は加算される。
+    public float Damage;
+    public float Heal;
+    //public BasePassive whatPassive;  多いしまだ必要ないから一旦コメントアウト
+    //public int DamagePercent　最大HPはBaseStates側にあるからそっちから取得する
+    public BaseSkill Skill;
+    public DamageData(bool isAtkHit,bool isBadPassiveHit,bool isBadPassiveRemove,bool isGoodPassiveHit,bool isGoodPassiveRemove,bool isGoodVitalLayerHit,bool isGoodVitalLayerRemove,bool isBadVitalLayerHit,bool isBadVitalLayerRemove,bool isHeal,BaseSkill skill,float damage,float heal,BaseStates attacker)
+    {
+        IsAtkHit = isAtkHit;
+        IsBadPassiveHit = isBadPassiveHit;
+        IsBadPassiveRemove = isBadPassiveRemove;
+        IsGoodPassiveHit = isGoodPassiveHit;
+        IsGoodPassiveRemove = isGoodPassiveRemove;
+        IsGoodVitalLayerHit = isGoodVitalLayerHit;
+        IsGoodVitalLayerRemove = isGoodVitalLayerRemove;
+        IsBadVitalLayerHit = isBadVitalLayerHit;
+        IsBadVitalLayerRemove = isBadVitalLayerRemove;
+        IsHeal = isHeal;
+
+        Skill = skill;
+        Damage = damage;
+        Heal = heal;
+        Attacker = attacker;
+    }
+}
+
+/// <summary>
+///     物理属性、スキルに依存し、キャラクター達の種別や個人との相性で攻撃の通りが変わる
+/// </summary>
+public enum PhysicalProperty
+{
+    heavy,
+    volten,
+    dishSmack //床ずれ、ヴぉ流転、暴断
+    ,none
+}
+/// <summary>
+/// 人間状況　全員持つけど例えばLife以外なんかは固定されてたりしたりする。
+/// </summary>
+public enum HumanConditionCircumstances
+{
+    /// <summary>
+    /// 辛い状態を表します。
+    /// </summary>
+    Painful,
+    /// <summary>
+    /// 楽観的な状態を表します。
+    /// </summary>
+    Optimistic,
+    /// <summary>
+    /// 高揚した状態を表します。
+    /// </summary>
+    Elated,
+    /// <summary>
+    /// 覚悟を決めた状態を表します。
+    /// </summary>
+    Resolved,
+    /// <summary>
+    /// 怒りの状態を表します。
+    /// </summary>
+    Angry,
+    /// <summary>
+    /// 状況への疑念を抱いている状態を表します。
+    /// </summary>
+    Doubtful,
+    /// <summary>
+    /// 混乱した状態を表します。
+    /// </summary>
+    Confused,
+    /// <summary>
+    /// 普段の状態を表します。
+    /// </summary>
+    Normal
+    }
+/// <summary>
+/// パワー、元気、気力値　歩行やその他イベントなどで短期的に上げ下げし、
+/// 狙い流れ等の防ぎ方切り替え処理などで、さらに上下する値として導入されたりする。
+/// </summary>
+public enum ThePower
+{
+        /// <summary>たるい</summary>
+    lowlow,
+        /// <summary>低い</summary>
+    low,
+    /// <summary>普通</summary>
+    medium,
+    /// <summary>高い</summary>
+    high
+}
+/// <summary>
+/// 武器依存の戦闘規格
+/// </summary>
+public enum BattleProtocol
+{
+    /// <summary>地味</summary>
+    LowKey,
+    /// <summary>トライキー</summary>
+    Tricky,
+    /// <summary>派手</summary>
+    Showey,
+    /// <summary>
+    /// この戦闘規格には狙い流れ(AimStyle)がないため、には防ぎ方(AimStyleごとに対応される防御排他ステ)もなく、追加攻撃力(戦闘規格による排他ステ)もない
+    /// </summary>
+    none
+}
+/// <summary>
+/// 防ぎ方 狙い流れとも言う　戦闘規格とスキルにセットアップされる順番や、b_defの対応に使用される。
+/// </summary>
+public enum AimStyle
+{
+
+     /// <summary>
+    /// アクロバマイナ体術1 - Acrobat Minor Technique 1
+    /// </summary>
+    AcrobatMinor,       // アクロバマイナ体術1
+
+    /// <summary>
+    /// ダブレット - Doublet
+    /// </summary>
+    Doublet,            // ダブレット
+
+    /// <summary>
+    /// 四弾差し込み - Quad Strike Insertion
+    /// </summary>
+    QuadStrike,         // 四弾差し込み
+
+    /// <summary>
+    /// ダスター - Duster
+    /// </summary>
+    Duster,             // ダスター
+
+    /// <summary>
+    /// ポタヌヴォルフのほうき術系 - Potanu Volf's Broom Technique
+    /// </summary>
+    PotanuVolf,         // ポタヌヴォルフのほうき術系
+
+    /// <summary>
+    /// 中天一弾 - Central Heaven Strike
+    /// </summary>
+    CentralHeavenStrike, // 中天一弾
+
+    /// <summary>
+    /// 戦闘規格のnoneに対して変化する防ぎ方
+    /// </summary>
+    none
+}
+/// <summary>
+/// 命中率、攻撃力、回避力、防御力への補正
+/// </summary>
+public class ModifierPart
+{
+    /// <summary>
+    /// どういう補正かを保存する　攻撃時にunderに出てくる
+    /// </summary>
+    public string whatModifier;
+
+    /// <summary>
+    /// 補正率
+    /// </summary>
+    public float Modifier;
+
+    public ModifierPart(string txt, float value)
+    {
+        whatModifier = txt;
+        Modifier = value;
+    }
+}
+/// <summary>
+///     精神属性、スキル、キャラクターに依存し、キャラクターは直前に使った物が適用される
+    ///     だから精神属性同士で攻撃の通りは設定される。
+    /// </summary>
+[Flags]
+public enum SpiritualProperty
+{
+    doremis = 1 << 0,   // ビットパターン: 0000 0001  (1)
+    pillar = 1 << 1,   // ビットパターン: 0000 0010  (2)
+    kindergarden = 1 << 2,   // ビットパターン: 0000 0100  (4)
+    liminalwhitetile = 1 << 3,   // ビットパターン: 0000 1000  (8)
+    sacrifaith = 1 << 4,   // ビットパターン: 0001 0000  (16)
+    cquiest = 1 << 5,   // ビットパターン: 0010 0000  (32)
+    pysco = 1 << 6,   // ビットパターン: 0100 0000  (64)
+    godtier = 1 << 7,   // ビットパターン: 1000 0000  (128)
+    baledrival = 1 << 8,   // ビットパターン: 0001 0000 0000  (256)
+    devil = 1 << 9,    // ビットパターン: 0010 0000 0000  (512)
+    none = 1 << 10    // ビットパターン: 0100 0000 0000  (1024)
+}
+
+public enum MemoryDensity
+{
+    /// <summary>
+    /// 薄い
+    /// </summary>
+    Low,
+    /// <summary>
+    /// 普通
+    /// </summary>
+    Medium,
+    /// <summary>
+    /// しっかりと
+    /// </summary>
+    High,
 }
 

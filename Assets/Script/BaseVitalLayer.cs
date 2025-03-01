@@ -169,6 +169,24 @@ public class BaseVitalLayer
 
     }
 
+    public BaseVitalLayer DeepCopy()
+    {
+        var clone = new BaseVitalLayer();
+        clone.id = this.id;
+        clone.name = this.name;
+        clone.IsBad = this.IsBad;
+        clone.Priority = this.Priority;
+        clone._layhp = this._layhp;
+        clone._maxLayhp = this._maxLayhp;
+        clone.IsBattleEndRemove = this.IsBattleEndRemove;
+        clone.Regen = this.Regen;
+        clone.HeavyResistance = this.HeavyResistance;
+        clone.voltenResistance = this.voltenResistance;
+        clone.DishSmackRsistance = this.DishSmackRsistance;
+        clone.MentalPenetrateRatio = this.MentalPenetrateRatio;
+        clone.ResistMode = this.ResistMode;
+        return clone;
+    }
 }
 public enum BarrierResistanceMode
 {

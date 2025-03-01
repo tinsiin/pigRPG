@@ -254,7 +254,7 @@ public class BaseSkill
     /// <summary>
     ///     スキルの物理属性
     /// </summary>
-    public PhysicalProperty SkillPhysical { get; }
+    public PhysicalProperty SkillPhysical;
 
     public BaseStates Doer;//行使者
     /// <summary>
@@ -337,7 +337,7 @@ public class BaseSkill
     }
 
     /// <summary>
-    /// triggerCountが0以上の複数ターン実行が必要なスキルの場合、複数ターンに跨る実行中に中断出来るかどうか。
+    /// triggerCountが0以上の複数ターン実行が必要なスキルの場合、複数ターンに跨る発動カウント実行中に中断出来るかどうか。
     /// </summary>
     public bool CanCancel = true;
 
@@ -351,23 +351,13 @@ public class BaseSkill
     public bool CanSelectAggressiveCommit = false;
 
 
-
-    /// <summary>
-    /// ランダムにスキル実行が継続されるかどうかの割合　
-    /// </summary>
-    public float ConsecutivePercentage = 0;
-
     /// <summary>
     /// 実行したキャラに付与される追加硬直値
     /// </summary>
     public int SKillDidWaitCount;//スキルを行使した後の硬直時間。 Doer、行使者のRecovelyTurnに一時的に加算される？
 
 
-    public string SkillName
-    {
-        get { return _name; }
-    }
-
+    public string SkillName;
 
     /// <summary>
     /// BattleManager単位で行使した回数
@@ -601,6 +591,10 @@ public class BaseSkill
     /// TLOAかどうか
     /// </summary>
     public bool IsTLOA;
+    /// <summary>
+    /// 魔法スキルかどうか
+    /// </summary>
+    public bool IsMagic;
 
     /// <summary>
     /// スキルの範囲効果における各割合　最大で6の長さまで使うと思う
@@ -631,7 +625,7 @@ public class BaseSkill
     /// <summary>
     /// 基本的にスキルのレベルは恒常的に上がらないが、戦闘内では一時的に上がったりするのかもしれない。
     /// </summary>
-    public float SkillLevel;
+    float SkillLevel;
     
 
     /// <summary>
@@ -842,6 +836,55 @@ public class BaseSkill
     /// </summary>
     public SerializableDictionary<SkillZoneTrait, float>
         HitRangePercentageDictionary;
+    /// <summary>
+    /// ランタイム用にスキルをディープコピーする関数
+    /// </summary>
+    public BaseSkill InitDeepCopy()
+    {
+        var copy = new BaseSkill();
+        copy.SkillSpiritual = SkillSpiritual;
+        copy.SkillPhysical = SkillPhysical;
+        foreach(var tenDay in TenDayValues)
+        {
+            copy.TenDayValues.Add(tenDay.Key,tenDay.Value);
+        }
+        copy._name = _name;
+        copy._triggerCountMax = _triggerCountMax;
+        copy._triggerRollBackCount = _triggerRollBackCount;
+        copy._RandomConsecutivePer = _RandomConsecutivePer;
+        copy._defaultStockCount = _defaultStockCount;
+        copy._stockPower = _stockPower;
+        copy._stockForgetPower = _stockForgetPower;
+        copy.CanCancel = CanCancel;
+        copy.IsAggressiveCommit = IsAggressiveCommit;
+        copy.CanSelectAggressiveCommit = CanSelectAggressiveCommit;
+        copy.SKillDidWaitCount = SKillDidWaitCount;
+        copy.SkillName = SkillName;
+        copy.IsTLOA = IsTLOA;
+        copy.IsMagic = IsMagic;
+        copy.PowerSpread = PowerSpread;
+        copy._skillPower = _skillPower;
+        copy.MentalDamageRatio = MentalDamageRatio;
+        copy.SkillHitPer = SkillHitPer;
+        copy.subEffects = new List<int>(subEffects);
+        copy.subVitalLayers = new List<int>(subVitalLayers);
+        foreach(var moveSet in A_MoveSet)
+        {
+            copy.A_MoveSet.Add(moveSet.DeepCopy());
+        }
+        foreach(var moveSet in B_MoveSet)
+        {
+            copy.B_MoveSet.Add(moveSet.DeepCopy());
+        }
+        copy._defAtk = _defAtk;
+        copy.WhatSkill = WhatSkill;
+        copy.ConsecutiveType = ConsecutiveType;
+        copy.ZoneTrait = ZoneTrait;
+        copy.DistributionType = DistributionType;
+        copy.PowerRangePercentageDictionary = PowerRangePercentageDictionary;
+        copy.HitRangePercentageDictionary = HitRangePercentageDictionary;
+        return copy;
+    }
 
 }
 /// <summary>
@@ -892,6 +935,25 @@ public class MoveSet: ISerializationCallbackReceiver
     public void OnAfterDeserialize()
     {
         // 特に何もしない場合は空でOK
+    }
+    public MoveSet DeepCopy()
+    {
+        // 新しい MoveSet を生成
+        var copy = new MoveSet();
+
+        // List<AimStyle> の中身をまるごとコピー
+        // (AimStyle は enum なので値コピーで OK)
+        copy.States = new List<AimStyle>(this.States);
+
+        // List<float> の中身をまるごとコピー
+        copy.DEFATKList = new List<float>(this.DEFATKList);
+
+        // oldSizeDEFATK は NonSerializedなので
+        // 新しい copy では 0 に初期化されるが
+        // OnBeforeSerialize が動くときにまた
+        // 適切に更新されるので問題なし
+
+        return copy;
     }
 
 

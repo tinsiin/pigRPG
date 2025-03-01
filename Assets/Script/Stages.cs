@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using RandomExtensions;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 [CreateAssetMenu]
@@ -9,6 +10,7 @@ public class Stages : MonoBehaviour
 {
     //ステージにまつわる物を処理したり呼び出したり(ステージデータベース??
     public List<StageData> StageDates; //ステージのデータベースのリスト     
+    public List<StageData> RunTimeStageDates; //ステージのデータベースのリスト(ランタイム用)
     [SerializeField][TextArea(1, 30)] private string memo;
 
     public static Stages Instance;
@@ -16,6 +18,7 @@ public class Stages : MonoBehaviour
     private void Awake()
     {
         if (Instance == null)
+
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
@@ -24,19 +27,30 @@ public class Stages : MonoBehaviour
         {
             Destroy(gameObject);
         }
-
-        OnInitializeAllStageCharas();
+        DeepCopyToRunTime();//ランタイム用にディープコピー
+        OnInitializeAllStageCharas();//全て初期化
     }
     /// <summary>
     /// 全てのステージのキャラクターの初期化をする
     /// </summary>
     private void OnInitializeAllStageCharas()
     {
-        foreach (var stage in StageDates)
+        foreach (var stage in RunTimeStageDates)
         {
             stage.OnInitializeAllAreaCharas();
         }
 
+    }
+    /// <summary>
+    /// ランタイム用にディープコピー
+    /// </summary>
+    void DeepCopyToRunTime()
+    {
+        RunTimeStageDates = new List<StageData>();
+        foreach (var stage in StageDates)
+        {
+            RunTimeStageDates.Add(stage.DeepCopy());
+        }
     }
 }
 
@@ -53,6 +67,18 @@ public class Stages : MonoBehaviour
         public int HPBonus;
         public int PBonus;
         public int RecovelyTurnMinusBonus;
+        public StatesBonus DeepCopy()
+        {
+            var copy = new StatesBonus();
+            copy.ATKBpunus = this.ATKBpunus;
+            copy.DEFBonus = this.DEFBonus;
+            copy.AGIBonus = this.AGIBonus;
+            copy.HITBonus = this.HITBonus;
+            copy.HPBonus = this.HPBonus;
+            copy.PBonus = this.PBonus;
+            copy.RecovelyTurnMinusBonus = this.RecovelyTurnMinusBonus;
+            return copy;
+        }
     }
 
     [Serializable]
@@ -95,6 +121,24 @@ public class Stages : MonoBehaviour
             {
                 cut.OnInitializeAllCharas();
             }
+        }
+        /// <summary>
+        /// このクラスの内容を別インスタンスとして返す
+        /// </summary>
+        public StageData DeepCopy()
+        {
+            var newData = new StageData();
+            newData._stageName = _stageName;
+            newData._cutArea = new List<StageCut>();
+            foreach (var cut in _cutArea)
+            {
+                newData._cutArea.Add(cut.DeepCopy());
+            }
+            newData.Satelite_StageBonus = Satelite_StageBonus.DeepCopy();//ステージボーナスはフィールドあるのでディープコピーメゾット
+            newData.Bass_StageBonus = Bass_StageBonus.DeepCopy();
+            newData.Stair_StageBonus = Stair_StageBonus.DeepCopy();
+
+            return newData;
         }
 
     }
@@ -162,6 +206,31 @@ public class Stages : MonoBehaviour
         ///     敵のリスト
         /// </summary>
         public IReadOnlyList<NormalEnemy> EnemyList => _enemyList;
+
+        public StageCut DeepCopy()
+        {
+            var newData = new StageCut();
+            newData._areaName = _areaName;
+            newData._id = _id;
+            newData._areaDates = new List<AreaDate>();
+            foreach (var area in _areaDates)
+            {
+                newData._areaDates.Add(area.DeepCopy());
+            }
+            newData._mapLineS = _mapLineS;
+            newData._mapLineE = _mapLineE;
+            newData._mapsrc = _mapsrc;
+            newData._enemyList = new List<NormalEnemy>();
+            foreach (var enemy in _enemyList)
+            {
+                newData._enemyList.Add(enemy.DeepCopy());
+            }
+            newData.EncounterRate = EncounterRate;
+            newData.EscapeRate = EscapeRate;
+            newData._sideObject_Lefts = _sideObject_Lefts;
+            newData._sideObject_Rights = _sideObject_Rights;
+            return newData;
+        }
 
         /// <summary>
         /// エリアの全ての敵キャラの初期化コールバック
@@ -387,4 +456,15 @@ public class Stages : MonoBehaviour
         ///     「,」で区切って入力。
         /// </summary>
         public string NextIDString => _nextIDString;
+
+        public AreaDate DeepCopy()
+        {
+            var newData = new AreaDate();
+            newData._rest = _rest;
+            newData._backsrc = _backsrc;
+            newData._nextID = _nextID;
+            newData._nextIDString = _nextIDString;
+            newData._nextStageID = _nextStageID;
+            return newData;
+        }
     }

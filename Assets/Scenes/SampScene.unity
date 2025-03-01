@@ -533,6 +533,8 @@ MonoBehaviour:
     _passiveList: []
     _skillList:
     - SkillSpiritual: 0
+      TenDayValues:
+        _list: []
       _name: "\u30C6\u30B9\u30C8\u30B9\u30AD\u30EB"
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -580,6 +582,8 @@ MonoBehaviour:
       protocol: 0
       WeaponSkill:
         SkillSpiritual: 0
+        TenDayValues:
+          _list: []
         _name: 
         _triggerCountMax: 0
         _triggerRollBackCount: 0
@@ -615,6 +619,8 @@ MonoBehaviour:
     NowDeffenceStyle: 0
     NowUseSkill:
       SkillSpiritual: 0
+      TenDayValues:
+        _list: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -651,6 +657,8 @@ MonoBehaviour:
         _list: []
     FreezeUseSkill:
       SkillSpiritual: 0
+      TenDayValues:
+        _list: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -686,13 +694,11 @@ MonoBehaviour:
       HitRangePercentageDictionary:
         _list: []
     IsDeleteMyFreezeConsecutive: 0
-    MAXP: 0
-    P: 0
     _tempVanguard: 0
     _tempLive: 0
     maxRecoveryTurn: 0
     _hp: 3
-    _maxHp: 3
+    _maxhp: 0
     _mentalHP: 0
     Target: 0
     RangeWill: 0
@@ -717,6 +723,8 @@ MonoBehaviour:
       protocol: 0
       WeaponSkill:
         SkillSpiritual: 0
+        TenDayValues:
+          _list: []
         _name: 
         _triggerCountMax: 0
         _triggerRollBackCount: 0
@@ -752,6 +760,8 @@ MonoBehaviour:
     NowDeffenceStyle: 0
     NowUseSkill:
       SkillSpiritual: 0
+      TenDayValues:
+        _list: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -788,6 +798,8 @@ MonoBehaviour:
         _list: []
     FreezeUseSkill:
       SkillSpiritual: 0
+      TenDayValues:
+        _list: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -823,13 +835,11 @@ MonoBehaviour:
       HitRangePercentageDictionary:
         _list: []
     IsDeleteMyFreezeConsecutive: 0
-    MAXP: 0
-    P: 0
     _tempVanguard: 0
     _tempLive: 0
     maxRecoveryTurn: 0
     _hp: 0
-    _maxHp: 0
+    _maxhp: 0
     _mentalHP: 0
     Target: 0
     RangeWill: 0
@@ -856,6 +866,8 @@ MonoBehaviour:
       protocol: 0
       WeaponSkill:
         SkillSpiritual: 0
+        TenDayValues:
+          _list: []
         _name: 
         _triggerCountMax: 0
         _triggerRollBackCount: 0
@@ -891,6 +903,8 @@ MonoBehaviour:
     NowDeffenceStyle: 2
     NowUseSkill:
       SkillSpiritual: 0
+      TenDayValues:
+        _list: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -929,6 +943,8 @@ MonoBehaviour:
         _list: []
     FreezeUseSkill:
       SkillSpiritual: 0
+      TenDayValues:
+        _list: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -964,13 +980,11 @@ MonoBehaviour:
       HitRangePercentageDictionary:
         _list: []
     IsDeleteMyFreezeConsecutive: 0
-    MAXP: 0
-    P: 0
     _tempVanguard: 0
     _tempLive: 0
     maxRecoveryTurn: 0
     _hp: 0
-    _maxHp: 0
+    _maxhp: 0
     _mentalHP: 0
     Target: 0
     RangeWill: 0
@@ -1073,6 +1087,8 @@ MonoBehaviour:
           protocol: 0
           WeaponSkill:
             SkillSpiritual: 0
+            TenDayValues:
+              _list: []
             _name: 
             _triggerCountMax: 0
             _triggerRollBackCount: 0
@@ -1108,6 +1124,8 @@ MonoBehaviour:
         NowDeffenceStyle: 0
         NowUseSkill:
           SkillSpiritual: 0
+          TenDayValues:
+            _list: []
           _name: 
           _triggerCountMax: 0
           _triggerRollBackCount: 0
@@ -1144,6 +1162,8 @@ MonoBehaviour:
             _list: []
         FreezeUseSkill:
           SkillSpiritual: 0
+          TenDayValues:
+            _list: []
           _name: 
           _triggerCountMax: 0
           _triggerRollBackCount: 0
@@ -1179,13 +1199,11 @@ MonoBehaviour:
           HitRangePercentageDictionary:
             _list: []
         IsDeleteMyFreezeConsecutive: 0
-        MAXP: 0
-        P: 0
         _tempVanguard: 0
         _tempLive: 0
         maxRecoveryTurn: 0
         _hp: 0
-        _maxHp: 0
+        _maxhp: 0
         _mentalHP: 0
         Target: 0
         RangeWill: 0
@@ -1214,6 +1232,8 @@ MonoBehaviour:
           protocol: 0
           WeaponSkill:
             SkillSpiritual: 0
+            TenDayValues:
+              _list: []
             _name: 
             _triggerCountMax: 0
             _triggerRollBackCount: 0
@@ -1249,6 +1269,8 @@ MonoBehaviour:
         NowDeffenceStyle: 0
         NowUseSkill:
           SkillSpiritual: 0
+          TenDayValues:
+            _list: []
           _name: 
           _triggerCountMax: 0
           _triggerRollBackCount: 0
@@ -1282,6 +1304,8 @@ MonoBehaviour:
             _list: []
         FreezeUseSkill:
           SkillSpiritual: 0
+          TenDayValues:
+            _list: []
           _name: 
           _triggerCountMax: 0
           _triggerRollBackCount: 0
@@ -1314,13 +1338,11 @@ MonoBehaviour:
           HitRangePercentageDictionary:
             _list: []
         IsDeleteMyFreezeConsecutive: 0
-        MAXP: 0
-        P: 0
         _tempVanguard: 0
         _tempLive: 0
         maxRecoveryTurn: 0
         _hp: 0
-        _maxHp: 0
+        _maxhp: 0
         _mentalHP: 0
         Target: 0
         RangeWill: 0
@@ -1478,6 +1500,8 @@ MonoBehaviour:
         protocol: 3
         WeaponSkill:
           SkillSpiritual: 0
+          TenDayValues:
+            _list: []
           _name: "\u63B4\u3093\u3067\u6295\u3052\u308B"
           _triggerCountMax: 0
           _triggerRollBackCount: 0

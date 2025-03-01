@@ -167,7 +167,7 @@ public class Walking : MonoBehaviour
     /// </summary>
     private void StageDataUpdate()
     {
-        NowStageData = stages.StageDates[ps.NowStageID]; //現在のステージデータ
+        NowStageData = stages.RunTimeStageDates[ps.NowStageID]; //現在のステージデータ
         NowStageCut = NowStageData.CutArea[ps.NowAreaID]; //現在のエリアデータ
         NowAreaData = NowStageCut.AreaDates[ps.NowProgress]; //現在地点
 
