@@ -17,9 +17,10 @@ using Unity.VisualScripting.Dependencies.NCalc;
 using UnityEditor.Rendering;
 using UnityEditor.ShaderGraph.Internal;
 using UnityEditorInternal.Profiling.Memory.Experimental;
+using UnityEditor;
 /// <summary>
 ///     基礎ステータスのクラス　　クラスそのものは使用しないので抽象クラス
-    /// </summary>
+/// </summary>
 [Serializable]
 public abstract class BaseStates
 {
@@ -5255,6 +5256,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         DecisionSacriFaithAdaptToSkillGrouping();
         skillDatas = new List<ACTSkillData>();//スキルの行動記録はbm単位で記録する。
         damageDatas = new();
+        FocusSkillImpressionList = new();//慣れ補正用スキル印象リストを初期化
         TargetBonusDatas = new();
         ConditionTransition();
         _mentalDivergenceRefilCount = 0;//精神HP乖離の再充填カウントをゼロに戻す
@@ -5272,6 +5274,8 @@ private int CalcTransformCountIncrement(int tightenStage)
     {
         TempDamageTurn = 0;
         DeleteConsecutiveATK();
+        DecayOfPersistentAdaptation();//恒常的な慣れ補正の減衰　　持ち越しの前に行われる　じゃないと記憶された瞬間に忘れてしまうし
+        AdaptCarryOver();//慣れ補正持ち越しの処理
         foreach(var layer in _vitalLayerList.Where(lay => lay.IsBattleEndRemove))
         {
             RemoveVitalLayerByID(layer.id);//戦闘の終了で消える追加HPを持ってる追加HPリストから全部消す
@@ -5282,12 +5286,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
     }
 
-    //慣れ補正ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー慣れ補正ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-    /// <summary>
-    /// 慣れ補正用　スキルの注目リスト
-    /// </summary>
-    public List<FocusedSkillAndUser> FocusSkillList = new List<FocusedSkillAndUser>();
-
+    //慣れ補正ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーAdaptToSkillsGroupingのための関数たちーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     /// <summary>
     /// ベールドライヴァル用の慣れ補正の優先順位のグルーピング
     /// グルーピングっていうか　3 を境目に二つに分かれるだけ。
@@ -5624,25 +5623,32 @@ private int CalcTransformCountIncrement(int tightenStage)
         return true;
     }
 
+
+//ここから慣れ補正のメイン計算部分--------------------------------------------------------------------------------------------------------------------------------    
+    /// <summary>
+    /// 慣れ補正用　スキル印象の注目リスト
+    /// </summary>
+    public List<FocusedSkillImpressionAndUser> FocusSkillImpressionList = new List<FocusedSkillImpressionAndUser>();
+
     /// <summary>
     /// 注目リスト内でのスキルのy優先順位の序列を返す 0から数えるインデックス　0から数える
     /// </summary>
-    int AdaptPriorityDamageToSkill(BaseSkill skill)
+    int AdaptPriorityDamageToSkill(SkillImpression imp)
     {
         //ダメージの大きさで並び替えて
-        FocusSkillList = FocusSkillList.OrderByDescending(skill => skill.TopDmg).ToList();
+        FocusSkillImpressionList = FocusSkillImpressionList.OrderByDescending(skill => skill.TopDmg).ToList();
 
-        return FocusSkillList.FindIndex(fo => fo.skill == skill);
+        return FocusSkillImpressionList.FindIndex(fo => fo.skillImpression == imp);
     }
     /// <summary>
     /// 注目リスト内でのスキルのy優先順位の序列を返す 0から数えるインデックス　0から数える
     /// </summary>
-    int AdaptPriorityMemoryToSkill(BaseSkill skill)
+    int AdaptPriorityMemoryToSkill(SkillImpression imp)
     {
         //記憶回数のカウントで並び替えて
-        FocusSkillList = FocusSkillList.OrderByDescending(skill => skill.MemoryCount).ToList();
+        FocusSkillImpressionList = FocusSkillImpressionList.OrderByDescending(skill => skill.MemoryCount(PersistentAdaptSkillImpressionMemories)).ToList();
 
-        return FocusSkillList.FindIndex(fo => fo.skill == skill);
+        return FocusSkillImpressionList.FindIndex(fo => fo.skillImpression == imp);
     }
 
     /// <summary>
@@ -5651,7 +5657,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     int AdaptToSkillsGrouping(int index)
     {
-        int groupIndex = -1;
+        int groupIndex;
         if (index < 0) return -1;//負の値が優先序列として渡されたらエラー
         switch (MyImpression)//自分の印象によってスキルのグループ分けが変わる。
         {
@@ -5767,16 +5773,15 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     float GetMemoryCountRankRatio(int index)
     {
-        if (FocusSkillList.Count == 1)
+        if (FocusSkillImpressionList.Count == 1)
             return 1.0f; // リストに1つだけの場合、割合は1.0
 
         // 先頭が1.0、末尾が0.0となるように割合を計算
-        return 1.0f - ((float)index / (FocusSkillList.Count - 1));
+        return 1.0f - ((float)index / (FocusSkillImpressionList.Count - 1));
     }
     /// <summary>
     /// 自身の精神属性による記憶段階構造と範囲の取得
     /// </summary>
-    /// <returns></returns>
     List<MemoryDensity> MemoryStageStructure()
     {
         List<MemoryDensity> rl;
@@ -5959,32 +5964,32 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     float AdaptToSkill(BaseStates enemy, BaseSkill skill, float dmg)
     {
-        var donthaveskill = true;//持ってないフラグ
-        var IsFirstAttacker = false;//知っているスキルに食らったとき、その攻撃者が初見かどうか
+        var donthaveskillImpression = true;//持ってないフラグ
+        var IsFirstAttacker = false;//知っているスキル印象に食らったとき、その攻撃者が初見かどうか
         var IsConfused = false;//戸惑いフラグ
         float AdaptModify = -1;//デフォルト値
         var nowTurn = manager.BattleTurnCount;//現在のターン数
-        FocusedSkillAndUser NowFocusSkill = null;//今回食らった注目慣れスキル
+        FocusedSkillImpressionAndUser NowFocusSkillImpression = null;//今回食らった注目慣れスキル印象
 
-        //今回食らうスキルが既に食らってるかどうかの判定ーーーーーーーーーーーーーーーーー
-        foreach (var fo in FocusSkillList)
+        //今回食らうスキル印象が既に食らってるかどうかの判定ーーーーーーーーーーーーーーーーー
+        foreach (var fo in FocusSkillImpressionList)
         {
-            if (fo.skill == skill)//スキル既にあるなら
+            if (fo.skillImpression == skill.Impression)//スキル既にあるなら
             {
                 fo.DamageMemory(dmg);// ダメージ記録
-                donthaveskill = false;//既にあるフラグ！
+                donthaveskillImpression = false;//既にあるフラグ！
                 if (IsFirstAttacker = !fo.User.Any(chara => chara == enemy))//攻撃者が人員リストにいない場合　true
                 {
                     fo.User.Add(enemy);//敵をそのスキルのユーザーリストに登録
                 }
-                NowFocusSkill = fo;//既にあるスキルを今回の慣れ注目スキルに
+                NowFocusSkillImpression = fo;//既にあるスキル印象を今回の慣れ注目スキル印象に
             }
         }
         //もし初めて食らうのならーーーーーーーーーーーーーーーーー
-        if (donthaveskill)
+        if (donthaveskillImpression)
         {
-            NowFocusSkill = new FocusedSkillAndUser(enemy, skill, dmg);//新しく慣れ注目スキルに
-            FocusSkillList.Add(NowFocusSkill);//最初のキャラクターとスキルを記録
+            NowFocusSkillImpression = new FocusedSkillImpressionAndUser(enemy, skill.Impression, dmg);//新しく慣れ注目印象に
+            FocusSkillImpressionList.Add(NowFocusSkillImpression);//最初のキャラクターとスキルを記録
         }
 
         //前回"スキル問わず"攻撃を受けてから今回受けるまでの　"経過ターン"
@@ -5992,13 +5997,12 @@ private int CalcTransformCountIncrement(int tightenStage)
         var DeltaDamageTurn = Math.Abs(nowTurn - TempDamageTurn);
 
         //今回食らった以外の全てのスキルの記憶回数をターン数経過によって減らすーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-        var templist = FocusSkillList;
-
-        templist.Remove(NowFocusSkill);//今回の慣れ注目スキルを省く
+        var templist = FocusSkillImpressionList;
+        templist.Remove(NowFocusSkillImpression);//今回の慣れ注目スキル印象を省く
         foreach (var fo in templist)
         {
             //まず優先順位を取得し、グループ序列(スキルの最終優先ランク)を取得
-            var finalSkillRank = AdaptToSkillsGrouping(AdaptPriorityDamageToSkill(fo.skill));
+            var finalSkillRank = AdaptToSkillsGrouping(AdaptPriorityDamageToSkill(fo.skillImpression));
 
             //DEFによる基礎減少値を取得
             var b_ReductionValue = GetBaseMemoryReducationValue();
@@ -6018,8 +6022,7 @@ private int CalcTransformCountIncrement(int tightenStage)
 
 
             //記憶回数の序列割合を入手
-            var MemoryRankRatio = GetMemoryCountRankRatio(AdaptPriorityMemoryToSkill(skill));
-
+            var MemoryRankRatio = GetMemoryCountRankRatio(AdaptPriorityMemoryToSkill(fo.skillImpression));
             var mod1 = RandomEx.Shared.NextFloat(2, 4);//2～3
             var rat1 = MemoryRankRatio / mod1;
             if (RandomEx.Shared.NextFloat(1f) < rat1)//乱数判定　成功したら。
@@ -6035,21 +6038,21 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         //記憶回数による記憶範囲の判定と慣れ補正の計算☆ーーーーーーーーーーーーーーーーーーーーーーーーー
 
-        //スキルの記憶回数での並べ替え
-        //記憶回数が多い方から数えて、　　"今回のスキル"がそれに入ってるなら慣れ補正を返す
+        //スキル印象の記憶回数での並べ替え
+        //記憶回数が多い方から数えて、　　"今回のスキル印象"がそれに入ってるなら慣れ補正を返す
         //数える範囲は　記憶範囲
-        FocusSkillList = FocusSkillList.OrderByDescending(skill => skill.MemoryCount).ToList();
+        FocusSkillImpressionList = FocusSkillImpressionList.OrderByDescending(skill => skill.MemoryCount(PersistentAdaptSkillImpressionMemories)).ToList();
 
         //記憶段階と範囲の取得　　
         var rl = MemoryStageStructure();
 
         //二回目以降で記憶範囲にあるのなら、補正計算して返す
-        if (!donthaveskill)
+        if (!donthaveskillImpression)
         {
             for (var i = 0; i < rl.Count; i++)//記憶段階と範囲のサイズ分ループ
             {
-                var fo = FocusSkillList[i];
-                if (fo.skill == skill)//もし記憶範囲に今回のスキルがあるならば
+                var fo = FocusSkillImpressionList[i];
+                if (fo.skillImpression == skill.Impression)//もし記憶範囲に今回のスキル印象があるならば
                 {
                     //もしスキルを使う行使者が初見なら(二人目以降の使用者)
                     //精神属性によっては戸惑って補正はない　　戸惑いフラグが立つ
@@ -6073,7 +6076,7 @@ private int CalcTransformCountIncrement(int tightenStage)
                     if (!IsConfused)//戸惑ってなければ、補正がかかる。(デフォルト値の-1でなくなる。)
                     {
                         var BaseValue = GetBaseAdaptValue();//基礎量
-                        var MemoryValue = Mathf.Floor(fo.MemoryCount);//記憶回数(小数点以下切り捨て)
+                        var MemoryValue = Mathf.Floor(fo.MemoryCount(PersistentAdaptSkillImpressionMemories));//記憶回数(小数点以下切り捨て)
 
                         float MemoryPriority = -1;//記憶段階による補正
                         switch (rl[i])
@@ -6133,12 +6136,12 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
 
 
-        //戸惑いが立ってると記憶回数は増加しない
-        if (!IsConfused)
+        //今回食らったスキルの記憶回数を増やす処理----------------------------------------------------------------------------------------------------------------
+        if (!IsConfused)//戸惑いが立ってると記憶回数は増加しない
         {//FocuseSkillはコンストラクタでMemory()されないため、donthaveSkillに関わらず、実行されます。
 
             //今回食らったスキルの記憶回数を増やすーーーーーーーーーーーーーーーーーーーーーーーーーーー☆
-            var finalSkillRank1 = AdaptToSkillsGrouping(AdaptPriorityDamageToSkill(NowFocusSkill.skill));//優先順位取得
+            var finalSkillRank1 = AdaptToSkillsGrouping(AdaptPriorityDamageToSkill(NowFocusSkillImpression.skillImpression));//優先順位取得
                                                                                                          //基礎上昇値取得
                                                                                                          //DEFによる基礎上昇値を取得
             var b_IncreaseValue = GetBaseMemoryIncreaseValue();
@@ -6159,14 +6162,14 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (DeltaDamageTurn < 3) TurnBonus += 0.7f;//2ターン以内
 
             //記憶回数による微加算　(これは掛けるのではなく最終計算結果に加算する¥)
-            float MemoryAdjust = 0.08f * NowFocusSkill.MemoryCount;
+            float MemoryAdjust = 0.08f * NowFocusSkillImpression.MemoryCount(PersistentAdaptSkillImpressionMemories);
 
             // 最終的な増加量計算
             // メモリ増加例: (基礎上昇値 * 優先順位補正 * 記憶割合補正 + ターン補正)
             float MemoryIncrease = b_IncreaseValue * PriorityIncreaseModify * TurnBonus + MemoryAdjust;
 
             //注目スキルとして記憶回数が増える。
-            NowFocusSkill.Memory(MemoryIncrease);
+            NowFocusSkillImpression.Memory(MemoryIncrease);
         }
 
         //慣れ補正がデフォルト値の-1のままだった場合、1.0として返す。
@@ -6175,7 +6178,125 @@ private int CalcTransformCountIncrement(int tightenStage)
         return AdaptModify;
     }
 
-    //static 静的なメゾット(戦いに関する辞書データなど)
+    /// <summary>
+    /// 恒常的な慣れ補正のリスト
+    /// </summary>
+    Dictionary<SkillImpression,float>PersistentAdaptSkillImpressionMemories = new();
+    const float MEMORY_COUNT_TOTAL_THRESHOLD = 47.7f;//持ち越し発生のの総記憶回数のしきい値
+    const float MEMORY_COUNT_TOP_THRESHOLD = 22.45f;//持ち越し発生のトップ記憶された慣れスキル印象の記憶回数のしきい値
+    const float NARE_TOP_PORTION_RATIO = 0.3f;//記憶回数でソートしたときの上位を何割取るか ％
+    const float NARE_DOMINANCE_THRESHOLD = 0.66f;//特定上位のスキル印象が総記憶回数の何割以上を占めたら「突出」判定するか ％
+
+    const float NARE_CARRYOVER_DECAY_RATIO = 0.3f;//恒常的な慣れ補正の戦闘終了時の減衰する際に使用する全員スキル印象の記憶量と掛ける割合
+
+    const float NARE_CARRYOVER_PRESERVATION_THRESHOLD = 0.24f;//指定の印象が、記憶回数全体のこの割合(0.24 = 24%)以上を占めていれば、減算を免除される
+
+
+
+    /// <summary>
+    /// 特定の条件で慣れ補正の慣れ量を持ち越す処理
+    /// </summary>
+    void AdaptCarryOver()
+    {
+        if(b_EYE < 20) return;//眼力が20未満ならば、慣れ補正を持ち越さない
+
+        //まずfocusSkillListの全てのスキル印象の記憶回数がしきい値を超えてるか計算する
+        var AllMemoryCount = FocusSkillImpressionList.Sum(fo => fo.MemoryCount(PersistentAdaptSkillImpressionMemories));
+        if (AllMemoryCount < MEMORY_COUNT_TOTAL_THRESHOLD) return;//総記憶回数のしきい値を超えていないなら、持ち越し処理は行わない
+
+        //一番多い記憶回数を持つスキル印象を取得
+        var TopMemoryCount = FocusSkillImpressionList.Max(fo => fo.MemoryCount(PersistentAdaptSkillImpressionMemories));
+        //トップ記憶回数のしきい値を超えていないなら、持ち越し処理は行わない
+        if(TopMemoryCount < MEMORY_COUNT_TOP_THRESHOLD) return;
+        
+        //念のため同じ記憶回数だった場合、その中から抽選するようにする。
+        var TopMemoryCountSkillImpressions = FocusSkillImpressionList.Where(fo => fo.MemoryCount(PersistentAdaptSkillImpressionMemories) == TopMemoryCount).ToList();//トップ記憶回数と同じ物をリストに
+        var TopMemorySkillImpression = RandomEx.Shared.GetItem(TopMemoryCountSkillImpressions.ToArray());//GetItemでランダムに一つ入手
+
+        //もし記憶回数の分布が突出した形なら、倍率1.5倍
+        var MemoryMountainBoost = 1.0f;
+        int count = (int)Mathf.Ceil(FocusSkillImpressionList.Count * NARE_TOP_PORTION_RATIO);//上位何割を取るか
+        FocusSkillImpressionList = FocusSkillImpressionList.OrderByDescending(fo => fo.MemoryCount(PersistentAdaptSkillImpressionMemories)).ToList();//記憶回数でソート
+        var TopPortion = FocusSkillImpressionList.Take(count).ToList();//上位何割を取るか
+        float TopPortionSum = TopPortion.Sum(fo => fo.MemoryCount(PersistentAdaptSkillImpressionMemories));//上位何割の合計
+        if (TopPortionSum >= NARE_DOMINANCE_THRESHOLD * AllMemoryCount) MemoryMountainBoost = 1.5f;//上位何割の合計が総記憶回数の何割以上を占めたら倍率1.5倍
+
+        var CarryOverMultplier = GetMemoryCarryOverMultiplierByDefaulSpiritualPropertyAndHumanCondition();//持ち越し倍率を取得
+
+        //もし記憶回数の総量が持ち越し発生の総量しきい値の二倍より多いなら、持ち越し倍率が0.8倍の最低保証が付く。
+        if (AllMemoryCount > MEMORY_COUNT_TOTAL_THRESHOLD * 2) CarryOverMultplier = Mathf.Max(0.8f, CarryOverMultplier);
+
+        //恒常的な慣れ補正のリストに記録
+        var PersistentMemoryValue = TopMemoryCount * CarryOverMultplier * MemoryMountainBoost;
+        if(PersistentAdaptSkillImpressionMemories.ContainsKey(TopMemorySkillImpression.skillImpression))
+        {
+            PersistentAdaptSkillImpressionMemories[TopMemorySkillImpression.skillImpression] += PersistentMemoryValue;
+        }
+        else
+        {
+            PersistentAdaptSkillImpressionMemories.Add(TopMemorySkillImpression.skillImpression, PersistentMemoryValue);
+        }
+    }
+
+    float GetMemoryCarryOverMultiplierByDefaulSpiritualPropertyAndHumanCondition()
+    {
+        switch(NowCondition)
+        {
+            case HumanConditionCircumstances.Painful:
+                if(DefaultImpression == SpiritualProperty.devil) return 0.8f;
+                return 0.75f;
+            case HumanConditionCircumstances.Optimistic:
+                return 0.95f;
+            case HumanConditionCircumstances.Elated:
+                if(DefaultImpression == SpiritualProperty.baledrival) return 0.91f;
+                return 0.7f;
+            case HumanConditionCircumstances.Resolved:
+                return 1.0f;
+            case HumanConditionCircumstances.Angry:
+                if(DefaultImpression == SpiritualProperty.doremis) return 1.2f;
+                return 0.6f;
+            case HumanConditionCircumstances.Doubtful:
+                if(DefaultImpression == SpiritualProperty.pillar) return 0.9f;
+                if(DefaultImpression == SpiritualProperty.cquiest) return 1.1f;
+                return 0.75f;
+            case HumanConditionCircumstances.Confused:
+                return 0.5f;
+            case HumanConditionCircumstances.Normal:
+                return 0.9f;
+            default:
+                return 0.7f;//念のためのデフォルト値
+        }
+    }
+    /// <summary>
+    /// 恒常的な慣れ補正の減衰処理
+    /// </summary>
+    void DecayOfPersistentAdaptation()
+    {
+        var AllMemoryCount = FocusSkillImpressionList.Sum(fo => fo.MemoryCount(PersistentAdaptSkillImpressionMemories));//総記憶回数を取得
+        
+        // いったん辞書のキーをまとめてリスト化
+        var keys = PersistentAdaptSkillImpressionMemories.Keys.ToList();
+
+        //全ての恒常的な慣れ補正のスキル印象で回す
+        foreach(var key in keys)
+        {
+            //現在のスキル印象の記憶回数の値を取得
+            float currentValue = PersistentAdaptSkillImpressionMemories[key];
+
+            //記憶回数の総量の特定の割合以上を該当のスキル印象が占めている場合、減算を免除する
+            if(currentValue >= AllMemoryCount * NARE_CARRYOVER_PRESERVATION_THRESHOLD) continue;
+            
+            // 新しい値を計算
+            float newValue = currentValue - (AllMemoryCount * NARE_CARRYOVER_DECAY_RATIO);//減算処理
+            if(newValue < 0) newValue = 0;//0未満にならないようにクランプ
+
+            // 上書き保存 (キーは同じ、値だけ更新)
+            PersistentAdaptSkillImpressionMemories[key] = newValue;
+        }
+
+        
+    }
+    //static 静的なメゾット(戦いに関する辞書データなど)---------------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
     /// 精神属性と十日能力の互換表
@@ -6431,6 +6552,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         dst.MyType = MyType;
         dst.MyImpression = DefaultImpression;//デフォルト精神属性を最初の精神属性にする　-> エンカウント時に持ってるスキルの中でランダムに決まるけどまぁ一応ね
         dst.DefaultImpression = DefaultImpression;
+        dst.PersistentAdaptSkillImpressionMemories = PersistentAdaptSkillImpressionMemories;//恒常的な慣れ補正のリストはインスペクタで敵とかが初期所持ので記録するかもしれないのでコピー
 
     }
 }
@@ -6477,13 +6599,13 @@ public class FixedOrRandomValue
 /// <summary>
 /// 慣れ補正で使用するスキルとその使用者
 /// </summary>
-public class FocusedSkillAndUser
+public class FocusedSkillImpressionAndUser
 {
-    public FocusedSkillAndUser(BaseStates InitUser, BaseSkill askil, float InitDmg)
+    public FocusedSkillImpressionAndUser(BaseStates InitUser, SkillImpression askil, float InitDmg)
     {
         User = new List<BaseStates>();
         User.Add(InitUser);
-        skill = askil;
+        skillImpression = askil;
 
         //Memory();//この記憶回数の処理の後に補正するので、作った瞬間はゼロから始めた方がいい
         DamageMemory(InitDmg);
@@ -6497,13 +6619,23 @@ public class FocusedSkillAndUser
     /// <summary>
     /// 保存スキル
     /// </summary>
-    public BaseSkill skill;
+    public SkillImpression skillImpression;
 
     float _memoryCount;
     /// <summary>
     /// 慣れの記憶回数
     /// </summary>
-    public float MemoryCount => _memoryCount;
+    public float MemoryCount(Dictionary<SkillImpression, float> PersistentMemories)
+    {
+        if (PersistentMemories.ContainsKey(skillImpression))
+        {
+            return _memoryCount + PersistentMemories[skillImpression];
+        }
+        else
+        {
+            return _memoryCount;
+        }
+    }
     public void Memory(float value)
     {
         _memoryCount += value;

@@ -40,24 +40,44 @@ public class PlayersStates:MonoBehaviour
             Destroy(gameObject);
         }
 
+        Init();
+
+    }
+    public void Init()
+    {
         CreateDecideValues();//中央決定値をゲーム開始時一回だけ生成
 
         NowProgress = 0;//ステージ関連のステータス初期化
         NowStageID = 0;
         NowAreaID = 0;
 
-        geino.OnInitializeSkillsAndChara();//スキル初期化
+        //初期データをランタイム用にセット
+        geino = Init_geino.DeepCopy();
+        noramlia = Init_noramlia.DeepCopy();
+        sites = Init_sites.DeepCopy();
+
+        //スキル初期化
+        geino.OnInitializeSkillsAndChara();
         noramlia.OnInitializeSkillsAndChara();
         sites.OnInitializeSkillsAndChara();
 
-        ApplySkillButtons();
-        Debug.Log("ボタンは読み込まれたはず");
+        ApplySkillButtons();//ボタンの結びつけ処理
 
+        //初期の各キャラのスキルボタンのみの有効化処理
+        //「主人公キャラ達はスキルを最初に全てbaseStatesに持っており、ボタンのみを有効化する」
+ 
+       
     }
+    public StairStates Init_geino;
+    public BassJackStates Init_noramlia;
+    public SateliteProcessStates Init_sites;
     public StairStates geino;
     public BassJackStates noramlia;
     public SateliteProcessStates sites;
 
+    /// <summary>
+    /// ボタンと全てのスキルを結びつける。
+    /// </summary>
     void ApplySkillButtons()
     {
                 //ボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
@@ -1196,18 +1216,48 @@ public class AllyClass : BaseStates
         }
     }
 
+    public AllyClass DeepCopy(AllyClass dst)
+    {
+
+        // 2. BaseStates のフィールドをコピー
+        InitBaseStatesDeepCopy(dst);
+
+        // 3. AllyClass 独自フィールドをコピー
+        //今はない
+        
+        // 4. 戻り値
+        return dst;
+    }
+
 }
 
 [Serializable]
 public class BassJackStates : AllyClass //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
 {
-    
+    public BassJackStates DeepCopy()
+    {
+        var clone = new BassJackStates();
+        clone.DeepCopy(clone);
+        return clone;
+    }
 }
 [Serializable]
 public class SateliteProcessStates : AllyClass //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
 {
+    public SateliteProcessStates DeepCopy()
+    {
+        var clone = new SateliteProcessStates();
+        clone.DeepCopy(clone);
+        return clone;
+    }
 }
 [Serializable]
 public class StairStates : AllyClass //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
 {
+    public StairStates DeepCopy()
+    {
+        var clone = new StairStates();
+        clone.DeepCopy(clone);
+        return clone;
+    }
 }

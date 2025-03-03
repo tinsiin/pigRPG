@@ -190,6 +190,29 @@ public enum AttackDistributionType
     /// </summary>
     Throw,
 }
+/// <summary>
+/// キャラクターを表現するのとスキルのタグを表すスキルの列挙体
+/// </summary>
+public enum SkillImpression
+{
+    /// <summary>
+    /// TLOAPHANTOM
+    /// </summary>
+    TLOA_PHANTOM,
+    /// <summary>
+    /// 半壊TLOA
+    /// </summary>
+    HalfBreak_TLOA,
+    /// <summary>
+    /// アサルト機械
+    /// </summary>
+    Assault_Machine,
+    /// <summary>
+    /// サブアサルト機械　
+    /// </summary>
+    SubAssult_Machine,
+}
+
 [Serializable]
 public class BaseSkill
 {
@@ -197,8 +220,10 @@ public class BaseSkill
     ///     スキルの精神属性
     /// </summary>
     public SpiritualProperty SkillSpiritual;
-
-
+    /// <summary>
+    /// スキル印象　タグや慣れ補正で使う
+    /// </summary>
+    public SkillImpression Impression;
 
     /// <summary>
     /// スキル性質を持ってるかどうか
@@ -844,6 +869,7 @@ public class BaseSkill
         var copy = new BaseSkill();
         copy.SkillSpiritual = SkillSpiritual;
         copy.SkillPhysical = SkillPhysical;
+        copy.Impression = Impression;
         foreach(var tenDay in TenDayValues)
         {
             copy.TenDayValues.Add(tenDay.Key,tenDay.Value);
