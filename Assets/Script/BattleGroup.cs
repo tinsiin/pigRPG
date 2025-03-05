@@ -143,9 +143,10 @@ public class BattleGroup
     }
     /// <summary>
     /// パーティー全員が死んでるかどうか
+    /// 主にBattleManagerの終了判定に使う
     /// </summary>
     /// <returns></returns>
-    public bool PartyDeath()
+    public bool PartyDeathOnBattle()
     {
         foreach (var chara in Ours)
         {
@@ -218,28 +219,6 @@ public class BattleGroup
             }
         }
     }
-
-
-    /// <summary>
-    /// oursがnormalEnemyの時だけ利用する。リカバリーステップのカウント準備の処理
-    /// </summary>
-    public void RecovelyStart(int nowProgress)
-    {
-        List<NormalEnemy> enes =  Ours.OfType<NormalEnemy>().ToList();
-        if (enes.Count < 1) Debug.LogWarning("恐らくRecovelyStep用の関数を敵じゃないクラスで利用してる");
-        else
-        {
-            enes.Where(enemy => enemy.Death() && enemy.Reborn).ToList();//死者であり、復活するタイプだけ
-
-            foreach(var ene in enes)
-            {
-                ene.ReadyRecovelyStep(nowProgress);//敵キャラの復活歩数準備
-            }
-        }
-
-        
-    }
-
     /// <summary>
     ///     集団の人員リスト
     /// </summary>
@@ -280,5 +259,50 @@ public class BattleGroup
     public List<BaseStates> GetCharactersFromImpression(params SpiritualProperty[] impressions)
     {
         return Ours.Where(one => impressions.Contains(one.MyImpression)).ToList();
+    }
+
+    //敵グループ専用関数----------------------------------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// oursがnormalEnemyの時だけ利用する。リカバリーステップのカウント準備の処理
+    /// </summary>
+    public void RecovelyStart(int nowProgress)
+    {
+        List<NormalEnemy> enes =  Ours.OfType<NormalEnemy>().ToList();
+        if (enes.Count < 1) Debug.LogWarning("恐らくRecovelyStep用の関数を敵じゃないクラスで利用してる");
+        else
+        {
+            enes.Where(enemy => enemy.Death() && enemy.Reborn && !enemy.broken).ToList();//死者であり、復活するタイプであり、壊れてないものだけ
+
+            foreach(var ene in enes)
+            {
+                ene.ReadyRecovelyStep(nowProgress);//敵キャラの復活歩数準備
+            }
+        }
+    }
+    /// <summary>
+    /// 敵グループの再遭遇時のコールバック　
+    /// </summary>
+    public void ReEncountCallback()
+    {
+        List<NormalEnemy> enes =  Ours.OfType<NormalEnemy>().ToList();
+
+        //自信ブーストの処理
+        foreach(var ene in enes)
+        {
+            ene.ReEncountCallback();//一人一人のコールバック
+
+            //死亡判定
+            if (ene.Death())//死亡時コールバックも呼ばれる
+            {
+                if(ene.Reborn && !ene.broken)//復活するタイプであり、壊れてないものだけ
+                {
+                    ene.ReadyRecovelyStep(PlayersStates.Instance.NowProgress);//復活歩数準備
+                }
+                Ours.Remove(ene);//パーティーから外す
+            }
+        }
+
+        
     }
 }

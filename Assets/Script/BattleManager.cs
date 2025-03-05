@@ -541,13 +541,13 @@ public class BattleManager
         Acts.RemoveDeathCharacters();//先約リストから死者を取り除く
 
         //パーティーの死亡判定
-        if (AllyGroup.PartyDeath())
+        if (AllyGroup.PartyDeathOnBattle())
         {
             Wipeout = true;
             ActerFaction = WhichGroup.alliy;
             return TabState.NextWait;//押して処理
         }
-        else if (EnemyGroup.PartyDeath())
+        else if (EnemyGroup.PartyDeathOnBattle())
         {
             Wipeout = true;
             ActerFaction = WhichGroup.Enemyiy;
@@ -701,6 +701,9 @@ public class BattleManager
             {
                 MessageDropper.Instance.CreateMessage("死んだ");
                 PlayersStates.Instance.PlayersOnLost();
+
+                //敗北時の敵たちの十日能力成長値のブースト
+                VictoryBoostOnEnemiesWin();
             }
             else
             {
@@ -708,7 +711,7 @@ public class BattleManager
                 PlayersStates.Instance.PlayersOnWin();
 
                 //勝利時の十日能力成長値のブースト
-                VictoryBoostOnWin();
+                VictoryBoostOnWin();                
             }
         }
         if (RunOut) 
@@ -732,6 +735,22 @@ public class BattleManager
         
         //各キャラクターの今回のバトルの成長値を倍化する。
         PlayersStates.Instance.PlayersVictoryBoost(boostMultiplier);
+    }
+    /// <summary>
+    /// 敗北時に敵キャラクター
+    /// </summary>
+    void VictoryBoostOnEnemiesWin()
+    {
+        //まず主人公グループと敵グループの強さの倍率(敵視点でね)
+        var ratio = AllyGroup.OurTenDayPowerSum / EnemyGroup.OurTenDayPowerSum;
+        // 勝利時の強さの比率から成長倍率を計算する
+        var boostMultiplier = CalculateVictoryBoostMultiplier(ratio);
+        
+        //各キャラクターの今回のバトルの成長値を倍化する。
+        foreach (var ene in EnemyGroup.Ours)
+        {
+            ene.VictoryBoost(boostMultiplier);       
+        }
     }
 
     /// <summary>
@@ -1633,12 +1652,12 @@ public class BattleManager
 
         //全てのキャラクターの特別な補正をリセットする
         EnemyGroup.ResetCharactersUseThinges();
-        AllyGroup.ResetCharactersUseThinges();
+        AllyGroup.ResetCharactersUseThinges();        
 
-        //敵キャラは復活歩数の準備
+        //敵キャラは死んだりした該当者のみ選んで復活準備
         EnemyGroup.RecovelyStart(PlayersStates.Instance.NowProgress);
 
-        foreach (var one in AllCharacters)
+        foreach (var one in AllCharacters)//全てのキャラの引数なし終わりのコールバック
         {
             one.OnBattleEndNoArgument();
         }

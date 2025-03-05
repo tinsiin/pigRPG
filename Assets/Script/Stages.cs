@@ -268,19 +268,33 @@ public class Stages : MonoBehaviour
         {
             var CompatibilityData = new Dictionary<(BaseStates,BaseStates),int>();//相性値のデータ保存用
             
-            if (!EncountCheck()) return null; //エンカウント失敗したら、nullを返す
+            if (!EncountCheck()) return null; //エンカウント判定に失敗したら、nullを返す
 
             var ResultList = new List<NormalEnemy>(); //返す用のリスト
             PartyProperty ourImpression;
-            var targetList = new List<NormalEnemy>(_enemyList); //引数のリストをコピー newを使ってディープコピーにしないと元が消える。
+            var targetList = new List<NormalEnemy>(_enemyList); //引数のリストをコピー newを使ってディープコピー
 
-            var validEnemies = targetList.Where(enemy => enemy.Reborn//生きてる敵だけに選別する
-                                               ? enemy.CanRebornWhatHeWill(PlayersStates.Instance.NowProgress)
-                                               : !enemy.broken).ToList();
+            //生きてる敵や死んでても今回で復活予定の敵を有効リストに抽出
+            var validEnemies = new List<NormalEnemy>(); //有効な敵のリスト
+            foreach(var ene in targetList)
+            {
+                if(!ene.Death())
+                {
+                    validEnemies.Add(ene);//生きてたら追加
+                    continue;
+                }
+                if(ene.broken) continue;//死んでてなおかつ壊れてもいたら復活不可能なのでスキップ
 
-        if (!validEnemies.Any())//リストが空だった場合
+                if(ene.Reborn)//敵が復活可能タイプなら
+                if(ene.CanRebornWhatHeWill(PlayersStates.Instance.NowProgress))//復活判定をして復活可能なら
+                {
+                    validEnemies.Add(ene);//追加
+                }
+            }
+
+        if (!validEnemies.Any())//有効リストが空だった場合
         {
-            Debug.LogWarning("EnemyCollectAI: 有効な敵が存在しません。");
+            Debug.LogWarning("EnemyCollectAI: エリアに有効な敵が存在しません。");
             return null; // または適切なデフォルト値を返す
         }
 

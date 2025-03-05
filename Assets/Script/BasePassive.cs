@@ -2,6 +2,8 @@
 using UnityEngine;
 using System;
 using System.Linq;
+using UnityEditor.Rendering;
+using Unity.VisualScripting;
 
 /// <summary>
 /// パッシブが付与/除去されるタイミングで追加HPをいつ追加するか
@@ -90,6 +92,12 @@ public class BasePassive
 
     /// <summary> このパッシブが有効な残り歩数（-1なら戦闘終了時に消え、0なら戦闘終了後歩行した瞬間に歩行効果なしに消え、1以上なら効果発生） </summary>
     public int DurationWalk = -1;
+    /// <summary>
+    /// 死亡時に消えるパッシブかどうか
+    /// </summary>
+    [SerializeField]
+    bool RemoveOnDeath = true;
+    
 
     /// <summary>
     /// パッシブが持つ追加HP　IDで扱う。
@@ -191,12 +199,19 @@ public class BasePassive
     {
         if (DurationWalk > 0)//歩行回数による自動解除
         {
-            DurationWalk--;
+            DurationWalk --;
             if(DurationWalk <= 0)
             {
                 user.RemovePassive(this);
                 return;
             }
+        }
+    }
+    public void UpdateDeathSurvival(BaseStates user)
+    {
+        if (RemoveOnDeath)//このパッシブが死亡時に消える物ならば
+        {
+            user.RemovePassive(this);
         }
     }
 

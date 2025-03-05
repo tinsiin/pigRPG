@@ -193,6 +193,15 @@ public abstract class BaseStates
             pas.UpdateWalkSurvival(this);
         }
     }
+    void UpdateDeathAllPassiveSurvival()
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.UpdateDeathSurvival(this);
+        }
+    }
     /// <summary>
     /// 全パッシブの歩行時効果を呼ぶ
     /// </summary>
@@ -286,20 +295,51 @@ public abstract class BaseStates
     /// 十日能力の総量
     /// </summary>
     public float TenDayValuesSum => TenDayValues.Values.Sum();
+
+    /// <summary>
+    /// 十日能力成長値を勝利ブースト用に記録する
+    /// </summary>
+    protected Dictionary<TenDayAbility, float> battleGain;
+    /// <summary>
+    /// 勝利時の十日能力ブースト倍化処理
+    /// </summary>
+    public void VictoryBoost(float multiplier)
+    {
+        foreach (var kv in battleGain)
+        {
+            var ability = kv.Key;
+            float totalGained = kv.Value; // 戦闘中に合計で上がった量
+            float extra = totalGained * (multiplier - 1f);//リアルタイムで加算済みなので倍率から1減らす
+            
+            // 追加で足す
+            TenDayValues[ability] += extra;
+        }
+
+    }
     
     /// <summary>
     /// 十日能力の成長する、能力値を加算する関数
     /// </summary>
-    virtual protected void TenDayGrow(TenDayAbility ability, float growthAmount)
+    void TenDayGrow(TenDayAbility ability, float growthAmount)
     {
         if (TenDayValues.ContainsKey(ability))
-            {
-                TenDayValues[ability] += growthAmount;
-            }
-            else
-            {
-                TenDayValues[ability] = growthAmount;
-            }
+        {
+            TenDayValues[ability] += growthAmount;
+        }
+        else
+        {
+            TenDayValues[ability] = growthAmount;
+        }
+
+        if (battleGain.ContainsKey(ability))
+        {
+            battleGain[ability] += growthAmount;//勝利用ブーストのために記録する。
+        }
+        else
+        {
+            // 存在しない場合は新しく追加
+            battleGain[ability] = growthAmount;
+        }
     }
 
     /// <summary>
@@ -1967,12 +2007,15 @@ public abstract class BaseStates
     /// </summary>
     public void ApplyConditionChangeOnKillEnemy(BaseStates ene)
     {
+        //実行した瞬間にそのスキルによって変化した精神属性により変化してほしいので、スキルの精神属性を使う
+        ////(スキル属性のキャラ代入のタイミングについて　を参照)
+        var imp = NowUseSkill.SkillSpiritual;
         if (MyType == CharacterType.Life) // 基本的に生命のみ
         {
             switch (NowCondition)
             {
                 case HumanConditionCircumstances.Painful:
-                    switch (MyImpression)
+                    switch (imp)
                     {
                         case SpiritualProperty.liminalwhitetile:
                             if(rollper(66))
@@ -2185,7 +2228,7 @@ public abstract class BaseStates
                     break;
 
                 case HumanConditionCircumstances.Optimistic:
-                    switch (MyImpression)
+                    switch (imp)
                     {
                         case SpiritualProperty.liminalwhitetile:
                             if(rollper(11))
@@ -2321,7 +2364,7 @@ public abstract class BaseStates
                         ResolvedToOptimisticPer = 0;
                     }
                     ResolvedToOptimisticPer = Mathf.Sqrt(ResolvedToOptimisticPer) * 2;
-                    switch (MyImpression)
+                    switch (imp)
                     {
                         case SpiritualProperty.liminalwhitetile:
                             if(rollper(11 + ResolvedToOptimisticPer))
@@ -2434,7 +2477,7 @@ public abstract class BaseStates
                     break;
 
                 case HumanConditionCircumstances.Angry:
-                    switch (MyImpression)
+                    switch (imp)
                     {
                         case SpiritualProperty.liminalwhitetile:
                             if(rollper(10))
@@ -2559,7 +2602,7 @@ public abstract class BaseStates
                     break;
 
                 case HumanConditionCircumstances.Doubtful:
-                    switch (MyImpression)
+                    switch (imp)
                     {
                         case SpiritualProperty.liminalwhitetile:
                             if(rollper(30 + TenDayValues.GetValueOrZero(TenDayAbility.SpringNap)))
@@ -2732,7 +2775,7 @@ public abstract class BaseStates
                     break;
 
                 case HumanConditionCircumstances.Confused:
-                    switch (MyImpression)
+                    switch (imp)
                     {
                         case SpiritualProperty.liminalwhitetile:
                             if(rollper(70))
@@ -2905,7 +2948,7 @@ public abstract class BaseStates
 
                 case HumanConditionCircumstances.Normal:
                     var y = TenDayValues.GetValueOrZero(TenDayAbility.Leisure) - ene.TenDayValues.GetValueOrZero(TenDayAbility.Leisure);//余裕の差
-                    switch (MyImpression)
+                    switch (imp)
                     {
                         case SpiritualProperty.liminalwhitetile:
                             if(rollper(30 + y*0.8f))
@@ -4149,6 +4192,207 @@ public abstract class BaseStates
             }
         }
     }
+    
+    /// <summary>
+    /// 呼び出し側の攻撃時の最大余剰ダメージを取得する
+    /// </summary>
+    float GetOverkillOverflowMax()
+    {
+        var flowmax = 0f;
+
+        //基本値
+        flowmax = TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller) * 2 + TenDayValues.GetValueOrZero(TenDayAbility.dokumamusi) * 0.4f;
+
+        switch(MyImpression)//精神属性で分岐　
+        {
+            case SpiritualProperty.liminalwhitetile:
+                flowmax += TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.8f;
+                break;
+            case SpiritualProperty.kindergarden:
+                flowmax += TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 2;
+                break;
+                
+            case SpiritualProperty.sacrifaith:
+                flowmax += TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 0.5f + TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight);
+                break;
+                
+            case SpiritualProperty.pysco:
+                flowmax += TenDayValues.GetValueOrZero(TenDayAbility.Raincoat) * 6 * TenDayValues.GetValueOrZero(TenDayAbility.UnextinguishedPath);
+                break;
+                
+            case SpiritualProperty.baledrival:
+                flowmax += TenDayValues.GetValueOrZero(TenDayAbility.Leisure) * 3;
+                break;
+                
+            case SpiritualProperty.devil:
+                flowmax += TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) + TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm);
+                break;
+                
+            case SpiritualProperty.cquiest:
+                flowmax += TenDayValues.GetValueOrZero(TenDayAbility.JoeTeeth) * 1.7f - TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.11f;
+                break;
+                
+            case SpiritualProperty.godtier:
+                flowmax += TenDayValues.GetValueOrZero(TenDayAbility.CryoniteQuality);
+                break;
+                
+            case SpiritualProperty.pillar:
+                flowmax += TenDayValues.GetValueOrZero(TenDayAbility.PersonaDivergence) - TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull);
+                break;
+                
+            case SpiritualProperty.doremis:
+                flowmax += TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) - TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower); 
+                break;
+            case SpiritualProperty.none:
+                //noneならそもそも最大余剰ダメージ発生せず
+                break;
+            default:
+                //他の未実装の精神属性を追加し忘れた場合に気づける
+                throw new NotImplementedException($"SpiritualProperty {MyImpression} is not handled.");
+        }
+
+        return flowmax;//これ自体がクランプ要素だから0クランプいらん
+    }
+    /// <summary>
+    /// 呼び出し側の攻撃時の余剰ダメージの通過率
+    /// </summary>
+    /// <returns></returns>
+    float GetOverkillOverflowPassRate()
+    {
+        var passRate = 0f;
+        switch(NowCondition)
+        {
+            case HumanConditionCircumstances.Painful:
+                if(MyImpression == SpiritualProperty.devil)
+                {
+                    passRate = 2;
+                }else{
+                    passRate = 0.43f;
+                }
+                break;
+            case HumanConditionCircumstances.Optimistic:
+                if(MyImpression == SpiritualProperty.cquiest)
+                {
+                    passRate = 1.1f;
+                }else{
+                    passRate = 1.01f;
+                }
+                break;
+            case HumanConditionCircumstances.Elated:
+                passRate = 1.2f;
+                break;
+            case HumanConditionCircumstances.Resolved:
+                passRate = 1.0f;
+                break;
+            case HumanConditionCircumstances.Angry:
+                if(MyImpression == SpiritualProperty.sacrifaith)
+                {
+                    passRate = 1.5f;
+                }else if(MyImpression == SpiritualProperty.devil)
+                {
+                    passRate = 1.0f;
+                }else
+                {
+                    passRate = 1.3f;
+                }
+                break;
+            case HumanConditionCircumstances.Doubtful:
+                if(MyImpression == SpiritualProperty.doremis)
+                {
+                    passRate = 0.93f;
+                }else{
+                    passRate = 0.77f;
+                }
+                break;
+            case HumanConditionCircumstances.Confused:
+                passRate = 0.7f;
+                break;
+            case HumanConditionCircumstances.Normal:
+                passRate = 0.8f;
+                break;
+                
+        }
+
+        //+-20%入れ替わる
+        passRate += RandomEx.Shared.NextFloat(-0.2f,0.2f);
+
+        return passRate;
+    }
+    
+    const float FINAL_BROKEN_RATE_MACHINE = 33;//機械がオーバーキルされてbrokenする最終判定率
+    const float FINAL_BROKEN_RATE_LIFE = 93;//生物がオーバーキルされてbrokenする最終判定率
+    /// <summary>
+    /// オーバーキルされてbrokenするからの判断
+    /// 殺された側がbrokenがtrueになるかの判断です。(だから殺された奴から呼び出そうよ)
+    /// </summary>
+    void OverKilledBrokenCalc(BaseStates Atker,float OverkillOverflow)
+    {
+        if(OverkillOverflow <= 0)return;//余剰ダメージが0以下なら終わり
+
+        if(!(MyType == CharacterType.Machine || MyType == CharacterType.Life))
+        {
+            //被害者の自分が機械でも生物でもないなら発生せずに終わり
+            return;
+        }
+        var OverkillOverflowMax = Atker.GetOverkillOverflowMax();//余剰ダメージの最大値を取得
+        var OverkillOverflowPassRate = Atker.GetOverkillOverflowPassRate();//余剰ダメージの通過率を取得
+
+        
+
+        //通過した余剰ダメージ(最大値クランプ
+        var OverkillOverflowPass = Mathf.Min(OverkillOverflow * OverkillOverflowPassRate,OverkillOverflowMax);
+        var overkillBreakThreshold = _maxhp * OverKillBrokenRate;//オーバーキルされてbrokenする閾値
+
+        if(OverkillOverflowPass <= overkillBreakThreshold) return;//通過した余剰ダメージが閾値を超えなかったら終わり
+
+        //ここまで到達したら発生したが　被害者の種別による判定の発生の計算と　生命なら攻撃者の性質による発生の判定
+
+        //機械なら　33%で完全破壊
+        if(MyType == CharacterType.Machine)
+        {
+            if(rollper(FINAL_BROKEN_RATE_MACHINE))
+            {
+                broken = true;
+            }
+        }
+
+        //人間なら攻撃者の性質による発生の判定
+        if(MyType == CharacterType.Life)
+        {
+            //まず攻撃者の種別と、分岐では彼らの性質によりそもそも発生するかの判定
+
+            if(Atker.MyType == CharacterType.Life)//攻撃者が生命なら
+            {
+                if(Atker.MyImpression != SpiritualProperty.pysco) return;//サイコパスでないなら終わり
+            }
+            if(Atker.MyType == CharacterType.Machine)//攻撃者が機械なら
+            {
+                var im = Atker.MyImpression;
+                var hc = Atker.NowCondition;
+                // サイコパスならOK
+                bool isPsyco = im == SpiritualProperty.pysco;
+
+                // ベイルの怒り ⇒ baledrival + Angry 状態
+                bool isBaleRivalAngry = im == SpiritualProperty.baledrival && hc == HumanConditionCircumstances.Angry;
+
+                // キンダーの高揚 ⇒ kindergarden + Elated 状態
+                bool isKindergardenElated = im == SpiritualProperty.kindergarden && hc == HumanConditionCircumstances.Elated;
+
+                // 上記3パターンのいずれにも当てはまらない場合は発生しない
+                if (!(isPsyco || isBaleRivalAngry || isKindergardenElated))
+                {
+                    return; 
+                }
+            }
+            //それ以外の種別なら生命に対して
+
+            if(rollper(FINAL_BROKEN_RATE_LIFE))
+            {
+                broken = true;
+            }
+        }
+    }
+    
     /// <summary>
     ///     オーバライド可能なダメージ関数
     /// </summary>
@@ -4191,10 +4435,16 @@ public abstract class BaseStates
         CalculateMutualKillSurvivalChance(tempHP,dmg,Atker);//互角一撃の生存によるHP再代入の可能性
         Atker.MentalHealOnAttack();//精神HPの攻撃時回復
 
+        //余剰ダメージを計算
+        var OverKillOverFlow = dmg - tempHP;//余剰ダメージ
+
         //死んだら攻撃者のOnKillを発生
         if(Death())
         {
-            Atker.OnKill(this);
+            Atker.OnKill(this);//攻撃者のOnkill発生
+
+            //overKillの処理
+            OverKilledBrokenCalc(Atker,OverKillOverFlow);//攻撃者、引かれる前のHP,ダメージを渡す。
         }
 
         //もし"攻撃者が"割り込みカウンターパッシブだったら
@@ -4847,8 +5097,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         SkillUseConsecutiveCountUp(NowUseSkill);//連続カウントアップ
         string txt = "";
 
-        // スキルの精神属性を自分の精神属性に変更
-        NowUseSkill.SkillSpiritual = MyImpression;
+       
 
         //対象者ボーナスの適用
         if(Unders.Count == 1)//結果として一人だけを選び、
@@ -4909,8 +5158,19 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
 
         _tempUseSkill = NowUseSkill;//使ったスキルを一時保存
+
+        //スキルの精神属性に染まる
+        PullImpressionFromSkill();
         return txt;
     }
+    /// <summary>
+    /// スキルの精神属性に染まる
+    /// </summary>
+    void PullImpressionFromSkill()
+    {
+        MyImpression = NowUseSkill.SkillSpiritual;
+    }
+
 
     /// <summary>
     /// 対象の十日能力総量と自分の十日能力総量の比率を計算し返す
@@ -4976,6 +5236,34 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// 死んだ瞬間を判断するためのフラグ
     /// </summary>
     bool hasDied =false;
+    /// <summary>
+    /// 完全死滅してるかどうか。
+    /// </summary>
+    public bool broken = false;
+    [SerializeField]
+    float _machineBrokenRate = 0.3f;//インスペクタで設定する際の初期デフォルト値
+    const float _lifeBrokenRate = 0.1f;//生命の壊れる確率は共通の定数
+    /// <summary>
+    /// OverKillが発生した場合、壊れる確率
+    /// </summary>
+    float OverKillBrokenRate
+    {
+        get
+        {
+            if(MyType == CharacterType.Machine)
+            {
+                return _machineBrokenRate;
+            }
+            if(MyType == CharacterType.Life)
+            {
+                return _lifeBrokenRate;
+            }
+            // そのほかのタイプに対応していない場合は例外をスロー
+            throw new NotImplementedException(
+            $"OverKillBrokenRate is not implemented for CharacterType: {MyType}"
+        );
+        }
+    }
 
     /// <summary>
     ///     死を判定するオーバライド可能な関数
@@ -4999,11 +5287,14 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     public virtual void Angel()
     {
-        hasDied =false;
-        HP = float.Epsilon;//生きてるか生きてないか=Angel
-        if(NowPower == ThePower.high)
+        if(!broken)//brokenしてないなら
         {
-            HP = 30;//気力が高いと多少回復
+            hasDied =false;
+            HP = float.Epsilon;//生きてるか生きてないか=Angel
+            if(NowPower == ThePower.high)
+            {
+                HP = 30;//気力が高いと多少回復
+            }
         }
     }
     /// <summary>
@@ -5023,6 +5314,9 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         //対象者ボーナス全削除
         TargetBonusDatas.AllClear();
+
+        //パッシブの死亡時処理
+        UpdateDeathAllPassiveSurvival();
 
     }
     void HighNessChance(BaseStates deathEne)
@@ -5126,7 +5420,23 @@ private int CalcTransformCountIncrement(int tightenStage)
             candidateAbilitiyValuesList.Remove(boostAbility);//今回取得した能力値と列挙体の候補セットリストを削除
         }
     }
+    /// <summary>
+    /// 歩行によって自信ブーストがフェードアウトする、やってることはただのデクリメント
+    /// </summary>
+    protected void FadeConfidenceBoostByWalking(int count)
+    {
+        //辞書のキーをリストにしておく (そのまま foreach で書き換えるとエラーになる可能性がある)
+        var keys = ConfidenceBoosts.Keys.ToList();
 
+        //キーを回して、値を取り出し -1 して戻す
+        foreach (var key in keys)
+        {
+            ConfidenceBoosts[key]-= count;
+            
+            //もし歩行ターンが0以下になったら削除する
+            if (ConfidenceBoosts[key] <= 0) { ConfidenceBoosts.Remove(key); }
+        }
+    }
     /// <summary>
     /// 攻撃した相手が死んだ場合のコールバック
     /// </summary>
@@ -5140,6 +5450,9 @@ private int CalcTransformCountIncrement(int tightenStage)
         ApplyConditionChangeOnKillEnemy(target);//人間状況の変化
 
         RecordConfidenceBoost(target,AllKillDmg);
+
+        //ここの殺した瞬間のはみんな精神属性の分岐では　=> スキルの精神属性　を使えば、　実行した瞬間にそのスキルの印象に染まってその状態の精神属性で分岐するってのを表現できる
+        //(スキル属性のキャラ代入のタイミングについて　を参照)
         
     }
 
@@ -5263,6 +5576,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         _mentalDivergenceCount = 0;//精神HP乖離のカウントをゼロに戻す
         _mentalPointRecoveryCountUp = 0;//精神HP自然回復のカウントをゼロに戻す
         DamageDealtToEnemyUntilKill = new();//戦闘開始時にキャラクターを殺すまでに与えたダメージを記録する辞書を初期化する
+        battleGain = new();//バトルが開始するたびに勝利ブースト用の値を初期化
 
         InitPByNowPower();//Pの初期値設定
 
@@ -5276,6 +5590,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         DeleteConsecutiveATK();
         DecayOfPersistentAdaptation();//恒常的な慣れ補正の減衰　　持ち越しの前に行われる　じゃないと記憶された瞬間に忘れてしまうし
         AdaptCarryOver();//慣れ補正持ち越しの処理
+        battleGain.Clear();//勝利ブーストの値をクリアしてメモリをよくする
         foreach(var layer in _vitalLayerList.Where(lay => lay.IsBattleEndRemove))
         {
             RemoveVitalLayerByID(layer.id);//戦闘の終了で消える追加HPを持ってる追加HPリストから全部消す
@@ -6288,10 +6603,13 @@ private int CalcTransformCountIncrement(int tightenStage)
             
             // 新しい値を計算
             float newValue = currentValue - (AllMemoryCount * NARE_CARRYOVER_DECAY_RATIO);//減算処理
-            if(newValue < 0) newValue = 0;//0未満にならないようにクランプ
 
             // 上書き保存 (キーは同じ、値だけ更新)
-            PersistentAdaptSkillImpressionMemories[key] = newValue;
+            if(newValue <= 0)PersistentAdaptSkillImpressionMemories.Remove(key);//0以下なら削除
+            else
+            {
+                PersistentAdaptSkillImpressionMemories[key] = newValue;
+            }
         }
 
         

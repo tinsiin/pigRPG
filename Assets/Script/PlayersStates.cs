@@ -347,11 +347,11 @@ public class PlayersStates:MonoBehaviour
         noramlia.OnAllyRunOutCallBack();
     }
 
-    public void PlayersOnWalks()
+    public void PlayersOnWalks(int walkCount)
     {
-        geino.OnWalkCallBack();
-        sites.OnWalkCallBack();
-        noramlia.OnWalkCallBack();
+        geino.OnWalkCallBack(walkCount);
+        sites.OnWalkCallBack(walkCount);
+        noramlia.OnWalkCallBack(walkCount);
     }
     /// <summary>
     /// 主人公陣の勝利時ブースト
@@ -377,41 +377,7 @@ public class PlayersStates:MonoBehaviour
 
 public class AllyClass : BaseStates
 {
-    /// <summary>
-    /// 十日能力成長値を勝利ブースト用に記録する
-    /// </summary>
-    Dictionary<TenDayAbility, float> battleGain;
-    /// <summary>
-    /// 勝利時の十日能力ブースト倍化処理
-    /// </summary>
-    public void VictoryBoost(float multiplier)
-    {
-        foreach (var kv in battleGain)
-        {
-            var ability = kv.Key;
-            float totalGained = kv.Value; // 戦闘中に合計で上がった量
-            float extra = totalGained * (multiplier - 1f);//リアルタイムで加算済みなので倍率から1減らす
-            
-            // 追加で足す
-            TenDayValues[ability] += extra;
-        }
-
-    }
-
     
-    protected override void TenDayGrow(TenDayAbility ability, float growthAmount)
-    {
-       base.TenDayGrow(ability, growthAmount);
-        if (battleGain.ContainsKey(ability))
-        {
-            battleGain[ability] += growthAmount;//主人公キャラなら勝利用ブーストのために記録する。
-        }
-        else
-        {
-            // 存在しない場合は新しく追加
-            battleGain[ability] = growthAmount;
-        }
-    }
     /// <summary>
     /// キャラクターのデフォルト精神属性を決定する関数　十日能力が変動するたびに決まる。
     /// </summary>
@@ -606,39 +572,22 @@ public class AllyClass : BaseStates
             MentalHP += TenDayValues.GetValueOrZero(TenDayAbility.Rain) + MentalMaxHP * 0.16f;
         }
     }
-    /// <summary>
-    /// 歩行によって自信ブーストがフェードアウトする、
-    /// </summary>
-    void FadeConfidenceBoostByWalking()
-    {
-        //辞書のキーをリストにしておく (そのまま foreach で書き換えるとエラーになる可能性がある)
-        var keys = ConfidenceBoosts.Keys.ToList();
-
-        //キーを回して、値を取り出し -1 して戻す
-        foreach (var key in keys)
-        {
-            ConfidenceBoosts[key]--;
-            
-            //もし歩行ターンが0以下になったら削除する
-            if (ConfidenceBoosts[key] <= 0) { ConfidenceBoosts.Remove(key); }
-        }
-    }
+    
     public override void OnBattleEndNoArgument()
     {
         base.OnBattleEndNoArgument();
         _walkPointRecoveryCounter = 0;//歩行のポイント回復用カウンターをゼロに
-        battleGain.Clear();
     }
     public override void OnBattleStartNoArgument()
     {
         base.OnBattleStartNoArgument();
-        battleGain = new();//バトルが開始するたびに勝利ブースト用の値を初期化
+        
     }
 
     /// <summary>
     /// 味方キャラの歩く際に呼び出されるコールバック
     /// </summary>
-    public void OnWalkCallBack()
+    public void OnWalkCallBack(int walkCount)
     {
         AllPassiveWalkEffect();//全パッシブの歩行効果を呼ぶ
         UpdateWalkAllPassiveSurvival();
@@ -646,7 +595,7 @@ public class AllyClass : BaseStates
 
         RecoverMentalHPOnWalk();//歩行時精神HP回復
         RecoverPointOnWalk();//歩行時ポイント回復
-        FadeConfidenceBoostByWalking();//歩行によって自信ブーストがフェードアウトする
+        FadeConfidenceBoostByWalking(walkCount);//歩行によって自信ブーストがフェードアウトする
     }
     public void OnAllyWinCallBack()
     {

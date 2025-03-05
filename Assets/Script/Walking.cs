@@ -102,6 +102,16 @@ public class Walking : MonoBehaviour
             //敵グループが返ってきてエンカウント
             Debug.Log("encount");
 
+            //敵グループの再遭遇時コールバック処理
+            enemyGroup.ReEncountCallback();
+            
+            //もし再遭遇コールバックで敵が全滅したら
+            if(enemyGroup.Ours.Count <= 0)
+            {
+                Debug.Log("全滅した死体を見つけた");
+                return;//エンカウントキャンセル
+            }
+
             //enemyGroupにいる敵によってallyGroupの人選が変わる処理、
             //例　ホッチキスでサテライトの単体戦になるとか。　
             //だから、allygroupがフルで人選されるとき以外は、他の味方アイコンがそそくさと逃げる演出をする。
@@ -136,7 +146,7 @@ public class Walking : MonoBehaviour
         StageDataUpdate();
 
         //主人公達の歩行時の処理
-        ps.PlayersOnWalks();
+        ps.PlayersOnWalks(1);//footnumber関係なしに一歩分の効果
 
         //エンカウント
         Encount();
