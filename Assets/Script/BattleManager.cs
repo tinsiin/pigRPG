@@ -1225,6 +1225,18 @@ public class BattleManager
         return true;
     }
     /// <summary>
+    /// テラーズヒット　後衛を狙っても前のめりがいた場合そいつのプレッシャーによってつい攻撃してしまう
+    /// </summary>
+    /// <returns></returns>
+    private bool ComparePressureAndRedirect(BaseStates Attacker,BaseStates Vanguard)
+    {
+        var VanguardPressure = Vanguard.TenDayValues.GetValueOrZero(TenDayAbility.Glory);
+        var AttackerResilience = Attacker.TenDayValues.GetValueOrZero(TenDayAbility.JoeTeeth) + Attacker.TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.5f;
+
+        // 前のめり防衛側のプレッシャー値未満の合計値の乱数が出た場合、テラーズヒット,庇いが発生する
+        return VanguardPressure > RandomEx.Shared.NextFloat(VanguardPressure + AttackerResilience);
+    }
+    /// <summary>
     /// スキルの性質が範囲ランダムだった場合、
     /// 術者の範囲意志として性質通りにランダムで決定させる方法
     /// </summary>
@@ -1313,7 +1325,6 @@ public class BattleManager
         if (chara == EnemyGroup.InstantVanguard) return true;
         return false;
     }
-    const int FrontGuardPer = 13;
     const int BackLineHITModifier = 70;
     /// <summary>
     /// スキルの実行者をunderActerに入れる処理　意思が実際の選別に状況を伴って変換される処理
@@ -1402,9 +1413,9 @@ public class BattleManager
                             Debug.Log(Acter.CharacterName + "は前のめりしてる奴を狙った");
                         }
                         else if (Acter.Target == DirectedWill.BacklineOrAny)
-                        {//後衛を狙おうとしたなら 後衛への命中率は7割補正され　そもそも1.3割の確率で前のめりしてる奴にあたる
+                        {//後衛を狙おうとしたなら 後衛への命中率は7割補正され　テラーズヒットが発生した場合前のめりしてる奴にあたる
 
-                            if (RandomEx.Shared.NextInt(100) < FrontGuardPer)//前衛のかばいに引っかかったら
+                            if (ComparePressureAndRedirect(Acter,SelectGroup.InstantVanguard))//前衛のかばいに引っかかったら
                             {
                                 UniqueTopMessage += "テラーズヒット";//かばうテキストを追加？
                                 UA.Add(SelectGroup.InstantVanguard);

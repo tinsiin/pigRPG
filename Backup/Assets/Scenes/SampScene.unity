@@ -529,52 +529,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 440ef6f28be5c104cbb968a1e4febc22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  geino:
-    _passiveList: []
-    _skillList:
-    - SkillSpiritual: 0
-      TenDayValues:
-        _list: []
-      _name: "\u30C6\u30B9\u30C8\u30B9\u30AD\u30EB"
-      _triggerCountMax: 0
-      _triggerRollBackCount: 0
-      _RandomConsecutivePer: 0
-      _defaultStockCount: 1
-      _stockPower: 1
-      _stockForgetPower: 1
-      CanCancel: 0
-      IsAggressiveCommit: 0
-      CanSelectAggressiveCommit: 0
-      ConsecutivePercentage: 0
-      SKillDidWaitCount: 0
-      IsTLOA: 0
-      PowerSpread: []
-      _skillPower: 0
-      MentalDamageRatio: 0
-      SkillHitPer: 0
-      SkillLevel: 0
-      subEffects: 
-      subVitalLayers: 
-      A_MoveSet: []
-      B_MoveSet: []
-      _defAtk: 0
-      WhatSkill: 0
-      ConsecutiveType: 64
-      ZoneTrait: 0
-      DistributionType: 0
-      PowerRangePercentageDictionary:
-        _list: []
-      HitRangePercentageDictionary:
-        _list: []
-    _vitalLaerList: []
-    NowPower: 0
+  Init_geino:
+    InitpassiveIDList: 
+    _skillList: []
+    InitVitalLaerIDList: 
+    NowPower: 2
     b_b_atk: 4
     b_b_def: 4
     b_b_eye: 4
     b_b_agi: 4
     TenDayValues:
       _list: []
-    CharacterName: "\u30B8\u30FC\u30CE"
+    CharacterName: 
     ImpressionStringName: 
     NowUseWeapon:
       id: 0
@@ -582,6 +548,8 @@ MonoBehaviour:
       protocol: 0
       WeaponSkill:
         SkillSpiritual: 0
+        Impression: 0
+        SkillPhysical: 0
         TenDayValues:
           _list: []
         _name: 
@@ -594,14 +562,14 @@ MonoBehaviour:
         CanCancel: 1
         IsAggressiveCommit: 1
         CanSelectAggressiveCommit: 0
-        ConsecutivePercentage: 0
         SKillDidWaitCount: 0
+        SkillName: 
         IsTLOA: 0
+        IsMagic: 0
         PowerSpread: []
         _skillPower: 0
         MentalDamageRatio: 0
         SkillHitPer: 0
-        SkillLevel: 0
         subEffects: 
         subVitalLayers: 
         A_MoveSet: []
@@ -619,6 +587,8 @@ MonoBehaviour:
     NowDeffenceStyle: 0
     NowUseSkill:
       SkillSpiritual: 0
+      Impression: 0
+      SkillPhysical: 0
       TenDayValues:
         _list: []
       _name: 
@@ -631,17 +601,14 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       CanSelectAggressiveCommit: 0
-      ConsecutivePercentage: 0
       SKillDidWaitCount: 0
+      SkillName: 
       IsTLOA: 0
-      PowerSpread:
-      - 0
-      - 0
-      - 0
+      IsMagic: 0
+      PowerSpread: []
       _skillPower: 0
       MentalDamageRatio: 0
       SkillHitPer: 0
-      SkillLevel: 0
       subEffects: 
       subVitalLayers: 
       A_MoveSet: []
@@ -657,6 +624,8 @@ MonoBehaviour:
         _list: []
     FreezeUseSkill:
       SkillSpiritual: 0
+      Impression: 0
+      SkillPhysical: 0
       TenDayValues:
         _list: []
       _name: 
@@ -669,9 +638,441 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       CanSelectAggressiveCommit: 0
-      ConsecutivePercentage: 0
       SKillDidWaitCount: 0
+      SkillName: 
       IsTLOA: 0
+      IsMagic: 0
+      PowerSpread: []
+      _skillPower: 0
+      MentalDamageRatio: 0
+      SkillHitPer: 0
+      subEffects: 
+      subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
+      _defAtk: 0
+      WhatSkill: 0
+      ConsecutiveType: 0
+      ZoneTrait: 0
+      DistributionType: 0
+      PowerRangePercentageDictionary:
+        _list: []
+      HitRangePercentageDictionary:
+        _list: []
+    IsDeleteMyFreezeConsecutive: 0
+    _tempVanguard: 0
+    _tempLive: 0
+    maxRecoveryTurn: 0
+    _hp: 0
+    _maxhp: 0
+    _mentalHP: 0
+    Target: 0
+    RangeWill: 0
+    IsActiveCancelInSkillACT: 0
+    MyType: 0
+    DefaultImpression: 0
+    broken: 0
+    _machineBrokenRate: 0.3
+  Init_noramlia:
+    InitpassiveIDList: 
+    _skillList: []
+    InitVitalLaerIDList: 
+    NowPower: 2
+    b_b_atk: 4
+    b_b_def: 4
+    b_b_eye: 4
+    b_b_agi: 4
+    TenDayValues:
+      _list: []
+    CharacterName: 
+    ImpressionStringName: 
+    NowUseWeapon:
+      id: 0
+      name: 
+      protocol: 0
+      WeaponSkill:
+        SkillSpiritual: 0
+        Impression: 0
+        SkillPhysical: 0
+        TenDayValues:
+          _list: []
+        _name: 
+        _triggerCountMax: 0
+        _triggerRollBackCount: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        CanCancel: 1
+        IsAggressiveCommit: 1
+        CanSelectAggressiveCommit: 0
+        SKillDidWaitCount: 0
+        SkillName: 
+        IsTLOA: 0
+        IsMagic: 0
+        PowerSpread: []
+        _skillPower: 0
+        MentalDamageRatio: 0
+        SkillHitPer: 0
+        subEffects: 
+        subVitalLayers: 
+        A_MoveSet: []
+        B_MoveSet: []
+        _defAtk: 0
+        WhatSkill: 0
+        ConsecutiveType: 0
+        ZoneTrait: 0
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
+    NowBattleProtocol: 0
+    NowDeffenceStyle: 0
+    NowUseSkill:
+      SkillSpiritual: 0
+      Impression: 0
+      SkillPhysical: 0
+      TenDayValues:
+        _list: []
+      _name: 
+      _triggerCountMax: 0
+      _triggerRollBackCount: 0
+      _RandomConsecutivePer: 0
+      _defaultStockCount: 1
+      _stockPower: 1
+      _stockForgetPower: 1
+      CanCancel: 1
+      IsAggressiveCommit: 1
+      CanSelectAggressiveCommit: 0
+      SKillDidWaitCount: 0
+      SkillName: 
+      IsTLOA: 0
+      IsMagic: 0
+      PowerSpread: []
+      _skillPower: 0
+      MentalDamageRatio: 0
+      SkillHitPer: 0
+      subEffects: 
+      subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
+      _defAtk: 0
+      WhatSkill: 0
+      ConsecutiveType: 0
+      ZoneTrait: 0
+      DistributionType: 0
+      PowerRangePercentageDictionary:
+        _list: []
+      HitRangePercentageDictionary:
+        _list: []
+    FreezeUseSkill:
+      SkillSpiritual: 0
+      Impression: 0
+      SkillPhysical: 0
+      TenDayValues:
+        _list: []
+      _name: 
+      _triggerCountMax: 0
+      _triggerRollBackCount: 0
+      _RandomConsecutivePer: 0
+      _defaultStockCount: 1
+      _stockPower: 1
+      _stockForgetPower: 1
+      CanCancel: 1
+      IsAggressiveCommit: 1
+      CanSelectAggressiveCommit: 0
+      SKillDidWaitCount: 0
+      SkillName: 
+      IsTLOA: 0
+      IsMagic: 0
+      PowerSpread: []
+      _skillPower: 0
+      MentalDamageRatio: 0
+      SkillHitPer: 0
+      subEffects: 
+      subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
+      _defAtk: 0
+      WhatSkill: 0
+      ConsecutiveType: 0
+      ZoneTrait: 0
+      DistributionType: 0
+      PowerRangePercentageDictionary:
+        _list: []
+      HitRangePercentageDictionary:
+        _list: []
+    IsDeleteMyFreezeConsecutive: 0
+    _tempVanguard: 0
+    _tempLive: 0
+    maxRecoveryTurn: 0
+    _hp: 0
+    _maxhp: 0
+    _mentalHP: 0
+    Target: 0
+    RangeWill: 0
+    IsActiveCancelInSkillACT: 0
+    MyType: 0
+    DefaultImpression: 0
+    broken: 0
+    _machineBrokenRate: 0.3
+  Init_sites:
+    InitpassiveIDList: 
+    _skillList: []
+    InitVitalLaerIDList: 
+    NowPower: 2
+    b_b_atk: 4
+    b_b_def: 4
+    b_b_eye: 4
+    b_b_agi: 4
+    TenDayValues:
+      _list: []
+    CharacterName: 
+    ImpressionStringName: 
+    NowUseWeapon:
+      id: 0
+      name: 
+      protocol: 0
+      WeaponSkill:
+        SkillSpiritual: 0
+        Impression: 0
+        SkillPhysical: 0
+        TenDayValues:
+          _list: []
+        _name: 
+        _triggerCountMax: 0
+        _triggerRollBackCount: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        CanCancel: 1
+        IsAggressiveCommit: 1
+        CanSelectAggressiveCommit: 0
+        SKillDidWaitCount: 0
+        SkillName: 
+        IsTLOA: 0
+        IsMagic: 0
+        PowerSpread: []
+        _skillPower: 0
+        MentalDamageRatio: 0
+        SkillHitPer: 0
+        subEffects: 
+        subVitalLayers: 
+        A_MoveSet: []
+        B_MoveSet: []
+        _defAtk: 0
+        WhatSkill: 0
+        ConsecutiveType: 0
+        ZoneTrait: 0
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
+    NowBattleProtocol: 0
+    NowDeffenceStyle: 0
+    NowUseSkill:
+      SkillSpiritual: 0
+      Impression: 0
+      SkillPhysical: 0
+      TenDayValues:
+        _list: []
+      _name: 
+      _triggerCountMax: 0
+      _triggerRollBackCount: 0
+      _RandomConsecutivePer: 0
+      _defaultStockCount: 1
+      _stockPower: 1
+      _stockForgetPower: 1
+      CanCancel: 1
+      IsAggressiveCommit: 1
+      CanSelectAggressiveCommit: 0
+      SKillDidWaitCount: 0
+      SkillName: 
+      IsTLOA: 0
+      IsMagic: 0
+      PowerSpread: []
+      _skillPower: 0
+      MentalDamageRatio: 0
+      SkillHitPer: 0
+      subEffects: 
+      subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
+      _defAtk: 0
+      WhatSkill: 0
+      ConsecutiveType: 0
+      ZoneTrait: 0
+      DistributionType: 0
+      PowerRangePercentageDictionary:
+        _list: []
+      HitRangePercentageDictionary:
+        _list: []
+    FreezeUseSkill:
+      SkillSpiritual: 0
+      Impression: 0
+      SkillPhysical: 0
+      TenDayValues:
+        _list: []
+      _name: 
+      _triggerCountMax: 0
+      _triggerRollBackCount: 0
+      _RandomConsecutivePer: 0
+      _defaultStockCount: 1
+      _stockPower: 1
+      _stockForgetPower: 1
+      CanCancel: 1
+      IsAggressiveCommit: 1
+      CanSelectAggressiveCommit: 0
+      SKillDidWaitCount: 0
+      SkillName: 
+      IsTLOA: 0
+      IsMagic: 0
+      PowerSpread: []
+      _skillPower: 0
+      MentalDamageRatio: 0
+      SkillHitPer: 0
+      subEffects: 
+      subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
+      _defAtk: 0
+      WhatSkill: 0
+      ConsecutiveType: 0
+      ZoneTrait: 0
+      DistributionType: 0
+      PowerRangePercentageDictionary:
+        _list: []
+      HitRangePercentageDictionary:
+        _list: []
+    IsDeleteMyFreezeConsecutive: 0
+    _tempVanguard: 0
+    _tempLive: 0
+    maxRecoveryTurn: 0
+    _hp: 0
+    _maxhp: 0
+    _mentalHP: 0
+    Target: 0
+    RangeWill: 0
+    IsActiveCancelInSkillACT: 0
+    MyType: 0
+    DefaultImpression: 0
+    broken: 0
+    _machineBrokenRate: 0.3
+  geino:
+    InitpassiveIDList: 
+    _skillList:
+    - SkillSpiritual: 0
+      Impression: 0
+      SkillPhysical: 0
+      TenDayValues:
+        _list: []
+      _name: "\u30C6\u30B9\u30C8\u30B9\u30AD\u30EB"
+      _triggerCountMax: 0
+      _triggerRollBackCount: 0
+      _RandomConsecutivePer: 0
+      _defaultStockCount: 1
+      _stockPower: 1
+      _stockForgetPower: 1
+      CanCancel: 0
+      IsAggressiveCommit: 0
+      CanSelectAggressiveCommit: 0
+      SKillDidWaitCount: 0
+      SkillName: 
+      IsTLOA: 0
+      IsMagic: 0
+      PowerSpread: []
+      _skillPower: 0
+      MentalDamageRatio: 0
+      SkillHitPer: 0
+      subEffects: 
+      subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
+      _defAtk: 0
+      WhatSkill: 0
+      ConsecutiveType: 64
+      ZoneTrait: 0
+      DistributionType: 0
+      PowerRangePercentageDictionary:
+        _list: []
+      HitRangePercentageDictionary:
+        _list: []
+    InitVitalLaerIDList: 
+    NowPower: 0
+    b_b_atk: 4
+    b_b_def: 4
+    b_b_eye: 4
+    b_b_agi: 4
+    TenDayValues:
+      _list: []
+    CharacterName: "\u30B8\u30FC\u30CE"
+    ImpressionStringName: 
+    NowUseWeapon:
+      id: 0
+      name: 
+      protocol: 0
+      WeaponSkill:
+        SkillSpiritual: 0
+        Impression: 0
+        SkillPhysical: 0
+        TenDayValues:
+          _list: []
+        _name: 
+        _triggerCountMax: 0
+        _triggerRollBackCount: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        CanCancel: 1
+        IsAggressiveCommit: 1
+        CanSelectAggressiveCommit: 0
+        SKillDidWaitCount: 0
+        SkillName: 
+        IsTLOA: 0
+        IsMagic: 0
+        PowerSpread: []
+        _skillPower: 0
+        MentalDamageRatio: 0
+        SkillHitPer: 0
+        subEffects: 
+        subVitalLayers: 
+        A_MoveSet: []
+        B_MoveSet: []
+        _defAtk: 0
+        WhatSkill: 0
+        ConsecutiveType: 0
+        ZoneTrait: 0
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
+    NowBattleProtocol: 0
+    NowDeffenceStyle: 0
+    NowUseSkill:
+      SkillSpiritual: 0
+      Impression: 0
+      SkillPhysical: 0
+      TenDayValues:
+        _list: []
+      _name: 
+      _triggerCountMax: 0
+      _triggerRollBackCount: 0
+      _RandomConsecutivePer: 0
+      _defaultStockCount: 1
+      _stockPower: 1
+      _stockForgetPower: 1
+      CanCancel: 1
+      IsAggressiveCommit: 1
+      CanSelectAggressiveCommit: 0
+      SKillDidWaitCount: 0
+      SkillName: 
+      IsTLOA: 0
+      IsMagic: 0
       PowerSpread:
       - 0
       - 0
@@ -679,7 +1080,46 @@ MonoBehaviour:
       _skillPower: 0
       MentalDamageRatio: 0
       SkillHitPer: 0
-      SkillLevel: 0
+      subEffects: 
+      subVitalLayers: 
+      A_MoveSet: []
+      B_MoveSet: []
+      _defAtk: 0
+      WhatSkill: 0
+      ConsecutiveType: 0
+      ZoneTrait: 0
+      DistributionType: 0
+      PowerRangePercentageDictionary:
+        _list: []
+      HitRangePercentageDictionary:
+        _list: []
+    FreezeUseSkill:
+      SkillSpiritual: 0
+      Impression: 0
+      SkillPhysical: 0
+      TenDayValues:
+        _list: []
+      _name: 
+      _triggerCountMax: 0
+      _triggerRollBackCount: 0
+      _RandomConsecutivePer: 0
+      _defaultStockCount: 1
+      _stockPower: 1
+      _stockForgetPower: 1
+      CanCancel: 1
+      IsAggressiveCommit: 1
+      CanSelectAggressiveCommit: 0
+      SKillDidWaitCount: 0
+      SkillName: 
+      IsTLOA: 0
+      IsMagic: 0
+      PowerSpread:
+      - 0
+      - 0
+      - 0
+      _skillPower: 0
+      MentalDamageRatio: 0
+      SkillHitPer: 0
       subEffects: 
       subVitalLayers: 
       A_MoveSet: []
@@ -703,11 +1143,14 @@ MonoBehaviour:
     Target: 0
     RangeWill: 0
     IsActiveCancelInSkillACT: 0
+    MyType: 0
     DefaultImpression: 0
+    broken: 0
+    _machineBrokenRate: 0.3
   noramlia:
-    _passiveList: []
+    InitpassiveIDList: 
     _skillList: []
-    _vitalLaerList: []
+    InitVitalLaerIDList: 
     NowPower: 0
     b_b_atk: 4
     b_b_def: 4
@@ -723,6 +1166,8 @@ MonoBehaviour:
       protocol: 0
       WeaponSkill:
         SkillSpiritual: 0
+        Impression: 0
+        SkillPhysical: 0
         TenDayValues:
           _list: []
         _name: 
@@ -735,14 +1180,14 @@ MonoBehaviour:
         CanCancel: 1
         IsAggressiveCommit: 1
         CanSelectAggressiveCommit: 0
-        ConsecutivePercentage: 0
         SKillDidWaitCount: 0
+        SkillName: 
         IsTLOA: 0
+        IsMagic: 0
         PowerSpread: []
         _skillPower: 0
         MentalDamageRatio: 0
         SkillHitPer: 0
-        SkillLevel: 0
         subEffects: 
         subVitalLayers: 
         A_MoveSet: []
@@ -760,6 +1205,8 @@ MonoBehaviour:
     NowDeffenceStyle: 0
     NowUseSkill:
       SkillSpiritual: 0
+      Impression: 0
+      SkillPhysical: 0
       TenDayValues:
         _list: []
       _name: 
@@ -772,9 +1219,10 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       CanSelectAggressiveCommit: 0
-      ConsecutivePercentage: 0
       SKillDidWaitCount: 0
+      SkillName: 
       IsTLOA: 0
+      IsMagic: 0
       PowerSpread:
       - 0
       - 0
@@ -782,7 +1230,6 @@ MonoBehaviour:
       _skillPower: 0
       MentalDamageRatio: 0
       SkillHitPer: 0
-      SkillLevel: 0
       subEffects: 
       subVitalLayers: 
       A_MoveSet: []
@@ -798,6 +1245,8 @@ MonoBehaviour:
         _list: []
     FreezeUseSkill:
       SkillSpiritual: 0
+      Impression: 0
+      SkillPhysical: 0
       TenDayValues:
         _list: []
       _name: 
@@ -810,9 +1259,10 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       CanSelectAggressiveCommit: 0
-      ConsecutivePercentage: 0
       SKillDidWaitCount: 0
+      SkillName: 
       IsTLOA: 0
+      IsMagic: 0
       PowerSpread:
       - 0
       - 0
@@ -820,7 +1270,6 @@ MonoBehaviour:
       _skillPower: 0
       MentalDamageRatio: 0
       SkillHitPer: 0
-      SkillLevel: 0
       subEffects: 
       subVitalLayers: 
       A_MoveSet: []
@@ -844,11 +1293,14 @@ MonoBehaviour:
     Target: 0
     RangeWill: 0
     IsActiveCancelInSkillACT: 0
+    MyType: 0
     DefaultImpression: 0
+    broken: 0
+    _machineBrokenRate: 0.3
   sites:
-    _passiveList: []
+    InitpassiveIDList: 
     _skillList: []
-    _vitalLaerList: []
+    InitVitalLaerIDList: 
     NowPower: 0
     b_b_atk: 4
     b_b_def: 4
@@ -866,6 +1318,8 @@ MonoBehaviour:
       protocol: 0
       WeaponSkill:
         SkillSpiritual: 0
+        Impression: 0
+        SkillPhysical: 0
         TenDayValues:
           _list: []
         _name: 
@@ -878,14 +1332,14 @@ MonoBehaviour:
         CanCancel: 1
         IsAggressiveCommit: 1
         CanSelectAggressiveCommit: 0
-        ConsecutivePercentage: 0
         SKillDidWaitCount: 0
+        SkillName: 
         IsTLOA: 0
+        IsMagic: 0
         PowerSpread: []
         _skillPower: 0
         MentalDamageRatio: 0
         SkillHitPer: 0
-        SkillLevel: 0
         subEffects: 
         subVitalLayers: 
         A_MoveSet: []
@@ -903,6 +1357,8 @@ MonoBehaviour:
     NowDeffenceStyle: 2
     NowUseSkill:
       SkillSpiritual: 0
+      Impression: 0
+      SkillPhysical: 0
       TenDayValues:
         _list: []
       _name: 
@@ -915,9 +1371,10 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       CanSelectAggressiveCommit: 0
-      ConsecutivePercentage: 0
       SKillDidWaitCount: 0
+      SkillName: 
       IsTLOA: 0
+      IsMagic: 0
       PowerSpread:
       - 0
       - 0
@@ -925,7 +1382,6 @@ MonoBehaviour:
       _skillPower: 0
       MentalDamageRatio: 0
       SkillHitPer: 0
-      SkillLevel: 0
       subEffects: 
       subVitalLayers: 
       A_MoveSet: []
@@ -943,6 +1399,8 @@ MonoBehaviour:
         _list: []
     FreezeUseSkill:
       SkillSpiritual: 0
+      Impression: 0
+      SkillPhysical: 0
       TenDayValues:
         _list: []
       _name: 
@@ -955,9 +1413,10 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       CanSelectAggressiveCommit: 0
-      ConsecutivePercentage: 0
       SKillDidWaitCount: 0
+      SkillName: 
       IsTLOA: 0
+      IsMagic: 0
       PowerSpread:
       - 0
       - 0
@@ -965,7 +1424,6 @@ MonoBehaviour:
       _skillPower: 0
       MentalDamageRatio: 0
       SkillHitPer: 0
-      SkillLevel: 0
       subEffects: 
       subVitalLayers: 
       A_MoveSet: []
@@ -989,7 +1447,10 @@ MonoBehaviour:
     Target: 0
     RangeWill: 0
     IsActiveCancelInSkillACT: 0
+    MyType: 0
     DefaultImpression: 0
+    broken: 0
+    _machineBrokenRate: 0.3
   StopFreezeConsecutiveButton_geino: {fileID: 294146446}
   StopFreezeConsecutiveButton_Bassjack: {fileID: 1385335785}
   StopFreezeConsecutiveButton_Sites: {fileID: 1833282123}
@@ -1060,6 +1521,7 @@ MonoBehaviour:
       HPBonus: 0
       PBonus: 0
       RecovelyTurnMinusBonus: 0
+  RunTimeStageDates: []
   memo: 
   references:
     version: 2
@@ -1069,9 +1531,9 @@ MonoBehaviour:
     - rid: 720943376607215620
       type: {class: butterfly, ns: , asm: Assembly-CSharp}
       data:
-        _passiveList: []
+        InitpassiveIDList: 
         _skillList: []
-        _vitalLaerList: []
+        InitVitalLaerIDList: 
         NowPower: 0
         b_b_atk: 4
         b_b_def: 4
@@ -1087,6 +1549,8 @@ MonoBehaviour:
           protocol: 0
           WeaponSkill:
             SkillSpiritual: 0
+            Impression: 0
+            SkillPhysical: 0
             TenDayValues:
               _list: []
             _name: 
@@ -1099,14 +1563,14 @@ MonoBehaviour:
             CanCancel: 1
             IsAggressiveCommit: 1
             CanSelectAggressiveCommit: 0
-            ConsecutivePercentage: 0
             SKillDidWaitCount: 0
+            SkillName: 
             IsTLOA: 0
+            IsMagic: 0
             PowerSpread: []
             _skillPower: 0
             MentalDamageRatio: 0
             SkillHitPer: 0
-            SkillLevel: 0
             subEffects: 
             subVitalLayers: 
             A_MoveSet: []
@@ -1124,6 +1588,8 @@ MonoBehaviour:
         NowDeffenceStyle: 0
         NowUseSkill:
           SkillSpiritual: 0
+          Impression: 0
+          SkillPhysical: 0
           TenDayValues:
             _list: []
           _name: 
@@ -1136,9 +1602,10 @@ MonoBehaviour:
           CanCancel: 1
           IsAggressiveCommit: 1
           CanSelectAggressiveCommit: 0
-          ConsecutivePercentage: 0
           SKillDidWaitCount: 0
+          SkillName: 
           IsTLOA: 0
+          IsMagic: 0
           PowerSpread:
           - 0
           - 0
@@ -1146,7 +1613,6 @@ MonoBehaviour:
           _skillPower: 0
           MentalDamageRatio: 0
           SkillHitPer: 0
-          SkillLevel: 0
           subEffects: 
           subVitalLayers: 
           A_MoveSet: []
@@ -1162,6 +1628,8 @@ MonoBehaviour:
             _list: []
         FreezeUseSkill:
           SkillSpiritual: 0
+          Impression: 0
+          SkillPhysical: 0
           TenDayValues:
             _list: []
           _name: 
@@ -1174,9 +1642,10 @@ MonoBehaviour:
           CanCancel: 1
           IsAggressiveCommit: 1
           CanSelectAggressiveCommit: 0
-          ConsecutivePercentage: 0
           SKillDidWaitCount: 0
+          SkillName: 
           IsTLOA: 0
+          IsMagic: 0
           PowerSpread:
           - 0
           - 0
@@ -1184,7 +1653,6 @@ MonoBehaviour:
           _skillPower: 0
           MentalDamageRatio: 0
           SkillHitPer: 0
-          SkillLevel: 0
           subEffects: 
           subVitalLayers: 
           A_MoveSet: []
@@ -1208,15 +1676,17 @@ MonoBehaviour:
         Target: 0
         RangeWill: 0
         IsActiveCancelInSkillACT: 0
+        MyType: 0
         DefaultImpression: 0
-        RecovelySteps: 0
         broken: 0
+        _machineBrokenRate: 0.3
+        RecovelySteps: 0
     - rid: 6711005805807403016
       type: {class: butterfly, ns: , asm: Assembly-CSharp}
       data:
-        _passiveList: []
+        InitpassiveIDList: 
         _skillList: []
-        _vitalLaerList: []
+        InitVitalLaerIDList: 
         NowPower: 0
         b_b_atk: 4
         b_b_def: 4
@@ -1232,6 +1702,8 @@ MonoBehaviour:
           protocol: 0
           WeaponSkill:
             SkillSpiritual: 0
+            Impression: 0
+            SkillPhysical: 0
             TenDayValues:
               _list: []
             _name: 
@@ -1244,14 +1716,14 @@ MonoBehaviour:
             CanCancel: 1
             IsAggressiveCommit: 1
             CanSelectAggressiveCommit: 0
-            ConsecutivePercentage: 0
             SKillDidWaitCount: 0
+            SkillName: 
             IsTLOA: 0
+            IsMagic: 0
             PowerSpread: []
             _skillPower: 0
             MentalDamageRatio: 0
             SkillHitPer: 0
-            SkillLevel: 0
             subEffects: 
             subVitalLayers: 
             A_MoveSet: []
@@ -1269,6 +1741,8 @@ MonoBehaviour:
         NowDeffenceStyle: 0
         NowUseSkill:
           SkillSpiritual: 0
+          Impression: 0
+          SkillPhysical: 0
           TenDayValues:
             _list: []
           _name: 
@@ -1281,14 +1755,14 @@ MonoBehaviour:
           CanCancel: 1
           IsAggressiveCommit: 1
           CanSelectAggressiveCommit: 0
-          ConsecutivePercentage: 0
           SKillDidWaitCount: 0
+          SkillName: 
           IsTLOA: 0
+          IsMagic: 0
           PowerSpread: []
           _skillPower: 0
           MentalDamageRatio: 0
           SkillHitPer: 0
-          SkillLevel: 0
           subEffects: 
           subVitalLayers: 
           A_MoveSet: []
@@ -1304,6 +1778,8 @@ MonoBehaviour:
             _list: []
         FreezeUseSkill:
           SkillSpiritual: 0
+          Impression: 0
+          SkillPhysical: 0
           TenDayValues:
             _list: []
           _name: 
@@ -1316,14 +1792,14 @@ MonoBehaviour:
           CanCancel: 1
           IsAggressiveCommit: 1
           CanSelectAggressiveCommit: 0
-          ConsecutivePercentage: 0
           SKillDidWaitCount: 0
+          SkillName: 
           IsTLOA: 0
+          IsMagic: 0
           PowerSpread: []
           _skillPower: 0
           MentalDamageRatio: 0
           SkillHitPer: 0
-          SkillLevel: 0
           subEffects: 
           subVitalLayers: 
           A_MoveSet: []
@@ -1347,9 +1823,11 @@ MonoBehaviour:
         Target: 0
         RangeWill: 0
         IsActiveCancelInSkillACT: 0
+        MyType: 0
         DefaultImpression: 0
-        RecovelySteps: 0
         broken: 0
+        _machineBrokenRate: 0.3
+        RecovelySteps: 0
 --- !u!114 &78173495
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1383,6 +1861,7 @@ MonoBehaviour:
         ID: 0
         DurationTurn: -1
         DurationWalk: -1
+        RemoveOnDeath: 1
         VitalLayers:
         - VitalLayerId: 0
           GrantTiming: 0
@@ -1400,6 +1879,7 @@ MonoBehaviour:
         ID: 3
         DurationTurn: 12
         DurationWalk: -1
+        RemoveOnDeath: 1
         VitalLayers: []
     - rid: 8285219776706641921
       type: {class: Upper, ns: , asm: Assembly-CSharp}
@@ -1413,6 +1893,7 @@ MonoBehaviour:
         ID: 4
         DurationTurn: 14
         DurationWalk: -1
+        RemoveOnDeath: 1
         VitalLayers: []
     - rid: 8980149206437855232
       type: {class: InterruptCounterPassive, ns: , asm: Assembly-CSharp}
@@ -1426,6 +1907,7 @@ MonoBehaviour:
         ID: 1
         DurationTurn: 1
         DurationWalk: -1
+        RemoveOnDeath: 1
         VitalLayers: []
         _attackMultipiler: 2
         _eyeBonus: 100
@@ -1441,6 +1923,7 @@ MonoBehaviour:
         ID: 2
         DurationTurn: 1
         DurationWalk: -1
+        RemoveOnDeath: 1
         VitalLayers: []
 --- !u!114 &78173496
 MonoBehaviour:
@@ -1500,6 +1983,8 @@ MonoBehaviour:
         protocol: 3
         WeaponSkill:
           SkillSpiritual: 0
+          Impression: 0
+          SkillPhysical: 0
           TenDayValues:
             _list: []
           _name: "\u63B4\u3093\u3067\u6295\u3052\u308B"
@@ -1512,14 +1997,14 @@ MonoBehaviour:
           CanCancel: 1
           IsAggressiveCommit: 1
           CanSelectAggressiveCommit: 0
-          ConsecutivePercentage: 0
           SKillDidWaitCount: 0
+          SkillName: 
           IsTLOA: 0
+          IsMagic: 0
           PowerSpread: []
           _skillPower: 0
           MentalDamageRatio: 0
           SkillHitPer: 15
-          SkillLevel: 0
           subEffects: 
           subVitalLayers: 
           A_MoveSet: []

@@ -61,6 +61,11 @@ public class PlayersStates:MonoBehaviour
         noramlia.OnInitializeSkillsAndChara();
         sites.OnInitializeSkillsAndChara();
 
+        //デフォルト精神属性の初回設定
+        geino.DecideDefaultMyImpression();
+        noramlia.DecideDefaultMyImpression();
+        sites.DecideDefaultMyImpression();
+
         ApplySkillButtons();//ボタンの結びつけ処理
 
         //初期の各キャラのスキルボタンのみの有効化処理
@@ -381,7 +386,7 @@ public class AllyClass : BaseStates
     /// <summary>
     /// キャラクターのデフォルト精神属性を決定する関数　十日能力が変動するたびに決まる。
     /// </summary>
-    void DecideDefaultMyImpression()
+    public void DecideDefaultMyImpression()
     {
         //1~4の範囲で合致しきい値が決まる。
         var Threshold = RandomEx.Shared.NextInt(1,5);
