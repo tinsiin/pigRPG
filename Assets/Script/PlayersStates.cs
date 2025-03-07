@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using static CommonCalc;
+[Serializable]
 public class ButtonAndSkillIDHold
 {
     public Button button;
@@ -43,6 +44,9 @@ public class PlayersStates:MonoBehaviour
         Init();
 
     }
+    /// <summary>
+    /// ゲームの値や、主人公達のステータスの初期化
+    /// </summary>
     public void Init()
     {
         CreateDecideValues();//中央決定値をゲーム開始時一回だけ生成
@@ -66,10 +70,12 @@ public class PlayersStates:MonoBehaviour
         noramlia.DecideDefaultMyImpression();
         sites.DecideDefaultMyImpression();
 
+        
+
         ApplySkillButtons();//ボタンの結びつけ処理
 
-        //初期の各キャラのスキルボタンのみの有効化処理
-        //「主人公キャラ達はスキルを最初に全てbaseStatesに持っており、ボタンのみを有効化する」
+        //現在の有効化リストIDの分だけスキルボタンを見えるようにする。
+        UpdateSkillButtonVisibility();
  
        
     }
@@ -85,7 +91,7 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     void ApplySkillButtons()
     {
-                //ボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
+        //ボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
         foreach (var button in skillButtonList_geino)
         {
             button.AddButtonFunc(geino.OnSkillBtnCallBack);
@@ -125,46 +131,97 @@ public class PlayersStates:MonoBehaviour
     }
 
     [SerializeField]
-    private List<ButtonAndSkillIDHold> skillButtonList_geino;//ジーノ用スキルボタン用リスト
+    private List<ButtonAndSkillIDHold> skillButtonList_geino =new();//ジーノ用スキルボタン用リスト
     [SerializeField]
-    private List<ButtonAndSkillIDHold> skillButtonList_noramlia;//ノーマリア用スキルボタン用リスト
+    private List<ButtonAndSkillIDHold> skillButtonList_noramlia=new();//ノーマリア用スキルボタン用リスト
     [SerializeField]
-    private List<ButtonAndSkillIDHold> skillButtonList_sites;//サテライト用スキルボタン用リスト
+    private List<ButtonAndSkillIDHold> skillButtonList_sites=new();//サテライト用スキルボタン用リスト
 
     [SerializeField]
-    private List<ButtonAndSkillIDHold> skillStockButtonList;//該当のスキルの攻撃ストックボタン用リスト
+    private List<ButtonAndSkillIDHold> skillStockButtonList_geino=new();//ジーノの該当のスキルの攻撃ストックボタン用リスト
     [SerializeField]
-    private List<ButtonAndSkillIDHold> skillStockButtonList_geino;//ジーノの該当のスキルの攻撃ストックボタン用リスト
+    private List<ButtonAndSkillIDHold> skillStockButtonList_noramlia=new();//ノーマリアの該当のスキルの攻撃ストックボタン用リスト
     [SerializeField]
-    private List<ButtonAndSkillIDHold> skillStockButtonList_noramlia;//ノーマリアの該当のスキルの攻撃ストックボタン用リスト
-    [SerializeField]
-    private List<ButtonAndSkillIDHold> skillStockButtonList_sites;//サテライトの該当のスキルの攻撃ストックボタン用リスト
+    private List<ButtonAndSkillIDHold> skillStockButtonList_sites=new();//サテライトの該当のスキルの攻撃ストックボタン用リスト
 
     /// <summary>
     /// 指定したZoneTraitとスキル性質を所持するスキルのみを、有効化しそれ以外を無効化するコールバック
     /// </summary>
     public void OnlyInteractHasZoneTraitSkills_geino(SkillZoneTrait trait,SkillType type)
     {
-        foreach(var hold in skillButtonList_geino)
+        foreach(var skill in geino.SkillList.Cast<AllySkill>())
         {
-            var skill = geino.SkillList[hold.skillID];
-            hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);//一つでも持ってればOK
+            //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
+            var hold = skillButtonList_geino.Find(hold => hold.skillID == skill.ID);
+            //一つでも持ってればOK
+            if (hold != null)
+            {
+                hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);
+            }
         }
     }
     public void OnlyInteractHasZoneTraitSkills_normalia(SkillZoneTrait trait,SkillType type)
     {
-        foreach(var hold in skillButtonList_noramlia)
+        foreach(var skill in noramlia.SkillList.Cast<AllySkill>())
         {
-            var skill = noramlia.SkillList[hold.skillID];
-            hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);//一つでも持ってればOK
+            //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
+            var hold = skillButtonList_noramlia.Find(hold => hold.skillID == skill.ID);
+            //一つでも持ってればOK
+            if (hold != null)
+            {
+                hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);
+            }
         }
     }
     public void OnlyInteractHasZoneTraitSkills_sites(SkillZoneTrait trait,SkillType type)
     {
-        foreach(var hold in skillButtonList_sites)
+        foreach(var skill in sites.SkillList.Cast<AllySkill>())
         {
-            var skill = sites.SkillList[hold.skillID];
-            hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);//一つでも持ってればOK
+            //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
+            var hold = skillButtonList_sites.Find(hold => hold.skillID == skill.ID);
+            //一つでも持ってればOK
+            if (hold != null)
+            {
+                hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);
+            }
+        }
+    }
+    /// <summary>
+    /// スキルボタンの使いを有効化する処理
+    /// </summary>
+    void UpdateSkillButtonVisibility()
+    {
+        // 有効なスキルのIDを抽出（キャストが必要ならキャストも実施）
+        var activeSkillIds_geino = new HashSet<int>(geino.SkillList.Cast<AllySkill>().Select(skill => skill.ID));
+        var activeSkillIds_normalia = new HashSet<int>(noramlia.SkillList.Cast<AllySkill>().Select(skill => skill.ID));
+        var activeSkillIds_sites = new HashSet<int>(sites.SkillList.Cast<AllySkill>().Select(skill => skill.ID));
+
+        // 各ボタンについて、対応スキルが有効かどうか判定
+        foreach (var hold in skillButtonList_geino)
+        {
+            hold.button.interactable = activeSkillIds_geino.Contains(hold.skillID);
+        }
+        foreach (var hold in skillStockButtonList_geino)//ストックボタン
+        {
+            hold.button.interactable = activeSkillIds_geino.Contains(hold.skillID);
+        }
+
+        foreach (var hold in skillButtonList_noramlia)
+        {
+            hold.button.interactable = activeSkillIds_normalia.Contains(hold.skillID);
+        }
+        foreach (var hold in skillStockButtonList_noramlia)//ストックボタン
+        {
+            hold.button.interactable = activeSkillIds_normalia.Contains(hold.skillID);
+        }
+
+        foreach (var hold in skillButtonList_sites)
+        {
+            hold.button.interactable = activeSkillIds_sites.Contains(hold.skillID);
+        }
+        foreach (var hold in skillStockButtonList_sites)//ストックボタン
+        {
+            hold.button.interactable = activeSkillIds_sites.Contains(hold.skillID);
         }
     }
 
@@ -172,6 +229,7 @@ public class PlayersStates:MonoBehaviour
 
 
     //連続実行スキル(FreezeConsecutive)の停止予約のボタン
+    //主にCharaConfigタブの方で扱う。
     [SerializeField]
     Button StopFreezeConsecutiveButton_geino;
     [SerializeField]
@@ -382,6 +440,24 @@ public class PlayersStates:MonoBehaviour
 
 public class AllyClass : BaseStates
 {
+    /// <summary>
+    /// 主人公達の全所持スキルリスト
+    /// </summary>
+    [SerializeField]
+    List<AllySkill> _skillList = new();
+    /// <summary>
+    /// 有効なスキルリスト
+    /// </summary>
+    public List<int> ValidSkillIDList = new();
+    public override IReadOnlyList<BaseSkill> SkillList => _skillList.Where(skill => ValidSkillIDList.Contains(skill.ID)).ToList();
+    public override void OnInitializeSkillsAndChara()
+    {
+        foreach (var skill in _skillList)
+        {
+            skill.OnInitialize(this);
+        }
+    }
+
     
     /// <summary>
     /// キャラクターのデフォルト精神属性を決定する関数　十日能力が変動するたびに決まる。
@@ -481,7 +557,7 @@ public class AllyClass : BaseStates
 
         
     }
-        /// <summary>
+     /// <summary>
     /// スキル攻撃回数ストックボタンからはそのまま次のターンへ移行する(対象者選択や範囲選択などはない。)
     /// </summary>
     /// <param name="skillListIndex"></param>
@@ -498,9 +574,10 @@ public class AllyClass : BaseStates
 
         var list = SkillList.Where((skill,index) => index != skillListIndex && skill.HasConsecutiveType(SkillConsecutiveType.Stockpile)).ToList();
         
+        //今回選んだストックスキル以外のストックが減る。
         foreach(var stockSkill in list)
         {
-            stockSkill.ForgetStock();//今回選んだストックスキル以外のストックが減る。
+            stockSkill.ForgetStock();
         }
 
         Walking.bm.DoNothing = true;//ACTBranchingで何もしないようにするboolをtrueに。
@@ -509,7 +586,7 @@ public class AllyClass : BaseStates
         
     }
 
-        /// <summary>
+    /// <summary>
     /// スキルの性質に基づいて、次に遷移すべき画面状態を判定する
     /// </summary>
     /// <param name="skill">判定対象のスキル</param>
@@ -1177,7 +1254,11 @@ public class AllyClass : BaseStates
         InitBaseStatesDeepCopy(dst);
 
         // 3. AllyClass 独自フィールドをコピー
-        //今はない
+        foreach(var skill in _skillList)
+        {
+            dst._skillList.Add(skill.InitAllyDeepCopy());
+        }
+        dst.ValidSkillIDList = new List<int>(ValidSkillIDList);  //主人公達の初期有効化スキルIDをランタイム用リストにセット
         
         // 4. 戻り値
         return dst;
@@ -1212,6 +1293,25 @@ public class StairStates : AllyClass //共通ステータスにプラスでそ�
     {
         var clone = new StairStates();
         clone.DeepCopy(clone);
+        return clone;
+    }
+}
+
+public class AllySkill : BaseSkill
+{
+    [SerializeField]
+    int _iD;
+    /// <summary>
+    /// id　主に有効化されてるかどうか
+    /// </summary>
+    public int ID => _iD;
+
+    public AllySkill InitAllyDeepCopy()
+    {
+        var clone = new AllySkill();
+        clone.InitDeepCopy();
+
+        clone._iD = _iD;
         return clone;
     }
 }

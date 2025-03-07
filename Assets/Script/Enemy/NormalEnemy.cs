@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using RandomExtensions;
+using UnityEngine;
 
 /// <summary>
 ///     通常の敵
@@ -22,14 +25,17 @@ public class NormalEnemy : BaseStates
     }
 
     
-
-    private int _recovelyStepCount;//実際のカウント
+    /// <summary>
+    /// 実際の再復活カウンター　初回は-1
+    /// </summary>
+    private int _recovelyStepCount = -1;
     //このカウントは死んだ状態でバトルが終わると、入る　Death()ではまだバトル内で復活する恐れがあるから。
 
     /// <summary>
     /// 最後にエンカウントした時の歩数 再復活用 要は敵が死んだとき"のみ"に記録される。
+    /// -1なら初回
     /// </summary>
-    private int _lastEncountProgressForReborn;
+    private int _lastEncountProgressForReborn = -1;
     /// <summary>
     /// 復活歩数をカウント変数にセットする。　
     /// </summary>
@@ -64,7 +70,22 @@ public class NormalEnemy : BaseStates
     /// </summary>
     private int _lastEncounterProgress = -1;
 
+    
     /// <summary>
+    /// 敵の実体スキルリスト
+    /// </summary>
+    protected List<SkillAndGrowthPoint> EnemySkillList{ get; private set; } = new();
+    /// <summary>
+    /// 敵は成長ポイントが-1に指定されたスキルのみ、実体スキルリストとして返す
+    /// </summary>
+    public override IReadOnlyList<BaseSkill> SkillList => EnemySkillList.Where(skill => skill.growthPoint <= -1).Select(skill => skill.skill).ToList();
+    public override void OnInitializeSkillsAndChara()
+    {
+        foreach (var skill in EnemySkillList)
+        {
+            skill.skill.OnInitialize(this);
+        }
+    }    /// <summary>
     /// 敵キャラクターはAttackCharaにてこの関数を通じてNowUseSkillを決める
     /// スキル実行の際に選択可能なオプションがあればここで決める
     /// </summary>
@@ -74,8 +95,27 @@ public class NormalEnemy : BaseStates
 
         //そのスキル上のオプションを選ぶ
     }
+
     /// <summary>
-    /// パッシブとか自信ブーストなどの、
+    ///初期精神属性決定関数(基本は印象を持ってるスキルリストから適当に選び出す
+    /// </summary>
+    public virtual void InitializeMyImpression()
+    {
+        SpiritualProperty that;
+
+        if (SkillList != null)
+        {
+            var rnd = RandomEx.Shared.NextInt(0, SkillList.Count);
+            that = SkillList[rnd].SkillSpiritual; //スキルの精神属性を抽出
+            MyImpression = that; //印象にセット
+        }
+        else
+        {
+            Debug.Log(CharacterName + " のスキルが空です。");
+        }
+    }
+    /// <summary>
+    /// 再遭遇時コールバック。パッシブとか自信ブーストなどの、
     // 歩行に変化のあるものは敵グループはここら辺で一気に処理をする。
     /// </summary>
     public void ReEncountCallback()
@@ -125,12 +165,34 @@ public class NormalEnemy : BaseStates
 
         // 3. NormalEnemy 独自フィールドをコピー
         clone.RecovelySteps = this.RecovelySteps;
-        clone.broken = this.broken;
+        foreach(var skill in this.EnemySkillList)
+        {
+            clone.EnemySkillList.Add(new SkillAndGrowthPoint()
+            {
+                skill = skill.skill.InitDeepCopy(),
+                growthPoint = skill.growthPoint
+            });
+        }
+
+        /*clone.broken = this.broken;
         clone._recovelyStepCount = this._recovelyStepCount;
         clone._lastEncountProgressForReborn = this._lastEncountProgressForReborn;
+        clone._lastEncounterProgress = this._lastEncounterProgress;*/
+        //全て戦闘の時に使われる前提の値だからコメントアウト
 
         // 4. 戻り値
         return clone;
     }
 
+}
+/// <summary>
+/// NormalEnemyで用いるスキルとその成長ポイントを保持するためのクラス
+/// </summary>
+public class SkillAndGrowthPoint
+{
+    public BaseSkill skill;
+    /// <summary>
+    /// -1で指定した場合、初期化時にそのまま有効化する
+    /// </summary>
+    public int growthPoint;
 }

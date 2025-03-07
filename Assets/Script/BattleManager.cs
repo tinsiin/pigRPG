@@ -60,6 +60,7 @@ public class ACTList
     List<List<ReservationStatesModify>> reservationStatesModifies;//補正リスト
     List<bool> IsFreezeList;//スキルをフリーズ、つまり前のスキルを持続させるかどうか。
     List<BaseStates> SingleTargetList;//単体で狙うのを確定するリスト
+    List<float> ExCounterDEFATKList;//割り込みカウンターの防御無視率を保持するリスト
 
 
     public int Count
@@ -67,7 +68,7 @@ public class ACTList
         get => CharactorACTList.Count;
     }
 
-    public void Add(BaseStates chara, WhichGroup charasFac, string mes = "", List<ReservationStatesModify> modifys = null, bool isfreeze = false,BaseStates SingleTarget = null)
+    public void Add(BaseStates chara, WhichGroup charasFac, string mes = "", List<ReservationStatesModify> modifys = null, bool isfreeze = false,BaseStates SingleTarget = null,float ExCounterDEFATK = -1)
     {
         CharactorACTList.Add(chara);
         FactionList.Add(charasFac);
@@ -75,6 +76,7 @@ public class ACTList
         reservationStatesModifies.Add(modifys);
         IsFreezeList.Add(isfreeze);
         SingleTargetList.Add(SingleTarget);
+        ExCounterDEFATKList.Add(ExCounterDEFATK);
 
     }
 
@@ -86,6 +88,7 @@ public class ACTList
         reservationStatesModifies = new List<List<ReservationStatesModify>>();
         IsFreezeList = new();
         SingleTargetList = new();
+        ExCounterDEFATKList = new();
     }
     /// <summary>
     /// 先約リスト内から死者を取り除く
@@ -107,6 +110,7 @@ public class ACTList
         reservationStatesModifies.RemoveAt(index);
         IsFreezeList.RemoveAt(index);
         SingleTargetList.RemoveAt(index);
+        ExCounterDEFATKList.RemoveAt(index);
     }
 
     public string GetAtTopMessage(int index)
@@ -133,7 +137,10 @@ public class ACTList
     {
         return SingleTargetList[index];
     }
-
+    public float GetAtExCounterDEFATK(int index)
+    {
+        return ExCounterDEFATKList[index];
+    }
 
 
 }
@@ -520,6 +527,10 @@ public class BattleManager
             {
                 Acter.FreezeSkill();
             }
+
+            //カウンター用の防御無視率特別補正はシステム上そのまま代入してOK
+            //特別補正だからでかくてもターン終わりで消えるし、先約リストで指定されなけば-1が代入つまり絶対本来の防御無視率を超えて指定されないし。
+            Acter.SetExCounterDEFATK(Acts.GetAtExCounterDEFATK(0));
             
 
             Debug.Log("俳優は先約リストから選ばれました");

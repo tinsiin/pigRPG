@@ -70,15 +70,13 @@ public abstract class BaseStates
     /// 初期所持のパッシブのIDリスト
     /// </summary>
     [SerializeField]
-    List<int> InitpassiveIDList;
-
-    [SerializeField] List<BaseSkill> _skillList;
+    List<int> InitpassiveIDList = new();
 
     List<BaseVitalLayer> _vitalLayerList = new();
     /// <summary>
     /// 初期所持のVitalLayerのIDリスト
     /// </summary>
-    [SerializeField] List<int> InitVitalLaerIDList;
+    [SerializeField] List<int> InitVitalLaerIDList = new();
 
 
     /// <summary>
@@ -685,6 +683,23 @@ public abstract class BaseStates
     /// </summary>
     public BaseWeapon NowUseWeapon;
     /// <summary>
+    /// 初期所持してる武器のID
+    /// </summary>
+    public int InitWeaponID;
+    /// <summary>
+    /// 武器装備、武器から移る戦闘規格の変化
+    /// </summary>
+    public void ApplyWeapon(int ID)
+    {
+        if (WeaponManager.Instance == null)
+        {
+            Debug.LogError("WeaponManager.Instance is null");
+            return;
+        }
+        NowUseWeapon = WeaponManager.Instance.GetAtID(ID);//武器を変更'
+        NowBattleProtocol = NowUseWeapon.protocol;//戦闘規格の変更
+    }
+    /// <summary>
     /// 今のキャラの戦闘規格
     /// </summary>
     public BattleProtocol NowBattleProtocol;
@@ -1273,7 +1288,7 @@ public abstract class BaseStates
     /// <summary>
     ///     このキャラクターの属性 精神属性が入る
     /// </summary>
-    public SpiritualProperty MyImpression { get; private set; }
+    public SpiritualProperty MyImpression { get; protected set; }
 
     /// <summary>
     ///     このキャラクターの"デフォルト"属性 精神属性が入る
@@ -3542,6 +3557,12 @@ public abstract class BaseStates
     /// 次に使用する防御力へのパーセント補正用保持リスト
     /// </summary>
     private List<ModifierPart> _useDEFPercentageModifiers;
+    /// <summary>
+    /// カウンター用の一時的な防御無視率 )特別補正_
+    /// 比較する際にこちらの方が本来の無視率より多ければ、こちらの値が使用される。
+    /// -1は使用されていない。というか直接比較されるから-以下の数字にしとけば絶対参照されない。
+    /// </summary>
+    float _exCounterDEFATK =-1;
 
     /// <summary>
     /// 命中率補正をセットする。
@@ -3575,7 +3596,10 @@ public abstract class BaseStates
         if (_useDEFPercentageModifiers == null) _useDEFPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
         _useDEFPercentageModifiers.Add(new ModifierPart(memo, value));
     }
-
+    public void SetExCounterDEFATK(float value)
+    {
+        _exCounterDEFATK = value;
+    }
     /// <summary>
     /// 特別な命中率補正
     /// </summary>
@@ -3640,22 +3664,26 @@ public abstract class BaseStates
         get => _useDEFPercentageModifiers;
     }
 
+    
+    
     /// <summary>
     /// 一時的な補正などをすべて消す
     /// </summary>
     public void RemoveUseThings()
     {
+        _exCounterDEFATK = -1;
         _useHITPercentageModifiers = new List<ModifierPart>();
         _useATKPercentageModifiers = new List<ModifierPart>();
         _useAGIPercentageModifiers = new List<ModifierPart>();
         _useDEFPercentageModifiers = new List<ModifierPart>();
     }
 
-
-
-
-    //スキルのリスト
-    public IReadOnlyList<BaseSkill> SkillList => _skillList;
+    //実体リストやその他有効化管理などの関数は、各派生立場のクラスで実装する
+    
+    /// <summary>
+    /// キャラクターが現在使用可能なスキルリスト
+    /// </summary>
+    public abstract IReadOnlyList<BaseSkill> SkillList { get; }
     /// <summary>
     /// 完全な単体攻撃かどうか
     /// (例えばControlByThisSituationの場合はrangeWillにそのままskillのzoneTraitが入るので、
@@ -3843,30 +3871,6 @@ public abstract class BaseStates
             ThePower.lowlow => 0.4f,
             _ => -4444444,//エラーだ
         };
-    }
-
-
-
-    
-
-
-    /// <summary>
-    ///初期精神属性決定関数(基本は印象を持ってるスキルリストから適当に選び出す
-    /// </summary>
-    public virtual void InitializeMyImpression()
-    {
-        SpiritualProperty that;
-
-        if (SkillList != null)
-        {
-            var rnd = RandomEx.Shared.NextInt(0, SkillList.Count);
-            that = SkillList[rnd].SkillSpiritual; //スキルの精神属性を抽出
-            MyImpression = that; //印象にセット
-        }
-        else
-        {
-            Debug.Log(CharacterName + " のスキルが空です。");
-        }
     }
 
     //互角一撃の生存処理--------------------------------------------------------------------------互角一撃の生存処理------------------------------ーーーーーーーーーーー
@@ -4400,7 +4404,12 @@ public abstract class BaseStates
     public virtual float Damage(BaseStates Atker, float SkillPower,float SkillPowerForMental)
     {
         var skill = Atker.NowUseSkill;
-        var def = DEF(skill.DEFATK);
+
+        //もしカウンター用の防御無視率が攻撃者が持ってたら(本来の防御無視率より多ければ)
+        var defatk = skill.DEFATK;
+        if (Atker._exCounterDEFATK > defatk) defatk = Atker._exCounterDEFATK;
+
+        var def = DEF(defatk);//防御力
 
         def = ClampDefenseByAimStyle(skill,def);//防ぎ方(AimStyle)の不一致がある場合、クランプする
 
@@ -4728,7 +4737,7 @@ private int CalcTransformCountIncrement(int tightenStage)
                 var eneRain = attacker.TenDayValues.GetValueOrZero(TenDayAbility.Rain);
                 var eneCold = attacker.TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm);
                 var ExVoid = PlayersStates.Instance.ExplosionVoid;
-                var counterValue = (myVond + mypersonDiver/(myVond-ExVoid)) * 0.9f;//カウンターする側の特定能力値
+                var counterValue = (myVond + mypersonDiver/(myTentvoid-ExVoid)) * 0.9f;//カウンターする側の特定能力値
                 var attackerValue = Mathf.Max(eneSort - eneRain/3,0)+eneCold;//攻撃者の特定能力値
 
 
@@ -4758,16 +4767,21 @@ private int CalcTransformCountIncrement(int tightenStage)
                     //次のターンで攻撃、つまり先約リストの予約を判定する。　
                     if(HasCharacterType(CharacterType.Life))
                     {//生命なら、必ず反撃可能
+                        
+                        //割り込みカウンターの反撃は割り込んだ際の、敵の攻撃の防御無視率の方が、反撃スキルの防御無視率より多ければ、
+                        // 食らいそうになった敵スキルの防御無視率をそのまま利用する。
+                        var CounterDEFATK = skill.DEFATK;
+                        
 
                         //攻撃を食らった際、中断不可能なカウンターまたはfreezeConecutiveの場合、武器スキルでしか返せない。
                         var isfreeze = false;
                         if(NowUseSkill.NowConsecutiveATKFromTheSecondTimeOnward() && NowUseSkill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive) ||
                         NowUseSkill.IsTriggering) 
                         {
-                        NowUseSkill = NowUseWeapon.WeaponSkill;
-                        isfreeze = true;
+                            NowUseSkill = NowUseWeapon.WeaponSkill;
+                            isfreeze = true;
                         }
-                        manager.Acts.Add(this,manager.GetCharacterFaction(this),"割り込みカウンター",null,isfreeze);//通常の行動予約 
+                        manager.Acts.Add(this,manager.GetCharacterFaction(this),"割り込みカウンター",null,isfreeze,null,CounterDEFATK);//通常の行動予約 
                     }
 
                     //無効化は誰でも可能です　以下のtrueを返して、呼び出し側で今回の攻撃の無効化は行います。
@@ -5555,14 +5569,9 @@ private int CalcTransformCountIncrement(int tightenStage)
 
     /// <summary>
     /// 持ってるスキルリストを初期化する
+    /// 立場により持ってる実体スキルの扱い方が異なるので各派生クラスで実装する。
     /// </summary>
-    public void OnInitializeSkillsAndChara()
-    {
-        foreach (var skill in SkillList)
-        {
-            skill.OnInitialize(this);
-        }
-    }
+    public abstract void OnInitializeSkillsAndChara();
     /// <summary>
     /// BM終了時に全スキルの一時保存系プロパティをリセットする
     /// </summary>
@@ -6927,22 +6936,24 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             foreach (var passiveID in InitpassiveIDList)
             {
-                ApplyPassive(passiveID);//applyする
+                dst.ApplyPassive(passiveID);//applyする
             }
         }
         //VitalLayerのコピー　追加HP
         if(InitVitalLaerIDList.Count > 0){
             foreach (var vitalLayerID in InitVitalLaerIDList)
             {
-                ApplyVitalLayer(vitalLayerID);
+                dst.ApplyVitalLayer(vitalLayerID);
             }
         }
 
+        //スキルは敵や主人公達によって違うシステム管理なので、各クラスでスキルの実体リストを持つ。
+        /*
         //スキルのコピー
         foreach (var skill in _skillList)
         {
             dst._skillList.Add(skill.InitDeepCopy());
-        }
+        }*/
 
         //NowPowerは戦闘開始時や歩行で切り替わるから、コピーしない
 
@@ -6956,8 +6967,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
         dst.CharacterName = CharacterName;
         dst.ImpressionStringName = ImpressionStringName;
-        dst.NowUseWeapon = NowUseWeapon;
-        dst.NowBattleProtocol = NowUseWeapon.protocol;//ここで初期武器の戦闘規格を設定 基本は武器選択で切り替わる
+        dst.ApplyWeapon(InitWeaponID);//ここで初期武器と戦闘規格を設定
         dst._p = _p;
         dst.maxRecoveryTurn = maxRecoveryTurn;
         dst._hp = _hp;

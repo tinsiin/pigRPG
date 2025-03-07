@@ -155,7 +155,7 @@ public class Stages : MonoBehaviour
         [SerializeField] private Vector2 _mapLineS;
         [SerializeField] private Vector2 _mapLineE;
         [SerializeField] private string _mapsrc;
-        [SerializeReference,SelectableSerializeReference] private List<NormalEnemy> _enemyList; //敵のリスト
+        [SerializeReference,SelectableSerializeReference] private List<NormalEnemy> _enemyList = new(); //敵のリスト
         //[SerializeReference,SelectableSerializeReference] private List<BaseStates> _enyList; //敵のリスト
         [SerializeField] private GameObject[] _sideObject_Lefts;//左側に出現するオブジェクト
         [SerializeField] private GameObject[] _sideObject_Rights;//右側に出現するオブジェクト
@@ -223,6 +223,7 @@ public class Stages : MonoBehaviour
             newData._enemyList = new List<NormalEnemy>();
             foreach (var enemy in _enemyList)
             {
+                if (enemy == null)Debug.Log("enemyList 内に null 要素が存在します。");
                 newData._enemyList.Add(enemy.DeepCopy());
             }
             newData.EncounterRate = EncounterRate;

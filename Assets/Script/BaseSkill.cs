@@ -611,7 +611,6 @@ public class BaseSkill
         _atkCountUP++;
         return _atkCountUP;
     }
-
     /// <summary>
     /// TLOAかどうか
     /// </summary>
@@ -818,13 +817,17 @@ public class BaseSkill
 
     [SerializeField]
     float _defAtk;
+    
     /// <summary>
     /// 連続攻撃時にはそれ用の、それ以外はスキル自体の防御無視率が返ります。
     /// </summary>
     public float DEFATK{
         get{
+            
             if(NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃中ならば、
-            return NowAimDefATK();//連続攻撃に設定されているDEFATKを乗算する
+            {
+                return NowAimDefATK();//連続攻撃に設定されているDEFATKを乗算する
+            }
 
             return _defAtk;
         }

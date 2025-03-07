@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-
+[DefaultExecutionOrder(-1)]
 public class WeaponManager : MonoBehaviour
 {
     public static WeaponManager Instance;
