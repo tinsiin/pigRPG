@@ -417,7 +417,7 @@ public class AllyClass : BaseStates
         //ここからwhileループ
         while(true)
         {
-            if(AbilityList.Count <= 0)//十日能力の重み付き抽選リストが空になったら
+            if(AbilityList.Count <= 0)//十日能力の重み付き抽選リストが空　つまり十日能力がないなら
             {
                 DefaultImpression = SpiritualProperty.none;
                 break;

@@ -4921,6 +4921,49 @@ private int CalcTransformCountIncrement(int tightenStage)
     }
 
     /// <summary>
+    /// 精神補正用にスキルの精神属性を特殊分岐した後に渡す関数
+    /// </summary>
+    SpiritualProperty GetCastImpressionToModifier(SpiritualProperty skillSpiritual,BaseStates attacker)
+    {
+        SpiritualProperty imp;
+        switch (skillSpiritual)
+        {
+            case SpiritualProperty.mvoid:
+            case SpiritualProperty.air:
+                //精神補正無し
+                imp = SpiritualProperty.none;//noneなら補正無しなので
+                break;
+            case SpiritualProperty.Galvanize:
+                imp = attacker.MyImpression;
+                break;
+            case SpiritualProperty.memento:
+                imp = attacker.DefaultImpression;
+                break;
+            default://基本的に精神属性をそのまま補正に渡す
+                imp = skillSpiritual;
+                break;
+        }
+        return imp;
+    }
+    /// <summary>
+    /// この関数を介して辞書から精神属性の補正を取り出す。
+    /// </summary>
+    FixedOrRandomValue GetSkillSpiritualModifier(SpiritualProperty skillImp,BaseStates attacker)
+    {
+        var castSkillImp = GetCastImpressionToModifier(skillImp,attacker);//補正に投げるスキル属性
+
+        if(castSkillImp == SpiritualProperty.none) return new FixedOrRandomValue(100);//noneなら補正なし(100%なので無変動)
+        
+        var resultModifier = SkillSpiritualModifier[(castSkillImp, MyImpression)];//スキルの精神属性と自分の精神属性による補正
+        
+        if(attacker.DefaultImpression == skillImp)
+        {
+            resultModifier.RandomMaxPlus(12);//一致してたら12%程乱数上昇
+        }
+
+        return resultModifier;
+    }
+    /// <summary>
     /// スキルに対するリアクション ここでスキルの解釈をする。
     /// </summary>
     /// <param name="skill"></param>
@@ -4930,9 +4973,9 @@ private int CalcTransformCountIncrement(int tightenStage)
         var skill = attacker.NowUseSkill;
 
         //スキルパワーの精神属性による計算
-        var modifier = SkillSpiritualModifier[(skill.SkillSpiritual, MyImpression)];//スキルの精神属性と自分の精神属性による補正
-        var skillPower = skill.SkillPowerCalc(spread) * modifier.GetValue() / 100.0f;
-        var skillPowerForMental = skill.SkillPowerForMentalCalc(spread) * modifier.GetValue() / 100.0f;//精神HPへのパワー
+        var modifier = GetSkillSpiritualModifier(skill.SkillSpiritual, attacker);
+        var skillPower = skill.SkillPowerCalc(spread) * modifier.GetValue();
+        var skillPowerForMental = skill.SkillPowerForMentalCalc(spread) * modifier.GetValue();//精神HPへのパワー
         var txt = "";//メッセージテキスト用
         var thisAtkTurn = true;
 
@@ -5071,6 +5114,11 @@ private int CalcTransformCountIncrement(int tightenStage)
                 isAttackerHit = isBadPassiveHit || isBadPassiveRemove || isGoodPassiveHit || isGoodPassiveRemove || 
                 isGoodVitalLayerHit || isGoodVitalLayerRemove || isBadVitalLayerHit || isBadVitalLayerRemove || isHeal;
         }
+        //攻撃がいわゆるヒットをしたならば、特殊なスキル属性に影響されるか
+        if (isAttackerHit)
+        {
+            ImposedImpressionFromSkill(skill.SkillSpiritual,attacker);
+        }
 
         //ここで攻撃者の攻撃記録を記録する
         attacker.skillDatas.Add(new ACTSkillData(thisAtkTurn,skill,this,isAttackerHit));//発動したのか、何のスキルなのかを記録
@@ -5080,6 +5128,33 @@ private int CalcTransformCountIncrement(int tightenStage)
         isBadVitalLayerHit,isBadVitalLayerRemove,isHeal,skill,damageAmount,healAmount,attacker));
 
         return txt;
+    }
+    /// <summary>
+    ///スキルの精神属性が特殊な場合、自分の精神属性が変化をしてしまう。
+    /// </summary>
+    void ImposedImpressionFromSkill(SpiritualProperty skillImp,BaseStates attacker)
+    {
+        switch(skillImp)
+        {
+            case SpiritualProperty.mvoid:
+                MyImpression = attacker.MyImpression;
+                break;
+            case SpiritualProperty.Galvanize:
+                MyImpression = attacker.MyImpression;
+                break;
+            case SpiritualProperty.air:
+                //noneでも変化なし
+                break;
+            case SpiritualProperty.memento:
+                //被害者には変化なし
+                break;
+            default:
+                if(MyImpression == SpiritualProperty.none)
+                {
+                    MyImpression = skillImp;
+                }
+                break;
+        }
     }
     /// <summary>
     /// クラスを通じて相手を攻撃する
@@ -5164,11 +5239,32 @@ private int CalcTransformCountIncrement(int tightenStage)
         return txt;
     }
     /// <summary>
-    /// スキルの精神属性に染まる
+    /// スキルを実行した結果として精神属性に染まる
     /// </summary>
     void PullImpressionFromSkill()
     {
-        MyImpression = NowUseSkill.SkillSpiritual;
+        var NextImpression =  NowUseSkill.SkillSpiritual;
+        
+
+        switch(NextImpression)//スキルの精神属性で特殊な分岐かそうでないかで
+        {
+            case SpiritualProperty.mvoid:
+                MyImpression = SpiritualProperty.none;
+                break;
+            case SpiritualProperty.Galvanize:
+                //変化なし
+                break;
+            case SpiritualProperty.air:
+                //変化なし
+                break;
+            case SpiritualProperty.memento:
+                MyImpression = DefaultImpression;
+                break;
+            default:
+                 MyImpression = NextImpression;//基本的に実行した精神属性にそまる
+                break;
+        }
+       
     }
 
 
@@ -6877,12 +6973,27 @@ private int CalcTransformCountIncrement(int tightenStage)
 
 /// <summary>
 /// 固定値か最大値、最小値に応じた乱数のどっちかを返すクラス
+/// 精神補正用の割合を出すためのクラスなので　割合はintで0~100の百分率で指定します
 /// </summary>
 public class FixedOrRandomValue
 {
 
     private int rndMax;//乱数の最大値 乱数かどうかはrndMaxに-1を入れればいい
     private int rndMinOrFixed;//単一の値または乱数としての最小値
+
+    /// <summary>
+    /// 乱数の上振れを増やす
+    /// </summary>
+    public void RandomMaxPlus(int plusAmount)
+    {
+        if(rndMax == -1)//乱数最大範囲がないなら
+        {
+            rndMax = rndMinOrFixed + plusAmount;//上振れを付けた状態で増やす
+            return;
+        }
+
+        rndMax += plusAmount;//既にあるならそのまま最大値を増やす
+    }
 
     /// <summary>
     /// クラス生成
@@ -6896,15 +7007,18 @@ public class FixedOrRandomValue
         rndMax = -1;//予め無を表す-1で初期化
     }
 
+    /// <summary>
+    /// -1を指定すると乱数ではないってことになる。
+    /// </summary>
     public void SetMax(int value)
     {
         rndMax = value;//-1を指定するとないってこと
     }
-    public int GetValue()
+    public float GetValue()
     {
-        if (rndMax == -1) return rndMinOrFixed;//乱数じゃないなら単一の値が返る
+        if (rndMax == -1) return rndMinOrFixed / 100.0f;//乱数じゃないなら単一の値が返る
 
-        return RandomEx.Shared.NextInt(rndMinOrFixed, rndMax + 1);//ランダムなら
+        return RandomEx.Shared.NextInt(rndMinOrFixed, rndMax + 1)  / 100.0f;//ランダムなら
 
     }
     public FixedOrRandomValue DeepCopy()
@@ -7366,7 +7480,11 @@ public enum SpiritualProperty
     godtier = 1 << 7,   // ビットパターン: 1000 0000  (128)
     baledrival = 1 << 8,   // ビットパターン: 0001 0000 0000  (256)
     devil = 1 << 9,    // ビットパターン: 0010 0000 0000  (512)
-    none = 1 << 10    // ビットパターン: 0100 0000 0000  (1024)
+    none = 1 << 10,    // ビットパターン: 0100 0000 0000  (1024)
+    mvoid = 1 << 11,
+    Galvanize = 1 << 12,
+    air = 1 << 13,
+    memento = 1 << 14
 }
 
 public enum MemoryDensity
