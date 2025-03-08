@@ -173,6 +173,15 @@ public static class TenDayAbilityPosition
     {
         return dict.TryGetValue(ability, out float value) ? value : 0f;
     }
+
+    /// <summary>
+    /// 十日能力の値を取得。存在しない場合は0を返す(通常辞書用)
+    /// </summary>
+    public static float GetValueOrZero(this Dictionary<TenDayAbility, float> dict,
+    TenDayAbility ability)
+    {
+        return dict.TryGetValue(ability, out float value) ? value : 0f;
+    }
 }
 
 

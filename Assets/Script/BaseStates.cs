@@ -311,6 +311,9 @@ public abstract class BaseStates
             
             // 追加で足す
             TenDayValues[ability] += extra;
+
+            // battleGainに今回のバトルで上がった分をすべて代入する。
+            battleGain[ability] = totalGained * multiplier;
         }
 
     }

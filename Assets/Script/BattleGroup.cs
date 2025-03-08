@@ -262,7 +262,37 @@ public class BattleGroup
     }
 
     //敵グループ専用関数----------------------------------------------------------------------------------------------------------------------------
-
+    /// <summary>
+    /// 敵グループの勝利時のコールバック
+    /// </summary>
+    public void EnemyiesOnWin()
+    {
+        foreach(var enemy in Ours.OfType<NormalEnemy>())
+        {
+            enemy.OnWin();
+        }
+    }
+    /// <summary>
+    /// 敵グループの逃げ出した時のコールバック
+    /// </summary>
+    public void EnemiesOnRunOut()
+    {
+        foreach(var enemy in Ours.OfType<NormalEnemy>())
+        {
+            enemy.OnRunOut();
+        }
+    }
+    /// <summary>
+    /// 主人公達が逃げ出した時のコールバック
+    /// </summary>
+    public void EnemiesOnAllyRunOut()
+    {
+        foreach(var enemy in Ours.OfType<NormalEnemy>())
+        {
+            enemy.OnAllyRunOut();
+        }
+    }
+    
     /// <summary>
     /// oursがnormalEnemyの時だけ利用する。リカバリーステップのカウント準備の処理
     /// </summary>
@@ -283,7 +313,7 @@ public class BattleGroup
     /// <summary>
     /// 敵グループの再遭遇時のコールバック　
     /// </summary>
-    public void ReEncountCallback()
+    public void EnemiesReEncountCallback()
     {
         List<NormalEnemy> enes =  Ours.OfType<NormalEnemy>().ToList();
 
@@ -303,6 +333,9 @@ public class BattleGroup
             }
         }
 
-        
+        //再遭遇時に敵が消えたりしてたら、　パーティー属性の再決定
+
+        //このコールバック自体をStagesでの敵集積での個人個人に移籍して、
+        //パーティー属性の処理や、敵のHPなどの違いによる　敵同士の集まりAIの変化などを実装する。
     }
 }

@@ -103,7 +103,7 @@ public class Walking : MonoBehaviour
             Debug.Log("encount");
 
             //敵グループの再遭遇時コールバック処理
-            enemyGroup.ReEncountCallback();
+            enemyGroup.EnemiesReEncountCallback();
             
             //もし再遭遇コールバックで敵が全滅したら
             if(enemyGroup.Ours.Count <= 0)

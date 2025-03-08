@@ -287,6 +287,10 @@ public class BaseSkill
     /// </summary>
     public SerializableDictionary<TenDayAbility,float> TenDayValues = new SerializableDictionary<TenDayAbility,float>();
 
+    /// <summary>
+    /// スキルの印象構造の十日能力値の合計
+    /// </summary>
+    public float SkillTenDayValues => TenDayValues.Sum(kvp => kvp.Value);
 
     [SerializeField]
     private string _name;

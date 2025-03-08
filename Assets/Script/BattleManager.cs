@@ -713,8 +713,11 @@ public class BattleManager
                 MessageDropper.Instance.CreateMessage("死んだ");
                 PlayersStates.Instance.PlayersOnLost();
 
-                //敗北時の敵たちの十日能力成長値のブースト
+                //勝利したの敵たちの十日能力成長値のブースト
                 VictoryBoostOnEnemiesWin();
+
+                //敵たちの勝利時コールバック 勝利時ブーストの後に行う。
+                EnemyGroup.EnemyiesOnWin();
             }
             else
             {
@@ -727,9 +730,17 @@ public class BattleManager
         }
         if (RunOut) 
         {
-            MessageDropper.Instance.CreateMessage("逃げた");
-            PlayersStates.Instance.PlayersOnRunOut();
-
+            if(ActerFaction == WhichGroup.alliy)
+            {
+                MessageDropper.Instance.CreateMessage("敵は逃げた");
+                EnemyGroup.EnemiesOnRunOut();
+            }
+            else
+            {
+                MessageDropper.Instance.CreateMessage("我々は逃げた");
+                PlayersStates.Instance.PlayersOnRunOut();
+                EnemyGroup.EnemiesOnAllyRunOut();
+            }
         }
         OnBattleEnd();
         return TabState.walk;
