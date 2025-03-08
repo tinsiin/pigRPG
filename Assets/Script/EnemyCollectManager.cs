@@ -206,12 +206,20 @@ public class EnemyCollectManager : MonoBehaviour
 
     /// <summary>
     ///     属性同士の敵集まりの相性判定
+    ///     もし同情効果がtrueなら、相性判定の確率が二倍になる
     /// </summary>
     /// <param name="I">既にパーティにいて、ジャッジする方</param>
     /// <param name="You">ジャッジされる側、相性が悪ければ</param>
-    public bool ImpressionMatchUp(SpiritualProperty I, SpiritualProperty You)
+    /// <param name="sympathy">同情してるかどうか</param>
+    public bool ImpressionMatchUp(SpiritualProperty I, SpiritualProperty You, bool sympathy = false)
     {
-        if (RandomEx.Shared.NextInt(100) < GetImpressionMatchPercent(I, You)) return true;
+        var matchPer = GetImpressionMatchPercent(I, You);
+        if (sympathy)
+        {
+            matchPer *= 2;//同情効果で二倍に
+        }
+
+        if (RandomEx.Shared.NextInt(100) < matchPer) return true;
 
         return false; //相性が合わなかった場合失敗を返す。
     }

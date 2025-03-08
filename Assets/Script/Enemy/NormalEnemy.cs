@@ -328,6 +328,15 @@ public class NormalEnemy : BaseStates
 
         //遭遇地点を記録する。
         _lastEncounterProgress = PlayersStates.Instance.NowProgress;
+
+        //死亡判定
+            if (Death())//死亡時コールバックも呼ばれる
+            {
+                if(Reborn && !broken)//復活するタイプであり、壊れてないものだけ
+                {
+                    ReadyRecovelyStep(PlayersStates.Instance.NowProgress);//復活歩数準備
+                }
+            }
     }
 
 

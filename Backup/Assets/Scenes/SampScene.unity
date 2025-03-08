@@ -2107,7 +2107,9 @@ MonoBehaviour:
           Impression: 0
           SkillPhysical: 0
           TenDayValues:
-            _list: []
+            _list:
+            - key: 0
+              value: 1
           _name: "\u63B4\u3093\u3067\u6295\u3052\u308B"
           _triggerCountMax: 0
           _triggerRollBackCount: 0

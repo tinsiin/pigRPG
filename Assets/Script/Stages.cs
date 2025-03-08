@@ -292,11 +292,17 @@ public class Stages : MonoBehaviour
                 }
             }
 
-        if (!validEnemies.Any())//有効リストが空だった場合
-        {
-            Debug.LogWarning("EnemyCollectAI: エリアに有効な敵が存在しません。");
-            return null; // または適切なデフォルト値を返す
-        }
+            //有効な敵のリスト全員に再遭遇時コールバックを実施
+            foreach(var ene in validEnemies)
+            {
+                ene.ReEncountCallback();
+            }
+            //有効リストが空だった場合
+            if (!validEnemies.Any())
+            {
+                Debug.LogWarning("EnemyCollectAI: エリアに有効な敵が存在しません。");
+                return null; // または適切なデフォルト値を返す
+            }
 
             //最初の一人はランダムで選ぶ
             var rndIndex = RandomEx.Shared.NextInt(0, validEnemies.Count - 1); //ランダムインデックス指定
@@ -323,22 +329,38 @@ public class Stages : MonoBehaviour
             {
                 //まず吟味する加入対象をランダムに選ぶ
                 var targetIndex = RandomEx.Shared.NextInt(0, validEnemies.Count - 1); //ランダムでインデックス指定
+                var target = validEnemies[targetIndex];
+                 //適合数 これがResultList.Countと同じになったら加入させる
+                var okCount = 0;
+                //同情
+                var sympathy = false;
 
-                var okCount = 0; //適合数 これがResultList.Countと同じになったら加入させる
+                //もし、既にいる敵や加入対象のHPが半分以下の場合、精神属性の相性判定が二倍になる。
+                foreach(var ene in ResultList)
+                {
+                    if(ene.HP <= ene.MAXHP / 2) sympathy = true;
+                }
+                if(target.HP <= target.MAXHP / 2) sympathy = true;
 
-                for (var i = 0; i < ResultList.Count; i++) //既に選ばれた敵全員との相性を見る
-                                                           //for文で判断しないと現在の配列のインデックスを相性値用の配列のインデックス指定に使えない
-                                                           //種別同士の判定 if文内で変数に代入できる
-                    if (EnemyCollectManager.Instance.TypeMatchUp(ResultList[i].MyType, validEnemies[targetIndex].MyType))
-                        if (EnemyCollectManager.Instance.ImpressionMatchUp(ResultList[i].MyImpression,
-                                validEnemies[targetIndex].MyImpression))//属性同士の判定
+                for (var i = 0; i < ResultList.Count; i++)
+                { //既に選ばれた敵全員との相性を見る
+                    //for文で判断しないと現在の配列のインデックスを相性値用の配列のインデックス指定に使えない
+                    //種別同士の判定 if文内で変数に代入できる
+                    if (EnemyCollectManager.Instance.TypeMatchUp(ResultList[i].MyType, target.MyType))
+                    {
+                        //属性同士の判定
+                        if (EnemyCollectManager.Instance.ImpressionMatchUp(ResultList[i].MyImpression,target.MyImpression, sympathy))
+                        {
                             okCount++; //適合数を増やす
-                                       //foreachで全員との相性を見たら、加入させる。
+                        }
+                    }
+                }
+                //foreachで全員との相性を見たら、加入させる。
                 if (okCount == ResultList.Count) //全員との相性が合致したら
                 {
-                    validEnemies[targetIndex].InitializeMyImpression();//精神属性のランダム生成
-                    ResultList.Add(validEnemies[targetIndex]); //結果のリストに追加
-                    validEnemies.RemoveAt(targetIndex); //候補リストから削除
+                    target.InitializeMyImpression();//精神属性のランダム生成
+                    ResultList.Add(target); //結果のリストに追加
+                    validEnemies.Remove(target); //候補リストから削除
                 }
 
                 //数判定

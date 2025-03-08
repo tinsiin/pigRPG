@@ -502,7 +502,7 @@ public class BattleManager
                             Acter.SetAGIPercentageModifier(mod.modify, mod.memo);
                             break;
                         case whatModify.eye:
-                            Acter.SetHITPercentageModifier(mod.modify, mod.memo);
+                            Acter.SetEYEPercentageModifier(mod.modify, mod.memo);
                             break;
                     }
                 }
@@ -1451,7 +1451,7 @@ public class BattleManager
                                 BackLines = new List<BaseStates>(SelectGroup.Ours.Where(member => member != SelectGroup.InstantVanguard));
 
                                 UA.Add(RandomEx.Shared.GetItem(BackLines.ToArray()));//後衛リストからランダムで選択
-                                Acter.SetHITPercentageModifier(BackLineHITModifier, "少し遠いよ");//後衛への命中率補正70%を追加。
+                                Acter.SetEYEPercentageModifier(BackLineHITModifier, "少し遠いよ");//後衛への命中率補正70%を追加。
                                 Debug.Log(Acter.CharacterName + "は後衛を狙った");
                             }
                         }
@@ -1554,7 +1554,7 @@ public class BattleManager
                                 BackLines = new List<BaseStates>(SelectGroup.Ours.Where(member => member != SelectGroup.InstantVanguard));
 
                                 UA.AddRange(BackLines);//後衛をそのまま入れる
-                                Acter.SetHITPercentageModifier(90, "ほんの少し狙いにくい");//後衛への命中率補正を追加。
+                                Acter.SetEYEPercentageModifier(90, "ほんの少し狙いにくい");//後衛への命中率補正を追加。
                                 Debug.Log(Acter.CharacterName + "は後衛を狙った");
                             }
                         }

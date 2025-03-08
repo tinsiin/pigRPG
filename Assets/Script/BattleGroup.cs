@@ -310,32 +310,4 @@ public class BattleGroup
             }
         }
     }
-    /// <summary>
-    /// 敵グループの再遭遇時のコールバック　
-    /// </summary>
-    public void EnemiesReEncountCallback()
-    {
-        List<NormalEnemy> enes =  Ours.OfType<NormalEnemy>().ToList();
-
-        //自信ブーストの処理
-        foreach(var ene in enes)
-        {
-            ene.ReEncountCallback();//一人一人のコールバック
-
-            //死亡判定
-            if (ene.Death())//死亡時コールバックも呼ばれる
-            {
-                if(ene.Reborn && !ene.broken)//復活するタイプであり、壊れてないものだけ
-                {
-                    ene.ReadyRecovelyStep(PlayersStates.Instance.NowProgress);//復活歩数準備
-                }
-                Ours.Remove(ene);//パーティーから外す
-            }
-        }
-
-        //再遭遇時に敵が消えたりしてたら、　パーティー属性の再決定
-
-        //このコールバック自体をStagesでの敵集積での個人個人に移籍して、
-        //パーティー属性の処理や、敵のHPなどの違いによる　敵同士の集まりAIの変化などを実装する。
-    }
 }
