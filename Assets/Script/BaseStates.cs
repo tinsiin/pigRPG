@@ -426,195 +426,195 @@ public abstract class BaseStates
         }
     }
 
-    public float b_AGI
+    public StatesPowerBreakdown b_AGI
     {
         get
         {
-            var calcAGI = 0f;
+            // StatesPowerBreakdownのインスタンスを作成
+            var breakdown = new StatesPowerBreakdown(new Dictionary<TenDayAbility, float>(), b_b_agi);
 
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.3f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.3f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 0.9f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 1.0f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.FaceToHand) * 0.2f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.Vail) * 0.1f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.4f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.HeatHaze) * 0.6f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.6f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.2f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.SilentTraining) * 0.02f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.2f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * 0.03f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.1f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.04f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.1f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.UnextinguishedPath) * 0.14f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.Raincoat) * 0.1f;
-            calcAGI += TenDayValues.GetValueOrZero(TenDayAbility.Baka) * 2f;
+            breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.3f);
+            breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.3f);
+            breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 0.9f);
+            breakdown.TenDayAdd(TenDayAbility.HeavenAndEndWar, TenDayValues.GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 1.0f);
+            breakdown.TenDayAdd(TenDayAbility.FaceToHand, TenDayValues.GetValueOrZero(TenDayAbility.FaceToHand) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues.GetValueOrZero(TenDayAbility.Vail) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.4f);
+            breakdown.TenDayAdd(TenDayAbility.HeatHaze, TenDayValues.GetValueOrZero(TenDayAbility.HeatHaze) * 0.6f);
+            breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.6f);
+            breakdown.TenDayAdd(TenDayAbility.PersonaDivergence, TenDayValues.GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues.GetValueOrZero(TenDayAbility.SilentTraining) * 0.02f);
+            breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * 0.03f);
+            breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.ElementFaithPower, TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.04f);
+            breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.UnextinguishedPath, TenDayValues.GetValueOrZero(TenDayAbility.UnextinguishedPath) * 0.14f);
+            breakdown.TenDayAdd(TenDayAbility.Raincoat, TenDayValues.GetValueOrZero(TenDayAbility.Raincoat) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.Baka, TenDayValues.GetValueOrZero(TenDayAbility.Baka) * 2f);
 
-            return b_b_agi + calcAGI;
+            return breakdown;
         }
     }
     /// <summary>
     /// 攻撃力を十日能力とb_b_atkから計算した値
+    /// 分解用にStatesPowerBreakdownとして返す
     /// </summary>
-    public float b_ATK
+    public StatesPowerBreakdown b_ATK
     {
         get 
         {
-            var calcATK = 0f;
-
+            // StatesPowerBreakdownのインスタンスを作成
+            var breakdown = new StatesPowerBreakdown(new Dictionary<TenDayAbility, float>(), b_b_atk);
+            
             //共通の十日能力をまず加算する。
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.5f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 0.8f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 0.3f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Rain) * 0.058f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.FaceToHand) * 0.01f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.02f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.dokumamusi) * 0.4f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.HeatHaze) * 0.0666f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Leisure) * 0.01f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.SilentTraining) * 0.2f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.56f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.09f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight) * 0.45f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.04f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.JoeTeeth) * 0.5f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Blades) * 1.0f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Glory) * 0.1f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Smiler) * 0.02f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.23f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Enokunagi) * 3f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Raincoat) * 22f;
-            calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Baka) * -11f;
+            breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.5f);
+            breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 0.8f);
+            breakdown.TenDayAdd(TenDayAbility.HeavenAndEndWar, TenDayValues.GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 0.3f);
+            breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues.GetValueOrZero(TenDayAbility.Rain) * 0.058f);
+            breakdown.TenDayAdd(TenDayAbility.FaceToHand, TenDayValues.GetValueOrZero(TenDayAbility.FaceToHand) * 0.01f);
+            breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.02f);
+            breakdown.TenDayAdd(TenDayAbility.dokumamusi, TenDayValues.GetValueOrZero(TenDayAbility.dokumamusi) * 0.4f);
+            breakdown.TenDayAdd(TenDayAbility.HeatHaze, TenDayValues.GetValueOrZero(TenDayAbility.HeatHaze) * 0.0666f);
+            breakdown.TenDayAdd(TenDayAbility.Leisure, TenDayValues.GetValueOrZero(TenDayAbility.Leisure) * 0.01f);
+            breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues.GetValueOrZero(TenDayAbility.SilentTraining) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.56f);
+            breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.09f);
+            breakdown.TenDayAdd(TenDayAbility.NightInkKnight, TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight) * 0.45f);
+            breakdown.TenDayAdd(TenDayAbility.ElementFaithPower, TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.04f);
+            breakdown.TenDayAdd(TenDayAbility.JoeTeeth, TenDayValues.GetValueOrZero(TenDayAbility.JoeTeeth) * 0.5f);
+            breakdown.TenDayAdd(TenDayAbility.Blades, TenDayValues.GetValueOrZero(TenDayAbility.Blades) * 1.0f);
+            breakdown.TenDayAdd(TenDayAbility.Glory, TenDayValues.GetValueOrZero(TenDayAbility.Glory) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.Smiler, TenDayValues.GetValueOrZero(TenDayAbility.Smiler) * 0.02f);
+            breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.23f);
+            breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues.GetValueOrZero(TenDayAbility.Enokunagi) * 3f);
+            breakdown.TenDayAdd(TenDayAbility.Raincoat, TenDayValues.GetValueOrZero(TenDayAbility.Raincoat) * 22f);
+            breakdown.TenDayAdd(TenDayAbility.Baka, TenDayValues.GetValueOrZero(TenDayAbility.Baka) * -11f);
 
             //戦闘規格により分岐する
             switch (NowBattleProtocol)
             {
                 case BattleProtocol.LowKey:
-                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.9f;
-                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.SpringWater) * 1.7f;
-                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller) * 1.0f;
-                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.UnextinguishedPath) * 0.3f;
+                    breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.9f);
+                    breakdown.TenDayAdd(TenDayAbility.SpringWater, TenDayValues.GetValueOrZero(TenDayAbility.SpringWater) * 1.7f);
+                    breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller) * 1.0f);
+                    breakdown.TenDayAdd(TenDayAbility.UnextinguishedPath, TenDayValues.GetValueOrZero(TenDayAbility.UnextinguishedPath) * 0.3f);
                     break;
                 case BattleProtocol.Tricky:
-                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Miza) * 1.2f;
-                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.8f;
-                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.7f;
-                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Enokunagi) * 0.5f;
-                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Rain) * 0.6f;
+                    breakdown.TenDayAdd(TenDayAbility.Miza, TenDayValues.GetValueOrZero(TenDayAbility.Miza) * 1.2f);
+                    breakdown.TenDayAdd(TenDayAbility.PersonaDivergence, TenDayValues.GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.8f);
+                    breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.7f);
+                    breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues.GetValueOrZero(TenDayAbility.Enokunagi) * 0.5f);
+                    breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues.GetValueOrZero(TenDayAbility.Rain) * 0.6f);
                     break;
                 case BattleProtocol.Showey:
-                 calcATK += TenDayValues.GetValueOrZero(TenDayAbility.Vail) * 1.11f;
-                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.2f;
-                    calcATK += TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller) * 1.0f;
+                    breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues.GetValueOrZero(TenDayAbility.Vail) * 1.11f);
+                    breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.2f);
+                    breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller) * 1.0f);
                     break;
                 //noneの場合、そもそもこの追加攻撃力がない。
             }
-
             
-            
-            return b_b_atk + calcATK;
-        }
+            return breakdown;
+        }   
     }
     /// <summary>
     /// 指定したAimStyleでの基礎防御力を計算する
     /// </summary>
-    private float CalcBaseDefenseForAimStyle(AimStyle style)
+    private StatesPowerBreakdown CalcBaseDefenseForAimStyle(AimStyle style)
     {
-        float calcDEF = 0;
+        // StatesPowerBreakdownのインスタンスを作成
+        var breakdown = new StatesPowerBreakdown(new Dictionary<TenDayAbility, float>(), 0);
 
-                    // 共通の十日能力をまず加算
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 1.0f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight) * 1.3f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Raincoat) * 1.0f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.JoeTeeth) * 0.8f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 0.3f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.34f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.HeatHaze) * 0.23f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.38f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Leisure) * 0.47f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Blades) * 0.3f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 0.01f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Rain) * 0.2f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.FaceToHand) * 0.013f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Vail) * 0.02f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.04f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SpringWater) * 0.035f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SilentTraining) * 0.09f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.01f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller) * 0.07f;
-            calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Baka) * -0.1f;
+        // 共通の十日能力をまず加算
+        breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 1.0f);
+        breakdown.TenDayAdd(TenDayAbility.NightInkKnight, TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight) * 1.3f);
+        breakdown.TenDayAdd(TenDayAbility.Raincoat, TenDayValues.GetValueOrZero(TenDayAbility.Raincoat) * 1.0f);
+        breakdown.TenDayAdd(TenDayAbility.JoeTeeth, TenDayValues.GetValueOrZero(TenDayAbility.JoeTeeth) * 0.8f);
+        breakdown.TenDayAdd(TenDayAbility.HeavenAndEndWar, TenDayValues.GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 0.3f);
+        breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.34f);
+        breakdown.TenDayAdd(TenDayAbility.HeatHaze, TenDayValues.GetValueOrZero(TenDayAbility.HeatHaze) * 0.23f);
+        breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.38f);
+        breakdown.TenDayAdd(TenDayAbility.Leisure, TenDayValues.GetValueOrZero(TenDayAbility.Leisure) * 0.47f);
+        breakdown.TenDayAdd(TenDayAbility.Blades, TenDayValues.GetValueOrZero(TenDayAbility.Blades) * 0.3f);
+        breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 0.01f);
+        breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues.GetValueOrZero(TenDayAbility.Rain) * 0.2f);
+        breakdown.TenDayAdd(TenDayAbility.FaceToHand, TenDayValues.GetValueOrZero(TenDayAbility.FaceToHand) * 0.013f);
+        breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues.GetValueOrZero(TenDayAbility.Vail) * 0.02f);
+        breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.04f);
+        breakdown.TenDayAdd(TenDayAbility.SpringWater, TenDayValues.GetValueOrZero(TenDayAbility.SpringWater) * 0.035f);
+        breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues.GetValueOrZero(TenDayAbility.SilentTraining) * 0.09f);
+        breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.01f);
+        breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller) * 0.07f);
+        breakdown.TenDayAdd(TenDayAbility.Baka, TenDayValues.GetValueOrZero(TenDayAbility.Baka) * -0.1f);
 
-
-        
         switch (style)
         {
-                case AimStyle.CentralHeavenStrike: // 中天一弾
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Smiler) * 0.78f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.CryoniteQuality) * 1.0f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SilentTraining) * 0.4f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Vail) * 0.5f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.JoeTeeth) * 0.9f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.3f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.1f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 0.6f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * -0.3f;
+            case AimStyle.CentralHeavenStrike: // 中天一弾
+                breakdown.TenDayAdd(TenDayAbility.Smiler, TenDayValues.GetValueOrZero(TenDayAbility.Smiler) * 0.78f);
+                breakdown.TenDayAdd(TenDayAbility.CryoniteQuality, TenDayValues.GetValueOrZero(TenDayAbility.CryoniteQuality) * 1.0f);
+                breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues.GetValueOrZero(TenDayAbility.SilentTraining) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues.GetValueOrZero(TenDayAbility.Vail) * 0.5f);
+                breakdown.TenDayAdd(TenDayAbility.JoeTeeth, TenDayValues.GetValueOrZero(TenDayAbility.JoeTeeth) * 0.9f);
+                breakdown.TenDayAdd(TenDayAbility.ElementFaithPower, TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.1f);
+                breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 0.6f);
+                breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * -0.3f);
                 break;
 
-                case AimStyle.AcrobatMinor: // アクロバマイナ体術1
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 1.0f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.1f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Blades) * 1.1f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.1f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.3f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.6f;
-                    break;
+            case AimStyle.AcrobatMinor: // アクロバマイナ体術1
+                breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 1.0f);
+                breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.1f);
+                breakdown.TenDayAdd(TenDayAbility.Blades, TenDayValues.GetValueOrZero(TenDayAbility.Blades) * 1.1f);
+                breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.1f);
+                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.6f);
+                break;
 
-                case AimStyle.Doublet: // ダブレット
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.HeatHaze) * 0.7f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Sort) * 0.3f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * 0.4f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight) * 0.3f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 1.0f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.2f;
-                    break;
+            case AimStyle.Doublet: // ダブレット
+                breakdown.TenDayAdd(TenDayAbility.HeatHaze, TenDayValues.GetValueOrZero(TenDayAbility.HeatHaze) * 0.7f);
+                breakdown.TenDayAdd(TenDayAbility.Sort, TenDayValues.GetValueOrZero(TenDayAbility.Sort) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.NightInkKnight, TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * 1.0f);
+                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.2f);
+                break;
 
-                case AimStyle.QuadStrike: // 四弾差し込み
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * 1.0f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Rain) * 0.2f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SpringWater) * 0.3f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.6f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Enokunagi) * 0.5f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.17f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.TentVoid) * 0.4f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * -0.2f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) * -1.0f;
-                    break;
+            case AimStyle.QuadStrike: // 四弾差し込み
+                breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * 1.0f);
+                breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues.GetValueOrZero(TenDayAbility.Rain) * 0.2f);
+                breakdown.TenDayAdd(TenDayAbility.SpringWater, TenDayValues.GetValueOrZero(TenDayAbility.SpringWater) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.6f);
+                breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues.GetValueOrZero(TenDayAbility.Enokunagi) * 0.5f);
+                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues.GetValueOrZero(TenDayAbility.Vond) * 0.17f);
+                breakdown.TenDayAdd(TenDayAbility.TentVoid, TenDayValues.GetValueOrZero(TenDayAbility.TentVoid) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * -0.2f);
+                breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) * -1.0f);
+                break;
 
-                case AimStyle.Duster: // ダスター
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Miza) * 0.6f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Glory) * 0.8f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.TentVoid) * -0.2f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * -0.2f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Raincoat) * 0.4f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Sort) * 0.1f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.SilentTraining) * 0.4f;
-                    break;
+            case AimStyle.Duster: // ダスター
+                breakdown.TenDayAdd(TenDayAbility.Miza, TenDayValues.GetValueOrZero(TenDayAbility.Miza) * 0.6f);
+                breakdown.TenDayAdd(TenDayAbility.Glory, TenDayValues.GetValueOrZero(TenDayAbility.Glory) * 0.8f);
+                breakdown.TenDayAdd(TenDayAbility.TentVoid, TenDayValues.GetValueOrZero(TenDayAbility.TentVoid) * -0.2f);
+                breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * -0.2f);
+                breakdown.TenDayAdd(TenDayAbility.Raincoat, TenDayValues.GetValueOrZero(TenDayAbility.Raincoat) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.Sort, TenDayValues.GetValueOrZero(TenDayAbility.Sort) * 0.1f);
+                breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues.GetValueOrZero(TenDayAbility.SilentTraining) * 0.4f);
+                break;
 
-                case AimStyle.PotanuVolf: // ポタヌヴォルフのほうき術
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.4f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.2f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull) * 1.4f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.2f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * -0.2f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.3f;
-                    calcDEF += TenDayValues.GetValueOrZero(TenDayAbility.Vond) * -0.2f;
-                    break;
-                //none 掴んで投げるスキルの場合はこの排他ステはない。
+            case AimStyle.PotanuVolf: // ポタヌヴォルフのほうき術
+                breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness) * 0.2f);
+                breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull) * 1.4f);
+                breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.2f);
+                breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues.GetValueOrZero(TenDayAbility.BlazingFire) * -0.2f);
+                breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues.GetValueOrZero(TenDayAbility.Vond) * -0.2f);
+                break;
+            //none 掴んで投げるスキルの場合はこの排他ステはない。
         }
-        
-        return calcDEF;
+    
+        return breakdown;
     }
 
 
@@ -624,52 +624,57 @@ public abstract class BaseStates
     /// </summary>
     /// <param name="SimulateAimStyle"></param>
     /// <returns></returns>
-    public float b_DEF(AimStyle? SimulateAimStyle = null)
+    public StatesPowerBreakdown b_DEF(AimStyle? SimulateAimStyle = null)
     {
-        var calcDEF = 0f;
-
+       // StatesPowerBreakdownのインスタンスを作成
+        var breakdown = new StatesPowerBreakdown(new Dictionary<TenDayAbility, float>(), b_b_def);
+        
+        StatesPowerBreakdown styleBreakdown;
+        
         if(SimulateAimStyle == null)
         {
-            calcDEF += CalcBaseDefenseForAimStyle(NowDeffenceStyle);
+            styleBreakdown = CalcBaseDefenseForAimStyle(NowDeffenceStyle);
         }
         else
         {
-            calcDEF += CalcBaseDefenseForAimStyle(SimulateAimStyle.Value);
-
+            styleBreakdown = CalcBaseDefenseForAimStyle(SimulateAimStyle.Value);
         }
-
-        return b_b_def + calcDEF;
+    
+        // スタイルによる防御力内訳を追加
+        return breakdown + styleBreakdown;
     }
-    public float b_EYE
+    public StatesPowerBreakdown b_EYE
     {
         get
         {
-            var calcEYE = 0f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.2f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.2f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Rain) * 0.1f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.FaceToHand) * 0.8f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Vail) * 0.25f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.6f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.SpringWater) * 0.04f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.dokumamusi) * 0.1f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 1.0f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Leisure) * 0.1f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.02f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.TentVoid) * 0.3f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Sort) * 0.6f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.01f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * 0.04f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.001f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Miza) * 0.5f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.JoeTeeth) * 0.03f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.2f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight) * 1.0f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller) * 0.2f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.CryoniteQuality) * 0.3f;
-            calcEYE += TenDayValues.GetValueOrZero(TenDayAbility.Enokunagi) * -0.5f;
-
-            return b_b_eye + calcEYE;
+            // StatesPowerBreakdownのインスタンスを作成
+            var breakdown = new StatesPowerBreakdown(new Dictionary<TenDayAbility, float>(), b_b_eye);
+            
+            breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues.GetValueOrZero(TenDayAbility.Rain) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.FaceToHand, TenDayValues.GetValueOrZero(TenDayAbility.FaceToHand) * 0.8f);
+            breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues.GetValueOrZero(TenDayAbility.Vail) * 0.25f);
+            breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues.GetValueOrZero(TenDayAbility.StarTersi) * 0.6f);
+            breakdown.TenDayAdd(TenDayAbility.SpringWater, TenDayValues.GetValueOrZero(TenDayAbility.SpringWater) * 0.04f);
+            breakdown.TenDayAdd(TenDayAbility.dokumamusi, TenDayValues.GetValueOrZero(TenDayAbility.dokumamusi) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 1.0f);
+            breakdown.TenDayAdd(TenDayAbility.Leisure, TenDayValues.GetValueOrZero(TenDayAbility.Leisure) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.PersonaDivergence, TenDayValues.GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.02f);
+            breakdown.TenDayAdd(TenDayAbility.TentVoid, TenDayValues.GetValueOrZero(TenDayAbility.TentVoid) * 0.3f);
+            breakdown.TenDayAdd(TenDayAbility.Sort, TenDayValues.GetValueOrZero(TenDayAbility.Sort) * 0.6f);
+            breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues.GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.01f);
+            breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * 0.04f);
+            breakdown.TenDayAdd(TenDayAbility.ElementFaithPower, TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.001f);
+            breakdown.TenDayAdd(TenDayAbility.Miza, TenDayValues.GetValueOrZero(TenDayAbility.Miza) * 0.5f);
+            breakdown.TenDayAdd(TenDayAbility.JoeTeeth, TenDayValues.GetValueOrZero(TenDayAbility.JoeTeeth) * 0.03f);
+            breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues.GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.NightInkKnight, TenDayValues.GetValueOrZero(TenDayAbility.NightInkKnight) * 1.0f);
+            breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues.GetValueOrZero(TenDayAbility.HumanKiller) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.CryoniteQuality, TenDayValues.GetValueOrZero(TenDayAbility.CryoniteQuality) * 0.3f);
+            breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues.GetValueOrZero(TenDayAbility.Enokunagi) * -0.5f);
+            
+            return breakdown;
         }
     }
     /// <summary>
@@ -1029,7 +1034,7 @@ public abstract class BaseStates
     /// </summary>
     void MentalHealOnAttack()
     {
-        MentalHP += b_ATK;
+        MentalHP += b_ATK.Total;
     }
     void MentalHPHealOnTurn()
     {
@@ -1162,7 +1167,7 @@ public abstract class BaseStates
     /// <summary>
     /// vitalLayerでHPに到達する前に攻撃値を請け負う処理
     /// </summary>
-    public float BarrierLayers(ref float dmg, ref float mentalDmg,BaseStates atker)
+    public void BarrierLayers(ref StatesPowerBreakdown dmg, ref StatesPowerBreakdown mentalDmg,BaseStates atker)
     {
 
         // 1) VitalLayer の順番どおりにダメージを適用していく
@@ -1189,7 +1194,7 @@ public abstract class BaseStates
                 }
                 if (skillPhy == PhysicalProperty.volten)//vol天なら破壊負け
                 {
-                    dmg -= dmg * 0.022f * (atker.b_ATK - kerekere);
+                    dmg -= dmg * 0.022f * (atker.b_ATK.Total - kerekere);
                     //b_atk < kerekereになった際、減らずに逆に威力が増えるので、そういう場合の演出差分が必要
                 }
             }
@@ -1200,18 +1205,51 @@ public abstract class BaseStates
             }
 
             // 3) dmg が 0 以下になったら、もうこれ以上削る必要ない
-            if (dmg <= 0f)
+            if (dmg.Total <= 0f)
             {
-                dmg = 0f;
                 break;
             }
         }
 
-        // 4) 層で削りきれなかった分を戻す
-        if (dmg < 0) dmg = 0;//0未満チェック
-        return dmg;
     }
 
+    /// <summary>
+    /// 思えの値　設定値
+    /// </summary>
+    public float ResonanceValue;
+    float _nowResonanceValue;
+    /// <summary>
+    /// 現在の思えの値
+    /// </summary>
+    public float NowResonanceValue
+    {
+        get
+        {
+            return _nowResonanceValue;
+        }
+        set
+        {
+            _nowResonanceValue = value;
+            //最小値未満なら最小値にする。
+            if(_nowResonanceValue < 0) _nowResonanceValue = 0;
+            //最大値超えたら最大値にする。
+            if(_nowResonanceValue > ResonanceValue) _nowResonanceValue = ResonanceValue;
+        }
+    }
+    /// <summary>
+    /// 思えの値をフルリセットする
+    /// </summary>
+    public void ResetResonanceValue() { NowResonanceValue = ResonanceValue; }
+    /// <summary>
+    /// 思えの値を回復する
+    /// </summary>
+    public void ResonanceHeal(float heal)
+    {
+        NowResonanceValue += heal;
+        //最大値超えたら最大値にする。
+        if(NowResonanceValue > ResonanceValue) NowResonanceValue = ResonanceValue;
+    }
+    
     /// <summary>
     /// このキャラがどの辺りを狙っているか
     /// </summary>
@@ -3564,19 +3602,19 @@ public abstract class BaseStates
     /// <summary>
     /// 次に使用する命中率への固定値補正用保持リスト
     /// </summary>
-    private List<ModifierPart> _useEYEFixedModifiers;
+    private List<FixedModifierPart> _useEYEFixedModifiers;
     /// <summary>
     /// 次に使用する攻撃力への固定値補正用保持リスト
     /// </summary>
-    private List<ModifierPart> _useATKFixedModifiers;
+    private List<FixedModifierPart> _useATKFixedModifiers;
     /// <summary>
     /// 次に使用する回避率への固定値補正用保持リスト
     /// </summary>
-    private List<ModifierPart> _useAGIFixedModifiers;
+    private List<FixedModifierPart> _useAGIFixedModifiers;
     /// <summary>
     /// 次に使用する防御力への固定値補正用保持リスト
     /// </summary>
-    private List<ModifierPart> _useDEFFixedModifiers;
+    private List<FixedModifierPart> _useDEFFixedModifiers;
     /// <summary>
     /// カウンター用の一時的な防御無視率 )特別補正_
     /// 比較する際にこちらの方が本来の無視率より多ければ、こちらの値が使用される。
@@ -3619,34 +3657,34 @@ public abstract class BaseStates
     /// <summary>
     /// 命中率固定値補正をセットする。
     /// </summary>
-    public void SetEYEFixedModifier(float value, string memo)
+    public void SetEYEFixedModifier(StatesPowerBreakdown value, string memo)
     {
-        if (_useEYEFixedModifiers == null) _useEYEFixedModifiers = new List<ModifierPart>();//nullチェック、処理
-        _useEYEFixedModifiers.Add(new ModifierPart(memo, value));
+        if (_useEYEFixedModifiers == null) _useEYEFixedModifiers = new List<FixedModifierPart>();//nullチェック、処理
+        _useEYEFixedModifiers.Add(new FixedModifierPart(memo, value));
     }
     /// <summary>
     /// 攻撃力固定値補正をセットする。
     /// </summary>
-    public void SetATKFixedModifier(float value, string memo)
+    public void SetATKFixedModifier(StatesPowerBreakdown value, string memo)
     {
-        if (_useATKFixedModifiers == null) _useATKFixedModifiers = new List<ModifierPart>();//nullチェック、処理
-        _useATKFixedModifiers.Add(new ModifierPart(memo, value));
+        if (_useATKFixedModifiers == null) _useATKFixedModifiers = new List<FixedModifierPart>();//nullチェック、処理
+        _useATKFixedModifiers.Add(new FixedModifierPart(memo, value));
     }
     /// <summary>
     /// 回避率固定値補正をセットする。
     /// </summary>
-    public void SetAGIFixedModifier(float value, string memo)
+    public void SetAGIFixedModifier(StatesPowerBreakdown value, string memo)
     {
-        if (_useAGIFixedModifiers == null) _useAGIFixedModifiers = new List<ModifierPart>();//nullチェック、処理
-        _useAGIFixedModifiers.Add(new ModifierPart(memo, value));
+        if (_useAGIFixedModifiers == null) _useAGIFixedModifiers = new List<FixedModifierPart>();//nullチェック、処理
+        _useAGIFixedModifiers.Add(new FixedModifierPart(memo, value));
     }
     /// <summary>
     /// 防御力固定値補正をセットする。
     /// </summary>
-    public void SetDEFFixedModifier(float value, string memo)
+    public void SetDEFFixedModifier(StatesPowerBreakdown value, string memo)
     {
-        if (_useDEFFixedModifiers == null) _useDEFFixedModifiers = new List<ModifierPart>();//nullチェック、処理
-        _useDEFFixedModifiers.Add(new ModifierPart(memo, value));
+        if (_useDEFFixedModifiers == null) _useDEFFixedModifiers = new List<FixedModifierPart>();//nullチェック、処理
+        _useDEFFixedModifiers.Add(new FixedModifierPart(memo, value));
     }
     /// <summary>
     /// カウンター用防御無視率をセット
@@ -3687,36 +3725,41 @@ public abstract class BaseStates
         get => _useDEFPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
     }
     /// <summary>
+    /// 特別補正の内訳リストを集約した一つの内訳にして返す処理
+    /// </summary>
+    private StatesPowerBreakdown CalculateFixedModifierTotal(List<FixedModifierPart> modifiers)
+    {
+        if (modifiers == null || modifiers.Count == 0)
+        {
+            return new StatesPowerBreakdown(new Dictionary<TenDayAbility, float>(), 0);
+        }
+        
+        StatesPowerBreakdown result = modifiers[0].Modifier;
+        
+        for (int i = 1; i < modifiers.Count; i++)
+        {
+            result = result + modifiers[i].Modifier;
+        }
+        
+        return result;
+    }
+    /// <summary>
     /// 特別な命中率固定値補正
     /// </summary>
-    public float UseEYEFixedModifier
-    {
-        get => _useEYEFixedModifiers.Aggregate(0.0f, (total, m) => total + m.Modifier);//リスト内全ての値を加算
-    }
-
+    public StatesPowerBreakdown UseEYEFixedModifier => CalculateFixedModifierTotal(_useEYEFixedModifiers);
     /// <summary>
     /// 特別な攻撃力固定値補正
     /// </summary>
-    public float UseATKFixedModifier
-    {
-        get => _useATKFixedModifiers.Aggregate(0.0f, (total, m) => total + m.Modifier);//リスト内全ての値を加算
-    }
-
+    public StatesPowerBreakdown UseATKFixedModifier => CalculateFixedModifierTotal(_useATKFixedModifiers);
     /// <summary>
     /// 特別な回避率固定値補正
     /// </summary>
-    public float UseAGIFixedModifier
-    {
-        get => _useAGIFixedModifiers.Aggregate(0.0f, (total, m) => total + m.Modifier);//リスト内全ての値を加算
-    }
-
+    public StatesPowerBreakdown UseAGIFixedModifier => CalculateFixedModifierTotal(_useAGIFixedModifiers);
     /// <summary>
     /// 特別な防御力固定値補正
     /// </summary>
-    public float UseDEFFixedModifier
-    {
-        get => _useDEFFixedModifiers.Aggregate(0.0f, (total, m) => total + m.Modifier);//リスト内全ての値を加算
-    }
+    public StatesPowerBreakdown UseDEFFixedModifier => CalculateFixedModifierTotal(_useDEFFixedModifiers);
+
     /// <summary>
     /// 特別な命中率補正の保持リストを返す。　主にフレーバー要素用。
     /// </summary>
@@ -3752,7 +3795,7 @@ public abstract class BaseStates
     /// <summary>
     /// 特別な命中率固定値補正の保持リストを返す。　主にフレーバー要素用。
     /// </summary>
-    public List<ModifierPart> UseEYEFixedModifiers
+    public List<FixedModifierPart> UseEYEFixedModifiers
     {
         get => _useEYEFixedModifiers;
     }
@@ -3760,7 +3803,7 @@ public abstract class BaseStates
     /// <summary>
     /// 特別な攻撃力固定値補正の保持リストを返す。　主にフレーバー要素用。
     /// </summary>
-    public List<ModifierPart> UseATKFixedModifiers
+    public List<FixedModifierPart> UseATKFixedModifiers
     {
         get => _useATKFixedModifiers;
     }
@@ -3768,7 +3811,7 @@ public abstract class BaseStates
     /// <summary>
     /// 特別な回避率固定値補正の保持リストを返す。　主にフレーバー要素用。
     /// </summary>
-    public List<ModifierPart> UseAGIFixedModifiers
+    public List<FixedModifierPart> UseAGIFixedModifiers
     {
         get => _useAGIFixedModifiers;
     }
@@ -3776,7 +3819,7 @@ public abstract class BaseStates
     /// <summary>
     /// 特別な防御力固定値補正の保持リストを返す。　主にフレーバー要素用。
     /// </summary>
-    public List<ModifierPart> UseDEFFixedModifiers
+    public List<FixedModifierPart> UseDEFFixedModifiers
     {
         get => _useDEFFixedModifiers;
     }
@@ -3793,10 +3836,10 @@ public abstract class BaseStates
         _useATKPercentageModifiers = new List<ModifierPart>();
         _useAGIPercentageModifiers = new List<ModifierPart>();
         _useDEFPercentageModifiers = new List<ModifierPart>();
-        _useEYEFixedModifiers = new List<ModifierPart>();
-        _useATKFixedModifiers = new List<ModifierPart>();
-        _useAGIFixedModifiers = new List<ModifierPart>();
-        _useDEFFixedModifiers = new List<ModifierPart>();
+        _useEYEFixedModifiers = new List<FixedModifierPart>();
+        _useATKFixedModifiers = new List<FixedModifierPart>();
+        _useAGIFixedModifiers = new List<FixedModifierPart>();
+        _useDEFFixedModifiers = new List<FixedModifierPart>();
     }
 
     //特別補正------------------------------------------------------------------------------------------------特別補正-----------------------------------------------------------------------------------------------
@@ -3824,9 +3867,9 @@ public abstract class BaseStates
     /// 命中率計算
     /// </summary>
     /// <returns></returns>
-    public virtual float EYE()
+    public virtual StatesPowerBreakdown EYE()
     {
-        float eye = b_EYE;//基礎命中率
+        StatesPowerBreakdown eye = b_EYE;//基礎命中率
 
         eye *= UseEYEPercentageModifier;//命中率補正。リスト内がゼロならちゃんと1.0fが返る。
         eye *= _passiveList.Aggregate(1.0f, (total, m) => total * m.EYEPercentageModifier());//パッシブの乗算補正
@@ -3838,7 +3881,7 @@ public abstract class BaseStates
         {
             if (HasRangeWill(entry.Key))//キーの内容が範囲意志と合致した場合
             {
-                eye += entry.Value;//範囲意志による補正が掛かる
+                eye += entry.Value;//範囲意志による補正は非十日能力値
 
                 //基本的に範囲は一つだけのはずなので無用なループは避けてここで終了
                 break;
@@ -3879,16 +3922,16 @@ public abstract class BaseStates
         //パッシブの補正　固定値
         eye += _passiveList.Sum(p => p.EYEFixedValueEffect());
 
-        if(eye < 0) eye = 0;
+        //eye.ClampToZero();//クランプ　ここでやらない
         return eye;
     }
 
     /// <summary>
     /// 回避率計算
     /// </summary>
-    public virtual float AGI()
+    public virtual StatesPowerBreakdown AGI()
     {
-        float agi = b_AGI;//基礎回避率
+        StatesPowerBreakdown agi = b_AGI;//基礎回避率
 
         agi *= UseAGIPercentageModifier;//回避率補正。リスト内がゼロならちゃんと1.0fが返る。
         agi *= _passiveList.Aggregate(1.0f, (total, m) => total * m.AGIPercentageModifier());//パッシブの乗算補正
@@ -3901,13 +3944,13 @@ public abstract class BaseStates
         //パッシブの補正　固定値
         agi += _passiveList.Sum(p => p.AGIFixedValueEffect());
 
-        if(agi < 0) agi = 0;
+        //agi.ClampToZero();//クランプ　ここでやらない
         return agi;
     }
 
-    public virtual float ATK()
+    public virtual StatesPowerBreakdown ATK()
     {
-        float atk = b_ATK;//基礎攻撃力
+        StatesPowerBreakdown atk = b_ATK;//基礎攻撃力
 
         atk *= UseATKPercentageModifier;//攻撃力補正
         atk *= _passiveList.Aggregate(1.0f, (total, m) => total * m.ATKPercentageModifier());//パッシブの乗算補正
@@ -3953,7 +3996,7 @@ public abstract class BaseStates
         //パッシブの補正　固定値を加算する
         atk += _passiveList.Sum(p => p.ATKFixedValueEffect());
 
-        if(atk < 0) atk = 0;
+        //atk.ClampToZero();//クランプ　ここでやらない
         return atk;
     }
 
@@ -3962,7 +4005,7 @@ public abstract class BaseStates
     ///     オプションのAimStyleに値を入れるとそのAimStyleでシミュレート
     /// </summary>
     /// <returns></returns>
-    public virtual float DEF(float minusPer=0f, AimStyle? SimulateAimStyle = null)
+    public virtual StatesPowerBreakdown DEF(float minusPer=0f, AimStyle? SimulateAimStyle = null)
     {
         var def = b_DEF(); //基礎防御力が基本。
 
@@ -3982,13 +4025,13 @@ public abstract class BaseStates
 
         def -= minusAmount;//低減
 
-        if(def < 0) def = 0;
+        //def.ClampToZero();//クランプ　ここでやらない
         return def;
     }
     /// <summary>
     /// 精神HP用の防御力
     /// </summary>
-    public virtual float MentalDEF()
+    public virtual StatesPowerBreakdown MentalDEF()
     {
         return b_DEF() * 0.7f * NowPower switch
         {
@@ -4222,7 +4265,7 @@ public abstract class BaseStates
     /// <summary>
     /// 基礎山型分布によるダメージ補正
     /// </summary>
-    float GetBaseCalcDamageWithPlusMinus22Percent(float baseDamage)
+    StatesPowerBreakdown GetBaseCalcDamageWithPlusMinus22Percent(StatesPowerBreakdown baseDamage)
     {
         // 1) 8d5501 を振る（8回ランダム）
         int diceSum = 0;
@@ -4238,13 +4281,7 @@ public abstract class BaseStates
 
         // 3) baseDamage に対して (1 + offset) 倍する
         //    → (1 - 0.22)～(1 + 0.22) = 0.78～1.22 倍
-        float finalDamage = baseDamage * (1f + offset);
-
-        // 4) 必要であれば下限補正（例：0未満になれば0にする など）
-        if (finalDamage < 0f)
-        {
-            finalDamage = 0f;
-        }
+        StatesPowerBreakdown finalDamage = baseDamage * (1f + offset);
 
         // 5) float で返す（丸めたくないのでそのまま）
         return finalDamage;
@@ -4252,7 +4289,7 @@ public abstract class BaseStates
     /// <summary>
     /// 防ぎ方(AimStyle)の不一致がある場合、クランプする
     /// </summary>
-    private float ClampDefenseByAimStyle(BaseSkill skill,float def)
+    private StatesPowerBreakdown ClampDefenseByAimStyle(BaseSkill skill,StatesPowerBreakdown def)
     {
         if(skill.NowAimStyle() != NowDeffenceStyle)
         {
@@ -4279,7 +4316,7 @@ public abstract class BaseStates
     /// <summary>
     /// ダメージを渡し、がむしゃらの補正をかけて返す
     /// </summary>
-    float GetFrenzyBoost(BaseStates atker,float dmg)
+    StatesPowerBreakdown GetFrenzyBoost(BaseStates atker,StatesPowerBreakdown dmg)
     {
         var boost =1.0f;
         var skill = atker.NowUseSkill;
@@ -4291,7 +4328,7 @@ public abstract class BaseStates
 
             if(StrongFootEye > WeekEye)//ちゃんと被害者側の命中回避平均値が攻撃者の命中より高い場合に限定する
             {
-                boostCoef = Mathf.Floor((StrongFootEye - WeekEye) / 5);
+                boostCoef = Mathf.Floor((StrongFootEye.Total - WeekEye.Total) / 5);//十日能力の記録の必要がないので、totalを使う。
                 boost += boostCoef * 0.01f;
                 for(int i =0;i<skill.ATKCountUP-1;i++)//初回=単回攻撃の恐れがある場合は、がむしゃらは発動しないので、二回目から一回ずつ乗算されるようにしたいから-1
                 {
@@ -4554,25 +4591,30 @@ public abstract class BaseStates
         //慣れ補正
         dmg *= AdaptToSkill(Atker, skill, dmg);
 
+        //思えのダメージ処理
+        ResonanceDamage(dmg, skill, Atker);
+
         //vitalLayerを通る処理
         BarrierLayers(ref dmg,ref mentalDmg, Atker);
 
-        if(dmg < 0)dmg = 0;//0未満は0にする　逆に回復してしまうのを防止
+        var totalDmg = dmg.Total;//直接引くように変数に代入
+        if(totalDmg < 0)totalDmg = 0;//0未満は0にする　逆に回復してしまうのを防止
         var tempHP = HP;//計算用にダメージ受ける前のHPを記録
-        HP -= dmg;
+        HP -= totalDmg;
         Debug.Log("攻撃が実行された");
 
         //攻撃者がダメージを殺すまでに与えたダメージ辞書に記録する
-        Atker.RecordDamageDealtToEnemyUntilKill(dmg,this);
+        Atker.RecordDamageDealtToEnemyUntilKill(dmg.Total,this);
 
-        if(mentalDmg < 0)mentalDmg = 0;//0未満は0にする
-        MentalHP -= mentalDmg;//実ダメージで精神HPの最大値がクランプされた後に、精神攻撃が行われる。
+        var totalMentalDmg = mentalDmg.Total;//直接引くように変数に代入
+        if(totalMentalDmg < 0)totalMentalDmg = 0;//0未満は0にする
+        MentalHP -= totalMentalDmg;//実ダメージで精神HPの最大値がクランプされた後に、精神攻撃が行われる。
 
-        CalculateMutualKillSurvivalChance(tempHP,dmg,Atker);//互角一撃の生存によるHP再代入の可能性
+        CalculateMutualKillSurvivalChance(tempHP,totalDmg,Atker);//互角一撃の生存によるHP再代入の可能性
         Atker.MentalHealOnAttack();//精神HPの攻撃時回復
 
         //余剰ダメージを計算
-        var OverKillOverFlow = dmg - tempHP;//余剰ダメージ
+        var OverKillOverFlow = totalDmg - tempHP;//余剰ダメージ
 
         //死んだら攻撃者のOnKillを発生
         if(Death())
@@ -4606,9 +4648,152 @@ public abstract class BaseStates
         }
 
 
-        return dmg;
+        return totalDmg;
     }
+    /// <summary>
+    /// 思えダメージの精神属性合致補正
+    /// </summary>
+    const float SPIRITUAL_MODIFIER = 1.29f;
+    /// <summary>
+    /// 思えダメージが発生する強さの比率のしきい値
+    /// </summary>
+    const float RESONANCE_POWER_THRESHOLD = 1.4f;
+    /// <summary>
+    /// 思えのダメージの基礎値
+    /// </summary>
+    const float BASEDAMGE_TENDAYS = 0.06f;
+    /// <summary>
+    /// 思えのダメージ処理
+    /// ダメージと精神ダメージを食らう前に判定され、追加HPで防がれない
+    /// </summary>
+    public void ResonanceDamage(StatesPowerBreakdown dmg, BaseSkill skill, BaseStates Atker)
+    {   
+        //攻撃者がこちらに対してどれだけ強いか
+        var powerRatio = Atker.TenDayValuesSum / TenDayValuesSum;
+        //相手が自分より定数倍強いとダメージが発生する
+        if(powerRatio < RESONANCE_POWER_THRESHOLD) return;
 
+        //被害者の精神HP現在値とHPの平均値と最大HPの割合
+        var myBodyAndMentalAverageRatio = (HP + MentalHP) / 2 / MAXHP;
+        //思えの食らう割合。
+        var ResonanceDangerRatio = 1.0f - myBodyAndMentalAverageRatio;
+        //最大0.8　8割分食らってる所までダメージが伸びきることを想定する
+        ResonanceDangerRatio = Mathf.Min(0.8f,ResonanceDangerRatio);
+
+        //攻撃者と攻撃スキルの精神属性が一致してた場合にかかる補正は各case文で計算
+        
+        //十日能力による基礎思えダメージ
+        var BaseDmg =dmg.TenDayValuesSum * BASEDAMGE_TENDAYS;//十日能力のダメージ分定数分
+
+        //相手がどのくらい強いかの倍率
+        var DamageMultipilerByPowerRatio = powerRatio - (RESONANCE_POWER_THRESHOLD - 1.0f);
+        
+        //人間状況による分岐
+        switch(NowCondition)
+        {
+            case HumanConditionCircumstances.Painful:
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.UnextinguishedPath);
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.FlameBreathingWife);
+
+                if(skill.SkillSpiritual == SpiritualProperty.devil || skill.SkillSpiritual == SpiritualProperty.liminalwhitetile)
+                {
+                    BaseDmg *= SPIRITUAL_MODIFIER;
+                }
+                if(Atker.MyImpression == SpiritualProperty.devil || Atker.MyImpression == SpiritualProperty.liminalwhitetile)
+                {
+                    BaseDmg *= SPIRITUAL_MODIFIER;
+                }
+                break;
+            case HumanConditionCircumstances.Optimistic:
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.NightDarkness);
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.StarTersi);
+
+                if(skill.SkillSpiritual == SpiritualProperty.doremis)
+                {
+                    BaseDmg *= SPIRITUAL_MODIFIER;
+                }
+                if(Atker.MyImpression == SpiritualProperty.doremis)
+                {
+                    BaseDmg *= SPIRITUAL_MODIFIER;
+                }
+                break;
+            case HumanConditionCircumstances.Elated:
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.dokumamusi);
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.SpringWater);
+                //どの精神属性も効かない
+                break;
+            case HumanConditionCircumstances.Resolved:
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.TentVoid);
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.Vond);
+                if(skill.SkillSpiritual == SpiritualProperty.pysco)
+                {
+                    BaseDmg *= SPIRITUAL_MODIFIER;
+                }
+                if(Atker.MyImpression == SpiritualProperty.pysco)
+                {
+                    BaseDmg *= SPIRITUAL_MODIFIER;
+                }
+                break;
+            case HumanConditionCircumstances.Angry:
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.HeatHaze);
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.Rain);
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.ColdHeartedCalm);
+                if(skill.SkillSpiritual == SpiritualProperty.liminalwhitetile)
+                {
+                    BaseDmg *= SPIRITUAL_MODIFIER;
+                }
+                if(Atker.MyImpression == SpiritualProperty.liminalwhitetile)
+                {
+                    BaseDmg *= SPIRITUAL_MODIFIER;
+                }
+                break;
+            case HumanConditionCircumstances.Doubtful:
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.HumanKiller);
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.PersonaDivergence);
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.Enokunagi);
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.Blades);
+                if(skill.SkillSpiritual == SpiritualProperty.doremis || skill.SkillSpiritual == SpiritualProperty.pysco)
+                {
+                    BaseDmg *= SPIRITUAL_MODIFIER;
+                }
+                if(Atker.MyImpression == SpiritualProperty.doremis || Atker.MyImpression == SpiritualProperty.pysco)
+                {
+                    BaseDmg *= SPIRITUAL_MODIFIER;
+                }
+                break;
+            case HumanConditionCircumstances.Confused:
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.SilentTraining);
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.Miza);
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.Raincoat);
+                if(skill.SkillSpiritual == SpiritualProperty.doremis || skill.SkillSpiritual == SpiritualProperty.sacrifaith)
+                {
+                    BaseDmg *= SPIRITUAL_MODIFIER;
+                }
+                if(Atker.MyImpression == SpiritualProperty.doremis || Atker.MyImpression == SpiritualProperty.sacrifaith)
+                {
+                    BaseDmg *= SPIRITUAL_MODIFIER;
+                }
+                break;
+        }
+
+        var finalDamage = BaseDmg * ResonanceDangerRatio * DamageMultipilerByPowerRatio;
+
+        NowResonanceValue -= finalDamage;
+    }
+    /// <summary>
+    /// 人間状況が普調なら　行動を起こすたびに思えの値が回復する。
+    /// AttackCharaで
+    /// </summary>
+    public void ResonanceHealingOnBattle()
+    {
+        if(NowCondition == HumanConditionCircumstances.Normal)
+        {
+            //とりあえず最大値 3~11%ランダム回復ってことで。
+            var HealAmount = ResonanceValue * RandomEx.Shared.NextFloat(0.03f,0.11f);
+            ResonanceHeal(HealAmount);
+        }
+    }
+    
     /// <summary>
     /// ヒール
     /// </summary>
@@ -4660,18 +4845,19 @@ public abstract class BaseStates
         //vanguardじゃなければ攻撃者の命中減少
         if (!manager.IsVanguard(Attacker))
         {
-            minusMyChance += AGI() * 0.2f;    
+            minusMyChance += AGI().Total * 0.2f;//チャンス計算だけだからTotal    
         }
 
-        if (minusMyChance > Attacker.EYE())//マイナス対策
+        if (minusMyChance > Attacker.EYE().Total)//マイナス対策
         {
-            minusMyChance = Attacker.EYE();
+            minusMyChance = Attacker.EYE().Total;
         }
 
-        if (RandomEx.Shared.NextFloat(Attacker.EYE() + AGI()) < Attacker.EYE() - minusMyChance)//術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
+        //術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
+        if (RandomEx.Shared.NextFloat(Attacker.EYE().Total + AGI().Total) < Attacker.EYE().Total - minusMyChance)
         {
             //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
-            return skill.SkillHitCalc(AccuracySupremacy(Attacker.EYE(), AGI()));
+            return skill.SkillHitCalc(AccuracySupremacy(Attacker.EYE().Total, AGI().Total));
         }
         skill.HitConsecutiveCount = 0;//外したら連続ヒット回数がゼロ　
         return false;
@@ -5377,6 +5563,8 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         //スキルの精神属性に染まる
         PullImpressionFromSkill();
+        //思えの値を回復する
+        ResonanceHealingOnBattle();
         return txt;
     }
     /// <summary>
@@ -6256,7 +6444,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     float GetBaseMemoryIncreaseValue()
     {
-        var def = DEF();
+        var def = DEF().Total;
         if (def <= increaseThreshold)
         {
             // 第1段階: startIncreaseValueからmidLimitIncreaseValueへ収束
@@ -6283,7 +6471,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     float GetBaseMemoryReducationValue()
     {
-        var def = DEF();//攻撃によって減少されないまっさらな防御力
+        var def = DEF().Total;//攻撃によって減少されないまっさらな防御力
         if (def <= thresholdDEF)
         {
             // 第1段階: StartValueからmidLimitValueへ収束
@@ -6394,7 +6582,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     {
         const float bValue = 0.0004f; //ここの単位調節は1バトルの長さと密接に関係すると思う。
 
-        return bValue * b_EYE;//基礎命中率で補正。　「慣れは"元々"の視力と、記憶の精神由来の構成が物を言います。」
+        return bValue * b_EYE.Total;//基礎命中率で補正。　「慣れは"元々"の視力と、記憶の精神由来の構成が物を言います。」
     }
     /// <summary>
     /// 慣れ補正割合値のデフォルトの下限しきい値
@@ -6418,7 +6606,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         const float maxEYE = 134f;//EYEが補正される限界値
 
         // 現在のEYE()値を取得
-        float eyeValue = EYE();
+        float eyeValue = EYE().Total;
 
         // EYE()の値に応じてthresholdを計算
         if (eyeValue <= minEYE)
@@ -6509,7 +6697,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>
     /// スキルに慣れる処理 慣れ補正を返す
     /// </summary>
-    float AdaptToSkill(BaseStates enemy, BaseSkill skill, float dmg)
+    float AdaptToSkill(BaseStates enemy, BaseSkill skill, StatesPowerBreakdown dmg)
     {
         var donthaveskillImpression = true;//持ってないフラグ
         var IsFirstAttacker = false;//知っているスキル印象に食らったとき、その攻撃者が初見かどうか
@@ -6523,7 +6711,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             if (fo.skillImpression == skill.Impression)//スキル既にあるなら
             {
-                fo.DamageMemory(dmg);// ダメージ記録
+                fo.DamageMemory(dmg.Total);// ダメージ記録 慣れ補正用の優先順位などを決めるためのダメージ記録なのでそのままtotalでok
                 donthaveskillImpression = false;//既にあるフラグ！
                 if (IsFirstAttacker = !fo.User.Any(chara => chara == enemy))//攻撃者が人員リストにいない場合　true
                 {
@@ -6535,7 +6723,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         //もし初めて食らうのならーーーーーーーーーーーーーーーーー
         if (donthaveskillImpression)
         {
-            NowFocusSkillImpression = new FocusedSkillImpressionAndUser(enemy, skill.Impression, dmg);//新しく慣れ注目印象に
+            NowFocusSkillImpression = new FocusedSkillImpressionAndUser(enemy, skill.Impression, dmg.Total);//新しく慣れ注目印象に
             FocusSkillImpressionList.Add(NowFocusSkillImpression);//最初のキャラクターとスキルを記録
         }
 
@@ -6652,7 +6840,7 @@ private int CalcTransformCountIncrement(int tightenStage)
                         //もしデフォルトの下限しきい値を慣れ補正が下回っていたら
                         if (initialAdaptThreshold > AdaptModify)
                         {
-                            var chance = (int)(777 - b_EYE * 5);//b_eyeの0~150 0.1~3.7%推移　 以降は5.2%
+                            var chance = (int)(777 - b_EYE.Total * 5);//b_eyeの0~150 0.1~3.7%推移　 以降は5.2%
                             chance = Mathf.Max(19, chance);
 
                             if (RandomEx.Shared.NextInt(chance) == 0)//瞬きが起きる機会
@@ -7601,6 +7789,27 @@ public class ModifierPart
     }
 }
 /// <summary>
+/// 命中率、攻撃力、回避力、防御力への固定値補正
+/// </summary>
+public class FixedModifierPart
+{
+    /// <summary>
+    /// どういう補正かを保存する　攻撃時にunderに出てくる
+    /// </summary>
+    public string whatModifier;
+
+    /// <summary>
+    /// 補正値
+    /// </summary>
+    public StatesPowerBreakdown Modifier;
+
+    public FixedModifierPart(string txt, StatesPowerBreakdown value)
+    {
+        whatModifier = txt;
+        Modifier = value;
+    }
+}
+/// <summary>
 ///     精神属性、スキル、キャラクターに依存し、キャラクターは直前に使った物が適用される
     ///     だから精神属性同士で攻撃の通りは設定される。
     /// </summary>
@@ -7640,3 +7849,400 @@ public enum MemoryDensity
     High,
 }
 
+/// <summary>
+/// 分解に対応した十日能力と非十日能力の内訳を持つ四大ステ保持クラス
+/// </summary>
+public class StatesPowerBreakdown
+{
+    /// <summary>
+    /// 「TenDayAbilityからくる四大ステの内訳」
+    /// </summary>
+    public Dictionary<TenDayAbility, float> TenDayBreakdown { get; set; }
+
+    /// <summary>
+    /// 「非TenDayAbility要素 (固定値 等)」
+    /// </summary>
+    public float NonTenDayPart { get; set; }
+
+    /// <summary>
+    /// コンストラクタ
+    /// 十日能力と非十日能力の初期値
+    /// </summary>
+    public StatesPowerBreakdown(Dictionary<TenDayAbility, float> tenDayBreakdown, float nonTenDayPart)
+    {
+        TenDayBreakdown = tenDayBreakdown;
+        NonTenDayPart = nonTenDayPart;
+    }
+
+    /// <summary>
+    /// 合計値を出すプロパティ
+    /// </summary>
+    public float Total
+        => TenDayBreakdown.Values.Sum() + NonTenDayPart;
+    public float TenDayValuesSum => TenDayBreakdown.Values.Sum();
+    /// <summary>
+    /// 十日能力追加
+    /// </summary>
+    public void TenDayAdd(TenDayAbility tenDayAbility, float value)
+    {
+        if (!TenDayBreakdown.ContainsKey(tenDayAbility))
+        {
+            TenDayBreakdown.Add(tenDayAbility, 0);
+        }
+        TenDayBreakdown[tenDayAbility] += value;
+    }
+    /// <summary>
+    /// 非十日能力追加
+    /// </summary>
+    public void NonTenDayAdd(float value)
+    {
+        NonTenDayPart += value;
+    }
+    /// <summary>
+    /// 該当の十日能力ステータス値を入手
+    /// </summary>
+    public float GetTenDayValue(TenDayAbility tenDayAbility)
+    {
+        return TenDayBreakdown.GetValueOrZero(tenDayAbility);
+    }
+
+    /// <summary>
+    /// 乗算演算子のオーバーロード - スカラー値による乗算
+    /// 乗算補正で十日能力などが使われてたとしてもすべてに対するブーストなので、
+    /// どんな十日能力に補正され乗算補正されたかの情報は持たないし、全ての値に乗算する。
+    /// </summary>
+    public static StatesPowerBreakdown operator *(StatesPowerBreakdown breakdown, float multiplier)
+    {
+        // 新しいDictionaryを作成（元のを変更しないため）
+        var newTenDayBreakdown = new Dictionary<TenDayAbility, float>();
+        
+        // すべての十日能力の寄与値に乗算を適用
+        foreach (var entry in breakdown.TenDayBreakdown)
+        {
+            newTenDayBreakdown[entry.Key] = entry.Value * multiplier;
+        }
+        
+        // 非十日能力部分にも乗算を適用
+        float newNonTenDayPart = breakdown.NonTenDayPart * multiplier;
+        
+        // 新しいStatesPowerBreakdownオブジェクトを返す
+        return new StatesPowerBreakdown(newTenDayBreakdown, newNonTenDayPart);
+    }
+    /// <summary>
+    /// 除算補正で十日能力などが使われてたとしてもすべてに対するブーストなので、
+    /// どんな十日能力に補正され除算補正されたかの情報は持たないし、全ての値に除算する。
+    /// </summary>
+    public static StatesPowerBreakdown operator /(StatesPowerBreakdown breakdown, float divisor)
+    {
+        if (divisor == 0)
+        {
+            // ゼロ除算の場合はそのまま返す
+            return breakdown;
+        }
+        
+        // 新しい十日能力値の内訳を作成
+        var newTenDayBreakdown = new Dictionary<TenDayAbility, float>();
+        
+        // 各十日能力値を割る
+        foreach (var entry in breakdown.TenDayBreakdown)
+        {
+            newTenDayBreakdown[entry.Key] = entry.Value / divisor;
+        }
+        
+        // 非十日能力値も割る
+        float newNonTenDayPart = breakdown.NonTenDayPart / divisor;
+        
+        return new StatesPowerBreakdown(newTenDayBreakdown, newNonTenDayPart);
+    }
+
+    /// <summary>
+    /// StatesPowerBreakdown同士の加算演算子
+    /// 十日能力ごとに対応する値を加算します
+    /// </summary>
+    public static StatesPowerBreakdown operator +(StatesPowerBreakdown left, StatesPowerBreakdown right)
+    {
+        // 新しいDictionaryを作成
+        var newTenDayBreakdown = new Dictionary<TenDayAbility, float>(left.TenDayBreakdown);
+        
+        // 右辺の十日能力値を加算
+        foreach (var entry in right.TenDayBreakdown)
+        {
+            if (newTenDayBreakdown.ContainsKey(entry.Key))
+            {
+                newTenDayBreakdown[entry.Key] += entry.Value;
+            }
+            else
+            {
+                newTenDayBreakdown[entry.Key] = entry.Value;
+            }
+        }
+        
+        // 非十日能力部分も加算
+        float newNonTenDayPart = left.NonTenDayPart + right.NonTenDayPart;
+        
+        // 新しいStatesPowerBreakdownを返す
+        return new StatesPowerBreakdown(newTenDayBreakdown, newNonTenDayPart);
+    }
+    /// <summary>
+    /// StatesPowerBreakdown同士の減算演算子
+    /// 十日能力ごとに対応する値を減算します
+    /// </summary>
+    public static StatesPowerBreakdown operator -(StatesPowerBreakdown left, StatesPowerBreakdown right)
+    {
+        // 新しいDictionaryを作成
+        var newTenDayBreakdown = new Dictionary<TenDayAbility, float>(left.TenDayBreakdown);
+        
+        // 右辺の十日能力値を減算
+        foreach (var entry in right.TenDayBreakdown)
+        {
+            if (newTenDayBreakdown.ContainsKey(entry.Key))
+            {
+                newTenDayBreakdown[entry.Key] -= entry.Value;
+            }
+            else
+            {
+                newTenDayBreakdown[entry.Key] = -entry.Value;
+            }
+        }
+        
+        // 非十日能力部分も減算
+        float newNonTenDayPart = left.NonTenDayPart - right.NonTenDayPart;
+        
+        // 新しいStatesPowerBreakdownを返す
+        return new StatesPowerBreakdown(newTenDayBreakdown, newNonTenDayPart);
+    }
+
+    /// <summary>
+    /// スカラー値による加算演算子
+    /// 非十日能力部分に加算されます
+    /// </summary>
+    public static StatesPowerBreakdown operator +(StatesPowerBreakdown breakdown, float value)
+    {
+        // 新しいオブジェクトを作成（十日能力部分はコピー）
+        var newBreakdown = new StatesPowerBreakdown(
+            new Dictionary<TenDayAbility, float>(breakdown.TenDayBreakdown), 
+            breakdown.NonTenDayPart);
+        
+        // 加算は非十日能力部分に適用
+        newBreakdown.NonTenDayPart += value;
+        
+        return newBreakdown;
+    }
+    /// <summary>
+    /// スカラー値による減算演算子
+    /// 非十日能力部分に減算されます
+    /// </summary>
+    public static StatesPowerBreakdown operator -(StatesPowerBreakdown breakdown, float value)
+    {
+        // 新しいオブジェクトを作成（十日能力部分はコピー）
+        var newBreakdown = new StatesPowerBreakdown(
+            new Dictionary<TenDayAbility, float>(breakdown.TenDayBreakdown), 
+            breakdown.NonTenDayPart);
+        
+        // 減算は非十日能力部分に適用
+        newBreakdown.NonTenDayPart -= value;
+        
+        return newBreakdown;
+    }
+    /// <summary>
+    /// float値からStatesPowerBreakdownを引くための演算子
+    /// 非十日能力部分に適用されます
+    /// </summary>
+    public static StatesPowerBreakdown operator -(float left, StatesPowerBreakdown right)
+    {
+        // 新しいStatesPowerBreakdownを作成
+        // 十日能力の内訳は反転して保持（マイナス値にする）
+        var newTenDayBreakdown = new Dictionary<TenDayAbility, float>();
+        
+        foreach (var entry in right.TenDayBreakdown)
+        {
+            newTenDayBreakdown[entry.Key] = -entry.Value;
+        }
+        
+        // 非十日能力部分はfloat値から引く
+        float newNonTenDayPart = left - right.NonTenDayPart;
+        
+        return new StatesPowerBreakdown(newTenDayBreakdown, newNonTenDayPart);
+    }
+    /// <summary>
+    /// 合計値が0未満になる場合は、非十日能力値を調整して0以上になるようにする
+    /// 十日能力値は変更しない
+    /// </summary>
+    public void ClampToZero()
+    {
+        // 合計値を計算
+        float total = Total;
+        
+        if (total < 0)
+        {
+            // 十日能力値の合計を計算
+            float tenDayTotal = TenDayBreakdown.Values.Sum();
+            
+            // 非十日能力値を調整して、全体が0になるようにする
+            // 非十日能力値が負の場合はそのまま0にせず、全体の合計が0になるよう調整
+            if (tenDayTotal > 0)
+            {
+                // 十日能力値が正なら、合計が0になるよう非十日能力値を調整
+                NonTenDayPart = -tenDayTotal;
+            }
+            else
+            {
+                // 十日能力値も負または0なら、非十日能力値を0にする
+                NonTenDayPart = 0;
+            }
+        }
+    }
+    /// <summary>
+    /// 大なり演算子のオーバーロード - Total値で比較する
+    /// </summary>
+    public static bool operator >(StatesPowerBreakdown left, StatesPowerBreakdown right)
+    {
+        return left.Total > right.Total;
+    }
+
+    /// <summary>
+    /// 小なり演算子のオーバーロード - Total値で比較する
+    /// </summary>
+    public static bool operator <(StatesPowerBreakdown left, StatesPowerBreakdown right)
+    {
+        return left.Total < right.Total;
+    }
+
+    /// <summary>
+    /// 以上演算子のオーバーロード - Total値で比較する
+    /// </summary>
+    public static bool operator >=(StatesPowerBreakdown left, StatesPowerBreakdown right)
+    {
+        return left.Total >= right.Total;
+    }
+
+    /// <summary>
+    /// 以下演算子のオーバーロード - Total値で比較する
+    /// </summary>
+    public static bool operator <=(StatesPowerBreakdown left, StatesPowerBreakdown right)
+    {
+        return left.Total <= right.Total;
+    }
+
+    /// <summary>
+    /// 等価演算子のオーバーロード - Total値で比較する
+    /// </summary>
+    public static bool operator ==(StatesPowerBreakdown left, StatesPowerBreakdown right)
+    {
+        if (ReferenceEquals(left, null))
+            return ReferenceEquals(right, null);
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    /// 非等価演算子のオーバーロード - Total値で比較する
+    /// </summary>
+    public static bool operator !=(StatesPowerBreakdown left, StatesPowerBreakdown right)
+    {
+        return !(left == right);
+    }
+    /// <summary>
+    /// 単項マイナス演算子 - 全ての値の符号を反転
+    /// </summary>
+    public static StatesPowerBreakdown operator -(StatesPowerBreakdown value)
+    {
+        // 新しいDictionaryを作成
+        var newTenDayBreakdown = new Dictionary<TenDayAbility, float>();
+        
+        // 各十日能力値の符号を反転
+        foreach (var entry in value.TenDayBreakdown)
+        {
+            newTenDayBreakdown[entry.Key] = -entry.Value;
+        }
+        
+        // 非十日能力部分も符号を反転
+        float newNonTenDayPart = -value.NonTenDayPart;
+        
+        // 新しいStatesPowerBreakdownを返す
+        return new StatesPowerBreakdown(newTenDayBreakdown, newNonTenDayPart);
+    }
+
+    /// <summary>
+    /// オブジェクトの等価性を判定する - 全ての十日能力値と非十日能力値を比較
+    /// </summary>
+    public override bool Equals(object obj)
+    {
+        if (obj is StatesPowerBreakdown other)
+        {
+            // 1. 非十日能力値の比較
+            if (this.NonTenDayPart != other.NonTenDayPart)
+                return false;
+                
+            // 2. 十日能力値の数が同じか確認
+            if (this.TenDayBreakdown.Count != other.TenDayBreakdown.Count)
+                return false;
+                
+            // 3. すべての十日能力値を比較
+            foreach (var entry in this.TenDayBreakdown)
+            {
+                // キーが存在するか確認
+                if (!other.TenDayBreakdown.TryGetValue(entry.Key, out float otherValue))
+                    return false;
+                    
+                // 値が一致するか確認
+                if (entry.Value != otherValue)
+                    return false;
+            }
+            
+            // すべての比較に合格したら等価
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// ハッシュコードを取得する - 全ての値を考慮
+    /// </summary>
+    public override int GetHashCode()
+    {
+        unchecked // オーバーフローを許可
+        {
+            int hash = 17;
+            hash = hash * 23 + NonTenDayPart.GetHashCode();
+            
+            foreach (var entry in TenDayBreakdown)
+            {
+                hash = hash * 23 + entry.Key.GetHashCode();
+                hash = hash * 23 + entry.Value.GetHashCode();
+            }
+            
+            return hash;
+        }
+    }
+    /// <summary>
+    /// StatesPowerBreakdownとfloatの大小比較（小なり）
+    /// </summary>
+    public static bool operator <=(StatesPowerBreakdown left, float right)
+    {
+        return left.Total <= right;
+    }
+
+    /// <summary>
+    /// StatesPowerBreakdownとfloatの大小比較（大なり）
+    /// </summary>
+    public static bool operator >=(StatesPowerBreakdown left, float right)
+    {
+        return left.Total >= right;
+    }
+
+    /// <summary>
+    /// StatesPowerBreakdownとfloatの大小比較（小なり）
+    /// </summary>
+    public static bool operator <(StatesPowerBreakdown left, float right)
+    {
+        return left.Total < right;
+    }
+
+    /// <summary>
+    /// StatesPowerBreakdownとfloatの大小比較（大なり）
+    /// </summary>
+    public static bool operator >(StatesPowerBreakdown left, float right)
+    {
+        return left.Total > right;
+    }
+}

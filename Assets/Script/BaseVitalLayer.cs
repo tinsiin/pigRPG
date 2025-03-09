@@ -93,7 +93,7 @@ public class BaseVitalLayer
     /// <summary>
     /// ダメージが層を通過する  与えられたダメージは通過して軽減され返る
     /// </summary>
-    public void PenetrateLayer(ref float dmg, ref float mentalDmg, PhysicalProperty impactProperty)
+    public void PenetrateLayer(ref StatesPowerBreakdown dmg, ref StatesPowerBreakdown mentalDmg, PhysicalProperty impactProperty)
     {
         // 1) 物理属性に応じた耐性率を取得
         float resistRate = 1.0f;
@@ -111,10 +111,10 @@ public class BaseVitalLayer
         }
 
         // 2) 軽減後の実ダメージ
-        float dmgAfter = dmg * resistRate;
+        StatesPowerBreakdown dmgAfter = dmg * resistRate;
 
         // 3) レイヤーHPを削る
-        float leftover = LayerHP - dmgAfter; // leftover "HP" => もしマイナスなら破壊
+        StatesPowerBreakdown leftover = LayerHP - dmgAfter; // leftover "HP" => もしマイナスなら破壊
 
         //精神dmgが現存する攻撃に削られる前のLayerを通る
         mentalDmg -= LayerHP * (1 - MentalPenetrateRatio);//精神HPの通過率の分だけ通るので、つまり100%ならmentalDMgの低減はないということ。
@@ -122,7 +122,7 @@ public class BaseVitalLayer
         if (leftover <= 0f)
         {
             // 破壊された
-            float overkill = -leftover; // -negative => positive
+            StatesPowerBreakdown overkill = -leftover; // -negative => positive
             var tmpHP = LayerHP;//仕組みC用に今回受ける時のLayerHPを保存。
             LayerHP = 0f; // 自分のHPはゼロ
 
@@ -138,7 +138,7 @@ public class BaseVitalLayer
                     // Bは「軽減後ダメージ」分を元に戻す => leftover を "÷ resistRate" で拡大
                     // ここで overkill は "dmgAfter - LayerHP" の結果
                     // → 仕組みB: leftoverDamage = overkill / resistRate
-                    float restored = overkill / resistRate;
+                    StatesPowerBreakdown restored = overkill / resistRate;
                     dmg = restored;
                     return;
 
@@ -146,16 +146,14 @@ public class BaseVitalLayer
                     // Cは元攻撃 - 現在のLayerHP
                     // leftover(= overkill)を無視し、
                     // "dmg - tmpHP(LayerHP)" などの再計算
-                    float cValue = dmg - tmpHP;
-                    if (cValue < 0) cValue = 0;
+                    StatesPowerBreakdown cValue = dmg - tmpHP;
                     dmg = cValue;
                     return;
                 case BarrierResistanceMode.C_IgnoreWhenBreak_MaxHP:
                     // Cは元攻撃 - 現在のLayerHP
                     // leftover(= overkill)を無視し、
                     // "dmg - tmpHP(LayerHP)" などの再計算
-                    float cmValue = dmg - MaxLayerHP;
-                    if (cmValue < 0) cmValue = 0;
+                    StatesPowerBreakdown cmValue = dmg - MaxLayerHP;
                     dmg = cmValue;
                     return;
             }
@@ -163,8 +161,8 @@ public class BaseVitalLayer
         else
         {
             // バリアで耐えた（破壊されなかった）
-            LayerHP = leftover;
-            dmg = 0f; // 余剰ダメージなし
+            LayerHP = leftover.Total;//レイヤーHPに戻すのでtotal
+            dmg = new StatesPowerBreakdown(new Dictionary<TenDayAbility, float>(), 0f);; // 余剰ダメージなし
         }
 
     }
