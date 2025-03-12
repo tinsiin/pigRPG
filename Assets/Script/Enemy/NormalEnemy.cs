@@ -59,7 +59,7 @@ public class NormalEnemy : BaseStates
         if((_recovelyStepCount -= distanceTraveled) <= 0)//復活までのカウントから(前エリアと今の進行度の差)を引いて0以下になったら
         {
             _recovelyStepCount = 0;//逃げてもまた出てくる　殺さないとまたrecovelyStepは設定されない。
-
+            OnReborn();//復活コールバック
             return true;//復活する。
         }
 
@@ -261,7 +261,7 @@ public class NormalEnemy : BaseStates
     //スキル成長------------------------------------------------------------------------------------------------------スキル成長ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
 
     /// <summary>
-    ///初期精神属性決定関数(基本は印象を持ってるスキルリストから適当に選び出す
+    ///初期精神属性決定関数(基本は印象を持ってるスキルリストとデフォルト精神属性から適当に選び出す
     /// </summary>
     public virtual void InitializeMyImpression()
     {
@@ -269,8 +269,9 @@ public class NormalEnemy : BaseStates
 
         if (SkillList != null)
         {
-            var rnd = RandomEx.Shared.NextInt(0, SkillList.Count);
-            that = SkillList[rnd].SkillSpiritual; //スキルの精神属性を抽出
+            var rndList = SkillList.Select(s => s.SkillSpiritual).ToList();
+            rndList.AddRange(new List<SpiritualProperty>{DefaultImpression,DefaultImpression});
+            that = RandomEx.Shared.GetItem(rndList.ToArray()); //スキルの精神属性を抽出
             MyImpression = that; //印象にセット
         }
         else
@@ -289,6 +290,19 @@ public class NormalEnemy : BaseStates
     public void OnAllyRunOut()
     {
         GrowSkillsNotEnabledOnAllyRunOut();
+    }
+    /// <summary>
+    /// 再遭遇時コールバックとは違い、復活者限定の処理
+    /// </summary>
+    public void OnReborn()
+    {
+        //復活時の処理
+        
+        Angel();
+        Heal(99999999999999);
+
+        //精神HPは戦闘開始時にmaxになる
+        //思えの値は死んだらリセットされてるし、パワーは再遭遇時コールバックで歩行変化するから。
     }
     /// <summary>
     /// 再遭遇時コールバック。パッシブとか自信ブーストなどの、
@@ -319,12 +333,19 @@ public class NormalEnemy : BaseStates
             {
                 AllPassiveWalkEffect();//歩行効果
                 UpdateWalkAllPassiveSurvival();//歩行によるパッシブ残存処理
+                ResonanceHealingOnWalking();//歩行時思えの値回復
+                //RecoverMentalHPOnWalk();//歩行時精神HP回復 基本的に歩行時の精神hp回復はポイント用だし、それ抜きにしたら戦闘開始時に精神HPはmaxになるし。
+                //RecoverPointOnWalk();//歩行時ポイント回復 敵には外でスキル使うとかないから、戦闘時のポイント初期化で十分なので歩行回復なし
             }          
 
             //歩行時の有効化されてないスキルの成長処理
             GrowSkillsNotEnabledOnReEncount(distanceTraveled);
 
         }
+        //「精神属性はEnemyCollectAI」　つまり敵グループの収集に必須なので、このコールバックの前の収集関数内で既に決まってます。
+
+        //初回遭遇も含めて全ての遭遇時の処理
+        TransitionPowerOnWalkByCharacterImpression();//パワー変化　精神属性で変化するがその精神属性は既に決まっているので
 
         //遭遇地点を記録する。
         _lastEncounterProgress = PlayersStates.Instance.NowProgress;

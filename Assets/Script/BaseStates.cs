@@ -256,6 +256,378 @@ public abstract class BaseStates
                 _ => NowPower//ここはdefault句らしい
             };
     }
+        /// <summary>
+    /// キャラクターのパワーが歩行によって変化する関数
+    /// </summary>
+    protected void TransitionPowerOnWalkByCharacterImpression()
+    {
+        switch(MyImpression)
+        {
+            case SpiritualProperty.doremis:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(35))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(25))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        if(rollper(6))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(6))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        if(rollper(2.7f))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(7.55f))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.pillar:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(2.23f))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(5))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        if(rollper(20))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(6.09f))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        if(rollper(15))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(8))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+
+                break;
+            case SpiritualProperty.kindergarden:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(25))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(31))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        if(rollper(28))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(25))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+
+                        if(rollper(20))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(30))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.liminalwhitetile:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(17))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(3))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        if(rollper(3.1f))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(13))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+
+                        if(rollper(2))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(40))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.sacrifaith:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        //不変
+                    case ThePower.medium:
+                        if(rollper(14))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(20))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(26))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.cquiest:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(14))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(3))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        if(rollper(3.1f))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(13))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(4.3f))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.pysco:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(77.77f))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(6.7f))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        if(rollper(3))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(90))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+
+                        if(rollper(10))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(80))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.godtier:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(4.26f))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(3))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        if(rollper(30))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(28))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+
+                        if(rollper(8))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(100))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.baledrival:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(9))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(25))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        if(rollper(11))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(26.5f))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+
+                        if(rollper(8))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(50))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+            case SpiritualProperty.devil:
+                switch(NowPower)
+                {
+                    case ThePower.high:
+                        if(rollper(5))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+                        break;
+                    case ThePower.medium:
+                        if(rollper(6))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        if(rollper(4.1f))
+                        {
+                            NowPower = ThePower.high;
+                        }
+                        break;
+                    case ThePower.low:
+                        if(rollper(15))
+                        {
+                            NowPower = ThePower.medium;
+                        }
+
+                        if(rollper(7))
+                        {
+                            NowPower = ThePower.lowlow;
+                        }
+                        break;
+                    case ThePower.lowlow:
+                        if(rollper(22))
+                        {
+                            NowPower = ThePower.low;
+                        }
+                        break;
+                }
+                break;
+        }
+    }
+
     
     [Header("4大ステの基礎基礎値")]
     public float  b_b_atk = 4f;
@@ -1040,6 +1412,69 @@ public abstract class BaseStates
     {
         MentalHP += TenDayValues.GetValueOrZero(TenDayAbility.Rain);
     }
+    
+    void MentalHPOnDeath()
+    {
+            switch (MyImpression)
+        {
+            case SpiritualProperty.liminalwhitetile:
+                // そのまま（変化なし）
+                break;
+            case SpiritualProperty.kindergarden:
+                // 10割回復
+                MentalHP = MentalMaxHP;
+                break;
+            case SpiritualProperty.sacrifaith:
+                // 10割回復　犠牲になって満足した
+                MentalHP = MentalMaxHP;
+                break;
+            case SpiritualProperty.cquiest:
+                // 10%加算 + 元素信仰力
+                MentalHP += MentalMaxHP * 0.1f + TenDayValues.GetValueOrZero(TenDayAbility.ElementFaithPower) / 3;
+                break;
+            case SpiritualProperty.devil:
+                // 10%減る
+                MentalHP -= MentalMaxHP * 0.1f;
+                break;
+            case SpiritualProperty.doremis:
+                // 春仮眠の夜暗黒に対する多さ 割
+                var darkNight = TenDayValues.GetValueOrZero(TenDayAbility.NightDarkness);
+                var springNap = TenDayValues.GetValueOrZero(TenDayAbility.SpringNap);
+                if (springNap > 0)
+                {
+                    MentalHP = MentalMaxHP * (springNap / darkNight);
+                }
+                break;
+            case SpiritualProperty.pillar:
+                // 8割固定
+                MentalHP = MentalMaxHP * 0.8f;
+                break;
+            case SpiritualProperty.godtier:
+                // 35%加算
+                MentalHP += MentalMaxHP * 0.35f;
+                break;
+            case SpiritualProperty.baledrival:
+                // 10割回復
+                MentalHP = MentalMaxHP;
+                break;
+            case SpiritualProperty.pysco:
+                // 20%加算
+                MentalHP += MentalMaxHP * 0.2f;
+                break;
+        }
+    
+        // 最大値を超えないように調整
+        if (MentalHP > MentalMaxHP)
+        {
+            MentalHP = MentalMaxHP;
+        }
+        
+        // 負の値にならないように調整
+        if (MentalHP < 0)
+        {
+            MentalHP = 0;
+        }
+    }
     /// <summary>
     /// 実HPに比べて何倍離れているのだろうか。
     /// </summary>
@@ -1212,11 +1647,77 @@ public abstract class BaseStates
         }
 
     }
+    /// <summary>
+    /// 自分の持つ精神属性の数を取得する。
+    /// 精神ポテンシャルとも言うよ
+    /// </summary>
+    public int GetMySpiritualPotential()
+    {
+        //重複しないコレクションを作成
+        HashSet<SpiritualProperty> spiritualPropertyHashSet = new HashSet<SpiritualProperty>
+        {
+            //デフォルト精神属性
+            DefaultImpression
+        };
 
+        //スキルの精神属性
+        foreach (var skill in SkillList)
+        {
+            spiritualPropertyHashSet.Add(skill.SkillSpiritual);
+        }
+
+        //重複しない精神属性の数を返す
+        return spiritualPropertyHashSet.Count;
+    }
+    /// <summary>
+    /// スキルの数による微小スケーリング定数
+    /// </summary>
+    const float skillCountMicroScaling = 0.04f;
+    /// <summary>
+    /// スキル数による思えの値最大値の微小スケーリング
+    /// </summary>
+    public float CalculateResonanceSkillCountMicroScaling(int skillCount ,float resonanceValue)
+    {
+        return resonanceValue * (1 - (skillCount - 1 * skillCountMicroScaling));
+        //スキルが二つ以上なら数に応じて引かれる
+    }
+    /// <summary>
+    /// 思慮係数による思えの値最大値のスケーリング
+    /// scalingMax の値を増やすほど、思慮係数 = 大元の知能が極端に低いキャラの思え最大値がより膨れ上がる設計
+    /// </summary>
+    /// <returns></returns>
+    public float CalculateResonanceThinkingScaling(float ResonanceValue,float scaleMax)
+    {
+        float scale = Mathf.Lerp(scaleMax,1f,_thinkingFactor/100.0f);
+        return ResonanceValue * scale;
+    }
     /// <summary>
     /// 思えの値　設定値
+    /// 知能が低いほど高い(馬鹿は思えの鳥になりにくい)
+    /// 思慮係数で知能の大体を決め　スキルの数での頭のほぐされ具合は微小に知能の高さとして影響する。
     /// </summary>
-    public float ResonanceValue;
+    public float ResonanceValue
+    {
+        get 
+        { 
+            //基本値
+            var baseValue = TenDayValuesSum * 0.56f;
+            //スキル数による微小スケーリング
+            baseValue = CalculateResonanceSkillCountMicroScaling(SkillList.Count, baseValue);
+            //思慮係数によるスケーリング
+            baseValue = CalculateResonanceThinkingScaling(baseValue, 11f);
+
+            return baseValue + TenDayValues.GetValueOrZero(TenDayAbility.Baka) * 1.3f;//馬鹿を加算する 
+        }
+    }
+    /// <summary>
+    /// 思えの値用の各キャラクターに設定するユニークな思慮係数(知能？)
+    /// 1~100でキャラの思慮深さを定義
+    /// </summary>
+    [SerializeField][Range(1,100)] float _thinkingFactor;
+    /// <summary>
+    /// 思えの値の現在の値
+    /// </summary>
     float _nowResonanceValue;
     /// <summary>
     /// 現在の思えの値
@@ -1249,6 +1750,20 @@ public abstract class BaseStates
         //最大値超えたら最大値にする。
         if(NowResonanceValue > ResonanceValue) NowResonanceValue = ResonanceValue;
     }
+    /// <summary>
+    /// 思えの値現在値をランダム化する
+    /// </summary>
+    public void InitializeNowResonanceValue() { NowResonanceValue = RandomEx.Shared.NextFloat(ResonanceValue * 0.6f, ResonanceValue); }
+    const float _resonanceHealingOnWalkingFactor = 1f;
+    /// <summary>
+    /// 歩行時の思えの値回復
+    /// </summary>
+    public void ResonanceHealingOnWalking() 
+    { 
+        ResonanceHeal(_resonanceHealingOnWalkingFactor + TenDayValues.GetValueOrZero(TenDayAbility.SpringNap) * 1.5f);
+    }
+    
+
     
     /// <summary>
     /// このキャラがどの辺りを狙っているか
@@ -4663,6 +5178,38 @@ public abstract class BaseStates
     /// </summary>
     const float BASEDAMGE_TENDAYS = 0.06f;
     /// <summary>
+    /// 思えダメージの精神属性の種類数、精神ポテンシャルによる除算DEFの数に掛ける係数
+    /// </summary>
+    const float SPRITUAL_POTENTIAL_DEF_COED =  0.06f;
+    /// <summary>
+    /// 思えダメージをランダマイズ出来るスキル数のしきい値
+    /// </summary>
+    const int SKILL_COUNT_THRESHOLD_DAMAGE_RANDOMIZE = 6;
+    /// <summary>
+    /// 思えダメージをスキルの数でランダマイズする
+    /// </summary>
+    float ResonanceDamageRandomizeBySkillCount(float dmg)
+    {
+        //スキル数がしきい値以下ならランダマイズしない
+        if(SkillList.Count <= SKILL_COUNT_THRESHOLD_DAMAGE_RANDOMIZE) return dmg;
+        //ランダマイズする数
+        var RandomizeCalcCount = SkillList.Count - SKILL_COUNT_THRESHOLD_DAMAGE_RANDOMIZE;
+        
+        var maxFactor = 1.0f;
+        var minFactor = 1.0f;
+        for(int i = 0; i < RandomizeCalcCount; i++)
+        {
+            var RandomizeUpper = RandomEx.Shared.NextFloat(0.01f,0.015f);//ランダマイズの上振れ
+            var RandomizeLower = RandomEx.Shared.NextFloat(0.01f,0.03f);//ランダマイズの下振れ
+
+            maxFactor += RandomizeUpper;
+            minFactor -= RandomizeLower;
+        }
+        if(minFactor < 0) minFactor = 0;
+        if(minFactor > maxFactor) minFactor = maxFactor;//念のため
+        return dmg * RandomEx.Shared.NextFloat(minFactor,maxFactor);
+    }
+    /// <summary>
     /// 思えのダメージ処理
     /// ダメージと精神ダメージを食らう前に判定され、追加HPで防がれない
     /// </summary>
@@ -4778,6 +5325,13 @@ public abstract class BaseStates
 
         var finalDamage = BaseDmg * ResonanceDangerRatio * DamageMultipilerByPowerRatio;
 
+        //被害者側の精神属性の種類　= 精神ポテンシャルで除算をする。
+        var potential = GetMySpiritualPotential();
+        finalDamage *= 1 - (potential * SPRITUAL_POTENTIAL_DEF_COED);
+
+        //スキルの数による除算
+        finalDamage = ResonanceDamageRandomizeBySkillCount(finalDamage);
+        //ダメージを反映
         NowResonanceValue -= finalDamage;
     }
     /// <summary>
@@ -5727,8 +6281,8 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     public virtual void DeathCallBack()
     {
-        DeleteConsecutiveATK();
-        ApplyConditionChangeOnDeath();
+        DeleteConsecutiveATK();//連続攻撃の消去
+        ApplyConditionChangeOnDeath();//人間状況の変化
 
         //あるかわからないが続行中のスキルを消し、
         //以外のそれ以外のスキルの連続攻撃回数消去(基本的に一個しか増えないはずだが)は以下のforeachループで行う
@@ -5742,6 +6296,12 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         //パッシブの死亡時処理
         UpdateDeathAllPassiveSurvival();
+
+        //思えの値リセット
+        ResetResonanceValue();
+
+        //精神HPの死亡時分岐
+        MentalHPOnDeath();
 
     }
     void HighNessChance(BaseStates deathEne)
@@ -7293,6 +7853,13 @@ private int CalcTransformCountIncrement(int tightenStage)
         dst.DefaultImpression = DefaultImpression;
         dst.PersistentAdaptSkillImpressionMemories = PersistentAdaptSkillImpressionMemories;//恒常的な慣れ補正のリストはインスペクタで敵とかが初期所持ので記録するかもしれないのでコピー
 
+        //思えの値ユニーク値の思慮係数をディープコピー
+        dst._thinkingFactor = _thinkingFactor;
+        //思えの値現在値をランダム化
+        dst.InitializeNowResonanceValue();
+
+
+        //パワーは初期値　medium allyは歩行で変化　enemyは再遭遇時コールバックで一回だけ歩行変化で判別
     }
 }
 

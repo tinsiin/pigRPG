@@ -624,7 +624,19 @@ public class AllyClass : BaseStates
     /// </summary>
     private int _walkPointRecoveryCounter = 0;
 
-    /// <summary>
+    
+    public override void OnBattleEndNoArgument()
+    {
+        base.OnBattleEndNoArgument();
+        _walkPointRecoveryCounter = 0;//歩行のポイント回復用カウンターをゼロに
+        _walkCountForTransitionToDefaultImpression = 0;//歩行の精神属性変化用カウンターをゼロに
+    }
+    public override void OnBattleStartNoArgument()
+    {
+        base.OnBattleStartNoArgument();
+        
+    }
+     /// <summary>
     /// 歩行時にポイントを回復する処理
     /// </summary>
     void RecoverPointOnWalk()
@@ -653,18 +665,35 @@ public class AllyClass : BaseStates
         {
             MentalHP += TenDayValues.GetValueOrZero(TenDayAbility.Rain) + MentalMaxHP * 0.16f;
         }
+        //ポイント回復用で結局は戦闘開始時にmaxになるんだし、こんぐらいの割合で丁度いいと思う
     }
-    
-    public override void OnBattleEndNoArgument()
+    const int FULL_NEEDED_TRANSITION_TODEFAULTIMPREEION_WALK_COUNT = 12;
+    /// <summary>
+    /// 歩行時に精神属性をデフォルトに戻す用歩行カウンター変数
+    /// </summary>
+    int _walkCountForTransitionToDefaultImpression = 0;
+    /// <summary>
+    /// 精神属性は歩くとデフォルト精神属性に戻っていく処理。
+    /// </summary>
+    void ImpressionToDefaultTransition()
     {
-        base.OnBattleEndNoArgument();
-        _walkPointRecoveryCounter = 0;//歩行のポイント回復用カウンターをゼロに
+        //既にデフォルト精神属性なら戻らない
+        if(MyImpression == DefaultImpression) return;
+
+        //思えの値の割合
+        var ratio = NowResonanceValue / ResonanceValue;
+        //必要歩数
+        var neededWalkCount = (1-ratio) * FULL_NEEDED_TRANSITION_TODEFAULTIMPREEION_WALK_COUNT;
+        //思えの値が削れてる = 思ってるほど、戻りにくい　= 必要歩数が増える
+
+        _walkCountForTransitionToDefaultImpression++;//一歩進んだ
+        if(_walkCountForTransitionToDefaultImpression >= neededWalkCount)
+        {
+            MyImpression = DefaultImpression;
+            _walkCountForTransitionToDefaultImpression = 0;
+        }
     }
-    public override void OnBattleStartNoArgument()
-    {
-        base.OnBattleStartNoArgument();
-        
-    }
+
 
     /// <summary>
     /// 味方キャラの歩く際に呼び出されるコールバック
@@ -676,12 +705,14 @@ public class AllyClass : BaseStates
         TransitionPowerOnWalkByCharacterImpression();
 
         RecoverMentalHPOnWalk();//歩行時精神HP回復
-        RecoverPointOnWalk();//歩行時ポイント回復
+        RecoverPointOnWalk();//歩行時ポイント回復　味方のみ
+        ResonanceHealingOnWalking();//歩行時思えの値回復
         FadeConfidenceBoostByWalking(walkCount);//歩行によって自信ブーストがフェードアウトする
+        ImpressionToDefaultTransition();//歩行によって精神属性がデフォルトに戻っていく
     }
     public void OnAllyWinCallBack()
     {
-        TransitionPowerOnBattleWinByCharacterImpression();
+        TransitionPowerOnBattleWinByCharacterImpression();//パワー変化
         HP += MAXHP * 0.3f;//HPの自然回復
     }
     public void OnAllyLostCallBack()
@@ -693,377 +724,6 @@ public class AllyClass : BaseStates
         TransitionPowerOnBattleRunOutByCharacterImpression();
     }
     
-    /// <summary>
-    /// キャラクターのパワーが歩行によって変化する関数
-    /// </summary>
-    void TransitionPowerOnWalkByCharacterImpression()
-    {
-        switch(MyImpression)
-        {
-            case SpiritualProperty.doremis:
-                switch(NowPower)
-                {
-                    case ThePower.high:
-                        if(rollper(35))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-                        break;
-                    case ThePower.medium:
-                        if(rollper(25))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        if(rollper(6))
-                        {
-                            NowPower = ThePower.high;
-                        }
-                        break;
-                    case ThePower.low:
-                        if(rollper(6))
-                        {
-                            NowPower = ThePower.lowlow;
-                        }
-                        if(rollper(2.7f))
-                        {
-                            NowPower = ThePower.high;
-                        }
-                        break;
-                    case ThePower.lowlow:
-                        if(rollper(7.55f))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-                        break;
-                }
-                break;
-            case SpiritualProperty.pillar:
-                switch(NowPower)
-                {
-                    case ThePower.high:
-                        if(rollper(2.23f))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-                        break;
-                    case ThePower.medium:
-                        if(rollper(5))
-                        {
-                            NowPower = ThePower.high;
-                        }
-                        if(rollper(20))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        break;
-                    case ThePower.low:
-                        if(rollper(6.09f))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-                        if(rollper(15))
-                        {
-                            NowPower = ThePower.lowlow;
-                        }
-                        break;
-                    case ThePower.lowlow:
-                        if(rollper(8))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        break;
-                }
-
-                break;
-            case SpiritualProperty.kindergarden:
-                switch(NowPower)
-                {
-                    case ThePower.high:
-                        if(rollper(25))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-                        break;
-                    case ThePower.medium:
-                        if(rollper(31))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        if(rollper(28))
-                        {
-                            NowPower = ThePower.high;
-                        }
-                        break;
-                    case ThePower.low:
-                        if(rollper(25))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-
-                        if(rollper(20))
-                        {
-                            NowPower = ThePower.lowlow;
-                        }
-                        break;
-                    case ThePower.lowlow:
-                        if(rollper(30))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        break;
-                }
-                break;
-            case SpiritualProperty.liminalwhitetile:
-                switch(NowPower)
-                {
-                    case ThePower.high:
-                        if(rollper(17))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-                        break;
-                    case ThePower.medium:
-                        if(rollper(3))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        if(rollper(3.1f))
-                        {
-                            NowPower = ThePower.high;
-                        }
-                        break;
-                    case ThePower.low:
-                        if(rollper(13))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-
-                        if(rollper(2))
-                        {
-                            NowPower = ThePower.lowlow;
-                        }
-                        break;
-                    case ThePower.lowlow:
-                        if(rollper(40))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        break;
-                }
-                break;
-            case SpiritualProperty.sacrifaith:
-                switch(NowPower)
-                {
-                    case ThePower.high:
-                        //不変
-                    case ThePower.medium:
-                        if(rollper(14))
-                        {
-                            NowPower = ThePower.high;
-                        }
-                        break;
-                    case ThePower.low:
-                        if(rollper(20))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-                        break;
-                    case ThePower.lowlow:
-                        if(rollper(26))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        break;
-                }
-                break;
-            case SpiritualProperty.cquiest:
-                switch(NowPower)
-                {
-                    case ThePower.high:
-                        if(rollper(14))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-                        break;
-                    case ThePower.medium:
-                        if(rollper(3))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        if(rollper(3.1f))
-                        {
-                            NowPower = ThePower.high;
-                        }
-                        break;
-                    case ThePower.low:
-                        if(rollper(13))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-
-                        break;
-                    case ThePower.lowlow:
-                        if(rollper(4.3f))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        break;
-                }
-                break;
-            case SpiritualProperty.pysco:
-                switch(NowPower)
-                {
-                    case ThePower.high:
-                        if(rollper(77.77f))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-                        break;
-                    case ThePower.medium:
-                        if(rollper(6.7f))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        if(rollper(3))
-                        {
-                            NowPower = ThePower.high;
-                        }
-                        break;
-                    case ThePower.low:
-                        if(rollper(90))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-
-                        if(rollper(10))
-                        {
-                            NowPower = ThePower.lowlow;
-                        }
-                        break;
-                    case ThePower.lowlow:
-                        if(rollper(80))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        break;
-                }
-                break;
-            case SpiritualProperty.godtier:
-                switch(NowPower)
-                {
-                    case ThePower.high:
-                        if(rollper(4.26f))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-                        break;
-                    case ThePower.medium:
-                        if(rollper(3))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        if(rollper(30))
-                        {
-                            NowPower = ThePower.high;
-                        }
-                        break;
-                    case ThePower.low:
-                        if(rollper(28))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-
-                        if(rollper(8))
-                        {
-                            NowPower = ThePower.lowlow;
-                        }
-                        break;
-                    case ThePower.lowlow:
-                        if(rollper(100))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        break;
-                }
-                break;
-            case SpiritualProperty.baledrival:
-                switch(NowPower)
-                {
-                    case ThePower.high:
-                        if(rollper(9))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-                        break;
-                    case ThePower.medium:
-                        if(rollper(25))
-                        {
-                            NowPower = ThePower.high;
-                        }
-                        if(rollper(11))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        break;
-                    case ThePower.low:
-                        if(rollper(26.5f))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-
-                        if(rollper(8))
-                        {
-                            NowPower = ThePower.lowlow;
-                        }
-                        break;
-                    case ThePower.lowlow:
-                        if(rollper(50))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        break;
-                }
-                break;
-            case SpiritualProperty.devil:
-                switch(NowPower)
-                {
-                    case ThePower.high:
-                        if(rollper(5))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-                        break;
-                    case ThePower.medium:
-                        if(rollper(6))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        if(rollper(4.1f))
-                        {
-                            NowPower = ThePower.high;
-                        }
-                        break;
-                    case ThePower.low:
-                        if(rollper(15))
-                        {
-                            NowPower = ThePower.medium;
-                        }
-
-                        if(rollper(7))
-                        {
-                            NowPower = ThePower.lowlow;
-                        }
-                        break;
-                    case ThePower.lowlow:
-                        if(rollper(22))
-                        {
-                            NowPower = ThePower.low;
-                        }
-                        break;
-                }
-                break;
-        }
-    }
     /// <summary>
     /// キャラクターのパワーが勝利時にどう変化するか
     /// </summary>
