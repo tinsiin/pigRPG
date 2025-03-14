@@ -17,5 +17,10 @@ public class BaseWeapon
     /// </summary>
     public BaseSkill  WeaponSkill;
 
+    /// <summary>
+    /// 刃物武器かどうか
+    /// </summary>
+    public bool IsBlade;
+
 
 }

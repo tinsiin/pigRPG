@@ -5075,7 +5075,53 @@ public abstract class BaseStates
             }
         }
     }
-    
+    /// <summary>
+    /// 即死刃物クリティカル
+    /// </summary>
+    bool BladeCriticalCalculation(ref StatesPowerBreakdown dmg, BaseStates Atker, BaseSkill skill)
+    {
+        var LiveHP = HP - dmg.Total;//もし即死が発生したときに、ダメージに加算される即死に足りないfloat
+        var atkerBlade = Atker.TenDayValues.GetValueOrZero(TenDayAbility.Blades);
+        var UnderBlade = TenDayValues.GetValueOrZero(TenDayAbility.Blades);
+        var UnderPower = TenDayValuesSum;
+
+        //まずしきい値発生から
+        var CriticalHPThreshold = Mathf.Min(atkerBlade/150f,1f) * (5/12) *100;
+        if(rollper(CriticalHPThreshold))
+        {
+            //攻撃者と被害者の刃物能力を比較してクリティカル発生率の計算
+            var threshold = atkerBlade / UnderPower * 100;
+            if(rollper(threshold))
+            {
+                //クリティカル発生
+                dmg.TenDayAdd(TenDayAbility.Blades,LiveHP);//刃物に差分ダメージを追加 = 即死
+                return true;
+            }
+        }
+
+        return false;
+    }
+    /// <summary>
+    /// 刃物即死クリティカルで生存するチャンス
+    /// </summary>
+    void CalculateBladeDeathCriticalSurvivalChance(BaseStates Atker)
+    {
+        if(NowPower < ThePower.high)return;//パワーが高くないなら発生しないって感じに
+
+        var underBlade = TenDayValues.GetValueOrZero(TenDayAbility.Blades);
+        var AtkerBlade = Atker.TenDayValues.GetValueOrZero(TenDayAbility.Blades);
+
+        //刃物能力を乱数比較して被害者の方のが出たなら、
+        if(rollComparison(underBlade,AtkerBlade))
+        {   
+            var AtkerBladeRate = AtkerBlade;
+            if(Atker.NowPower == ThePower.high) AtkerBladeRate *= 1.5f;
+            //生き残りHP
+            var survivalHP = RandomEx.Shared.NextFloat(1,2.8f) + Mathf.Max(0,underBlade - AtkerBladeRate) * RandomEx.Shared.NextFloat(4,5);
+
+            HP = survivalHP;//HPに生き残ったHP分を代入
+        }
+    }
     /// <summary>
     ///     オーバライド可能なダメージ関数
     /// </summary>
@@ -5106,11 +5152,18 @@ public abstract class BaseStates
         //慣れ補正
         dmg *= AdaptToSkill(Atker, skill, dmg);
 
-        //思えのダメージ処理
-        ResonanceDamage(dmg, skill, Atker);
+        //思えのダメージ保存　追加HPは通らない
+        var ResonanceDmg = dmg;
 
         //vitalLayerを通る処理
         BarrierLayers(ref dmg,ref mentalDmg, Atker);
+
+        //刃物スキルであり、ダメージがまだ残っていて、自分の体力がダメージより多いのなら、刃物即死クリティカル
+        bool BladeCriticalDeath = false;
+        if(skill.IsBlade && dmg.Total > 0 && HP > dmg.Total)BladeCriticalDeath = BladeCriticalCalculation(ref dmg,Atker,skill);
+
+        //思えのダメージ発生  各クリティカルのダメージを考慮するためクリティカル後に
+        ResonanceDamage(ResonanceDmg, skill, Atker);
 
         var totalDmg = dmg.Total;//直接引くように変数に代入
         if(totalDmg < 0)totalDmg = 0;//0未満は0にする　逆に回復してしまうのを防止
@@ -5125,8 +5178,15 @@ public abstract class BaseStates
         if(totalMentalDmg < 0)totalMentalDmg = 0;//0未満は0にする
         MentalHP -= totalMentalDmg;//実ダメージで精神HPの最大値がクランプされた後に、精神攻撃が行われる。
 
-        CalculateMutualKillSurvivalChance(tempHP,totalDmg,Atker);//互角一撃の生存によるHP再代入の可能性
-        Atker.MentalHealOnAttack();//精神HPの攻撃時回復
+        if(!skill.IsBlade)//刃物スキルでなければ発生
+        {
+            CalculateMutualKillSurvivalChance(tempHP,totalDmg,Atker);//互角一撃の生存によるHP再代入の可能性
+        }
+        if(BladeCriticalDeath)//刃物即死発生したのなら
+        {
+           CalculateBladeDeathCriticalSurvivalChance(Atker);//生存チャンス
+        }
+        
 
         //余剰ダメージを計算
         var OverKillOverFlow = totalDmg - tempHP;//余剰ダメージ
@@ -5898,7 +5958,7 @@ private int CalcTransformCountIncrement(int tightenStage)
                     
                     //成功されるとダメージを受ける
                     damageAmount = Damage(attacker, skillPower,skillPowerForMental);
-                    isAtkHit = true;//攻撃を受けたからtrue
+                    isAtkHit = true;//攻撃をしたからtrue
 
                     ApplyNonDamageHostileEffects(skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove);
                 }
@@ -5995,10 +6055,11 @@ private int CalcTransformCountIncrement(int tightenStage)
                 isAttackerHit = isBadPassiveHit || isBadPassiveRemove || isGoodPassiveHit || isGoodPassiveRemove || 
                 isGoodVitalLayerHit || isGoodVitalLayerRemove || isBadVitalLayerHit || isBadVitalLayerRemove || isHeal;
         }
-        //攻撃がいわゆるヒットをしたならば、特殊なスキル属性に影響されるか
+        //攻撃がいわゆるヒットをしたならば、
         if (isAttackerHit)
         {
-            ImposedImpressionFromSkill(skill.SkillSpiritual,attacker);
+            ImposedImpressionFromSkill(skill.SkillSpiritual,attacker);//特殊なスキル属性に影響されるか
+            MentalHealOnAttack();//行動をしたので精神HPの攻撃時回復
         }
 
         //ここで攻撃者の攻撃記録を記録する

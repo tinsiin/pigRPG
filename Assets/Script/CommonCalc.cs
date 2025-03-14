@@ -6,11 +6,24 @@ public static class CommonCalc
 {
     /// <summary>
     /// RandomExtensionsを利用して、確率を判定する
+    /// 百分率の数字で
     /// </summary>
     public static bool rollper(float percentage)
     {
         if (percentage < 0)percentage = 0;
         return RandomEx.Shared.NextFloat(100) < percentage;
+    }
+    /// <summary>
+    /// 二つの値のどちらが選ばれるかを確率的に決定する
+    /// </summary>
+    /// <param name="a">最初の値</param>
+    /// <param name="b">二番目の値</param>
+    /// <returns>aが選ばれたらtrue、bが選ばれたらfalse</returns>
+    public static bool rollComparison(float a, float b)
+    {
+        float totalValue = a + b;
+        float percentage = a / totalValue * 100f;
+        return rollper(percentage);
     }
     /// <summary>
     /// BaseStatesを継承したキャラクターのListから死亡者を省いたリストに変換する

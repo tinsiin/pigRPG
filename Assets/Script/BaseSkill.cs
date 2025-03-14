@@ -623,6 +623,10 @@ public class BaseSkill
     /// 魔法スキルかどうか
     /// </summary>
     public bool IsMagic;
+    /// <summary>
+    /// 刃物スキルかどうか
+    /// </summary>
+    public bool IsBlade;
 
     /// <summary>
     /// スキルの範囲効果における各割合　最大で6の長さまで使うと思う
