@@ -5078,7 +5078,7 @@ public abstract class BaseStates
     /// <summary>
     /// 即死刃物クリティカル
     /// </summary>
-    bool BladeCriticalCalculation(ref StatesPowerBreakdown dmg, BaseStates Atker, BaseSkill skill)
+    bool BladeCriticalCalculation(ref StatesPowerBreakdown dmg, ref StatesPowerBreakdown resonanceDmg, BaseStates Atker, BaseSkill skill)
     {
         var LiveHP = HP - dmg.Total;//もし即死が発生したときに、ダメージに加算される即死に足りないfloat
         var atkerBlade = Atker.TenDayValues.GetValueOrZero(TenDayAbility.Blades);
@@ -5095,6 +5095,7 @@ public abstract class BaseStates
             {
                 //クリティカル発生
                 dmg.TenDayAdd(TenDayAbility.Blades,LiveHP);//刃物に差分ダメージを追加 = 即死
+                resonanceDmg.TenDayAdd(TenDayAbility.Blades, LiveHP);//思えダメージ用にも
                 return true;
             }
         }
@@ -5152,7 +5153,10 @@ public abstract class BaseStates
         //慣れ補正
         dmg *= AdaptToSkill(Atker, skill, dmg);
 
+        //ここまでで被害者に向かう純正ダメージです。
+
         //思えのダメージ保存　追加HPは通らない
+        //ただクリティカルで増幅してほしいので、各クリティカル処理で本来のdmg同様にダメージを計算するべく引数に加える必要がある。
         var ResonanceDmg = dmg;
 
         //vitalLayerを通る処理
@@ -5160,7 +5164,7 @@ public abstract class BaseStates
 
         //刃物スキルであり、ダメージがまだ残っていて、自分の体力がダメージより多いのなら、刃物即死クリティカル
         bool BladeCriticalDeath = false;
-        if(skill.IsBlade && dmg.Total > 0 && HP > dmg.Total)BladeCriticalDeath = BladeCriticalCalculation(ref dmg,Atker,skill);
+        if(skill.IsBlade && dmg.Total > 0 && HP > dmg.Total)BladeCriticalDeath = BladeCriticalCalculation(ref dmg,ref ResonanceDmg,Atker,skill);
 
         //思えのダメージ発生  各クリティカルのダメージを考慮するためクリティカル後に
         ResonanceDamage(ResonanceDmg, skill, Atker);

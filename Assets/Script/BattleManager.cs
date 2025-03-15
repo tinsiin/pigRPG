@@ -647,15 +647,18 @@ public class BattleManager
              case StairStates:
                 //ここでスキルを指定した範囲性質を持つもののみinteractable=trueになるようにする。
                 ps.OnlyInteractHasZoneTraitSkills_geino(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);//ボタンのオンオフをするコールバック
+                ps.OnlyInteractHasHasBladeWeaponShowBladeSkill_geino();
                 Walking.SKILLUI_state.Value = SkillUICharaState.geino;
                 break;
 
             case SateliteProcessStates:
                 ps.OnlyInteractHasZoneTraitSkills_sites(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);
+                ps.OnlyInteractHasHasBladeWeaponShowBladeSkill_sites();
                 Walking.SKILLUI_state.Value = SkillUICharaState.sites;
                 break;
             case BassJackStates:
                 ps.OnlyInteractHasZoneTraitSkills_normalia(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);
+                ps.OnlyInteractHasHasBladeWeaponShowBladeSkill_noramlia();
                 Walking.SKILLUI_state.Value = SkillUICharaState.normalia;
                 break;
 

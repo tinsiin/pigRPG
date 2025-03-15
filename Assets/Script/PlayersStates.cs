@@ -86,6 +86,7 @@ public class PlayersStates:MonoBehaviour
     public BassJackStates noramlia;
     public SateliteProcessStates sites;
 
+
     /// <summary>
     /// ボタンと全てのスキルを結びつける。
     /// </summary>
@@ -186,6 +187,60 @@ public class PlayersStates:MonoBehaviour
             }
         }
     }
+    /// <summary>
+    /// 刃物武器でないと刃物スキルが表示されない処理。
+    /// 既に全てのスキルが表示されてる前提の関数なので、
+    /// 非表示にしていくって形で。
+    /// </summary>
+    public void OnlyInteractHasHasBladeWeaponShowBladeSkill_geino()
+    {
+        if(geino.NowUseWeapon.IsBlade) return;//刃物武器だから非表示の必要なし、終了。
+
+        //刃物武器でないので、刃物スキルの非表示処理
+        foreach(var skill in geino.SkillList.Cast<AllySkill>())
+        {
+            //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
+            var hold = skillButtonList_geino.Find(hold => hold.skillID == skill.ID);
+            //刃物スキルのボタンを非表示にする
+            if (hold != null)
+            {
+                hold.button.interactable = !skill.IsBlade;
+            }
+        }
+    }
+    public void OnlyInteractHasHasBladeWeaponShowBladeSkill_noramlia()
+    {
+        if(noramlia.NowUseWeapon.IsBlade) return;//刃物武器だから非表示の必要なし、終了。
+
+        //刃物武器でないので、刃物スキルの非表示処理
+        foreach(var skill in noramlia.SkillList.Cast<AllySkill>())
+        {
+            //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
+            var hold = skillButtonList_noramlia.Find(hold => hold.skillID == skill.ID);
+            //刃物スキルのボタンを非表示にする
+            if (hold != null)
+            {
+                hold.button.interactable = !skill.IsBlade;
+            }
+        }
+    }
+    public void OnlyInteractHasHasBladeWeaponShowBladeSkill_sites()
+    {
+        if(sites.NowUseWeapon.IsBlade) return;//刃物武器だから非表示の必要なし、終了。
+
+        //刃物武器でないので、刃物スキルの非表示処理
+        foreach(var skill in sites.SkillList.Cast<AllySkill>())
+        {
+            //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
+            var hold = skillButtonList_sites.Find(hold => hold.skillID == skill.ID);
+            //刃物スキルのボタンを非表示にする
+            if (hold != null)
+            {
+                hold.button.interactable = !skill.IsBlade;
+            }
+        }
+    }
+
     /// <summary>
     /// スキルボタンの使いを有効化する処理
     /// </summary>
