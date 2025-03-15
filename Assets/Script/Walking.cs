@@ -44,7 +44,7 @@ public class Walking : MonoBehaviour
     private List<SelectButton> buttons;
 
     private AreaDate NowAreaData;
-    private StageCut NowStageCut;
+    public static StageCut NowStageCut;
     private Stages stages;
 
     //現在のステージとエリアのデータを保存する関数

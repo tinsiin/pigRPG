@@ -1097,6 +1097,10 @@ public abstract class BaseStates
     ///現在のの攻撃ターンで使われる
     /// </summary>
     public BaseSkill NowUseSkill;
+    /// <summary>
+    /// 逃げる選択肢を押したかどうか
+    /// </summary>
+    public bool SelectedEscape;
 
     /// <summary>
     /// 強制続行中のスキル　nullならその状態でないということ

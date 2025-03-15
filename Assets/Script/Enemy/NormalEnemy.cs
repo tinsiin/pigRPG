@@ -26,6 +26,11 @@ public class NormalEnemy : BaseStates
         get { return RecovelySteps >= 0; }//復活歩数がゼロ以上なら復活する敵　つまり-1に設定すると復活しない
     }
 
+    /// <summary>
+    /// 逃げる確率　成功率は一律50%
+    /// </summary>
+    public float EscapeAttemptRate;
+
     
     /// <summary>
     /// 実際の再復活カウンター　初回は-1

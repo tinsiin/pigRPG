@@ -342,7 +342,13 @@ public class BattleManager
     public UnderActersEntryList unders;
     WhichGroup ActerFaction;//陣営
     bool Wipeout = false;//全滅したかどうか
-    bool RunOut = false;//逃走
+    bool EnemyGroupEmpty = false;//敵グループが空っぽ
+    bool AlliesRunOut = false;//味方全員逃走
+    NormalEnemy VoluntaryRunOutEnemy = null;//敵一人の逃走
+    /// <summary>
+    /// 連鎖逃走する敵リスト
+    /// </summary>
+    List<NormalEnemy> DominoRunOutEnemies = new List<NormalEnemy>();
     public bool DoNothing = false;//何もしない
     public bool VoidTurn = false;//そのターンは無かったことに
 
@@ -355,7 +361,7 @@ public class BattleManager
 
 
     /// <summary>
-    ///     コンストラクタ
+    ///コンストラクタ
     /// </summary>
     public BattleManager(BattleGroup allyGroup, BattleGroup enemyGroup, BattleStartSituation first)
     {
@@ -564,6 +570,23 @@ public class BattleManager
             ActerFaction = WhichGroup.Enemyiy;
             return TabState.NextWait;//押して処理
         }
+        //もし敵のグループが逃走なんかで空っぽになってたら、
+        if (EnemyGroup.Ours.Count == 0)
+        {
+            EnemyGroupEmpty = true;
+            return TabState.NextWait;//押して処理
+        }
+
+        //逃走
+        if (AlliesRunOut)
+        {
+            return TabState.NextWait;//押して処理
+        }
+        //敵の連鎖逃走リストがあるなら
+        if(DominoRunOutEnemies.Count > 0)
+        {
+            return TabState.NextWait;//押して処理
+        }
 
         CharacterAddFromListOrRandom();//Acterが選ばれる
 
@@ -583,6 +606,14 @@ public class BattleManager
             }
             else//スキル強制続行中なら、
             {
+                //俳優が自分のFreezeConsecutiveを削除する予約をしているのなら、
+                if (Acter.IsDeleteMyFreezeConsecutive)
+                {
+                    Acter.DeleteConsecutiveATK();//連続実行FreezeConsecutiveを削除
+                    DoNothing = true;//何もしない
+                    return TabState.NextWait;// nextwait = CharacterACTBranching
+                }
+                
                 var skill = Acter.FreezeUseSkill;
                 Acter.NowUseSkill = skill;//操作の代わりに使用スキルに強制続行スキルを入れとく
 
@@ -604,15 +635,10 @@ public class BattleManager
         }
         //スキルと範囲の思考--------------------------------------------------------------------------------------------------------スキルと範囲の思考-----------------------------------------------------------
 
-        //俳優が自分のFreezeConsecutiveを削除する予約をしているのなら、
-        if (Acter.IsDeleteMyFreezeConsecutive)
-        {
-            Acter.DeleteConsecutiveATK();//連続実行FreezeConsecutiveを削除
-            DoNothing = true;//何もしない
-        }
+        
 
 
-        return TabState.NextWait;
+        return TabState.NextWait;// nextwait = CharacterACTBranching
 
 
     }
@@ -667,17 +693,23 @@ public class BattleManager
     }
 
     /// <summary>
-    /// 発動カウントかスキル実行かで分岐
+    /// 俳優の行動の分岐
     /// </summary>
     /// <returns></returns>
     public TabState CharacterActBranching()
     {
         var skill = Acter.NowUseSkill;
+        var IsEscape = Acter.SelectedEscape;//逃げる意思
 
-        if (Wipeout || RunOut) //全滅か逃走かで終了アクトへ
+        if (Wipeout || AlliesRunOut || EnemyGroupEmpty) //全滅か主人公達逃走かでダイアログ終了アクトへ
         {
             //Bmは終了へ向かうので、RunOutもWipeOutもfalseにする必要はない。
             return DialogEndACT();
+        }
+        //敵の連鎖逃走リストがあるなら
+        if(DominoRunOutEnemies.Count > 0)
+        {
+            return DominoEscapeACT();//連鎖逃走の処理へ
         }
 
         if(DoNothing)
@@ -690,6 +722,11 @@ public class BattleManager
         {
             VoidTurn = false;//ターン消しとび　エフェクトなし
             return ACTPop();
+        }
+        
+        if(IsEscape)
+        {
+            return EscapeACT();
         }
 
         int count;//メッセージテキスト用のカウント数字
@@ -704,8 +741,114 @@ public class BattleManager
         }
 
     }
+    float GetRunOutRateByCharacterImpression(SpiritualProperty property)
+    {
+        switch(property)
+        {
+            case SpiritualProperty.liminalwhitetile:
+                return 55;
+            case SpiritualProperty.kindergarden:
+                return 80;
+            case SpiritualProperty.sacrifaith:
+                return 5;
+            case SpiritualProperty.cquiest:
+                return 25;
+            case SpiritualProperty.devil:
+                return 40;
+            case SpiritualProperty.doremis:
+                return 40;
+            case SpiritualProperty.pillar:
+                return 10;
+            case SpiritualProperty.godtier:
+                return 50;
+            case SpiritualProperty.baledrival:
+                return 60;
+            case SpiritualProperty.pysco:
+                return 100;
+            case SpiritualProperty.none:
+                return 0;
+        }
+        return 0;
+    }
     /// <summary>
-    /// メッセージと共に終わらせる
+    /// 連鎖逃走する敵を取得
+    /// 連鎖逃走リストに追加しとく
+    /// </summary>
+    /// <param name="voluntaryRunOutEnemy">逃げた最初の敵</param>
+    public void GetRunOutEnemies(NormalEnemy voluntaryRunOutEnemy)
+    {
+        //敵グループに残った敵で回す
+        foreach(var remainingEnemy in EnemyGroup.Ours)
+        {
+            //逃げた敵に対する相性値が高ければ連鎖逃走
+            if(EnemyGroup.CharaCompatibility[(remainingEnemy, voluntaryRunOutEnemy)] >= 77)
+            {
+                DominoRunOutEnemies.Add(remainingEnemy as NormalEnemy);
+                continue;
+            }       
+            //キャラクター属性による逃走判定
+            if(rollper(GetRunOutRateByCharacterImpression(remainingEnemy.MyImpression)))
+            {
+                DominoRunOutEnemies.Add(remainingEnemy as NormalEnemy);
+            }
+        }
+    }
+    /// <summary>
+    /// 逃げるACT
+    /// </summary>
+    /// <returns></returns>
+    public TabState EscapeACT()
+    {
+        //味方の場合はエリアの逃走率判定
+        if(ActerFaction == WhichGroup.alliy)
+        {
+            var Rate = Walking.NowStageCut.EscapeRate;
+            if(rollper(Rate))
+            {
+                //逃走成功
+                AlliesRunOut = true;//次のACTpopで逃走する
+                Debug.Log("逃げた");
+            }else{
+                //逃げ失敗
+                Debug.Log("逃げ失敗");
+            }
+        }else//敵なら一律50%
+        {
+            if(rollper(50))
+            {
+                //逃走成功
+                VoluntaryRunOutEnemy = Acter as NormalEnemy;//
+                EnemyGroup.EscapeAndRemove(VoluntaryRunOutEnemy);//敵キャラならその場で消す
+                Debug.Log("敵は逃げた");
+
+                //連鎖逃走の判断とリストに入れる。
+                GetRunOutEnemies(VoluntaryRunOutEnemy);
+            }else{
+                //逃げ失敗
+                Debug.Log("敵は逃げ失敗");
+            }
+        }
+        Acter.SelectedEscape = false;//選択を解除
+        return ACTPop();
+    }
+    /// <summary>
+    /// 連鎖逃走
+    /// </summary>
+    public TabState DominoEscapeACT()
+    {
+        //連鎖逃走
+        foreach(var enemy in DominoRunOutEnemies)
+        {
+            EnemyGroup.EscapeAndRemove(enemy);
+            Debug.Log("敵は連鎖逃走");
+        }
+
+        //連鎖逃走リストクリア
+        DominoRunOutEnemies.Clear();
+        return ACTPop();
+    }
+    /// <summary>
+    /// メッセージと共に戦闘を終わらせる
     /// </summary>
     public TabState DialogEndACT()
     {
@@ -731,20 +874,23 @@ public class BattleManager
                 VictoryBoostOnWin();                
             }
         }
-        if (RunOut) 
+        if (AlliesRunOut) 
         {
-            if(ActerFaction == WhichGroup.alliy)
-            {
-                MessageDropper.Instance.CreateMessage("敵は逃げた");
-                EnemyGroup.EnemiesOnRunOut();
-            }
-            else
-            {
-                MessageDropper.Instance.CreateMessage("我々は逃げた");
-                PlayersStates.Instance.PlayersOnRunOut();
-                EnemyGroup.EnemiesOnAllyRunOut();
-            }
+            MessageDropper.Instance.CreateMessage("我々は逃げた");
+            PlayersStates.Instance.PlayersOnRunOut();
+            EnemyGroup.EnemiesOnAllyRunOut();//敵の主人公達が逃げ出した時のコールバック
         }
+        if (EnemyGroupEmpty)
+        {
+            MessageDropper.Instance.CreateMessage("敵はいなくなった");
+           //敵が逃げたときのはそれぞれコールバックしたのでここで敵のコールバックは行わない。
+
+           //一応主人公達は勝った扱い
+           PlayersStates.Instance.PlayersOnWin();
+           //勝利時の十日能力成長値のブースト
+           VictoryBoostOnWin();
+        }
+
         OnBattleEnd();
         return TabState.walk;
     }

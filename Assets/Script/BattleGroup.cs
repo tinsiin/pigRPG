@@ -148,6 +148,7 @@ public class BattleGroup
     /// <returns></returns>
     public bool PartyDeathOnBattle()
     {
+        if (Ours.Count == 0) return false;//全員死んでる訳ではない
         foreach (var chara in Ours)
         {
             if (!chara.Death())//死んでなかったら
@@ -223,6 +224,15 @@ public class BattleGroup
     ///     集団の人員リスト
     /// </summary>
     public List<BaseStates> Ours {  get; private set; }
+    /// <summary>
+    ///グループから逃走処理
+    ///逃走時コールバックとキャラクターの消去
+    /// </summary>
+    public void EscapeAndRemove(NormalEnemy chara)
+    {
+        Ours.Remove(chara);
+        chara.OnRunOut();//逃走コールバック
+    }
 
     ///<summary>
     ///グループの人員同士の相性値

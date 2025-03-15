@@ -169,7 +169,7 @@ public class Stages : MonoBehaviour
         /// <summary>
         ///     逃走率
         /// </summary>
-        [SerializeField] private int EscapeRate;
+        public float EscapeRate;
 
         /// <summary>
         ///     小分けしたエリアの名前
