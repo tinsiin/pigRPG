@@ -18,6 +18,12 @@ public class BaseWeapon
     public BaseSkill  WeaponSkill;
 
     /// <summary>
+    /// 武器の装備に必要な能力値　十日能力値
+    /// </summary>
+    public SerializableDictionary<TenDayAbility,float> TenDayValues = new SerializableDictionary<TenDayAbility,float>();
+
+
+    /// <summary>
     /// 刃物武器かどうか
     /// </summary>
     public bool IsBlade;

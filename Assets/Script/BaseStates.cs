@@ -1856,6 +1856,19 @@ public abstract class BaseStates
     ///     当然この属性自体もゲーム中で変化する可能性はある。
     /// </summary>
     public SpiritualProperty DefaultImpression;
+    
+    /// <summary>
+    /// 暴断耐性
+    /// </summary>
+    public float HeavyResistance = 1.0f;
+    /// <summary>
+    /// ヴォル転耐性
+    /// </summary>
+    public float voltenResistance = 1.0f;
+    /// <summary>
+    /// 床ずれ耐性
+    /// </summary>
+    public float DishSmackRsistance = 1.0f;
 
     /// <summary>
     /// 現在のこのキャラの人間状況
@@ -5128,7 +5141,27 @@ public abstract class BaseStates
         }
     }
     /// <summary>
-    ///     オーバライド可能なダメージ関数
+    /// ダメージを物理耐性で減衰
+    /// </summary>
+    StatesPowerBreakdown ApplyPhysicalResistance(StatesPowerBreakdown dmg, BaseSkill skill)
+    {
+        switch(skill.SkillPhysical)
+        {
+            case PhysicalProperty.dishSmack:
+                dmg *= DishSmackRsistance;
+                break;
+            case PhysicalProperty.heavy:
+                dmg *= HeavyResistance;
+                break;
+            case PhysicalProperty.volten:
+                dmg *= voltenResistance;
+                break;
+            //noneは物理耐性の計算無し
+        }        
+        return dmg;
+    }
+    /// <summary>
+    ///オーバライド可能なダメージ関数
     /// </summary>
     /// <param name="atkPoint"></param>
     public virtual float Damage(BaseStates Atker, float SkillPower,float SkillPowerForMental)
@@ -5150,6 +5183,9 @@ public abstract class BaseStates
 
         if(NowPower > ThePower.lowlow)//たるくなければ基礎山形補正がある。
         dmg = GetBaseCalcDamageWithPlusMinus22Percent(dmg);//基礎山型補正
+
+        //物理耐性による減衰
+        dmg = ApplyPhysicalResistance(dmg,skill);
 
         //がむしゃらな補正
         dmg = GetFrenzyBoost(Atker,dmg);
@@ -5923,8 +5959,14 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         //スキルパワーの精神属性による計算
         var modifier = GetSkillSpiritualModifier(skill.SkillSpiritual, attacker);
-        var skillPower = skill.SkillPowerCalc(spread) * modifier.GetValue();
-        var skillPowerForMental = skill.SkillPowerForMentalCalc(spread) * modifier.GetValue();//精神HPへのパワー
+        var SpiritualModifierPercentage = 0.2f;//IsTLOAスキル以外は20%の精神補正
+        if(skill.IsTLOA) SpiritualModifierPercentage = 0.4f;//IsTLOAなら40%の精神補正
+
+        var modifierForSkillPower = modifier.GetValue(SpiritualModifierPercentage);//精神補正値
+        if(attacker.NowUseWeapon.IsBlade) modifierForSkillPower = 1.0f;//刃物武器なら精神補正なし
+        
+        var skillPower = skill.SkillPowerCalc(spread) * modifierForSkillPower;
+        var skillPowerForMental = skill.SkillPowerForMentalCalc(spread) * modifier.GetValue();//精神HPへのパワーは精神補正100%
         var txt = "";//メッセージテキスト用
         var thisAtkTurn = true;
 
@@ -7975,11 +8017,13 @@ public class FixedOrRandomValue
     {
         rndMax = value;//-1を指定するとないってこと
     }
-    public float GetValue()
+    public float GetValue(float percentage = 1.0f)
     {
-        if (rndMax == -1) return rndMinOrFixed / 100.0f;//乱数じゃないなら単一の値が返る
+        float value;
+        if (rndMax == -1) value = rndMinOrFixed / 100.0f;//乱数じゃないなら単一の値が返る
+        else value = RandomEx.Shared.NextInt(rndMinOrFixed, rndMax + 1)  / 100.0f;//ランダムなら
 
-        return RandomEx.Shared.NextInt(rndMinOrFixed, rndMax + 1)  / 100.0f;//ランダムなら
+        return value * percentage;//割合を掛ける
 
     }
     public FixedOrRandomValue DeepCopy()
@@ -8284,7 +8328,7 @@ public class DamageData
 }
 
 /// <summary>
-///     物理属性、スキルに依存し、キャラクター達の種別や個人との相性で攻撃の通りが変わる
+///物理属性、スキルに依存し、キャラクター達の種別や個人との相性で攻撃の通りが変わる
 /// </summary>
 public enum PhysicalProperty
 {
