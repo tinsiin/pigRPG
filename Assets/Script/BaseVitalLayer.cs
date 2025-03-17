@@ -162,7 +162,7 @@ public class BaseVitalLayer
         {
             // バリアで耐えた（破壊されなかった）
             LayerHP = leftover.Total;//レイヤーHPに戻すのでtotal
-            dmg = new StatesPowerBreakdown(new Dictionary<TenDayAbility, float>(), 0f);; // 余剰ダメージなし
+            dmg = new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0f);; // 余剰ダメージなし
         }
 
     }

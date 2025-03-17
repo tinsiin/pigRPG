@@ -44,7 +44,7 @@ public static class CommonCalc
     /// 十日能力辞書間の距離を計算するメソッド
     /// マンハッタン距離らしい(AI全任せwｗ)
     /// </summary>
-    public static float CalculateTenDaysDistance(SerializableDictionary<TenDayAbility, float> skillValues1, Dictionary<TenDayAbility, float> skiillValues2)
+    public static float CalculateTenDaysDistance(TenDayAbilityDictionary skillValues1, TenDayAbilityDictionary skillValues2)
     {
         float totalDistance = 0f;
         
@@ -55,7 +55,7 @@ public static class CommonCalc
             float value1 = skillValues1.GetValueOrZero(ability);
             
             // 2つ目の値（存在しない場合は0）
-            float value2 = skiillValues2.GetValueOrZero(ability);
+            float value2 = skillValues2.GetValueOrZero(ability);
             
             // 距離を加算（値の差の絶対値）
             totalDistance += Math.Abs(value1 - value2);

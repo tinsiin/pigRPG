@@ -212,6 +212,57 @@ public enum SkillImpression
     /// </summary>
     SubAssult_Machine,
 }
+/// <summary>
+/// スキルレベルに含まれるデータ
+/// </summary>
+public class SkillLevelData
+{
+    public TenDayAbilityDictionary TenDayValues;
+    public float SkillPower;
+
+    /// <summary>
+    /// スキルレベルによる精神攻撃率 (オプション)
+    /// -1なら参照されない
+    /// </summary>
+    public float OptionMentalDamageRatio = -1;
+
+    /// <summary>
+    /// スキルレベルによる分散割合 (オプション)
+    /// nullなら参照されない
+    /// </summary>
+    public float[] OptionPowerSpread = null;
+    /// <summary>
+    /// スキルレベルによる命中補正 (オプション)
+    /// -1なら参照されない
+    /// </summary>
+    public int OptionSkillHitPer = -1;
+
+    public SkillLevelData Clone()
+{
+    // 基本データをコピー
+    var copy = new SkillLevelData
+    {
+        SkillPower = this.SkillPower,
+        OptionMentalDamageRatio = this.OptionMentalDamageRatio,
+        OptionSkillHitPer = this.OptionSkillHitPer
+    };
+    
+    // TenDayValuesのディープコピー
+    if (this.TenDayValues != null)
+    {
+        copy.TenDayValues = new TenDayAbilityDictionary(this.TenDayValues);
+    }
+    
+    // PowerSpreadのディープコピー
+    if (this.OptionPowerSpread != null)
+    {
+        copy.OptionPowerSpread = new float[this.OptionPowerSpread.Length];
+        Array.Copy(this.OptionPowerSpread, copy.OptionPowerSpread, this.OptionPowerSpread.Length);
+    }
+    
+    return copy;
+}
+}
 
 [Serializable]
 public class BaseSkill
@@ -282,10 +333,224 @@ public class BaseSkill
     public PhysicalProperty SkillPhysical;
 
     public BaseStates Doer;//行使者
+
+        /// <summary>
+    /// TLOAかどうか
+    /// </summary>
+    public bool IsTLOA;
+    /// <summary>
+    /// 魔法スキルかどうか
+    /// </summary>
+    public bool IsMagic;
+    /// <summary>
+    /// 切物スキルかどうか
+    /// </summary>
+    public bool IsBlade;
+    /// <summary>
+    /// TLOAスキルのレベルアップに必要な使用回数
+    /// </summary>
+    protected const int TLOA_LEVEL_DIVIDER = 120;
+    /// <summary>
+    /// 非TLOAスキルのレベルアップに必要な使用回数
+    /// </summary>
+    protected const int NOT_TLOA_LEVEL_DIVIDER = 50;
+    /// <summary>
+    /// スキルレベル
+    /// 永続実行回数をTLOAスキルかそうでないかで割る数が変わる。
+    /// </summary>
+    protected virtual int _nowSkillLevel
+    {
+        get
+        {
+            if(IsTLOA)
+            {
+                return _recordDoCount / TLOA_LEVEL_DIVIDER;
+            }
+            else
+            {
+                return _recordDoCount / NOT_TLOA_LEVEL_DIVIDER;
+            }
+        }
+    }
+    /// <summary>
+    /// 固定されたスキルレベルデータ部分
+    /// このリスト以降なら無限のデータ
+    /// </summary>
+    public List<SkillLevelData> FixedSkillLevelData;
+    /// <summary>
+    /// 無限に伸びる部分のスキルパワーの単位。
+    /// </summary>
+    [SerializeField]
+    float _infiniteSkillPowerUnit;
+    /// <summary>
+    /// 無限に伸びる部分の印象構造(全て)の単位。
+    /// </summary>
+    [SerializeField]
+    float _infiniteSkillTenDaysUnit;
+
+    /// <summary>
+    /// スキルのパワー　
+    /// </summary>
+    float _skillPower
+    {
+        get
+        {
+            // スキルレベルが有限範囲ならそれを返す
+            if (FixedSkillLevelData.Count > _nowSkillLevel)
+            {
+                return FixedSkillLevelData[_nowSkillLevel].SkillPower;
+            }
+            else
+            {// そうでないなら有限最終以降と無限単位の加算
+                // 有限リストの最終値と無限単位に以降のスキルレベルを乗算した物を加算
+                // 有限リストの最終値を基礎値にする
+                var baseSkillPower = FixedSkillLevelData[FixedSkillLevelData.Count - 1].SkillPower;
+
+                // 有限リストの超過分、無限単位にどの程度かけるかの数
+                var infiniteLevelMultiplier = _nowSkillLevel - (FixedSkillLevelData.Count - 1);
+
+                // 基礎値に無限単位に超過分を掛けたものを加算して返す
+                return baseSkillPower + _infiniteSkillPowerUnit * infiniteLevelMultiplier;
+                
+                // 有限リストがないってことはない。必ず一つは設定されてるはずだしね。
+            }
+        }
+    }
+    /// <summary>
+    /// スキルのパワー
+    /// </summary>
+    public float SkillPower => _skillPower * (1.0f - MentalDamageRatio);
+    /// <summary>
+    /// 精神HPへのスキルのパワー
+    /// </summary>
+    public float SkillPowerForMental=> _skillPower * MentalDamageRatio;
+
+    /// <summary>
+    /// 通常の精神攻撃率
+    /// </summary>
+    [SerializeField]
+    float _mentalDamageRatio;
+    /// <summary>
+    /// 精神攻撃率　100だとSkillPower全てが精神HPの方に行くよ。
+    /// 有限リストのオプション値で指定されてるのならそれを返す
+    /// </summary>
+    public float MentalDamageRatio
+    {
+        get
+        {
+            //スキルレベルが有限範囲なら
+            if(FixedSkillLevelData.Count > _nowSkillLevel)
+            {
+                //-1でないならあるので返す
+                if(FixedSkillLevelData[_nowSkillLevel].OptionMentalDamageRatio != -1)
+                {
+                    return FixedSkillLevelData[_nowSkillLevel].OptionMentalDamageRatio;
+                }
+            }
+            //当然有限リストは絶対に存在するので、
+            //有限範囲以降なら、その最終値でオプションで指定されてるならそれを返す
+            if(FixedSkillLevelData[FixedSkillLevelData.Count - 1].OptionMentalDamageRatio != -1)
+            {
+                return FixedSkillLevelData[FixedSkillLevelData.Count - 1].OptionMentalDamageRatio;
+            }
+
+            //そうでないなら設定値を返す
+            return _mentalDamageRatio;
+        }
+    }
+    /// <summary>
+    /// 通常の分散割合
+    /// </summary>
+    [SerializeField]
+    float[] _powerSpread;
+    /// <summary>
+    /// スキルの範囲効果における各割合　最大で6の長さまで使うと思う
+    /// 有限リストのオプション値で指定されてるのならそれを返す
+    /// </summary>
+    public float[] PowerSpread
+    {
+        get
+        {
+            //スキルレベルが有限範囲なら
+            if(FixedSkillLevelData.Count > _nowSkillLevel)
+            {
+                //nullでないならあるので返す
+                if(FixedSkillLevelData[_nowSkillLevel].OptionPowerSpread != null && FixedSkillLevelData[_nowSkillLevel].OptionPowerSpread.Length > 0)
+                {
+                    return FixedSkillLevelData[_nowSkillLevel].OptionPowerSpread;
+                }
+            }
+            //当然有限リストは絶対に存在するので、
+            //有限範囲以降なら、その最終値でオプションで指定されてるならそれを返す
+            if(FixedSkillLevelData[FixedSkillLevelData.Count - 1].OptionPowerSpread != null 
+            && FixedSkillLevelData[FixedSkillLevelData.Count - 1].OptionPowerSpread.Length > 0)
+            {
+                return FixedSkillLevelData[FixedSkillLevelData.Count - 1].OptionPowerSpread;
+            }
+
+            //そうでないなら設定値を返す
+            return _powerSpread;
+        }
+    }
+    /// <summary>
+    /// 通常の命中補正
+    /// </summary>
+    [SerializeField]
+    int _skillHitPer;
+    /// <summary>
+    /// スキルの命中補正 int 百分率
+    /// </summary>
+    public int SkillHitPer
+    {
+        get
+        {
+            //スキルレベルが有限範囲なら
+            if(FixedSkillLevelData.Count > _nowSkillLevel)
+            {
+                //-1でないならあるので返す
+                if(FixedSkillLevelData[_nowSkillLevel].OptionSkillHitPer != -1)
+                {
+                    return FixedSkillLevelData[_nowSkillLevel].OptionSkillHitPer;
+                }
+            }
+            //当然有限リストは絶対に存在するので、
+            //有限範囲以降なら、その最終値でオプションで指定されてるならそれを返す
+            if(FixedSkillLevelData[FixedSkillLevelData.Count - 1].OptionSkillHitPer != -1)
+            {
+                return FixedSkillLevelData[FixedSkillLevelData.Count - 1].OptionSkillHitPer;
+            }
+
+            //そうでないなら設定値を返す
+            return _skillHitPer;
+        }
+    }
     /// <summary>
     /// スキルの印象構造　十日能力値
     /// </summary>
-    public SerializableDictionary<TenDayAbility,float> TenDayValues = new SerializableDictionary<TenDayAbility,float>();
+    public TenDayAbilityDictionary TenDayValues
+    {
+        get
+        {
+            //skillLecelが有限範囲ならそれを返す
+            if(FixedSkillLevelData.Count > _nowSkillLevel)
+            {
+                return FixedSkillLevelData[_nowSkillLevel].TenDayValues;
+            }else
+            {//そうでないなら有限最終以降と無限単位の加算
+                //有限リストの最終値と無限単位に以降のスキルレベルを乗算した物を加算
+                //有限リストの最終値を基礎値にする
+                var BaseTenDayValues = FixedSkillLevelData[FixedSkillLevelData.Count - 1].TenDayValues;
+
+                //有限リストの超過分、無限単位にどの程度かけるかの数
+                var InfiniteLevelMultiplier =  _nowSkillLevel - (FixedSkillLevelData.Count - 1);
+
+                //基礎値に無限単位に超過分を掛けたものを加算して返す。
+                return BaseTenDayValues + _infiniteSkillTenDaysUnit * InfiniteLevelMultiplier;
+            
+                //有限リストがないってことはない。必ず一つは設定されてるはずだしね。
+            }
+        }
+    }
 
     /// <summary>
     /// スキルの印象構造の十日能力値の合計
@@ -297,7 +562,7 @@ public class BaseSkill
 
     private int _doConsecutiveCount;//スキルを連続実行した回数
     private int _doCount;//スキルを実行した回数
-    private int _recordDoCount;//スキルを実行した回数（記録する
+    protected int _recordDoCount;
     private int _hitCount;    // スキルがヒットした回数
     private int _hitConsecutiveCount;//スキルが連続ヒットした回数
     private int _triggerCount;//発動への−カウント　このカウント分連続でやらないと発動しなかったりする　重要なのは連続でやらなくても　一気にまたゼロからになるかはスキル次第
@@ -615,49 +880,7 @@ public class BaseSkill
         _atkCountUP++;
         return _atkCountUP;
     }
-    /// <summary>
-    /// TLOAかどうか
-    /// </summary>
-    public bool IsTLOA;
-    /// <summary>
-    /// 魔法スキルかどうか
-    /// </summary>
-    public bool IsMagic;
-    /// <summary>
-    /// 刃物スキルかどうか
-    /// </summary>
-    public bool IsBlade;
 
-    /// <summary>
-    /// スキルの範囲効果における各割合　最大で6の長さまで使うと思う
-    /// </summary>
-    public float[] PowerSpread;
-
-    [SerializeField]
-    float _skillPower;//バッキングフィールド
-    /// <summary>
-    /// スキルのパワー
-    /// </summary>
-    public float SkillPower => _skillPower * (1.0f - MentalDamageRatio);
-    /// <summary>
-    /// 精神HPへのスキルのパワー
-    /// </summary>
-    public float SkillPowerForMental=> _skillPower * MentalDamageRatio;
-
-    /// <summary>
-    /// 精神攻撃率　100だとSkillPower全てが精神HPの方に行くよ。
-    /// </summary>
-    public float MentalDamageRatio;
-
-    /// <summary>
-    /// スキルの命中補正 int 百分率
-    /// </summary>
-    public int SkillHitPer;
-
-    /// <summary>
-    /// 基本的にスキルのレベルは恒常的に上がらないが、戦闘内では一時的に上がったりするのかもしれない。
-    /// </summary>
-    float SkillLevel;
     
 
     /// <summary>
@@ -691,15 +914,6 @@ public class BaseSkill
         ReturnTrigger();//発動カウントはカウントダウンするから最初っから
         _tmpSkillUseTurn = -1;//前回とのターン比較用の変数をnullに
         ResetStock();
-
-        SkillLevel = 0;
-    }
-    /// <summary>
-    /// TLOAと対決した際のライバハルの増え方の関数
-    /// </summary>
-    public void RivahalDream()
-    {
-
     }
 
     /// <summary>
@@ -754,12 +968,12 @@ public class BaseSkill
     /// スキルごとのムーブセット 戦闘規格ごとのaに対応するもの。
     /// </summary>
     [SerializeField]
-    List<MoveSet> A_MoveSet;
+    List<MoveSet> A_MoveSet=new();
     /// <summary>
     /// スキルごとのムーブセット 戦闘規格ごとのbに対応するもの。
     /// </summary>
     [SerializeField]
-    List<MoveSet> B_MoveSet;
+    List<MoveSet> B_MoveSet=new();
     /// <summary>
     /// 現在のムーブセット
     /// </summary>
@@ -819,8 +1033,9 @@ public class BaseSkill
     /// </summary>
     float NowAimDefATK()
     {
-        var nowCountUp = _atkCountUP;//今何回目の攻撃か。
         return NowMoveSetState.GetAtDEFATK(_atkCountUP - 1); 
+        //-1してる理由　ムーブセットListは二回目以降から指定されるので。
+        //リストのインデックスでしっかり初回から参照されるように二回目前提として必ず-1をする。
     }
 
     [SerializeField]
@@ -881,10 +1096,10 @@ public class BaseSkill
         copy.SkillSpiritual = SkillSpiritual;
         copy.SkillPhysical = SkillPhysical;
         copy.Impression = Impression;
-        foreach(var tenDay in TenDayValues)
+        /*foreach(var tenDay in TenDayValues)
         {
             copy.TenDayValues.Add(tenDay.Key,tenDay.Value);
-        }
+        }*///十日能力は有限スキルレベルリストから参照する
         copy._name = _name;
         copy._triggerCountMax = _triggerCountMax;
         copy._triggerRollBackCount = _triggerRollBackCount;
@@ -899,10 +1114,18 @@ public class BaseSkill
         copy.SkillName = SkillName;
         copy.IsTLOA = IsTLOA;
         copy.IsMagic = IsMagic;
-        copy.PowerSpread = PowerSpread;
-        copy._skillPower = _skillPower;
-        copy.MentalDamageRatio = MentalDamageRatio;
-        copy.SkillHitPer = SkillHitPer;
+        copy._powerSpread = _powerSpread;//通常の分散割合
+        copy._mentalDamageRatio = _mentalDamageRatio;//通常の精神攻撃率
+        copy._infiniteSkillPowerUnit = _infiniteSkillPowerUnit;//無限スキルの威力単位
+        copy._infiniteSkillTenDaysUnit = _infiniteSkillTenDaysUnit;//無限スキルの10日単位
+        copy.FixedSkillLevelData = FixedSkillLevelData;//固定スキルレベルデータ
+        //有限スキルレベルリストのディープコピー
+        copy.FixedSkillLevelData = new();
+        foreach(var levelData in FixedSkillLevelData)
+        {
+            copy.FixedSkillLevelData.Add(levelData.Clone());
+        }
+        
         copy.subEffects = new List<int>(subEffects);
         copy.subVitalLayers = new List<int>(subVitalLayers);
         foreach(var moveSet in A_MoveSet)

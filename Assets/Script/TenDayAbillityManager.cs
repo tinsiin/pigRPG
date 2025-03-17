@@ -1,10 +1,13 @@
-﻿using System;
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 /// <summary>
 /// 十日能力の種類
 /// </summary>
+[Serializable]
 public enum TenDayAbility
 {
     /// <summary>テント空洞</summary>
@@ -182,6 +185,111 @@ public static class TenDayAbilityPosition
     {
         return dict.TryGetValue(ability, out float value) ? value : 0f;
     }
+
 }
+/// <summary>
+/// TenDayAbility用の乗算演算子をサポートする辞書
+/// </summary>
+[Serializable]
+public class TenDayAbilityDictionary : SerializableDictionary<TenDayAbility, float>
+{
+    /// <summary>
+    /// 既存のTenDayAbilityDictionaryからコピーを作成するコンストラクタ
+    /// </summary>
+    public TenDayAbilityDictionary(TenDayAbilityDictionary dictionary) : base()
+    {
+        // 既存のTenDayAbilityDictionaryの内容をこのインスタンスにコピー
+        foreach (var pair in dictionary)
+        {
+            this[pair.Key] = pair.Value;
+        }
+    }
+    /// <summary>
+    /// デフォルトコンストラクタ
+    /// </summary>
+    public TenDayAbilityDictionary() : base()
+    {
+        // 空のコンストラクタ
+    }
 
+    /// <summary>
+    /// Dictionary<TenDayAbility, float>からコピーを作成するコンストラクタ
+    /// </summary>
+    public TenDayAbilityDictionary(Dictionary<TenDayAbility, float> dictionary) : base()
+    {
+        // 既存のDictionaryの内容をこのインスタンスにコピー
+        foreach (var pair in dictionary)
+        {
+            this[pair.Key] = pair.Value;
+        }
+    }
 
+    /// <summary>
+    /// 加算演算子 - 2つの辞書の値を加算する
+    /// </summary>
+    public static TenDayAbilityDictionary operator +(TenDayAbilityDictionary left, TenDayAbilityDictionary right)
+    {
+        TenDayAbilityDictionary result = new TenDayAbilityDictionary(left);
+        
+        foreach (var pair in right)
+        {
+            if (result.ContainsKey(pair.Key))
+            {
+                result[pair.Key] += pair.Value;
+            }
+            else
+            {
+                result[pair.Key] = pair.Value;
+            }
+        }
+        
+        return result;
+    }
+
+    /// <summary>
+    /// 加算演算子 - TenDayAbilityDictionaryにfloat値を加算する
+    /// 全ての値にfloat値を加算します
+    /// </summary>
+    public static TenDayAbilityDictionary operator +(TenDayAbilityDictionary dict, float value)
+    {
+        TenDayAbilityDictionary result = new TenDayAbilityDictionary(dict);
+        
+        foreach (var key in result.Keys)
+        {
+            result[key] += value;
+        }
+        
+        return result;
+    }
+
+    /// <summary>
+    /// 加算演算子 - float値にTenDayAbilityDictionaryを加算する（交換法則対応）
+    /// </summary>
+    public static TenDayAbilityDictionary operator +(float value, TenDayAbilityDictionary dict)
+    {
+        return dict + value;
+    }
+
+    /// <summary>
+    /// 乗算演算子 - 辞書の全ての値に乗数を掛ける
+    /// </summary>
+    public static TenDayAbilityDictionary operator *(TenDayAbilityDictionary dict, float multiplier)
+    {
+        TenDayAbilityDictionary result = new TenDayAbilityDictionary();
+        
+        foreach (var pair in dict)
+        {
+            result[pair.Key] = pair.Value * multiplier;
+        }
+        
+        return result;
+    }
+
+    /// <summary>
+    /// 乗算演算子（交換法則対応）
+    /// </summary>
+    public static TenDayAbilityDictionary operator *(float multiplier, TenDayAbilityDictionary dict)
+    {
+        return dict * multiplier;
+    }
+}

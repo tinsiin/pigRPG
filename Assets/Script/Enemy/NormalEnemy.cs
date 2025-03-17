@@ -122,7 +122,7 @@ public class NormalEnemy : BaseStates
     /// 成長した十日能力とそれに近い順に成長予定スキルを並び替えたリストを返す。
     /// </summary>
     /// <param name="GrowTenDays">成長した十日能力</param>
-    List<EnemySkill> GetGrowSkillsSortedByDistance(Dictionary<TenDayAbility,float> GrowTenDays)
+    List<EnemySkill> GetGrowSkillsSortedByDistance(TenDayAbilityDictionary GrowTenDays)
     {
         var result = new List<EnemySkill>();
 
@@ -150,7 +150,7 @@ public class NormalEnemy : BaseStates
     void GrowSkillsNotEnabledOnWin()
     {
         //成長した十日能力
-        var growTenDays = new Dictionary<TenDayAbility, float>(battleGain);
+        var growTenDays = new TenDayAbilityDictionary(battleGain);
         //成長した十日能力に近い順に並び替えた有効化されてないスキルのリスト
         var growSkillsSortedByNearGrowTenDays = GetGrowSkillsSortedByDistance(growTenDays);
         
@@ -184,7 +184,7 @@ public class NormalEnemy : BaseStates
     void GrowSkillsNotEnabledOnRunOut()
     {
         //成長した十日能力
-        var growTenDays = new Dictionary<TenDayAbility, float>(battleGain);
+        var growTenDays = new TenDayAbilityDictionary(battleGain);
         //成長した十日能力に近い順に並び替えた有効化されてないスキルのリスト
         var growSkillsSortedByNearGrowTenDays = GetGrowSkillsSortedByDistance(growTenDays);
         
@@ -209,7 +209,7 @@ public class NormalEnemy : BaseStates
     void GrowSkillsNotEnabledOnAllyRunOut()
     {
         //成長した十日能力
-        var growTenDays = new Dictionary<TenDayAbility, float>(battleGain);
+        var growTenDays = new TenDayAbilityDictionary(battleGain);
         //成長した十日能力に近い順に並び替えた有効化されてないスキルのリスト
         var growSkillsSortedByNearGrowTenDays = GetGrowSkillsSortedByDistance(growTenDays);
         
@@ -380,6 +380,7 @@ public class NormalEnemy : BaseStates
 
         // 3. NormalEnemy 独自フィールドをコピー
         clone.RecovelySteps = this.RecovelySteps;
+        clone.EscapeAttemptRate = this.EscapeAttemptRate;//逃げる確率
         foreach(var skill in this.EnemySkillList)
         {
             clone.EnemySkillList.Add(skill.InitEnemyDeepCopy());
@@ -417,6 +418,30 @@ public class EnemySkill : BaseSkill
             this.growthPoint = -1;
         }
     }
+
+        /// <summary>
+    /// 敵は初期スキルレベルを指定可能。
+    /// つまり敵は使用回数に関係なく最初からスキルのレベルが上がってることを表現できるし、
+    /// その上でちゃんと使用回数でも成長する。
+    /// → obsidian スキルレベルの敵のスキルレベルについての章を読んで
+    /// </summary>
+    [SerializeField]
+    int _initSkillLevel;
+    protected override int _nowSkillLevel
+    {
+        get
+        {
+            if(IsTLOA)
+            {
+                return _recordDoCount / TLOA_LEVEL_DIVIDER + _initSkillLevel;
+            }
+            else
+            {
+                return _recordDoCount / NOT_TLOA_LEVEL_DIVIDER + _initSkillLevel;
+            }
+        }
+    }
+
 
     public EnemySkill InitEnemyDeepCopy()
     {

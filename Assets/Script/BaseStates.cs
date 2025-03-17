@@ -627,7 +627,30 @@ public abstract class BaseStates
                 break;
         }
     }
-
+    /// <summary>
+    /// ライバハル値
+    /// </summary>
+    float _rivahal;
+    /// <summary>
+    /// TLOAスキルからのダメージ時、ライバハルの増える処理
+    /// </summary>
+    public void RivahalDream(BaseStates Atker,BaseSkill skill)
+    {
+        //スキルの印象構造で回す
+        var baseValue = 0f;
+        foreach(var tenDay in skill.TenDayValues)
+        {
+            var attackerValue = 0f;
+            if(tenDay.Value > 0)//ゼロ除算対策
+            {
+                attackerValue = Atker.TenDayValues.GetValueOrZero(tenDay.Key) / tenDay.Value;
+            }
+            baseValue += attackerValue;
+        }
+        //精神補正100%を適用
+        var AtkerTLOAValue = baseValue * GetSkillSpiritualModifier(skill.SkillSpiritual,Atker).GetValue();
+        _rivahal += AtkerTLOAValue;
+    }
     
     [Header("4大ステの基礎基礎値")]
     public float  b_b_atk = 4f;
@@ -669,7 +692,7 @@ public abstract class BaseStates
     /// <summary>
     /// 十日能力成長値を勝利ブースト用に記録する
     /// </summary>
-    protected Dictionary<TenDayAbility, float> battleGain;
+    protected TenDayAbilityDictionary battleGain;
     /// <summary>
     /// 勝利時の十日能力ブースト倍化処理
     /// </summary>
@@ -803,7 +826,7 @@ public abstract class BaseStates
         get
         {
             // StatesPowerBreakdownのインスタンスを作成
-            var breakdown = new StatesPowerBreakdown(new Dictionary<TenDayAbility, float>(), b_b_agi);
+            var breakdown = new StatesPowerBreakdown(new TenDayAbilityDictionary(), b_b_agi);
 
             breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.3f);
             breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.3f);
@@ -837,7 +860,7 @@ public abstract class BaseStates
         get 
         {
             // StatesPowerBreakdownのインスタンスを作成
-            var breakdown = new StatesPowerBreakdown(new Dictionary<TenDayAbility, float>(), b_b_atk);
+            var breakdown = new StatesPowerBreakdown(new TenDayAbilityDictionary(), b_b_atk);
             
             //共通の十日能力をまず加算する。
             breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.5f);
@@ -896,7 +919,7 @@ public abstract class BaseStates
     private StatesPowerBreakdown CalcBaseDefenseForAimStyle(AimStyle style)
     {
         // StatesPowerBreakdownのインスタンスを作成
-        var breakdown = new StatesPowerBreakdown(new Dictionary<TenDayAbility, float>(), 0);
+        var breakdown = new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
 
         // 共通の十日能力をまず加算
         breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 1.0f);
@@ -999,7 +1022,7 @@ public abstract class BaseStates
     public StatesPowerBreakdown b_DEF(AimStyle? SimulateAimStyle = null)
     {
        // StatesPowerBreakdownのインスタンスを作成
-        var breakdown = new StatesPowerBreakdown(new Dictionary<TenDayAbility, float>(), b_b_def);
+        var breakdown = new StatesPowerBreakdown(new TenDayAbilityDictionary(), b_b_def);
         
         StatesPowerBreakdown styleBreakdown;
         
@@ -1020,7 +1043,7 @@ public abstract class BaseStates
         get
         {
             // StatesPowerBreakdownのインスタンスを作成
-            var breakdown = new StatesPowerBreakdown(new Dictionary<TenDayAbility, float>(), b_b_eye);
+            var breakdown = new StatesPowerBreakdown(new TenDayAbilityDictionary(), b_b_eye);
             
             breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues.GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.2f);
             breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues.GetValueOrZero(TenDayAbility.Taraiton) * 0.2f);
@@ -4263,7 +4286,7 @@ public abstract class BaseStates
     {
         if (modifiers == null || modifiers.Count == 0)
         {
-            return new StatesPowerBreakdown(new Dictionary<TenDayAbility, float>(), 0);
+            return new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
         }
         
         StatesPowerBreakdown result = modifiers[0].Modifier;
@@ -5633,9 +5656,11 @@ private int CalcTransformCountIncrement(int tightenStage)
            if(RandomEx.Shared.NextFloat(1) < pattern.a)//パターンAなら 
            {
             skill.DecideNowMoveSet_A0_B1(0);
+            skill.SetSingleAimStyle(pattern.aStyle);//攻撃者側スキルにデフォルトの狙い流れを設定
 
             if(RandomEx.Shared.NextFloat(1)<per){
                 NowDeffenceStyle =  pattern.aStyle;
+                //攻撃者のAimStyle = 被害者のAimStyle　となるので狙い流れを対応できている。
             }else{
                 NowDeffenceStyle = GetRandomAimStyleExcept(pattern.aStyle);//aStyle以外のAimStyleをランダムに選びます
             }
@@ -5643,15 +5668,17 @@ private int CalcTransformCountIncrement(int tightenStage)
            else                                         //パターンBなら
            {
             skill.DecideNowMoveSet_A0_B1(1);
+            skill.SetSingleAimStyle(pattern.bStyle);//攻撃者側スキルにデフォルトの狙い流れを設定
 
             if(RandomEx.Shared.NextFloat(1)<per){
                 NowDeffenceStyle =  pattern.bStyle;
+                
             }else{
                 NowDeffenceStyle = GetRandomAimStyleExcept(pattern.bStyle);//bStyle以外のAimStyleをランダムに選びます
             }
            }
 
-           skill.SetSingleAimStyle(NowDeffenceStyle);//スキルのAimStyleとしても記録する。
+           
         }else{                                              //連続攻撃中なら　　(戦闘規格noneを連続攻撃のmovesetに入れないこと前提)
             var AtkAimStyle = skill.NowAimStyle();//攻撃者の現在のAimStyleを取得
             
@@ -5932,6 +5959,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     }
     /// <summary>
     /// この関数を介して辞書から精神属性の補正を取り出す。
+    /// 被害者側から呼び出す。
     /// </summary>
     FixedOrRandomValue GetSkillSpiritualModifier(SpiritualProperty skillImp,BaseStates attacker)
     {
@@ -6109,7 +6137,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         if (isAttackerHit)
         {
             ImposedImpressionFromSkill(skill.SkillSpiritual,attacker);//特殊なスキル属性に影響されるか
-            MentalHealOnAttack();//行動をしたので精神HPの攻撃時回復
+            RivahalDream(attacker,skill);//ライバハルの上昇
+
         }
 
         //ここで攻撃者の攻撃記録を記録する
@@ -6195,9 +6224,10 @@ private int CalcTransformCountIncrement(int tightenStage)
         RemoveUseThings();//特別な補正を消去
         Debug.Log("AttackChara");
 
-        //HIT分のスキルの印象構造の十日能力が上昇する。
-        if (IsAnyHitInRecentSkillData(NowUseSkill, Unders.Count))// 今回の攻撃で一回でもヒットしていれば成長処理
+        //今回の攻撃で一回でもヒットしていれば
+        if (IsAnyHitInRecentSkillData(NowUseSkill, Unders.Count))
         {
+            //成長処理 HIT分のスキルの印象構造の十日能力が上昇する。
             float growRate;
             if (NowUseSkill.HasType(SkillType.Attack))
             {
@@ -6222,6 +6252,10 @@ private int CalcTransformCountIncrement(int tightenStage)
             float clampedRatio = CalculateClampedStrengthRatio(averageTenDayValuesSum);
 
             GrowTenDayAbilityBySkill(NowUseSkill, growRate * clampedRatio); //攻撃相手との強さの比率を計算して成長させる   
+
+
+            //当たったので精神回復　行動が一応成功したからメンタルが安心する。
+            MentalHealOnAttack();
         }
 
         _tempUseSkill = NowUseSkill;//使ったスキルを一時保存
@@ -6656,6 +6690,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         TempDamageTurn = 0;
         _tempVanguard = false;
         _tempLive = true;
+        _rivahal = 0;//ライバハル値を初期化
         DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
         DecisionSacriFaithAdaptToSkillGrouping();
         skillDatas = new List<ACTSkillData>();//スキルの行動記録はbm単位で記録する。
@@ -8537,7 +8572,7 @@ public class StatesPowerBreakdown
     /// <summary>
     /// 「TenDayAbilityからくる四大ステの内訳」
     /// </summary>
-    public Dictionary<TenDayAbility, float> TenDayBreakdown { get; set; }
+    public TenDayAbilityDictionary TenDayBreakdown { get; set; }
 
     /// <summary>
     /// 「非TenDayAbility要素 (固定値 等)」
@@ -8548,7 +8583,7 @@ public class StatesPowerBreakdown
     /// コンストラクタ
     /// 十日能力と非十日能力の初期値
     /// </summary>
-    public StatesPowerBreakdown(Dictionary<TenDayAbility, float> tenDayBreakdown, float nonTenDayPart)
+    public StatesPowerBreakdown(TenDayAbilityDictionary tenDayBreakdown, float nonTenDayPart)
     {
         TenDayBreakdown = tenDayBreakdown;
         NonTenDayPart = nonTenDayPart;
@@ -8594,7 +8629,7 @@ public class StatesPowerBreakdown
     public static StatesPowerBreakdown operator *(StatesPowerBreakdown breakdown, float multiplier)
     {
         // 新しいDictionaryを作成（元のを変更しないため）
-        var newTenDayBreakdown = new Dictionary<TenDayAbility, float>();
+        var newTenDayBreakdown = new TenDayAbilityDictionary();
         
         // すべての十日能力の寄与値に乗算を適用
         foreach (var entry in breakdown.TenDayBreakdown)
@@ -8621,7 +8656,7 @@ public class StatesPowerBreakdown
         }
         
         // 新しい十日能力値の内訳を作成
-        var newTenDayBreakdown = new Dictionary<TenDayAbility, float>();
+        var newTenDayBreakdown = new TenDayAbilityDictionary();
         
         // 各十日能力値を割る
         foreach (var entry in breakdown.TenDayBreakdown)
@@ -8642,7 +8677,7 @@ public class StatesPowerBreakdown
     public static StatesPowerBreakdown operator +(StatesPowerBreakdown left, StatesPowerBreakdown right)
     {
         // 新しいDictionaryを作成
-        var newTenDayBreakdown = new Dictionary<TenDayAbility, float>(left.TenDayBreakdown);
+        var newTenDayBreakdown = new TenDayAbilityDictionary(left.TenDayBreakdown);
         
         // 右辺の十日能力値を加算
         foreach (var entry in right.TenDayBreakdown)
@@ -8670,7 +8705,7 @@ public class StatesPowerBreakdown
     public static StatesPowerBreakdown operator -(StatesPowerBreakdown left, StatesPowerBreakdown right)
     {
         // 新しいDictionaryを作成
-        var newTenDayBreakdown = new Dictionary<TenDayAbility, float>(left.TenDayBreakdown);
+        var newTenDayBreakdown = new TenDayAbilityDictionary(left.TenDayBreakdown);
         
         // 右辺の十日能力値を減算
         foreach (var entry in right.TenDayBreakdown)
@@ -8700,7 +8735,7 @@ public class StatesPowerBreakdown
     {
         // 新しいオブジェクトを作成（十日能力部分はコピー）
         var newBreakdown = new StatesPowerBreakdown(
-            new Dictionary<TenDayAbility, float>(breakdown.TenDayBreakdown), 
+            new TenDayAbilityDictionary(breakdown.TenDayBreakdown), 
             breakdown.NonTenDayPart);
         
         // 加算は非十日能力部分に適用
@@ -8716,7 +8751,7 @@ public class StatesPowerBreakdown
     {
         // 新しいオブジェクトを作成（十日能力部分はコピー）
         var newBreakdown = new StatesPowerBreakdown(
-            new Dictionary<TenDayAbility, float>(breakdown.TenDayBreakdown), 
+            new TenDayAbilityDictionary(breakdown.TenDayBreakdown), 
             breakdown.NonTenDayPart);
         
         // 減算は非十日能力部分に適用
@@ -8732,7 +8767,7 @@ public class StatesPowerBreakdown
     {
         // 新しいStatesPowerBreakdownを作成
         // 十日能力の内訳は反転して保持（マイナス値にする）
-        var newTenDayBreakdown = new Dictionary<TenDayAbility, float>();
+        var newTenDayBreakdown = new TenDayAbilityDictionary();
         
         foreach (var entry in right.TenDayBreakdown)
         {
@@ -8827,7 +8862,7 @@ public class StatesPowerBreakdown
     public static StatesPowerBreakdown operator -(StatesPowerBreakdown value)
     {
         // 新しいDictionaryを作成
-        var newTenDayBreakdown = new Dictionary<TenDayAbility, float>();
+        var newTenDayBreakdown = new TenDayAbilityDictionary();
         
         // 各十日能力値の符号を反転
         foreach (var entry in value.TenDayBreakdown)

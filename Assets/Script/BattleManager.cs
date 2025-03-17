@@ -144,12 +144,6 @@ public class ACTList
 
 
 }
-
-/// <summary>
-///     バトルを、管理するクラス
-/// </summary>
-public class BattleManager
-{
     /// <summary>
     /// 攻撃対象者の一時処方に耐えうる保持リスト
     /// </summary>
@@ -216,7 +210,7 @@ public class BattleManager
 
             float item = 1;//分散しなかったらデフォルトで100%
 
-            if (skill.PowerSpread.Length > 0)//スキル分散値配列のサイズがゼロより大きかったら分散する
+            if (skill.PowerSpread.Length > 0 && skill.PowerSpread != null)//スキル分散値配列のサイズがゼロより大きかったら分散する
             {
                 //爆発的
                 if (skill.DistributionType == AttackDistributionType.Explosion)
@@ -276,6 +270,12 @@ public class BattleManager
     }
 
 
+
+/// <summary>
+///     バトルを、管理するクラス
+/// </summary>
+public class BattleManager
+{
     /// <summary>
     ///     プレイヤー側のバトルグループ　ここに味方のバトルグループオブジェクトをリンクする？
     /// </summary>
