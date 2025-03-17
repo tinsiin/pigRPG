@@ -373,6 +373,17 @@ public class BaseSkill
         }
     }
     /// <summary>
+    /// ゆりかご計算されたスキルレベル
+    /// </summary>
+    int _cradleSkillLevel = -1;
+    /// <summary>
+    /// TLOAスキルをゆりかご計算する。
+    /// </summary>
+    void CalcCradleSkillLevel()
+    {
+        
+    }
+    /// <summary>
     /// 固定されたスキルレベルデータ部分
     /// このリスト以降なら無限のデータ
     /// </summary>
@@ -390,40 +401,43 @@ public class BaseSkill
 
     /// <summary>
     /// スキルのパワー　
+    /// ゆりかご効果によるスキルレベルを参照するか、そうでないか。
     /// </summary>
-    float _skillPower
+    float _skillPower(bool IsCradle)
     {
-        get
+        var Level = _nowSkillLevel;
+        if(IsCradle)
         {
-            // スキルレベルが有限範囲ならそれを返す
-            if (FixedSkillLevelData.Count > _nowSkillLevel)
-            {
-                return FixedSkillLevelData[_nowSkillLevel].SkillPower;
-            }
-            else
-            {// そうでないなら有限最終以降と無限単位の加算
-                // 有限リストの最終値と無限単位に以降のスキルレベルを乗算した物を加算
-                // 有限リストの最終値を基礎値にする
-                var baseSkillPower = FixedSkillLevelData[FixedSkillLevelData.Count - 1].SkillPower;
+            Level = _cradleSkillLevel;//ゆりかごならゆりかご用計算されたスキルレベルが
+        }
+        // スキルレベルが有限範囲ならそれを返す
+        if (FixedSkillLevelData.Count > Level)
+        {
+            return FixedSkillLevelData[Level].SkillPower;
+        }
+        else
+        {// そうでないなら有限最終以降と無限単位の加算
+            // 有限リストの最終値と無限単位に以降のスキルレベルを乗算した物を加算
+            // 有限リストの最終値を基礎値にする
+            var baseSkillPower = FixedSkillLevelData[FixedSkillLevelData.Count - 1].SkillPower;
 
-                // 有限リストの超過分、無限単位にどの程度かけるかの数
-                var infiniteLevelMultiplier = _nowSkillLevel - (FixedSkillLevelData.Count - 1);
+            // 有限リストの超過分、無限単位にどの程度かけるかの数
+                var infiniteLevelMultiplier = Level - (FixedSkillLevelData.Count - 1);
 
                 // 基礎値に無限単位に超過分を掛けたものを加算して返す
                 return baseSkillPower + _infiniteSkillPowerUnit * infiniteLevelMultiplier;
                 
                 // 有限リストがないってことはない。必ず一つは設定されてるはずだしね。
             }
-        }
     }
     /// <summary>
     /// スキルのパワー
     /// </summary>
-    public float SkillPower => _skillPower * (1.0f - MentalDamageRatio);
+    public float GetSkillPower(bool IsCradle = false) => _skillPower(IsCradle) * (1.0f - MentalDamageRatio);
     /// <summary>
     /// 精神HPへのスキルのパワー
     /// </summary>
-    public float SkillPowerForMental=> _skillPower * MentalDamageRatio;
+    public float GetSkillPowerForMental(bool IsCradle = false) => _skillPower(IsCradle) * MentalDamageRatio;
 
     /// <summary>
     /// 通常の精神攻撃率
@@ -910,6 +924,7 @@ public class BaseSkill
         _doConsecutiveCount = 0;
         _hitCount = 0;
         _hitConsecutiveCount = 0;
+        _cradleSkillLevel = -1;//ゆりかご用スキルレベルをエラーにする。
         ResetAtkCountUp();
         ReturnTrigger();//発動カウントはカウントダウンするから最初っから
         _tmpSkillUseTurn = -1;//前回とのターン比較用の変数をnullに
@@ -921,7 +936,7 @@ public class BaseSkill
     /// </summary>
     public virtual float SkillPowerCalc(float spread)
     {
-        var pwr = SkillPower;//基礎パワー
+        var pwr = GetSkillPower();//基礎パワー
 
 
 
@@ -931,7 +946,7 @@ public class BaseSkill
     }
     public virtual float SkillPowerForMentalCalc(float spread)
     {
-        var pwr = SkillPowerForMental;//基礎パワー
+        var pwr = GetSkillPowerForMental();//基礎パワー
 
         pwr *= spread;//分散値を掛ける
 
