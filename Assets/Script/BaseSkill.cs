@@ -6,6 +6,7 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.UI;
 
 
 /// <summary>
@@ -237,6 +238,9 @@ public class SkillLevelData
     /// </summary>
     public int OptionSkillHitPer = -1;
 
+    public List<MoveSet> OptionA_MoveSet = null;
+    public List<MoveSet> OptionB_MoveSet = null;
+
     public SkillLevelData Clone()
 {
     // 基本データをコピー
@@ -258,6 +262,15 @@ public class SkillLevelData
     {
         copy.OptionPowerSpread = new float[this.OptionPowerSpread.Length];
         Array.Copy(this.OptionPowerSpread, copy.OptionPowerSpread, this.OptionPowerSpread.Length);
+    }
+
+    //MoveSetのディープコピー
+    if(this.OptionA_MoveSet != null)
+    {
+        foreach(var moveSet in this.OptionA_MoveSet)
+        {
+            copy.OptionA_MoveSet.Add(moveSet.DeepCopy());
+        }
     }
     
     return copy;
@@ -378,11 +391,149 @@ public class BaseSkill
     int _cradleSkillLevel = -1;
     /// <summary>
     /// TLOAスキルをゆりかご計算する。
+    /// Doer = 攻撃者だよ　スキルは攻撃だし、攻撃者が呼び出す関数だし
     /// </summary>
-    void CalcCradleSkillLevel()
+    public void CalcCradleSkillLevel(BaseStates underAtker)
     {
-        
+        if(!IsTLOA) return;//TLOAスキルでなければ計算しない
+
+        //まずゆりかごのルート位置から決める
+        //強さ
+        var TendayAdvantage = Doer.TenDayValuesSum/underAtker.TenDayValuesSum;
+        //実効ライバハル　= ライバハル　÷　敵に対する強さ　
+        //相手より弱いほどライバハルが増えたら変なので、1クランプする。
+        var EffectiveRivahal = Doer.Rivahal / Mathf.Max(1, TendayAdvantage);
+        //ルート位置補正計算式についてはobsidianのスキルレベルを参照して
+        var skillLevelRandomDivisorMax = EffectiveRivahal /2;
+        if(skillLevelRandomDivisorMax < 1) skillLevelRandomDivisorMax = 1;
+        //ルート位置算出
+        var root = EffectiveRivahal + _nowSkillLevel / RandomEx.Shared.NextFloat(1, skillLevelRandomDivisorMax);
+
+        //次に調子の範囲を決める
+        //まず精神補正値による固定範囲
+        var ratio = 0.7f;
+        var BaseMoodRange = GetEstablishSpiritualMoodRange(BaseStates.GetOffensiveSpiritualModifier(Doer,underAtker).GetValue(ratio),ratio);
+        //次にパーティ属性と自分の属性相性による調子の範囲の補正
+        var MoodRange = ModifyMoodByAttributeCompatibility(BaseMoodRange,Doer.MyImpression,Walking.bm.MyGroup(Doer).OurImpression);
+
+        //今度は調子の範囲で使う上下レートを決める
+        //スキルの印象構造と同じ攻撃者の(Doer)十日能力値の総量を取得
+        var AtkerTenDaySumMatchingSkill  = 0f;
+        foreach(var tenDay in TenDayValues())//スキルの印象構造で回す
+        {
+            //蓄積変数にスキルの印象構造と同じ攻撃者Doerの十日能力値を足していくｐ！
+            AtkerTenDaySumMatchingSkill += Doer.TenDayValues.GetValueOrZero(tenDay.Key);
+        }
+        //上下レート算出　印象構造対応Doerの十日能力値　÷　スキルの十日能力値の総量　「どのくらいスキルを使いこなしているか」が指標
+        var MoodRangeRate = AtkerTenDaySumMatchingSkill / TenDayValuesSum;
+        MoodRangeRate = Mathf.Max(MoodRangeRate - 2,RandomEx.Shared.NextFloat(2));//ランダム　0~2が上下レートの最低値
+
+
+        //ルート位置から、調子の範囲によって上下レートを元にずらす。
+        _cradleSkillLevel = (int)(root + MoodRange * MoodRangeRate);
     }
+    /// <summary>
+    /// 調子の範囲を決める
+    /// 後で上下レートと掛けるので、-1,0,1の範囲の、下がるか上がるかそのままかで返す。
+    /// これは精神補正に掛ける補正率によって精神補正による分布範囲の前提が崩れるので、
+    /// 精神補正に掛ける率と同じ値を範囲指定に掛ける。
+    /// </summary>
+    int GetEstablishSpiritualMoodRange(float value,float ratio)
+    {
+        // 精神補正値に基づいて調子の範囲を決定
+        if (value <= 95 *ratio)
+        {
+            return -1;
+        }
+        else if (value <= 100 *ratio)
+        {
+            return 0;
+        }
+        else
+        {
+            return 1; //78以上
+        }    
+    }
+    /// <summary>
+    /// 調子の範囲を追加補正
+    /// </summary>
+    int ModifyMoodByAttributeCompatibility(int BaseValue, SpiritualProperty MyImpression,PartyProperty partyProperty)
+    {
+        // キャラクターの精神属性がnoneの場合は変化なし
+        if (MyImpression == SpiritualProperty.none)
+            return BaseValue;
+
+        // 相性表に基づいて調整
+        bool increase = false;
+        bool decrease = false;
+        
+        switch (Doer.MyImpression)
+        {
+            case SpiritualProperty.liminalwhitetile:
+                if (partyProperty == PartyProperty.Flowerees)
+                    decrease = true;
+                else if (partyProperty == PartyProperty.Odradeks)
+                    increase = true;
+                break;
+                
+            case SpiritualProperty.kindergarden:
+                if (partyProperty == PartyProperty.Flowerees)
+                    decrease = true;
+                else if (partyProperty == PartyProperty.TrashGroup)
+                    increase = true;
+                break;
+                
+            case SpiritualProperty.sacrifaith:
+                if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.HolyGroup)
+                    increase = true;
+                break;
+                
+            case SpiritualProperty.cquiest:
+                if (partyProperty == PartyProperty.TrashGroup)
+                    decrease = true;
+                else if (partyProperty == PartyProperty.HolyGroup || partyProperty == PartyProperty.Odradeks)
+                    increase = true;
+                break;
+                
+            case SpiritualProperty.devil:
+                if (partyProperty == PartyProperty.Odradeks)
+                    decrease = true;
+                else if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.TrashGroup)
+                    increase = true;
+                break;
+                
+            case SpiritualProperty.doremis:
+                if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.HolyGroup)
+                    increase = true;
+                break;
+                
+            case SpiritualProperty.godtier:
+                if (partyProperty == PartyProperty.TrashGroup)
+                    increase = true;
+                break;
+                
+            case SpiritualProperty.baledrival:
+                if (partyProperty == PartyProperty.Odradeks)
+                    decrease = true;
+                else if (partyProperty == PartyProperty.TrashGroup || partyProperty == PartyProperty.HolyGroup)
+                    increase = true;
+                break;
+                
+            case SpiritualProperty.pysco:
+                if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.MelaneGroup)
+                    increase = true;
+                break;
+        }
+        
+        // 上昇または下降の適用（-1から1の間に制限）
+        if (increase)
+            return Math.Min(1, BaseValue + 1);
+        else if (decrease)
+            return Math.Max(-1, BaseValue - 1);
+        else
+            return BaseValue;
+    }
+
     /// <summary>
     /// 固定されたスキルレベルデータ部分
     /// このリスト以降なら無限のデータ
@@ -456,16 +607,24 @@ public class BaseSkill
             if(FixedSkillLevelData.Count > _nowSkillLevel)
             {
                 //-1でないならあるので返す
-                if(FixedSkillLevelData[_nowSkillLevel].OptionMentalDamageRatio != -1)
+                // 現在のレベルから逆向きに検索して最初に有効な値を見つける
+                for(int i = _nowSkillLevel; i >= 0; i--) 
                 {
-                    return FixedSkillLevelData[_nowSkillLevel].OptionMentalDamageRatio;
+                    if(FixedSkillLevelData[i].OptionMentalDamageRatio != -1)
+                    {
+                        return FixedSkillLevelData[i].OptionMentalDamageRatio;
+                    }
                 }
             }
             //当然有限リストは絶対に存在するので、
             //有限範囲以降なら、その最終値でオプションで指定されてるならそれを返す
-            if(FixedSkillLevelData[FixedSkillLevelData.Count - 1].OptionMentalDamageRatio != -1)
+            //有限リスト外の場合、最後の要素から逆向きに検索
+            for(int i = FixedSkillLevelData.Count - 1; i >= 0; i--) 
             {
-                return FixedSkillLevelData[FixedSkillLevelData.Count - 1].OptionMentalDamageRatio;
+                if(FixedSkillLevelData[i].OptionMentalDamageRatio != -1)
+                {
+                    return FixedSkillLevelData[i].OptionMentalDamageRatio;
+                }
             }
 
             //そうでないなら設定値を返す
@@ -489,17 +648,26 @@ public class BaseSkill
             if(FixedSkillLevelData.Count > _nowSkillLevel)
             {
                 //nullでないならあるので返す
-                if(FixedSkillLevelData[_nowSkillLevel].OptionPowerSpread != null && FixedSkillLevelData[_nowSkillLevel].OptionPowerSpread.Length > 0)
+                // 現在のレベルから逆向きに検索して最初に有効な値を見つける
+                for(int i = _nowSkillLevel; i >= 0; i--) 
                 {
-                    return FixedSkillLevelData[_nowSkillLevel].OptionPowerSpread;
+                    if(FixedSkillLevelData[i].OptionPowerSpread != null && 
+                    FixedSkillLevelData[i].OptionPowerSpread.Length > 0)
+                    {
+                        return FixedSkillLevelData[i].OptionPowerSpread;
+                    }
                 }
             }
             //当然有限リストは絶対に存在するので、
             //有限範囲以降なら、その最終値でオプションで指定されてるならそれを返す
-            if(FixedSkillLevelData[FixedSkillLevelData.Count - 1].OptionPowerSpread != null 
-            && FixedSkillLevelData[FixedSkillLevelData.Count - 1].OptionPowerSpread.Length > 0)
+            //有限リスト外の場合、最後の要素から逆向きに検索
+            for(int i = FixedSkillLevelData.Count - 1; i >= 0; i--) 
             {
-                return FixedSkillLevelData[FixedSkillLevelData.Count - 1].OptionPowerSpread;
+                if(FixedSkillLevelData[i].OptionPowerSpread != null && 
+                FixedSkillLevelData[i].OptionPowerSpread.Length > 0)
+                {
+                    return FixedSkillLevelData[i].OptionPowerSpread;
+                }
             }
 
             //そうでないなら設定値を返す
@@ -524,52 +692,137 @@ public class BaseSkill
                 //-1でないならあるので返す
                 if(FixedSkillLevelData[_nowSkillLevel].OptionSkillHitPer != -1)
                 {
-                    return FixedSkillLevelData[_nowSkillLevel].OptionSkillHitPer;
+                    // 現在のレベルから逆向きに検索して最初に有効な値を見つける
+                    for(int i = _nowSkillLevel; i >= 0; i--) {
+                        if(FixedSkillLevelData[i].OptionSkillHitPer != -1) {
+                            return FixedSkillLevelData[i].OptionSkillHitPer;
+                        }
+                    }
                 }
             }
             //当然有限リストは絶対に存在するので、
             //有限範囲以降なら、その最終値でオプションで指定されてるならそれを返す
-            if(FixedSkillLevelData[FixedSkillLevelData.Count - 1].OptionSkillHitPer != -1)
-            {
-                return FixedSkillLevelData[FixedSkillLevelData.Count - 1].OptionSkillHitPer;
+            //有限リスト外の場合、最後の要素から逆向きに検索
+            for(int i = FixedSkillLevelData.Count - 1; i >= 0; i--) {
+                if(FixedSkillLevelData[i].OptionSkillHitPer != -1) {
+                    return FixedSkillLevelData[i].OptionSkillHitPer;
+                }
             }
-
             //そうでないなら設定値を返す
             return _skillHitPer;
         }
     }
+
     /// <summary>
-    /// スキルの印象構造　十日能力値
+    /// 通常設定されたムーブセットA
     /// </summary>
-    public TenDayAbilityDictionary TenDayValues
+    [SerializeField]
+    List<MoveSet> _a_moveset = new();
+    /// <summary>
+    /// スキルごとのムーブセット 戦闘規格ごとのaに対応するもの。
+    /// </summary>
+    List<MoveSet> A_MoveSet_Cash;
+    /// <summary>
+    /// 通常設定されたムーブセットB
+    /// </summary>
+    [SerializeField]
+    List<MoveSet> _b_moveset = new();
+    /// <summary>
+    /// スキルごとのムーブセット 戦闘規格ごとのbに対応するもの。
+    /// </summary>
+    List<MoveSet> B_MoveSet_Cash=new();
+    /// <summary>
+    /// 連続攻撃中にスキルレベル成長によるムーブセット変更を防ぐために、
+    /// 連続攻撃開始時にムーブセットをキャッシュし使い続ける
+    /// </summary>
+    public void CashMoveSet()
     {
-        get
-        {
-            //skillLecelが有限範囲ならそれを返す
+        var A_cash = _a_moveset;//
+        var B_cash = _b_moveset;
+
+        //スキルレベルが有限範囲なら
             if(FixedSkillLevelData.Count > _nowSkillLevel)
             {
-                return FixedSkillLevelData[_nowSkillLevel].TenDayValues;
+                for(int i = _nowSkillLevel ; i>=0; i --)
+                {
+                    if(FixedSkillLevelData[i].OptionA_MoveSet != null)//nullでないならあるので返す
+                    {
+                        A_cash = FixedSkillLevelData[i].OptionA_MoveSet;
+                        break;//レベルを下げてって一致した物だけを返し、ループを抜ける。
+                    }
+                }
+                for(int i = _nowSkillLevel ; i>=0; i --)
+                {
+                    if(FixedSkillLevelData[i].OptionB_MoveSet != null)
+                    {
+                        B_cash = FixedSkillLevelData[i].OptionB_MoveSet;
+                        break;
+                    }
+                }
             }else
-            {//そうでないなら有限最終以降と無限単位の加算
-                //有限リストの最終値と無限単位に以降のスキルレベルを乗算した物を加算
-                //有限リストの最終値を基礎値にする
-                var BaseTenDayValues = FixedSkillLevelData[FixedSkillLevelData.Count - 1].TenDayValues;
-
-                //有限リストの超過分、無限単位にどの程度かけるかの数
-                var InfiniteLevelMultiplier =  _nowSkillLevel - (FixedSkillLevelData.Count - 1);
-
-                //基礎値に無限単位に超過分を掛けたものを加算して返す。
-                return BaseTenDayValues + _infiniteSkillTenDaysUnit * InfiniteLevelMultiplier;
-            
-                //有限リストがないってことはない。必ず一つは設定されてるはずだしね。
+            {
+                //当然有限リストは絶対に存在するので、
+                //有限範囲以降なら、その最終値から後ろまで回して、でオプションで指定されてるならそれを返す
+                for(int i = FixedSkillLevelData.Count - 1 ; i>=0; i --)
+                {
+                    if(FixedSkillLevelData[i].OptionA_MoveSet != null)
+                    {
+                        A_cash = FixedSkillLevelData[i].OptionA_MoveSet;
+                        break;
+                    }
+                }
+                for(int i = FixedSkillLevelData.Count - 1 ; i>=0; i --)
+                {
+                    if(FixedSkillLevelData[i].OptionB_MoveSet != null)
+                    {
+                        B_cash = FixedSkillLevelData[i].OptionB_MoveSet;
+                        break;
+                    }
+                }
             }
+
+            //キャッシュする。
+            A_MoveSet_Cash = A_cash;
+            B_MoveSet_Cash = B_cash;
+           
+        }
+
+    /// <summary>
+    /// スキルの印象構造　十日能力値
+    /// ゆりかごするかどうかは引数で
+    /// </summary>
+    public TenDayAbilityDictionary TenDayValues(bool IsCradle = false)
+    {
+        var Level = _nowSkillLevel;
+        if(IsCradle)
+        {
+            Level = _cradleSkillLevel;//ゆりかごならゆりかご用計算されたスキルレベルが
+        }
+
+        //skillLecelが有限範囲ならそれを返す
+        if(FixedSkillLevelData.Count > Level)
+        {
+            return FixedSkillLevelData[Level].TenDayValues;
+        }else
+        {//そうでないなら有限最終以降と無限単位の加算
+            //有限リストの最終値と無限単位に以降のスキルレベルを乗算した物を加算
+            //有限リストの最終値を基礎値にする
+            var BaseTenDayValues = FixedSkillLevelData[FixedSkillLevelData.Count - 1].TenDayValues;
+
+            //有限リストの超過分、無限単位にどの程度かけるかの数
+            var InfiniteLevelMultiplier =  Level - (FixedSkillLevelData.Count - 1);
+
+            //基礎値に無限単位に超過分を掛けたものを加算して返す。
+            return BaseTenDayValues + _infiniteSkillTenDaysUnit * InfiniteLevelMultiplier;
+        
+            //有限リストがないってことはない。必ず一つは設定されてるはずだしね。
         }
     }
 
     /// <summary>
     /// スキルの印象構造の十日能力値の合計
     /// </summary>
-    public float SkillTenDayValues => TenDayValues.Sum(kvp => kvp.Value);
+    public float TenDayValuesSum => TenDayValues().Sum(kvp => kvp.Value);
 
     [SerializeField]
     private string _name;
@@ -593,9 +846,11 @@ public class BaseSkill
 
     //stockpile用　最大値はランダム確率の連続攻撃と同じように、ATKCountを参照する。
     private int _nowStockCount;//現在のストック数
-
+    /// <summary>
+    /// デフォルトのストック数
+    /// </summary>
     [SerializeField]
-    private int _defaultStockCount = 1;//ストックデフォルト
+    private int _defaultStockCount = 1;
     ///<summary> ストックデフォルト値。DefaultAtkCount を超えないように調整された値を返す</summary> ///
     int DefaultStockCount => _defaultStockCount > DefaultAtkCount ? DefaultAtkCount : _defaultStockCount;
 
@@ -914,7 +1169,11 @@ public class BaseSkill
         ResetAtkCountUp();
         ReturnTrigger();
     }
-
+    public void OnBattleStart()
+    {
+        //カウントが専ら参照されるので、バグ出ないようにとりあえず仮のムーブセットを決めておく。
+        DecideNowMoveSet_A0_B1(0);
+    }
     /// <summary>
     /// スキルの"一時保存"系プロパティをリセットする　BattleManager終了時など
     /// </summary>
@@ -934,9 +1193,9 @@ public class BaseSkill
     /// <summary>
     /// スキルパワーの計算
     /// </summary>
-    public virtual float SkillPowerCalc(float spread)
+    public virtual float SkillPowerCalc(float spread,bool IsCradle = false)
     {
-        var pwr = GetSkillPower();//基礎パワー
+        var pwr = GetSkillPower(IsCradle);//基礎パワー
 
 
 
@@ -944,9 +1203,9 @@ public class BaseSkill
 
         return pwr;
     }
-    public virtual float SkillPowerForMentalCalc(float spread)
+    public virtual float SkillPowerForMentalCalc(float spread,bool IsCradle = false)
     {
-        var pwr = GetSkillPowerForMental();//基礎パワー
+        var pwr = GetSkillPowerForMental(IsCradle);//基礎パワー
 
         pwr *= spread;//分散値を掛ける
 
@@ -980,16 +1239,6 @@ public class BaseSkill
     public List<int> subVitalLayers;
 
     /// <summary>
-    /// スキルごとのムーブセット 戦闘規格ごとのaに対応するもの。
-    /// </summary>
-    [SerializeField]
-    List<MoveSet> A_MoveSet=new();
-    /// <summary>
-    /// スキルごとのムーブセット 戦闘規格ごとのbに対応するもの。
-    /// </summary>
-    [SerializeField]
-    List<MoveSet> B_MoveSet=new();
-    /// <summary>
     /// 現在のムーブセット
     /// </summary>
     [NonSerialized]
@@ -1004,21 +1253,21 @@ public class BaseSkill
     {
         if(aOrB == 0)
         {
-            if(A_MoveSet.Count == 0)
+            if(A_MoveSet_Cash.Count == 0)
             {
                 NowMoveSetState = new();
                 return;
             }
-            NowMoveSetState = A_MoveSet[RandomEx.Shared.NextInt(A_MoveSet.Count)];
+            NowMoveSetState = A_MoveSet_Cash[RandomEx.Shared.NextInt(A_MoveSet_Cash.Count)];
         }
         else if(aOrB == 1)
         {
-            if(B_MoveSet.Count == 0)
+            if(B_MoveSet_Cash.Count == 0)
             {
                 NowMoveSetState = new();
                 return;
             }
-            NowMoveSetState = B_MoveSet[RandomEx.Shared.NextInt(B_MoveSet.Count)];
+            NowMoveSetState = B_MoveSet_Cash[RandomEx.Shared.NextInt(B_MoveSet_Cash.Count)];
         }
     }
     /// <summary>
@@ -1143,13 +1392,13 @@ public class BaseSkill
         
         copy.subEffects = new List<int>(subEffects);
         copy.subVitalLayers = new List<int>(subVitalLayers);
-        foreach(var moveSet in A_MoveSet)
+        foreach(var moveSet in A_MoveSet_Cash)
         {
-            copy.A_MoveSet.Add(moveSet.DeepCopy());
+            copy.A_MoveSet_Cash.Add(moveSet.DeepCopy());
         }
-        foreach(var moveSet in B_MoveSet)
+        foreach(var moveSet in B_MoveSet_Cash)
         {
-            copy.B_MoveSet.Add(moveSet.DeepCopy());
+            copy.B_MoveSet_Cash.Add(moveSet.DeepCopy());
         }
         copy._defAtk = _defAtk;
         copy.WhatSkill = WhatSkill;

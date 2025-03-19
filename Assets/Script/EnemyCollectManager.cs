@@ -236,7 +236,7 @@ public class EnemyCollectManager : MonoBehaviour
     }
 
     /// <summary>
-    ///     キャラクター属性の組み合わせによって、パーティー属性を決定する
+    ///キャラクター属性の組み合わせによって、パーティー属性を決定する
     /// </summary>
     /// <param name="calcList">キャラクター属性を抽出するための敵のリスト</param>
     /// <returns></returns>

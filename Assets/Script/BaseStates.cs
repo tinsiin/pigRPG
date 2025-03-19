@@ -630,7 +630,7 @@ public abstract class BaseStates
     /// <summary>
     /// ライバハル値
     /// </summary>
-    float _rivahal;
+    public float Rivahal;
     /// <summary>
     /// TLOAスキルからのダメージ時、ライバハルの増える処理
     /// </summary>
@@ -638,7 +638,7 @@ public abstract class BaseStates
     {
         //スキルの印象構造で回す
         var baseValue = 0f;
-        foreach(var tenDay in skill.TenDayValues)
+        foreach(var tenDay in skill.TenDayValues())
         {
             var attackerValue = 0f;
             if(tenDay.Value > 0)//ゼロ除算対策
@@ -648,8 +648,8 @@ public abstract class BaseStates
             baseValue += attackerValue;
         }
         //精神補正100%を適用
-        var AtkerTLOAValue = baseValue * GetSkillSpiritualModifier(skill.SkillSpiritual,Atker).GetValue();
-        _rivahal += AtkerTLOAValue;
+        var AtkerTLOAValue = baseValue * GetSkillVsCharaSpiritualModifier(skill.SkillSpiritual,Atker).GetValue();
+        Rivahal += AtkerTLOAValue;
     }
     
     [Header("4大ステの基礎基礎値")]
@@ -737,11 +737,15 @@ public abstract class BaseStates
             battleGain[ability] = growthAmount;
         }
     }
-
     /// <summary>
-    /// スキル成長 引数で渡す倍率から直接増加値を調整する。
+    /// ヒット分で伸びる十日能力の倍率と使用する印象構造を記録する。
     /// </summary>
-    void GrowTenDayAbilityBySkill(BaseSkill skill,float Factor)
+    List<(float Factor, TenDayAbilityDictionary growTenDay)> TenDayGrowthListByHIT=new();
+    /// <summary>
+    /// スキル成長 引数で渡す倍率と十日能力の辞書から直接増加値を調整する。
+    /// スキルを直接渡すのではなく、柔軟性のため成長する十日能力の辞書を渡す形式にした。
+    /// </summary>
+    void GrowTenDayAbilityBySkill(float Factor,TenDayAbilityDictionary growTenDay)
     {
         const float topValueThresholdRate = 0.6f;//トップ能力のしきい値　どのくらいの大きいのと同じような能力値をスキルの十日能力として比較するかの指標
         //精神属性を実際に構成している十日能力が実際にスキルの十日能力値と比較されるイメージ
@@ -766,7 +770,9 @@ public abstract class BaseStates
             }
         }
 
-        foreach(var SkillTenDayValue in skill.TenDayValues)//実行したスキルに含まれてる全ての印象構造の十日能力分処理する。
+        
+        
+        foreach(var GrowSkillTenDayValue in growTenDay)//渡された十日能力の辞書に含まれてる全ての印象構造の十日能力分処理する。
         {
             // 加重平均用の変数
             float totalWeight = 0f;
@@ -776,7 +782,7 @@ public abstract class BaseStates
             foreach(var (myImpTen, value) in pickupSpiritualTenDays)
             {
                 // 十日能力間の距離を計算
-                float dist = TenDayAbilityPosition.GetDistance(myImpTen, SkillTenDayValue.Key);
+                float dist = TenDayAbilityPosition.GetDistance(myImpTen, GrowSkillTenDayValue.Key);
                 
                 // 能力値を重みとして使用
                 totalWeight += value;
@@ -796,7 +802,7 @@ public abstract class BaseStates
                 foreach(var ten in SpritualTenDayAbilitysMap[DefaultImpression])//デフォルト精神属性の構成する十日能力で回す.
                 {
                     //スキルの回してる十日能力とデフォルト精神属性の回してる十日能力間の距離が10より多いなら
-                    if(TenDayAbilityPosition.GetDistance(ten, SkillTenDayValue.Key) > 10)
+                    if(TenDayAbilityPosition.GetDistance(ten, GrowSkillTenDayValue.Key) > 10)
                     {
                         isHelp = false;//foreachで一回でも当てはまってしまうと、falseとなり、救済は発生しません、
                         break;
@@ -807,17 +813,17 @@ public abstract class BaseStates
 
             //ある程度の自信ブーストを適用する
             var confidenceBoost = 1.0f;
-            if(ConfidenceBoosts.ContainsKey(SkillTenDayValue.Key))//自信ブーストの辞書に今回の能力値が含まれていたら
+            if(ConfidenceBoosts.ContainsKey(GrowSkillTenDayValue.Key))//自信ブーストの辞書に今回の能力値が含まれていたら
             {
                 confidenceBoost = 1.3f + TenDayValues.GetValueOrZero(TenDayAbility.Baka) * 0.01f;
             }
             
             // 成長量を計算（スキルの該当能力値と減衰係数から）
-            float growthAmount = growthFactor * SkillTenDayValue.Value * Factor * confidenceBoost; 
+            float growthAmount = growthFactor * GrowSkillTenDayValue.Value * Factor * confidenceBoost; 
             // グラデーション係数 × スキルの該当能力値 × 引数から渡された倍率　× 自信ブースト
             
             // 十日能力値を更新
-            TenDayGrow(SkillTenDayValue.Key, growthAmount);
+            TenDayGrow(GrowSkillTenDayValue.Key, growthAmount);
         }
     }
 
@@ -1926,6 +1932,8 @@ public abstract class BaseStates
     }
     /// <summary>
     /// 人間状況が変わった際に必要な処理
+    /// 基本的にConditionInNextTurnで自動で処理されるから、各人間状況変化に個別には必要ない。
+    /// ただし、時間変化の際は別途呼び出す必要がある。(ConditionInNextTurnを参照してください。)
     /// </summary>
     void ConditionTransition()
     {
@@ -5933,7 +5941,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     }
 
     /// <summary>
-    /// 精神補正用にスキルの精神属性を特殊分岐した後に渡す関数
+    /// 精神補正用にスキルの属性を精神属性用に特殊分岐した後に渡す関数
     /// </summary>
     SpiritualProperty GetCastImpressionToModifier(SpiritualProperty skillSpiritual,BaseStates attacker)
     {
@@ -5958,16 +5966,16 @@ private int CalcTransformCountIncrement(int tightenStage)
         return imp;
     }
     /// <summary>
-    /// この関数を介して辞書から精神属性の補正を取り出す。
-    /// 被害者側から呼び出す。
+    /// スキル攻撃とその被害者の場合の精神属性の補正を取り出す。
+    /// 被害者側から呼び出す。 引数に攻撃スキルと攻撃者を
     /// </summary>
-    FixedOrRandomValue GetSkillSpiritualModifier(SpiritualProperty skillImp,BaseStates attacker)
+    FixedOrRandomValue GetSkillVsCharaSpiritualModifier(SpiritualProperty skillImp,BaseStates attacker)
     {
-        var castSkillImp = GetCastImpressionToModifier(skillImp,attacker);//補正に投げるスキル属性
+        var castSkillImp = GetCastImpressionToModifier(skillImp,attacker);//補正に投げる特殊スキル属性を純正な精神属性に変換
 
         if(castSkillImp == SpiritualProperty.none) return new FixedOrRandomValue(100);//noneなら補正なし(100%なので無変動)
         
-        var resultModifier = SkillSpiritualModifier[(castSkillImp, MyImpression)];//スキルの精神属性と自分の精神属性による補正
+        var resultModifier = SpiritualModifier[(castSkillImp, MyImpression)];//スキルの精神属性と自分の精神属性による補正
         
         if(attacker.DefaultImpression == skillImp)
         {
@@ -5984,18 +5992,24 @@ private int CalcTransformCountIncrement(int tightenStage)
     public virtual string ReactionSkill(BaseStates attacker, float spread)
     {
         var skill = attacker.NowUseSkill;
+        skill.CalcCradleSkillLevel(attacker);//「攻撃者の」スキルのゆりかご計算
 
         //スキルパワーの精神属性による計算
-        var modifier = GetSkillSpiritualModifier(skill.SkillSpiritual, attacker);
+        var modifier = GetSkillVsCharaSpiritualModifier(skill.SkillSpiritual, attacker);
         var SpiritualModifierPercentage = 0.2f;//IsTLOAスキル以外は20%の精神補正
         if(skill.IsTLOA) SpiritualModifierPercentage = 0.4f;//IsTLOAなら40%の精神補正
 
         var modifierForSkillPower = modifier.GetValue(SpiritualModifierPercentage);//精神補正値
         if(attacker.NowUseWeapon.IsBlade) modifierForSkillPower = 1.0f;//刃物武器なら精神補正なし
         
-        var skillPower = skill.SkillPowerCalc(spread) * modifierForSkillPower;
-        var skillPowerForMental = skill.SkillPowerForMentalCalc(spread) * modifier.GetValue();//精神HPへのパワーは精神補正100%
-        var txt = "";//メッセージテキスト用
+        //TLOAスキルならゆりかごされたスキルレベルを参照する(IsTLOAを渡して判断)
+        var skillPower = skill.SkillPowerCalc(spread,skill.IsTLOA) * modifierForSkillPower;
+        var skillPowerForMental = skill.SkillPowerForMentalCalc(spread,skill.IsTLOA) * modifier.GetValue();//精神HPへのパワーは精神補正100%
+
+        //メッセージテキスト用
+        var txt = "";
+
+        //発動するかどうか
         var thisAtkTurn = true;
 
         //被害記録用の一時保存boolなど
@@ -6139,6 +6153,22 @@ private int CalcTransformCountIncrement(int tightenStage)
             ImposedImpressionFromSkill(skill.SkillSpiritual,attacker);//特殊なスキル属性に影響されるか
             RivahalDream(attacker,skill);//ライバハルの上昇
 
+            //攻撃者の成長処理 HIT分のスキルの印象構造の十日能力が上昇する。
+            float growRate;
+            if (skill.HasType(SkillType.Attack))
+            {
+                growRate = 0.7f;
+            }
+            else
+            {
+                growRate = 0.9f;
+            }
+            // 攻撃者とと攻撃相手の総量の比率を使用して比率を計算
+            float clampedRatio = attacker.CalculateClampedStrengthRatio(TenDayValuesSum);
+
+            //攻撃者のHIT分の成長を記録
+            attacker.TenDayGrowthListByHIT.Add((growRate * clampedRatio, skill.TenDayValues(skill.IsTLOA)));//成長量にTLOAならゆりかごを考慮
+
         }
 
         //ここで攻撃者の攻撃記録を記録する
@@ -6182,12 +6212,14 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     public virtual string AttackChara(UnderActersEntryList Unders)
     {
+        TenDayGrowthListByHIT = new();//ヒット分成長リストを初期化する。
+
         //素振り分のスキルの印象構造の十日能力が上昇する。
         if(NowUseSkill.HasType(SkillType.Attack))
         {
-            GrowTenDayAbilityBySkill(NowUseSkill,0.3f);
+            GrowTenDayAbilityBySkill(0.3f,NowUseSkill.TenDayValues());
         }else{
-            GrowTenDayAbilityBySkill(NowUseSkill,0.1f);
+            GrowTenDayAbilityBySkill(0.1f,NowUseSkill.TenDayValues());
         }
 
         SkillUseConsecutiveCountUp(NowUseSkill);//連続カウントアップ
@@ -6227,35 +6259,13 @@ private int CalcTransformCountIncrement(int tightenStage)
         //今回の攻撃で一回でもヒットしていれば
         if (IsAnyHitInRecentSkillData(NowUseSkill, Unders.Count))
         {
-            //成長処理 HIT分のスキルの印象構造の十日能力が上昇する。
-            float growRate;
-            if (NowUseSkill.HasType(SkillType.Attack))
-            {
-                growRate = 0.7f;
-            }
-            else
-            {
-                growRate = 0.9f;
-            }
-
-            // Undersの全キャラクターのTenDayValuesSumの平均を計算　複数範囲の攻撃ならその平均値分の強さとの比率分の成長をする。
-            float totalTenDayValuesSum = 0f;
-            int characterCount = 0;
-            foreach (var character in Unders.charas)
-            {
-                totalTenDayValuesSum += character.TenDayValuesSum;
-                characterCount++;
-            }
-            float averageTenDayValuesSum = characterCount > 0 ? totalTenDayValuesSum / characterCount : 0;//平均の十日能力総量
-
-            // 自分と攻撃相手平均の総量の比率を使用して比率を計算
-            float clampedRatio = CalculateClampedStrengthRatio(averageTenDayValuesSum);
-
-            GrowTenDayAbilityBySkill(NowUseSkill, growRate * clampedRatio); //攻撃相手との強さの比率を計算して成長させる   
-
-
             //当たったので精神回復　行動が一応成功したからメンタルが安心する。
             MentalHealOnAttack();
+        }
+        //HIT分の十日能力の成長
+        foreach(var growData in TenDayGrowthListByHIT)
+        {
+            GrowTenDayAbilityBySkill(growData.Factor,growData.growTenDay);
         }
 
         _tempUseSkill = NowUseSkill;//使ったスキルを一時保存
@@ -6297,7 +6307,8 @@ private int CalcTransformCountIncrement(int tightenStage)
 
 
     /// <summary>
-    /// 対象の十日能力総量と自分の十日能力総量の比率を計算し返す
+    /// 攻撃対象の十日能力総量と被害者の十日能力総量の比率を計算し返す
+    /// 攻撃者から呼び出す
     /// </summary>
     private float CalculateClampedStrengthRatio(float targetSum)
     {
@@ -6602,6 +6613,13 @@ private int CalcTransformCountIncrement(int tightenStage)
             skill.OnBattleEnd();//プロパティをリセットする
         }
     }
+    public void OnBattleStartSkills()
+    {
+        foreach (var skill in SkillList)
+        {
+            skill.OnBattleStart();
+        }
+    }
 
     /// <summary>
     ///追加HPを適用  passiveと違い適合条件がないからvoid
@@ -6690,7 +6708,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         TempDamageTurn = 0;
         _tempVanguard = false;
         _tempLive = true;
-        _rivahal = 0;//ライバハル値を初期化
+        Rivahal = 0;//ライバハル値を初期化
         DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
         DecisionSacriFaithAdaptToSkillGrouping();
         skillDatas = new List<ACTSkillData>();//スキルの行動記録はbm単位で記録する。
@@ -6698,6 +6716,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         FocusSkillImpressionList = new();//慣れ補正用スキル印象リストを初期化
         TargetBonusDatas = new();
         ConditionTransition();
+        RecovelyWaitStart();//リカバリーターンのリセット
         _mentalDivergenceRefilCount = 0;//精神HP乖離の再充填カウントをゼロに戻す
         _mentalDivergenceCount = 0;//精神HP乖離のカウントをゼロに戻す
         _mentalPointRecoveryCountUp = 0;//精神HP自然回復のカウントをゼロに戻す
@@ -6708,6 +6727,9 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         //初期精神HPは常に戦闘開始時に最大値
         MentalHP = MentalMaxHP;
+
+        //スキルの戦闘開始時コールバック
+        OnBattleStartSkills();
         
     }
     public virtual void OnBattleEndNoArgument()
@@ -6725,6 +6747,9 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             RemovePassive(passive);//歩行残存ターンが-1の場合戦闘終了時に消える。
         }
+    
+        //スキルの戦闘終了時コールバック
+        OnBattleEndSkills();
     }
 
     //慣れ補正ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーAdaptToSkillsGroupingのための関数たちーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
@@ -7826,10 +7851,26 @@ private int CalcTransformCountIncrement(int tightenStage)
     };
 
     /// <summary>
-    /// 精神属性でのスキルの補正値　スキルの精神属性→キャラクター属性 csvDataからロード
+    /// 精神属性でのスキルの補正値　攻撃者の精神属性→キャラクター属性 csvDataからロード
     /// </summary>
-    protected static Dictionary<(SpiritualProperty, SpiritualProperty), FixedOrRandomValue> SkillSpiritualModifier;
+    protected static Dictionary<(SpiritualProperty atk, SpiritualProperty def), FixedOrRandomValue> SpiritualModifier;
+    /// <summary>
+    /// スキル以外のキャラクター同士の攻撃的なニュアンスの精神補正
+    /// </summary>
+    public static FixedOrRandomValue GetOffensiveSpiritualModifier(BaseStates attacker,BaseStates Defer)
+    {
 
+        if(attacker.MyImpression == SpiritualProperty.none) return new FixedOrRandomValue(100);//noneなら補正なし(100%なので無変動)
+        
+        var resultModifier = SpiritualModifier[(attacker.MyImpression, Defer.MyImpression)];//攻撃的な人の放つ精神属性と被害者の精神属性による補正
+        
+        if(attacker.MyImpression == attacker.MyImpression)
+        {
+            resultModifier.RandomMaxPlus(RandomEx.Shared.NextInt(2,8));//スキルの計算でないのでほんのちょっとだけ。
+        }
+
+        return resultModifier;
+    }
     /// <summary>
     /// セルの文字列を整数にパースする。空または無効な場合はデフォルト値を返す。
     /// </summary>
@@ -7848,7 +7889,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     public async static void CsvLoad()
     {
-        SkillSpiritualModifier = new Dictionary<(SpiritualProperty, SpiritualProperty), FixedOrRandomValue>();//初期化
+        SpiritualModifier = new Dictionary<(SpiritualProperty, SpiritualProperty), FixedOrRandomValue>();//初期化
         var csvFile = "Assets/csvData/SpiritualMatchData.csv";
 
         var textHandle = await Addressables.LoadAssetAsync<TextAsset>(csvFile);
@@ -7911,9 +7952,9 @@ private int CalcTransformCountIncrement(int tightenStage)
                 var value = rows[i][j];
                 if (i == 5 || j == 9)//もし五行目、または九列目の場合
                 {
-                    if (SkillSpiritualModifier.ContainsKey(key))//キーが既にあれば
+                    if (SpiritualModifier.ContainsKey(key))//キーが既にあれば
                     {
-                        SkillSpiritualModifier[key].SetMax(value);//乱数最大値を設定
+                        SpiritualModifier[key].SetMax(value);//乱数最大値を設定
                         //Debug.Log($"乱数セット{value}");
                     }
                     else
@@ -7925,9 +7966,9 @@ private int CalcTransformCountIncrement(int tightenStage)
                 else
                 {
                     //固定値としてクラスを生成 (生成時にrndMaxに初期値-1が入るよ)
-                    if (!SkillSpiritualModifier.ContainsKey(key))//キーが存在していなければ
+                    if (!SpiritualModifier.ContainsKey(key))//キーが存在していなければ
                     {
-                        SkillSpiritualModifier.Add(key, new FixedOrRandomValue(value));//キーを追加
+                        SpiritualModifier.Add(key, new FixedOrRandomValue(value));//キーを追加
                     }
                     else
                     {

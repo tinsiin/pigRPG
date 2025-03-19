@@ -600,6 +600,16 @@ public class AllyClass : BaseStates
         NowUseSkill = SkillList[skillListIndex];//使用スキルに代入する
         Debug.Log(SkillList[skillListIndex].SkillName + "を" + CharacterName +" のNowUseSkillにボタンを押して登録しました。");
 
+        //ムーブセットをキャッシュする。
+        NowUseSkill.CashMoveSet();
+
+        //今回選んだスキル以外のストック可能なスキル全てのストックを減らす。
+        var list = SkillList.Where((skill,index) => index != skillListIndex && skill.HasConsecutiveType(SkillConsecutiveType.Stockpile)).ToList();
+        foreach(var stockSkill in list)
+        {
+            stockSkill.ForgetStock();
+        }
+
         //もし先約リストによる単体指定ならば、範囲や対象者選択画面にはいかず、直接actbranchiへ移行
         if(manager.Acts.GetAtSingleTarget(0)!= null)
         {
@@ -627,9 +637,10 @@ public class AllyClass : BaseStates
         skill.ATKCountStock();;//該当のスキルをストックする。
         Debug.Log(skill.SkillName + "をストックしました。");
 
-        var list = SkillList.Where((skill,index) => index != skillListIndex && skill.HasConsecutiveType(SkillConsecutiveType.Stockpile)).ToList();
+        
         
         //今回選んだストックスキル以外のストックが減る。
+        var list = SkillList.Where((skill,index) => index != skillListIndex && skill.HasConsecutiveType(SkillConsecutiveType.Stockpile)).ToList();
         foreach(var stockSkill in list)
         {
             stockSkill.ForgetStock();

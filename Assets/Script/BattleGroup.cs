@@ -87,18 +87,6 @@ public class BattleGroup
         }
     }
     /// <summary>
-    /// グループ全キャラの追加硬直値と短縮ターンをリセットする
-    /// </summary>
-    public void ResetCharactersRecovelyStepTmpToAdd()
-    {
-        foreach (var chara in Ours)
-        {
-            chara.RemoveRecovelyTmpAddTurn();
-            chara.RemoveRecovelyTmpMinusTurn();
-        }
-
-    }
-    /// <summary>
     /// グループ全キャラの特別な補正を消去
     /// </summary>
     public void ResetCharactersUseThinges()
@@ -106,17 +94,6 @@ public class BattleGroup
         foreach (var chara in Ours)
         {
             chara.RemoveUseThings();
-        }
-    }
-
-    /// <summary>
-    /// グループ全員の全スキルをリセットする　BattleManager終了時
-    /// </summary>
-    public void OnBattleEndCharactersSkills()
-    {
-        foreach (var chara in Ours) 
-        {
-            chara.OnBattleEndSkills();
         }
     }
     /// <summary>

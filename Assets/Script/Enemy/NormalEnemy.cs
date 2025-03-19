@@ -93,7 +93,7 @@ public class NormalEnemy : BaseStates
     /// <summary>
     /// 全スキルの印象構造の十日能力値の総和
     /// </summary>
-    float AllSkillTenDays => SkillList.Sum(s => s.SkillTenDayValues);
+    float AllSkillTenDays => SkillList.Sum(s => s.TenDayValuesSum);
     /// <summary>
     /// 全スキルの印象構造の十日能力値の平均値
     /// </summary>
@@ -448,6 +448,7 @@ public class EnemySkill : BaseSkill
         var clone = new EnemySkill();
         clone.InitDeepCopy();
         clone.growthPoint = growthPoint;
+        clone._initSkillLevel = _initSkillLevel;
         return clone;
     }
 }

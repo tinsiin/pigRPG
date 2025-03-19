@@ -14,6 +14,7 @@ using Mono.Cecil.Cil;
 using TMPro;
 using UnityEditor;
 using static CommonCalc;
+using UnityEditor.UIElements;
 
 /// <summary>
 /// 戦闘の先手が起ったかどうか
@@ -397,6 +398,7 @@ public class BattleManager
         {
             chara.ApplyConditionOnBattleStart(AllyGroup.OurAvarageTenDayPower());
         }
+        //初期化コールバックで変化判定用にConditionTransitionが実行され記録されるので、初期化コールバックの前に呼ばなければなりません。
 
         OnBattleStart();//初期化コールバック
 
@@ -1824,13 +1826,6 @@ public class BattleManager
     /// </summary>
     private void OnBattleEnd()
     {
-        //全てのキャラクターのスキルのTurn系プロパティをリセットする
-        EnemyGroup.OnBattleEndCharactersSkills();
-        AllyGroup.OnBattleEndCharactersSkills();
-
-        //全てのキャラクターの追加硬直値をリセットする
-        EnemyGroup.ResetCharactersRecovelyStepTmpToAdd();
-        AllyGroup.ResetCharactersRecovelyStepTmpToAdd();
 
         //全てのキャラクターの特別な補正をリセットする
         EnemyGroup.ResetCharactersUseThinges();
