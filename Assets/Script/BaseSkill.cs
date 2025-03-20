@@ -422,7 +422,7 @@ public class BaseSkill
         foreach(var tenDay in TenDayValues())//スキルの印象構造で回す
         {
             //蓄積変数にスキルの印象構造と同じ攻撃者Doerの十日能力値を足していくｐ！
-            AtkerTenDaySumMatchingSkill += Doer.TenDayValues.GetValueOrZero(tenDay.Key);
+            AtkerTenDaySumMatchingSkill += Doer.TenDayValues().GetValueOrZero(tenDay.Key);
         }
         //上下レート算出　印象構造対応Doerの十日能力値　÷　スキルの十日能力値の総量　「どのくらいスキルを使いこなしているか」が指標
         var MoodRangeRate = AtkerTenDaySumMatchingSkill / TenDayValuesSum;

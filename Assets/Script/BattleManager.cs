@@ -1033,7 +1033,7 @@ public class BattleManager
     /// <returns></returns>
     float GetCoolnessFlatRozeChance()
     {
-        var coolPower = Acter.TenDayValues.GetValueOrZero(TenDayAbility.SpringWater);//泉水取得
+        var coolPower = Acter.TenDayValues().GetValueOrZero(TenDayAbility.SpringWater);//泉水取得
 
         return Mathf.Floor(coolPower / 16.7f) * 0.01f;
     }
@@ -1043,7 +1043,7 @@ public class BattleManager
     /// <returns></returns>
     float GetCoolnesFlatRozePower()
     {
-        var coolPower = Acter.TenDayValues.GetValueOrZero(TenDayAbility.SpringWater);//泉水取得
+        var coolPower = Acter.TenDayValues().GetValueOrZero(TenDayAbility.SpringWater);//泉水取得
 
         return coolPower * 0.005f;
     }
@@ -1403,8 +1403,8 @@ public class BattleManager
     /// <returns></returns>
     private bool ComparePressureAndRedirect(BaseStates Attacker,BaseStates Vanguard)
     {
-        var VanguardPressure = Vanguard.TenDayValues.GetValueOrZero(TenDayAbility.Glory);
-        var AttackerResilience = Attacker.TenDayValues.GetValueOrZero(TenDayAbility.JoeTeeth) + Attacker.TenDayValues.GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.5f;
+        var VanguardPressure = Vanguard.TenDayValues().GetValueOrZero(TenDayAbility.Glory);
+        var AttackerResilience = Attacker.TenDayValues().GetValueOrZero(TenDayAbility.JoeTeeth) + Attacker.TenDayValues().GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.5f;
 
         // 前のめり防衛側のプレッシャー値未満の合計値の乱数が出た場合、テラーズヒット,庇いが発生する
         return VanguardPressure > RandomEx.Shared.NextFloat(VanguardPressure + AttackerResilience);
