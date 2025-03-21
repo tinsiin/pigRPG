@@ -1411,7 +1411,15 @@ public class BaseSkill
         copy.ZoneTrait = ZoneTrait;
         copy.DistributionType = DistributionType;
         copy.PowerRangePercentageDictionary = PowerRangePercentageDictionary;
+        foreach (var pair in PowerRangePercentageDictionary)
+        {
+            copy.PowerRangePercentageDictionary.Add(pair.Key, pair.Value);
+        }
         copy.HitRangePercentageDictionary = HitRangePercentageDictionary;
+        foreach (var pair in HitRangePercentageDictionary)
+        {
+            copy.HitRangePercentageDictionary.Add(pair.Key, pair.Value);
+        }
         return copy;
     }
 

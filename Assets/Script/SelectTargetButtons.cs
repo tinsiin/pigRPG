@@ -83,7 +83,9 @@ public class SelectTargetButtons : MonoBehaviour
         //buttonPrefabをスキル性質に応じてbmのグループを特定の人数分だけ作って生成する
         bool EnemyTargeting = false;//敵の対象選択
         bool AllyTargeting = false;//味方の対象選択
+        bool MySelfTargeting = acter.HasRangeWill(SkillZoneTrait.CanSelectMyself);//自分自身の対象選択
         bool EnemyVanguardOrBackLine = false;//敵の前のめりor後衛
+
 
         if (acter.HasRangeWill(SkillZoneTrait.CanPerfectSelectSingleTarget))//選択可能な単体対象
         {
@@ -93,6 +95,9 @@ public class SelectTargetButtons : MonoBehaviour
             if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))
             {
                 AllyTargeting = true;//味方も選べたら味方も追加
+                NeedSelectCountAlly = 1;
+            }else if (MySelfTargeting)
+            {
                 NeedSelectCountAlly = 1;
             }
 
@@ -105,6 +110,9 @@ public class SelectTargetButtons : MonoBehaviour
                 AllyTargeting = true;//味方は単体でしか選べない
                 //一人または二人単位 
                 NeedSelectCountAlly = Random.Range(1, 3);
+            }else if (MySelfTargeting)
+            {
+                NeedSelectCountAlly = 1;
             }
         }
 
@@ -116,6 +124,9 @@ public class SelectTargetButtons : MonoBehaviour
                 AllyTargeting = true;//味方は単体でしか選べない
                 //二人範囲 
                 NeedSelectCountAlly = 2;
+            }else if (MySelfTargeting)
+            {
+                NeedSelectCountAlly = 1;
             }
         }
 
@@ -130,7 +141,7 @@ public class SelectTargetButtons : MonoBehaviour
             var enemyLives = RemoveDeathCharacters(bm.EnemyGroup.Ours);//生きてる敵だけ
             if(bm.EnemyGroup.InstantVanguard == null || enemyLives.Count < 2) //前のめりがいないか　敵の生きてる人数が二人未満
             {
-                if (!AllyTargeting)//味方選択がないなら
+                if (!AllyTargeting && !MySelfTargeting)//味方選択がないなら
                 {
                     ReturnNextWaitView();//そのまま次の画面へ
                     //bmに処理を任せる
@@ -237,7 +248,7 @@ public class SelectTargetButtons : MonoBehaviour
                 selects = RemoveDeathCharacters(selects);//省く
             }
 
-            if (selects.Count < 2 && AllyTargeting)//敵の生きてる人数が二人未満で、味方の選択もなければ
+            if (selects.Count < 2 && !AllyTargeting && !MySelfTargeting)//敵の生きてる人数が二人未満で、味方の選択もなければ
             {
                 ReturnNextWaitView();//そのまま次の画面へ
                                      //bmに処理を任せる
@@ -285,15 +296,28 @@ public class SelectTargetButtons : MonoBehaviour
             }
         }
 
-        if (AllyTargeting)//味方全員を入れる
+        if (AllyTargeting || MySelfTargeting)//味方全員を入れる
         {
-            var selects = bm.AllyGroup.Ours;
+            List<BaseStates> selects;
+            if(AllyTargeting)//味方選択可能なら
+            {
+                selects = bm.AllyGroup.Ours;
+                if(!MySelfTargeting)//自分自身が選ばれないのなら　自分自身を省く
+                {
+                    selects.Remove(acter);
+                }
+            }
+            else//味方選択不可能だが自分自身は選択可能なら
+            {
+                selects = new List<BaseStates>{acter};//自分自身だけ
+            }
 
 
             if(!acter.HasRangeWill(SkillZoneTrait.CanSelectDeath))//死亡者選択不可能なら
             {
                 selects = RemoveDeathCharacters(selects);//省く
             }
+            
 
 
             for (var i = 0; i < selects.Count; i++)

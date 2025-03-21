@@ -200,7 +200,7 @@ public class SelectRangeButtons : MonoBehaviour
                 currentX = startX;
 
                 // 次の行に移動
-                currentY -= (buttonSize.y + verticalPadding);
+                currentY -= buttonSize.y + verticalPadding;
             }
 
             // ボタンの位置を設定
@@ -212,6 +212,34 @@ public class SelectRangeButtons : MonoBehaviour
             button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectAlly));
             button.GetComponentInChildren<TextMeshProUGUI>().text =
                 "味方" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectAlly);//ボタンのテキスト
+            buttonList.Add(button);//ボタンリストに入れる
+
+        }
+
+        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectMyself))//自分自身を選ぶオプションを追加するなら
+        {
+            var button = Instantiate(buttonPrefab, transform);
+            var rect = button.GetComponent<RectTransform>();
+
+            // 親オブジェクトの右端を超える場合は次の行に移動
+            if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+            {
+                // 左端にリセット
+                currentX = startX;
+
+                // 次の行に移動
+                currentY -= buttonSize.y + verticalPadding;
+            }
+
+            // ボタンの位置を設定
+            rect.anchoredPosition = new Vector2(currentX, currentY);
+
+            // 次のボタンのX位置を更新
+            currentX += (buttonSize.x + horizontalPadding);
+
+            button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectMyself));
+            button.GetComponentInChildren<TextMeshProUGUI>().text =
+                "自分自身" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectMyself);//ボタンのテキスト
             buttonList.Add(button);//ボタンリストに入れる
 
         }
@@ -346,7 +374,7 @@ public class SelectRangeButtons : MonoBehaviour
     private string AddPercentageTextOnButton(SkillZoneTrait zone)
     {
         var skill = bm.Acter.NowUseSkill;
-        var txt = "";//何もなければ空文字が返るのみ
+        var txt = "割合差分なし";//何もなければ空文字が返るのみ
         if (skill.PowerRangePercentageDictionary.ContainsKey(zone))//その範囲性質の割合差分があるならば
         {
             txt = "\n割合差分:" + (skill.PowerRangePercentageDictionary[zone] * 100).ToString() + "%";//テキストに入れる。

@@ -1528,6 +1528,14 @@ public class BattleManager
             if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))//自陣も対象に選べるなら
             {
                 OurGroup = new BattleGroup(AllyGroup.Ours, AllyGroup.OurImpression, AllyGroup.which);//自陣
+                if(!skill.HasZoneTrait(SkillZoneTrait.CanSelectMyself))//自分自身を対象にする性質がないなら
+                {
+                    OurGroup.Ours.Remove(Acter);//自分自身を対象から除く
+                }
+            }else if(skill.HasZoneTrait(SkillZoneTrait.CanSelectMyself))//自分自身だけを対象にできるなら、
+            {
+                //自分自身だけを対象にする
+                OurGroup = new BattleGroup(new List<BaseStates>{Acter}, AllyGroup.OurImpression, AllyGroup.which);//自陣
             }
         }
         else
@@ -1536,6 +1544,13 @@ public class BattleManager
             if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))//自陣も対象に選べるなら
             {
                 OurGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);//自陣
+                if(!skill.HasZoneTrait(SkillZoneTrait.CanSelectMyself))//自分自身を対象にする性質がないなら
+                {
+                    OurGroup.Ours.Remove(Acter);//自分自身を対象から除く
+                }
+            }else if(skill.HasZoneTrait(SkillZoneTrait.CanSelectMyself))//自分自身だけを対象にできるなら、
+            {
+                OurGroup = new BattleGroup(new List<BaseStates>{Acter}, EnemyGroup.OurImpression, EnemyGroup.which);//自陣
             }
 
         }
