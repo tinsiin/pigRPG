@@ -94,13 +94,17 @@ public enum SkillZoneTrait
     /// 基本的には前のめりしか選べない。 前のめりがいない場合
     ///ランダムな事故が起きる感じで、
     ///その事故は意志により選択は不可能
-    ///canSelectAllyは無効
+    ///canSelectAlly等は無効
     /// </summary>
     ControlByThisSituation = 1 << 14,
     /// <summary>
     /// 範囲ランダム判定用
     /// </summary>
     RandomRange = 1 << 15,
+    /// <summary>
+    /// 自分自身を対象にすることができるかどうか
+    /// </summary>
+    CanSelectMyself = 1 << 16,
 
 }
 /// <summary>
@@ -1330,8 +1334,9 @@ public class BaseSkill
     public SkillConsecutiveType ConsecutiveType;
     /// <summary>
     /// スキルの範囲性質
+    /// 初期値は0
     /// </summary>
-    public SkillZoneTrait ZoneTrait;
+    public SkillZoneTrait ZoneTrait = 0;//初期値
     /// <summary>
     /// スキルの分散性質
     /// </summary>

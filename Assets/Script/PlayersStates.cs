@@ -525,7 +525,7 @@ public class AllyClass : BaseStates
         //キャラクターの持つ十日能力を多い順に重み付き抽選リストに入れ、処理をする。
         var AbilityList = new WeightedList<TenDayAbility>();
         //linqで値の多い順にゲット
-        foreach(var ability in TenDayValues.OrderByDescending(x => x.Value))
+        foreach(var ability in TenDayValues().OrderByDescending(x => x.Value))
         {
             AbilityList.Add(ability.Key,ability.Value);//キーが十日能力の列挙体　重みの部分に能力の値が入る。
         }
@@ -659,6 +659,8 @@ public class AllyClass : BaseStates
     /// <returns>遷移先のTabState</returns>
     public static TabState DetermineNextUIState(BaseSkill skill)
     {
+        var acter = Walking.bm.Acter;
+
         if (skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))//範囲を選べるのなら
         {
             return TabState.SelectRange;//範囲選択画面へ飛ぶ
@@ -671,9 +673,12 @@ public class AllyClass : BaseStates
         }
         else if (skill.HasZoneTrait(SkillZoneTrait.ControlByThisSituation))
         {
+            //実行意志ではないので、RangeWillに入れない。
             return TabState.NextWait;//何もないなら事象ボタンへ
         }
-        
+
+        Debug.Log("範囲選択も対象者選択も起こらないControlByThisSituation以外のスキル性質: " + skill.ZoneTrait);
+        //acter.RangeWill = skill.ZoneTrait;//実行者の範囲意志にそのままスキルの範囲性質を入れる。
         return TabState.NextWait; // デフォルトの遷移先
     }
     /// <summary>
@@ -729,7 +734,7 @@ public class AllyClass : BaseStates
     {
         if(MentalHP < MentalMaxHP)
         {
-            MentalHP += TenDayValues.GetValueOrZero(TenDayAbility.Rain) + MentalMaxHP * 0.16f;
+            MentalHP += TenDayValues().GetValueOrZero(TenDayAbility.Rain) + MentalMaxHP * 0.16f;
         }
         //ポイント回復用で結局は戦闘開始時にmaxになるんだし、こんぐらいの割合で丁度いいと思う
     }

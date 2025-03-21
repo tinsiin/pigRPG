@@ -41,6 +41,28 @@ public static class CommonCalc
     }
 
     /// <summary>
+    /// ランダム性があるかどうか。
+    /// 範囲意志と範囲誠意どっちと比べるかを引数で指定する。
+    /// </summary>
+    public static bool IsRandomTrait(SkillZoneTrait trait)
+    {
+        return HasZoneTraitAny(trait, SkillZoneTrait.RandomSingleTarget, 
+        SkillZoneTrait.RandomSelectMultiTarget, SkillZoneTrait.RandomMultiTarget, SkillZoneTrait.RandomRange);
+    }
+    /// <summary>
+    /// 渡したスキル範囲の内、いずれかの性質を持っているかどうか
+    /// 複数指定した場合はどれか一つでも当てはまればtrueを返す
+    /// </summary>
+    /// <param name="ZoneTrait">対象範囲性質</param>
+    /// <param name="skills">対象範囲性質の配列</param>
+    /// <returns>対象範囲性質のいずれかを持っているかどうか</returns>
+    public static bool HasZoneTraitAny(SkillZoneTrait ZoneTrait,params SkillZoneTrait[] skills)
+    {
+        return skills.Any(skill => (ZoneTrait & skill) != 0);
+    }
+
+
+    /// <summary>
     /// 十日能力辞書間の距離を計算するメソッド
     /// マンハッタン距離らしい(AI全任せwｗ)
     /// </summary>

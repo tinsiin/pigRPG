@@ -69,6 +69,7 @@ public class SelectTargetButtons : MonoBehaviour
         CashUnders = new List<BaseStates>();
 
         //もしスキルの範囲性質にcanSelectRangeがない場合 (=範囲選択の必要がないスキルなので範囲選択が発生せず代入されないのでここで入れる)
+        //範囲選択されたこと前提でこの後分岐するので。
         if (!skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))
         {
             acter.RangeWill |= skill.ZoneTrait;//実行者の範囲意志にそのままスキルの範囲性質を入れる。

@@ -598,7 +598,7 @@ public class BattleManager
         if (ActerFaction == WhichGroup.alliy)
         {//味方が行動するならば
 
-            if (Acter.FreezeUseSkill == null)//強制続行中のスキルがなければ
+            if (!Acter.IsFreeze)//強制続行中のスキルがなければ
             {
                 //スキル選択ボタンを各キャラの物にしてから
                 SwitchAllySkillUiState();
@@ -617,6 +617,7 @@ public class BattleManager
                 }
                 
                 var skill = Acter.FreezeUseSkill;
+                Acter.RangeWill= Acter.FreezeRangeWill;//強制続行スキルの範囲意志を入れとく
                 Acter.NowUseSkill = skill;//操作の代わりに使用スキルに強制続行スキルを入れとく
 
                 //連続攻撃中に操作可能なスキルなら、
@@ -1292,6 +1293,14 @@ public class BattleManager
             DetermineRangeRandomly();
         }
 
+        //この時点で範囲意志が決まっていないなら、スキルの性質をそのまま入れる
+        //要は範囲選択も対象者選択も発生しない自動決定型　RandomMultiやControlByThisSituationに、
+        //ランダム範囲でない範囲系など
+        if(Acter.RangeWill == 0)
+        {
+            Acter.RangeWill = skill.ZoneTrait;
+        }
+
         //人数やスキルの攻撃傾向によって、被攻撃者の選別をする
         SelectTargetFromWill();
 
@@ -1334,6 +1343,7 @@ public class BattleManager
                 //_atkCountupは【連続攻撃実行完了】以外ではBattlemanager単位での戦闘終了時と死亡時にしかリセットされないので、次回引っ掛かってもそのまま連続攻撃の途中と認識される。
 
                 Acter.FreezeSkill();//連続実行の為凍結
+                Acter.SetFreezeRangeWill(skill.ZoneTrait);//範囲意志も凍結
             }
         }
         else //複数実行が終わり
@@ -1349,7 +1359,7 @@ public class BattleManager
         }
 
         unders = new UnderActersEntryList(this);//対象者リスト初期化
-
+        Acter.RangeWill = 0;//範囲意志を初期化
 
         return ACTPop();
 
@@ -1412,6 +1422,7 @@ public class BattleManager
     /// <summary>
     /// スキルの性質が範囲ランダムだった場合、
     /// 術者の範囲意志として性質通りにランダムで決定させる方法
+    /// RandomMultiTargetは含まれない(何故ならランダムに変化する範囲としては曖昧にMultiTargetはすべて包括しているから。)
     /// </summary>
     private void DetermineRangeRandomly()
     {
@@ -1514,7 +1525,7 @@ public class BattleManager
         {//味方なら敵グループから、
             SelectGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);
 
-            if (Acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//自陣も対象に選べるなら
+            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))//自陣も対象に選べるなら
             {
                 OurGroup = new BattleGroup(AllyGroup.Ours, AllyGroup.OurImpression, AllyGroup.which);//自陣
             }
@@ -1522,7 +1533,7 @@ public class BattleManager
         else
         {//敵なら味方グループから選別する ディープコピー。
             SelectGroup = new BattleGroup(AllyGroup.Ours, AllyGroup.OurImpression, AllyGroup.which);
-            if (Acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//自陣も対象に選べるなら
+            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))//自陣も対象に選べるなら
             {
                 OurGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);//自陣
             }
@@ -1530,7 +1541,7 @@ public class BattleManager
         }
 
         //死者は省く
-        if (!Acter.HasRangeWill(SkillZoneTrait.CanSelectDeath))//死を選べないのなら　死を省く
+        if (!skill.HasZoneTrait(SkillZoneTrait.CanSelectDeath))//死を選べないのなら　死を省く
         {
             SelectGroup.SetCharactersList(RemoveDeathCharacters(SelectGroup.Ours));
             if (OurGroup != null)
@@ -1618,7 +1629,8 @@ public class BattleManager
 
                     UA.Add(RandomEx.Shared.GetItem(selects));//s選別リストからランダムで選択
                 }
-                else if (Acter.HasRangeWill(SkillZoneTrait.ControlByThisSituation))//状況のみに縛られる。(前のめりにしか当たらないなら
+                else //他メイン分岐とは違い、意志ではないので、スキルの範囲性質で指定する。
+                if (skill.HasZoneTrait(SkillZoneTrait.ControlByThisSituation))//状況のみに縛られる。(前のめりにしか当たらないなら
                 {
                     if (SelectGroup.InstantVanguard == null)//対象者グループに前のめりがいない場合。事故が起きる
                     {
@@ -1628,14 +1640,14 @@ public class BattleManager
                         //前のめりいないことによる事故☆☆☆☆☆☆☆☆☆☆
 
                         //シングルにあたるなら
-                        if (Acter.HasRangeWill(SkillZoneTrait.RandomSingleTarget))
+                        if (skill.HasZoneTrait(SkillZoneTrait.RandomSingleTarget))
                         {
                             UA.Add(RandomEx.Shared.GetItem(SelectGroup.Ours.ToArray()));//選別リストからランダムで選択
                         }
                         //前のめりがいないんだから、　前のめりか後衛単位での　集団事故は起こらないため　RandomSelectMultiTargetによる場合分けはない。
 
                         //全範囲事故なら
-                        if (Acter.HasRangeWill(SkillZoneTrait.AllTarget))
+                        if (skill.HasZoneTrait(SkillZoneTrait.AllTarget))
                         {
                             BaseStates[] selects = SelectGroup.Ours.ToArray();
                             if (OurGroup != null)//自陣グループも選択可能なら
@@ -1644,7 +1656,7 @@ public class BattleManager
                             UA.AddRange(selects);//対象範囲を全て加える
                         }
                         //ランダム範囲事故なら
-                        if (Acter.HasRangeWill(SkillZoneTrait.RandomMultiTarget))
+                        if (skill.HasZoneTrait(SkillZoneTrait.RandomMultiTarget))
                         {
                             List<BaseStates> selects = SelectGroup.Ours;
                             if (OurGroup != null)//自陣グループも選択可能なら

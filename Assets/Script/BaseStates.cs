@@ -1883,8 +1883,24 @@ public abstract class BaseStates
     public void Defrost()
     {
         FreezeUseSkill = null;
+        FreezeRangeWill = 0;
     }
 
+    /// <summary>
+    /// スキルが強制続行中かどうか
+    /// </summary>
+    public bool IsFreeze => FreezeUseSkill != null;
+    /// <summary>
+    /// 強制続行中のスキルの範囲性質
+    /// </summary>
+    public SkillZoneTrait FreezeRangeWill;
+    /// <summary>
+    /// 強制続行中のスキルの範囲性質を設定する
+    /// </summary>
+    public void SetFreezeRangeWill(SkillZoneTrait NowRangeWill)
+    {
+        FreezeRangeWill = NowRangeWill;
+    }
     /// <summary>
     /// SkillACT内(damage関数やReactionSkill)などで行動をキャンセルされたかどうか。
     /// </summary>
