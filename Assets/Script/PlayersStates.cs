@@ -471,15 +471,6 @@ public class PlayersStates:MonoBehaviour
         sites.OnWalkCallBack(walkCount);
         noramlia.OnWalkCallBack(walkCount);
     }
-    /// <summary>
-    /// 主人公陣の勝利時ブースト
-    /// </summary>
-    public void PlayersVictoryBoost(float multiplier)
-    {
-        geino.VictoryBoost(multiplier);
-        sites.VictoryBoost(multiplier);
-        noramlia.VictoryBoost(multiplier);
-    }
     
 
     //中央決定値など---------------------------------------------------------中央決定値
@@ -785,6 +776,8 @@ public class AllyClass : BaseStates
     {
         TransitionPowerOnBattleWinByCharacterImpression();//パワー変化
         HP += MAXHP * 0.3f;//HPの自然回復
+        AllyVictoryBoost();//勝利時の十日能力ブースト
+        ResolveDivergentSkillOutcome();//乖離スキル使用により、十日能力値減少
     }
     public void OnAllyLostCallBack()
     {
@@ -794,7 +787,19 @@ public class AllyClass : BaseStates
     {
         TransitionPowerOnBattleRunOutByCharacterImpression();
     }
+    /// <summary>
+    /// 勝利時の十日能力ブースト倍化処理
+    /// </summary>
+    public void AllyVictoryBoost()
+    {
+        //まず主人公グループと敵グループの強さの倍率
+        var ratio = Walking.bm.EnemyGroup.OurTenDayPowerSum / Walking.bm.AllyGroup.OurTenDayPowerSum;
+        VictoryBoost(ratio);
+
+    }
+
     
+
     /// <summary>
     /// キャラクターのパワーが勝利時にどう変化するか
     /// </summary>

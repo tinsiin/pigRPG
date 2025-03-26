@@ -135,8 +135,8 @@ public class NormalEnemy : BaseStates
         //正数ならs1のがでかいからs2が小さいからs2が上に行く　昇順ソートならこれで小さい順に並ぶ。
 
             // 各スキルと成長した十日能力との距離を計算
-            float distance1 = CalculateTenDaysDistance(s1.TenDayValues, GrowTenDays);
-            float distance2 = CalculateTenDaysDistance(s2.TenDayValues, GrowTenDays);
+            float distance1 = CalculateTenDaysDistance(s1.TenDayValues(), GrowTenDays);
+            float distance2 = CalculateTenDaysDistance(s2.TenDayValues(), GrowTenDays);
             return distance1.CompareTo(distance2);//CompareToに渡した物より大きいなら正の値が返り、小さければ負の値が返るってイメージ。
             //dis1主体で比較してんだからdis1の方が多ければ正の値、当然だよなって感じ。
         });
@@ -165,7 +165,7 @@ public class NormalEnemy : BaseStates
             //スキルの成長ポイント
             var growPoint = 0f;
             
-            foreach (var skillTenDay in growSkill.TenDayValues)//スキルの持つ全ての十日能力
+            foreach (var skillTenDay in growSkill.TenDayValues())//スキルの持つ全ての十日能力
             {
                 //成長した十日能力と一致したものならば、乗算して成長ポイントに足す
                 if (growTenDays.TryGetValue(skillTenDay.Key, out float growValue))
@@ -284,9 +284,17 @@ public class NormalEnemy : BaseStates
             Debug.Log(CharacterName + " のスキルが空です。");
         }
     }
+    void EneVictoryBoost()
+    {
+        //まず主人公グループと敵グループの強さの倍率(敵視点でね)
+        var ratio = Walking.bm.AllyGroup.OurTenDayPowerSum / Walking.bm.EnemyGroup.OurTenDayPowerSum;        
+        VictoryBoost(ratio);       
+    }
     public void OnWin()
     {
-        GrowSkillsNotEnabledOnWin();
+        EneVictoryBoost();//勝利時ブースト
+        GrowSkillsNotEnabledOnWin();//敵の非有効化スキル成長　勝利時ブーストの後に行うこと前提
+        ResolveDivergentSkillOutcome();//乖離スキル過多使用による苦悩システム　十日能力低下
     }
     public void OnRunOut()
     {

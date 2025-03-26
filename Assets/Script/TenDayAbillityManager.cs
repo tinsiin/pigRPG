@@ -224,6 +224,7 @@ public class TenDayAbilityDictionary : SerializableDictionary<TenDayAbility, flo
         }
     }
 
+
     /// <summary>
     /// 加算演算子 - 2つの辞書の値を加算する
     /// </summary>
@@ -292,4 +293,103 @@ public class TenDayAbilityDictionary : SerializableDictionary<TenDayAbility, flo
     {
         return dict * multiplier;
     }
+    /// <summary>
+    /// 減算演算子 - 2つの辞書の値を減算する
+    /// </summary>
+    public static TenDayAbilityDictionary operator -(TenDayAbilityDictionary left, TenDayAbilityDictionary right)
+    {
+        TenDayAbilityDictionary result = new TenDayAbilityDictionary(left);
+        
+        foreach (var pair in right)
+        {
+            if (result.ContainsKey(pair.Key))
+            {
+                result[pair.Key] -= pair.Value;
+            }
+            else
+            {
+                result[pair.Key] = -pair.Value;
+            }
+
+            if(result[pair.Key] < 0)//0クランプ
+            {
+                result[pair.Key] = 0;
+            }
+        }
+        
+        return result;
+    }
+
+    //存在するもののみで掛け合わせる平均値の算出==============================================================================================================
+    //つまり一つの辞書に存在した十日能力の値は他の辞書に存在してなくても0で平均されず存在する値のみでしか割られない　詳しくはcascadeに聞こう
+    
+
+    /// <summary>
+    /// 複数のBaseSkillからそれぞれの十日能力の平均値を計算してTenDayAbilityDictionaryを返す
+    /// </summary>
+    /// <param name="skills">平均を計算するスキルのコレクション</param>
+    /// <returns>平均値を持つTenDayAbilityDictionary</returns>
+    public static TenDayAbilityDictionary CalculateAverageTenDayValues(IEnumerable<BaseSkill> skills)
+    {
+        if (skills == null || !skills.Any())
+            return new TenDayAbilityDictionary();
+
+        // すべてのスキルの十日能力値を集める
+        var allValues = new Dictionary<TenDayAbility, List<float>>();
+
+        foreach (var skill in skills)
+        {
+            foreach (var pair in skill.TenDayValues())
+            {
+                if (!allValues.ContainsKey(pair.Key))
+                    allValues[pair.Key] = new List<float>();
+
+                allValues[pair.Key].Add(pair.Value);
+            }
+        }
+
+        // 平均を計算する
+        var result = new TenDayAbilityDictionary();
+        foreach (var pair in allValues)
+        {
+            result[pair.Key] = pair.Value.Average();
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// 複数のTenDayAbilityDictionaryから各十日能力の平均値を計算する
+    /// </summary>
+    /// <param name="dictionaries">平均を計算するTenDayAbilityDictionaryのコレクション</param>
+    /// <returns>平均値を持つTenDayAbilityDictionary</returns>
+    public static TenDayAbilityDictionary CalculateAverageTenDayDictionary(IEnumerable<TenDayAbilityDictionary> dictionaries)
+    {
+        if (dictionaries == null || !dictionaries.Any())
+            return new TenDayAbilityDictionary();
+
+        // すべての辞書から十日能力値を集める
+        var allValues = new Dictionary<TenDayAbility, List<float>>();
+
+        foreach (var dict in dictionaries)
+        {
+            foreach (var pair in dict)
+            {
+                if (!allValues.ContainsKey(pair.Key))
+                    allValues[pair.Key] = new List<float>();
+
+                allValues[pair.Key].Add(pair.Value);
+            }
+        }
+
+        // 平均を計算する
+        var result = new TenDayAbilityDictionary();
+        foreach (var pair in allValues)
+        {
+            result[pair.Key] = pair.Value.Average();
+        }
+
+        return result;
+    }
+    //存在するもののみで掛け合わせる平均値の算出======================================================================終わり＝＝＝＝＝＝＝＝＝＝＝＝========================================
 }

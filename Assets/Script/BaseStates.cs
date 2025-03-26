@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using RandomExtensions;
+using RandomExtensions.Linq;
 using System;
 using UnityEditor.Experimental.GraphView;
 using static BattleManager;
@@ -18,6 +19,7 @@ using UnityEditor.Rendering;
 using UnityEditor.ShaderGraph.Internal;
 using UnityEditorInternal.Profiling.Memory.Experimental;
 using UnityEditor;
+using static TenDayAbilityPosition;
 /// <summary>
 ///     基礎ステータスのクラス　　クラスそのものは使用しないので抽象クラス
 /// </summary>
@@ -44,9 +46,114 @@ public abstract class BaseStates
     /// </summary>
     public List<DamageData> damageDatas;
     /// <summary>
-    /// キャラクターの行動記録
+    /// キャラクターの対ひとりごとの行動記録
     /// </summary>
-    public List<ACTSkillData> skillDatas;
+    public List<ACTSkillData> ActDoOneSkillDatas;
+    /// <summary>
+    /// アクション事のスキルデータ
+    /// </summary>
+    public List<ActionSkillData> DidActionSkillDatas;
+    /// <summary>
+    /// bm内にスキル実行した回数。
+    /// </summary>
+    protected int AllSkillDoCountInBattle => DidActionSkillDatas.Count;
+
+    /// <summary>
+    /// 乖離したスキルを利用したことによる苦悩での十日能力値下降処理
+    /// </summary>
+    protected void ResolveDivergentSkillOutcome()
+    {
+        //まずバトル内でのスキル実行回数が一定以上で発生
+        if(AllSkillDoCountInBattle < 7) return;
+
+        //終了時の精神属性による発生確率の分岐
+        switch(MyImpression)
+        {
+            case SpiritualProperty.liminalwhitetile:
+                // リーミナルホワイトタイル 0%
+                return; // 常に発生しない
+                
+            case SpiritualProperty.kindergarden:
+                // キンダーガーデン 95%
+                if(!rollper(95f)) return;
+                break;
+                
+            case SpiritualProperty.sacrifaith:
+            case SpiritualProperty.cquiest:
+            case SpiritualProperty.devil:
+            case SpiritualProperty.doremis:
+            case SpiritualProperty.pillar:
+                // 自己犠牲・シークイエスト・デビル・ドレミス・支柱は全て100%
+                // 100%発生するので何もしない（returnしない）
+                break;
+                
+            case SpiritualProperty.godtier:
+                // ゴッドティア 50%
+                if(!rollper(50f)) return;
+                break;
+                
+            case SpiritualProperty.baledrival:
+                // ベールドライヴァル 70%
+                if(!rollper(70f)) return;
+                break;
+                
+            case SpiritualProperty.pysco:
+                // サイコパス 20%
+                if(!rollper(20f)) return;
+                break;
+                
+            default:
+                // その他の精神属性の場合はデフォルト処理
+                break;
+        }
+    
+        //乖離したスキルが一定％以上全体実行に対して使用されていたら
+        var DivergenceCount = 0;
+        foreach(var skill in DidActionSkillDatas)
+        {
+            if(skill.IsDivergence)
+            {
+                DivergenceCount++;
+            }
+        }
+        //特定％以上乖離スキルがあったら発生する。
+        if(AllSkillDoCountInBattle * 0.71 > DivergenceCount) return;
+
+        //減少する十日能力値の計算☆☆☆
+
+        //最後に使った乖離スキル
+        BaseSkill lastDivergenceSkill = null;
+        for(var i = DidActionSkillDatas.Count - 1; i >= 0; i--)//最後に使った乖離スキルに辿り着くまでループ
+        {
+            if(DidActionSkillDatas[i].IsDivergence)
+            {
+                lastDivergenceSkill = DidActionSkillDatas[i].Skill;
+                break;
+            }
+        }
+
+        //乖離スキルの全種類の印象構造の平均
+        
+        //まず全乖離スキルを取得する　同じのは重複しないようにhashset
+        var DivergenceSkills = new HashSet<BaseSkill>();
+        foreach(var skill in DidActionSkillDatas)
+        {
+            if(skill.IsDivergence)
+            {
+                DivergenceSkills.Add(skill.Skill);
+            }
+        }
+        //全乖離スキルの印象構造の平均値
+        var averageImpression = TenDayAbilityDictionary.CalculateAverageTenDayValues(DivergenceSkills);
+
+        //「最後に使った乖離スキル」と「乖離スキル全体の平均値」の平均値を求める
+        var DecreaseTenDayValue = TenDayAbilityDictionary.CalculateAverageTenDayDictionary(new[] { lastDivergenceSkill.TenDayValues(), averageImpression });
+        DecreaseTenDayValue *= 1.2f;//定数で微増
+
+        //自分の十日能力から減らす
+        _baseTenDayValues -= DecreaseTenDayValue;
+    }
+
     /// <summary>
     /// 現在持ってる対象者のボーナスデータ
     /// </summary>
@@ -55,7 +162,7 @@ public abstract class BaseStates
     /// <summary>
     /// 直近の行動記録
     /// </summary>
-    public ACTSkillData RecentSkillData => skillDatas[skillDatas.Count - 1];
+    public ACTSkillData RecentSkillData => ActDoOneSkillDatas[ActDoOneSkillDatas.Count - 1];
     /// <summary>
     /// 直近の被害記録
     /// </summary>
@@ -717,10 +824,72 @@ public abstract class BaseStates
     /// </summary>
     protected TenDayAbilityDictionary battleGain;
     /// <summary>
+    /// 勝利時の強さの比率から成長倍率を計算する
+    /// </summary>
+    protected float CalculateVictoryBoostMultiplier(float ratio)
+    {
+        // (最大比率, 対応する倍) を小さい順に並べる
+        (float maxRatio, float multiplier)[] boostTable = new[]
+        {
+            // 6割以下
+            (0.6f, 2.6f),
+            // 6割 < 7割
+            (0.7f, 5f),
+            // 7割 < 8割
+            (0.8f, 6.6f),
+            // 8割 < 9割
+            (0.9f, 7f),
+            // 9割 < 12割
+            (1.2f, 10f),
+            // 12割 < 15割
+            (1.5f, 12f),
+            // 15割 < 17割
+            (1.7f, 13f),
+            // 17割 < 20割
+            (2.0f, 16f),
+            // 20割 < 24割
+            (2.4f, 18f),
+            // 24割 < 26割 (特別ゾーン)
+            (2.6f, 20f),
+            // 26割 < 29割 (少し下がる設定)
+            (2.9f, 19f),
+            // 29割 < 34割
+            (3.4f, 24f),
+            // 34割 < 38割
+            (3.8f, 30f),
+            // 38割 < 40割
+            (4.0f, 31f),
+            // 40割 < 42割
+            (4.2f, 34f),
+            // 42割 < 48割
+            (4.8f, 36f),
+        };
+
+        // テーブルを順に判定して返す
+        foreach (var (maxVal, multi) in boostTable)
+        {
+            if (ratio <= maxVal)
+            {
+                return multi;
+            }
+        }
+
+        // 最後: 48割を超える場合は (ratio - 7) 倍
+        // ただし (ratio - 7) が 1 未満になる場合の扱いは要相談。
+        // ここでは最低1倍を保証する例を示す:
+        float result = ratio - 7f;
+        if (result < 1f) result = 1f;
+        return result;
+    }
+
+    /// <summary>
     /// 勝利時の十日能力ブースト倍化処理
     /// </summary>
-    public void VictoryBoost(float multiplier)
+    public void VictoryBoost(float ratio)
     {
+        // 勝利時の強さの比率から成長倍率を計算する
+        var multiplier = CalculateVictoryBoostMultiplier(ratio);
+
         foreach (var kv in battleGain)
         {
             var ability = kv.Key;
@@ -5323,7 +5492,7 @@ public abstract class BaseStates
 
             //割り込みカウンターをされた = さっき「自分は連続攻撃」をしていた
             //その連続攻撃の追加硬直値分だけ、「食らわせ」というパッシブを食らう。
-            var DurationTurn = skillDatas[skillDatas.Count - 1].Skill.SKillDidWaitCount;//食らうターン
+            var DurationTurn = ActDoOneSkillDatas[ActDoOneSkillDatas.Count - 1].Skill.SKillDidWaitCount;//食らうターン
             if(DurationTurn > 0)//持続ターンが存在すれば、
             {
                 ApplyPassive(2);//パッシブ、食らわせを入手する。
@@ -6211,7 +6380,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
 
         //ここで攻撃者の攻撃記録を記録する
-        attacker.skillDatas.Add(new ACTSkillData(thisAtkTurn,skill,this,isAttackerHit));//発動したのか、何のスキルなのかを記録
+        attacker.ActDoOneSkillDatas.Add(new ACTSkillData(thisAtkTurn,skill,this,isAttackerHit));//発動したのか、何のスキルなのかを記録
         //被害の記録
         damageDatas.Add(new DamageData//クソ長い
         (isAtkHit,isBadPassiveHit,isBadPassiveRemove,isGoodPassiveHit,isGoodPassiveRemove,isGoodVitalLayerHit,isGoodVitalLayerRemove,
@@ -6313,6 +6482,9 @@ private int CalcTransformCountIncrement(int tightenStage)
         PullImpressionFromSkill();
         //思えの値を回復する
         ResonanceHealingOnBattle();
+        //アクション単位での行動記録
+        var isdivergence = GetIsSkillDivergence();
+        DidActionSkillDatas.Add(new ActionSkillData(isdivergence, NowUseSkill));
         return txt;
     }
     /// <summary>
@@ -6343,7 +6515,50 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
        
     }
+    /// <summary>
+    /// 現在のスキルが乖離してるかどうかを返す
+    /// </summary>
+    public bool GetIsSkillDivergence()
+    {
+        //判定するスキル印象構造の種類数を取得  1クランプする。
+        var NeedJudgementSkillTenDayCount = Mathf.Max(1, (int)(NowUseSkill.TenDayValues().Count * 0.8 -1));
 
+        //判定するスキル印象構造を取得して
+        var SuggestionJudgementSkillTenDay =new TenDayAbilityDictionary(NowUseSkill.TenDayValues());
+        //キーリストを取得
+        var SuggestionJudgementSkillTenDayKeys = SuggestionJudgementSkillTenDay.Keys.ToList();
+        //キーリストをシャッフルする
+        SuggestionJudgementSkillTenDayKeys.Shuffle();
+
+        //判定する種類分判定リストに代入
+        var JudgementSkillTenDays =new HashSet<TenDayAbility>();
+        for(var i = 0; i < NeedJudgementSkillTenDayCount; i++)
+        {
+            var key = SuggestionJudgementSkillTenDayKeys[i];
+            JudgementSkillTenDays.Add(key);
+        }
+
+        //判定印象構造とデフォルト精神属性互換の精神属性全て同士の距離の平均を出す。
+        var AllAverageBetweenSkillTenAndDefaultImpressionDistance = 0f;//判定印象構造とデフォルト精神属性互換の精神属性全て同士の距離の平均の印象構造分全て
+        foreach(var skillTen in JudgementSkillTenDays)//スキルの判定印象構造で回す
+        {
+            var AllBetweenSkillTenAndDefaultImpressionDistance = 0f;
+            foreach(var defaultImpTen in SpritualTenDayAbilitysMap[DefaultImpression])//デフォルト精神属性互換の精神属性全てで回す
+            {
+                //距離を足す
+                AllBetweenSkillTenAndDefaultImpressionDistance += GetDistance(skillTen, defaultImpTen);
+            }
+            //デフォルト精神属性互換の十日能力の数で割って、平均を出す
+            AllAverageBetweenSkillTenAndDefaultImpressionDistance//その平均距離を総距離として加算する
+             += AllBetweenSkillTenAndDefaultImpressionDistance / SpritualTenDayAbilitysMap[DefaultImpression].Count;
+        }
+        //平均の平均を出す　判定印象構造とデフォルト精神属性互換の精神属性全て同士の距離の平均の平均
+        var AvarageAllAverageBetweenSkillTenAndDefaultImpressionDistance 
+        = AllAverageBetweenSkillTenAndDefaultImpressionDistance / JudgementSkillTenDays.Count;
+
+        //この平均の平均が特定の定数より多い、　離れているのなら、乖離したスキルとみなす。
+        return AvarageAllAverageBetweenSkillTenAndDefaultImpressionDistance >= 8;
+    }
 
     /// <summary>
     /// 攻撃対象の十日能力総量と被害者の十日能力総量の比率を計算し返す
@@ -6363,9 +6578,9 @@ private int CalcTransformCountIncrement(int tightenStage)
     private bool IsAnyHitInRecentSkillData(BaseSkill skill, int targetCount)
     {
         // 最新のtargetCount分のスキルデータを取得
-        var recentSkillDatas = skillDatas.Count >= targetCount 
-            ? skillDatas.GetRange(skillDatas.Count - targetCount, targetCount) 
-            : skillDatas;
+        var recentSkillDatas = ActDoOneSkillDatas.Count >= targetCount 
+            ? ActDoOneSkillDatas.GetRange(ActDoOneSkillDatas.Count - targetCount, targetCount) 
+            : ActDoOneSkillDatas;
 
         // 最新のスキルデータでIsHitがtrueのものがあるか確認
         foreach (var data in recentSkillDatas)
@@ -6750,7 +6965,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         Rivahal = 0;//ライバハル値を初期化
         DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
         DecisionSacriFaithAdaptToSkillGrouping();
-        skillDatas = new List<ACTSkillData>();//スキルの行動記録はbm単位で記録する。
+        ActDoOneSkillDatas = new List<ACTSkillData>();//スキルの行動記録はbm単位で記録する。
+        DidActionSkillDatas = new();//スキルのアクション事の記録データを初期化
         damageDatas = new();
         FocusSkillImpressionList = new();//慣れ補正用スキル印象リストを初期化
         TargetBonusDatas = new();
@@ -7809,6 +8025,7 @@ private int CalcTransformCountIncrement(int tightenStage)
 
     /// <summary>
     /// 精神属性と十日能力の互換表
+    /// デフォルト精神属性
     /// </summary>
     public static readonly Dictionary<SpiritualProperty, List<TenDayAbility>> SpritualTenDayAbilitysMap = 
     new()
@@ -8388,6 +8605,19 @@ public class ACTSkillData
         Skill = skill;
         Target = target;
         IsHit = ishit;
+    }
+}
+public class ActionSkillData
+{
+    /// <summary>
+    /// 実行したスキルが乖離しているかどうか
+    /// </summary>
+    public bool IsDivergence;
+    public BaseSkill Skill;
+    public ActionSkillData(bool isdivergence, BaseSkill skill)
+    {
+        IsDivergence = isdivergence;
+        Skill = skill;
     }
 }
 /// <summary>

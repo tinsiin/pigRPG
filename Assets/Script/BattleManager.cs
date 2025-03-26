@@ -862,19 +862,13 @@ public class BattleManager
                 MessageDropper.Instance.CreateMessage("死んだ");
                 PlayersStates.Instance.PlayersOnLost();
 
-                //勝利したの敵たちの十日能力成長値のブースト
-                VictoryBoostOnEnemiesWin();
-
-                //敵たちの勝利時コールバック 勝利時ブーストの後に行う。
+                //敵たちの勝利時コールバック。
                 EnemyGroup.EnemyiesOnWin();
             }
             else
             {
                 MessageDropper.Instance.CreateMessage("勝ち抜いた");
                 PlayersStates.Instance.PlayersOnWin();
-
-                //勝利時の十日能力成長値のブースト
-                VictoryBoostOnWin();                
             }
         }
         if (AlliesRunOut) 
@@ -890,102 +884,12 @@ public class BattleManager
 
            //一応主人公達は勝った扱い
            PlayersStates.Instance.PlayersOnWin();
-           //勝利時の十日能力成長値のブースト
-           VictoryBoostOnWin();
         }
 
         OnBattleEnd();
         return TabState.walk;
     }
-    /// <summary>
-    /// bm上で敵グループと主人公グループを比較して倍率を決め、各キャラクターの今回のバトルの成長値を倍化する。
-    /// </summary>
-    void VictoryBoostOnWin()
-    {
-        //まず主人公グループと敵グループの強さの倍率
-        var ratio = EnemyGroup.OurTenDayPowerSum / AllyGroup.OurTenDayPowerSum;
-        // 勝利時の強さの比率から成長倍率を計算する
-        var boostMultiplier = CalculateVictoryBoostMultiplier(ratio);
-        
-        //各キャラクターの今回のバトルの成長値を倍化する。
-        PlayersStates.Instance.PlayersVictoryBoost(boostMultiplier);
-    }
-    /// <summary>
-    /// 敗北時に敵キャラクター
-    /// </summary>
-    void VictoryBoostOnEnemiesWin()
-    {
-        //まず主人公グループと敵グループの強さの倍率(敵視点でね)
-        var ratio = AllyGroup.OurTenDayPowerSum / EnemyGroup.OurTenDayPowerSum;
-        // 勝利時の強さの比率から成長倍率を計算する
-        var boostMultiplier = CalculateVictoryBoostMultiplier(ratio);
-        
-        //各キャラクターの今回のバトルの成長値を倍化する。
-        foreach (var ene in EnemyGroup.Ours)
-        {
-            ene.VictoryBoost(boostMultiplier);       
-        }
-    }
-
-    /// <summary>
-    /// 勝利時の強さの比率から成長倍率を計算する
-    /// </summary>
-    private float CalculateVictoryBoostMultiplier(float ratio)
-    {
-        // (最大比率, 対応する倍) を小さい順に並べる
-        (float maxRatio, float multiplier)[] boostTable = new[]
-        {
-            // 6割以下
-            (0.6f, 2.6f),
-            // 6割 < 7割
-            (0.7f, 5f),
-            // 7割 < 8割
-            (0.8f, 6.6f),
-            // 8割 < 9割
-            (0.9f, 7f),
-            // 9割 < 12割
-            (1.2f, 10f),
-            // 12割 < 15割
-            (1.5f, 12f),
-            // 15割 < 17割
-            (1.7f, 13f),
-            // 17割 < 20割
-            (2.0f, 16f),
-            // 20割 < 24割
-            (2.4f, 18f),
-            // 24割 < 26割 (特別ゾーン)
-            (2.6f, 20f),
-            // 26割 < 29割 (少し下がる設定)
-            (2.9f, 19f),
-            // 29割 < 34割
-            (3.4f, 24f),
-            // 34割 < 38割
-            (3.8f, 30f),
-            // 38割 < 40割
-            (4.0f, 31f),
-            // 40割 < 42割
-            (4.2f, 34f),
-            // 42割 < 48割
-            (4.8f, 36f),
-        };
-
-        // テーブルを順に判定して返す
-        foreach (var (maxVal, multi) in boostTable)
-        {
-            if (ratio <= maxVal)
-            {
-                return multi;
-            }
-        }
-
-        // 最後: 48割を超える場合は (ratio - 7) 倍
-        // ただし (ratio - 7) が 1 未満になる場合の扱いは要相談。
-        // ここでは最低1倍を保証する例を示す:
-        float result = ratio - 7f;
-        if (result < 1f) result = 1f;
-        return result;
-    }
-
+    
     /// <summary>
     /// 戦闘系のメッセージ作成
     /// </summary>
