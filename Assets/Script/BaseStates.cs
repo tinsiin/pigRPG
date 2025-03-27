@@ -6020,44 +6020,64 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>
     /// 悪いパッシブ解除処理
     /// </summary>
-    void BadPassiveRemove(BaseSkill skill)
+    bool BadPassiveRemove(BaseSkill skill)
     {
-        // skill.subEffects のIDを順にチェックして、
+        var done = false;
+
+        // skill.canEraceEffectIDs のIDを順にチェックして、
         // _passiveList の中で同じIDを持つパッシブを検索
         // そのパッシブが IsBad == true なら Remove する
-        foreach (var id in skill.subEffects)
+        var rndList = new List<int>(skill.canEraceEffectIDs);
+        rndList.Shuffle();
+        var decrement = 0;
+        for(var i = 0; i < skill.Now_CanEraceEffectCount; i++)
         {
             // ID が一致するパッシブを検索 (存在しない場合は null)
-            var found = _passiveList.FirstOrDefault(p => p.ID == id);//解除するときはちゃんとインスタンスがあるので、passiveList内のインスタンスを調査する
+            var found = _passiveList.FirstOrDefault(p => p.ID == rndList[i]);//解除するときはちゃんとインスタンスがあるので、passiveList内のインスタンスを調査する
             if (found != null && found.IsBad)
             {
-                RemovePassiveByID(id);
+                RemovePassiveByID(rndList[i]);
+                done = true;
+                decrement++;
             }
         }
+        skill.Now_CanEraceEffectCount -= decrement;//使った分現在の消せる数を減らす
+        return done;
     }
     /// <summary>
     /// 悪い追加HP付与処理
     /// </summary>
-    void BadVitalLayerHit(BaseSkill skill)
+    bool BadVitalLayerHit(BaseSkill skill)
     {
+        var done = false;
         foreach (var id in skill.subVitalLayers.Where(id => VitalLayerManager.Instance.GetAtID(id).IsBad))
         {
             ApplyVitalLayer(id);
+            done = true;
         }
+        return done;
     }
     /// <summary>
     /// 悪い追加HP解除処理
     /// </summary>
-    void BadVitalLayerRemove(BaseSkill skill)
+    bool BadVitalLayerRemove(BaseSkill skill)
     {
-        foreach (var id in skill.subVitalLayers)
+        var done = false;
+        var rndList = new List<int>(skill.canEraceVitalLayerIDs);
+        rndList.Shuffle();
+        var decrement = 0;
+        for(var i=0; i<skill.Now_CanEraceVitalLayerCount; i++)
         {
-            var found = _vitalLayerList.FirstOrDefault(v => v.id == id);
+            var found = _vitalLayerList.FirstOrDefault(v => v.id == rndList[i]);
             if (found != null && found.IsBad)
             {
-                RemoveVitalLayerByID(id);
+                RemoveVitalLayerByID(rndList[i]);
+                done = true;
+                decrement++;
             }
         }
+        skill.Now_CanEraceVitalLayerCount -= decrement;//使った分現在の消せる数を減らす
+        return done;
     }
     /// <summary>
     /// 良いパッシブ付与処理
@@ -6074,42 +6094,61 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>
     /// 良いパッシブ解除処理
     /// </summary>
-    void GoodPassiveRemove(BaseSkill skill)
+    bool GoodPassiveRemove(BaseSkill skill)
     {
-        foreach(var id in skill.subEffects)
+        var done = false;
+        var rndList = new List<int>(skill.canEraceEffectIDs);
+        rndList.Shuffle();
+        var decrement = 0;
+        for(var i=0; i<skill.Now_CanEraceEffectCount; i++)
         {
-            var found = _passiveList.FirstOrDefault(p => p.ID == id);
+            var found = _passiveList.FirstOrDefault(p => p.ID == rndList[i]);
             if(found != null && !found.IsBad)
             {
-                RemovePassiveByID(id);
+                RemovePassiveByID(rndList[i]);
+                done = true;
+                decrement++;
             }
         }
+        skill.Now_CanEraceEffectCount -= decrement;//使った分現在の消せる数を減らす
+        return done;
     }
     /// <summary>
     /// 良い追加HP付与処理
     /// </summary>
     /// <param name="skill"></param>
-    void GoodVitalLayerHit(BaseSkill skill)
+    bool GoodVitalLayerHit(BaseSkill skill)
     {
+        var done = false;
         foreach (var id in skill.subVitalLayers.Where(id => !VitalLayerManager.Instance.GetAtID(id).IsBad))
         {
             ApplyVitalLayer(id);
+            done = true;
         }
+        return done;
     }
     /// <summary>
     /// 良い追加HP解除処理
     /// </summary>
     /// <param name="skill"></param>
-    void GoodVitalLayerRemove(BaseSkill skill)
+    bool GoodVitalLayerRemove(BaseSkill skill)
     {
-        foreach (var id in skill.subVitalLayers)
+        var done = false;
+        var rndList = new List<int>(skill.canEraceVitalLayerIDs);
+        rndList.Shuffle();
+        var decrement = 0;
+        for(var i=0; i<skill.Now_CanEraceVitalLayerCount; i++)
         {
-            var found = _vitalLayerList.FirstOrDefault(v => v.id == id);
+            var found = _vitalLayerList.FirstOrDefault(v => v.id == rndList[i]);
             if (found != null && !found.IsBad)
             {
-                RemoveVitalLayerByID(id);
+                RemoveVitalLayerByID(rndList[i]);
+                done = true;
+                decrement++;
             }
         }
+        skill.Now_CanEraceVitalLayerCount -= decrement;//使った分現在の消せる数を減らす
+        return done;
     }
     /// <summary>
     /// 直接攻撃じゃない敵対行動系
@@ -6130,20 +6169,17 @@ private int CalcTransformCountIncrement(int tightenStage)
         if (skill.HasType(SkillType.AddVitalLayer))
         {
             //悪い追加HPを付与しようとしてるのなら、命中回避計算
-            BadVitalLayerHit(skill);
-            isBadVitalLayerHit = true;
+            isBadVitalLayerHit = BadVitalLayerHit(skill);
         }
         if(skill.HasType(SkillType.RemovePassive))
         {
             //良いパッシブを取り除こうとしてるのなら、命中回避計算
-            GoodPassiveRemove(skill);
-            isGoodPassiveRemove = true;
+            isGoodPassiveRemove = GoodPassiveRemove(skill);
         }
         if (skill.HasType(SkillType.RemoveVitalLayer))
         {
             //良い追加HPを取り除こうとしてるのなら、命中回避計算
-            GoodVitalLayerRemove(skill);
-            isGoodVitalLayerRemove = true;
+            isGoodVitalLayerRemove = GoodVitalLayerRemove(skill);
         }
         
     }
@@ -6201,6 +6237,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     {
         var skill = attacker.NowUseSkill;
         skill.CalcCradleSkillLevel(attacker);//「攻撃者の」スキルのゆりかご計算
+        skill.RefilCanEraceCount();//除去スキル用の消せるカウント回数の補充
 
         //スキルパワーの精神属性による計算
         var modifier = GetSkillVsCharaSpiritualModifier(skill.SkillSpiritual, attacker);
@@ -6326,8 +6363,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
             {
                 //悪いパッシブを取り除くのなら、スキル命中のみ
-                BadPassiveRemove(skill);
-                isBadPassiveRemove = true;
+                isBadPassiveRemove = BadPassiveRemove(skill);
             }
         }
         if (skill.HasType(SkillType.RemoveVitalLayer))
@@ -6335,8 +6371,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
             {
                 //悪い追加HPを取り除こうとしてるのなら、スキル命中のみ
-                BadVitalLayerRemove(skill);
-                isBadVitalLayerRemove = true;
+                isBadVitalLayerRemove = BadVitalLayerRemove(skill);
             }
         }
 

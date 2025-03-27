@@ -1241,6 +1241,43 @@ public class BaseSkill
     /// スキル実行時に付与する追加HP(Passive由来でない)　ID指定
     /// </summary>
     public List<int> subVitalLayers;
+    /// <summary>
+    /// 除去スキルとして消せるパッシブのID範囲
+    /// </summary>
+    public List<int> canEraceEffectIDs;
+    /// <summary>
+    /// 除去スキルとして消せる追加HPのID範囲
+    /// </summary>
+    public List<int> canEraceVitalLayerIDs;
+    /// <summary>
+    /// 除去スキルとして使用する際に指定する消せるパッシブの数
+    /// 除去スキルでないと参照されない
+    /// </summary>
+    public int CanEraceEffectCount;
+    /// <summary>
+    /// 現在の消せるパッシブの数
+    /// ReactionSkill内で除去する度に減っていく値
+    /// </summary>
+    public int Now_CanEraceEffectCount;
+    /// <summary>
+    /// 除去スキルとして使用する際に指定する消せる追加HPの数
+    /// 除去スキルでないと参照されない
+    /// </summary>
+    public int CanEraceVitalLayerCount;
+    /// <summary>
+    /// 現在の消せる追加HPの数
+    /// ReactionSkill内で除去する度に減っていく値
+    /// </summary>
+    public int Now_CanEraceVitalLayerCount;
+    /// <summary>
+    /// 除去可能数をReactionSkill冒頭で補充する。
+    /// </summary>
+    public void RefilCanEraceCount()
+    {
+        Now_CanEraceEffectCount = CanEraceEffectCount;
+        Now_CanEraceVitalLayerCount = CanEraceVitalLayerCount;
+    }
+
 
     /// <summary>
     /// 現在のムーブセット
@@ -1420,6 +1457,12 @@ public class BaseSkill
         {
             copy.HitRangePercentageDictionary.Add(pair.Key, pair.Value);
         }
+
+        copy.canEraceEffectIDs = new(canEraceEffectIDs);
+        copy.canEraceVitalLayerIDs = new(canEraceVitalLayerIDs);
+        copy.CanEraceEffectCount = CanEraceEffectCount;
+        copy.CanEraceVitalLayerCount = CanEraceVitalLayerCount;
+
         return copy;
     }
 
