@@ -170,27 +170,25 @@ public class BasePassive
                 {
                     // user から IDが一致するVitalLayerを検索して削除
                     // (BaseStates側にRemoveVitalLayer(id)など作っておく)
-                    RemoveVitalLayerById(user, bind.VitalLayerId);
+                    user.RemoveVitalLayer(bind.VitalLayerId);
+                }
+
+                //矛盾してる場合を警告する
+                if(bind.GrantTiming == PassiveVitalTiming.OnRemove && bind.IsSurvivalCondition)
+                {
+                    Debug.LogWarning
+                    ($"{_owner}に付与された{PassiveName}の追加HP({bind.VitalLayerId})はOnRemoveというパッシブが消されるタイミングで付与されますが、/n同時にパッシブの生存条件のプロパティも存在します。 パッシブは正常に削除された為、エラーは起きません。\n");
+                }
+
+                if(bind.GrantTiming == PassiveVitalTiming.OnRemove && bind.RemoveOnPassiveRemove)
+                {
+                    Debug.LogWarning
+                    ($"{_owner}に付与された{PassiveName}の追加HP({bind.VitalLayerId})はOnRemoveというパッシブが消されるタイミングで付与されますが、同時にパッシブ終了時にも消される設定です。この場合、削除処理が優先され、追加HPは付与されませんでした。\n");
                 }
             }
         }
 
         _owner = null;
-    }
-    /// <summary>
-    /// 特定のキャラからidを通じて追加HPを消す。
-    /// </summary>
-    private void RemoveVitalLayerById(BaseStates user, int targetId)
-    {
-        // user.VitalLayers は IReadOnlyList かもしれないので、castや実体取得が必要
-        var list = user.VitalLayers as List<BaseVitalLayer>;
-        if (list == null) return;
-
-        var index = list.FindIndex(l => l.id == targetId);
-        if (index >= 0)
-        {
-            list.RemoveAt(index);
-        }
     }
     /// <summary>
     /// 歩行時にパッシブが生存するかどうか
@@ -215,8 +213,57 @@ public class BasePassive
         }
     }
 
+    /// <summary>
+    /// ユーザーの残っている生存条件のVitalLayerを返す
+    /// </summary>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    List<PassiveVitalLayerBinding> RemainingSurvivalVitalLayerBinding(BaseStates user)
+    {
+        //すべてのSurvivalConditionなLayerが消滅していたらRemove
+        var survivalBinds = VitalLayers
+            .Where(v => v.IsSurvivalCondition )
+            .ToList();
 
-
+        if (survivalBinds.Count > 0)//生存条件のvitalLayerBindがあるならば、
+        {
+            //user上に残っているレイヤーのIDを取得（HP > 0のもの）
+            var livingLayerIds = user.VitalLayers
+                .Where(lay => lay.LayerHP > 0)
+                .Select(lay => lay.id)
+                .ToList();
+        
+            // 生存条件を満たすバインディングだけをフィルタリング
+            var remainingBindings = survivalBinds
+                .Where(bind => livingLayerIds.Contains(bind.VitalLayerId))
+                .ToList();
+        
+            if(remainingBindings.Count > 0)
+            {
+                return remainingBindings;
+            }
+        }
+        return null;
+    }    
+    /// <summary>
+    /// 生存条件のvitalLayerを残っているかどうか
+    /// </summary>
+    public bool HasRemainingSurvivalVitalLayer(BaseStates user)
+    {
+        var remainingLayers = RemainingSurvivalVitalLayerBinding(user);
+        return remainingLayers != null && remainingLayers.Count > 0; // 残っているレイヤーがあればtrueを返す
+    }
+    /// <summary>
+    /// 残っている生存条件のVitalLayerがパッシブ削除されたときに消される性質を持っているかどうか
+    /// </summary>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    bool RemainigSurvivalVitalLayer_Has_RemoveOnPassiveRemove(BaseStates user)
+    {
+        var remainingLayers = RemainingSurvivalVitalLayerBinding(user);
+        if(remainingLayers.Count < 1) return false;//そもそも残っている生存条件のvitalLayerがない
+        return remainingLayers.Any(lay => lay.RemoveOnPassiveRemove);
+    }
     /// <summary>
     ///     毎ターンこのパッシブが生存するかどうか(戦闘中)
     /// </summary>
@@ -231,6 +278,16 @@ public class BasePassive
             {
                 // userのpassivelist からこのパッシブをRemove
                 user.RemovePassive(this);
+                if(HasRemainingSurvivalVitalLayer(user))//もし生存条件のvitalLayerがあれば
+                {
+                    Debug.Log($"{user}の{PassiveName}-パッシブがターン経過により削除されました。 生存条件の追加HPがありますが、ターン経過が優先されます。\n");
+
+                    //もし残っている生存条件のvitalLayerが「パッシブが消えるときに一緒に消える性質を持っていなかったら」警告する
+                    if(!RemainigSurvivalVitalLayer_Has_RemoveOnPassiveRemove(user))
+                    {
+                        Debug.LogWarning($"{user}の{PassiveName}-パッシブの残っている生存条件の追加HPにRemoveOnPassiveRemove性質がありません。これではパッシブと密接なはずの追加HPなのに消えずに残りますが、\nよろしいでしょうか？\n");
+                    }
+                }
                 return; // ここで処理打ち切り
             }
         }
@@ -239,27 +296,7 @@ public class BasePassive
         //    IsSurvivalCondition == true の Layer が "ひとつも残っていない" 場合
         if (VitalLayers != null)
         {
-            bool needRemove = false;
-
-            //すべてのSurvivalConditionなLayerが消滅していたらRemove
-            var survivalIds = VitalLayers
-                .Where(v => v.IsSurvivalCondition)
-                .Select(v => v.VitalLayerId)
-                .ToList();
-
-            if (survivalIds.Count > 0)//生存条件のvitalLayerがあるならば、
-            {
-                // user上に「HP>0の対応レイヤー」があるか探す
-                var existAny = user.VitalLayers
-                    .Any(lay => survivalIds.Contains(lay.id) && lay.LayerHP > 0);
-
-                if (!existAny) // 1つも残ってない
-                {
-                    needRemove = true;
-                }
-            }
-
-            if (needRemove)
+            if (!HasRemainingSurvivalVitalLayer(user))
             {
                 user.RemovePassive(this);
                 return;

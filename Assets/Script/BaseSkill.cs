@@ -1218,9 +1218,11 @@ public class BaseSkill
 
     /// <summary>
     /// スキルにより補正された最終命中率
+    /// 引数の命中凌駕はIsReactHitで使われるものなので、キャラ同士の命中回避計算が
+    /// 必要ないものであれば、引数を指定しなくていい(デフォ値)
     /// </summary>
     /// <param name="supremacyBonus">命中ボーナス　主に命中凌駕用途</param>>
-    public virtual bool SkillHitCalc(float supremacyBonus)
+    public virtual bool SkillHitCalc(float supremacyBonus = 0)
     {
         //割り込みカウンターなら確実
         if(Doer.HasPassive(1)) return true;

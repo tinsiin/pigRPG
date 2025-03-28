@@ -330,6 +330,14 @@ public abstract class BaseStates
     {
         return _vitalLayerList.Any(vit => vit.id == id);
     }
+    public void RemoveVitalLayer(int id)
+    {
+        int index = _vitalLayerList.FindIndex(l => l.id == id);
+        if (index >= 0)
+        {
+            _vitalLayerList.RemoveAt(index);
+        }
+    }
 
     public ThePower NowPower = ThePower.medium;//初期値は中
 
@@ -6229,6 +6237,39 @@ private int CalcTransformCountIncrement(int tightenStage)
         return resultModifier;
     }
     /// <summary>
+    /// 直接攻撃スキルのを「食らう側のヒット判定のラッパー
+    /// 命中回避を用いるかどうかをここで計算する。
+    /// </summary>
+    /// <returns></returns>
+    bool ATKTypeSkillReactHitCalc(BaseStates attacker,BaseSkill atkSkill)
+    {
+        //善意攻撃であるのなら、スキル命中率のみ
+
+        //攻撃者と被害者(自分)が味方同士で、かつ、
+        if(manager.IsFriend(attacker, this))
+        {
+            //自分の持ってるパッシブに一つでも「行動不能」と「現存してる追加HPが生存条件である」パッシブの二つが同時に含まれていれば
+            var isGoodwillAttackTarget = false;
+
+            foreach (var pas in _passiveList)//自分の持ってるパッシブで回す
+            {
+                if(pas.IsCantACT)//行動不能のパッシブなら
+                {
+                    if(pas.VitalLayers == null) continue;//パッシブに追加HPが無ければ飛ばす
+
+                    if(pas.HasRemainingSurvivalVitalLayer(this))//生存条件としてのVitalLayerを今持っているかどうか
+                    {
+                        isGoodwillAttackTarget = true;//善意攻撃とみなす
+                        break;//一個でも条件を満たせば善意攻撃なのでループを抜けていい
+                    }
+                }
+            }
+
+            if(isGoodwillAttackTarget) return atkSkill.SkillHitCalc();
+        }
+        return IsReactHIT(attacker);
+    }
+    /// <summary>
     /// スキルに対するリアクション ここでスキルの解釈をする。
     /// </summary>
     /// <param name="skill"></param>
@@ -6275,7 +6316,7 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         if (skill.HasType(SkillType.Attack))
         {
-            if (IsReactHIT(attacker))
+            if (ATKTypeSkillReactHitCalc(attacker,skill))
             {
                 //割り込みカウンターの判定
                 if(skill.NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃されてる途中なら
@@ -6303,7 +6344,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
         else//atktypeがないと各自で判定
         {
-             if (IsReactHIT(attacker))
+             if (ATKTypeSkillReactHitCalc(attacker,skill))
             {
                 ApplyNonDamageHostileEffects(skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove);        
             }
@@ -6312,7 +6353,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         //回復系は常に独立
         if(skill.HasType(SkillType.DeathHeal))
         {
-            if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
+            if (skill.SkillHitCalc())//スキル命中率の計算だけ行う
             {
                 Angel();//降臨　アイコンがノイズで満たされるようなエフェクト
                 isHeal = true;
@@ -6331,7 +6372,7 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         if (skill.HasType(SkillType.MentalHeal))
         {
-            if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
+            if (skill.SkillHitCalc())//スキル命中率の計算だけ行う
             {
                 MentalHeal(skillPower);
                 isHeal = true;
@@ -6340,7 +6381,7 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         if (skill.HasType(SkillType.addPassive))
         {
-            if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
+            if (skill.SkillHitCalc())//スキル命中率の計算だけ行う
             {
                 //良いパッシブを付与しようとしてるのなら、スキル命中計算のみ
                 isGoodPassiveHit = GoodPassiveHit(skill);
@@ -6348,7 +6389,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
         if (skill.HasType(SkillType.AddVitalLayer))
         {
-            if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
+            if (skill.SkillHitCalc())//スキル命中率の計算だけ行う
             {
                 //良い追加HPを付与しようとしてるのなら、スキル命中のみ
                GoodVitalLayerHit(skill);
@@ -6360,7 +6401,7 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         if(skill.HasType(SkillType.RemovePassive))
         {
-            if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
+            if (skill.SkillHitCalc())//スキル命中率の計算だけ行う
             {
                 //悪いパッシブを取り除くのなら、スキル命中のみ
                 isBadPassiveRemove = BadPassiveRemove(skill);
@@ -6368,7 +6409,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
         if (skill.HasType(SkillType.RemoveVitalLayer))
         {
-            if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
+            if (skill.SkillHitCalc())//スキル命中率の計算だけ行う
             {
                 //悪い追加HPを取り除こうとしてるのなら、スキル命中のみ
                 isBadVitalLayerRemove = BadVitalLayerRemove(skill);

@@ -310,6 +310,17 @@ public class BattleManager
     /// </summary>
     public BattleGroup MyGroup(BaseStates chara) => FactionToGroup(GetCharacterFaction(chara));
     /// <summary>
+    /// 同じグループかどうか
+    /// </summary>
+    public bool IsFriend(BaseStates chara1, BaseStates chara2)
+    {
+        bool chara1InAlly = AllyGroup.Ours.Contains(chara1);
+        bool chara2InAlly = AllyGroup.Ours.Contains(chara2);
+        
+        // 両方が味方、または両方が敵ならtrue
+        return (chara1InAlly && chara2InAlly) || (!chara1InAlly && !chara2InAlly);
+    }
+    /// <summary>
     /// 渡されたキャラクタのbm内での陣営を表す。
     /// </summary>
     public WhichGroup GetCharacterFaction(BaseStates chara)
