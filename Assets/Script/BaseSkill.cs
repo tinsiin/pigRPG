@@ -364,6 +364,11 @@ public class BaseSkill
     /// </summary>
     public bool IsBlade;
     /// <summary>
+    /// 殺せないスキルかどうか
+    /// 1残る
+    /// </summary>
+    public bool Cantkill = false;
+    /// <summary>
     /// TLOAスキルのレベルアップに必要な使用回数
     /// </summary>
     protected const int TLOA_LEVEL_DIVIDER = 120;

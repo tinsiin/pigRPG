@@ -5408,6 +5408,31 @@ public abstract class BaseStates
         return dmg;
     }
     /// <summary>
+    /// 殺せないスキルの場合のクランプ
+    /// </summary>
+    void CantKillSkillClamp(BaseStates Atker, BaseSkill skill)
+    {
+        //もし攻撃者がTLOAスキルなら
+        if(skill.IsTLOA)
+        {
+            if(Atker.HasPassive(5))//攻撃者が「TLOAではとどめがさせない」パッシブを持ってたら1割まで
+            {
+                HP = Mathf.Max(HP,MAXHP * 0.1f);//10%までしか減らせない
+            }
+            else//それ以外は3.4%まで
+            {
+                HP = Mathf.Max(HP,MAXHP * 0.034f);//3.4%までしか減らせない
+            }
+        }
+
+        //もし攻撃者が殺せないスキルなら
+        if(skill.Cantkill)
+        {
+            HP = Mathf.Max(HP,1);//1までしか減らせない
+        }
+    }
+    
+    /// <summary>
     ///オーバライド可能なダメージ関数
     /// </summary>
     /// <param name="atkPoint"></param>
@@ -5459,7 +5484,10 @@ public abstract class BaseStates
         var totalDmg = dmg.Total;//直接引くように変数に代入
         if(totalDmg < 0)totalDmg = 0;//0未満は0にする　逆に回復してしまうのを防止
         var tempHP = HP;//計算用にダメージ受ける前のHPを記録
+
+        
         HP -= totalDmg;
+        CantKillSkillClamp(Atker,skill);
         Debug.Log("攻撃が実行された");
 
         //攻撃者がダメージを殺すまでに与えたダメージ辞書に記録する

@@ -533,11 +533,12 @@ MonoBehaviour:
     InitpassiveIDList: 
     InitVitalLaerIDList: 
     NowPower: 2
+    Rivahal: 0
     b_b_atk: 4
     b_b_def: 4
     b_b_eye: 4
     b_b_agi: 4
-    TenDayValues:
+    _baseTenDayValues:
       _list: []
     CharacterName: 
     ImpressionStringName: 
@@ -549,8 +550,16 @@ MonoBehaviour:
         SkillSpiritual: 0
         Impression: 0
         SkillPhysical: 0
-        TenDayValues:
-          _list: []
+        IsTLOA: 0
+        IsMagic: 0
+        IsBlade: 0
+        _infiniteSkillPowerUnit: 0
+        _infiniteSkillTenDaysUnit: 0
+        _mentalDamageRatio: 0
+        _powerSpread: []
+        _skillHitPer: 0
+        _a_moveset: []
+        _b_moveset: []
         _name: 
         _triggerCountMax: 0
         _triggerRollBackCount: 0
@@ -563,16 +572,14 @@ MonoBehaviour:
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
-        IsTLOA: 0
-        IsMagic: 0
-        PowerSpread: []
-        _skillPower: 0
-        MentalDamageRatio: 0
-        SkillHitPer: 0
         subEffects: 
         subVitalLayers: 
-        A_MoveSet: []
-        B_MoveSet: []
+        canEraceEffectIDs: 
+        canEraceVitalLayerIDs: 
+        CanEraceEffectCount: 0
+        Now_CanEraceEffectCount: 0
+        CanEraceVitalLayerCount: 0
+        Now_CanEraceVitalLayerCount: 0
         _defAtk: 0
         WhatSkill: 0
         ConsecutiveType: 0
@@ -582,6 +589,18 @@ MonoBehaviour:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+      TenDayBonusData:
+        TLOAData:
+          _list: []
+        MagicData:
+          _list: []
+        BladeData:
+          _list: []
+        NormalData:
+          _list: []
+      TenDayValues:
+        _list: []
+      IsBlade: 0
     InitWeaponID: 0
     NowBattleProtocol: 0
     NowDeffenceStyle: 0
@@ -589,8 +608,16 @@ MonoBehaviour:
       SkillSpiritual: 0
       Impression: 0
       SkillPhysical: 0
-      TenDayValues:
-        _list: []
+      IsTLOA: 0
+      IsMagic: 0
+      IsBlade: 0
+      _infiniteSkillPowerUnit: 0
+      _infiniteSkillTenDaysUnit: 0
+      _mentalDamageRatio: 0
+      _powerSpread: []
+      _skillHitPer: 0
+      _a_moveset: []
+      _b_moveset: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -603,16 +630,14 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
-      IsTLOA: 0
-      IsMagic: 0
-      PowerSpread: []
-      _skillPower: 0
-      MentalDamageRatio: 0
-      SkillHitPer: 0
       subEffects: 
       subVitalLayers: 
-      A_MoveSet: []
-      B_MoveSet: []
+      canEraceEffectIDs: 
+      canEraceVitalLayerIDs: 
+      CanEraceEffectCount: 0
+      Now_CanEraceEffectCount: 0
+      CanEraceVitalLayerCount: 0
+      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -622,12 +647,21 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+    SelectedEscape: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
       SkillPhysical: 0
-      TenDayValues:
-        _list: []
+      IsTLOA: 0
+      IsMagic: 0
+      IsBlade: 0
+      _infiniteSkillPowerUnit: 0
+      _infiniteSkillTenDaysUnit: 0
+      _mentalDamageRatio: 0
+      _powerSpread: []
+      _skillHitPer: 0
+      _a_moveset: []
+      _b_moveset: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -640,16 +674,14 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
-      IsTLOA: 0
-      IsMagic: 0
-      PowerSpread: []
-      _skillPower: 0
-      MentalDamageRatio: 0
-      SkillHitPer: 0
       subEffects: 
       subVitalLayers: 
-      A_MoveSet: []
-      B_MoveSet: []
+      canEraceEffectIDs: 
+      canEraceVitalLayerIDs: 
+      CanEraceEffectCount: 0
+      Now_CanEraceEffectCount: 0
+      CanEraceVitalLayerCount: 0
+      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -666,11 +698,16 @@ MonoBehaviour:
     _hp: 0
     _maxhp: 0
     _mentalHP: 0
+    _thinkingFactor: 0
     Target: 0
     RangeWill: 0
+    FreezeRangeWill: 0
     IsActiveCancelInSkillACT: 0
     MyType: 0
     DefaultImpression: 0
+    HeavyResistance: 1
+    voltenResistance: 1
+    DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
     ValidSkillIDList: 
@@ -678,11 +715,12 @@ MonoBehaviour:
     InitpassiveIDList: 
     InitVitalLaerIDList: 
     NowPower: 2
+    Rivahal: 0
     b_b_atk: 4
     b_b_def: 4
     b_b_eye: 4
     b_b_agi: 4
-    TenDayValues:
+    _baseTenDayValues:
       _list: []
     CharacterName: 
     ImpressionStringName: 
@@ -694,8 +732,16 @@ MonoBehaviour:
         SkillSpiritual: 0
         Impression: 0
         SkillPhysical: 0
-        TenDayValues:
-          _list: []
+        IsTLOA: 0
+        IsMagic: 0
+        IsBlade: 0
+        _infiniteSkillPowerUnit: 0
+        _infiniteSkillTenDaysUnit: 0
+        _mentalDamageRatio: 0
+        _powerSpread: []
+        _skillHitPer: 0
+        _a_moveset: []
+        _b_moveset: []
         _name: 
         _triggerCountMax: 0
         _triggerRollBackCount: 0
@@ -708,16 +754,14 @@ MonoBehaviour:
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
-        IsTLOA: 0
-        IsMagic: 0
-        PowerSpread: []
-        _skillPower: 0
-        MentalDamageRatio: 0
-        SkillHitPer: 0
         subEffects: 
         subVitalLayers: 
-        A_MoveSet: []
-        B_MoveSet: []
+        canEraceEffectIDs: 
+        canEraceVitalLayerIDs: 
+        CanEraceEffectCount: 0
+        Now_CanEraceEffectCount: 0
+        CanEraceVitalLayerCount: 0
+        Now_CanEraceVitalLayerCount: 0
         _defAtk: 0
         WhatSkill: 0
         ConsecutiveType: 0
@@ -727,6 +771,18 @@ MonoBehaviour:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+      TenDayBonusData:
+        TLOAData:
+          _list: []
+        MagicData:
+          _list: []
+        BladeData:
+          _list: []
+        NormalData:
+          _list: []
+      TenDayValues:
+        _list: []
+      IsBlade: 0
     InitWeaponID: 0
     NowBattleProtocol: 0
     NowDeffenceStyle: 0
@@ -734,8 +790,16 @@ MonoBehaviour:
       SkillSpiritual: 0
       Impression: 0
       SkillPhysical: 0
-      TenDayValues:
-        _list: []
+      IsTLOA: 0
+      IsMagic: 0
+      IsBlade: 0
+      _infiniteSkillPowerUnit: 0
+      _infiniteSkillTenDaysUnit: 0
+      _mentalDamageRatio: 0
+      _powerSpread: []
+      _skillHitPer: 0
+      _a_moveset: []
+      _b_moveset: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -748,16 +812,14 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
-      IsTLOA: 0
-      IsMagic: 0
-      PowerSpread: []
-      _skillPower: 0
-      MentalDamageRatio: 0
-      SkillHitPer: 0
       subEffects: 
       subVitalLayers: 
-      A_MoveSet: []
-      B_MoveSet: []
+      canEraceEffectIDs: 
+      canEraceVitalLayerIDs: 
+      CanEraceEffectCount: 0
+      Now_CanEraceEffectCount: 0
+      CanEraceVitalLayerCount: 0
+      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -767,12 +829,21 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+    SelectedEscape: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
       SkillPhysical: 0
-      TenDayValues:
-        _list: []
+      IsTLOA: 0
+      IsMagic: 0
+      IsBlade: 0
+      _infiniteSkillPowerUnit: 0
+      _infiniteSkillTenDaysUnit: 0
+      _mentalDamageRatio: 0
+      _powerSpread: []
+      _skillHitPer: 0
+      _a_moveset: []
+      _b_moveset: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -785,16 +856,14 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
-      IsTLOA: 0
-      IsMagic: 0
-      PowerSpread: []
-      _skillPower: 0
-      MentalDamageRatio: 0
-      SkillHitPer: 0
       subEffects: 
       subVitalLayers: 
-      A_MoveSet: []
-      B_MoveSet: []
+      canEraceEffectIDs: 
+      canEraceVitalLayerIDs: 
+      CanEraceEffectCount: 0
+      Now_CanEraceEffectCount: 0
+      CanEraceVitalLayerCount: 0
+      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -811,11 +880,16 @@ MonoBehaviour:
     _hp: 0
     _maxhp: 0
     _mentalHP: 0
+    _thinkingFactor: 0
     Target: 0
     RangeWill: 0
+    FreezeRangeWill: 0
     IsActiveCancelInSkillACT: 0
     MyType: 0
     DefaultImpression: 0
+    HeavyResistance: 1
+    voltenResistance: 1
+    DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
     ValidSkillIDList: 
@@ -823,11 +897,12 @@ MonoBehaviour:
     InitpassiveIDList: 
     InitVitalLaerIDList: 
     NowPower: 2
+    Rivahal: 0
     b_b_atk: 4
     b_b_def: 4
     b_b_eye: 4
     b_b_agi: 4
-    TenDayValues:
+    _baseTenDayValues:
       _list: []
     CharacterName: 
     ImpressionStringName: 
@@ -839,8 +914,16 @@ MonoBehaviour:
         SkillSpiritual: 0
         Impression: 0
         SkillPhysical: 0
-        TenDayValues:
-          _list: []
+        IsTLOA: 0
+        IsMagic: 0
+        IsBlade: 0
+        _infiniteSkillPowerUnit: 0
+        _infiniteSkillTenDaysUnit: 0
+        _mentalDamageRatio: 0
+        _powerSpread: []
+        _skillHitPer: 0
+        _a_moveset: []
+        _b_moveset: []
         _name: 
         _triggerCountMax: 0
         _triggerRollBackCount: 0
@@ -853,16 +936,14 @@ MonoBehaviour:
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
-        IsTLOA: 0
-        IsMagic: 0
-        PowerSpread: []
-        _skillPower: 0
-        MentalDamageRatio: 0
-        SkillHitPer: 0
         subEffects: 
         subVitalLayers: 
-        A_MoveSet: []
-        B_MoveSet: []
+        canEraceEffectIDs: 
+        canEraceVitalLayerIDs: 
+        CanEraceEffectCount: 0
+        Now_CanEraceEffectCount: 0
+        CanEraceVitalLayerCount: 0
+        Now_CanEraceVitalLayerCount: 0
         _defAtk: 0
         WhatSkill: 0
         ConsecutiveType: 0
@@ -872,6 +953,18 @@ MonoBehaviour:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+      TenDayBonusData:
+        TLOAData:
+          _list: []
+        MagicData:
+          _list: []
+        BladeData:
+          _list: []
+        NormalData:
+          _list: []
+      TenDayValues:
+        _list: []
+      IsBlade: 0
     InitWeaponID: 0
     NowBattleProtocol: 0
     NowDeffenceStyle: 0
@@ -879,8 +972,16 @@ MonoBehaviour:
       SkillSpiritual: 0
       Impression: 0
       SkillPhysical: 0
-      TenDayValues:
-        _list: []
+      IsTLOA: 0
+      IsMagic: 0
+      IsBlade: 0
+      _infiniteSkillPowerUnit: 0
+      _infiniteSkillTenDaysUnit: 0
+      _mentalDamageRatio: 0
+      _powerSpread: []
+      _skillHitPer: 0
+      _a_moveset: []
+      _b_moveset: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -893,16 +994,14 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
-      IsTLOA: 0
-      IsMagic: 0
-      PowerSpread: []
-      _skillPower: 0
-      MentalDamageRatio: 0
-      SkillHitPer: 0
       subEffects: 
       subVitalLayers: 
-      A_MoveSet: []
-      B_MoveSet: []
+      canEraceEffectIDs: 
+      canEraceVitalLayerIDs: 
+      CanEraceEffectCount: 0
+      Now_CanEraceEffectCount: 0
+      CanEraceVitalLayerCount: 0
+      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -912,12 +1011,21 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+    SelectedEscape: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
       SkillPhysical: 0
-      TenDayValues:
-        _list: []
+      IsTLOA: 0
+      IsMagic: 0
+      IsBlade: 0
+      _infiniteSkillPowerUnit: 0
+      _infiniteSkillTenDaysUnit: 0
+      _mentalDamageRatio: 0
+      _powerSpread: []
+      _skillHitPer: 0
+      _a_moveset: []
+      _b_moveset: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -930,16 +1038,14 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
-      IsTLOA: 0
-      IsMagic: 0
-      PowerSpread: []
-      _skillPower: 0
-      MentalDamageRatio: 0
-      SkillHitPer: 0
       subEffects: 
       subVitalLayers: 
-      A_MoveSet: []
-      B_MoveSet: []
+      canEraceEffectIDs: 
+      canEraceVitalLayerIDs: 
+      CanEraceEffectCount: 0
+      Now_CanEraceEffectCount: 0
+      CanEraceVitalLayerCount: 0
+      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -956,11 +1062,16 @@ MonoBehaviour:
     _hp: 0
     _maxhp: 0
     _mentalHP: 0
+    _thinkingFactor: 0
     Target: 0
     RangeWill: 0
+    FreezeRangeWill: 0
     IsActiveCancelInSkillACT: 0
     MyType: 0
     DefaultImpression: 0
+    HeavyResistance: 1
+    voltenResistance: 1
+    DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
     ValidSkillIDList: 
@@ -968,11 +1079,12 @@ MonoBehaviour:
     InitpassiveIDList: 
     InitVitalLaerIDList: 
     NowPower: 0
+    Rivahal: 0
     b_b_atk: 4
     b_b_def: 4
     b_b_eye: 4
     b_b_agi: 4
-    TenDayValues:
+    _baseTenDayValues:
       _list: []
     CharacterName: "\u30B8\u30FC\u30CE"
     ImpressionStringName: 
@@ -984,8 +1096,16 @@ MonoBehaviour:
         SkillSpiritual: 0
         Impression: 0
         SkillPhysical: 0
-        TenDayValues:
-          _list: []
+        IsTLOA: 0
+        IsMagic: 0
+        IsBlade: 0
+        _infiniteSkillPowerUnit: 0
+        _infiniteSkillTenDaysUnit: 0
+        _mentalDamageRatio: 0
+        _powerSpread: []
+        _skillHitPer: 0
+        _a_moveset: []
+        _b_moveset: []
         _name: 
         _triggerCountMax: 0
         _triggerRollBackCount: 0
@@ -998,16 +1118,14 @@ MonoBehaviour:
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
-        IsTLOA: 0
-        IsMagic: 0
-        PowerSpread: []
-        _skillPower: 0
-        MentalDamageRatio: 0
-        SkillHitPer: 0
         subEffects: 
         subVitalLayers: 
-        A_MoveSet: []
-        B_MoveSet: []
+        canEraceEffectIDs: 
+        canEraceVitalLayerIDs: 
+        CanEraceEffectCount: 0
+        Now_CanEraceEffectCount: 0
+        CanEraceVitalLayerCount: 0
+        Now_CanEraceVitalLayerCount: 0
         _defAtk: 0
         WhatSkill: 0
         ConsecutiveType: 0
@@ -1017,6 +1135,18 @@ MonoBehaviour:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+      TenDayBonusData:
+        TLOAData:
+          _list: []
+        MagicData:
+          _list: []
+        BladeData:
+          _list: []
+        NormalData:
+          _list: []
+      TenDayValues:
+        _list: []
+      IsBlade: 0
     InitWeaponID: 0
     NowBattleProtocol: 0
     NowDeffenceStyle: 0
@@ -1024,8 +1154,16 @@ MonoBehaviour:
       SkillSpiritual: 0
       Impression: 0
       SkillPhysical: 0
-      TenDayValues:
-        _list: []
+      IsTLOA: 0
+      IsMagic: 0
+      IsBlade: 0
+      _infiniteSkillPowerUnit: 0
+      _infiniteSkillTenDaysUnit: 0
+      _mentalDamageRatio: 0
+      _powerSpread: []
+      _skillHitPer: 0
+      _a_moveset: []
+      _b_moveset: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -1038,19 +1176,14 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
-      IsTLOA: 0
-      IsMagic: 0
-      PowerSpread:
-      - 0
-      - 0
-      - 0
-      _skillPower: 0
-      MentalDamageRatio: 0
-      SkillHitPer: 0
       subEffects: 
       subVitalLayers: 
-      A_MoveSet: []
-      B_MoveSet: []
+      canEraceEffectIDs: 
+      canEraceVitalLayerIDs: 
+      CanEraceEffectCount: 0
+      Now_CanEraceEffectCount: 0
+      CanEraceVitalLayerCount: 0
+      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -1060,12 +1193,21 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+    SelectedEscape: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
       SkillPhysical: 0
-      TenDayValues:
-        _list: []
+      IsTLOA: 0
+      IsMagic: 0
+      IsBlade: 0
+      _infiniteSkillPowerUnit: 0
+      _infiniteSkillTenDaysUnit: 0
+      _mentalDamageRatio: 0
+      _powerSpread: []
+      _skillHitPer: 0
+      _a_moveset: []
+      _b_moveset: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -1078,19 +1220,14 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
-      IsTLOA: 0
-      IsMagic: 0
-      PowerSpread:
-      - 0
-      - 0
-      - 0
-      _skillPower: 0
-      MentalDamageRatio: 0
-      SkillHitPer: 0
       subEffects: 
       subVitalLayers: 
-      A_MoveSet: []
-      B_MoveSet: []
+      canEraceEffectIDs: 
+      canEraceVitalLayerIDs: 
+      CanEraceEffectCount: 0
+      Now_CanEraceEffectCount: 0
+      CanEraceVitalLayerCount: 0
+      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -1107,11 +1244,16 @@ MonoBehaviour:
     _hp: 3
     _maxhp: 0
     _mentalHP: 0
+    _thinkingFactor: 0
     Target: 0
     RangeWill: 0
+    FreezeRangeWill: 0
     IsActiveCancelInSkillACT: 0
     MyType: 0
     DefaultImpression: 0
+    HeavyResistance: 1
+    voltenResistance: 1
+    DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
     ValidSkillIDList: 
@@ -1119,11 +1261,12 @@ MonoBehaviour:
     InitpassiveIDList: 
     InitVitalLaerIDList: 
     NowPower: 0
+    Rivahal: 0
     b_b_atk: 4
     b_b_def: 4
     b_b_eye: 4
     b_b_agi: 4
-    TenDayValues:
+    _baseTenDayValues:
       _list: []
     CharacterName: 
     ImpressionStringName: 
@@ -1135,8 +1278,16 @@ MonoBehaviour:
         SkillSpiritual: 0
         Impression: 0
         SkillPhysical: 0
-        TenDayValues:
-          _list: []
+        IsTLOA: 0
+        IsMagic: 0
+        IsBlade: 0
+        _infiniteSkillPowerUnit: 0
+        _infiniteSkillTenDaysUnit: 0
+        _mentalDamageRatio: 0
+        _powerSpread: []
+        _skillHitPer: 0
+        _a_moveset: []
+        _b_moveset: []
         _name: 
         _triggerCountMax: 0
         _triggerRollBackCount: 0
@@ -1149,16 +1300,14 @@ MonoBehaviour:
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
-        IsTLOA: 0
-        IsMagic: 0
-        PowerSpread: []
-        _skillPower: 0
-        MentalDamageRatio: 0
-        SkillHitPer: 0
         subEffects: 
         subVitalLayers: 
-        A_MoveSet: []
-        B_MoveSet: []
+        canEraceEffectIDs: 
+        canEraceVitalLayerIDs: 
+        CanEraceEffectCount: 0
+        Now_CanEraceEffectCount: 0
+        CanEraceVitalLayerCount: 0
+        Now_CanEraceVitalLayerCount: 0
         _defAtk: 0
         WhatSkill: 0
         ConsecutiveType: 0
@@ -1168,6 +1317,18 @@ MonoBehaviour:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+      TenDayBonusData:
+        TLOAData:
+          _list: []
+        MagicData:
+          _list: []
+        BladeData:
+          _list: []
+        NormalData:
+          _list: []
+      TenDayValues:
+        _list: []
+      IsBlade: 0
     InitWeaponID: 0
     NowBattleProtocol: 0
     NowDeffenceStyle: 0
@@ -1175,8 +1336,16 @@ MonoBehaviour:
       SkillSpiritual: 0
       Impression: 0
       SkillPhysical: 0
-      TenDayValues:
-        _list: []
+      IsTLOA: 0
+      IsMagic: 0
+      IsBlade: 0
+      _infiniteSkillPowerUnit: 0
+      _infiniteSkillTenDaysUnit: 0
+      _mentalDamageRatio: 0
+      _powerSpread: []
+      _skillHitPer: 0
+      _a_moveset: []
+      _b_moveset: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -1189,19 +1358,14 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
-      IsTLOA: 0
-      IsMagic: 0
-      PowerSpread:
-      - 0
-      - 0
-      - 0
-      _skillPower: 0
-      MentalDamageRatio: 0
-      SkillHitPer: 0
       subEffects: 
       subVitalLayers: 
-      A_MoveSet: []
-      B_MoveSet: []
+      canEraceEffectIDs: 
+      canEraceVitalLayerIDs: 
+      CanEraceEffectCount: 0
+      Now_CanEraceEffectCount: 0
+      CanEraceVitalLayerCount: 0
+      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -1211,12 +1375,21 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+    SelectedEscape: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
       SkillPhysical: 0
-      TenDayValues:
-        _list: []
+      IsTLOA: 0
+      IsMagic: 0
+      IsBlade: 0
+      _infiniteSkillPowerUnit: 0
+      _infiniteSkillTenDaysUnit: 0
+      _mentalDamageRatio: 0
+      _powerSpread: []
+      _skillHitPer: 0
+      _a_moveset: []
+      _b_moveset: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -1229,19 +1402,14 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
-      IsTLOA: 0
-      IsMagic: 0
-      PowerSpread:
-      - 0
-      - 0
-      - 0
-      _skillPower: 0
-      MentalDamageRatio: 0
-      SkillHitPer: 0
       subEffects: 
       subVitalLayers: 
-      A_MoveSet: []
-      B_MoveSet: []
+      canEraceEffectIDs: 
+      canEraceVitalLayerIDs: 
+      CanEraceEffectCount: 0
+      Now_CanEraceEffectCount: 0
+      CanEraceVitalLayerCount: 0
+      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -1258,11 +1426,16 @@ MonoBehaviour:
     _hp: 0
     _maxhp: 0
     _mentalHP: 0
+    _thinkingFactor: 0
     Target: 0
     RangeWill: 0
+    FreezeRangeWill: 0
     IsActiveCancelInSkillACT: 0
     MyType: 0
     DefaultImpression: 0
+    HeavyResistance: 1
+    voltenResistance: 1
+    DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
     ValidSkillIDList: 
@@ -1270,14 +1443,13 @@ MonoBehaviour:
     InitpassiveIDList: 
     InitVitalLaerIDList: 
     NowPower: 0
+    Rivahal: 0
     b_b_atk: 4
     b_b_def: 4
     b_b_eye: 4
     b_b_agi: 4
-    TenDayValues:
-      _list:
-      - key: 0
-        value: 0
+    _baseTenDayValues:
+      _list: []
     CharacterName: 
     ImpressionStringName: 
     NowUseWeapon:
@@ -1288,8 +1460,16 @@ MonoBehaviour:
         SkillSpiritual: 0
         Impression: 0
         SkillPhysical: 0
-        TenDayValues:
-          _list: []
+        IsTLOA: 0
+        IsMagic: 0
+        IsBlade: 0
+        _infiniteSkillPowerUnit: 0
+        _infiniteSkillTenDaysUnit: 0
+        _mentalDamageRatio: 0
+        _powerSpread: []
+        _skillHitPer: 0
+        _a_moveset: []
+        _b_moveset: []
         _name: 
         _triggerCountMax: 0
         _triggerRollBackCount: 0
@@ -1302,16 +1482,14 @@ MonoBehaviour:
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
-        IsTLOA: 0
-        IsMagic: 0
-        PowerSpread: []
-        _skillPower: 0
-        MentalDamageRatio: 0
-        SkillHitPer: 0
         subEffects: 
         subVitalLayers: 
-        A_MoveSet: []
-        B_MoveSet: []
+        canEraceEffectIDs: 
+        canEraceVitalLayerIDs: 
+        CanEraceEffectCount: 0
+        Now_CanEraceEffectCount: 0
+        CanEraceVitalLayerCount: 0
+        Now_CanEraceVitalLayerCount: 0
         _defAtk: 0
         WhatSkill: 0
         ConsecutiveType: 0
@@ -1321,6 +1499,18 @@ MonoBehaviour:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+      TenDayBonusData:
+        TLOAData:
+          _list: []
+        MagicData:
+          _list: []
+        BladeData:
+          _list: []
+        NormalData:
+          _list: []
+      TenDayValues:
+        _list: []
+      IsBlade: 0
     InitWeaponID: 0
     NowBattleProtocol: 0
     NowDeffenceStyle: 2
@@ -1328,8 +1518,16 @@ MonoBehaviour:
       SkillSpiritual: 0
       Impression: 0
       SkillPhysical: 0
-      TenDayValues:
-        _list: []
+      IsTLOA: 0
+      IsMagic: 0
+      IsBlade: 0
+      _infiniteSkillPowerUnit: 0
+      _infiniteSkillTenDaysUnit: 0
+      _mentalDamageRatio: 0
+      _powerSpread: []
+      _skillHitPer: 0
+      _a_moveset: []
+      _b_moveset: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -1342,21 +1540,14 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
-      IsTLOA: 0
-      IsMagic: 0
-      PowerSpread:
-      - 0
-      - 0
-      - 0
-      _skillPower: 0
-      MentalDamageRatio: 0
-      SkillHitPer: 0
       subEffects: 
       subVitalLayers: 
-      A_MoveSet: []
-      B_MoveSet:
-      - States: 
-        DEFATKList: []
+      canEraceEffectIDs: 
+      canEraceVitalLayerIDs: 
+      CanEraceEffectCount: 0
+      Now_CanEraceEffectCount: 0
+      CanEraceVitalLayerCount: 0
+      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -1366,12 +1557,21 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+    SelectedEscape: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
       SkillPhysical: 0
-      TenDayValues:
-        _list: []
+      IsTLOA: 0
+      IsMagic: 0
+      IsBlade: 0
+      _infiniteSkillPowerUnit: 0
+      _infiniteSkillTenDaysUnit: 0
+      _mentalDamageRatio: 0
+      _powerSpread: []
+      _skillHitPer: 0
+      _a_moveset: []
+      _b_moveset: []
       _name: 
       _triggerCountMax: 0
       _triggerRollBackCount: 0
@@ -1384,19 +1584,14 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
-      IsTLOA: 0
-      IsMagic: 0
-      PowerSpread:
-      - 0
-      - 0
-      - 0
-      _skillPower: 0
-      MentalDamageRatio: 0
-      SkillHitPer: 0
       subEffects: 
       subVitalLayers: 
-      A_MoveSet: []
-      B_MoveSet: []
+      canEraceEffectIDs: 
+      canEraceVitalLayerIDs: 
+      CanEraceEffectCount: 0
+      Now_CanEraceEffectCount: 0
+      CanEraceVitalLayerCount: 0
+      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       WhatSkill: 0
       ConsecutiveType: 0
@@ -1413,11 +1608,16 @@ MonoBehaviour:
     _hp: 0
     _maxhp: 0
     _mentalHP: 0
+    _thinkingFactor: 0
     Target: 0
     RangeWill: 0
+    FreezeRangeWill: 0
     IsActiveCancelInSkillACT: 0
     MyType: 0
     DefaultImpression: 0
+    HeavyResistance: 1
+    voltenResistance: 1
+    DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
     ValidSkillIDList: 
@@ -1508,11 +1708,12 @@ MonoBehaviour:
         InitpassiveIDList: 
         InitVitalLaerIDList: 
         NowPower: 0
+        Rivahal: 0
         b_b_atk: 4
         b_b_def: 4
         b_b_eye: 4
         b_b_agi: 4
-        TenDayValues:
+        _baseTenDayValues:
           _list: []
         CharacterName: 
         ImpressionStringName: 
@@ -1524,8 +1725,16 @@ MonoBehaviour:
             SkillSpiritual: 0
             Impression: 0
             SkillPhysical: 0
-            TenDayValues:
-              _list: []
+            IsTLOA: 0
+            IsMagic: 0
+            IsBlade: 0
+            _infiniteSkillPowerUnit: 0
+            _infiniteSkillTenDaysUnit: 0
+            _mentalDamageRatio: 0
+            _powerSpread: []
+            _skillHitPer: 0
+            _a_moveset: []
+            _b_moveset: []
             _name: 
             _triggerCountMax: 0
             _triggerRollBackCount: 0
@@ -1538,16 +1747,14 @@ MonoBehaviour:
             CanSelectAggressiveCommit: 0
             SKillDidWaitCount: 0
             SkillName: 
-            IsTLOA: 0
-            IsMagic: 0
-            PowerSpread: []
-            _skillPower: 0
-            MentalDamageRatio: 0
-            SkillHitPer: 0
             subEffects: 
             subVitalLayers: 
-            A_MoveSet: []
-            B_MoveSet: []
+            canEraceEffectIDs: 
+            canEraceVitalLayerIDs: 
+            CanEraceEffectCount: 0
+            Now_CanEraceEffectCount: 0
+            CanEraceVitalLayerCount: 0
+            Now_CanEraceVitalLayerCount: 0
             _defAtk: 0
             WhatSkill: 0
             ConsecutiveType: 0
@@ -1557,6 +1764,18 @@ MonoBehaviour:
               _list: []
             HitRangePercentageDictionary:
               _list: []
+          TenDayBonusData:
+            TLOAData:
+              _list: []
+            MagicData:
+              _list: []
+            BladeData:
+              _list: []
+            NormalData:
+              _list: []
+          TenDayValues:
+            _list: []
+          IsBlade: 0
         InitWeaponID: 0
         NowBattleProtocol: 0
         NowDeffenceStyle: 0
@@ -1564,8 +1783,16 @@ MonoBehaviour:
           SkillSpiritual: 0
           Impression: 0
           SkillPhysical: 0
-          TenDayValues:
-            _list: []
+          IsTLOA: 0
+          IsMagic: 0
+          IsBlade: 0
+          _infiniteSkillPowerUnit: 0
+          _infiniteSkillTenDaysUnit: 0
+          _mentalDamageRatio: 0
+          _powerSpread: []
+          _skillHitPer: 0
+          _a_moveset: []
+          _b_moveset: []
           _name: 
           _triggerCountMax: 0
           _triggerRollBackCount: 0
@@ -1578,19 +1805,14 @@ MonoBehaviour:
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
-          IsTLOA: 0
-          IsMagic: 0
-          PowerSpread:
-          - 0
-          - 0
-          - 0
-          _skillPower: 0
-          MentalDamageRatio: 0
-          SkillHitPer: 0
           subEffects: 
           subVitalLayers: 
-          A_MoveSet: []
-          B_MoveSet: []
+          canEraceEffectIDs: 
+          canEraceVitalLayerIDs: 
+          CanEraceEffectCount: 0
+          Now_CanEraceEffectCount: 0
+          CanEraceVitalLayerCount: 0
+          Now_CanEraceVitalLayerCount: 0
           _defAtk: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -1600,12 +1822,21 @@ MonoBehaviour:
             _list: []
           HitRangePercentageDictionary:
             _list: []
+        SelectedEscape: 0
         FreezeUseSkill:
           SkillSpiritual: 0
           Impression: 0
           SkillPhysical: 0
-          TenDayValues:
-            _list: []
+          IsTLOA: 0
+          IsMagic: 0
+          IsBlade: 0
+          _infiniteSkillPowerUnit: 0
+          _infiniteSkillTenDaysUnit: 0
+          _mentalDamageRatio: 0
+          _powerSpread: []
+          _skillHitPer: 0
+          _a_moveset: []
+          _b_moveset: []
           _name: 
           _triggerCountMax: 0
           _triggerRollBackCount: 0
@@ -1618,19 +1849,14 @@ MonoBehaviour:
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
-          IsTLOA: 0
-          IsMagic: 0
-          PowerSpread:
-          - 0
-          - 0
-          - 0
-          _skillPower: 0
-          MentalDamageRatio: 0
-          SkillHitPer: 0
           subEffects: 
           subVitalLayers: 
-          A_MoveSet: []
-          B_MoveSet: []
+          canEraceEffectIDs: 
+          canEraceVitalLayerIDs: 
+          CanEraceEffectCount: 0
+          Now_CanEraceEffectCount: 0
+          CanEraceVitalLayerCount: 0
+          Now_CanEraceVitalLayerCount: 0
           _defAtk: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -1647,25 +1873,32 @@ MonoBehaviour:
         _hp: 0
         _maxhp: 0
         _mentalHP: 0
+        _thinkingFactor: 0
         Target: 0
         RangeWill: 0
+        FreezeRangeWill: 0
         IsActiveCancelInSkillACT: 0
         MyType: 0
         DefaultImpression: 0
+        HeavyResistance: 1
+        voltenResistance: 1
+        DishSmackRsistance: 1
         broken: 0
         _machineBrokenRate: 0.3
         RecovelySteps: 0
+        EscapeAttemptRate: 0
     - rid: 3171372139819302913
       type: {class: NormalEnemy, ns: , asm: Assembly-CSharp}
       data:
         InitpassiveIDList: 
         InitVitalLaerIDList: 
         NowPower: 2
+        Rivahal: 0
         b_b_atk: 4
         b_b_def: 4
         b_b_eye: 4
         b_b_agi: 4
-        TenDayValues:
+        _baseTenDayValues:
           _list: []
         CharacterName: 
         ImpressionStringName: 
@@ -1677,8 +1910,16 @@ MonoBehaviour:
             SkillSpiritual: 0
             Impression: 0
             SkillPhysical: 0
-            TenDayValues:
-              _list: []
+            IsTLOA: 0
+            IsMagic: 0
+            IsBlade: 0
+            _infiniteSkillPowerUnit: 0
+            _infiniteSkillTenDaysUnit: 0
+            _mentalDamageRatio: 0
+            _powerSpread: []
+            _skillHitPer: 0
+            _a_moveset: []
+            _b_moveset: []
             _name: 
             _triggerCountMax: 0
             _triggerRollBackCount: 0
@@ -1691,16 +1932,14 @@ MonoBehaviour:
             CanSelectAggressiveCommit: 0
             SKillDidWaitCount: 0
             SkillName: 
-            IsTLOA: 0
-            IsMagic: 0
-            PowerSpread: []
-            _skillPower: 0
-            MentalDamageRatio: 0
-            SkillHitPer: 0
             subEffects: 
             subVitalLayers: 
-            A_MoveSet: []
-            B_MoveSet: []
+            canEraceEffectIDs: 
+            canEraceVitalLayerIDs: 
+            CanEraceEffectCount: 0
+            Now_CanEraceEffectCount: 0
+            CanEraceVitalLayerCount: 0
+            Now_CanEraceVitalLayerCount: 0
             _defAtk: 0
             WhatSkill: 0
             ConsecutiveType: 0
@@ -1710,6 +1949,18 @@ MonoBehaviour:
               _list: []
             HitRangePercentageDictionary:
               _list: []
+          TenDayBonusData:
+            TLOAData:
+              _list: []
+            MagicData:
+              _list: []
+            BladeData:
+              _list: []
+            NormalData:
+              _list: []
+          TenDayValues:
+            _list: []
+          IsBlade: 0
         InitWeaponID: 0
         NowBattleProtocol: 0
         NowDeffenceStyle: 0
@@ -1717,8 +1968,16 @@ MonoBehaviour:
           SkillSpiritual: 0
           Impression: 0
           SkillPhysical: 0
-          TenDayValues:
-            _list: []
+          IsTLOA: 0
+          IsMagic: 0
+          IsBlade: 0
+          _infiniteSkillPowerUnit: 0
+          _infiniteSkillTenDaysUnit: 0
+          _mentalDamageRatio: 0
+          _powerSpread: []
+          _skillHitPer: 0
+          _a_moveset: []
+          _b_moveset: []
           _name: 
           _triggerCountMax: 0
           _triggerRollBackCount: 0
@@ -1731,16 +1990,14 @@ MonoBehaviour:
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
-          IsTLOA: 0
-          IsMagic: 0
-          PowerSpread: []
-          _skillPower: 0
-          MentalDamageRatio: 0
-          SkillHitPer: 0
           subEffects: 
           subVitalLayers: 
-          A_MoveSet: []
-          B_MoveSet: []
+          canEraceEffectIDs: 
+          canEraceVitalLayerIDs: 
+          CanEraceEffectCount: 0
+          Now_CanEraceEffectCount: 0
+          CanEraceVitalLayerCount: 0
+          Now_CanEraceVitalLayerCount: 0
           _defAtk: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -1750,12 +2007,21 @@ MonoBehaviour:
             _list: []
           HitRangePercentageDictionary:
             _list: []
+        SelectedEscape: 0
         FreezeUseSkill:
           SkillSpiritual: 0
           Impression: 0
           SkillPhysical: 0
-          TenDayValues:
-            _list: []
+          IsTLOA: 0
+          IsMagic: 0
+          IsBlade: 0
+          _infiniteSkillPowerUnit: 0
+          _infiniteSkillTenDaysUnit: 0
+          _mentalDamageRatio: 0
+          _powerSpread: []
+          _skillHitPer: 0
+          _a_moveset: []
+          _b_moveset: []
           _name: 
           _triggerCountMax: 0
           _triggerRollBackCount: 0
@@ -1768,16 +2034,14 @@ MonoBehaviour:
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
-          IsTLOA: 0
-          IsMagic: 0
-          PowerSpread: []
-          _skillPower: 0
-          MentalDamageRatio: 0
-          SkillHitPer: 0
           subEffects: 
           subVitalLayers: 
-          A_MoveSet: []
-          B_MoveSet: []
+          canEraceEffectIDs: 
+          canEraceVitalLayerIDs: 
+          CanEraceEffectCount: 0
+          Now_CanEraceEffectCount: 0
+          CanEraceVitalLayerCount: 0
+          Now_CanEraceVitalLayerCount: 0
           _defAtk: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -1794,25 +2058,32 @@ MonoBehaviour:
         _hp: 0
         _maxhp: 0
         _mentalHP: 0
+        _thinkingFactor: 0
         Target: 0
         RangeWill: 0
+        FreezeRangeWill: 0
         IsActiveCancelInSkillACT: 0
         MyType: 0
         DefaultImpression: 0
+        HeavyResistance: 1
+        voltenResistance: 1
+        DishSmackRsistance: 1
         broken: 0
         _machineBrokenRate: 0.3
         RecovelySteps: 0
+        EscapeAttemptRate: 0
     - rid: 6711005805807403016
       type: {class: butterfly, ns: , asm: Assembly-CSharp}
       data:
         InitpassiveIDList: 
         InitVitalLaerIDList: 
         NowPower: 0
+        Rivahal: 0
         b_b_atk: 4
         b_b_def: 4
         b_b_eye: 4
         b_b_agi: 4
-        TenDayValues:
+        _baseTenDayValues:
           _list: []
         CharacterName: 
         ImpressionStringName: 
@@ -1824,8 +2095,16 @@ MonoBehaviour:
             SkillSpiritual: 0
             Impression: 0
             SkillPhysical: 0
-            TenDayValues:
-              _list: []
+            IsTLOA: 0
+            IsMagic: 0
+            IsBlade: 0
+            _infiniteSkillPowerUnit: 0
+            _infiniteSkillTenDaysUnit: 0
+            _mentalDamageRatio: 0
+            _powerSpread: []
+            _skillHitPer: 0
+            _a_moveset: []
+            _b_moveset: []
             _name: 
             _triggerCountMax: 0
             _triggerRollBackCount: 0
@@ -1838,16 +2117,14 @@ MonoBehaviour:
             CanSelectAggressiveCommit: 0
             SKillDidWaitCount: 0
             SkillName: 
-            IsTLOA: 0
-            IsMagic: 0
-            PowerSpread: []
-            _skillPower: 0
-            MentalDamageRatio: 0
-            SkillHitPer: 0
             subEffects: 
             subVitalLayers: 
-            A_MoveSet: []
-            B_MoveSet: []
+            canEraceEffectIDs: 
+            canEraceVitalLayerIDs: 
+            CanEraceEffectCount: 0
+            Now_CanEraceEffectCount: 0
+            CanEraceVitalLayerCount: 0
+            Now_CanEraceVitalLayerCount: 0
             _defAtk: 0
             WhatSkill: 0
             ConsecutiveType: 0
@@ -1857,6 +2134,18 @@ MonoBehaviour:
               _list: []
             HitRangePercentageDictionary:
               _list: []
+          TenDayBonusData:
+            TLOAData:
+              _list: []
+            MagicData:
+              _list: []
+            BladeData:
+              _list: []
+            NormalData:
+              _list: []
+          TenDayValues:
+            _list: []
+          IsBlade: 0
         InitWeaponID: 0
         NowBattleProtocol: 0
         NowDeffenceStyle: 0
@@ -1864,8 +2153,16 @@ MonoBehaviour:
           SkillSpiritual: 0
           Impression: 0
           SkillPhysical: 0
-          TenDayValues:
-            _list: []
+          IsTLOA: 0
+          IsMagic: 0
+          IsBlade: 0
+          _infiniteSkillPowerUnit: 0
+          _infiniteSkillTenDaysUnit: 0
+          _mentalDamageRatio: 0
+          _powerSpread: []
+          _skillHitPer: 0
+          _a_moveset: []
+          _b_moveset: []
           _name: 
           _triggerCountMax: 0
           _triggerRollBackCount: 0
@@ -1878,16 +2175,14 @@ MonoBehaviour:
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
-          IsTLOA: 0
-          IsMagic: 0
-          PowerSpread: []
-          _skillPower: 0
-          MentalDamageRatio: 0
-          SkillHitPer: 0
           subEffects: 
           subVitalLayers: 
-          A_MoveSet: []
-          B_MoveSet: []
+          canEraceEffectIDs: 
+          canEraceVitalLayerIDs: 
+          CanEraceEffectCount: 0
+          Now_CanEraceEffectCount: 0
+          CanEraceVitalLayerCount: 0
+          Now_CanEraceVitalLayerCount: 0
           _defAtk: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -1897,12 +2192,21 @@ MonoBehaviour:
             _list: []
           HitRangePercentageDictionary:
             _list: []
+        SelectedEscape: 0
         FreezeUseSkill:
           SkillSpiritual: 0
           Impression: 0
           SkillPhysical: 0
-          TenDayValues:
-            _list: []
+          IsTLOA: 0
+          IsMagic: 0
+          IsBlade: 0
+          _infiniteSkillPowerUnit: 0
+          _infiniteSkillTenDaysUnit: 0
+          _mentalDamageRatio: 0
+          _powerSpread: []
+          _skillHitPer: 0
+          _a_moveset: []
+          _b_moveset: []
           _name: 
           _triggerCountMax: 0
           _triggerRollBackCount: 0
@@ -1915,16 +2219,14 @@ MonoBehaviour:
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
-          IsTLOA: 0
-          IsMagic: 0
-          PowerSpread: []
-          _skillPower: 0
-          MentalDamageRatio: 0
-          SkillHitPer: 0
           subEffects: 
           subVitalLayers: 
-          A_MoveSet: []
-          B_MoveSet: []
+          canEraceEffectIDs: 
+          canEraceVitalLayerIDs: 
+          CanEraceEffectCount: 0
+          Now_CanEraceEffectCount: 0
+          CanEraceVitalLayerCount: 0
+          Now_CanEraceVitalLayerCount: 0
           _defAtk: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -1941,14 +2243,20 @@ MonoBehaviour:
         _hp: 0
         _maxhp: 0
         _mentalHP: 0
+        _thinkingFactor: 0
         Target: 0
         RangeWill: 0
+        FreezeRangeWill: 0
         IsActiveCancelInSkillACT: 0
         MyType: 0
         DefaultImpression: 0
+        HeavyResistance: 1
+        voltenResistance: 1
+        DishSmackRsistance: 1
         broken: 0
         _machineBrokenRate: 0.3
         RecovelySteps: 0
+        EscapeAttemptRate: 0
 --- !u!114 &78173495
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1967,9 +2275,24 @@ MonoBehaviour:
   - rid: 8980149223421378560
   - rid: 8285219776706641920
   - rid: 8285219776706641921
+  - rid: 3171372632022712320
   references:
     version: 2
     RefIds:
+    - rid: 3171372632022712320
+      type: {class: BasePassive, ns: , asm: Assembly-CSharp}
+      data:
+        OkImpression: -1
+        OkType: -1
+        IsCantACT: 0
+        IsBad: 0
+        MaxPassivePower: 0
+        PassiveName: "TLOA\u3067\u306F\u3068\u3069\u3081\u304C\u3055\u305B\u306A\u3044"
+        ID: 5
+        DurationTurn: -1
+        DurationWalk: -1
+        RemoveOnDeath: 0
+        VitalLayers: []
     - rid: 6711005805807403020
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -1982,7 +2305,7 @@ MonoBehaviour:
         ID: 0
         DurationTurn: -1
         DurationWalk: -1
-        RemoveOnDeath: 1
+        RemoveOnDeath: 0
         VitalLayers:
         - VitalLayerId: 0
           GrantTiming: 0
@@ -2106,10 +2429,16 @@ MonoBehaviour:
           SkillSpiritual: 0
           Impression: 0
           SkillPhysical: 0
-          TenDayValues:
-            _list:
-            - key: 0
-              value: 1
+          IsTLOA: 0
+          IsMagic: 0
+          IsBlade: 0
+          _infiniteSkillPowerUnit: 0
+          _infiniteSkillTenDaysUnit: 0
+          _mentalDamageRatio: 0
+          _powerSpread: []
+          _skillHitPer: 0
+          _a_moveset: []
+          _b_moveset: []
           _name: "\u63B4\u3093\u3067\u6295\u3052\u308B"
           _triggerCountMax: 0
           _triggerRollBackCount: 0
@@ -2122,16 +2451,14 @@ MonoBehaviour:
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
-          IsTLOA: 0
-          IsMagic: 0
-          PowerSpread: []
-          _skillPower: 0
-          MentalDamageRatio: 0
-          SkillHitPer: 15
           subEffects: 
           subVitalLayers: 
-          A_MoveSet: []
-          B_MoveSet: []
+          canEraceEffectIDs: 
+          canEraceVitalLayerIDs: 
+          CanEraceEffectCount: 0
+          Now_CanEraceEffectCount: 0
+          CanEraceVitalLayerCount: 0
+          Now_CanEraceVitalLayerCount: 0
           _defAtk: 0
           WhatSkill: 0
           ConsecutiveType: 0
@@ -2141,6 +2468,18 @@ MonoBehaviour:
             _list: []
           HitRangePercentageDictionary:
             _list: []
+        TenDayBonusData:
+          TLOAData:
+            _list: []
+          MagicData:
+            _list: []
+          BladeData:
+            _list: []
+          NormalData:
+            _list: []
+        TenDayValues:
+          _list: []
+        IsBlade: 0
 --- !u!1 &90538794
 GameObject:
   m_ObjectHideFlags: 0

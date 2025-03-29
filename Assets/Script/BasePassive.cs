@@ -96,7 +96,7 @@ public class BasePassive
     /// 死亡時に消えるパッシブかどうか
     /// </summary>
     [SerializeField]
-    bool RemoveOnDeath = true;
+    bool RemoveOnDeath = false;
     
 
     /// <summary>
