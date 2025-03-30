@@ -1229,18 +1229,20 @@ public class BaseSkill
     /// スキルにより補正された最終命中率
     /// 引数の命中凌駕はIsReactHitで使われるものなので、キャラ同士の命中回避計算が
     /// 必要ないものであれば、引数を指定しなくていい(デフォ値)
+    /// またHitResultの引数は事前の命中回避計算等でどういうヒット結果になったかを渡して最終結果として返すため。
+    /// スキル命中onlyならデフォルトで普通のHitが指定されるので渡さなくてOK
     /// </summary>
     /// <param name="supremacyBonus">命中ボーナス　主に命中凌駕用途</param>>
-    public virtual HitResult SkillHitCalc(float supremacyBonus = 0)
+    public virtual HitResult SkillHitCalc(float supremacyBonus = 0,HitResult hitResult = HitResult.Hit)
     {
         //割り込みカウンターなら確実
-        if(Doer.HasPassive(1)) return HitResult.Hit;
+        if(Doer.HasPassive(1)) return hitResult;
 
         //通常計算
         var rndMin = RandomEx.Shared.NextInt(3);//ボーナスがある場合ランダムで三パーセント~0パーセント引かれる
         if(supremacyBonus>rndMin)supremacyBonus -= rndMin;
 
-        return RandomEx.Shared.NextInt(100) < supremacyBonus + SkillHitPer ? HitResult.Hit : HitResult.CompleteEvade;
+        return RandomEx.Shared.NextInt(100) < supremacyBonus + SkillHitPer ? hitResult : HitResult.CompleteEvade;
     }
 
     /// <summary>

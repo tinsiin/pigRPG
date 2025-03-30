@@ -203,7 +203,7 @@ public class ACTList
         }
 
         /// <summary>
-        /// 追加し整理する関数
+        /// スキル対象者を追加し整理する関数
         /// </summary>
         public void CharaAdd(BaseStates chara)
         {

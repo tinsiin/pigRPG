@@ -5922,44 +5922,77 @@ public abstract class BaseStates
             minusMyChance = Attacker.EYE().Total;
         }
 
-        //術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
-        if (RandomEx.Shared.NextFloat(Attacker.EYE().Total + EvasionRate(AGI().Total,Attacker)) < Attacker.EYE().Total - minusMyChance)
+        var minimumHitChanceResult= HitResult.CompleteEvade;//命中回避計算外のミニマムヒットチャンス
+        if(rollper(4.4f))//ミニマムヒットチャンス  4.4%の確率でかすりとクリティカルの計算
         {
-            //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
-            return skill.SkillHitCalc(AccuracySupremacy(Attacker.EYE().Total, AGI().Total));
-        }else
-        {//命中回避計算が外れた場合、かすりとクリティカルの計算に入る
-
-            if(rollper(4.4f))//4.4%の確率でかすりとクリティカルの計算
+            //三分の一で二分の一計算、三分の二ならステータス計算に入ります
+            //三分の1でかすりとクリティカルは完全二分の一計算
+            if(RandomEx.Shared.NextFloat(3) < 1)
             {
-                //三分の一で二分の一計算、三分の二ならステータス計算に入ります
-                //三分の1でかすりとクリティカルは完全二分の一計算
-                if(RandomEx.Shared.NextFloat(3) < 1)
+                if(RandomEx.Shared.NextFloat(2) < 1)
+                {
+                    minimumHitChanceResult = HitResult.Critical;
+                }
+                else
+                {
+                    minimumHitChanceResult = HitResult.Graze;
+                }
+            }else
+            {//残り三分の二で、ステータス比較の計算
+                var atkerCalcEYEAGI = Attacker.EYE().Total + Attacker.AGI().Total *0.6f;//minusMychanceは瀬戸際の攻防計算なので使用しない
+                var defCalcEYEAGI = EYE().Total + AGI().Total *0.6f;
+                if(RandomEx.Shared.NextFloat(atkerCalcEYEAGI + defCalcEYEAGI) < atkerCalcEYEAGI)
+                {
+                    minimumHitChanceResult = HitResult.Critical;//攻撃者側のステータスが乱数で出たなら、クリティカル
+                }
+                else
+                {
+                    minimumHitChanceResult = HitResult.Graze;//そうでなければかすり
+                }
+            }
+        }
+
+        //術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
+        if (RandomEx.Shared.NextFloat(Attacker.EYE().Total + EvasionRate(AGI().Total,Attacker)) < Attacker.EYE().Total - minusMyChance || minimumHitChanceResult != HitResult.CompleteEvade)
+        {
+            var hitResult = minimumHitChanceResult;//ミニマムヒット前提でヒット結果変数に代入
+            //ミニマムヒットがなく、かつ、通常の命中率が満たされた場合
+            if(minimumHitChanceResult == HitResult.CompleteEvade)
+            {
+                hitResult = HitResult.Hit;//スキル命中に渡すヒット結果に通常のHitを代入
+            }
+
+            //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
+            return skill.SkillHitCalc(AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult);
+        }
+
+        //スキルが爆破型で、なおかつ被害者の自分が前のめりなら完全回避のはずがかすりになる
+        if(skill.DistributionType == AttackDistributionType.Explosion && manager.IsVanguard(this))
+        {
+            //が、AGI比較て勝ってたらそれを免除し本来の完全回避へ
+
+            //三倍以上越してると84%で避けられる
+            if(Attacker.AGI().Total * 3 < AGI().Total)
+            {
+                if(rollper(84))
+                {
+                    return HitResult.CompleteEvade;
+                }
+            }else
+            {
+                //攻撃者のAGIを二倍以上越していると、二分の一で避けられる。
+                if(Attacker.AGI().Total * 2 < AGI().Total)
                 {
                     if(RandomEx.Shared.NextFloat(2) < 1)
                     {
-                        return HitResult.Critical;
+                        return HitResult.CompleteEvade;
                     }
-                    return HitResult.Graze;
-                }else
-                {//残り三分の二で、ステータス比較の計算
-                    var atkerCalcEYEAGI = Attacker.EYE().Total + Attacker.AGI().Total *0.6f;//minusMychanceは瀬戸際の攻防計算なので使用しない
-                    var defCalcEYEAGI = EYE().Total + AGI().Total *0.6f;
-                    if(RandomEx.Shared.NextFloat(atkerCalcEYEAGI + defCalcEYEAGI) < atkerCalcEYEAGI)
-                    {
-                        return HitResult.Critical;//攻撃者側のステータスが乱数で出たなら、クリティカル
-                    }
-                    return HitResult.Graze;//そうでなければかすり
                 }
             }
-            
-
+            return HitResult.Graze;
         }
 
 
-
-
-        skill.HitConsecutiveCount = 0;//外したら連続ヒット回数がゼロ　
         return HitResult.CompleteEvade;
     }
 
