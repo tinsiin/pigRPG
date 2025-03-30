@@ -369,6 +369,10 @@ public class BaseSkill
     /// </summary>
     public bool Cantkill = false;
     /// <summary>
+    /// このスキルを実行することにより影響させる使い手の回避率でAGIに掛けられる回避補正率
+    /// </summary>
+    public float EvasionModifier = 1f;
+    /// <summary>
     /// TLOAスキルのレベルアップに必要な使用回数
     /// </summary>
     protected const int TLOA_LEVEL_DIVIDER = 120;
@@ -1227,16 +1231,16 @@ public class BaseSkill
     /// 必要ないものであれば、引数を指定しなくていい(デフォ値)
     /// </summary>
     /// <param name="supremacyBonus">命中ボーナス　主に命中凌駕用途</param>>
-    public virtual bool SkillHitCalc(float supremacyBonus = 0)
+    public virtual HitResult SkillHitCalc(float supremacyBonus = 0)
     {
         //割り込みカウンターなら確実
-        if(Doer.HasPassive(1)) return true;
+        if(Doer.HasPassive(1)) return HitResult.Hit;
 
         //通常計算
         var rndMin = RandomEx.Shared.NextInt(3);//ボーナスがある場合ランダムで三パーセント~0パーセント引かれる
         if(supremacyBonus>rndMin)supremacyBonus -= rndMin;
 
-        return RandomEx.Shared.NextInt(100) < supremacyBonus + SkillHitPer;
+        return RandomEx.Shared.NextInt(100) < supremacyBonus + SkillHitPer ? HitResult.Hit : HitResult.CompleteEvade;
     }
 
     /// <summary>

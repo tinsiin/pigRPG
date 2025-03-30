@@ -177,7 +177,7 @@ public class BasePassive
                 if(bind.GrantTiming == PassiveVitalTiming.OnRemove && bind.IsSurvivalCondition)
                 {
                     Debug.LogWarning
-                    ($"{_owner}に付与された{PassiveName}の追加HP({bind.VitalLayerId})はOnRemoveというパッシブが消されるタイミングで付与されますが、/n同時にパッシブの生存条件のプロパティも存在します。 パッシブは正常に削除された為、エラーは起きません。\n");
+                    ($"{_owner}に付与された{PassiveName}の追加HP({bind.VitalLayerId})はOnRemoveというパッシブが消されるタイミングで付与されますが、/n同時にパッシブの生存条件であるというプロパティも存在します。 パッシブは正常に削除された為、エラーは起きません。\n");
                 }
 
                 if(bind.GrantTiming == PassiveVitalTiming.OnRemove && bind.RemoveOnPassiveRemove)
@@ -285,7 +285,7 @@ public class BasePassive
                     //もし残っている生存条件のvitalLayerが「パッシブが消えるときに一緒に消える性質を持っていなかったら」警告する
                     if(!RemainigSurvivalVitalLayer_Has_RemoveOnPassiveRemove(user))
                     {
-                        Debug.LogWarning($"{user}の{PassiveName}-パッシブの残っている生存条件の追加HPにRemoveOnPassiveRemove性質がありません。これではパッシブと密接なはずの追加HPなのに消えずに残りますが、\nよろしいでしょうか？\n");
+                        Debug.LogWarning($"{user}の{PassiveName}-パッシブの残っている生存条件の追加HPにRemoveOnPassiveRemove性質がありません。これではターン経過削除の際、パッシブと密接なはずの追加HPなのに消えずに残りますが、\nよろしいでしょうか？\n");
                     }
                 }
                 return; // ここで処理打ち切り

@@ -412,19 +412,19 @@ public class SelectTargetButtons : MonoBehaviour
     {
         CashUnders.Add(target);
 
-        if (AllybuttonList.Count > 0 && faction == WhichGroup.Enemyiy)///敵のボタンで味方のボタンが一つ以上あったら
+        if (AllybuttonList.Count > 0 && faction == WhichGroup.Enemyiy)///敵のボタンで主人公達のボタンが一つ以上あったら
         {
             foreach (var button in AllybuttonList)
             {
-                Destroy(button);//味方のボタンを全部消す
+                Destroy(button);//主人公達のボタンを全部消す
             }
         }
 
-        if (EnemybuttonList.Count > 0 && faction == WhichGroup.alliy)///味方のボタンで敵のボタンが一つ以上あったら
+        if (EnemybuttonList.Count > 0 && faction == WhichGroup.alliy)///主人公達のボタンで敵のボタンが一つ以上あったら
         {
             foreach (var button in EnemybuttonList)
             {
-                Destroy(button);//味方のボタンを全部消す
+                Destroy(button);//敵のボタンを全部消す
             }
         }
 

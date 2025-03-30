@@ -441,16 +441,19 @@ public class BattleManager
 
         for (var i = 0; i < group.Count; i++)//グループの人数分
         {
+            var acter = RandomEx.Shared.GetItem(group.ToArray<BaseStates>());
             if (i == group.Count - 1 && CounterCharas.Count > 0 && RandomEx.Shared.NextInt(100) < 40)
             {//もし最後の先手ターンで後手グループにキンダーガーデンかゴッドティアがいて、　40%の確率が当たったら
                 //反撃グループにいるそのどちらかの印象を持ったキャラクターのターンが入る。
-                Acts.Add(RandomEx.Shared.GetItem(CounterCharas.ToArray()), _counterGroup.which, "ハンターナイト▼");
+                Acts.Add(acter, _counterGroup.which, "ハンターナイト▼");
             }
             else
             {
                 //グループの中から人数分アクションをいれる
-                Acts.Add(RandomEx.Shared.GetItem(group.ToArray<BaseStates>()), _group.which, $"先手{i}☆");
+                Acts.Add(acter, _group.which, $"先手{i}☆");
             }
+
+            if(i == 0)acter.BattleFirstSurpriseAttacker = true;//もしバトル最初の先手攻撃者ならフラグを立てる
 
         }
         Debug.Log("actsの数 = " + Acts.Count);
@@ -1225,6 +1228,8 @@ public class BattleManager
         //実行処理
         skill.SetDeltaTurn(BattleTurnCount);//スキルのdeltaTurnをセット
         CreateBattleMessage(Acter.AttackChara(unders));//攻撃の処理からメッセージが返る。
+
+        Acter.CalmDownSet(skill.EvasionModifier);//スキル回避率と落ち着きカウントをセット
         
 
         //慣れフラットロゼが起こるかどうかの判定　

@@ -29,11 +29,11 @@ public class BaseVitalLayer
     /// </summary>
     public int Priority;
 
-    [SerializeField]
     private float _layhp;
     /// <summary>
     /// レイヤーHP
     /// </summary>
+    [HideInInspector]
     public float LayerHP
     {
         get { return _layhp; }

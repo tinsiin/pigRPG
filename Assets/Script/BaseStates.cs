@@ -1330,7 +1330,6 @@ public abstract class BaseStates
     /// 逃げる選択肢を押したかどうか
     /// </summary>
     public bool SelectedEscape;
-
     /// <summary>
     /// 強制続行中のスキル　nullならその状態でないということ
     /// </summary>
@@ -1480,6 +1479,11 @@ public abstract class BaseStates
     /// 前回ターンに生きてたかどうかの比較のため
     /// </summary>
     public bool _tempLive;
+
+    /// <summary>
+    /// bm初回の先制攻撃者かどうか
+    /// </summary>
+    public bool BattleFirstSurpriseAttacker = false;
 
     /// <summary>
     ///     リカバリターン/再行動クールタイムの設定値。
@@ -5431,12 +5435,59 @@ public abstract class BaseStates
             HP = Mathf.Max(HP,1);//1までしか減らせない
         }
     }
+    /// <summary>
+    /// かすりのダメージ倍率計算　基本値からステータス計算で減らす形
+    /// 攻撃を受ける側で呼び出す
+    /// </summary>
+    float GetGrazeRate(BaseStates Attacker)
+    {
+        var baseRate = 0.35f;
+        // EYEの差による減衰量を計算 (防御者EYEが攻撃者EYEに対する超過分) * 0.7%
+        var atkEye = Attacker.EYE().Total;
+        var defEye = EYE().Total;
+        var eyeDifference = defEye - atkEye;
+        //もし攻撃者のEYEが防御者のEYEより大きいなら基本値に対する現象が発生しないので、
+        if(eyeDifference < 0)eyeDifference = 0;//-にならないようにゼロに
+        var reduction = eyeDifference * 0.007f;//0.7%のレートを掛ける
+
+        // 最終的なかすりダメージ倍率を計算
+        var finalRate = baseRate - reduction;
+        finalRate = Mathf.Max(0.02f, finalRate);//2％
+
+        return finalRate; // 最終的なレートは 0.02f ～ 0.35f の範囲になる
+    }
+    /// <summary>
+    /// 命中段階で分かれるダメージ分岐
+    /// ダメージを受ける側で呼び出す
+    /// </summary>
+    void HitDmgCalculation(ref StatesPowerBreakdown dmg,ref StatesPowerBreakdown ResonanceDmg,HitResult hitResult,BaseStates Attacker)
+    {
+        var criticalRate = 1.5f;
+        var GrazeRate = GetGrazeRate(Attacker);
+        switch(hitResult)
+        {
+            case HitResult.CompleteEvade://完全回避
+                Debug.LogError("完全回避したはずなのにDamageメゾットが呼び出されています。");
+                return;
+            case HitResult.Graze://かすり
+                dmg *= GrazeRate;
+                ResonanceDmg *= GrazeRate;
+                return;
+            case HitResult.Hit://ヒット
+                return;//そのまま
+            case HitResult.Critical://クリティカル
+                dmg *=criticalRate;
+                ResonanceDmg *= criticalRate;
+                return;
+        }
+    }
+    
     
     /// <summary>
     ///オーバライド可能なダメージ関数
     /// </summary>
     /// <param name="atkPoint"></param>
-    public virtual float Damage(BaseStates Atker, float SkillPower,float SkillPowerForMental)
+    public virtual float Damage(BaseStates Atker, float SkillPower,float SkillPowerForMental,HitResult hitResult)
     {
         var skill = Atker.NowUseSkill;
 
@@ -5478,6 +5529,9 @@ public abstract class BaseStates
         bool BladeCriticalDeath = false;
         if(skill.IsBlade && dmg.Total > 0 && HP > dmg.Total)BladeCriticalDeath = BladeCriticalCalculation(ref dmg,ref ResonanceDmg,Atker,skill);
 
+        //命中段階による最終ダメージ計算
+        HitDmgCalculation(ref dmg,ref ResonanceDmg, hitResult,Atker);
+        
         //思えのダメージ発生  各クリティカルのダメージを考慮するためクリティカル後に
         ResonanceDamage(ResonanceDmg, skill, Atker);
 
@@ -5767,10 +5821,92 @@ public abstract class BaseStates
         }
         return supremacyMargin;
     }
+    
+    /// <summary>
+    /// スキルにより影響された回避補正率
+    /// </summary>
+    float _skillEvasionModifier = 1f;
+    /// <summary>
+    /// 平準化する回避補正率
+    /// </summary>
+    float _BaseEvasionModifier = 1f;
+    /// <summary>
+    /// 回避率でAGIに掛けるスキルにより影響された回避補正率　
+    /// 落ち着きターン経過により減衰する。
+    /// </summary>
+    float SkillEvasionModifier
+    {
+        get
+        {
+            var calmDownModifier = CalmDownCount;//落ち着きカウントによる補正
+            var calmDownModifierMax = CalmDownCountMax;
+            if (calmDownModifier < 0)calmDownModifier = 0;//落ち着きカウントがマイナスにならないようにする
+
+            // カウントダウンの進行度に応じて線形補間
+            // カウントが減るほど _BaseEvasionModifier に近づく
+            float progress = 1.0f - (calmDownModifier / calmDownModifierMax);
+            
+            // 線形補間: _skillEvasionModifier から _BaseEvasionModifier へ徐々に変化
+            return _skillEvasionModifier + (_BaseEvasionModifier - _skillEvasionModifier) * progress;
+        }
+    }
+    /// <summary>
+    /// 落ち着きカウント
+    /// 回避率や次攻撃者率　の平準化に用いられる
+    /// </summary>
+    int CalmDownCount = 0;
+    /// <summary>
+    /// 落ち着きカウントの最大値
+    /// 影響された補正率がどの程度平準化されているかの計算に用いるために保存する。
+    /// </summary>
+    int CalmDownCountMax;
+    /// <summary>
+    /// 落ち着きカウントの最大値算出
+    /// </summary>
+    int CalmDownCountMaxRnd => RandomEx.Shared.NextInt(4, 8);
+    /// <summary>
+    /// 落ち着きカウントのカウント開始準備
+    /// スキル回避率もセット
+    /// </summary>
+    public void CalmDownSet(float Modifier = 1f)
+    {
+        CalmDownCountMax = CalmDownCountMaxRnd;//乱数から設定して、カウントダウンの最大値を設定
+        CalmDownCount = CalmDownCountMax;//カウントダウンを最大値に設定
+        CalmDownCount++;//NextTurnで即引かれるので調整　　落ち着き#カウント対処を参照して
+        _skillEvasionModifier = Modifier;//スキルにより影響された回避補正率をセット
+    }
+    /// <summary>
+    /// 落ち着きカウントダウン
+    /// </summary>
+    void CalmDownCountDec()
+    {
+        CalmDownCount--;
+    }
+    /// <summary>
+    /// 意図的に落ち着きカウントをゼロにすることにより、落ち着いた判定にする。
+    /// </summary>
+    void CalmDown()
+    {
+        CalmDownCount = 0;
+    }
+    /// <summary>
+    /// 命中回避計算で使用する回避率
+    /// </summary>
+    float EvasionRate(float baseAgi,BaseStates Attacker)
+    {
+        float evasionRate;
+
+        evasionRate = baseAgi * SkillEvasionModifier;
+
+        if(Attacker.BattleFirstSurpriseAttacker)//bm最初のターンで先手攻撃を受ける場合
+        evasionRate  = baseAgi * 0.7f;//0.7倍で固定
+
+        return evasionRate;
+    }
     /// <summary>
     /// 攻撃者と防御者とスキルを利用してヒットするかの計算
     /// </summary>
-    private bool IsReactHIT(BaseStates Attacker)
+    private HitResult IsReactHIT(BaseStates Attacker)
     {
         var skill = Attacker.NowUseSkill;
         var minusMyChance = 0f;
@@ -5787,13 +5923,44 @@ public abstract class BaseStates
         }
 
         //術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
-        if (RandomEx.Shared.NextFloat(Attacker.EYE().Total + AGI().Total) < Attacker.EYE().Total - minusMyChance)
+        if (RandomEx.Shared.NextFloat(Attacker.EYE().Total + EvasionRate(AGI().Total,Attacker)) < Attacker.EYE().Total - minusMyChance)
         {
             //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
             return skill.SkillHitCalc(AccuracySupremacy(Attacker.EYE().Total, AGI().Total));
+        }else
+        {//命中回避計算が外れた場合、かすりとクリティカルの計算に入る
+
+            if(rollper(4.4f))//4.4%の確率でかすりとクリティカルの計算
+            {
+                //三分の一で二分の一計算、三分の二ならステータス計算に入ります
+                //三分の1でかすりとクリティカルは完全二分の一計算
+                if(RandomEx.Shared.NextFloat(3) < 1)
+                {
+                    if(RandomEx.Shared.NextFloat(2) < 1)
+                    {
+                        return HitResult.Critical;
+                    }
+                    return HitResult.Graze;
+                }else
+                {//残り三分の二で、ステータス比較の計算
+                    var atkerCalcEYEAGI = Attacker.EYE().Total + Attacker.AGI().Total *0.6f;//minusMychanceは瀬戸際の攻防計算なので使用しない
+                    var defCalcEYEAGI = EYE().Total + AGI().Total *0.6f;
+                    if(RandomEx.Shared.NextFloat(atkerCalcEYEAGI + defCalcEYEAGI) < atkerCalcEYEAGI)
+                    {
+                        return HitResult.Critical;//攻撃者側のステータスが乱数で出たなら、クリティカル
+                    }
+                    return HitResult.Graze;//そうでなければかすり
+                }
+            }
+            
+
         }
+
+
+
+
         skill.HitConsecutiveCount = 0;//外したら連続ヒット回数がゼロ　
-        return false;
+        return HitResult.CompleteEvade;
     }
 
     /// <summary>
@@ -6189,35 +6356,64 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>
     /// 直接攻撃じゃない敵対行動系
     /// </summary>
-    void ApplyNonDamageHostileEffects(BaseSkill skill,out bool isBadPassiveHit, out bool isBadVitalLayerHit, out bool isGoodPassiveRemove, out bool isGoodVitalLayerRemove)
+    void ApplyNonDamageHostileEffects(BaseSkill skill,out bool isBadPassiveHit, out bool isBadVitalLayerHit, out bool isGoodPassiveRemove, out bool isGoodVitalLayerRemove,HitResult hitResult)
     {
         isBadPassiveHit = false;
         isBadVitalLayerHit = false;
         isGoodPassiveRemove = false;
         isGoodVitalLayerRemove = false;
 
-        if (skill.HasType(SkillType.addPassive))//atktypeがあるからここで発生
+        var rndFrequency = 98;//ランダム発動率　基本的に100%発動する　　　　　　　　　　　　　　　　　　　　　　　　　　　微妙に攻撃タイプ以外の敵対行動を発動しにくくして、攻撃することの優位性を高める　ドキュメント記述なし
+        if(hitResult == HitResult.Graze)
         {
-            //悪いパッシブを付与しようとしてるのなら、命中回避計算
-            isBadPassiveHit = BadPassiveHit(skill);
+            rndFrequency = 50;//かすりHitなので、二分の一で発動
+        }        
+
+        if (skill.HasType(SkillType.addPassive))
+        {
+            if (rollper(rndFrequency))
+            {
+                //悪いパッシブを付与しようとしてるのなら、命中回避計算
+                isBadPassiveHit = BadPassiveHit(skill);
+            }else
+            {
+                Debug.Log("悪いパッシブを付与が上手く発動しなかった。");
+            }
         }
 
         if (skill.HasType(SkillType.AddVitalLayer))
         {
-            //悪い追加HPを付与しようとしてるのなら、命中回避計算
-            isBadVitalLayerHit = BadVitalLayerHit(skill);
+            if (rollper(rndFrequency))
+            {
+                //悪い追加HPを付与しようとしてるのなら、命中回避計算
+                isBadVitalLayerHit = BadVitalLayerHit(skill);
+            }else
+            {
+                Debug.Log("悪い追加HPを付与が上手く発動しなかった。");
+            }
         }
         if(skill.HasType(SkillType.RemovePassive))
         {
-            //良いパッシブを取り除こうとしてるのなら、命中回避計算
-            isGoodPassiveRemove = GoodPassiveRemove(skill);
+            if (rollper(rndFrequency))
+            {
+                //良いパッシブを取り除こうとしてるのなら、命中回避計算
+                isGoodPassiveRemove = GoodPassiveRemove(skill);
+            }else
+            {
+                Debug.Log("良いパッシブを取り除くのが上手く発動しなかった。");
+            }
         }
         if (skill.HasType(SkillType.RemoveVitalLayer))
         {
-            //良い追加HPを取り除こうとしてるのなら、命中回避計算
-            isGoodVitalLayerRemove = GoodVitalLayerRemove(skill);
+            if (rollper(rndFrequency))
+            {
+                //良い追加HPを取り除こうとしてるのなら、命中回避計算
+                isGoodVitalLayerRemove = GoodVitalLayerRemove(skill);
+            }else
+            {
+                Debug.Log("良い追加HPを取り除くのが上手く発動しなかった。");
+            }
         }
-        
     }
 
     /// <summary>
@@ -6266,19 +6462,20 @@ private int CalcTransformCountIncrement(int tightenStage)
     }
     /// <summary>
     /// 直接攻撃スキルのを「食らう側のヒット判定のラッパー
-    /// 命中回避を用いるかどうかをここで計算する。
+    /// 命中回避を用いるかどうかなどをここで計算する。
     /// </summary>
     /// <returns></returns>
-    bool ATKTypeSkillReactHitCalc(BaseStates attacker,BaseSkill atkSkill)
+    HitResult ATKTypeSkillReactHitCalc(BaseStates attacker,BaseSkill atkSkill)
     {
+        HitResult hitResult = HitResult.CompleteEvade;//念のため初期値を
+        var HitResultSet = false;
+
         //善意攻撃であるのなら、スキル命中率のみ
 
         //攻撃者と被害者(自分)が味方同士で、かつ、
         if(manager.IsFriend(attacker, this))
         {
             //自分の持ってるパッシブに一つでも「行動不能」と「現存してる追加HPが生存条件である」パッシブの二つが同時に含まれていれば
-            var isGoodwillAttackTarget = false;
-
             foreach (var pas in _passiveList)//自分の持ってるパッシブで回す
             {
                 if(pas.IsCantACT)//行動不能のパッシブなら
@@ -6287,15 +6484,15 @@ private int CalcTransformCountIncrement(int tightenStage)
 
                     if(pas.HasRemainingSurvivalVitalLayer(this))//生存条件としてのVitalLayerを今持っているかどうか
                     {
-                        isGoodwillAttackTarget = true;//善意攻撃とみなす
-                        break;//一個でも条件を満たせば善意攻撃なのでループを抜けていい
+                        hitResult = atkSkill.SkillHitCalc();//一個でも条件を満たせば善意攻撃なのでループを抜けていい
+                        HitResultSet = true;
                     }
                 }
             }
-
-            if(isGoodwillAttackTarget) return atkSkill.SkillHitCalc();
         }
-        return IsReactHIT(attacker);
+        if(!HitResultSet) hitResult = IsReactHIT(attacker);//ヒット判定が未代入なら通常のヒット判定
+
+        return hitResult;
     }
     /// <summary>
     /// スキルに対するリアクション ここでスキルの解釈をする。
@@ -6344,10 +6541,11 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         if (skill.HasType(SkillType.Attack))
         {
-            if (ATKTypeSkillReactHitCalc(attacker,skill))
+            var hitResult = ATKTypeSkillReactHitCalc(attacker, skill);
+            if (hitResult != HitResult.CompleteEvade)//完全回避以外なら = HITしてるなら
             {
                 //割り込みカウンターの判定
-                if(skill.NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃されてる途中なら
+                if (skill.NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃されてる途中なら
                 {
                     if(!skill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive))//ターンをまたいだ物じゃないなら
                     {
@@ -6363,25 +6561,26 @@ private int CalcTransformCountIncrement(int tightenStage)
                     CheckPhysicsConsecutiveAimBoost(attacker);
                     
                     //成功されるとダメージを受ける
-                    damageAmount = Damage(attacker, skillPower,skillPowerForMental);
+                    damageAmount = Damage(attacker, skillPower,skillPowerForMental,hitResult);
                     isAtkHit = true;//攻撃をしたからtrue
 
-                    ApplyNonDamageHostileEffects(skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove);
+                    ApplyNonDamageHostileEffects(skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove, hitResult);
                 }
             }
         }
         else//atktypeがないと各自で判定
         {
-             if (ATKTypeSkillReactHitCalc(attacker,skill))
+            var hitResult = ATKTypeSkillReactHitCalc(attacker, skill);
+            if (hitResult != HitResult.CompleteEvade)
             {
-                ApplyNonDamageHostileEffects(skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove);        
+                ApplyNonDamageHostileEffects(skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove, hitResult);        
             }
         }
 
         //回復系は常に独立
         if(skill.HasType(SkillType.DeathHeal))
         {
-            if (skill.SkillHitCalc())//スキル命中率の計算だけ行う
+            if (skill.SkillHitCalc() == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 Angel();//降臨　アイコンがノイズで満たされるようなエフェクト
                 isHeal = true;
@@ -6391,7 +6590,7 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         if (skill.HasType(SkillType.Heal))
         {
-            if (skill.SkillHitCalc(0))//スキル命中率の計算だけ行う
+            if (skill.SkillHitCalc() == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 healAmount= Heal(skillPower);
                 isHeal = true;
@@ -6400,7 +6599,7 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         if (skill.HasType(SkillType.MentalHeal))
         {
-            if (skill.SkillHitCalc())//スキル命中率の計算だけ行う
+            if (skill.SkillHitCalc() == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 MentalHeal(skillPower);
                 isHeal = true;
@@ -6409,7 +6608,7 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         if (skill.HasType(SkillType.addPassive))
         {
-            if (skill.SkillHitCalc())//スキル命中率の計算だけ行う
+            if (skill.SkillHitCalc() == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //良いパッシブを付与しようとしてるのなら、スキル命中計算のみ
                 isGoodPassiveHit = GoodPassiveHit(skill);
@@ -6417,7 +6616,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
         if (skill.HasType(SkillType.AddVitalLayer))
         {
-            if (skill.SkillHitCalc())//スキル命中率の計算だけ行う
+            if (skill.SkillHitCalc() == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //良い追加HPを付与しようとしてるのなら、スキル命中のみ
                GoodVitalLayerHit(skill);
@@ -6429,7 +6628,7 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         if(skill.HasType(SkillType.RemovePassive))
         {
-            if (skill.SkillHitCalc())//スキル命中率の計算だけ行う
+            if (skill.SkillHitCalc() == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //悪いパッシブを取り除くのなら、スキル命中のみ
                 isBadPassiveRemove = BadPassiveRemove(skill);
@@ -6437,7 +6636,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
         if (skill.HasType(SkillType.RemoveVitalLayer))
         {
-            if (skill.SkillHitCalc())//スキル命中率の計算だけ行う
+            if (skill.SkillHitCalc() == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //悪い追加HPを取り除こうとしてるのなら、スキル命中のみ
                 isBadVitalLayerRemove = BadVitalLayerRemove(skill);
@@ -6817,6 +7016,9 @@ private int CalcTransformCountIncrement(int tightenStage)
         //精神HPの死亡時分岐
         MentalHPOnDeath();
 
+        //落ち着きをリセット　死んだらスキルの持続力無くなるしね
+        CalmDown();
+
     }
     void HighNessChance(BaseStates deathEne)
     {
@@ -6993,6 +7195,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         else//初物の場合
         {
             var newLayer = VitalLayerManager.Instance.GetAtID(id).DeepCopy();//マネージャーから取得 当然ディープコピー
+            newLayer.ReplenishHP();//maxにしないとね
             //優先順位にリスト内で並び替えつつ追加
             // _vitalLaerList 内で、新しいレイヤーの Priority より大きい最初の要素のインデックスを探す
             int insertIndex = _vitalLayerList.FindIndex(v => v.Priority > newLayer.Priority);
@@ -7037,7 +7240,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         //生きている場合にのみする処理
         if(!Death())
         {
-            ConditionInNextTurn();
+            ConditionInNextTurn();//人間状況ターン変化
             TryMentalPointRecovery();//精神HPが自動回復される前に精神HPによるポイント自然回復の判定
 
             if(IsMentalDiverGenceRefilCountDown() == false)//再充填とそのカウントダウンが終わってるのなら
@@ -7049,12 +7252,15 @@ private int CalcTransformCountIncrement(int tightenStage)
                 }
                
             }
+
+            CalmDownCountDec();//落ち着きカウントダウン
         }
        
         
 
         //記録系
         _tempLive = !Death();//死んでない = 生きてるからtrue
+        BattleFirstSurpriseAttacker = false;//絶対にoff bm初回先手攻撃フラグは
     }
 
 
@@ -7064,6 +7270,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     public virtual void OnBattleStartNoArgument()
     {
         TempDamageTurn = 0;
+        CalmDownSet(AGI().Total * 1.3f);//落ち着きカウントの初回生成　最初のSkillACT前までは1.3倍
         _tempVanguard = false;
         _tempLive = true;
         Rivahal = 0;//ライバハル値を初期化
@@ -8938,6 +9145,23 @@ public class FixedModifierPart
         whatModifier = txt;
         Modifier = value;
     }
+}
+/// <summary>
+/// 命中結果の種類を表す列挙型
+/// </summary>
+public enum HitResult
+{
+    /// <summary>完全回避（ノーダメージ）</summary>
+    CompleteEvade,
+    
+    /// <summary>かすり（割合少ないダメージ）</summary>
+    Graze,
+    
+    /// <summary>通常ヒット</summary>
+    Hit,
+    
+    /// <summary>クリティカルヒット（大ダメージ）</summary>
+    Critical
 }
 /// <summary>
 ///     精神属性、スキル、キャラクターに依存し、キャラクターは直前に使った物が適用される
