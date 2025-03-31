@@ -4731,13 +4731,22 @@ public abstract class BaseStates
         return agi;
     }
 
-    public virtual StatesPowerBreakdown ATK()
+    /// <summary>
+    /// 攻撃力のステータス
+    /// 引数の補正はいわゆるステータスに関係ないものとして、攻撃補正なので、
+    /// 「実際に敵のHPを減らす際」のみに指定する。  = 精神HPに対するダメージにも使われない。
+    /// </summary>
+    /// <param name="AttackModifier"></param>
+    /// <returns></returns>
+    public virtual StatesPowerBreakdown ATK(float AttackModifier =1f)
     {
         StatesPowerBreakdown atk = b_ATK;//基礎攻撃力
 
         atk *= UseATKPercentageModifier;//攻撃力補正
         atk *= _passiveList.Aggregate(1.0f, (total, m) => total * m.ATKPercentageModifier());//パッシブの乗算補正
         atk += UseATKFixedModifier;//攻撃力固定値補正
+
+        atk *= AttackModifier;//攻撃補正  実際の攻撃時のみに参照される。
 
         //範囲意志によるボーナス
         foreach (KeyValuePair<SkillZoneTrait, float> entry
@@ -5499,7 +5508,7 @@ public abstract class BaseStates
 
         def = ClampDefenseByAimStyle(skill,def);//防ぎ方(AimStyle)の不一致がある場合、クランプする
 
-        var dmg = ((Atker.ATK() - def) * SkillPower) + SkillPower;//(攻撃-対象者の防御) にスキルパワー加算と乗算
+        var dmg = ((Atker.ATK(Atker.SkillAttackModifier) - def) * SkillPower) + SkillPower;//(攻撃-対象者の防御) にスキルパワー加算と乗算
         var mentalATKBoost = Mathf.Max(Atker.TenDayValues().GetValueOrZero(TenDayAbility.Leisure) - TenDayValues().GetValueOrZero(TenDayAbility.Leisure),0)
         * Atker.MentalHP * 0.2f;//相手との余裕の差と精神HPの0.2倍を掛ける 
         var mentalDmg = ((Atker.ATK() - MentalDEF()) * SkillPowerForMental) + SkillPowerForMental * mentalATKBoost;//精神攻撃
@@ -5827,12 +5836,22 @@ public abstract class BaseStates
     /// </summary>
     float _skillEvasionModifier = 1f;
     /// <summary>
+    /// スキルにより影響された攻撃補正率
+    /// </summary>
+    float _skillAttackModifier = 1f;
+    
+    /// <summary>
     /// 平準化する回避補正率
     /// </summary>
     float _BaseEvasionModifier = 1f;
     /// <summary>
+    /// 平準化する攻撃補正率
+    /// </summary>
+    float _BaseAttackModifier = 1f;
+    /// <summary>
     /// 回避率でAGIに掛けるスキルにより影響された回避補正率　
     /// 落ち着きターン経過により減衰する。
+    /// 回避率の計算の際に最終回避率としてAGIと掛ける
     /// </summary>
     float SkillEvasionModifier
     {
@@ -5848,6 +5867,27 @@ public abstract class BaseStates
             
             // 線形補間: _skillEvasionModifier から _BaseEvasionModifier へ徐々に変化
             return _skillEvasionModifier + (_BaseEvasionModifier - _skillEvasionModifier) * progress;
+        }
+    }
+    /// <summary>
+    /// 攻撃力でATKに掛けるスキルにより影響された攻撃補正率
+    /// 落ち着きターン経過により減衰する。
+    /// 実際の敵HPに対する減算処理のみに参照し、尚且つなるべく素に近いATK()の補正積み重ねの初期に掛けられる。
+    /// </summary>
+    float SkillAttackModifier
+    {
+        get
+        {
+            var calmDownModifier = CalmDownCount;//落ち着きカウントによる補正
+            var calmDownModifierMax = CalmDownCountMax;
+            if (calmDownModifier < 0)calmDownModifier = 0;//落ち着きカウントがマイナスにならないようにする
+
+            // カウントダウンの進行度に応じて線形補間
+            // カウントが減るほど _BaseAttackModifier に近づく
+            float progress = 1.0f - (calmDownModifier / calmDownModifierMax);
+            
+            // 線形補間: _skillAttackModifier から _BaseAttackModifier へ徐々に変化
+            return _skillAttackModifier + (_BaseAttackModifier - _skillAttackModifier) * progress;
         }
     }
     /// <summary>
@@ -5868,12 +5908,13 @@ public abstract class BaseStates
     /// 落ち着きカウントのカウント開始準備
     /// スキル回避率もセット
     /// </summary>
-    public void CalmDownSet(float Modifier = 1f)
+    public void CalmDownSet(float EvasionModifier = 1f, float AttackModifier = 1f)
     {
         CalmDownCountMax = CalmDownCountMaxRnd;//乱数から設定して、カウントダウンの最大値を設定
         CalmDownCount = CalmDownCountMax;//カウントダウンを最大値に設定
         CalmDownCount++;//NextTurnで即引かれるので調整　　落ち着き#カウント対処を参照して
-        _skillEvasionModifier = Modifier;//スキルにより影響された回避補正率をセット
+        _skillEvasionModifier = EvasionModifier;//スキルにより影響された回避補正率をセット
+        _skillAttackModifier = AttackModifier;//スキルにより影響された攻撃補正率をセット
     }
     /// <summary>
     /// 落ち着きカウントダウン
@@ -7303,7 +7344,9 @@ private int CalcTransformCountIncrement(int tightenStage)
     public virtual void OnBattleStartNoArgument()
     {
         TempDamageTurn = 0;
-        CalmDownSet(AGI().Total * 1.3f);//落ち着きカウントの初回生成　最初のSkillACT前までは1.3倍
+        CalmDownSet(AGI().Total * 1.3f,1f);//落ち着きカウントの初回生成　
+        //最初のSkillACT前までは回避率補正は1.3倍 攻撃補正はなし。=100%\
+
         _tempVanguard = false;
         _tempLive = true;
         Rivahal = 0;//ライバハル値を初期化

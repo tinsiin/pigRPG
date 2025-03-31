@@ -820,6 +820,24 @@ public class BattleManager
         if(ActerFaction == WhichGroup.alliy)
         {
             var Rate = Walking.NowStageCut.EscapeRate;
+            //人数により逃走率の分岐
+            switch(AllyGroup.Ours.Count)
+            {
+                case 1:
+                    Rate *= 0.5f;//半減
+                    break;
+                case 2:
+                    Rate *= 0.96f;//96%
+                    break;
+                case 3:
+                    //そのまま
+                    break;
+                default:
+                    //そのまま
+                    Debug.LogWarning("味方のグループが三人以上_EscapeACTにて検出された");
+                    break;
+            }
+
             if(rollper(Rate))
             {
                 //逃走成功
@@ -1229,7 +1247,7 @@ public class BattleManager
         skill.SetDeltaTurn(BattleTurnCount);//スキルのdeltaTurnをセット
         CreateBattleMessage(Acter.AttackChara(unders));//攻撃の処理からメッセージが返る。
 
-        Acter.CalmDownSet(skill.EvasionModifier);//スキル回避率と落ち着きカウントをセット
+        Acter.CalmDownSet(skill.EvasionModifier,skill.AttackModifier);//スキル回避率と落ち着きカウントをセット
         
 
         //慣れフラットロゼが起こるかどうかの判定　

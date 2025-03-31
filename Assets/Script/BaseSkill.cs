@@ -370,8 +370,14 @@ public class BaseSkill
     public bool Cantkill = false;
     /// <summary>
     /// このスキルを実行することにより影響させる使い手の回避率でAGIに掛けられる回避補正率
+    /// 一番最後に掛けられる。
     /// </summary>
     public float EvasionModifier = 1f;
+    /// <summary>
+    /// このスキルを実行することにより影響させる使い手の攻撃力としてATKに掛けられる攻撃補正率
+    /// 一番最初の素の攻撃力に掛けられる。
+    /// </summary>
+    public float AttackModifier = 1f;
     /// <summary>
     /// TLOAスキルのレベルアップに必要な使用回数
     /// </summary>
