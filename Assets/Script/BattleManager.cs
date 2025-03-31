@@ -320,6 +320,11 @@ public class BattleManager
         // 両方が味方、または両方が敵ならtrue
         return (chara1InAlly && chara2InAlly) || (!chara1InAlly && !chara2InAlly);
     }
+
+    /// <summary>
+    /// 誰もアクションを取らなかった場合、ネクストターンをスキップする
+    /// </summary>
+    bool ACTSkipACTBecauseNobodyACT = false;
     /// <summary>
     /// 渡されたキャラクタのbm内での陣営を表す。
     /// </summary>
@@ -421,13 +426,8 @@ public class BattleManager
     /// </summary>
     private List<BaseStates> RetainActionableCharacters(List<BaseStates> Charas)
     {
-        //少なくとも一人のキャラクターが RecovelyBattleField(BattleTurnCount) を満たすと、Any() が true を返し、while ループが終了します。
-        while (!(Charas = Charas.Where(chara => chara.RecovelyBattleField(BattleTurnCount)).ToList()).Any())
-        {
-            BattleTurnCount++;//全員再行動までのクールタイム中なら、全員硬直したまま時間が進む
-            //メッセージで戦闘は膠着している　みたいなのを出すと雰囲気出るよね
-        }
-        return Charas;
+        var ActionableCharacters =  Charas.Where(chara => chara.RecovelyBattleField(BattleTurnCount)).ToList();
+        return ActionableCharacters;
     }
     /// <summary>
     /// キャラクター行動リストに先手分のリストを入れる。
@@ -482,6 +482,12 @@ public class BattleManager
 
         Charas = RemoveDeathCharacters(Charas);//死者を取り除く
         Charas = RetainActionableCharacters(Charas);//再行動をとれる人間のみに絞る
+
+        if (Charas.Count == 0)
+        {
+            return null;
+        }
+        
         Chara = RandomEx.Shared.GetItem(Charas.ToArray<BaseStates>());//キャラリストからランダムで選ぶ
         Chara.RecovelyWaitStart();//選ばれたので次に行動できるまでまた再カウント開始
 
@@ -606,6 +612,19 @@ public class BattleManager
 
         CharacterAddFromListOrRandom();//Acterが選ばれる
 
+        if(VoidTurn)
+        {
+            VoidTurn = false;//ターン消しとび　エフェクトなし
+            NextTurn(false);
+            return ACTPop();
+        }
+
+        if(Acter == null)//俳優がnullだとランダム選別の際に「再行動できるキャラがいない」とされて処理がキャンセルされたので
+        {
+            ACTSkipACTBecauseNobodyACT = true;
+            return TabState.NextWait;//押して処理
+        }
+
         //スキルと範囲の思考--------------------------------------------------------------------------------------------------------スキルと範囲の思考-----------------------------------------------------------
 
         //俳優が味方なら
@@ -728,22 +747,33 @@ public class BattleManager
         {
             return DominoEscapeACT();//連鎖逃走の処理へ
         }
+        //誰も動けないのでスキップし、時間が進む
+        if(ACTSkipACTBecauseNobodyACT)
+        {
+            ACTSkipACTBecauseNobodyACT = false;
+            return ACTPop();
+        }
 
         if(DoNothing)
         {
             //小さなアイコン辺りに無音の灰色円縮小エフェクトを入れる     何もしないエフェクト
             DoNothing = false;
+            NextTurn(true);
             return ACTPop();//何もせず行動準備へ
-        }
-        if(VoidTurn)
-        {
-            VoidTurn = false;//ターン消しとび　エフェクトなし
-            return ACTPop();
         }
         
         if(IsEscape)
         {
             return EscapeACT();
+        }
+        if(ACTSkipACTBecauseNobodyACT)
+        {
+            ACTSkipACTBecauseNobodyACT = false;
+            //誰も動けない膠着状態だからスキップされたことを表すエフェクトを入れるといいと思う。
+
+            //誰も動けないのでスキップし、時間が進む
+            NextTurn(true);
+            return ACTPop();
         }
 
         int count;//メッセージテキスト用のカウント数字
@@ -864,6 +894,7 @@ public class BattleManager
             }
         }
         Acter.SelectedEscape = false;//選択を解除
+        NextTurn(true);
         return ACTPop();
     }
     /// <summary>
@@ -880,6 +911,7 @@ public class BattleManager
 
         //連鎖逃走リストクリア
         DominoRunOutEnemies.Clear();
+        NextTurn(true);
         return ACTPop();
     }
     /// <summary>
