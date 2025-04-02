@@ -5490,7 +5490,42 @@ public abstract class BaseStates
                 return;
         }
     }
-    
+    /// <summary>
+    /// 魔法スキルの計算式は、基本の-計算と÷計算がブレンドするからそれ用の関数
+    /// -計算から÷計算へtの値を元にシフトしていく(÷計算の最低保証性が攻撃力が防御力に負けるにつれて高まるって感じ)
+    /// </summary>
+    /// <param name="atkPoint"></param>
+    /// <param name="defPoint"></param>
+    /// <returns></returns>
+    public StatesPowerBreakdown MagicBlendVSCalc(StatesPowerBreakdown atkPoint, StatesPowerBreakdown defPoint)
+    {
+        float k = 0.02f;      // 調整可能な傾きパラメータ
+        float t = 140f;      // 調整可能な閾値シフト
+        float epsilon = 0.0001f;
+
+        // ロジスティック関数を用いて重みを計算
+        // atk - def が大きければ weight は 1 に近づき、差分計算（通常スキル的な挙動）をして、
+        // atk - def が小さい（またはマイナス）なら weight は 0 に近づき、比率計算（最低ダメージ保証的な挙動）の比率が高まる
+        float weight = 1.0f / (1.0f + Mathf.Exp(-k * (atkPoint.Total - defPoint.Total - t)));//重みなのでtotal
+
+        // 差分に基づくダメージ（通常スキルの挙動に近い）       
+        StatesPowerBreakdown damage_diff = atkPoint - defPoint;
+        
+        
+        // 除算に基づくダメージ（魔法特有の挙動、最低ダメージ保証の要素を持たせる）  （思った以上に効果ないから+10とかしとくわ）
+        StatesPowerBreakdown damage_ratio = atkPoint / (defPoint + epsilon) + 8 + damage_diff / 1.6f;
+
+
+        if(damage_diff.Total <= 0)//攻撃と防御の差が0以下なら　除算計算オンリー
+        {
+            return damage_ratio;
+        }
+        // 両者をブレンドする
+        // weight が 1 に近いときは damage_diff が支配的（通常スキル的挙動）、
+        // weight が 0 に近いときは damage_ratio が支配的に
+        StatesPowerBreakdown baseDamage = (weight * damage_diff) + ((1.0f - weight) * damage_ratio);
+        return baseDamage;
+    }
     
     /// <summary>
     ///オーバライド可能なダメージ関数
@@ -5508,10 +5543,22 @@ public abstract class BaseStates
 
         def = ClampDefenseByAimStyle(skill,def);//防ぎ方(AimStyle)の不一致がある場合、クランプする
 
-        var dmg = ((Atker.ATK(Atker.SkillAttackModifier) - def) * SkillPower) + SkillPower;//(攻撃-対象者の防御) にスキルパワー加算と乗算
+        StatesPowerBreakdown dmg, mentalDmg;
         var mentalATKBoost = Mathf.Max(Atker.TenDayValues().GetValueOrZero(TenDayAbility.Leisure) - TenDayValues().GetValueOrZero(TenDayAbility.Leisure),0)
         * Atker.MentalHP * 0.2f;//相手との余裕の差と精神HPの0.2倍を掛ける 
-        var mentalDmg = ((Atker.ATK() - MentalDEF()) * SkillPowerForMental) + SkillPowerForMental * mentalATKBoost;//精神攻撃
+
+        //下の魔法スキル以外の計算式を基本計算式と考えましょう
+        if(skill.IsMagic)//魔法スキルのダメージ計算
+        {
+            dmg = (MagicBlendVSCalc(Atker.ATK(Atker.SkillAttackModifier),def) * SkillPower) + SkillPower;//(攻撃-対象者の防御) にスキルパワー加算と乗算
+            mentalDmg = (Atker.ATK() * mentalATKBoost / MentalDEF() * SkillPowerForMental) + SkillPowerForMental * 0.7f ;//精神攻撃
+        }
+        else//それ以外のスキルのダメージ計算
+        {
+            dmg = ((Atker.ATK(Atker.SkillAttackModifier) - def) * SkillPower) + SkillPower;//(攻撃-対象者の防御) にスキルパワー加算と乗算
+            mentalDmg = ((Atker.ATK() * mentalATKBoost - MentalDEF()) * SkillPowerForMental) + SkillPowerForMental ;//精神攻撃
+        }
+        
 
         if(NowPower > ThePower.lowlow)//たるくなければ基礎山形補正がある。
         dmg = GetBaseCalcDamageWithPlusMinus22Percent(dmg);//基礎山型補正
@@ -5951,6 +5998,8 @@ public abstract class BaseStates
     {
         var skill = Attacker.NowUseSkill;
         var minusMyChance = 0f;
+        var minimumHitChancePer = 4.4f;//ミニマムヒットチャンスの発生確率
+        if(skill.IsMagic)minimumHitChancePer = 2f;
 
         //vanguardじゃなければ攻撃者の命中減少
         if (!manager.IsVanguard(Attacker))
@@ -5964,7 +6013,7 @@ public abstract class BaseStates
         }
 
         var minimumHitChanceResult= HitResult.CompleteEvade;//命中回避計算外のミニマムヒットチャンス
-        if(rollper(4.4f))//ミニマムヒットチャンス  4.4%の確率でかすりとクリティカルの計算
+        if(rollper(minimumHitChancePer))//ミニマムヒットチャンス  4.4%の確率でかすりとクリティカルの計算
         {
             //三分の一で二分の一計算、三分の二ならステータス計算に入ります
             //三分の1でかすりとクリティカルは完全二分の一計算
@@ -6006,10 +6055,19 @@ public abstract class BaseStates
             //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
             return skill.SkillHitCalc(AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult);
         }
+        //回避されたので、まずは魔法スキルなら魔法かすりする　三分の一で
+        //事前魔法かすり判定である。(攻撃性質スキル以外はスキル命中のみで魔法かすり判定をするという違いがある為。)
+        if(skill.IsMagic && RandomEx.Shared.NextFloat(3) < 1)
+        {
+            //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
+            return skill.SkillHitCalc(AccuracySupremacy(Attacker.EYE().Total, AGI().Total), HitResult.Graze, true);
+        }
+
 
         //スキルが爆破型で、なおかつ被害者の自分が前のめりなら完全回避のはずがかすりになる
         if(skill.DistributionType == AttackDistributionType.Explosion && manager.IsVanguard(this))
         {
+            var hitResult = HitResult.Graze;
             //が、AGI比較て勝ってたらそれを免除し本来の完全回避へ
 
             //三倍以上越してると84%で避けられる
@@ -6017,20 +6075,22 @@ public abstract class BaseStates
             {
                 if(rollper(84))
                 {
-                    return HitResult.CompleteEvade;
+                    hitResult = HitResult.CompleteEvade;
                 }
             }else
             {
-                //攻撃者のAGIを二倍以上越していると、二分の一で避けられる。
-                if(Attacker.AGI().Total * 2 < AGI().Total)
+                //攻撃者のAGIを1.6倍以上越していると、二分の一で避けられる。
+                if(Attacker.AGI().Total * 1.6 < AGI().Total)
                 {
                     if(RandomEx.Shared.NextFloat(2) < 1)
                     {
-                        return HitResult.CompleteEvade;
+                        hitResult = HitResult.CompleteEvade;
                     }
                 }
             }
-            return HitResult.Graze;
+
+            //爆破型なのでかすりだが、そもそものスキル命中の計算をする介する
+            return skill.SkillHitCalc(AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult);
         }
 
 
@@ -9337,6 +9397,40 @@ public class StatesPowerBreakdown
     }
 
     /// <summary>
+    /// StatesPowerBreakdown同士の除算演算子
+    /// 結果の合計値が left.Total / right.Total と同じになるように各値をスケーリングします
+    /// </summary>
+    public static StatesPowerBreakdown operator /(StatesPowerBreakdown left, StatesPowerBreakdown right)
+    {
+        // ゼロ除算対策
+        if (right.Total == 0)
+        {
+            // 右辺の合計が0の場合は左辺をそのまま返す
+            return new StatesPowerBreakdown(
+                new TenDayAbilityDictionary(left.TenDayBreakdown),
+                left.NonTenDayPart);
+        }
+        
+        // スケーリング係数を計算 (left.Total / right.Total)
+        float scaleFactor = left.Total / right.Total;
+        
+        // 新しいDictionaryを作成
+        var newTenDayBreakdown = new TenDayAbilityDictionary(left.TenDayBreakdown);
+        
+        // 全ての値をスケーリング係数で乗算
+        foreach (var key in newTenDayBreakdown.Keys.ToList())
+        {
+            newTenDayBreakdown[key] *= scaleFactor;
+        }
+        
+        // 非十日能力部分も同様にスケーリング
+        float newNonTenDayPart = left.NonTenDayPart * scaleFactor;
+        
+        // 新しいStatesPowerBreakdownを返す
+        return new StatesPowerBreakdown(newTenDayBreakdown, newNonTenDayPart);
+    }
+
+    /// <summary>
     /// 乗算演算子のオーバーロード - スカラー値による乗算
     /// 乗算補正で十日能力などが使われてたとしてもすべてに対するブーストなので、
     /// どんな十日能力に補正され乗算補正されたかの情報は持たないし、全ての値に乗算する。
@@ -9357,6 +9451,15 @@ public class StatesPowerBreakdown
         
         // 新しいStatesPowerBreakdownオブジェクトを返す
         return new StatesPowerBreakdown(newTenDayBreakdown, newNonTenDayPart);
+    }
+    /// <summary>
+    /// float値とStatesPowerBreakdownの乗算演算子（交換法則対応）
+    /// 各十日能力値と非十日能力値に同じfloat値を乗算します
+    /// </summary>
+    public static StatesPowerBreakdown operator *(float multiplier, StatesPowerBreakdown breakdown)
+    {
+        // 既存の StatesPowerBreakdown * float 演算子を利用（交換法則）
+        return breakdown * multiplier;
     }
     /// <summary>
     /// 除算補正で十日能力などが使われてたとしてもすべてに対するブーストなので、
@@ -9384,6 +9487,43 @@ public class StatesPowerBreakdown
         
         return new StatesPowerBreakdown(newTenDayBreakdown, newNonTenDayPart);
     }
+
+    /// <summary>
+    /// float値でStatesPowerBreakdownを除算する演算子
+    /// 結果の合計値が float / breakdown.Total と同じになるように各値をスケーリングします
+    /// </summary>
+    public static StatesPowerBreakdown operator /(float left, StatesPowerBreakdown right)
+    {
+        // ゼロ除算対策
+        if (right.Total == 0)
+        {
+            // 右辺の合計が0の場合は、ゼロに近い小さな値を使用して除算を続行
+            return new StatesPowerBreakdown(new TenDayAbilityDictionary(),left);
+        }
+        
+        // スケーリング係数を計算 (left / right.Total)
+        float scaleFactor = left / right.Total;
+        
+        // 新しいDictionaryを作成
+        var newTenDayBreakdown = new TenDayAbilityDictionary();
+        
+        // 右辺の全ての十日能力値に対して、その逆数にスケーリング係数を掛ける
+        foreach (var entry in right.TenDayBreakdown)
+        {
+            // 元の値との比率を反転させつつスケーリング
+            newTenDayBreakdown[entry.Key] = entry.Value / right.Total * left;
+        }
+        
+        // 非十日能力部分も同様にスケーリング
+        float newNonTenDayPart = right.NonTenDayPart / right.Total * left;
+        
+        // 新しいStatesPowerBreakdownを返す
+        return new StatesPowerBreakdown(newTenDayBreakdown, newNonTenDayPart);
+    }
+
+
+
+
 
     /// <summary>
     /// StatesPowerBreakdown同士の加算演算子

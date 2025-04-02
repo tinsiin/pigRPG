@@ -1239,7 +1239,7 @@ public class BaseSkill
     /// スキル命中onlyならデフォルトで普通のHitが指定されるので渡さなくてOK
     /// </summary>
     /// <param name="supremacyBonus">命中ボーナス　主に命中凌駕用途</param>>
-    public virtual HitResult SkillHitCalc(float supremacyBonus = 0,HitResult hitResult = HitResult.Hit)
+    public virtual HitResult SkillHitCalc(float supremacyBonus = 0,HitResult hitResult = HitResult.Hit,bool PreliminaryMagicGrazeRoll = false)
     {
         //割り込みカウンターなら確実
         if(Doer.HasPassive(1)) return hitResult;
@@ -1248,7 +1248,20 @@ public class BaseSkill
         var rndMin = RandomEx.Shared.NextInt(3);//ボーナスがある場合ランダムで三パーセント~0パーセント引かれる
         if(supremacyBonus>rndMin)supremacyBonus -= rndMin;
 
-        return RandomEx.Shared.NextInt(100) < supremacyBonus + SkillHitPer ? hitResult : HitResult.CompleteEvade;
+        var result = RandomEx.Shared.NextInt(100) < supremacyBonus + SkillHitPer ? hitResult : HitResult.CompleteEvade;
+
+        if(result == HitResult.CompleteEvade && IsMagic)//もし発生しなかった場合、魔法スキルなら
+        {
+            //三分の一の確率でかする
+            if(RandomEx.Shared.NextInt(3) == 0) result = HitResult.Graze;
+        }
+
+        if(PreliminaryMagicGrazeRoll)//事前魔法かすり判定がIsReactHitで行われていたら
+        {
+            result = hitResult;//かすりを入れる
+        }
+
+        return result;
     }
 
     /// <summary>

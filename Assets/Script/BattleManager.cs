@@ -612,7 +612,7 @@ public class BattleManager
 
         CharacterAddFromListOrRandom();//Acterが選ばれる
 
-        if(VoidTurn)
+        if(VoidTurn)//これは処理の仕組み上発生する飛ばせないエラーによるターン処理だが、そもそも発生しないと思う。
         {
             VoidTurn = false;//ターン消しとび　エフェクトなし
             NextTurn(false);
