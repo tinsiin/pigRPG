@@ -5526,6 +5526,21 @@ public abstract class BaseStates
         StatesPowerBreakdown baseDamage = (weight * damage_diff) + ((1.0f - weight) * damage_ratio);
         return baseDamage;
     }
+    /// <summary>
+    /// TLOAスキルの威力減衰
+    /// 呼び出し側のダメージを受ける自分のHPの割合が条件　詳しくはTLOAスキル　を参照
+    /// </summary>
+    public void ApplyTLOADamageReduction(ref StatesPowerBreakdown damage,ref StatesPowerBreakdown resDamage)
+    {
+        //HPが38%以下ならTLOAは0.7倍まで減衰する。
+        if(this.HP / this.MAXHP < 0.38f)
+        {
+            damage *= 0.7f;
+            resDamage *= 0.7f;
+        }
+
+        return;
+    }
     
     /// <summary>
     ///オーバライド可能なダメージ関数
@@ -5550,8 +5565,8 @@ public abstract class BaseStates
         //下の魔法スキル以外の計算式を基本計算式と考えましょう
         if(skill.IsMagic)//魔法スキルのダメージ計算
         {
-            dmg = (MagicBlendVSCalc(Atker.ATK(Atker.SkillAttackModifier),def) * SkillPower) + SkillPower;//(攻撃-対象者の防御) にスキルパワー加算と乗算
-            mentalDmg = (Atker.ATK() * mentalATKBoost / MentalDEF() * SkillPowerForMental) + SkillPowerForMental * 0.7f ;//精神攻撃
+            dmg = (MagicBlendVSCalc(Atker.ATK(Atker.SkillAttackModifier),def) * (SkillPower * 0.5f)) + SkillPower * Atker.ATK() * 0.09f;//(攻撃-対象者の防御) にスキルパワー加算と乗算
+            mentalDmg = (Atker.ATK() * mentalATKBoost / MentalDEF() * (SkillPowerForMental * 0.6f)) + SkillPowerForMental * 0.7f ;//精神攻撃
         }
         else//それ以外のスキルのダメージ計算
         {
@@ -5587,6 +5602,9 @@ public abstract class BaseStates
 
         //命中段階による最終ダメージ計算
         HitDmgCalculation(ref dmg,ref ResonanceDmg, hitResult,Atker);
+
+        //TLOAスキルの威力減衰
+        ApplyTLOADamageReduction(ref dmg,ref ResonanceDmg);
         
         //思えのダメージ発生  各クリティカルのダメージを考慮するためクリティカル後に
         ResonanceDamage(ResonanceDmg, skill, Atker);
