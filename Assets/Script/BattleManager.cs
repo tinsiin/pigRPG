@@ -1253,7 +1253,13 @@ public class BattleManager
         Debug.Log("スキル行使実行");
         var skill = Acter.NowUseSkill;
 
-
+        //もしActs,先約リストでsingleTargetを予約しているのなら(死亡チェックはactbranchingのCharacterAddFromListOrRandomで行っています。)
+        var singleTarget = Acts.GetAtSingleTarget(0);
+        if (singleTarget != null)
+        {   
+            Acter.Target = DirectedWill.One;//ここで単体選択し、尚且つしたの行動者決定☆の処理を飛ばせる
+            unders.CharaAdd(singleTarget);//対象者に追加
+        }
 
         //もしランダム範囲ならこの段階で範囲意志にランダム範囲を入れる。
         if (skill.HasZoneTrait(SkillZoneTrait.RandomRange))
@@ -1330,6 +1336,7 @@ public class BattleManager
 
         unders = new UnderActersEntryList(this);//対象者リスト初期化
         Acter.RangeWill = 0;//範囲意志を初期化
+        Acter.Target = 0;//対象者を初期化
 
         return ACTPop();
 
@@ -1398,6 +1405,17 @@ public class BattleManager
     {
         var skill = Acter.NowUseSkill;
 
+        //範囲意志かターゲットが既にいたら、35%で既に選んでるのが取り消してランダム範囲が入る。
+        //逆に言うと35%に引っかからないと、既に選んでるのでOK = ランダム範囲の処理を切り上げる。
+        if(Acter.Target != 0 || Acter.RangeWill != 0)
+        {
+            if(!rollper(35f)) return;
+
+            //ランダム範囲に切り替わるので、既にあるターゲットと範囲意志を初期化
+            Acter.Target = 0;
+            Acter.RangeWill = 0;
+            //unders = 対象者は初期化しない。　　 
+        }
 
         //全部　全範囲　単体ランダム　前のめり後衛
         if (skill.HasZoneTrait(SkillZoneTrait.RandomTargetALLSituation))
@@ -1535,13 +1553,7 @@ public class BattleManager
             }
         }
 
-        //もしActs,先約リストでsingleTargetを予約しているのなら(死亡チェックはactbranchingのCharacterAddFromListOrRandomで行っています。)
-        var singleTarget = Acts.GetAtSingleTarget(0);
-        if (singleTarget != null)
-        {   
-            Acter.Target = DirectedWill.One;//ここで単体選択し、尚且つしたの行動者決定☆の処理を飛ばせる
-            unders.CharaAdd(singleTarget);//対象者に追加
-        }
+        
 
         //行動者決定☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
 

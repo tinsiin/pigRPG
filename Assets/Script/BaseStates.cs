@@ -2005,13 +2005,13 @@ public abstract class BaseStates
     /// <summary>
     /// このキャラがどの辺りを狙っているか
     /// </summary>
-    public DirectedWill Target;
+    public DirectedWill Target = 0;
 
     /// <summary>
     /// このキャラの現在の範囲の意思　　複数持てる
     /// スキルの範囲性質にcanSelectRangeがある場合のみ、ない場合はskillのzoneTraitをそのまま代入される。
     /// </summary>
-    public SkillZoneTrait RangeWill;
+    public SkillZoneTrait RangeWill = 0;
 
     /// <summary>
     /// スキル範囲性質を持ってるかどうか

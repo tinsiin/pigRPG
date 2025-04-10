@@ -650,7 +650,7 @@ public class AllyClass : BaseStates
     /// <returns>遷移先のTabState</returns>
     public static TabState DetermineNextUIState(BaseSkill skill)
     {
-        var acter = Walking.bm.Acter;
+        //var acter = Walking.bm.Acter;
 
         if (skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))//範囲を選べるのなら
         {
