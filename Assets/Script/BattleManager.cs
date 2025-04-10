@@ -1497,7 +1497,6 @@ public class BattleManager
         if (chara == EnemyGroup.InstantVanguard) return true;
         return false;
     }
-    const int BackLineHITModifier = 70;
     /// <summary>
     /// スキルの実行者をunderActerに入れる処理　意思が実際の選別に状況を伴って変換される処理
     /// </summary>
@@ -1610,7 +1609,7 @@ public class BattleManager
                                 BackLines = new List<BaseStates>(SelectGroup.Ours.Where(member => member != SelectGroup.InstantVanguard));
 
                                 UA.Add(RandomEx.Shared.GetItem(BackLines.ToArray()));//後衛リストからランダムで選択
-                                Acter.SetEYEPercentageModifier(BackLineHITModifier, "少し遠いよ");//後衛への命中率補正70%を追加。
+                                Acter.SetEYEPercentageModifier(0.7f, "少し遠いよ");//後衛への命中率補正70%を追加。
                                 Debug.Log(Acter.CharacterName + "は後衛を狙った");
                             }
                         }
@@ -1698,9 +1697,9 @@ public class BattleManager
                             Debug.Log(Acter.CharacterName + "は前のめりしてる奴を狙った");
                         }
                         else if (Acter.Target == DirectedWill.BacklineOrAny)
-                        {//後衛を狙おうとしたなら 後衛への命中率は9割補正され　そもそも1.2割の確率で前のめりしてる奴にあたる
+                        {//後衛を狙おうとしたなら 後衛への命中率は9割補正され　テラーズヒットが発生した場合前のめりしてる奴にあたる
 
-                            if (RandomEx.Shared.NextInt(100) < 12)//前衛のかばいに引っかかったら
+                            if (ComparePressureAndRedirect(Acter,SelectGroup.InstantVanguard))//前衛のかばいに引っかかったら
                             {
                                 UniqueTopMessage += "テラーズヒット";//かばうテキストを追加？
                                 UA.Add(SelectGroup.InstantVanguard);
