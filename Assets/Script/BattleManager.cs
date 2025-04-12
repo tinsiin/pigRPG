@@ -1087,9 +1087,11 @@ public class BattleManager
             return val+CoolChance;
         }
     }
+    /// <summary>
+    /// スキル実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
+    /// </summary>
     void BeVanguard()
     {
-        //スキル実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
         if (Acter.NowUseSkill.IsAggressiveCommit)
         {
             FactionToGroup(ActerFaction).InstantVanguard = Acter;
