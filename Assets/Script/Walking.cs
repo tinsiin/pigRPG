@@ -74,6 +74,9 @@ public class Walking : MonoBehaviour
 
                 if (state == TabState.SelectRange) SelectRangeButtons.Instance.OnCreated();
             });
+
+        //USERUIの初期状態
+        USERUI_state.Value = TabState.Skill;
     }
 
     /// <summary>

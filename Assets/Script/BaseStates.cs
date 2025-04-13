@@ -8908,7 +8908,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         //思えの値現在値をランダム化
         dst.InitializeNowResonanceValue();
 
-
+        Debug.Log("BaseStatesディープコピー完了");
         //パワーは初期値　medium allyは歩行で変化　enemyは再遭遇時コールバックで一回だけ歩行変化で判別
     }
 }

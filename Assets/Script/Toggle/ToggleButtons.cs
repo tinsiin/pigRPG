@@ -53,7 +53,6 @@ public class ToggleButtons : MonoBehaviour //カスタマイズしやすいTabCo
                 _tabContentsChanger.GetViewFromKind(TabContentsKind.Players).SwitchContent(state);
                 _tabContentsChanger.GetViewFromKind(TabContentsKind.CharactorConfig).SwitchContent(state);
             }).AddTo(this);
-        Walking.USERUI_state.Value = TabState.walk;
     }
 
     [Serializable]

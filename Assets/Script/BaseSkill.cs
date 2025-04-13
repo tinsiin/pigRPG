@@ -557,7 +557,7 @@ public class BaseSkill
     /// 固定されたスキルレベルデータ部分
     /// このリスト以降なら無限のデータ
     /// </summary>
-    public List<SkillLevelData> FixedSkillLevelData;
+    public List<SkillLevelData> FixedSkillLevelData = new();
     /// <summary>
     /// 無限に伸びる部分のスキルパワーの単位。
     /// </summary>
@@ -740,7 +740,7 @@ public class BaseSkill
     /// <summary>
     /// スキルごとのムーブセット 戦闘規格ごとのaに対応するもの。
     /// </summary>
-    List<MoveSet> A_MoveSet_Cash;
+    List<MoveSet> A_MoveSet_Cash = new();
     /// <summary>
     /// 通常設定されたムーブセットB
     /// </summary>
@@ -928,6 +928,10 @@ public class BaseSkill
     /// </summary>
     public bool IsAggressiveCommit = true;
     /// <summary>
+    /// 発動カウント実行時に前のめりになるかどうか
+    /// </summary>
+    public bool IsReadyTriggerAgressiveCommit = false;
+    /// <summary>
     /// スキルが前のめりになるからならないかを選べるかどうか
     /// </summary>
     public bool CanSelectAggressiveCommit = false;
@@ -939,7 +943,7 @@ public class BaseSkill
     public int SKillDidWaitCount;//スキルを行使した後の硬直時間。 Doer、行使者のRecovelyTurnに一時的に加算される？
 
 
-    public string SkillName;
+    public string SkillName = "ここに名前を入れてください";
 
     /// <summary>
     /// BattleManager単位で行使した回数
@@ -1428,74 +1432,72 @@ public class BaseSkill
     /// <summary>
     /// ランタイム用にスキルをディープコピーする関数
     /// </summary>
-    public BaseSkill InitDeepCopy()
+    public void InitDeepCopy(BaseSkill dst)
     {
-        var copy = new BaseSkill();
-        copy.SkillSpiritual = SkillSpiritual;
-        copy.SkillPhysical = SkillPhysical;
-        copy.Impression = Impression;
+        dst.SkillSpiritual = SkillSpiritual;
+        dst.SkillPhysical = SkillPhysical;
+        dst.Impression = Impression;
         /*foreach(var tenDay in TenDayValues)
         {
-            copy.TenDayValues.Add(tenDay.Key,tenDay.Value);
+            dst.TenDayValues.Add(tenDay.Key,tenDay.Value);
         }*///十日能力は有限スキルレベルリストから参照する
-        copy._name = _name;
-        copy._triggerCountMax = _triggerCountMax;
-        copy._triggerRollBackCount = _triggerRollBackCount;
-        copy._RandomConsecutivePer = _RandomConsecutivePer;
-        copy._defaultStockCount = _defaultStockCount;
-        copy._stockPower = _stockPower;
-        copy._stockForgetPower = _stockForgetPower;
-        copy.CanCancel = CanCancel;
-        copy.IsAggressiveCommit = IsAggressiveCommit;
-        copy.CanSelectAggressiveCommit = CanSelectAggressiveCommit;
-        copy.SKillDidWaitCount = SKillDidWaitCount;
-        copy.SkillName = SkillName;
-        copy.IsTLOA = IsTLOA;
-        copy.IsMagic = IsMagic;
-        copy._powerSpread = _powerSpread;//通常の分散割合
-        copy._mentalDamageRatio = _mentalDamageRatio;//通常の精神攻撃率
-        copy._infiniteSkillPowerUnit = _infiniteSkillPowerUnit;//無限スキルの威力単位
-        copy._infiniteSkillTenDaysUnit = _infiniteSkillTenDaysUnit;//無限スキルの10日単位
-        copy.FixedSkillLevelData = FixedSkillLevelData;//固定スキルレベルデータ
+        dst._name = _name;
+        dst._triggerCountMax = _triggerCountMax;
+        dst._triggerRollBackCount = _triggerRollBackCount;
+        dst._RandomConsecutivePer = _RandomConsecutivePer;
+        dst._defaultStockCount = _defaultStockCount;
+        dst._stockPower = _stockPower;
+        dst._stockForgetPower = _stockForgetPower;
+        dst.CanCancel = CanCancel;
+        dst.IsAggressiveCommit = IsAggressiveCommit;
+        dst.CanSelectAggressiveCommit = CanSelectAggressiveCommit;
+        dst.SKillDidWaitCount = SKillDidWaitCount;
+        dst.SkillName = SkillName;
+        dst.IsTLOA = IsTLOA;
+        dst.IsMagic = IsMagic;
+        dst._powerSpread = _powerSpread;//通常の分散割合
+        dst._mentalDamageRatio = _mentalDamageRatio;//通常の精神攻撃率
+        dst._infiniteSkillPowerUnit = _infiniteSkillPowerUnit;//無限スキルの威力単位
+        dst._infiniteSkillTenDaysUnit = _infiniteSkillTenDaysUnit;//無限スキルの10日単位
+        dst.FixedSkillLevelData = FixedSkillLevelData;//固定スキルレベルデータ
         //有限スキルレベルリストのディープコピー
-        copy.FixedSkillLevelData = new();
+        dst.FixedSkillLevelData = new();
         foreach(var levelData in FixedSkillLevelData)
         {
-            copy.FixedSkillLevelData.Add(levelData.Clone());
+            dst.FixedSkillLevelData.Add(levelData.Clone());
         }
         
-        copy.subEffects = new List<int>(subEffects);
-        copy.subVitalLayers = new List<int>(subVitalLayers);
+        dst.subEffects = new List<int>(subEffects);
+        dst.subVitalLayers = new List<int>(subVitalLayers);
         foreach(var moveSet in A_MoveSet_Cash)
         {
-            copy.A_MoveSet_Cash.Add(moveSet.DeepCopy());
+            dst.A_MoveSet_Cash.Add(moveSet.DeepCopy());
         }
         foreach(var moveSet in B_MoveSet_Cash)
         {
-            copy.B_MoveSet_Cash.Add(moveSet.DeepCopy());
+            dst.B_MoveSet_Cash.Add(moveSet.DeepCopy());
         }
-        copy._defAtk = _defAtk;
-        copy.WhatSkill = WhatSkill;
-        copy.ConsecutiveType = ConsecutiveType;
-        copy.ZoneTrait = ZoneTrait;
-        copy.DistributionType = DistributionType;
-        copy.PowerRangePercentageDictionary = PowerRangePercentageDictionary;
+        dst._defAtk = _defAtk;
+        dst.WhatSkill = WhatSkill;
+        dst.ConsecutiveType = ConsecutiveType;
+        dst.ZoneTrait = ZoneTrait;
+        dst.DistributionType = DistributionType;
+        dst.PowerRangePercentageDictionary = PowerRangePercentageDictionary;
         foreach (var pair in PowerRangePercentageDictionary)
         {
-            copy.PowerRangePercentageDictionary.Add(pair.Key, pair.Value);
+            dst.PowerRangePercentageDictionary.Add(pair.Key, pair.Value);
         }
-        copy.HitRangePercentageDictionary = HitRangePercentageDictionary;
+        dst.HitRangePercentageDictionary = HitRangePercentageDictionary;
         foreach (var pair in HitRangePercentageDictionary)
         {
-            copy.HitRangePercentageDictionary.Add(pair.Key, pair.Value);
+            dst.HitRangePercentageDictionary.Add(pair.Key, pair.Value);
         }
 
-        copy.canEraceEffectIDs = new(canEraceEffectIDs);
-        copy.canEraceVitalLayerIDs = new(canEraceVitalLayerIDs);
-        copy.CanEraceEffectCount = CanEraceEffectCount;
-        copy.CanEraceVitalLayerCount = CanEraceVitalLayerCount;
+        dst.canEraceEffectIDs = new(canEraceEffectIDs);
+        dst.canEraceVitalLayerIDs = new(canEraceVitalLayerIDs);
+        dst.CanEraceEffectCount = CanEraceEffectCount;
+        dst.CanEraceVitalLayerCount = CanEraceVitalLayerCount;
 
-        return copy;
     }
 
 }

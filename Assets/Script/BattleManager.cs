@@ -680,6 +680,7 @@ public class BattleManager
     }
     /// <summary>
     /// スキルボタンのUIを各キャラクターの物にする。
+    /// スキル画面へ遷移する際のコールバックタイミングでもある
     /// </summary>
     void SwitchAllySkillUiState()
     {
@@ -709,18 +710,18 @@ public class BattleManager
              case StairStates:
                 //ここでスキルを指定した範囲性質を持つもののみinteractable=trueになるようにする。
                 ps.OnlyInteractHasZoneTraitSkills_geino(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);//ボタンのオンオフをするコールバック
-                ps.OnlyInteractHasHasBladeWeaponShowBladeSkill_geino();
+                ps.OnSkillSelectionScreenTransition_geino();//遷移時のここの引数必要のないコールバック
                 Walking.SKILLUI_state.Value = SkillUICharaState.geino;
                 break;
 
             case SateliteProcessStates:
                 ps.OnlyInteractHasZoneTraitSkills_sites(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);
-                ps.OnlyInteractHasHasBladeWeaponShowBladeSkill_sites();
+                ps.OnSkillSelectionScreenTransition_sites();
                 Walking.SKILLUI_state.Value = SkillUICharaState.sites;
                 break;
             case BassJackStates:
                 ps.OnlyInteractHasZoneTraitSkills_normalia(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);
-                ps.OnlyInteractHasHasBladeWeaponShowBladeSkill_noramlia();
+                ps.OnSkillSelectionScreenTransition_noramlia();
                 Walking.SKILLUI_state.Value = SkillUICharaState.normalia;
                 break;
 
@@ -987,6 +988,7 @@ public class BattleManager
         {
             Acter.FreezeSkill();//このスキルがキャンセル不可能として俳優に凍結される。
         }
+        BeVanguard_TriggerACT();//前のめりになるかどうか
         //他のスキルの発動カウントを巻き戻す
         OtherSkillsTriggerRollBack();
         //発動カウントのメッセージ
@@ -1090,11 +1092,21 @@ public class BattleManager
     /// <summary>
     /// スキル実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
     /// </summary>
-    void BeVanguard()
+    void BeVanguard_SkillACT()
     {
         if (Acter.NowUseSkill.IsAggressiveCommit)
         {
-            FactionToGroup(ActerFaction).InstantVanguard = Acter;
+            MyGroup(Acter).InstantVanguard = Acter;
+        }
+    }
+    /// <summary>
+    /// 発動カウント実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
+    /// </summary>
+    void BeVanguard_TriggerACT()
+    {
+        if (Acter.NowUseSkill.IsReadyTriggerAgressiveCommit)
+        {
+            MyGroup(Acter).InstantVanguard = Acter;
         }
     }
     /// <summary>
@@ -1281,7 +1293,7 @@ public class BattleManager
         SelectTargetFromWill();
 
         //前のめりになるスキルなら前のめりになる。
-        BeVanguard();
+        BeVanguard_SkillACT();
 
         //実行処理
         skill.SetDeltaTurn(BattleTurnCount);//スキルのdeltaTurnをセット

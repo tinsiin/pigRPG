@@ -454,7 +454,7 @@ public class EnemySkill : BaseSkill
     public EnemySkill InitEnemyDeepCopy()
     {
         var clone = new EnemySkill();
-        clone.InitDeepCopy();
+        InitDeepCopy(clone);
         clone.growthPoint = growthPoint;
         clone._initSkillLevel = _initSkillLevel;
         return clone;

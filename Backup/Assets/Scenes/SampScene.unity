@@ -540,7 +540,7 @@ MonoBehaviour:
     b_b_agi: 4
     _baseTenDayValues:
       _list: []
-    CharacterName: 
+    CharacterName: "\u30B8\u30FC\u30CE"
     ImpressionStringName: 
     NowUseWeapon:
       id: 0
@@ -554,6 +554,8 @@ MonoBehaviour:
         IsMagic: 0
         IsBlade: 0
         Cantkill: 0
+        EvasionModifier: 1
+        AttackModifier: 1
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
@@ -570,6 +572,7 @@ MonoBehaviour:
         _stockForgetPower: 1
         CanCancel: 1
         IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
@@ -613,6 +616,8 @@ MonoBehaviour:
       IsMagic: 0
       IsBlade: 0
       Cantkill: 0
+      EvasionModifier: 1
+      AttackModifier: 1
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -629,6 +634,7 @@ MonoBehaviour:
       _stockForgetPower: 1
       CanCancel: 1
       IsAggressiveCommit: 1
+      IsReadyTriggerAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -658,6 +664,8 @@ MonoBehaviour:
       IsMagic: 0
       IsBlade: 0
       Cantkill: 0
+      EvasionModifier: 1
+      AttackModifier: 1
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -674,6 +682,7 @@ MonoBehaviour:
       _stockForgetPower: 1
       CanCancel: 1
       IsAggressiveCommit: 1
+      IsReadyTriggerAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -697,23 +706,72 @@ MonoBehaviour:
     IsDeleteMyFreezeConsecutive: 0
     _tempVanguard: 0
     _tempLive: 0
+    BattleFirstSurpriseAttacker: 0
     maxRecoveryTurn: 0
-    _hp: 0
-    _maxhp: 0
-    _mentalHP: 0
-    _thinkingFactor: 0
+    _hp: 4444
+    _maxhp: 6.767677e+13
+    _mentalHP: 0.34
+    _thinkingFactor: 17.2
     Target: 0
     RangeWill: 0
     FreezeRangeWill: 0
     IsActiveCancelInSkillACT: 0
     MyType: 0
     DefaultImpression: 0
-    HeavyResistance: 1
-    voltenResistance: 1
-    DishSmackRsistance: 1
+    HeavyResistance: 2.91
+    voltenResistance: 4.91
+    DishSmackRsistance: 6.28
     broken: 0
     _machineBrokenRate: 0.3
-    ValidSkillIDList: 
+    _skillList:
+    - SkillSpiritual: 0
+      Impression: 0
+      SkillPhysical: 0
+      IsTLOA: 0
+      IsMagic: 0
+      IsBlade: 0
+      Cantkill: 0
+      EvasionModifier: 0
+      AttackModifier: 0
+      _infiniteSkillPowerUnit: 0
+      _infiniteSkillTenDaysUnit: 0
+      _mentalDamageRatio: 0
+      _powerSpread: []
+      _skillHitPer: 0
+      _a_moveset: []
+      _b_moveset: []
+      _name: 
+      _triggerCountMax: 0
+      _triggerRollBackCount: 0
+      _RandomConsecutivePer: 0
+      _defaultStockCount: 0
+      _stockPower: 0
+      _stockForgetPower: 0
+      CanCancel: 0
+      IsAggressiveCommit: 1
+      IsReadyTriggerAgressiveCommit: 0
+      CanSelectAggressiveCommit: 0
+      SKillDidWaitCount: 0
+      SkillName: 
+      subEffects: 
+      subVitalLayers: 
+      canEraceEffectIDs: 
+      canEraceVitalLayerIDs: 
+      CanEraceEffectCount: 0
+      Now_CanEraceEffectCount: 0
+      CanEraceVitalLayerCount: 0
+      Now_CanEraceVitalLayerCount: 0
+      _defAtk: 0
+      WhatSkill: 0
+      ConsecutiveType: 0
+      ZoneTrait: 0
+      DistributionType: 0
+      PowerRangePercentageDictionary:
+        _list: []
+      HitRangePercentageDictionary:
+        _list: []
+      _iD: 0
+    ValidSkillIDList: 00000000
   Init_noramlia:
     InitpassiveIDList: 
     InitVitalLaerIDList: 
@@ -739,6 +797,8 @@ MonoBehaviour:
         IsMagic: 0
         IsBlade: 0
         Cantkill: 0
+        EvasionModifier: 1
+        AttackModifier: 1
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
@@ -755,6 +815,7 @@ MonoBehaviour:
         _stockForgetPower: 1
         CanCancel: 1
         IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
@@ -798,6 +859,8 @@ MonoBehaviour:
       IsMagic: 0
       IsBlade: 0
       Cantkill: 0
+      EvasionModifier: 1
+      AttackModifier: 1
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -814,6 +877,7 @@ MonoBehaviour:
       _stockForgetPower: 1
       CanCancel: 1
       IsAggressiveCommit: 1
+      IsReadyTriggerAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -843,6 +907,8 @@ MonoBehaviour:
       IsMagic: 0
       IsBlade: 0
       Cantkill: 0
+      EvasionModifier: 1
+      AttackModifier: 1
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -859,6 +925,7 @@ MonoBehaviour:
       _stockForgetPower: 1
       CanCancel: 1
       IsAggressiveCommit: 1
+      IsReadyTriggerAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -882,6 +949,7 @@ MonoBehaviour:
     IsDeleteMyFreezeConsecutive: 0
     _tempVanguard: 0
     _tempLive: 0
+    BattleFirstSurpriseAttacker: 0
     maxRecoveryTurn: 0
     _hp: 0
     _maxhp: 0
@@ -898,6 +966,7 @@ MonoBehaviour:
     DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
+    _skillList: []
     ValidSkillIDList: 
   Init_sites:
     InitpassiveIDList: 
@@ -924,6 +993,8 @@ MonoBehaviour:
         IsMagic: 0
         IsBlade: 0
         Cantkill: 0
+        EvasionModifier: 1
+        AttackModifier: 1
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
@@ -940,6 +1011,7 @@ MonoBehaviour:
         _stockForgetPower: 1
         CanCancel: 1
         IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
@@ -983,6 +1055,8 @@ MonoBehaviour:
       IsMagic: 0
       IsBlade: 0
       Cantkill: 0
+      EvasionModifier: 1
+      AttackModifier: 1
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -999,6 +1073,7 @@ MonoBehaviour:
       _stockForgetPower: 1
       CanCancel: 1
       IsAggressiveCommit: 1
+      IsReadyTriggerAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1028,6 +1103,8 @@ MonoBehaviour:
       IsMagic: 0
       IsBlade: 0
       Cantkill: 0
+      EvasionModifier: 1
+      AttackModifier: 1
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1044,6 +1121,7 @@ MonoBehaviour:
       _stockForgetPower: 1
       CanCancel: 1
       IsAggressiveCommit: 1
+      IsReadyTriggerAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1067,6 +1145,7 @@ MonoBehaviour:
     IsDeleteMyFreezeConsecutive: 0
     _tempVanguard: 0
     _tempLive: 0
+    BattleFirstSurpriseAttacker: 0
     maxRecoveryTurn: 0
     _hp: 0
     _maxhp: 0
@@ -1083,6 +1162,7 @@ MonoBehaviour:
     DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
+    _skillList: []
     ValidSkillIDList: 
   geino:
     InitpassiveIDList: 
@@ -1095,7 +1175,7 @@ MonoBehaviour:
     b_b_agi: 4
     _baseTenDayValues:
       _list: []
-    CharacterName: "\u30B8\u30FC\u30CE"
+    CharacterName: "\u30B8\u30FC\u30CE\u7A7A\u3067\u3059\u3001\u30B3\u30D4\u30FC\u3055\u308C\u3066\u306A\u3044\u521D\u671F\u30C7\u30FC\u30BF\u304C"
     ImpressionStringName: 
     NowUseWeapon:
       id: 0
@@ -1109,6 +1189,8 @@ MonoBehaviour:
         IsMagic: 0
         IsBlade: 0
         Cantkill: 0
+        EvasionModifier: 1
+        AttackModifier: 1
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
@@ -1125,6 +1207,7 @@ MonoBehaviour:
         _stockForgetPower: 1
         CanCancel: 1
         IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
@@ -1168,6 +1251,8 @@ MonoBehaviour:
       IsMagic: 0
       IsBlade: 0
       Cantkill: 0
+      EvasionModifier: 1
+      AttackModifier: 1
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1184,6 +1269,7 @@ MonoBehaviour:
       _stockForgetPower: 1
       CanCancel: 1
       IsAggressiveCommit: 1
+      IsReadyTriggerAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1213,6 +1299,8 @@ MonoBehaviour:
       IsMagic: 0
       IsBlade: 0
       Cantkill: 0
+      EvasionModifier: 1
+      AttackModifier: 1
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1229,6 +1317,7 @@ MonoBehaviour:
       _stockForgetPower: 1
       CanCancel: 1
       IsAggressiveCommit: 1
+      IsReadyTriggerAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1252,6 +1341,7 @@ MonoBehaviour:
     IsDeleteMyFreezeConsecutive: 0
     _tempVanguard: 0
     _tempLive: 0
+    BattleFirstSurpriseAttacker: 0
     maxRecoveryTurn: 0
     _hp: 3
     _maxhp: 0
@@ -1268,6 +1358,7 @@ MonoBehaviour:
     DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
+    _skillList: []
     ValidSkillIDList: 
   noramlia:
     InitpassiveIDList: 
@@ -1294,6 +1385,8 @@ MonoBehaviour:
         IsMagic: 0
         IsBlade: 0
         Cantkill: 0
+        EvasionModifier: 1
+        AttackModifier: 1
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
@@ -1310,6 +1403,7 @@ MonoBehaviour:
         _stockForgetPower: 1
         CanCancel: 1
         IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
@@ -1353,6 +1447,8 @@ MonoBehaviour:
       IsMagic: 0
       IsBlade: 0
       Cantkill: 0
+      EvasionModifier: 1
+      AttackModifier: 1
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1369,6 +1465,7 @@ MonoBehaviour:
       _stockForgetPower: 1
       CanCancel: 1
       IsAggressiveCommit: 1
+      IsReadyTriggerAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1398,6 +1495,8 @@ MonoBehaviour:
       IsMagic: 0
       IsBlade: 0
       Cantkill: 0
+      EvasionModifier: 1
+      AttackModifier: 1
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1414,6 +1513,7 @@ MonoBehaviour:
       _stockForgetPower: 1
       CanCancel: 1
       IsAggressiveCommit: 1
+      IsReadyTriggerAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1437,6 +1537,7 @@ MonoBehaviour:
     IsDeleteMyFreezeConsecutive: 0
     _tempVanguard: 0
     _tempLive: 0
+    BattleFirstSurpriseAttacker: 0
     maxRecoveryTurn: 0
     _hp: 0
     _maxhp: 0
@@ -1453,6 +1554,7 @@ MonoBehaviour:
     DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
+    _skillList: []
     ValidSkillIDList: 
   sites:
     InitpassiveIDList: 
@@ -1479,6 +1581,8 @@ MonoBehaviour:
         IsMagic: 0
         IsBlade: 0
         Cantkill: 0
+        EvasionModifier: 1
+        AttackModifier: 1
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
@@ -1495,6 +1599,7 @@ MonoBehaviour:
         _stockForgetPower: 1
         CanCancel: 1
         IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
@@ -1538,6 +1643,8 @@ MonoBehaviour:
       IsMagic: 0
       IsBlade: 0
       Cantkill: 0
+      EvasionModifier: 1
+      AttackModifier: 1
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1554,6 +1661,7 @@ MonoBehaviour:
       _stockForgetPower: 1
       CanCancel: 1
       IsAggressiveCommit: 1
+      IsReadyTriggerAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1583,6 +1691,8 @@ MonoBehaviour:
       IsMagic: 0
       IsBlade: 0
       Cantkill: 0
+      EvasionModifier: 1
+      AttackModifier: 1
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1599,6 +1709,7 @@ MonoBehaviour:
       _stockForgetPower: 1
       CanCancel: 1
       IsAggressiveCommit: 1
+      IsReadyTriggerAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1622,6 +1733,7 @@ MonoBehaviour:
     IsDeleteMyFreezeConsecutive: 0
     _tempVanguard: 0
     _tempLive: 0
+    BattleFirstSurpriseAttacker: 0
     maxRecoveryTurn: 0
     _hp: 0
     _maxhp: 0
@@ -1638,6 +1750,7 @@ MonoBehaviour:
     DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
+    _skillList: []
     ValidSkillIDList: 
   skillButtonList_geino: []
   skillButtonList_noramlia: []
@@ -1645,6 +1758,11 @@ MonoBehaviour:
   skillStockButtonList_geino: []
   skillStockButtonList_noramlia: []
   skillStockButtonList_sites: []
+  skillSelectAgressiveCommitRadioList_geino:
+  - Controller: {fileID: 1312828554}
+    skillID: 0
+  skillSelectAgressiveCommitRadioList_noramlia: []
+  skillSelectAgressiveCommitRadioList_sites: []
   StopFreezeConsecutiveButton_geino: {fileID: 294146446}
   StopFreezeConsecutiveButton_Bassjack: {fileID: 1385335785}
   StopFreezeConsecutiveButton_Sites: {fileID: 1833282123}
@@ -1747,6 +1865,8 @@ MonoBehaviour:
             IsMagic: 0
             IsBlade: 0
             Cantkill: 0
+            EvasionModifier: 1
+            AttackModifier: 1
             _infiniteSkillPowerUnit: 0
             _infiniteSkillTenDaysUnit: 0
             _mentalDamageRatio: 0
@@ -1763,6 +1883,7 @@ MonoBehaviour:
             _stockForgetPower: 1
             CanCancel: 1
             IsAggressiveCommit: 1
+            IsReadyTriggerAgressiveCommit: 0
             CanSelectAggressiveCommit: 0
             SKillDidWaitCount: 0
             SkillName: 
@@ -1806,6 +1927,8 @@ MonoBehaviour:
           IsMagic: 0
           IsBlade: 0
           Cantkill: 0
+          EvasionModifier: 1
+          AttackModifier: 1
           _infiniteSkillPowerUnit: 0
           _infiniteSkillTenDaysUnit: 0
           _mentalDamageRatio: 0
@@ -1822,6 +1945,7 @@ MonoBehaviour:
           _stockForgetPower: 1
           CanCancel: 1
           IsAggressiveCommit: 1
+          IsReadyTriggerAgressiveCommit: 0
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
@@ -1851,6 +1975,8 @@ MonoBehaviour:
           IsMagic: 0
           IsBlade: 0
           Cantkill: 0
+          EvasionModifier: 1
+          AttackModifier: 1
           _infiniteSkillPowerUnit: 0
           _infiniteSkillTenDaysUnit: 0
           _mentalDamageRatio: 0
@@ -1867,6 +1993,7 @@ MonoBehaviour:
           _stockForgetPower: 1
           CanCancel: 1
           IsAggressiveCommit: 1
+          IsReadyTriggerAgressiveCommit: 0
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
@@ -1890,6 +2017,7 @@ MonoBehaviour:
         IsDeleteMyFreezeConsecutive: 0
         _tempVanguard: 0
         _tempLive: 0
+        BattleFirstSurpriseAttacker: 0
         maxRecoveryTurn: 0
         _hp: 0
         _maxhp: 0
@@ -1935,6 +2063,8 @@ MonoBehaviour:
             IsMagic: 0
             IsBlade: 0
             Cantkill: 0
+            EvasionModifier: 1
+            AttackModifier: 1
             _infiniteSkillPowerUnit: 0
             _infiniteSkillTenDaysUnit: 0
             _mentalDamageRatio: 0
@@ -1951,6 +2081,7 @@ MonoBehaviour:
             _stockForgetPower: 1
             CanCancel: 1
             IsAggressiveCommit: 1
+            IsReadyTriggerAgressiveCommit: 0
             CanSelectAggressiveCommit: 0
             SKillDidWaitCount: 0
             SkillName: 
@@ -1994,6 +2125,8 @@ MonoBehaviour:
           IsMagic: 0
           IsBlade: 0
           Cantkill: 0
+          EvasionModifier: 1
+          AttackModifier: 1
           _infiniteSkillPowerUnit: 0
           _infiniteSkillTenDaysUnit: 0
           _mentalDamageRatio: 0
@@ -2010,6 +2143,7 @@ MonoBehaviour:
           _stockForgetPower: 1
           CanCancel: 1
           IsAggressiveCommit: 1
+          IsReadyTriggerAgressiveCommit: 0
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
@@ -2039,6 +2173,8 @@ MonoBehaviour:
           IsMagic: 0
           IsBlade: 0
           Cantkill: 0
+          EvasionModifier: 1
+          AttackModifier: 1
           _infiniteSkillPowerUnit: 0
           _infiniteSkillTenDaysUnit: 0
           _mentalDamageRatio: 0
@@ -2055,6 +2191,7 @@ MonoBehaviour:
           _stockForgetPower: 1
           CanCancel: 1
           IsAggressiveCommit: 1
+          IsReadyTriggerAgressiveCommit: 0
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
@@ -2078,6 +2215,7 @@ MonoBehaviour:
         IsDeleteMyFreezeConsecutive: 0
         _tempVanguard: 0
         _tempLive: 0
+        BattleFirstSurpriseAttacker: 0
         maxRecoveryTurn: 0
         _hp: 0
         _maxhp: 0
@@ -2123,6 +2261,8 @@ MonoBehaviour:
             IsMagic: 0
             IsBlade: 0
             Cantkill: 0
+            EvasionModifier: 1
+            AttackModifier: 1
             _infiniteSkillPowerUnit: 0
             _infiniteSkillTenDaysUnit: 0
             _mentalDamageRatio: 0
@@ -2139,6 +2279,7 @@ MonoBehaviour:
             _stockForgetPower: 1
             CanCancel: 1
             IsAggressiveCommit: 1
+            IsReadyTriggerAgressiveCommit: 0
             CanSelectAggressiveCommit: 0
             SKillDidWaitCount: 0
             SkillName: 
@@ -2182,6 +2323,8 @@ MonoBehaviour:
           IsMagic: 0
           IsBlade: 0
           Cantkill: 0
+          EvasionModifier: 1
+          AttackModifier: 1
           _infiniteSkillPowerUnit: 0
           _infiniteSkillTenDaysUnit: 0
           _mentalDamageRatio: 0
@@ -2198,6 +2341,7 @@ MonoBehaviour:
           _stockForgetPower: 1
           CanCancel: 1
           IsAggressiveCommit: 1
+          IsReadyTriggerAgressiveCommit: 0
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
@@ -2227,6 +2371,8 @@ MonoBehaviour:
           IsMagic: 0
           IsBlade: 0
           Cantkill: 0
+          EvasionModifier: 1
+          AttackModifier: 1
           _infiniteSkillPowerUnit: 0
           _infiniteSkillTenDaysUnit: 0
           _mentalDamageRatio: 0
@@ -2243,6 +2389,7 @@ MonoBehaviour:
           _stockForgetPower: 1
           CanCancel: 1
           IsAggressiveCommit: 1
+          IsReadyTriggerAgressiveCommit: 0
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
@@ -2266,6 +2413,7 @@ MonoBehaviour:
         IsDeleteMyFreezeConsecutive: 0
         _tempVanguard: 0
         _tempLive: 0
+        BattleFirstSurpriseAttacker: 0
         maxRecoveryTurn: 0
         _hp: 0
         _maxhp: 0
@@ -2517,6 +2665,8 @@ MonoBehaviour:
           IsMagic: 0
           IsBlade: 0
           Cantkill: 0
+          EvasionModifier: 1
+          AttackModifier: 1
           _infiniteSkillPowerUnit: 0
           _infiniteSkillTenDaysUnit: 0
           _mentalDamageRatio: 0
@@ -2533,6 +2683,7 @@ MonoBehaviour:
           _stockForgetPower: 1
           CanCancel: 1
           IsAggressiveCommit: 1
+          IsReadyTriggerAgressiveCommit: 0
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
@@ -4115,6 +4266,7 @@ RectTransform:
   m_Children:
   - {fileID: 602005236}
   - {fileID: 841515317}
+  - {fileID: 1312828550}
   m_Father: {fileID: 1736134641}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -4478,8 +4630,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -261, y: 159.2}
-  m_SizeDelta: {x: 456.54, y: 213.68}
+  m_AnchoredPosition: {x: -342.52, y: 101.78}
+  m_SizeDelta: {x: 293.5, y: 98.85}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &602005237
 MonoBehaviour:
@@ -6196,7 +6348,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 6c29cf41061d53344aefbbf29de0b0ee, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6518,6 +6670,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1286961439}
   m_CullTransparentMesh: 1
+--- !u!224 &1312828550 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+  m_PrefabInstance: {fileID: 474800726722792207}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1312828554 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 770933180919006377, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+  m_PrefabInstance: {fileID: 474800726722792207}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbc8e02ddf781f14280eff6be7e481c6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1353248581
 GameObject:
   m_ObjectHideFlags: 0
@@ -8537,7 +8705,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 72
+  m_fontSize: 34.1
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -9096,7 +9264,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2056622406}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 78173491}
+        m_TargetAssemblyTypeName: Walking, Assembly-CSharp
+        m_MethodName: OnWalkBtn
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &2056622406
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9371,6 +9551,103 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2134117276}
   m_CullTransparentMesh: 1
+--- !u!1001 &474800726722792207
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 514049932}
+    m_Modifications:
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 217.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 59.92
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -288
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 244
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7080641178823015572, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
+      propertyPath: m_Name
+      value: TestSelectAgrresiveCommit
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

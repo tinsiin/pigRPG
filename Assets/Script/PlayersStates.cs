@@ -20,6 +20,34 @@ public class ButtonAndSkillIDHold
         button.onClick.AddListener(() => call(skillID));
     }
 }
+[Serializable]
+public class RadioButtonsAndSkillIDHold
+{
+    public ToggleGroupController_SelectAggressiveCommit Controller;
+    public int skillID;
+    
+    // UnityAction<int, int>に変更 - 第1引数：どのトグルが選ばれたか、第2引数：skillID
+    public void AddRadioFunc(UnityAction<int, int> call)
+    {
+         // nullチェック
+        if (Controller == null)
+        {
+            Debug.LogError("toggleGroupがnullです！ skillID: " + skillID);
+        }
+        
+        if (call == null)
+        {
+            Debug.LogError("callがnullです！ skillID: " + skillID);
+        }
+        // 両方の情報を渡す
+        Controller.AddListener((int toggleIndex) => call(toggleIndex, skillID));
+    }
+
+    public void Interactable(bool interactable)
+    {
+        Controller.interactable = interactable;
+    }
+}
 
 /// <summary>
 ///セーブでセーブされるような事柄とかメインループで操作するためのステータス太刀　シングルトン
@@ -49,6 +77,8 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     public void Init()
     {
+        Debug.Log("Init");
+
         CreateDecideValues();//中央決定値をゲーム開始時一回だけ生成
 
         NowProgress = 0;//ステージ関連のステータス初期化
@@ -128,6 +158,24 @@ public class PlayersStates:MonoBehaviour
             button.AddButtonFunc(sites.OnSkillStockBtnCallBack);
         }
 
+        //ラジオボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
+        foreach (var button in skillSelectAgressiveCommitRadioList_geino)
+        {
+            button.AddRadioFunc(geino.OnSkillSelectAgressiveCommitBtnCallBack);
+        }
+
+        //ラジオボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
+        foreach (var button in skillSelectAgressiveCommitRadioList_noramlia)
+        {
+            button.AddRadioFunc(noramlia.OnSkillSelectAgressiveCommitBtnCallBack);
+        }
+
+        //ラジオボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
+        foreach (var button in skillSelectAgressiveCommitRadioList_sites)
+        {
+            button.AddRadioFunc(sites.OnSkillSelectAgressiveCommitBtnCallBack);
+        }
+
 
     }
 
@@ -145,6 +193,64 @@ public class PlayersStates:MonoBehaviour
     [SerializeField]
     private List<ButtonAndSkillIDHold> skillStockButtonList_sites=new();//サテライトの該当のスキルの攻撃ストックボタン用リスト
 
+    //前のめり選択が可能なスキル用に選択できるラジオボタン用リスト
+    [SerializeField]
+    private List<RadioButtonsAndSkillIDHold> skillSelectAgressiveCommitRadioList_geino = new();
+    [SerializeField]
+    private List<RadioButtonsAndSkillIDHold> skillSelectAgressiveCommitRadioList_noramlia = new();
+    [SerializeField]
+    private List<RadioButtonsAndSkillIDHold> skillSelectAgressiveCommitRadioList_sites = new();
+
+    /// <summary>
+    /// スキル選択画面へ遷移する際のコールバック
+    /// </summary>
+    public void OnSkillSelectionScreenTransition_geino() 
+    {
+        //OnlyInteractHasZoneTraitSkills_geino(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);//ボタンのオンオフをするコールバック
+        //これは引数必要だから呼び出し元で
+        OnlyInteractHasHasBladeWeaponShowBladeSkill_geino();
+
+        //「有効化されてるスキル達のみ」の前のめり選択状態を　ラジオボタンに反映する処理
+        foreach(var radio in skillSelectAgressiveCommitRadioList_geino.Where(radio => geino.ValidSkillIDList.Contains(radio.skillID)))
+        {
+            BaseSkill skill = geino.SkillList[radio.skillID];
+            if(skill == null) Debug.LogError("スキルがありません");
+            radio.Controller.UpdateToggleState(skill.IsAggressiveCommit);
+        }
+    }
+    /// <summary>
+    /// スキル選択画面へ遷移する際のコールバック（sites用）
+    /// </summary>
+    public void OnSkillSelectionScreenTransition_sites() 
+    {
+        //OnlyInteractHasZoneTraitSkills_sites(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);//ボタンのオンオフをするコールバック
+        //これは引数必要だから呼び出し元で
+        OnlyInteractHasHasBladeWeaponShowBladeSkill_sites();
+
+        //「有効化されてるスキル達のみ」の前のめり選択状態を　ラジオボタンに反映する処理
+        foreach(var radio in skillSelectAgressiveCommitRadioList_sites.Where(radio => sites.ValidSkillIDList.Contains(radio.skillID)))
+        {
+            radio.Controller.UpdateToggleState(sites.SkillList[radio.skillID].IsAggressiveCommit);
+        }
+    }
+
+    /// <summary>
+    /// スキル選択画面へ遷移する際のコールバック（bassjack/noramlia用）
+    /// </summary>
+    public void OnSkillSelectionScreenTransition_noramlia() 
+    {
+        //OnlyInteractHasZoneTraitSkills_noramlia(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);//ボタンのオンオフをするコールバック
+        //これは引数必要だから呼び出し元で
+        OnlyInteractHasHasBladeWeaponShowBladeSkill_noramlia();
+
+        //「有効化されてるスキル達のみ」の前のめり選択状態を　ラジオボタンに反映する処理
+        foreach(var radio in skillSelectAgressiveCommitRadioList_noramlia.Where(radio => noramlia.ValidSkillIDList.Contains(radio.skillID)))
+        {
+            radio.Controller.UpdateToggleState(noramlia.SkillList[radio.skillID].IsAggressiveCommit);
+        }
+    }
+
+    
     /// <summary>
     /// 指定したZoneTraitとスキル性質を所持するスキルのみを、有効化しそれ以外を無効化するコールバック
     /// </summary>
@@ -242,7 +348,7 @@ public class PlayersStates:MonoBehaviour
     }
 
     /// <summary>
-    /// スキルボタンの使いを有効化する処理
+    /// スキルボタンの使いを有効化する処理　可視化
     /// </summary>
     void UpdateSkillButtonVisibility()
     {
@@ -260,6 +366,10 @@ public class PlayersStates:MonoBehaviour
         {
             hold.button.interactable = activeSkillIds_geino.Contains(hold.skillID);
         }
+        foreach(var hold in skillSelectAgressiveCommitRadioList_geino)
+        {
+            hold.Interactable(activeSkillIds_geino.Contains(hold.skillID));//前のめり選択ラジオボタンの設定
+        }
 
         foreach (var hold in skillButtonList_noramlia)
         {
@@ -269,6 +379,10 @@ public class PlayersStates:MonoBehaviour
         {
             hold.button.interactable = activeSkillIds_normalia.Contains(hold.skillID);
         }
+        foreach(var hold in skillSelectAgressiveCommitRadioList_noramlia)
+        {
+            hold.Interactable(activeSkillIds_normalia.Contains(hold.skillID));//前のめり選択ラジオボタンの設定
+        }
 
         foreach (var hold in skillButtonList_sites)
         {
@@ -277,6 +391,10 @@ public class PlayersStates:MonoBehaviour
         foreach (var hold in skillStockButtonList_sites)//ストックボタン
         {
             hold.button.interactable = activeSkillIds_sites.Contains(hold.skillID);
+        }
+        foreach(var hold in skillSelectAgressiveCommitRadioList_sites)
+        {
+            hold.Interactable(activeSkillIds_sites.Contains(hold.skillID));//前のめり選択ラジオボタンの設定
         }
     }
 
@@ -644,6 +762,27 @@ public class AllyClass : BaseStates
     }
 
     /// <summary>
+    /// 前のめりを選択できるスキルで選択したときのコールバック関数
+    /// </summary>
+    public void OnSkillSelectAgressiveCommitBtnCallBack(int toggleIndex, int skillID)
+    {
+        bool isAgrresiveCommit;
+        var skill = SkillList[skillID];
+        
+        if(toggleIndex == 0) 
+        {
+            isAgrresiveCommit = true;
+            Debug.Log("前のめりして攻撃する" );
+        }
+        else
+        {
+            isAgrresiveCommit = false;
+            Debug.Log("そのままの位置から攻撃" );
+        }
+        skill.IsAggressiveCommit = isAgrresiveCommit;//スキルの前のめり性に代入すべ
+    }
+
+    /// <summary>
     /// スキルの性質に基づいて、次に遷移すべき画面状態を判定する
     /// </summary>
     /// <param name="skill">判定対象のスキル</param>
@@ -983,21 +1122,20 @@ public class AllyClass : BaseStates
         }
     }
 
-    public AllyClass DeepCopy(AllyClass dst)
+    public void DeepCopy(AllyClass dst)
     {
 
         // 2. BaseStates のフィールドをコピー
         InitBaseStatesDeepCopy(dst);
 
         // 3. AllyClass 独自フィールドをコピー
+        dst._skillList = new List<AllySkill>();
         foreach(var skill in _skillList)
         {
             dst._skillList.Add(skill.InitAllyDeepCopy());
         }
         dst.ValidSkillIDList = new List<int>(ValidSkillIDList);  //主人公達の初期有効化スキルIDをランタイム用リストにセット
-        
-        // 4. 戻り値
-        return dst;
+        Debug.Log("AllyClassディープコピー完了");
     }
 
 }
@@ -1008,7 +1146,8 @@ public class BassJackStates : AllyClass //共通ステータスにプラスで�
     public BassJackStates DeepCopy()
     {
         var clone = new BassJackStates();
-        clone.DeepCopy(clone);
+        DeepCopy(clone);
+        Debug.Log("BassJackStatesディープコピー完了");
         return clone;
     }
 }
@@ -1018,7 +1157,8 @@ public class SateliteProcessStates : AllyClass //共通ステータスにプラ�
     public SateliteProcessStates DeepCopy()
     {
         var clone = new SateliteProcessStates();
-        clone.DeepCopy(clone);
+        DeepCopy(clone);
+        Debug.Log("SateliteProcessStatesディープコピー完了");
         return clone;
     }
 }
@@ -1028,11 +1168,12 @@ public class StairStates : AllyClass //共通ステータスにプラスでそ�
     public StairStates DeepCopy()
     {
         var clone = new StairStates();
-        clone.DeepCopy(clone);
+        DeepCopy(clone);
+        Debug.Log("StairStatesディープコピー完了");
         return clone;
     }
 }
-
+[Serializable]
 public class AllySkill : BaseSkill
 {
     [SerializeField]
@@ -1045,7 +1186,7 @@ public class AllySkill : BaseSkill
     public AllySkill InitAllyDeepCopy()
     {
         var clone = new AllySkill();
-        clone.InitDeepCopy();
+        InitDeepCopy(clone);
 
         clone._iD = _iD;
         return clone;
