@@ -6085,7 +6085,11 @@ public abstract class BaseStates
         //vanguardじゃなければ攻撃者の命中減少
         if (!manager.IsVanguard(Attacker))
         {
-            minusMyChance += AGI().Total * 0.2f;//チャンス計算だけだからTotal    
+            //スキルのその場DontMove性の担保のため、前のめりの選択がないスキルは後衛でも命中低下しない
+            if(skill.CanSelectAggressiveCommit)
+            {//だから前のめり選べるスキルの場合のみ命中低下する。
+                minusMyChance += AGI().Total * 0.2f;//チャンス計算だけだからTotal    
+            }
         }
 
         if (minusMyChance > Attacker.EYE().Total)//マイナス対策

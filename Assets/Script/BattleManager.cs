@@ -755,8 +755,10 @@ public class BattleManager
             return ACTPop();
         }
 
+        //スキルのStockACT ストック
         if(DoNothing)
         {
+            BeVanguard_SkillStockACT();//前のめりになるかならないか
             //小さなアイコン辺りに無音の灰色円縮小エフェクトを入れる     何もしないエフェクト
             DoNothing = false;
             NextTurn(true);
@@ -1105,6 +1107,16 @@ public class BattleManager
     void BeVanguard_TriggerACT()
     {
         if (Acter.NowUseSkill.IsReadyTriggerAgressiveCommit)
+        {
+            MyGroup(Acter).InstantVanguard = Acter;
+        }
+    }
+    /// <summary>
+    /// スキルストック時に踏み込むのなら、俳優がグループ内の前のめり状態になる
+    /// </summary>
+    void BeVanguard_SkillStockACT()
+    {
+        if (Acter.NowUseSkill.IsStockAgressiveCommit)
         {
             MyGroup(Acter).InstantVanguard = Acter;
         }

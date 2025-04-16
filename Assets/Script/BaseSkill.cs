@@ -928,11 +928,16 @@ public class BaseSkill
     /// </summary>
     public bool IsAggressiveCommit = true;
     /// <summary>
-    /// 発動カウント実行時に前のめりになるかどうか
-    /// </summary>
+/// 発動カウント実行時に前のめりになるかどうか
+/// </summary>
     public bool IsReadyTriggerAgressiveCommit = false;
     /// <summary>
+    /// スキルのストック時に前のめりになるかどうか
+    /// </summary>
+    public bool IsStockAgressiveCommit = false;
+    /// <summary>
     /// スキルが前のめりになるからならないかを選べるかどうか
+    /// </summary>
     /// </summary>
     public bool CanSelectAggressiveCommit = false;
 
