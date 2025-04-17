@@ -1096,7 +1096,7 @@ public class BattleManager
     /// </summary>
     void BeVanguard_SkillACT()
     {
-        if (Acter.NowUseSkill.IsAggressiveCommit)
+        if (Acter.NowUseSkill.IsAggressiveCommit && !TryBlockVanruard())
         {
             MyGroup(Acter).InstantVanguard = Acter;
         }
@@ -1106,7 +1106,7 @@ public class BattleManager
     /// </summary>
     void BeVanguard_TriggerACT()
     {
-        if (Acter.NowUseSkill.IsReadyTriggerAgressiveCommit)
+        if (Acter.NowUseSkill.IsReadyTriggerAgressiveCommit && !TryBlockVanruard())
         {
             MyGroup(Acter).InstantVanguard = Acter;
         }
@@ -1116,10 +1116,60 @@ public class BattleManager
     /// </summary>
     void BeVanguard_SkillStockACT()
     {
-        if (Acter.NowUseSkill.IsStockAgressiveCommit)
+        if (Acter.NowUseSkill.IsStockAgressiveCommit && !TryBlockVanruard())
         {
             MyGroup(Acter).InstantVanguard = Acter;
         }
+    }
+    /// <summary>
+    /// 前のめりの交代阻止パッシブ用の判定関数
+    /// </summary>
+    /// <returns></returns>
+    bool TryBlockVanruard()
+    {
+        var group = MyGroup(Acter);
+
+        //前のめり者がいなければ終わり
+        if (group.InstantVanguard == null) return false;
+        //前のめり者が交代阻止のパッシブを持っていなければ終わり
+        if (!group.InstantVanguard.HasPassive(8)) return false;
+
+        var nowVanguard = group.InstantVanguard;
+        var newVanguard = Acter;
+
+        // パーティー属性係数
+        float attrRate = group.OurImpression == PartyProperty.HolyGroup ? 0.7f : 1f;
+
+        // 前のめり引き留め側合算
+        float defendSum =
+            nowVanguard.TenDayValues().GetValueOrZero(TenDayAbility.Leisure) +
+            nowVanguard.TenDayValues().GetValueOrZero(TenDayAbility.SpringNap) +
+            nowVanguard.TenDayValues().GetValueOrZero(TenDayAbility.SpringWater) +
+            nowVanguard.TenDayValues().GetValueOrZero(TenDayAbility.FlameBreathingWife);
+
+        // 前のめりになろうとする側取得
+        float blaze = newVanguard.TenDayValues().GetValueOrZero(TenDayAbility.BlazingFire);
+        float pilma = newVanguard.TenDayValues().GetValueOrZero(TenDayAbility.Pilmagreatifull);
+        float miza  = newVanguard.TenDayValues().GetValueOrZero(TenDayAbility.Miza);
+
+        // 冷酷冷静による個別減算
+        float coldCalm = newVanguard.TenDayValues().GetValueOrZero(TenDayAbility.ColdHeartedCalm);
+        blaze = Mathf.Max(blaze - coldCalm * 0.8f, 0f);
+        pilma = Mathf.Max(pilma - coldCalm * 0.2f, 0f);
+
+        // エノクナギによる全体減算
+        float enok = newVanguard.TenDayValues().GetValueOrZero(TenDayAbility.Enokunagi);
+
+        float attackSum = blaze + pilma + miza - enok;
+        attackSum = Mathf.Max(attackSum, 0f);
+
+        float NowVanguardScore = defendSum * attrRate;
+        float WantBeVanguardScore = attackSum * (1f - attrRate);
+        if (NowVanguardScore + WantBeVanguardScore <= 0f) return false;//そもそも比較できるスコアがないなら終わり
+
+        // 合計値＝NowVanguardScore+WantBeVanguardScore の範囲で一様乱数を取り、
+        // WantBeVanguardScore 以下なら “入れ替え成功”（防止失敗）になる。
+        return RandomEx.Shared.NextFloat(NowVanguardScore + WantBeVanguardScore) <= NowVanguardScore;
     }
     /// <summary>
     /// 相性値由来の被害者への仲間の救済意図での再行動短縮処理

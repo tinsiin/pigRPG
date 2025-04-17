@@ -34,9 +34,9 @@ public class NormalEnemy : BaseStates
     
     /// <summary>
     /// 実際の再復活カウンター　初回は-1
+    /// このカウントは死んだ状態でバトルが終わると、入る　Death()ではまだバトル内で復活する恐れがあるから。
     /// </summary>
     private int _recovelyStepCount = -1;
-    //このカウントは死んだ状態でバトルが終わると、入る　Death()ではまだバトル内で復活する恐れがあるから。
 
     /// <summary>
     /// 最後にエンカウントした時の歩数 再復活用 要は敵が死んだとき"のみ"に記録される。
@@ -81,7 +81,7 @@ public class NormalEnemy : BaseStates
     /// <summary>
     /// 敵の実体スキルリスト
     /// </summary>
-    protected List<EnemySkill> EnemySkillList{ get; private set; } = new();
+    [SerializeReference,SelectableSerializeReference] List<EnemySkill> EnemySkillList;
     /// <summary>
     /// 敵は成長ポイントが-1に指定されたスキルのみ、実体スキルリストとして返す
     /// </summary>
@@ -405,7 +405,7 @@ public class NormalEnemy : BaseStates
     }
 
 }
-
+[Serializable]
 public class EnemySkill : BaseSkill
 {
     /// <summary>

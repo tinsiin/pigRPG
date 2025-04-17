@@ -607,16 +607,16 @@ public class AllyClass : BaseStates
     /// <summary>
     /// 主人公達の全所持スキルリスト
     /// </summary>
-    [SerializeField]
-    List<AllySkill> _skillList = new();
+    [SerializeReference,SelectableSerializeReference]
+    List<AllySkill> _skillALLList = new();
     /// <summary>
     /// 有効なスキルリスト
     /// </summary>
     public List<int> ValidSkillIDList = new();
-    public override IReadOnlyList<BaseSkill> SkillList => _skillList.Where(skill => ValidSkillIDList.Contains(skill.ID)).ToList();
+    public override IReadOnlyList<BaseSkill> SkillList => _skillALLList.Where(skill => ValidSkillIDList.Contains(skill.ID)).ToList();
     public override void OnInitializeSkillsAndChara()
     {
-        foreach (var skill in _skillList)
+        foreach (var skill in _skillALLList)
         {
             skill.OnInitialize(this);
         }
@@ -1129,10 +1129,10 @@ public class AllyClass : BaseStates
         InitBaseStatesDeepCopy(dst);
 
         // 3. AllyClass 独自フィールドをコピー
-        dst._skillList = new List<AllySkill>();
-        foreach(var skill in _skillList)
+        dst._skillALLList = new List<AllySkill>();
+        foreach(var skill in _skillALLList)
         {
-            dst._skillList.Add(skill.InitAllyDeepCopy());
+            dst._skillALLList.Add(skill.InitAllyDeepCopy());
         }
         dst.ValidSkillIDList = new List<int>(ValidSkillIDList);  //主人公達の初期有効化スキルIDをランタイム用リストにセット
         Debug.Log("AllyClassディープコピー完了");

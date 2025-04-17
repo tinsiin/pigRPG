@@ -573,6 +573,7 @@ MonoBehaviour:
         CanCancel: 1
         IsAggressiveCommit: 1
         IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
@@ -635,6 +636,7 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
+      IsStockAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -683,6 +685,7 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
+      IsStockAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -723,54 +726,8 @@ MonoBehaviour:
     DishSmackRsistance: 6.28
     broken: 0
     _machineBrokenRate: 0.3
-    _skillList:
-    - SkillSpiritual: 0
-      Impression: 0
-      SkillPhysical: 0
-      IsTLOA: 0
-      IsMagic: 0
-      IsBlade: 0
-      Cantkill: 0
-      EvasionModifier: 0
-      AttackModifier: 0
-      _infiniteSkillPowerUnit: 0
-      _infiniteSkillTenDaysUnit: 0
-      _mentalDamageRatio: 0
-      _powerSpread: []
-      _skillHitPer: 0
-      _a_moveset: []
-      _b_moveset: []
-      _name: 
-      _triggerCountMax: 0
-      _triggerRollBackCount: 0
-      _RandomConsecutivePer: 0
-      _defaultStockCount: 0
-      _stockPower: 0
-      _stockForgetPower: 0
-      CanCancel: 0
-      IsAggressiveCommit: 1
-      IsReadyTriggerAgressiveCommit: 0
-      CanSelectAggressiveCommit: 0
-      SKillDidWaitCount: 0
-      SkillName: 
-      subEffects: 
-      subVitalLayers: 
-      canEraceEffectIDs: 
-      canEraceVitalLayerIDs: 
-      CanEraceEffectCount: 0
-      Now_CanEraceEffectCount: 0
-      CanEraceVitalLayerCount: 0
-      Now_CanEraceVitalLayerCount: 0
-      _defAtk: 0
-      WhatSkill: 0
-      ConsecutiveType: 0
-      ZoneTrait: 0
-      DistributionType: 0
-      PowerRangePercentageDictionary:
-        _list: []
-      HitRangePercentageDictionary:
-        _list: []
-      _iD: 0
+    _skillALLList:
+    - rid: 2127851150886043649
     ValidSkillIDList: 00000000
   Init_noramlia:
     InitpassiveIDList: 
@@ -816,6 +773,7 @@ MonoBehaviour:
         CanCancel: 1
         IsAggressiveCommit: 1
         IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
@@ -878,6 +836,7 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
+      IsStockAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -926,6 +885,7 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
+      IsStockAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -966,7 +926,7 @@ MonoBehaviour:
     DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
-    _skillList: []
+    _skillALLList: []
     ValidSkillIDList: 
   Init_sites:
     InitpassiveIDList: 
@@ -1012,6 +972,7 @@ MonoBehaviour:
         CanCancel: 1
         IsAggressiveCommit: 1
         IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
@@ -1074,6 +1035,7 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
+      IsStockAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1122,6 +1084,7 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
+      IsStockAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1162,7 +1125,7 @@ MonoBehaviour:
     DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
-    _skillList: []
+    _skillALLList: []
     ValidSkillIDList: 
   geino:
     InitpassiveIDList: 
@@ -1208,6 +1171,7 @@ MonoBehaviour:
         CanCancel: 1
         IsAggressiveCommit: 1
         IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
@@ -1270,6 +1234,7 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
+      IsStockAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1318,6 +1283,7 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
+      IsStockAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1358,7 +1324,7 @@ MonoBehaviour:
     DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
-    _skillList: []
+    _skillALLList: []
     ValidSkillIDList: 
   noramlia:
     InitpassiveIDList: 
@@ -1404,6 +1370,7 @@ MonoBehaviour:
         CanCancel: 1
         IsAggressiveCommit: 1
         IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
@@ -1466,6 +1433,7 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
+      IsStockAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1514,6 +1482,7 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
+      IsStockAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1554,7 +1523,7 @@ MonoBehaviour:
     DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
-    _skillList: []
+    _skillALLList: []
     ValidSkillIDList: 
   sites:
     InitpassiveIDList: 
@@ -1600,6 +1569,7 @@ MonoBehaviour:
         CanCancel: 1
         IsAggressiveCommit: 1
         IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
@@ -1662,6 +1632,7 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
+      IsStockAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1710,6 +1681,7 @@ MonoBehaviour:
       CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
+      IsStockAgressiveCommit: 0
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
@@ -1750,7 +1722,7 @@ MonoBehaviour:
     DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
-    _skillList: []
+    _skillALLList: []
     ValidSkillIDList: 
   skillButtonList_geino: []
   skillButtonList_noramlia: []
@@ -1767,6 +1739,60 @@ MonoBehaviour:
   StopFreezeConsecutiveButton_Bassjack: {fileID: 1385335785}
   StopFreezeConsecutiveButton_Sites: {fileID: 1833282123}
   ExplosionVoid: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 2127851150886043649
+      type: {class: AllySkill, ns: , asm: Assembly-CSharp}
+      data:
+        SkillSpiritual: 0
+        Impression: 0
+        SkillPhysical: 0
+        IsTLOA: 0
+        IsMagic: 0
+        IsBlade: 0
+        Cantkill: 0
+        EvasionModifier: 1
+        AttackModifier: 1
+        _infiniteSkillPowerUnit: 0
+        _infiniteSkillTenDaysUnit: 0
+        _mentalDamageRatio: 0
+        _powerSpread: []
+        _skillHitPer: 0
+        _a_moveset: []
+        _b_moveset: []
+        _name: 
+        _triggerCountMax: 0
+        _triggerRollBackCount: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        CanCancel: 1
+        IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
+        CanSelectAggressiveCommit: 0
+        SKillDidWaitCount: 0
+        SkillName: "\u3053\u3053\u306B\u540D\u524D\u3092\u5165\u308C\u3066\u304F\u3060\u3055\u3044"
+        subEffects: 
+        subVitalLayers: 
+        canEraceEffectIDs: 
+        canEraceVitalLayerIDs: 
+        CanEraceEffectCount: 0
+        Now_CanEraceEffectCount: 0
+        CanEraceVitalLayerCount: 0
+        Now_CanEraceVitalLayerCount: 0
+        _defAtk: 0
+        WhatSkill: 0
+        ConsecutiveType: 0
+        ZoneTrait: 0
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
+        _iD: 0
 --- !u!114 &78173494
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1884,6 +1910,7 @@ MonoBehaviour:
             CanCancel: 1
             IsAggressiveCommit: 1
             IsReadyTriggerAgressiveCommit: 0
+            IsStockAgressiveCommit: 0
             CanSelectAggressiveCommit: 0
             SKillDidWaitCount: 0
             SkillName: 
@@ -1946,6 +1973,7 @@ MonoBehaviour:
           CanCancel: 1
           IsAggressiveCommit: 1
           IsReadyTriggerAgressiveCommit: 0
+          IsStockAgressiveCommit: 0
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
@@ -1994,6 +2022,7 @@ MonoBehaviour:
           CanCancel: 1
           IsAggressiveCommit: 1
           IsReadyTriggerAgressiveCommit: 0
+          IsStockAgressiveCommit: 0
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
@@ -2036,6 +2065,59 @@ MonoBehaviour:
         _machineBrokenRate: 0.3
         RecovelySteps: 0
         EscapeAttemptRate: 0
+        EnemySkillList: []
+    - rid: 2127851150886043648
+      type: {class: EnemySkill, ns: , asm: Assembly-CSharp}
+      data:
+        SkillSpiritual: 0
+        Impression: 0
+        SkillPhysical: 0
+        IsTLOA: 0
+        IsMagic: 0
+        IsBlade: 0
+        Cantkill: 0
+        EvasionModifier: 1
+        AttackModifier: 1
+        _infiniteSkillPowerUnit: 0
+        _infiniteSkillTenDaysUnit: 0
+        _mentalDamageRatio: 0
+        _powerSpread: []
+        _skillHitPer: 0
+        _a_moveset: []
+        _b_moveset: []
+        _name: 
+        _triggerCountMax: 0
+        _triggerRollBackCount: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        CanCancel: 1
+        IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
+        CanSelectAggressiveCommit: 0
+        SKillDidWaitCount: 0
+        SkillName: "\u3053\u3053\u306B\u540D\u524D\u3092\u5165\u308C\u3066\u304F\u3060\u3055\u3044"
+        subEffects: 
+        subVitalLayers: 
+        canEraceEffectIDs: 
+        canEraceVitalLayerIDs: 
+        CanEraceEffectCount: 0
+        Now_CanEraceEffectCount: 0
+        CanEraceVitalLayerCount: 0
+        Now_CanEraceVitalLayerCount: 0
+        _defAtk: 0
+        WhatSkill: 0
+        ConsecutiveType: 0
+        ZoneTrait: 0
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
+        growthPoint: 0
+        _initSkillLevel: 0
     - rid: 3171372139819302913
       type: {class: NormalEnemy, ns: , asm: Assembly-CSharp}
       data:
@@ -2082,6 +2164,7 @@ MonoBehaviour:
             CanCancel: 1
             IsAggressiveCommit: 1
             IsReadyTriggerAgressiveCommit: 0
+            IsStockAgressiveCommit: 0
             CanSelectAggressiveCommit: 0
             SKillDidWaitCount: 0
             SkillName: 
@@ -2144,6 +2227,7 @@ MonoBehaviour:
           CanCancel: 1
           IsAggressiveCommit: 1
           IsReadyTriggerAgressiveCommit: 0
+          IsStockAgressiveCommit: 0
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
@@ -2192,6 +2276,7 @@ MonoBehaviour:
           CanCancel: 1
           IsAggressiveCommit: 1
           IsReadyTriggerAgressiveCommit: 0
+          IsStockAgressiveCommit: 0
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
@@ -2234,6 +2319,8 @@ MonoBehaviour:
         _machineBrokenRate: 0.3
         RecovelySteps: 0
         EscapeAttemptRate: 0
+        EnemySkillList:
+        - rid: 2127851150886043648
     - rid: 6711005805807403016
       type: {class: butterfly, ns: , asm: Assembly-CSharp}
       data:
@@ -2280,6 +2367,7 @@ MonoBehaviour:
             CanCancel: 1
             IsAggressiveCommit: 1
             IsReadyTriggerAgressiveCommit: 0
+            IsStockAgressiveCommit: 0
             CanSelectAggressiveCommit: 0
             SKillDidWaitCount: 0
             SkillName: 
@@ -2342,6 +2430,7 @@ MonoBehaviour:
           CanCancel: 1
           IsAggressiveCommit: 1
           IsReadyTriggerAgressiveCommit: 0
+          IsStockAgressiveCommit: 0
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
@@ -2390,6 +2479,7 @@ MonoBehaviour:
           CanCancel: 1
           IsAggressiveCommit: 1
           IsReadyTriggerAgressiveCommit: 0
+          IsStockAgressiveCommit: 0
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
@@ -2432,6 +2522,7 @@ MonoBehaviour:
         _machineBrokenRate: 0.3
         RecovelySteps: 0
         EscapeAttemptRate: 0
+        EnemySkillList: []
 --- !u!114 &78173495
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2453,9 +2544,24 @@ MonoBehaviour:
   - rid: 3171372632022712320
   - rid: 3171372632022712321
   - rid: 3171372633387433985
+  - rid: 2127851169592115200
   references:
     version: 2
     RefIds:
+    - rid: 2127851169592115200
+      type: {class: BasePassive, ns: , asm: Assembly-CSharp}
+      data:
+        OkImpression: 32759
+        OkType: -1
+        IsCantACT: 0
+        IsBad: 0
+        MaxPassivePower: 0
+        PassiveName: "\u5473\u65B9\u524D\u306E\u3081\u308A\u4EA4\u4EE3\u963B\u6B62\u306E\u30D1\u30C3\u30B7\u30D6"
+        ID: 8
+        DurationTurn: 6
+        DurationWalk: -1
+        RemoveOnDeath: 0
+        VitalLayers: []
     - rid: 3171372632022712320
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -2684,6 +2790,7 @@ MonoBehaviour:
           CanCancel: 1
           IsAggressiveCommit: 1
           IsReadyTriggerAgressiveCommit: 0
+          IsStockAgressiveCommit: 0
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
