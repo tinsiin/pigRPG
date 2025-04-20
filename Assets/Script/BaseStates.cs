@@ -322,11 +322,24 @@ public abstract class BaseStates
         }
         return true;
     }
+    /// <summary>
+    ///ダメージ直前のパッシブ効果
+    /// </summary>
+    public void PassivesOnBeforeDamage()
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.OnBeforeDamage();
+        }
+    }
+    
     
     /// <summary>
-/// パッシブをIDで除去
-/// </summary>
-void RemovePassiveByID(int id)
+    /// パッシブをIDで除去
+    /// </summary>
+    void RemovePassiveByID(int id)
     {
         var passive = _passiveList.FirstOrDefault(p => p.ID == id);
         // パッシブがあるか確認
@@ -352,7 +365,6 @@ void RemovePassiveByID(int id)
     /// <summary>
     /// パッシブをidで指定し、存在するかチェックしてから、除去する。
     /// </summary>
-    /// <param name="passiveId"></param>
     public void TryRemovePassiveByID(int passiveId)
     {
     if (HasPassive(passiveId))
@@ -394,6 +406,19 @@ void RemovePassiveByID(int id)
         }
     }
     /// <summary>
+    /// 全パッシブがダメージを受けて生き残るかどうか。
+    /// ターン数を操作してNextTurnでのTurnSurvivalで消えるようにする。
+    /// </summary>
+    void UpdateDamageAllPassiveSurvival()
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.UpdateDamageSurvival();
+        }
+    }
+    /// <summary>
     /// 全パッシブの歩行時効果を呼ぶ
     /// </summary>
     protected void AllPassiveWalkEffect()
@@ -425,6 +450,57 @@ void RemovePassiveByID(int id)
         _hp = Math.Clamp(_hp, minHp, MaxHP);
     }
 
+    /// <summary>
+    /// ダメージに対して実行されるパッシブの減衰率
+    /// 平均計減衰率が使われ、-1ならそもそも平均計算に使われない...
+    /// </summary>
+    void PassivesDamageReductionEffect(ref StatesPowerBreakdown damage)
+    {
+        // -1 を除外して有効な減衰率を収集
+        var rates = _passiveList
+            .Select(p => p.DamageReductionRateOnDamage)
+            .Where(r => r >= 0f)
+            .ToList();
+        if (rates.Count == 0) return;
+
+        // 平均減衰率を計算
+        var avgRate = rates.Average();
+
+        // ダメージに乗算
+        damage *= avgRate;
+    }
+    
+    /// <summary>
+    /// FEライクな 2RN（Two‐Random‑Number）方式の実効命中率
+    /// </summary>
+    private float ComputeEffectiveHit(float d)
+    {
+        // 本家では D ≤ 0.76 のとき 2D², D > 0.76 のとき 1 – 2(1–D)²
+        return d <= 0.76f
+            ? 2f * d * d
+            : 1f - 2f * (1f - d) * (1f - d);
+    }
+    /// <summary>
+    /// 持ってるパッシブによるターゲットされる確率
+    /// 平均化と実効化が行われる
+    /// </summary>
+    public float PassivesTargetProbability()
+    {
+        // -1 を除外して有効な確率を収集
+        var rates = _passiveList
+            .Select(p => p.TargetProbability)
+            .Where(r => r >= 0f)
+            .ToList();
+        if (rates.Count == 0) return 0f;
+
+        // 平均確率
+        var avgRate = rates.Average();
+
+        // 76% 以下はそのまま返し、超過分のみ実効命中率を適用
+        return avgRate <= 76f
+            ? avgRate
+            : ComputeEffectiveHit(avgRate);
+    }
 
     public IReadOnlyList<BaseVitalLayer> VitalLayers => _vitalLayerList;
     /// <summary>
@@ -5717,6 +5793,12 @@ void RemovePassiveByID(int id)
     {
         var skill = Atker.NowUseSkill;
 
+        //ダメージ直前のパッシブ効果
+        PassivesOnBeforeDamage();
+        //ダメージ時に消えるパッシブ(NextTurnで消えるように)
+        UpdateDamageAllPassiveSurvival();
+
+
         //もしカウンター用の防御無視率が攻撃者が持ってたら(本来の防御無視率より多ければ)
         var defatk = skill.DEFATK;
         if (Atker._exCounterDEFATK > defatk) defatk = Atker._exCounterDEFATK;
@@ -5748,6 +5830,8 @@ void RemovePassiveByID(int id)
         //物理耐性による減衰
         dmg = ApplyPhysicalResistance(dmg,skill);
 
+        //パッシブによるダメージの減衰率による絶対削減
+        PassivesDamageReductionEffect(ref dmg);
         //がむしゃらな補正
         dmg = GetFrenzyBoost(Atker,dmg);
 
@@ -5770,7 +5854,7 @@ void RemovePassiveByID(int id)
         //命中段階による最終ダメージ計算
         HitDmgCalculation(ref dmg,ref ResonanceDmg, hitResult,Atker);
 
-        //TLOAスキルの威力減衰
+        //TLOAスキルの威力減衰 本体HPの割合に対するダメージの削り切れる限界というもの。
         ApplyTLOADamageReduction(ref dmg,ref ResonanceDmg);
         
         //思えのダメージ発生  各クリティカルのダメージを考慮するためクリティカル後に
@@ -5792,7 +5876,7 @@ void RemovePassiveByID(int id)
         if(totalMentalDmg < 0)totalMentalDmg = 0;//0未満は0にする
         //パッシブによる絶対的なダメージ食らわないクランプ処理  下回ると代入するダメージの防ぎ
         DontDamagePassiveEffect();
-        
+
         MentalHP -= totalMentalDmg;//実ダメージで精神HPの最大値がクランプされた後に、精神攻撃が行われる。
 
         

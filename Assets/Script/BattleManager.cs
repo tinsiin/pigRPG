@@ -1574,6 +1574,47 @@ public class BattleManager
         return false;
     }
     /// <summary>
+    /// パッシブのターゲット率を利用した敵選別を追加した対象者選別関数
+    /// 対象者のリストを返す。
+    /// デフォルトの選別で次へ行く確率をNextChancePercentで制御出来る。
+    /// </summary>
+    List<BaseStates> SelectByPassiveAndRandom(
+        IEnumerable<BaseStates> candidates,
+        int want,
+        int NextChancePercent = 100)
+    {
+        // 降順ソート
+        var ordered = candidates
+            .OrderByDescending(u => u.PassivesTargetProbability())
+            .ToList();
+
+        var winners = new List<BaseStates>();
+
+        // パッシブのターゲット率による降順ソート判定
+        foreach (var u in ordered)
+        {
+            if (winners.Count >= want) break;
+            if (rollper(u.PassivesTargetProbability()))
+                winners.Add(u);
+        }
+
+        //デフォルトの判定　完全ランダム方式　持続チャンスがある。
+        if (winners.Count < want)
+        {
+            var others = ordered.Except(winners).ToList();
+            others.Shuffle();
+            for (var i = 0; i < others.Count; i++)
+            {
+                if (winners.Count >= want) break;
+                winners.Add(others[i]);
+                if (RandomEx.Shared.NextInt(100) > NextChancePercent)break;//次に行けるチャンス確率に満たなければ終わり
+                    
+            }
+        }
+
+        return winners;
+    }
+    /// <summary>
     /// スキルの実行者をunderActerに入れる処理　意思が実際の選別に状況を伴って変換される処理
     /// </summary>
     private void SelectTargetFromWill()
@@ -1651,15 +1692,8 @@ public class BattleManager
                     if (SelectGroup.InstantVanguard == null)//対象者グループに前のめりがいない場合。
                     {
                         //一人か二人に当たる
-                        var counter = 0;
-                        SelectGroup.Ours.Shuffle();//リスト内でシャッフル
-                        foreach (var one in SelectGroup.Ours)
-                        {
-                            UA.Add(one);
-                            counter++;
-                            if (RandomEx.Shared.NextInt(100) < 77) break;//２３％で二人目にも当たる。
-                            if (counter >= 2) break;//二人目を入れたらbreak　二人目まで行かなくてもforEachで勝手に終わる
-                        }
+                        // 最大２人、２人目は 23% の確率でチャレンジ
+                        UA.AddRange(SelectByPassiveAndRandom(SelectGroup.Ours, 2, 23 ) );                        
                     }
                     else//前のめりがいるなら
                     {
@@ -1684,7 +1718,7 @@ public class BattleManager
                                 //前衛を抜いてディープコピーする
                                 BackLines = new List<BaseStates>(SelectGroup.Ours.Where(member => member != SelectGroup.InstantVanguard));
 
-                                UA.Add(RandomEx.Shared.GetItem(BackLines.ToArray()));//後衛リストからランダムで選択
+                                UA.AddRange(SelectByPassiveAndRandom(BackLines, 1));
                                 Acter.SetEYEPercentageModifier(0.7f, "少し遠いよ");//後衛への命中率補正70%を追加。
                                 Debug.Log(Acter.CharacterName + "は後衛を狙った");
                             }
@@ -1707,6 +1741,7 @@ public class BattleManager
                     if (SelectGroup.InstantVanguard == null)//対象者グループに前のめりがいない場合。事故が起きる
                     {
                         //前のめりしか選べなくても、もし前のめりがいなかったら、その**平坦なグループ**にスキル性質による攻撃が当たる。
+                        //平坦 = 前のめり、後衛の区別がないまっさらということか？
 
 
                         //前のめりいないことによる事故☆☆☆☆☆☆☆☆☆☆
@@ -1714,7 +1749,12 @@ public class BattleManager
                         //シングルにあたるなら
                         if (skill.HasZoneTrait(SkillZoneTrait.RandomSingleTarget))
                         {
-                            UA.Add(RandomEx.Shared.GetItem(SelectGroup.Ours.ToArray()));//選別リストからランダムで選択
+                            BaseStates[] selects = SelectGroup.Ours.ToArray();
+                            if (OurGroup != null)//自陣グループも選択可能なら
+                                selects.AddRange(OurGroup.Ours);
+                            
+                            // 単体ランダム（want=1）
+                            UA.AddRange(SelectByPassiveAndRandom(selects, 1));
                         }
                         //前のめりがいないんだから、　前のめりか後衛単位での　集団事故は起こらないため　RandomSelectMultiTargetによる場合分けはない。
 
@@ -1730,19 +1770,13 @@ public class BattleManager
                         //ランダム範囲事故なら
                         if (skill.HasZoneTrait(SkillZoneTrait.RandomMultiTarget))
                         {
-                            List<BaseStates> selects = SelectGroup.Ours;
+                            BaseStates[] selects = SelectGroup.Ours.ToArray();
                             if (OurGroup != null)//自陣グループも選択可能なら
                                 selects.AddRange(OurGroup.Ours);
 
-                            var count = selects.Count;//群体の数を取得
-                            count = RandomEx.Shared.NextInt(1, count + 1);//取得する数もランダム
-
-                            for (int i = 0; i < count; i++) //ランダムな数分引き抜く
-                            {
-                                var item = RandomEx.Shared.GetItem(selects.ToArray());
-                                UA.Add(item);//選別リストからランダムで選択
-                                selects.Remove(item);//選択したから除去
-                            }
+                            // グループ乱数分（want＝1〜Count）
+                            int want = RandomEx.Shared.NextInt(1, selects.Length + 1);
+                            UA.AddRange(SelectByPassiveAndRandom(selects, want));
                         }
                     }
                     else
@@ -1754,18 +1788,10 @@ public class BattleManager
                 else if (Acter.HasRangeWill(SkillZoneTrait.CanSelectMultiTarget))//前衛、後衛単位の範囲でランダムに狙うなら
                 {
                     if (SelectGroup.InstantVanguard == null)//対象者グループに前のめりがいない場合。最大二人範囲で攻撃
-                    {
-                        //グループ全員のリストで回すが、もし三人目に行きそうになったら、止める
-                        var counter = 0;
-                        SelectGroup.Ours.Shuffle();//リスト内でシャッフル
-                        foreach (var one in SelectGroup.Ours)
-                        {
-                            UA.Add(one);
-                            counter++;
-                            if (counter >= 2) break;//二人目を入れたらbreak　二人目まで行かなくてもforEachで勝手に終わる
-                        }
+                    {   
+                        UA.AddRange(SelectByPassiveAndRandom(SelectGroup.Ours, 2));
                     }
-                    else//前のめりいたら
+                    else//前のめり居たら
                     {
                         if (Acter.Target == DirectedWill.InstantVanguard)//前のめりしてる奴を狙うなら
                         {

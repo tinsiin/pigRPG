@@ -103,8 +103,12 @@ public class BasePassive
     /// </summary>
     [SerializeField]
     bool RemoveOnDeath = false;
+    /// <summary>
+    /// ダメージで消えるパッシブかどうか
+    /// </summary>
+    [SerializeField]
+    bool RemoveOnDamage = false;
     
-
     /// <summary>
     /// パッシブが持つ追加HP　IDで扱う。
     /// </summary>
@@ -172,6 +176,18 @@ public class BasePassive
         //派生クラスで実装して
     }
     /// <summary>
+    /// ダメージを受ける直前に
+    /// </summary>
+    public virtual void OnBeforeDamage()
+    {
+        //派生クラスで実装して
+    }
+    public virtual float OnDamageReductionEffect()
+    {
+        return DamageReductionRateOnDamage;
+    }
+    
+    /// <summary>
     /// パッシブがキャラからRemoveされる時 (OnRemove)
     /// </summary>
     public virtual void OnRemove(BaseStates user)
@@ -226,6 +242,9 @@ public class BasePassive
             }
         }
     }
+    /// <summary>
+    /// 死亡時にパッシブ消すプロパティがあるなら消す関数
+    /// </summary>
     public void UpdateDeathSurvival(BaseStates user)
     {
         if (RemoveOnDeath)//このパッシブが死亡時に消える物ならば
@@ -233,7 +252,17 @@ public class BasePassive
             user.RemovePassive(this);
         }
     }
-
+    /// <summary>
+    /// ダメージ時にパッシブ消すプロパティがあるなら消す関数
+    /// </summary>
+    public void UpdateDamageSurvival()
+    {
+        if (RemoveOnDamage)//このパッシブがダメージで消える物ならば
+        {
+            DurationTurnCounter = 0;//TurnSurvivalで自動で消える。
+        }
+    }
+    
     /// <summary>
     /// ユーザーの残っている生存条件のVitalLayerを返す
     /// </summary>
@@ -287,6 +316,7 @@ public class BasePassive
     }
     /// <summary>
     ///     毎ターンこのパッシブが生存するかどうか(戦闘中)
+    ///     -1はそもそもターンで消えず、0にセットすれば一気に終わらされる(パッシブ制作の操作で有用)
     /// </summary>
     public virtual void UpdateTurnSurvival(BaseStates user)
     {
@@ -432,6 +462,18 @@ public class BasePassive
     /// 0.0~1.0の範囲で、最大HPのその割合よりもダメージを食らうことは絶対にない。　禁忌のプロパティなので全然使うな！
     /// </summary>
     public float DontDamageHpMinRatio = -1;
+
+    /// <summary>
+    /// ダメージに掛ける形で減衰する0~1.0
+    /// -1だと実行時に使われる平均計算に使用されない。
+    /// </summary>
+    public float DamageReductionRateOnDamage = -1;
+    /// <summary>
+    /// ターゲットされる確率　詳細はobsidianメモを
+    /// 100~0　の範囲　-1なら使わない。
+    /// </summary>
+    public float TargetProbability = -1f;
+
 
     //これらで操り切れない部分は、直接baseStatesでのforeachでpassiveListから探す関数でゴリ押しすればいい。
 

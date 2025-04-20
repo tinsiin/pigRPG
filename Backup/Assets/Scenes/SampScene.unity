@@ -2559,8 +2559,8 @@ MonoBehaviour:
         IsCantACT: 0
         IsBad: 0
         MaxPassivePower: 0
-        PassiveName: "\u5473\u65B9\u524D\u306E\u3081\u308A\u4EA4\u4EE3\u963B\u6B62\u306E\u30D1\u30C3\u30B7\u30D6_6T"
-        SmallPassiveName: 
+        PassiveName: "\u5473\u65B9\u524D\u306E\u3081\u308A\u4EA4\u4EE3\u963B\u6B62"
+        SmallPassiveName: "\u4EA4\u4EE3\u963B\u6B62"
         ID: 8
         DurationTurn: 6
         DurationTurnCounter: 0
@@ -2586,7 +2586,7 @@ MonoBehaviour:
         IsCantACT: 0
         IsBad: 0
         MaxPassivePower: 0
-        PassiveName: "\u5473\u65B9\u524D\u306E\u3081\u308A\u4EA4\u4EE3\u963B\u6B62\u306E\u30D1\u30C3\u30B7\u30D6_3T"
+        PassiveName: "\u7A7A-----------------------------------------------------"
         SmallPassiveName: 
         ID: 9
         DurationTurn: 3
@@ -2658,7 +2658,7 @@ MonoBehaviour:
         _defPercentageModifier: 1.08
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        DontDamageHpMinRatio: 0.2
     - rid: 3171372632022712320
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
