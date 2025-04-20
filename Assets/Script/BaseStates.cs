@@ -179,6 +179,34 @@ public abstract class BaseStates
     [SerializeField]
     List<int> InitpassiveIDList = new();
 
+    /// <summary>
+    /// パッシブの設計上、即座に適用するのではなく、NextTurnにてUpdateTurnSurvivalの後に適用するためのバッファリスト
+    /// 詳しくは豚のパッシブを参照
+    /// </summary>
+    List<BasePassive> BufferApplyingPassiveList = new();
+    /// <summary>
+    /// バッファのパッシブを追加する。
+    /// </summary>
+    void ApplyBufferApplyingPassive()
+    {
+        foreach(var passive in BufferApplyingPassiveList)
+        {
+            ApplyPassive(passive);
+        }
+        BufferApplyingPassiveList.Clear();//追加したからバッファ消す
+
+    }
+    /// <summary>
+    /// 戦闘中のパッシブ追加は基本バッファに入れよう
+    /// </summary>
+    public void ApplyPassiveBufferInBattleByID(int id)
+    {
+        var status = PassiveManager.Instance.GetAtID(id).DeepCopy();//idを元にpassiveManagerから取得 ディープコピーでないとインスタンス共有される
+        BufferApplyingPassiveList.Add(status);
+    }
+
+
+
     List<BaseVitalLayer> _vitalLayerList = new();
     /// <summary>
     /// 初期所持のVitalLayerのIDリスト
@@ -197,6 +225,13 @@ public abstract class BaseStates
     {
         return _passiveList.Any(pas => pas.ID == id);
     }
+    /// <summary>
+    /// 自分が前のめりの時に味方を交代阻止するパッシブを一個でも持っているかどうか
+    /// </summary>
+    public bool HasBlockVanguardByAlly_IfImVanguard()
+    {
+        return _passiveList.Any(pas => pas.BlockVanguardByAlly_IfImVanguard);
+    }
 
     /// <summary>
     /// 所持してるリストの中から指定したIDのパッシブを取得する。存在しない場合はnullを返す
@@ -207,17 +242,26 @@ public abstract class BaseStates
     {
         return _passiveList.FirstOrDefault(p => p.ID == passiveId);
     }
+    /// <summary>
+    /// バッファのパッシブリストから指定したIDのパッシブを取得する。存在しない場合はnullを返す
+    /// もし、一回のターンで複数個の重複されたパッシブがあった場合、それの複数取得(そしてそれらへの何らかの適用)に対応出来てないよ...
+    /// バッファシステムとパッシブの初期値変更に完璧に対応できていない。
+    /// </summary>
+    public BasePassive GetBufferPassiveByID(int passiveId)
+    {
+        return BufferApplyingPassiveList.FirstOrDefault(p => p.ID == passiveId);
+    }
 
     /// <summary>
     ///     パッシブを適用
     /// </summary>
-    public bool ApplyPassive(int id)
+    public void ApplyPassiveByID(int id)
     {
         var status = PassiveManager.Instance.GetAtID(id).DeepCopy();//idを元にpassiveManagerから取得 ディープコピーでないとインスタンス共有される
 
         // 条件(OkType,OkImpression) は既にチェック済みならスキップ
-        if (!HasCharacterType(status.OkType)) return false;
-        if (!HasCharacterImpression(status.OkImpression)) return false;
+        if (!HasCharacterType(status.OkType)) return;
+        if (!HasCharacterImpression(status.OkImpression)) return;
 
         // すでに持ってるかどうか
         var existing = _passiveList.FirstOrDefault(p => p.ID == status.ID);
@@ -234,13 +278,55 @@ public abstract class BaseStates
             status.OnApply(this);
         }
 
+    }
+    /// <summary>
+    /// パッシブが適合するか
+    /// </summary>
+    private bool CanApplyPassive(BasePassive passive)
+    {
+        if (!HasCharacterType(passive.OkType))       return false;
+        if (!HasCharacterImpression(passive.OkImpression)) return false;
         return true;
     }
+    public void ApplyPassive(BasePassive passive)
+    {
+        // 条件(OkType,OkImpression) は既にチェック済みならスキップ
+        if (!CanApplyPassive(passive)) return;
 
+        // すでに持ってるかどうか
+        var existing = _passiveList.FirstOrDefault(p => p.ID == passive.ID);
+        if (existing != null)
+        {
+            // 重ね掛け
+            existing.AddPassivePower(1);
+        }
+        else
+        {
+            // 新規追加
+            _passiveList.Add(passive);
+            // パッシブ側のOnApplyを呼ぶ
+            passive.OnApply(this);
+        }
+
+    }
     /// <summary>
-    /// パッシブをIDで除去
+    /// 割り込みカウンター発生時のパッシブ効果
     /// </summary>
-    void RemovePassiveByID(int id)
+    public bool PassivesOnInterruptCounter()
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.OnInterruptCounter();
+        }
+        return true;
+    }
+    
+    /// <summary>
+/// パッシブをIDで除去
+/// </summary>
+void RemovePassiveByID(int id)
     {
         var passive = _passiveList.FirstOrDefault(p => p.ID == id);
         // パッシブがあるか確認
@@ -314,11 +400,29 @@ public abstract class BaseStates
     {
         foreach (var pas in _passiveList)
         {
-            if(pas.DurationWalk > 0)
+            if(pas.DurationWalkCounter > 0)
             {
                 pas.WalkEffect();//歩行残存ターンが1以上でないと動作しない。
             }
         }
+    }
+
+    /// <summary>
+    /// 持ってるパッシブの中で一番大きいDontDamageRatioを探し、その割合を用いてHPをクランプする
+    /// </summary>
+    void DontDamagePassiveEffect()
+    {
+        float maxDontDamageHpMinRatio = 0;
+        foreach (var pas in _passiveList)//一番大きいDontDamageRatioを探す
+        {
+            if (pas.DontDamageHpMinRatio > maxDontDamageHpMinRatio)
+            {
+                maxDontDamageHpMinRatio = pas.DontDamageHpMinRatio;
+            }
+        }
+        // 「HPが下回らない最大HPの割合の最大値」より下回ってたらクランプ処理
+        int minHp = (int)(MaxHP * maxDontDamageHpMinRatio);
+        _hp = Math.Clamp(_hp, minHp, MaxHP);
     }
 
 
@@ -1426,7 +1530,7 @@ public abstract class BaseStates
         var baseRecovelyP = (int)MentalHP / MentalHP_TO_P_Recovely_CONVERSION_FACTOR;
         
         // 精神HPと実HP最大値との割合
-        var mentalToMaxHPRatio = MentalHP / MAXHP;
+        var mentalToMaxHPRatio = MentalHP / MaxHP;
         
         var RecovelyValue = baseRecovelyP * mentalToMaxHPRatio;//回復量
         
@@ -1584,16 +1688,16 @@ public abstract class BaseStates
         get { return _hp; }
         set
         {
-            if (value > MAXHP)//最大値を超えないようにする
+            if (value > MaxHP)//最大値を超えないようにする
             {
-                _hp = MAXHP;
+                _hp = MaxHP;
             }
             else _hp = value;
         }
     }
     [SerializeField]
     private float _maxhp;
-    public float MAXHP => _maxhp;
+    public float MaxHP => _maxhp;
 
     //精神HP
     [SerializeField]
@@ -1814,7 +1918,7 @@ public abstract class BaseStates
     /// </summary>
     protected virtual void MentalUpperDiverGenceEffect()
     {//ここに書かれるのは基本効果
-        ApplyPassive(4);//アッパーのパッシブを付与
+        ApplyPassiveBufferInBattleByID(4);//アッパーのパッシブを付与
     }
     /// <summary>
     /// 精神HPのダウナー乖離で起こる変化
@@ -1827,7 +1931,7 @@ public abstract class BaseStates
             HP = _hp * 0.76f;
         }else
         {//TLOA以外の種別なら
-            ApplyPassive(3);//強制ダウナーのパッシブを付与
+            ApplyPassiveBufferInBattleByID(3);//強制ダウナーのパッシブを付与
             if(rollper(50))
             {
                 Power1Down();//二分の一でパワーが下がる。
@@ -5430,11 +5534,11 @@ public abstract class BaseStates
         {
             if(Atker.HasPassive(5))//攻撃者が「TLOAではとどめがさせない」パッシブを持ってたら1割まで
             {
-                HP = Mathf.Max(HP,MAXHP * 0.1f);//10%までしか減らせない
+                HP = Mathf.Max(HP,MaxHP * 0.1f);//10%までしか減らせない
             }
             else//それ以外は3.4%まで
             {
-                HP = Mathf.Max(HP,MAXHP * 0.034f);//3.4%までしか減らせない
+                HP = Mathf.Max(HP,MaxHP * 0.034f);//3.4%までしか減らせない
             }
         }
 
@@ -5596,7 +5700,7 @@ public abstract class BaseStates
     public void ApplyTLOADamageReduction(ref StatesPowerBreakdown damage,ref StatesPowerBreakdown resDamage)
     {
         //HPが38%以下ならTLOAは0.7倍まで減衰する。
-        if(this.HP / this.MAXHP < 0.38f)
+        if(this.HP / this.MaxHP < 0.38f)
         {
             damage *= 0.7f;
             resDamage *= 0.7f;
@@ -5686,7 +5790,12 @@ public abstract class BaseStates
 
         var totalMentalDmg = mentalDmg.Total;//直接引くように変数に代入
         if(totalMentalDmg < 0)totalMentalDmg = 0;//0未満は0にする
+        //パッシブによる絶対的なダメージ食らわないクランプ処理  下回ると代入するダメージの防ぎ
+        DontDamagePassiveEffect();
+        
         MentalHP -= totalMentalDmg;//実ダメージで精神HPの最大値がクランプされた後に、精神攻撃が行われる。
+
+        
 
         if(!skill.IsBlade)//刃物スキルでなければ発生
         {
@@ -5722,9 +5831,9 @@ public abstract class BaseStates
             var DurationTurn = ActDoOneSkillDatas[ActDoOneSkillDatas.Count - 1].Skill.SKillDidWaitCount;//食らうターン
             if(DurationTurn > 0)//持続ターンが存在すれば、
             {
-                ApplyPassive(2);//パッシブ、食らわせを入手する。
-                var hurt = GetPassiveByID(2);//適合したなら(適合条件がある)
-                if(hurt != null)
+                ApplyPassiveBufferInBattleByID(2);//パッシブ、食らわせを入手する。
+                var hurt = GetBufferPassiveByID(2);//適合したなら(適合条件がある)`
+                if(CanApplyPassive(hurt))
                 {
                     hurt.DurationTurn = DurationTurn;//持続ターンを入れる
                 }
@@ -5791,7 +5900,7 @@ public abstract class BaseStates
         if(powerRatio < RESONANCE_POWER_THRESHOLD) return;
 
         //被害者の精神HP現在値とHPの平均値と最大HPの割合
-        var myBodyAndMentalAverageRatio = (HP + MentalHP) / 2 / MAXHP;
+        var myBodyAndMentalAverageRatio = (HP + MentalHP) / 2 / MaxHP;
         //思えの食らう割合。
         var ResonanceDangerRatio = 1.0f - myBodyAndMentalAverageRatio;
         //最大0.8　8割分食らってる所までダメージが伸びきることを想定する
@@ -6387,12 +6496,12 @@ private int CalcTransformCountIncrement(int tightenStage)
                     //その三パターンで分かれる。　　最後のパッシブ条件のみ直接割り込みカウンターPassiveの方で設定している。
 
                     //割り込みカウンターのパッシブ付与しますが、適合するかどうかはそのpassiveの条件次第です。
-                    ApplyPassive(1);
-
-                    var CounterPower = GetPassiveByID(1);//適合したなら
-                    if (CounterPower != null)
+                    var counterID = 1;
+                    ApplyPassiveBufferInBattleByID(counterID);
+                    var CounterPower = GetBufferPassiveByID(counterID);
+                    if (CanApplyPassive(CounterPower))//適合したら
                     {
-                        var attackerCounterPower = attacker.GetPassiveByID(1);
+                        var attackerCounterPower = attacker.GetPassiveByID(counterID);
                         if(attackerCounterPower != null) //もし攻撃者が割り込みカウンターパッシブなら、
                         {
                             //攻撃者の割り込みカウンターパッシブのパワー+1で生成
@@ -6435,7 +6544,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         var hit = false;
         foreach (var id in skill.subEffects.Where(id => PassiveManager.Instance.GetAtID(id).IsBad))
         {//付与する瞬間はインスタンス作成のディープコピーがまだないので、passivemanagerで調査する
-            hit |= ApplyPassive(id);//or演算だとtrueを一回でも発生すればfalseが来てもずっとtrueのまま
+            ApplyPassiveBufferInBattleByID(id);
+            hit = true;//goodpassiveHitに説明
         }
         return hit;
     }
@@ -6509,7 +6619,11 @@ private int CalcTransformCountIncrement(int tightenStage)
         var hit = false;
         foreach (var id in skill.subEffects.Where(id => !PassiveManager.Instance.GetAtID(id).IsBad))
         {
-            hit |= ApplyPassive(id);
+            ApplyPassiveBufferInBattleByID(id);
+            hit = true;//スキル命中率を介してるのだから、適合したかどうかはヒットしたかしないかに関係ない。 = ApplyPassiveで元々適合したかどうかをhitに代入してた
+            //。。。バッファーリストの関係で一々シミュレイト用関数作るのがめんどくさかったけど、この考えが割と合理的だったからそうしたけどね。
+            //それに、このhitしたのに敵になかったら、プレイヤーはこのパッシブの適合条件で適合しなかったことを察せれるし。
+
         }
         return hit;
     }
@@ -6816,6 +6930,10 @@ private int CalcTransformCountIncrement(int tightenStage)
                     if(!skill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive))//ターンをまたいだ物じゃないなら
                     {
                         thisAtkTurn = !TryInterruptCounter(attacker);//割り込みカウンターの判定
+                        if(!thisAtkTurn)
+                        {
+                            PassivesOnInterruptCounter();//割り込みカウンター発生時の効果
+                        }
                     }
                 }
 
@@ -7389,7 +7507,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         //自分より1.7倍以上強い敵かどうか そうじゃないならreturn
         if(opponentStrengthRatio < 1.7f)return;
         //与えたダメージが敵の最大HPの半分以上与えてるかどうか、そうじゃないならreturn
-        if(allkilldmg < target.MAXHP * 0.5f)return;
+        if(allkilldmg < target.MaxHP * 0.5f)return;
 
         //ブーストする十日能力を敵のデフォルト精神属性を構成する一番大きいの達から取得
 
@@ -7553,7 +7671,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             CalmDownCountDec();//落ち着きカウントダウン
         }
        
-        
+        ApplyBufferApplyingPassive();//パッシブをここで付与。 =>詳細は豚のパッシブみとけ
 
         //記録系
         _tempLive = !Death();//死んでない = 生きてるからtrue
@@ -7609,7 +7727,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             RemoveVitalLayerByID(layer.id);//戦闘の終了で消える追加HPを持ってる追加HPリストから全部消す
         }
-        foreach(var passive in _passiveList.Where(pas => pas.DurationWalk < 0))
+        foreach(var passive in _passiveList.Where(pas => pas.DurationWalkCounter < 0))
         {
             RemovePassive(passive);//歩行残存ターンが-1の場合戦闘終了時に消える。
         }
@@ -8865,7 +8983,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             foreach (var passiveID in InitpassiveIDList)
             {
-                dst.ApplyPassive(passiveID);//applyする
+                dst.ApplyPassiveByID(passiveID);//applyする
             }
         }
         //VitalLayerのコピー　追加HP

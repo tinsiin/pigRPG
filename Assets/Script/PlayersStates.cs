@@ -483,9 +483,9 @@ public class PlayersStates:MonoBehaviour
     private PartyProperty GetPartyImpression()
     {
         //それぞれの最大HP５％以内の差は許容し、それを前提に三人が同じHPだった場合
-        float toleranceStair = geino.MAXHP * 0.05f;
-        float toleranceSateliteProcess = sites.MAXHP * 0.05f;
-        float toleranceBassJack = noramlia.MAXHP * 0.05f;
+        float toleranceStair = geino.MaxHP * 0.05f;
+        float toleranceSateliteProcess = sites.MaxHP * 0.05f;
+        float toleranceBassJack = noramlia.MaxHP * 0.05f;
         if (Mathf.Abs(geino.HP - sites.HP) <= toleranceStair && 
             Mathf.Abs(sites.HP - noramlia.HP) <= toleranceSateliteProcess &&
             Mathf.Abs(noramlia.HP - geino.HP) <= toleranceBassJack)
@@ -914,7 +914,7 @@ public class AllyClass : BaseStates
     public void OnAllyWinCallBack()
     {
         TransitionPowerOnBattleWinByCharacterImpression();//パワー変化
-        HP += MAXHP * 0.3f;//HPの自然回復
+        HP += MaxHP * 0.3f;//HPの自然回復
         AllyVictoryBoost();//勝利時の十日能力ブースト
         ResolveDivergentSkillOutcome();//乖離スキル使用により、十日能力値減少
     }

@@ -338,9 +338,9 @@ public class Stages : MonoBehaviour
                 //もし、既にいる敵や加入対象のHPが半分以下の場合、精神属性の相性判定が二倍になる。
                 foreach(var ene in ResultList)
                 {
-                    if(ene.HP <= ene.MAXHP / 2) sympathy = true;
+                    if(ene.HP <= ene.MaxHP / 2) sympathy = true;
                 }
-                if(target.HP <= target.MAXHP / 2) sympathy = true;
+                if(target.HP <= target.MaxHP / 2) sympathy = true;
 
                 for (var i = 0; i < ResultList.Count; i++)
                 { //既に選ばれた敵全員との相性を見る

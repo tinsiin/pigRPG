@@ -85,13 +85,19 @@ public class BasePassive
     /// パッシブの名前
     /// </summary>
     public string PassiveName;
+    /// <summary>
+    /// パッシブの名前の小さな版 (省略系UI表示用)
+    /// </summary>
+    public string SmallPassiveName;
     public int ID;
 
     /// <summary> このパッシブが有効な残りターン数（-1なら無効 </summary>
     public int DurationTurn = -1;
+    public int DurationTurnCounter;
 
     /// <summary> このパッシブが有効な残り歩数（-1なら戦闘終了時に消え、0なら戦闘終了後歩行した瞬間に歩行効果なしに消え、1以上なら効果発生） </summary>
     public int DurationWalk = -1;
+    public int DurationWalkCounter;
     /// <summary>
     /// 死亡時に消えるパッシブかどうか
     /// </summary>
@@ -103,6 +109,11 @@ public class BasePassive
     /// パッシブが持つ追加HP　IDで扱う。
     /// </summary>
     public List<PassiveVitalLayerBinding> VitalLayers = new();
+
+    /// <summary>
+    /// 自分が前のめりの時に、味方の前のめり交代を阻止するかどうか
+    /// </summary>
+    public bool BlockVanguardByAlly_IfImVanguard = false;
 
 
     /// <summary>
@@ -128,6 +139,8 @@ public class BasePassive
     {
         PassivePower += addpoint;
         if (PassivePower > MaxPassivePower) PassivePower = MaxPassivePower; //設定値を超えたら設定値にする
+
+        DurationTurnCounter = DurationTurn;//パッシブの残りターン数を再補充
     }
 
     /// <summary>
@@ -135,6 +148,8 @@ public class BasePassive
     /// </summary>
     public void OnApply(BaseStates user)
     {
+        DurationTurnCounter = DurationTurn;
+        DurationWalkCounter = DurationWalk;
         // ここで Timing == OnApply の VitalLayer を付与
         if (VitalLayers != null)
         {
@@ -149,7 +164,13 @@ public class BasePassive
 
         _owner = user;
     }
-
+    /// <summary>
+    /// 割り込みカウンター発生時
+    /// </summary>
+    public virtual void OnInterruptCounter()
+    {
+        //派生クラスで実装して
+    }
     /// <summary>
     /// パッシブがキャラからRemoveされる時 (OnRemove)
     /// </summary>
@@ -195,10 +216,10 @@ public class BasePassive
     /// </summary>
     public virtual void UpdateWalkSurvival(BaseStates user)
     {
-        if (DurationWalk > 0)//歩行回数による自動解除
+        if (DurationWalkCounter > 0)//歩行回数による自動解除
         {
-            DurationWalk --;
-            if(DurationWalk <= 0)
+            DurationWalkCounter --;
+            if(DurationWalkCounter <= 0)
             {
                 user.RemovePassive(this);
                 return;
@@ -271,10 +292,10 @@ public class BasePassive
     {
 
         // 1) ターン経過による自動解除 (Duration >= 0)
-        if (DurationTurn > 0)
+        if (DurationTurnCounter > 0)
         {
-            DurationTurn--;
-            if (DurationTurn <= 0)
+            DurationTurnCounter--;
+            if (DurationTurnCounter <= 0)
             {
                 // userのpassivelist からこのパッシブをRemove
                 user.RemovePassive(this);
@@ -328,13 +349,22 @@ public class BasePassive
 
     }
 
+    //十日能力などから補正するならここの単純値ではなく、Effectの関数などを派生クラスでoverrideして直接書きます。
+    [SerializeField]
+    float _atkFixedValue;
+    [SerializeField]
+    float _defFixedValue;
+    [SerializeField]
+    float _eyeFixedValue;
+    [SerializeField]
+    float _agiFixedValue;
     /// <summary>
     /// 固定値でATKに作用する効果
     /// </summary>
     /// <returns></returns>
     public virtual float ATKFixedValueEffect()
     {
-        return 0f;
+        return _atkFixedValue;
     }
     /// <summary>
     /// 固定値でDEFに作用する効果
@@ -342,7 +372,7 @@ public class BasePassive
     /// <returns></returns>
     public virtual float DEFFixedValueEffect()
     {
-        return 0f;
+        return _defFixedValue;
     }
     /// <summary>
     /// 固定値でEYEに作用する効果
@@ -350,7 +380,7 @@ public class BasePassive
     /// <returns></returns>
     public virtual float EYEFixedValueEffect()
     {
-        return 0f;
+        return _eyeFixedValue;
     }
     /// <summary>
     /// 固定値でAGIに作用する効果
@@ -358,36 +388,50 @@ public class BasePassive
     /// <returns></returns>
     public virtual float AGIFixedValueEffect()
     {
-        return 0f;
+        return _agiFixedValue;
     }
+
+    [SerializeField]
+    float _atkPercentageModifier=1f;
+    [SerializeField]
+    float _defPercentageModifier=1f;
+    [SerializeField]
+    float _eyePercentageModifier=1f;
+    [SerializeField]
+    float _agiPercentageModifier=1f;
     /// <summary>
     ///ATKに作用する補正値の倍率
     /// </summary>
     public virtual float ATKPercentageModifier()
     {
-        return 1f;
+        return _atkPercentageModifier;
     }
     /// <summary>
     ///DEFに作用する補正値の倍率
     /// </summary>
     public virtual float DEFPercentageModifier()
     {
-        return 1f;
+        return _defPercentageModifier;
     }
     /// <summary>
     ///EYEに作用する補正値の倍率
     /// </summary>
     public virtual float EYEPercentageModifier()
     {
-        return 1f;
+        return _eyePercentageModifier;
     }
     /// <summary>
     ///AGIに作用する補正値の倍率
     /// </summary>
     public virtual float AGIPercentageModifier()
     {
-        return 1f;
+        return _agiPercentageModifier;
     }
+
+    /// <summary>
+    /// 0.0~1.0の範囲で、最大HPのその割合よりもダメージを食らうことは絶対にない。　禁忌のプロパティなので全然使うな！
+    /// </summary>
+    public float DontDamageHpMinRatio = -1;
 
     //これらで操り切れない部分は、直接baseStatesでのforeachでpassiveListから探す関数でゴリ押しすればいい。
 

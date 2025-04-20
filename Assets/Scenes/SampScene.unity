@@ -2545,6 +2545,9 @@ MonoBehaviour:
   - rid: 3171372632022712321
   - rid: 3171372633387433985
   - rid: 2127851169592115200
+  - rid: 2127851221303427072
+  - rid: 2127851221303427073
+  - rid: 2127851221303427074
   references:
     version: 2
     RefIds:
@@ -2556,12 +2559,106 @@ MonoBehaviour:
         IsCantACT: 0
         IsBad: 0
         MaxPassivePower: 0
-        PassiveName: "\u5473\u65B9\u524D\u306E\u3081\u308A\u4EA4\u4EE3\u963B\u6B62\u306E\u30D1\u30C3\u30B7\u30D6"
+        PassiveName: "\u5473\u65B9\u524D\u306E\u3081\u308A\u4EA4\u4EE3\u963B\u6B62"
+        SmallPassiveName: "\u4EA4\u4EE3\u963B\u6B62"
         ID: 8
         DurationTurn: 6
+        DurationTurnCounter: 0
         DurationWalk: -1
+        DurationWalkCounter: 0
         RemoveOnDeath: 0
         VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 1
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        DontDamageHpMinRatio: -1
+    - rid: 2127851221303427072
+      type: {class: BasePassive, ns: , asm: Assembly-CSharp}
+      data:
+        OkImpression: 32759
+        OkType: -1
+        IsCantACT: 0
+        IsBad: 0
+        MaxPassivePower: 0
+        PassiveName: "\u7A7A-----------------------------------------------------"
+        SmallPassiveName: 
+        ID: 9
+        DurationTurn: 3
+        DurationTurnCounter: 0
+        DurationWalk: -1
+        DurationWalkCounter: 0
+        RemoveOnDeath: 0
+        VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 1
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        DontDamageHpMinRatio: -1
+    - rid: 2127851221303427073
+      type: {class: Raitistini, ns: , asm: Assembly-CSharp}
+      data:
+        OkImpression: -1
+        OkType: -1
+        IsCantACT: 0
+        IsBad: 0
+        MaxPassivePower: 0
+        PassiveName: "\u30E9\u30A4\u30C6\u30A3\u30B9\u30C6\u30A3\u30CB"
+        SmallPassiveName: 
+        ID: 10
+        DurationTurn: 7
+        DurationTurnCounter: 0
+        DurationWalk: -1
+        DurationWalkCounter: 0
+        RemoveOnDeath: 0
+        VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        DontDamageHpMinRatio: -1
+    - rid: 2127851221303427074
+      type: {class: BasePassive, ns: , asm: Assembly-CSharp}
+      data:
+        OkImpression: -1
+        OkType: -1
+        IsCantACT: 0
+        IsBad: 0
+        MaxPassivePower: 0
+        PassiveName: "\u30E9\u30A4\u30C6\u30A3\u30B9\u30C6\u30A3\u30CB\u8005\u306E\u56DE\u907F\u56DE\u904A"
+        SmallPassiveName: "\u30E9\u8005\u56DE\u56DE\u907F\u904A"
+        ID: 11
+        DurationTurn: 3
+        DurationTurnCounter: 0
+        DurationWalk: -1
+        DurationWalkCounter: 0
+        RemoveOnDeath: 0
+        VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 10
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1.08
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        DontDamageHpMinRatio: 0.2
     - rid: 3171372632022712320
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -2571,11 +2668,24 @@ MonoBehaviour:
         IsBad: 0
         MaxPassivePower: 0
         PassiveName: "TLOA\u3067\u306F\u3068\u3069\u3081\u304C\u3055\u305B\u306A\u3044"
+        SmallPassiveName: 
         ID: 5
         DurationTurn: -1
+        DurationTurnCounter: 0
         DurationWalk: -1
+        DurationWalkCounter: 0
         RemoveOnDeath: 0
         VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        DontDamageHpMinRatio: -1
     - rid: 3171372632022712321
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -2585,9 +2695,12 @@ MonoBehaviour:
         IsBad: 1
         MaxPassivePower: 0
         PassiveName: "\u4E0D\u8001\u4E0D\u6B7B\u306E\u5316\u77F3_1"
+        SmallPassiveName: 
         ID: 6
         DurationTurn: -1
+        DurationTurnCounter: 0
         DurationWalk: -1
+        DurationWalkCounter: 0
         RemoveOnDeath: 0
         VitalLayers:
         - VitalLayerId: 0
@@ -2598,6 +2711,16 @@ MonoBehaviour:
           GrantTiming: 0
           IsSurvivalCondition: 1
           RemoveOnPassiveRemove: 1
+        BlockVanguardByAlly_IfImVanguard: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        DontDamageHpMinRatio: -1
     - rid: 3171372633387433985
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -2607,15 +2730,28 @@ MonoBehaviour:
         IsBad: 1
         MaxPassivePower: 0
         PassiveName: "\u571F_1"
+        SmallPassiveName: 
         ID: 7
         DurationTurn: -1
+        DurationTurnCounter: 0
         DurationWalk: -1
+        DurationWalkCounter: 0
         RemoveOnDeath: 0
         VitalLayers:
         - VitalLayerId: 1
           GrantTiming: 0
           IsSurvivalCondition: 1
           RemoveOnPassiveRemove: 1
+        BlockVanguardByAlly_IfImVanguard: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        DontDamageHpMinRatio: -1
     - rid: 6711005805807403020
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -2625,15 +2761,28 @@ MonoBehaviour:
         IsBad: 0
         MaxPassivePower: 0
         PassiveName: "\u6DE1\u3005\u3068\u3057\u305F\u30ED\u30BC"
+        SmallPassiveName: 
         ID: 0
         DurationTurn: -1
+        DurationTurnCounter: 0
         DurationWalk: -1
+        DurationWalkCounter: 0
         RemoveOnDeath: 0
         VitalLayers:
         - VitalLayerId: 0
           GrantTiming: 0
           IsSurvivalCondition: 0
           RemoveOnPassiveRemove: 0
+        BlockVanguardByAlly_IfImVanguard: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        DontDamageHpMinRatio: -1
     - rid: 8285219776706641920
       type: {class: ForcedDowner, ns: , asm: Assembly-CSharp}
       data:
@@ -2643,11 +2792,24 @@ MonoBehaviour:
         IsBad: 1
         MaxPassivePower: 3
         PassiveName: "\u5F37\u5236\u30C0\u30A6\u30CA\u30FC"
+        SmallPassiveName: 
         ID: 3
         DurationTurn: 12
+        DurationTurnCounter: 0
         DurationWalk: -1
+        DurationWalkCounter: 0
         RemoveOnDeath: 1
         VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        DontDamageHpMinRatio: -1
     - rid: 8285219776706641921
       type: {class: Upper, ns: , asm: Assembly-CSharp}
       data:
@@ -2657,11 +2819,24 @@ MonoBehaviour:
         IsBad: 1
         MaxPassivePower: 4
         PassiveName: "\u30A2\u30C3\u30D1\u30FC"
+        SmallPassiveName: 
         ID: 4
         DurationTurn: 14
+        DurationTurnCounter: 0
         DurationWalk: -1
+        DurationWalkCounter: 0
         RemoveOnDeath: 1
         VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        DontDamageHpMinRatio: -1
     - rid: 8980149206437855232
       type: {class: InterruptCounterPassive, ns: , asm: Assembly-CSharp}
       data:
@@ -2671,11 +2846,24 @@ MonoBehaviour:
         IsBad: 0
         MaxPassivePower: 11
         PassiveName: "\u5272\u308A\u8FBC\u307F\u30AB\u30A6\u30F3\u30BF\u30FC"
+        SmallPassiveName: 
         ID: 1
         DurationTurn: 1
+        DurationTurnCounter: 0
         DurationWalk: -1
+        DurationWalkCounter: 0
         RemoveOnDeath: 1
         VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        DontDamageHpMinRatio: -1
         _attackMultipiler: 2
         _eyeBonus: 100
     - rid: 8980149223421378560
@@ -2687,11 +2875,24 @@ MonoBehaviour:
         IsBad: 1
         MaxPassivePower: 0
         PassiveName: "\u98DF\u3089\u308F\u305B"
+        SmallPassiveName: 
         ID: 2
         DurationTurn: 1
+        DurationTurnCounter: 0
         DurationWalk: -1
+        DurationWalkCounter: 0
         RemoveOnDeath: 1
         VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        DontDamageHpMinRatio: -1
 --- !u!114 &78173496
 MonoBehaviour:
   m_ObjectHideFlags: 0

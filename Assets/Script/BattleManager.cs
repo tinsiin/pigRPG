@@ -1132,7 +1132,7 @@ public class BattleManager
         //前のめり者がいなければ終わり
         if (group.InstantVanguard == null) return false;
         //前のめり者が交代阻止のパッシブを持っていなければ終わり
-        if (!group.InstantVanguard.HasPassive(8)) return false;
+        if (!group.InstantVanguard.HasBlockVanguardByAlly_IfImVanguard()) return false;
 
         var nowVanguard = group.InstantVanguard;
         var newVanguard = Acter;
@@ -1188,7 +1188,7 @@ public class BattleManager
             HelpGroup.CharaCompatibility.ContainsKey((ally, chara)) && HelpGroup.CharaCompatibility[(ally, chara)] >= 60).ToList();
             if(LiveAllyGroupList.Count < 1)continue;//60以上の相性値を持ってる味方がいなければスキップ
             var data = chara.RecentDamageData;//被害者のダメージ記録
-            var DamageRate = data.Damage/chara.MAXHP;//被害者のダメージ率
+            var DamageRate = data.Damage/chara.MaxHP;//被害者のダメージ率
             foreach(var ally in LiveAllyGroupList)//60%以上の相性値を持ってる味方全員分ループ
             {
                 var Compatibility = HelpGroup.CharaCompatibility[(ally, chara)];//味方→被害者への相性値
@@ -1267,7 +1267,7 @@ public class BattleManager
             HelpGroup.CharaCompatibility.ContainsKey((ally, chara)) && HelpGroup.CharaCompatibility[(ally, chara)] >= 86).ToList();
             if(LiveAllyGroupList.Count < 1)continue;//60以上の相性値を持ってる味方がいなければスキップ
             var data = chara.RecentDamageData;//被害者のダメージ記録
-            var DamageRate = data.Damage/chara.MAXHP;//被害者のダメージ率
+            var DamageRate = data.Damage/chara.MaxHP;//被害者のダメージ率
 
             foreach(var ally in LiveAllyGroupList)//特定の相性値以上の相性値を持ってる味方全員分ループ
             {
