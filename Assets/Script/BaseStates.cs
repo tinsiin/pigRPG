@@ -482,7 +482,7 @@ public abstract class BaseStates
     }
     /// <summary>
     /// 持ってるパッシブによるターゲットされる確率
-    /// 平均化と実効化が行われる
+    /// 平均化と実効化が行われる　1~100
     /// </summary>
     public float PassivesTargetProbability()
     {
@@ -4547,108 +4547,79 @@ public abstract class BaseStates
         
     //特別補正------------------------------------------------------------------------------------------------特別補正----------------------------------------------------------------------------------------------
     /// <summary>
-    /// 次に使用する命中率へのパーセント補正用保持リスト
+    /// 特別補正用保持リスト
     /// </summary>
-    private List<ModifierPart> _useEYEPercentageModifiers;
+    private List<ModifierPart> _specialModifiers;
     /// <summary>
-    /// 次に使用する攻撃力へのパーセント補正用保持リスト
+    /// 特別補正をセットする。
+    /// オプション変数部分が固定値
     /// </summary>
-    private List<ModifierPart> _useATKPercentageModifiers;
+    public void SetSpecialModifier(string memo,whatModify whatstate,float value = 1, StatesPowerBreakdown fixedModifier = null, bool isFixed = false)
+    {
+        if (_specialModifiers == null) _specialModifiers = new List<ModifierPart>();//nullチェック、処理
+        _specialModifiers.Add(new ModifierPart(memo, whatstate, value, fixedModifier, isFixed));
+    }
     /// <summary>
-    /// 次に使用する回避率へのパーセント補正用保持リスト
+    /// 既にある特別補正をコピーする。
     /// </summary>
-    private List<ModifierPart> _useAGIPercentageModifiers;
+    public void CopySpecialModifier(ModifierPart mod)
+    {
+        if (_specialModifiers == null) _specialModifiers = new List<ModifierPart>();//nullチェック、処理
+        _specialModifiers.Add(mod);
+    }
     /// <summary>
-    /// 次に使用する防御力へのパーセント補正用保持リスト
+    /// 特別な補正を利用  パーセンテージ補正用
     /// </summary>
-    private List<ModifierPart> _useDEFPercentageModifiers;
+    public float GetSpecialPercentModifier(whatModify mod)
+    {
+        return _specialModifiers.Where(m => m.IsFixedOrPercent == false && m.whatStates == mod)
+            .Aggregate(1.0f, (total, m) => total * m.Modifier);//指定したステータスとパーセンテージ補正のリスト内全ての値を乗算
+    }
     /// <summary>
-    /// 次に使用する命中率への固定値補正用保持リスト
+    /// 特別な補正を利用  固定値補正用
     /// </summary>
-    private List<FixedModifierPart> _useEYEFixedModifiers;
+    public StatesPowerBreakdown GetSpecialFixedModifier(whatModify mod)
+    {
+        var calculateList =_specialModifiers.Where(m => m.IsFixedOrPercent == true && m.whatStates == mod).ToList();
+        return CalculateFixedModifierTotal(calculateList);
+            
+    }
+
     /// <summary>
-    /// 次に使用する攻撃力への固定値補正用保持リスト
+    /// 特別補正の内訳リストを集約した一つの内訳にして返す処理
+    /// 特別補正リストの固定値集約用
     /// </summary>
-    private List<FixedModifierPart> _useATKFixedModifiers;
+    private StatesPowerBreakdown CalculateFixedModifierTotal(List<ModifierPart> modifiers)
+    {
+        if (modifiers == null || modifiers.Count == 0)
+        {
+            return new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
+        }
+        
+        StatesPowerBreakdown result = new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
+        
+        for (int i = 0; i < modifiers.Count; i++)
+        {
+            result = result + modifiers[i].FixedModifier;
+        }
+        
+        return result;
+    }
+
     /// <summary>
-    /// 次に使用する回避率への固定値補正用保持リスト
+    /// 特別な補正の保持リストをただ返す。　主にフレーバー要素用。_conditionalMods;
     /// </summary>
-    private List<FixedModifierPart> _useAGIFixedModifiers;
-    /// <summary>
-    /// 次に使用する防御力への固定値補正用保持リスト
-    /// </summary>
-    private List<FixedModifierPart> _useDEFFixedModifiers;
+    public List<ModifierPart> UseSpecialModifiers
+    {
+        get => _specialModifiers;
+    }
+
     /// <summary>
     /// カウンター用の一時的な防御無視率 )特別補正_
     /// 比較する際にこちらの方が本来の無視率より多ければ、こちらの値が使用される。
     /// -1は使用されていない。というか直接比較されるから-以下の数字にしとけば絶対参照されない。
     /// </summary>
     float _exCounterDEFATK =-1;
-
-    /// <summary>
-    /// 命中率補正をセットする。
-    /// </summary>
-    public void SetEYEPercentageModifier(float value, string memo)
-    {
-        if (_useEYEPercentageModifiers == null) _useEYEPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
-        _useEYEPercentageModifiers.Add(new ModifierPart(memo, value));
-    }
-    /// <summary>
-    /// 攻撃力補正をセットする。
-    /// </summary>
-    public void SetATKPercentageModifier(float value, string memo)
-    {
-        if (_useATKPercentageModifiers == null) _useATKPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
-        _useATKPercentageModifiers.Add(new ModifierPart(memo, value));
-    }
-    /// <summary>
-    /// 回避率補正をセットする。
-    /// </summary>
-    public void SetAGIPercentageModifier(float value, string memo)
-    {
-        if (_useAGIPercentageModifiers == null) _useAGIPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
-        _useAGIPercentageModifiers.Add(new ModifierPart(memo, value));
-    }
-    /// <summary>
-    /// 防御力補正をセットする。
-    /// </summary>
-    public void SetDEFPercentageModifier(float value, string memo)
-    {
-        if (_useDEFPercentageModifiers == null) _useDEFPercentageModifiers = new List<ModifierPart>();//nullチェック、処理
-        _useDEFPercentageModifiers.Add(new ModifierPart(memo, value));
-    }
-    /// <summary>
-    /// 命中率固定値補正をセットする。
-    /// </summary>
-    public void SetEYEFixedModifier(StatesPowerBreakdown value, string memo)
-    {
-        if (_useEYEFixedModifiers == null) _useEYEFixedModifiers = new List<FixedModifierPart>();//nullチェック、処理
-        _useEYEFixedModifiers.Add(new FixedModifierPart(memo, value));
-    }
-    /// <summary>
-    /// 攻撃力固定値補正をセットする。
-    /// </summary>
-    public void SetATKFixedModifier(StatesPowerBreakdown value, string memo)
-    {
-        if (_useATKFixedModifiers == null) _useATKFixedModifiers = new List<FixedModifierPart>();//nullチェック、処理
-        _useATKFixedModifiers.Add(new FixedModifierPart(memo, value));
-    }
-    /// <summary>
-    /// 回避率固定値補正をセットする。
-    /// </summary>
-    public void SetAGIFixedModifier(StatesPowerBreakdown value, string memo)
-    {
-        if (_useAGIFixedModifiers == null) _useAGIFixedModifiers = new List<FixedModifierPart>();//nullチェック、処理
-        _useAGIFixedModifiers.Add(new FixedModifierPart(memo, value));
-    }
-    /// <summary>
-    /// 防御力固定値補正をセットする。
-    /// </summary>
-    public void SetDEFFixedModifier(StatesPowerBreakdown value, string memo)
-    {
-        if (_useDEFFixedModifiers == null) _useDEFFixedModifiers = new List<FixedModifierPart>();//nullチェック、処理
-        _useDEFFixedModifiers.Add(new FixedModifierPart(memo, value));
-    }
     /// <summary>
     /// カウンター用防御無視率をセット
     /// </summary>
@@ -4656,159 +4627,58 @@ public abstract class BaseStates
     {
         _exCounterDEFATK = value;
     }
-    /// <summary>
-    /// 特別な命中率補正
-    /// </summary>
-    public float UseEYEPercentageModifier
-    {
-        get => _useEYEPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
-    }
 
+    //////------------------------キャラクター限定の特別補正----------------------------------------------------------------------------------------
+    public List<CharacterConditionalModifier> _charaConditionalMods;
     /// <summary>
-    /// 特別な攻撃力補正
+    /// キャラ限定補正を追加
     /// </summary>
-    public float UseATKPercentageModifier
+    public void SetCharaConditionalModifierList(BaseStates target, string memo, 
+    whatModify whatstate,float value, StatesPowerBreakdown fixedModifier = null, bool isFixed = false)
     {
-        get => _useATKPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
-    }
+        if (_charaConditionalMods == null)
+            _charaConditionalMods = new List<CharacterConditionalModifier>();
 
-    /// <summary>
-    /// 特別な回避率補正
-    /// </summary>
-    public float UseAGIPercentageModifier
-    {
-        get => _useAGIPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
+        // ModifierPart を生成して CharacterConditionalModifier に渡す
+        var part = new ModifierPart(memo, whatstate, value, fixedModifier, isFixed);
+        _charaConditionalMods.Add(new CharacterConditionalModifier(target, part));
     }
-
-    /// <summary>
-    /// 特別な防御力補正
+   /// <summary>
+    /// キャラ限定補正を、その敵と一致しているものだけ通常の特別補正リストに追加する
     /// </summary>
-    public float UseDEFPercentageModifier
+    public void ApplyCharaConditionalToSpecial(BaseStates target)
     {
-        get => _useDEFPercentageModifiers.Aggregate(1.0f, (total, m) => total * m.Modifier);//リスト内全ての値を乗算
-    }
-    /// <summary>
-    /// 特別補正の内訳リストを集約した一つの内訳にして返す処理
-    /// </summary>
-    private StatesPowerBreakdown CalculateFixedModifierTotal(List<FixedModifierPart> modifiers)
-    {
-        if (modifiers == null || modifiers.Count == 0)
+        if (_charaConditionalMods == null || _charaConditionalMods.Count < 1) return;
+        foreach (var cond in _charaConditionalMods.Where(x => x.Target == target))
         {
-            return new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
+            // SetSpecialModifier(memo, whatstate, value, fixedModifier, isFixed)
+            SetSpecialModifier(
+                cond.Part.memo,
+                cond.Part.whatStates,
+                cond.Part.Modifier,
+                cond.Part.FixedModifier,
+                cond.Part.IsFixedOrPercent
+            );
         }
-        
-        StatesPowerBreakdown result = modifiers[0].Modifier;
-        
-        for (int i = 1; i < modifiers.Count; i++)
-        {
-            result = result + modifiers[i].Modifier;
-        }
-        
-        return result;
     }
-    /// <summary>
-    /// 特別な命中率固定値補正
-    /// </summary>
-    public StatesPowerBreakdown UseEYEFixedModifier => CalculateFixedModifierTotal(_useEYEFixedModifiers);
-    /// <summary>
-    /// 特別な攻撃力固定値補正
-    /// </summary>
-    public StatesPowerBreakdown UseATKFixedModifier => CalculateFixedModifierTotal(_useATKFixedModifiers);
-    /// <summary>
-    /// 特別な回避率固定値補正
-    /// </summary>
-    public StatesPowerBreakdown UseAGIFixedModifier => CalculateFixedModifierTotal(_useAGIFixedModifiers);
-    /// <summary>
-    /// 特別な防御力固定値補正
-    /// </summary>
-    public StatesPowerBreakdown UseDEFFixedModifier => CalculateFixedModifierTotal(_useDEFFixedModifiers);
-
-    /// <summary>
-    /// 特別な命中率補正の保持リストを返す。　主にフレーバー要素用。
-    /// </summary>
-    public List<ModifierPart> UseEYEPercentageModifiers
-    {
-        get => _useEYEPercentageModifiers;
-    }
-
-    /// <summary>
-    /// 特別な攻撃力補正の保持リストを返す。　主にフレーバー要素用。
-    /// </summary>
-    public List<ModifierPart> UseATKPercentageModifiers
-    {
-        get => _useATKPercentageModifiers;
-    }
-
-    /// <summary>
-    /// 特別な回避率補正の保持リストを返す。　主にフレーバー要素用。
-    /// </summary>
-    public List<ModifierPart> UseAGIPercentageModifiers
-    {
-        get => _useAGIPercentageModifiers;
-    }
-
-    /// <summary>
-    /// 特別な防御力補正の保持リストを返す。　主にフレーバー要素用。
-    /// </summary>
-    public List<ModifierPart> UseDEFPercentageModifiers
-    {
-        get => _useDEFPercentageModifiers;
-    }
-
-    /// <summary>
-    /// 特別な命中率固定値補正の保持リストを返す。　主にフレーバー要素用。
-    /// </summary>
-    public List<FixedModifierPart> UseEYEFixedModifiers
-    {
-        get => _useEYEFixedModifiers;
-    }
-
-    /// <summary>
-    /// 特別な攻撃力固定値補正の保持リストを返す。　主にフレーバー要素用。
-    /// </summary>
-    public List<FixedModifierPart> UseATKFixedModifiers
-    {
-        get => _useATKFixedModifiers;
-    }
-
-    /// <summary>
-    /// 特別な回避率固定値補正の保持リストを返す。　主にフレーバー要素用。
-    /// </summary>
-    public List<FixedModifierPart> UseAGIFixedModifiers
-    {
-        get => _useAGIFixedModifiers;
-    }
-
-    /// <summary>
-    /// 特別な防御力固定値補正の保持リストを返す。　主にフレーバー要素用。
-    /// </summary>
-    public List<FixedModifierPart> UseDEFFixedModifiers
-    {
-        get => _useDEFFixedModifiers;
-    }
-
-    
+    //////　　　　　　　　　　キャラクター限定の特別補正----------------------------------------------------------------------------------------
     
     /// <summary>
-    /// 一時的な補正などをすべて消す
+    /// 特別補正などをすべて消す
     /// </summary>
     public void RemoveUseThings()
     {
         _exCounterDEFATK = -1;
-        _useEYEPercentageModifiers = new List<ModifierPart>();
-        _useATKPercentageModifiers = new List<ModifierPart>();
-        _useAGIPercentageModifiers = new List<ModifierPart>();
-        _useDEFPercentageModifiers = new List<ModifierPart>();
-        _useEYEFixedModifiers = new List<FixedModifierPart>();
-        _useATKFixedModifiers = new List<FixedModifierPart>();
-        _useAGIFixedModifiers = new List<FixedModifierPart>();
-        _useDEFFixedModifiers = new List<FixedModifierPart>();
+        _specialModifiers = new List<ModifierPart>();
+        _charaConditionalMods = new List<CharacterConditionalModifier>();
     }
 
     //特別補正------------------------------------------------------------------------------------------------特別補正-----------------------------------------------------------------------------------------------
 
     //実体リストやその他有効化管理などの関数は、各派生立場のクラスで実装する
     
+
+
     /// <summary>
     /// キャラクターが現在使用可能なスキルリスト
     /// </summary>
@@ -4834,9 +4704,9 @@ public abstract class BaseStates
     {
         StatesPowerBreakdown eye = b_EYE;//基礎命中率
 
-        eye *= UseEYEPercentageModifier;//命中率補正。リスト内がゼロならちゃんと1.0fが返る。
+        eye *= GetSpecialPercentModifier(whatModify.eye);//命中率補正。リスト内がゼロならちゃんと1.0fが返る。
         eye *= _passiveList.Aggregate(1.0f, (total, m) => total * m.EYEPercentageModifier());//パッシブの乗算補正
-        eye += UseEYEFixedModifier;//命中率固定値補正
+        eye += GetSpecialFixedModifier(whatModify.eye);//命中率固定値補正
 
         //範囲意志によるボーナス
         foreach (KeyValuePair<SkillZoneTrait, float> entry
@@ -4896,9 +4766,9 @@ public abstract class BaseStates
     {
         StatesPowerBreakdown agi = b_AGI;//基礎回避率
 
-        agi *= UseAGIPercentageModifier;//回避率補正。リスト内がゼロならちゃんと1.0fが返る。
+        agi *= GetSpecialPercentModifier(whatModify.agi);//回避率補正。リスト内がゼロならちゃんと1.0fが返る。
         agi *= _passiveList.Aggregate(1.0f, (total, m) => total * m.AGIPercentageModifier());//パッシブの乗算補正
-        agi += UseAGIFixedModifier;//回避率固定値補正
+        agi += GetSpecialFixedModifier(whatModify.agi);//回避率固定値補正
 
         if (manager.IsVanguard(this))//自分が前のめりなら
         {
@@ -4922,9 +4792,9 @@ public abstract class BaseStates
     {
         StatesPowerBreakdown atk = b_ATK;//基礎攻撃力
 
-        atk *= UseATKPercentageModifier;//攻撃力補正
+        atk *= GetSpecialPercentModifier(whatModify.atk);//攻撃力補正
         atk *= _passiveList.Aggregate(1.0f, (total, m) => total * m.ATKPercentageModifier());//パッシブの乗算補正
-        atk += UseATKFixedModifier;//攻撃力固定値補正
+        atk += GetSpecialFixedModifier(whatModify.atk);//攻撃力固定値補正
 
         atk *= AttackModifier;//攻撃補正  実際の攻撃時のみに参照される。
 
@@ -4986,9 +4856,9 @@ public abstract class BaseStates
             def = b_DEF(SimulateAimStyle);//b_defをシミュレート
         }
 
-        def *= UseDEFPercentageModifier;//防御力補正
+        def *= GetSpecialPercentModifier(whatModify.def);//防御力補正
         def *= _passiveList.Aggregate(1.0f, (total, m) => total * m.DEFPercentageModifier());//パッシブの乗算補正
-        def += UseDEFFixedModifier;//防御力固定値補正
+        def += GetSpecialFixedModifier(whatModify.def);//防御力固定値補正
 
         var minusAmount = def * minusPer;//防御低減率
 
@@ -6543,7 +6413,8 @@ private int CalcTransformCountIncrement(int tightenStage)
             ( skill.NowAimStyle() ==AimStyle.PotanuVolf && skill.SkillPhysical == PhysicalProperty.volten) ||
             (skill.NowAimStyle() ==AimStyle.Duster) && skill.SkillPhysical == PhysicalProperty.dishSmack)
             {
-                attacker.SetATKPercentageModifier(1.1f, "連続攻撃時、狙い流れの物理属性適正とスキルの物理属性の一致による1.1倍ブースト");
+                attacker.SetSpecialModifier("連続攻撃時、狙い流れの物理属性適正とスキルの物理属性の一致による1.1倍ブースト",
+                whatModify.atk, 1.1f);
             }
     }
 
@@ -6570,7 +6441,8 @@ private int CalcTransformCountIncrement(int tightenStage)
                 var attackerValue = Mathf.Max(eneSort - eneRain/3,0)+eneCold;//攻撃者の特定能力値
 
 
-                if(RandomEx.Shared.NextFloat(counterValue+attackerValue) < counterValue && RandomEx.Shared.NextFloat(1)<0.5f)
+                if(RandomEx.Shared.NextFloat(counterValue+attackerValue) < counterValue &&
+                 RandomEx.Shared.NextFloat(1)<0.5f)
                 {
                     //まず連続攻撃の無効化
                     attacker.DeleteConsecutiveATK();
@@ -7248,7 +7120,7 @@ private int CalcTransformCountIncrement(int tightenStage)
                 {
                     //適用
                     var index = TargetBonusDatas.GetTargetIndex(ene);
-                    SetATKPercentageModifier(TargetBonusDatas.GetAtPowerBonusPercentage(index),"対象者ボーナス");
+                    SetSpecialModifier("対象者ボーナス", whatModify.atk,TargetBonusDatas.GetAtPowerBonusPercentage(index));
 
                     //適用した対象者ボーナスの削除　該当インデックスのclear関数の制作
                     TargetBonusDatas.BonusClear(index);
@@ -7258,7 +7130,9 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         for (var i = 0; i < Unders.Count; i++)
         {
-            txt += Unders.GetAtCharacter(i).ReactionSkill(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
+            var ene = Unders.GetAtCharacter(i);
+            ApplyCharaConditionalToSpecial(ene);//キャラ限定補正を通常の特別補正リストに追加　キャラが合ってればね
+            txt += ene.ReactionSkill(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
         }
 
         NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルの攻撃回数をカウントアップ
@@ -9259,6 +9133,8 @@ public struct AimStyleMemory
 }
 /// <summary>
 /// 対象者ボーナスのデータ
+/// 相性値用の仕組みで汎用性は低い　　威力の1.〇倍ボーナス　を対象者限定で、尚且つ持続ターンありきのもの。
+/// 割り込みカウンターのシングル単体攻撃とも違うぞ！
 /// </summary>
 public class TargetBonusDatas
 {
@@ -9606,6 +9482,20 @@ public enum AimStyle
     none
 }
 /// <summary>
+/// あるキャラクターにのみ効く一時補正
+/// </summary>
+public class CharacterConditionalModifier
+{
+    public BaseStates Target { get; }
+    public ModifierPart Part  { get; }
+
+    public CharacterConditionalModifier(BaseStates target, ModifierPart part)
+    {
+        Target = target;
+        Part   = part;
+    }
+}
+/// <summary>
 /// 命中率、攻撃力、回避力、防御力への補正
 /// </summary>
 public class ModifierPart
@@ -9613,38 +9503,33 @@ public class ModifierPart
     /// <summary>
     /// どういう補正かを保存する　攻撃時にunderに出てくる
     /// </summary>
-    public string whatModifier;
+    public string memo;
+
+    public whatModify whatStates;
 
     /// <summary>
-    /// 補正率
+    /// trueならfixed、falseならpercent
+    /// </summary>
+    public bool IsFixedOrPercent;
+
+    /// <summary>
+    /// 補正率 
     /// </summary>
     public float Modifier;
 
-    public ModifierPart(string txt, float value)
-    {
-        whatModifier = txt;
-        Modifier = value;
-    }
-}
-/// <summary>
-/// 命中率、攻撃力、回避力、防御力への固定値補正
-/// </summary>
-public class FixedModifierPart
-{
     /// <summary>
-    /// どういう補正かを保存する　攻撃時にunderに出てくる
+    /// 固定値補正値　十日能力の内訳を含む
     /// </summary>
-    public string whatModifier;
+    public StatesPowerBreakdown FixedModifier;
 
-    /// <summary>
-    /// 補正値
-    /// </summary>
-    public StatesPowerBreakdown Modifier;
 
-    public FixedModifierPart(string txt, StatesPowerBreakdown value)
+    public ModifierPart(string memo, whatModify whatStates, float value, StatesPowerBreakdown fixedModifier = null, bool isFixedOrPercent = false)
     {
-        whatModifier = txt;
+        this.memo = memo;
         Modifier = value;
+        this.whatStates = whatStates;
+        IsFixedOrPercent = isFixedOrPercent;
+        FixedModifier = fixedModifier;
     }
 }
 /// <summary>

@@ -614,6 +614,7 @@ public class AllyClass : BaseStates
     /// </summary>
     public List<int> ValidSkillIDList = new();
     public override IReadOnlyList<BaseSkill> SkillList => _skillALLList.Where(skill => ValidSkillIDList.Contains(skill.ID)).ToList();
+
     public override void OnInitializeSkillsAndChara()
     {
         foreach (var skill in _skillALLList)
@@ -700,6 +701,68 @@ public class AllyClass : BaseStates
         
 
     }
+    
+    /// <summary>
+    /// 隙だらけ補正
+    /// 攻撃相手のターゲット率を引数に入れ、それに自分の十日能力補正を掛ける形で命中パーセンテージ補正を算出する
+    /// 0未満なら使われない。
+    /// </summary>
+    public float GetExposureAccuracyPercentageBonus(float EneTargetProbability)
+    {
+        if(NowPower == ThePower.lowlow)return -1f;//パワーがたるい　だとそもそも発生しない。
+
+        //ジョー歯÷4による基礎能力係数
+        var BaseCoefficient = TenDayValues(false).GetValueOrZero(TenDayAbility.JoeTeeth) / 4;
+        //馬鹿と烈火の乗算　された補正要素
+        var BakaBlazeFireCoef = TenDayValues(false).GetValueOrZero(TenDayAbility.Baka) * 
+        TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire) / 30;
+        //レインコートによる補正要素
+        var RaincoatCoef = TenDayValues(false).GetValueOrZero(TenDayAbility.Raincoat) / 20;
+
+        //レインコートと馬鹿烈火補正はパワーによって分岐
+        switch(NowPower)
+        {
+            case ThePower.low://低いとなし
+                BakaBlazeFireCoef = 0;
+                RaincoatCoef = 0;
+                break;
+            case ThePower.medium://普通なら0.5倍
+                BakaBlazeFireCoef *= 0.5f;
+                RaincoatCoef *= 0.5f;
+                break;
+        }
+
+        var finalTenDaysCoef = BaseCoefficient ;//最終的な十日能力補正にまず基礎の係数を
+
+        //精神属性で分岐する
+        switch(MyImpression)
+        {
+            case SpiritualProperty.pysco://サイコパス、キンダー、リーミナルホワイトはレインコート
+            case SpiritualProperty.liminalwhitetile:
+            case SpiritualProperty.kindergarden:
+                finalTenDaysCoef += RaincoatCoef;
+                break;
+            case SpiritualProperty.doremis://ドレミスは二つとも
+                finalTenDaysCoef += BakaBlazeFireCoef + RaincoatCoef;
+                break;
+            case SpiritualProperty.pillar:
+            case SpiritualProperty.none:
+                //加算なし
+                break;
+            default:
+                //それ以外の精神属性は馬鹿烈火補正
+                finalTenDaysCoef += BakaBlazeFireCoef;
+                break;
+        }
+
+        //最終的な十日能力補正をターゲット率÷10 と掛ける　
+        var eyeModifier = finalTenDaysCoef * (EneTargetProbability / 10);
+
+
+        return eyeModifier;
+
+    }
+    
     /// <summary>
     /// スキルボタンからそのスキルの範囲や対象者の画面に移る
     /// </summary>

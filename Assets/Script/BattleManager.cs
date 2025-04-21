@@ -38,18 +38,6 @@ public enum whatModify
     eye, atk, def, agi
 }
 /// <summary>
-/// 先約リストで扱うステータス補正クラス
-/// </summary>
-public class ReservationStatesModify
-{
-    public whatModify eada;//どのステータスの補正なのか。
-
-    public float modify;
-
-    public string memo;
-}
-
-/// <summary>
 /// 行動リスト
 /// </summary>
 public class ACTList
@@ -58,7 +46,10 @@ public class ACTList
     List<BaseStates> CharactorACTList;
     List<string> TopMessage;
     List<WhichGroup> FactionList;//陣営
-    List<List<ReservationStatesModify>> reservationStatesModifies;//補正リスト
+    /// <summary>
+    /// 予約式補正リスト
+    /// </summary>
+    List<List<ModifierPart>> reservationStatesModifies;
     List<bool> IsFreezeList;//スキルをフリーズ、つまり前のスキルを持続させるかどうか。
     List<BaseStates> SingleTargetList;//単体で狙うのを確定するリスト
     List<float> ExCounterDEFATKList;//割り込みカウンターの防御無視率を保持するリスト
@@ -69,7 +60,7 @@ public class ACTList
         get => CharactorACTList.Count;
     }
 
-    public void Add(BaseStates chara, WhichGroup charasFac, string mes = "", List<ReservationStatesModify> modifys = null, bool isfreeze = false,BaseStates SingleTarget = null,float ExCounterDEFATK = -1)
+    public void Add(BaseStates chara, WhichGroup charasFac, string mes = "", List<ModifierPart> modifys = null, bool isfreeze = false,BaseStates SingleTarget = null,float ExCounterDEFATK = -1)
     {
         CharactorACTList.Add(chara);
         FactionList.Add(charasFac);
@@ -86,7 +77,7 @@ public class ACTList
         CharactorACTList = new List<BaseStates>();
         TopMessage = new List<string>();
         FactionList = new List<WhichGroup>();
-        reservationStatesModifies = new List<List<ReservationStatesModify>>();
+        reservationStatesModifies = new List<List<ModifierPart>>();
         IsFreezeList = new();
         SingleTargetList = new();
         ExCounterDEFATKList = new();
@@ -126,7 +117,7 @@ public class ACTList
     {
         return FactionList[index];
     }
-    public List<ReservationStatesModify> GetAtModifyList(int index)
+    public List<ModifierPart> GetAtModifyList(int index)
     {
         return reservationStatesModifies[index];
     }
@@ -513,26 +504,12 @@ public class BattleManager
             ActerFaction = Acts.GetAtFaction(0);
 
             //acterの特別補正の補正予約があるなら入れる
-            List<ReservationStatesModify> modList;
+            List<ModifierPart> modList;
             if ((modList = Acts.GetAtModifyList(0)) != null)//リストが存在するなら
             {
                 foreach (var mod in modList)//補正リスト内のアイテムで回す
                 {
-                    switch (mod.eada)
-                    {
-                        case whatModify.atk:
-                            Acter.SetATKPercentageModifier(mod.modify, mod.memo);
-                            break;
-                        case whatModify.def:
-                            Acter.SetDEFPercentageModifier(mod.modify, mod.memo);
-                            break;
-                        case whatModify.agi:
-                            Acter.SetAGIPercentageModifier(mod.modify, mod.memo);
-                            break;
-                        case whatModify.eye:
-                            Acter.SetEYEPercentageModifier(mod.modify, mod.memo);
-                            break;
-                    }
+                    Acter.CopySpecialModifier(mod);//そのままコピー
                 }
             }
             //単体固定の狙うべきキャラがいたら
@@ -1442,20 +1419,22 @@ public class BattleManager
         if (RandomEx.Shared.NextInt(100) >= Ideal50or60Easing(Acter.NowUseSkill.SkillHitPer)) return false;
 
         // フラットロゼの効果を付与
-        Acts.Add(Acter, ActerFaction, "淡々としたロゼ", new List<ReservationStatesModify>()
+        Acts.Add(Acter, ActerFaction, "淡々としたロゼ", new List<ModifierPart>()
         {
-            new()
-            {
-                eada = whatModify.eye,
-                modify = 1.6f + GetCoolnesFlatRozePower(),
-                memo = "ロゼ瞳"
-            },
-            new()
-            {
-                eada = whatModify.atk,
-                modify = 0.5f,
-                memo = "ロゼ威力半減"
-            }
+            new(
+                "ロゼ瞳",
+                whatModify.atk,
+                1.6f + GetCoolnesFlatRozePower(),
+                null,
+                false
+            ),
+            new(
+                "ロゼ威力半減",
+                whatModify.atk,
+                0.5f,
+                null,
+                false
+            )
         }, true);
 
         return true;
@@ -1719,7 +1698,7 @@ public class BattleManager
                                 BackLines = new List<BaseStates>(SelectGroup.Ours.Where(member => member != SelectGroup.InstantVanguard));
 
                                 UA.AddRange(SelectByPassiveAndRandom(BackLines, 1));
-                                Acter.SetEYEPercentageModifier(0.7f, "少し遠いよ");//後衛への命中率補正70%を追加。
+                                Acter.SetSpecialModifier("少し遠いよ",whatModify.eye,0.7f);//後衛への命中率補正70%を追加。
                                 Debug.Log(Acter.CharacterName + "は後衛を狙った");
                             }
                         }
@@ -1815,7 +1794,7 @@ public class BattleManager
                                 BackLines = new List<BaseStates>(SelectGroup.Ours.Where(member => member != SelectGroup.InstantVanguard));
 
                                 UA.AddRange(BackLines);//後衛をそのまま入れる
-                                Acter.SetEYEPercentageModifier(90, "ほんの少し狙いにくい");//後衛への命中率補正を追加。
+                                Acter.SetSpecialModifier("ほんの少し狙いにくい",whatModify.eye,0.9f);//後衛への命中率補正を追加。
                                 Debug.Log(Acter.CharacterName + "は後衛を狙った");
                             }
                         }
