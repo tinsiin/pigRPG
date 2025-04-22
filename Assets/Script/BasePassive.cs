@@ -470,9 +470,9 @@ public class BasePassive
     public float DamageReductionRateOnDamage = -1;
     /// <summary>
     /// ターゲットされる確率　詳細はobsidianメモを
-    /// 100~0　の範囲　-1なら使わない。
+    /// 100~-100　の範囲　0なら計算にあまり使われない
     /// </summary>
-    public float TargetProbability = -1f;
+    public float TargetProbability = 0f;
 
 
     //これらで操り切れない部分は、直接baseStatesでのforeachでpassiveListから探す関数でゴリ押しすればいい。

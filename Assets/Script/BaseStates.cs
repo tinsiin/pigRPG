@@ -471,16 +471,6 @@ public abstract class BaseStates
     }
     
     /// <summary>
-    /// FEライクな 2RN（Two‐Random‑Number）方式の実効命中率
-    /// </summary>
-    private float ComputeEffectiveHit(float d)
-    {
-        // 本家では D ≤ 0.76 のとき 2D², D > 0.76 のとき 1 – 2(1–D)²
-        return d <= 0.76f
-            ? 2f * d * d
-            : 1f - 2f * (1f - d) * (1f - d);
-    }
-    /// <summary>
     /// 持ってるパッシブによるターゲットされる確率
     /// 平均化と実効化が行われる　1~100
     /// </summary>
@@ -494,12 +484,17 @@ public abstract class BaseStates
         if (rates.Count == 0) return 0f;
 
         // 平均確率
-        var avgRate = rates.Average();
+        var avgRate = rates.Average();// -100～100 想定
+        var sign = Mathf.Sign(avgRate);         // +1 or -1
+        var absNorm = Mathf.Abs(avgRate) / 100f; // 0～1 正規化
 
-        // 76% 以下はそのまま返し、超過分のみ実効命中率を適用
-        return avgRate <= 76f
-            ? avgRate
-            : ComputeEffectiveHit(avgRate);
+        // FE式を適用（0.76閾値は 1.0 基準 → 0.76）
+        float eff = absNorm <= 0.76f
+            ? 2f * absNorm * absNorm
+            : 1f - 2f * (1f - absNorm) * (1f - absNorm);
+
+        // 符号を戻し、0～±100 にスケール
+        return sign * eff * 100f;
     }
 
     public IReadOnlyList<BaseVitalLayer> VitalLayers => _vitalLayerList;

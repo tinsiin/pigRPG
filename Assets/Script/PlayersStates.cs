@@ -756,10 +756,15 @@ public class AllyClass : BaseStates
         }
 
         //最終的な十日能力補正をターゲット率÷10 と掛ける　
-        var eyeModifier = finalTenDaysCoef * (EneTargetProbability / 10);
+        var rawModifier = finalTenDaysCoef * (EneTargetProbability / 10) / 10;
 
+        //正か負かによって　1.〇倍か、-1.〇倍かにする
+        //eyeModifier = eyeModifier > 0 ? 1 + eyeModifier :  eyeModifier - 1;
+        //return eyeModifier * 0.67f;
 
-        return eyeModifier;
+        // 累乗 0.5（平方根）で増加に減衰をかけ、最低１倍を保証
+        var finalModifier = Mathf.Max(1f, Mathf.Pow(rawModifier, 0.5f));
+        return finalModifier;
 
     }
     

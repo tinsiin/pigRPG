@@ -292,7 +292,7 @@ public class SelectTargetButtons : MonoBehaviour
                     if(ExposureModifier > 0)
                     {
                         //その補正をボタンテキストに追加 1.〇倍の形で表示
-                        txt += "\n 隙だらけ命中補正 " + (1 + ExposureModifier) + "倍";
+                        txt += "\n 隙だらけ命中補正 " + ExposureModifier + "倍";
                     }
 
 
@@ -477,7 +477,7 @@ public class SelectTargetButtons : MonoBehaviour
             if(ExposureModifier > 0)//隙だらけ補正のパーセンテージがあるなら
             {
                 //隙だらけ補正をキャラ限定特別補正に入れる  命中パーセンテージ補正　1.〇倍の形で
-                allyActer.SetCharaConditionalModifierList(target,"隙だらけ", whatModify.eye, 1 + ExposureModifier);
+                allyActer.SetCharaConditionalModifierList(target,"隙だらけ", whatModify.eye, ExposureModifier);
             }
 
 

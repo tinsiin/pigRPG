@@ -5,6 +5,7 @@ using UnityEngine;
 using RandomExtensions;
 using System.Linq;
 using RandomExtensions.Linq;
+using RandomExtensions.Collections;
 using Unity.VisualScripting;
 using R3;
 using Cysharp.Threading.Tasks;
@@ -1562,35 +1563,70 @@ public class BattleManager
         int want,
         int NextChancePercent = 100)
     {
-        // 降順ソート
-        var ordered = candidates
+        // positiveListを降順ソート
+        var PositiveTargetOrder = candidates
+            .Where(u => u.PassivesTargetProbability() > 0)
             .OrderByDescending(u => u.PassivesTargetProbability())
             .ToList();
+        
 
         var winners = new List<BaseStates>();
 
-        // パッシブのターゲット率による降順ソート判定
-        foreach (var u in ordered)
+        // パッシブのターゲット率による降順ソート判定  positiveSelect
+        foreach (var u in PositiveTargetOrder)
         {
             if (winners.Count >= want) break;
             if (rollper(u.PassivesTargetProbability()))
                 winners.Add(u);
         }
 
+        var others = PositiveTargetOrder.Except(winners).ToList();
+        if(others.Count == 0|| winners.Count >= want) return winners;//残ってんのなかったり条件満たされてたら終わり
+        // 残ってるもので-ターゲット率のキャラをnegativeListとして確率計算の候補リスト
+        var NegativeTarget = others
+            .Where(u => u.PassivesTargetProbability() < 0)
+            .ToList();
+        var negativeList = new List<BaseStates>();
+
+        //NegativeAntiSelect　ターゲット率が-以降の物を、その確率でランダム選択リストから外す。
+        foreach (var u in NegativeTarget)
+        {
+            if (rollper(u.PassivesTargetProbability()))
+                negativeList.Add(u);//確率計算に合致すればネガティブリストに
+        }
+
         //デフォルトの判定　完全ランダム方式　持続チャンスがある。
         if (winners.Count < want)
         {
-            var others = ordered.Except(winners).ToList();
-            others.Shuffle();
-            for (var i = 0; i < others.Count; i++)
+            others = others.Except(negativeList).ToList();//ネガティブを除外。
+            if(others.Count == 0){
+                // 残ったもので重み付きリストを作成
+                //ポジティブな選ばれなかったやつ、ネガティブで選ばれなかった奴が混じってるので、重み付きリストを使います。詳細はメモを
+                var DefaultSelectList = new WeightedList<BaseStates>();
+                foreach(var u in others)
+                {//残った候補リストを全て重み付きリストに
+                    DefaultSelectList.Add(u, u.PassivesTargetProbability());
+                }
+
+                do
+                {
+                    DefaultSelectList.RemoveRandom(out var item);//抽選してから削除
+                    winners.Add(item);
+                }while(DefaultSelectList.Count > 0 && winners.Count < want && RandomEx.Shared.NextInt(100) <= NextChancePercent);
+            }
+            
+            //もしまだ満たしてなければネガティブリストの内容で完全ランダム選別
+            //ただし本来選ばれない者たちであるので、NextChancePercentが100%未満ならその確率判定なしですぐ終わる。　
+            // あともちろん必要数満たされてたら終わる
+            //また、「ネガティブ確率に当選した物たちなので」、完全ランダムで選別する、確率に成功したんだから比較する必要がない。
+            if (NextChancePercent < 100) return winners;
+            negativeList.Shuffle();
+            foreach (var u in negativeList)
             {
                 if (winners.Count >= want) break;
-                winners.Add(others[i]);
-                if (RandomEx.Shared.NextInt(100) > NextChancePercent)break;//次に行けるチャンス確率に満たなければ終わり
-                    
+                winners.Add(u);
             }
         }
-
         return winners;
     }
     /// <summary>
