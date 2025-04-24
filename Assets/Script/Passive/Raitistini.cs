@@ -11,6 +11,7 @@ public class Raitistini : BasePassive
     //割り込みカウンター時に、「ライティスティニの効果パッシブ」と「前のめり交代阻止のパッシブ」を付与
     public override void OnInterruptCounter()
     {
+        base.OnInterruptCounter();
         //「ライティスティニの効果パッシブ」を付与
         _owner.ApplyPassiveBufferInBattleByID(11);
 

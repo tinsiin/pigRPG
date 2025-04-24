@@ -27,7 +27,7 @@ public enum BattleStartSituation
 /// <summary>
 ///敵味方どっち
 /// </summary>
-public enum WhichGroup
+public enum allyOrEnemy
 {
     alliy, Enemyiy
 }
@@ -46,7 +46,7 @@ public class ACTList
 
     List<BaseStates> CharactorACTList;
     List<string> TopMessage;
-    List<WhichGroup> FactionList;//陣営
+    List<allyOrEnemy> FactionList;//陣営
     /// <summary>
     /// 予約式補正リスト
     /// </summary>
@@ -61,7 +61,7 @@ public class ACTList
         get => CharactorACTList.Count;
     }
 
-    public void Add(BaseStates chara, WhichGroup charasFac, string mes = "", List<ModifierPart> modifys = null, bool isfreeze = false,BaseStates SingleTarget = null,float ExCounterDEFATK = -1)
+    public void Add(BaseStates chara, allyOrEnemy charasFac, string mes = "", List<ModifierPart> modifys = null, bool isfreeze = false,BaseStates SingleTarget = null,float ExCounterDEFATK = -1)
     {
         CharactorACTList.Add(chara);
         FactionList.Add(charasFac);
@@ -77,7 +77,7 @@ public class ACTList
     {
         CharactorACTList = new List<BaseStates>();
         TopMessage = new List<string>();
-        FactionList = new List<WhichGroup>();
+        FactionList = new List<allyOrEnemy>();
         reservationStatesModifies = new List<List<ModifierPart>>();
         IsFreezeList = new();
         SingleTargetList = new();
@@ -114,7 +114,7 @@ public class ACTList
     {
         return CharactorACTList[index];
     }
-    public WhichGroup GetAtFaction(int index)
+    public allyOrEnemy GetAtFaction(int index)
     {
         return FactionList[index];
     }
@@ -286,13 +286,13 @@ public class BattleManager
     /// <summary>
     /// factionのグループを返す
     /// </summary>
-    BattleGroup FactionToGroup(WhichGroup faction)
+    BattleGroup FactionToGroup(allyOrEnemy faction)
     {
         switch(faction)
         {
-            case WhichGroup.alliy:
+            case allyOrEnemy.alliy:
                 return AllyGroup;
-            case WhichGroup.Enemyiy:
+            case allyOrEnemy.Enemyiy:
                 return EnemyGroup;
         }
         return null;
@@ -320,15 +320,15 @@ public class BattleManager
     /// <summary>
     /// 渡されたキャラクタのbm内での陣営を表す。
     /// </summary>
-    public WhichGroup GetCharacterFaction(BaseStates chara)
+    public allyOrEnemy GetCharacterFaction(BaseStates chara)
     {
         foreach(var one in AllyGroup.Ours)
         {
-            if(one == chara)return WhichGroup.alliy;
+            if(one == chara)return allyOrEnemy.alliy;
         }
         foreach(var one in EnemyGroup.Ours)
         {
-            if(one == chara)return WhichGroup.Enemyiy;
+            if(one == chara)return allyOrEnemy.Enemyiy;
         }
 
         return 0;
@@ -349,7 +349,7 @@ public class BattleManager
     /// 行動を受ける人 
     /// </summary>
     public UnderActersEntryList unders;
-    WhichGroup ActerFaction;//陣営
+    allyOrEnemy ActerFaction;//陣営
     bool Wipeout = false;//全滅したかどうか
     bool EnemyGroupEmpty = false;//敵グループが空っぽ
     bool AlliesRunOut = false;//味方全員逃走
@@ -464,12 +464,12 @@ public class BattleManager
         if (RandomEx.Shared.NextBool())//キャラリストから選ぶの決める
         {
             Charas = AllyGroup.Ours;
-            ActerFaction = WhichGroup.alliy;
+            ActerFaction = allyOrEnemy.alliy;
         }
         else
         {
             Charas = EnemyGroup.Ours;
-            ActerFaction = WhichGroup.Enemyiy;
+            ActerFaction = allyOrEnemy.Enemyiy;
         }
 
         Charas = RemoveDeathCharacters(Charas);//死者を取り除く
@@ -561,13 +561,13 @@ public class BattleManager
         if (AllyGroup.PartyDeathOnBattle())
         {
             Wipeout = true;
-            ActerFaction = WhichGroup.alliy;
+            ActerFaction = allyOrEnemy.alliy;
             return TabState.NextWait;//押して処理
         }
         else if (EnemyGroup.PartyDeathOnBattle())
         {
             Wipeout = true;
-            ActerFaction = WhichGroup.Enemyiy;
+            ActerFaction = allyOrEnemy.Enemyiy;
             return TabState.NextWait;//押して処理
         }
         //もし敵のグループが逃走なんかで空っぽになってたら、
@@ -606,7 +606,7 @@ public class BattleManager
         //スキルと範囲の思考--------------------------------------------------------------------------------------------------------スキルと範囲の思考-----------------------------------------------------------
 
         //俳優が味方なら
-        if (ActerFaction == WhichGroup.alliy)
+        if (ActerFaction == allyOrEnemy.alliy)
         {//味方が行動するならば
 
             if (!Acter.IsFreeze)//強制続行中のスキルがなければ
@@ -642,7 +642,7 @@ public class BattleManager
         }
 
         //敵ならここで思考して決める
-        if (ActerFaction == WhichGroup.Enemyiy)
+        if (ActerFaction == allyOrEnemy.Enemyiy)
         {
             var ene = Acter as NormalEnemy;
             ene.SkillAI();//ここで決めないとスキル可変オプションが下記の対象者選択で反映されないから
@@ -828,7 +828,7 @@ public class BattleManager
     public TabState EscapeACT()
     {
         //味方の場合はエリアの逃走率判定
-        if(ActerFaction == WhichGroup.alliy)
+        if(ActerFaction == allyOrEnemy.alliy)
         {
             var Rate = Walking.NowStageCut.EscapeRate;
             //人数により逃走率の分岐
@@ -902,7 +902,7 @@ public class BattleManager
     {
         if (Wipeout)
         {
-            if (ActerFaction == WhichGroup.alliy)
+            if (ActerFaction == allyOrEnemy.alliy)
             {
                 MessageDropper.Instance.CreateMessage("死んだ");
                 PlayersStates.Instance.PlayersOnLost();
@@ -1070,13 +1070,24 @@ public class BattleManager
         }
     }
     /// <summary>
+    /// 前のめりになるかどうか
+    /// </summary>
+    /// <param name="newVanguard"></param>
+    public void BeVanguard(BaseStates newVanguard)
+    {
+        if(!TryBlockVanruard(newVanguard))
+        {
+            MyGroup(newVanguard).InstantVanguard = newVanguard;
+        }
+    }
+    /// <summary>
     /// スキル実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
     /// </summary>
     void BeVanguard_SkillACT()
     {
-        if (Acter.NowUseSkill.IsAggressiveCommit && !TryBlockVanruard())
+        if (Acter.NowUseSkill.IsAggressiveCommit)
         {
-            MyGroup(Acter).InstantVanguard = Acter;
+            BeVanguard(Acter);
         }
     }
     /// <summary>
@@ -1084,9 +1095,9 @@ public class BattleManager
     /// </summary>
     void BeVanguard_TriggerACT()
     {
-        if (Acter.NowUseSkill.IsReadyTriggerAgressiveCommit && !TryBlockVanruard())
+        if (Acter.NowUseSkill.IsReadyTriggerAgressiveCommit)
         {
-            MyGroup(Acter).InstantVanguard = Acter;
+            BeVanguard(Acter);
         }
     }
     /// <summary>
@@ -1094,18 +1105,18 @@ public class BattleManager
     /// </summary>
     void BeVanguard_SkillStockACT()
     {
-        if (Acter.NowUseSkill.IsStockAgressiveCommit && !TryBlockVanruard())
+        if (Acter.NowUseSkill.IsStockAgressiveCommit)
         {
-            MyGroup(Acter).InstantVanguard = Acter;
+            BeVanguard(Acter);
         }
     }
     /// <summary>
     /// 前のめりの交代阻止パッシブ用の判定関数
     /// </summary>
     /// <returns></returns>
-    bool TryBlockVanruard()
+    public bool TryBlockVanruard(BaseStates newVanguard)
     {
-        var group = MyGroup(Acter);
+        var group = MyGroup(newVanguard);
 
         //前のめり者がいなければ終わり
         if (group.InstantVanguard == null) return false;
@@ -1113,7 +1124,6 @@ public class BattleManager
         if (!group.InstantVanguard.HasBlockVanguardByAlly_IfImVanguard()) return false;
 
         var nowVanguard = group.InstantVanguard;
-        var newVanguard = Acter;
 
         // パーティー属性係数
         float attrRate = group.OurImpression == PartyProperty.HolyGroup ? 0.7f : 1f;
@@ -1591,7 +1601,7 @@ public class BattleManager
         //NegativeAntiSelect　ターゲット率が-以降の物を、その確率でランダム選択リストから外す。
         foreach (var u in NegativeTarget)
         {
-            if (rollper(u.PassivesTargetProbability()))
+            if (rollper(-u.PassivesTargetProbability()))
                 negativeList.Add(u);//確率計算に合致すればネガティブリストに
         }
 
@@ -1640,7 +1650,7 @@ public class BattleManager
         List<BaseStates> UA = null;
 
         //選抜グループ決定する処理☆☆☆☆☆☆☆☆☆☆☆
-        if (ActerFaction == WhichGroup.alliy)
+        if (ActerFaction == allyOrEnemy.alliy)
         {//味方なら敵グループから、
             SelectGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);
 

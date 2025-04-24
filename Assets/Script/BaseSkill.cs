@@ -304,7 +304,7 @@ public class BaseSkill
         {
             combinedSkills |= skill;
         }
-        return (WhatSkill & combinedSkills) == combinedSkills;
+        return (SkillType & combinedSkills) == combinedSkills;
     }
     /// <summary>
     /// スキル性質のいずれかを持ってるかどうか
@@ -312,7 +312,7 @@ public class BaseSkill
     /// </summary>
     public bool HasTypeAny(params SkillType[] skills)
     {
-        return skills.Any(skill => (WhatSkill & skill) != 0);    
+        return skills.Any(skill => (SkillType & skill) != 0);    
     }
     /// <summary>
     /// そのスキル連続性質を持ってるかどうか
@@ -1274,10 +1274,36 @@ public class BaseSkill
     }
 
     /// <summary>
+    /// SubEffectsの基本的な奴
+    /// </summary>
+    [SerializeField] List<int> subEffects;
+    /// <summary>
+    /// SubEffectsのバッファ 主にパッシブによる追加適用用など
+    /// </summary>
+    List<int> bufferSubEffects;
+    /// <summary>
+    /// スキルのパッシブ付与効果に追加適用する。　
+    /// バッファーのリストに追加する。
+    /// </summary>
+    /// <param name="subEffects"></param>
+    public void SetBufferSubEffects(List<int> subEffects)
+    {
+        bufferSubEffects = subEffects;
+    }
+    /// <summary>
+    /// スキルのパッシブ付与効果の追加適用を消す。
+    /// </summary>
+    public void EraseBufferSubEffects()
+    {
+        bufferSubEffects.Clear();
+    }
+    /// <summary>
     /// スキル実行時に付与する状態異常とか ID指定
     /// </summary>
-    public List<int> subEffects;
-
+    public List<int> SubEffects
+    {
+        get { return subEffects.Concat(bufferSubEffects).ToList(); }
+    }
     /// <summary>
     /// スキル実行時に付与する追加HP(Passive由来でない)　ID指定
     /// </summary>
@@ -1401,11 +1427,30 @@ public class BaseSkill
             return _defAtk;
         }
     }
-
+    /// <summary>
+    /// スキルの攻撃性質　基本的な奴
+    /// </summary>
+    [SerializeField]
+    SkillType _baseSkillType;
+    /// <summary>
+    /// スキルの攻撃性質　バッファ用フィールド
+    /// </summary>
+    SkillType bufferSkillType;
     /// <summary>
     /// スキルの攻撃性質
     /// </summary>
-    public SkillType WhatSkill;
+    public SkillType SkillType
+    {
+        get => _baseSkillType | bufferSkillType;
+    }
+    // ⑤ バッファのセット／クリア用メソッド
+    /// <summary>一時的に追加する SkillType を設定</summary>
+    public void SetBufferSkillType(SkillType skill)
+        => bufferSkillType = skill;
+
+    /// <summary>バッファをクリア</summary>
+    public void EraseBufferSkillType()
+        => bufferSkillType = 0;
     /// <summary>
     /// スキルの連撃性質
     /// </summary>
@@ -1483,7 +1528,7 @@ public class BaseSkill
             dst.B_MoveSet_Cash.Add(moveSet.DeepCopy());
         }
         dst._defAtk = _defAtk;
-        dst.WhatSkill = WhatSkill;
+        dst._baseSkillType = _baseSkillType;
         dst.ConsecutiveType = ConsecutiveType;
         dst.ZoneTrait = ZoneTrait;
         dst.DistributionType = DistributionType;

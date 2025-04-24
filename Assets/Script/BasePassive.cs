@@ -6,6 +6,11 @@ using UnityEditor.Rendering;
 using Unity.VisualScripting;
 
 /// <summary>
+/// パッシブの対象範囲
+/// </summary>
+public enum PassiveTargetScope { Allies, Enemies, Both }
+
+/// <summary>
 /// パッシブが付与/除去されるタイミングで追加HPをいつ追加するか
 /// </summary>
 public enum PassiveVitalTiming
@@ -18,6 +23,18 @@ public enum PassiveVitalTiming
 
     /// <summary> 特に自動付与しない (コードで直接制御)</summary>
     Manual
+}
+/// <summary>
+/// スキルのパッシブ付与性質の対象範囲とIDをまとめたもの。
+/// </summary>
+[Serializable]
+public class ExtraPassiveBinding
+{
+    /// <summary> 対応するパッシブのID </summary>
+    public int PassiveId;
+
+    /// <summary> 対応するパッシブの対象範囲 </summary>
+    public PassiveTargetScope TargetScope;
 }
 /// <summary>
 /// パッシブが持つVitalLayerについてをまとめた情報
@@ -91,12 +108,23 @@ public class BasePassive
     public string SmallPassiveName;
     public int ID;
 
-    /// <summary> このパッシブが有効な残りターン数（-1なら無効 </summary>
+    /// <summary> このパッシブが有効な残りターン数（-1なら無効   設定値</summary>
     public int DurationTurn = -1;
+    /// <summary>
+    /// 実際にカウントに使用されるもの
+    /// </summary>
+    [HideInInspector]
     public int DurationTurnCounter;
 
-    /// <summary> このパッシブが有効な残り歩数（-1なら戦闘終了時に消え、0なら戦闘終了後歩行した瞬間に歩行効果なしに消え、1以上なら効果発生） </summary>
+    /// <summary> 
+    // このパッシブが有効な残り歩数（-1なら戦闘終了時に消え、0なら戦闘終了後歩行した瞬間に歩行効果なしに消え、1以上なら効果発生）　 
+    // 設定値 
+    /// </summary>
     public int DurationWalk = -1;
+    /// <summary>
+    /// 実際にカウントに使用されるもの
+    /// </summary>
+    [HideInInspector]
     public int DurationWalkCounter;
     /// <summary>
     /// 死亡時に消えるパッシブかどうか
@@ -108,6 +136,23 @@ public class BasePassive
     /// </summary>
     [SerializeField]
     bool RemoveOnDamage = false;
+
+    /// <summary>
+    /// 割り込みカウンターで消えるパッシブかどうか
+    /// </summary>
+    [SerializeField]
+    bool RemoveOnInterruptCounter = false;
+
+    /// <summary>
+    /// 前のめりでないなら消えるパッシブかどうか
+    /// </summary>
+    [SerializeField]
+    bool RemoveOnNotVanguard = false;
+
+    /// <summary>
+    /// スキル実行時に付与するパッシブ
+    /// </summary>
+    public List<ExtraPassiveBinding> ExtraPassivesIdOnSkillACT = new();
     
     /// <summary>
     /// パッシブが持つ追加HP　IDで扱う。
@@ -150,7 +195,7 @@ public class BasePassive
     /// <summary>
     /// パッシブ付与時
     /// </summary>
-    public void OnApply(BaseStates user)
+    public virtual void OnApply(BaseStates user)
     {
         DurationTurnCounter = DurationTurn;
         DurationWalkCounter = DurationWalk;
@@ -166,14 +211,22 @@ public class BasePassive
             }
         }
 
+        if(BeVanguardOnApply)//前のめりになるパッシブなら
+        {
+            Walking.bm.BeVanguard(user);
+        }
+
+        //前のめりでないなら消えるパッシブなら、消す
+        UpdateNotVanguardSurvival(user);
+
         _owner = user;
-    }
-    /// <summary>
+}
     /// 割り込みカウンター発生時
     /// </summary>
     public virtual void OnInterruptCounter()
     {
-        //派生クラスで実装して
+        //メイン効果は派生クラスで実装して
+        UpdateInterruptCounterSurvival();//パッシブ消えるかどうか
     }
     /// <summary>
     /// ダメージを受ける直前に
@@ -181,6 +234,7 @@ public class BasePassive
     public virtual void OnBeforeDamage()
     {
         //派生クラスで実装して
+        UpdateDamageSurvival();//パッシブが生存判定
     }
     public virtual float OnDamageReductionEffect()
     {
@@ -227,6 +281,49 @@ public class BasePassive
 
         _owner = null;
     }
+
+    /// <summary>
+    ///     毎ターンこのパッシブが生存するかどうか(戦闘中)
+    ///     -1はそもそもターンで消えず、0にセットすれば一気に終わらされる(パッシブ制作の操作で有用)
+    /// </summary>
+    public virtual void UpdateTurnSurvival(BaseStates user)
+    {
+
+        // 1) ターン経過による自動解除 (Duration >= 0)
+        if (DurationTurnCounter > 0)
+        {
+            DurationTurnCounter--;
+            if (DurationTurnCounter <= 0)
+            {
+                // userのpassivelist からこのパッシブをRemove
+                user.RemovePassive(this);
+                if(HasRemainingSurvivalVitalLayer(user))//もし生存条件のvitalLayerがあれば
+                {
+                    Debug.Log($"{user}の{PassiveName}-パッシブがターン経過により削除されました。 生存条件の追加HPがありますが、ターン経過が優先されます。\n");
+
+                    //もし残っている生存条件のvitalLayerが「パッシブが消えるときに一緒に消える性質を持っていなかったら」警告する
+                    if(!RemainigSurvivalVitalLayer_Has_RemoveOnPassiveRemove(user))
+                    {
+                        Debug.LogWarning($"{user}の{PassiveName}-パッシブの残っている生存条件の追加HPにRemoveOnPassiveRemove性質がありません。これではターン経過削除の際、パッシブと密接なはずの追加HPなのに消えずに残りますが、\nよろしいでしょうか？\n");
+                    }
+                }
+                return; // ここで処理打ち切り
+            }
+        }
+
+        // 2) VitalLayer の生存条件チェック
+        //    IsSurvivalCondition == true の Layer が "ひとつも残っていない" 場合
+        if (VitalLayers != null)
+        {
+            if (!HasRemainingSurvivalVitalLayer(user))
+            {
+                user.RemovePassive(this);
+                return;
+            }
+        }
+
+    }
+
     /// <summary>
     /// 歩行時にパッシブが生存するかどうか
     /// </summary>
@@ -253,13 +350,33 @@ public class BasePassive
         }
     }
     /// <summary>
+    /// 前のめりでないなら消えるパッシブなら消す関数
+    /// </summary>
+    public void UpdateNotVanguardSurvival(BaseStates user)
+    {
+        if (RemoveOnNotVanguard && !Walking.bm.IsVanguard(user))//前のめりでなく、前のめり出ないなら消える性質があるのなら
+        {
+            user.RemovePassive(this);
+        }
+    }
+    /// <summary>
     /// ダメージ時にパッシブ消すプロパティがあるなら消す関数
     /// </summary>
-    public void UpdateDamageSurvival()
+    void UpdateDamageSurvival()
     {
         if (RemoveOnDamage)//このパッシブがダメージで消える物ならば
         {
             DurationTurnCounter = 0;//TurnSurvivalで自動で消える。
+        }
+    }
+    /// <summary>
+    /// 割り込みカウンター時にパッシブが消えるなら消す関数
+    /// </summary>
+    void UpdateInterruptCounterSurvival()
+    {
+        if (RemoveOnInterruptCounter)
+        {
+            DurationTurnCounter = 0;
         }
     }
     
@@ -314,48 +431,7 @@ public class BasePassive
         if(remainingLayers.Count < 1) return false;//そもそも残っている生存条件のvitalLayerがない
         return remainingLayers.Any(lay => lay.RemoveOnPassiveRemove);
     }
-    /// <summary>
-    ///     毎ターンこのパッシブが生存するかどうか(戦闘中)
-    ///     -1はそもそもターンで消えず、0にセットすれば一気に終わらされる(パッシブ制作の操作で有用)
-    /// </summary>
-    public virtual void UpdateTurnSurvival(BaseStates user)
-    {
-
-        // 1) ターン経過による自動解除 (Duration >= 0)
-        if (DurationTurnCounter > 0)
-        {
-            DurationTurnCounter--;
-            if (DurationTurnCounter <= 0)
-            {
-                // userのpassivelist からこのパッシブをRemove
-                user.RemovePassive(this);
-                if(HasRemainingSurvivalVitalLayer(user))//もし生存条件のvitalLayerがあれば
-                {
-                    Debug.Log($"{user}の{PassiveName}-パッシブがターン経過により削除されました。 生存条件の追加HPがありますが、ターン経過が優先されます。\n");
-
-                    //もし残っている生存条件のvitalLayerが「パッシブが消えるときに一緒に消える性質を持っていなかったら」警告する
-                    if(!RemainigSurvivalVitalLayer_Has_RemoveOnPassiveRemove(user))
-                    {
-                        Debug.LogWarning($"{user}の{PassiveName}-パッシブの残っている生存条件の追加HPにRemoveOnPassiveRemove性質がありません。これではターン経過削除の際、パッシブと密接なはずの追加HPなのに消えずに残りますが、\nよろしいでしょうか？\n");
-                    }
-                }
-                return; // ここで処理打ち切り
-            }
-        }
-
-        // 2) VitalLayer の生存条件チェック
-        //    IsSurvivalCondition == true の Layer が "ひとつも残っていない" 場合
-        if (VitalLayers != null)
-        {
-            if (!HasRemainingSurvivalVitalLayer(user))
-            {
-                user.RemovePassive(this);
-                return;
-            }
-        }
-
-    }
-
+    
     /// <summary>
     ///     歩行時効果　basestatesでapplypassiveで購読する
     /// </summary>
@@ -378,6 +454,11 @@ public class BasePassive
     {
 
     }
+    /// <summary>
+    /// 実行時に前のめりになるかどうか
+    /// </summary>
+    [SerializeField]
+    bool BeVanguardOnApply;
 
     //十日能力などから補正するならここの単純値ではなく、Effectの関数などを派生クラスでoverrideして直接書きます。
     [SerializeField]
@@ -464,7 +545,7 @@ public class BasePassive
     public float DontDamageHpMinRatio = -1;
 
     /// <summary>
-    /// ダメージに掛ける形で減衰する0~1.0
+    /// ダメージに掛ける形で減衰する  0~1.0
     /// -1だと実行時に使われる平均計算に使用されない。
     /// </summary>
     public float DamageReductionRateOnDamage = -1;

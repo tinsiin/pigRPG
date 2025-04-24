@@ -473,7 +473,7 @@ public class PlayersStates:MonoBehaviour
             //ストーリー依存
         }
 
-        return new BattleGroup(playerGroup, nowOurImpression,WhichGroup.alliy,CompatibilityData); //パーティー属性を返す
+        return new BattleGroup(playerGroup, nowOurImpression,allyOrEnemy.alliy,CompatibilityData); //パーティー属性を返す
     }
 
     /// <summary>

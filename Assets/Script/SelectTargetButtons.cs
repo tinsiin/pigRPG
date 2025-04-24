@@ -296,7 +296,7 @@ public class SelectTargetButtons : MonoBehaviour
                     }
 
 
-                    button.onClick.AddListener(() => OnClickSelectTarget(selects[i], button, WhichGroup.Enemyiy, DirectedWill.One));//関数を登録
+                    button.onClick.AddListener(() => OnClickSelectTarget(selects[i], button, allyOrEnemy.Enemyiy, DirectedWill.One));//関数を登録
                     button.GetComponentInChildren<TextMeshProUGUI>().text = txt;//ボタンのテキスト
                     EnemybuttonList.Add(button);//敵のボタンリストを入れる
 
@@ -350,7 +350,7 @@ public class SelectTargetButtons : MonoBehaviour
                 // 次のボタンのX位置を更新
                 currentX += buttonSize.x + horizontalPadding;
 
-                button.onClick.AddListener(() => OnClickSelectTarget(selects[i], button, WhichGroup.alliy, DirectedWill.One));//関数を登録
+                button.onClick.AddListener(() => OnClickSelectTarget(selects[i], button, allyOrEnemy.alliy, DirectedWill.One));//関数を登録
                 button.GetComponentInChildren<TextMeshProUGUI>().text = selects[i].CharacterName;//ボタンのテキストにキャラ名
                 EnemybuttonList.Add(button);//敵のボタンリストを入れる
 
@@ -417,11 +417,11 @@ public class SelectTargetButtons : MonoBehaviour
     /// <summary>
     /// "人物を対象として選ぶクリック関数"
     /// </summary>
-    void OnClickSelectTarget(BaseStates target, Button thisBtn, WhichGroup faction,DirectedWill will)
+    void OnClickSelectTarget(BaseStates target, Button thisBtn, allyOrEnemy faction,DirectedWill will)
     {
         CashUnders.Add(target);
 
-        if (AllybuttonList.Count > 0 && faction == WhichGroup.Enemyiy)///敵のボタンで主人公達のボタンが一つ以上あったら
+        if (AllybuttonList.Count > 0 && faction == allyOrEnemy.Enemyiy)///敵のボタンで主人公達のボタンが一つ以上あったら
         {
             foreach (var button in AllybuttonList)
             {
@@ -429,7 +429,7 @@ public class SelectTargetButtons : MonoBehaviour
             }
         }
 
-        if (EnemybuttonList.Count > 0 && faction == WhichGroup.alliy)///主人公達のボタンで敵のボタンが一つ以上あったら
+        if (EnemybuttonList.Count > 0 && faction == allyOrEnemy.alliy)///主人公達のボタンで敵のボタンが一つ以上あったら
         {
             foreach (var button in EnemybuttonList)
             {
@@ -438,14 +438,14 @@ public class SelectTargetButtons : MonoBehaviour
         }
 
         //人物セレクトカウントをデクリメント
-        if (faction == WhichGroup.alliy)
+        if (faction == allyOrEnemy.alliy)
             NeedSelectCountAlly--;
-        if (faction == WhichGroup.Enemyiy)
+        if (faction == allyOrEnemy.Enemyiy)
             NeedSelectCountEnemy--;
 
         //各陣営ごとに属したボタンが二つ以上なくても終わり (一つだけあってもそれは廃棄予定の"このオブジェクト"だから)
         //つまりもう選ぶボタンがないなら
-        if (faction == WhichGroup.alliy)
+        if (faction == allyOrEnemy.alliy)
         {//味方ボタンなら
             if (AllybuttonList.Count > 1 || NeedSelectCountAlly <= 0)//味方ボタンが二つ以上ないか、味方選択必要カウントダウンがゼロ以下なら次行く処理
             {
@@ -457,7 +457,7 @@ public class SelectTargetButtons : MonoBehaviour
                 SelectEndBtn.gameObject.SetActive(true);
             }
         }
-        else if (faction == WhichGroup.Enemyiy)
+        else if (faction == allyOrEnemy.Enemyiy)
         {//敵ボタンなら
             if (EnemybuttonList.Count > 1 || NeedSelectCountEnemy <= 0) //敵ボタンが二つ以上ないなら、敵選択必要カウントダウンがゼロ以下なら次行く処理
             {

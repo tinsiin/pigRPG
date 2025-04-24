@@ -34,7 +34,7 @@ public class BattleGroup
     /// <summary>
     ///     コンストラクタ
     /// </summary>
-    public BattleGroup(List<BaseStates> ours, PartyProperty ourImpression,WhichGroup _which,Dictionary<(BaseStates,BaseStates),int> CompatibilityData = null)
+    public BattleGroup(List<BaseStates> ours, PartyProperty ourImpression,allyOrEnemy _which,Dictionary<(BaseStates,BaseStates),int> CompatibilityData = null)
     {
         Ours = ours;
         OurImpression = ourImpression;
@@ -229,7 +229,7 @@ public class BattleGroup
     /// <summary>
     /// 陣営
     /// </summary>
-    public WhichGroup which;
+    public allyOrEnemy which;
 
     /// <summary>
     /// このグループには指定したどれかの精神印象を持った奴が"一人でも"いるかどうか　

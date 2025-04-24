@@ -375,6 +375,7 @@ public abstract class BaseStates
 
     /// <summary>
     /// 全パッシブのUpdateTurnSurvivalを呼ぶ ターン経過時パッシブが生存するかどうか
+    /// NextTurnで呼び出す
     /// </summary>
     void UpdateTurnAllPassiveSurvival()
     {
@@ -384,7 +385,22 @@ public abstract class BaseStates
         {
             pas.UpdateTurnSurvival(this);
         }
-    }/// <summary>
+    }
+    /// <summary>
+    /// 全パッシブが前のめり出ないときに消えるかどうかの判定をする
+    /// RemoveOnNotVanguard = true 前のめり出ないなら消える
+    /// </summary>
+    void UpdateNotVanguardAllPassiveSurvival()
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.UpdateNotVanguardSurvival(this);
+        }
+    }
+    
+    /// <summary>
     /// 全パッシブのUpdateWalkSurvivalを呼ぶ 歩行時パッシブが生存するかどうか
     /// </summary>
     protected void UpdateWalkAllPassiveSurvival()
@@ -403,19 +419,6 @@ public abstract class BaseStates
         foreach (var pas in copy)
         {
             pas.UpdateDeathSurvival(this);
-        }
-    }
-    /// <summary>
-    /// 全パッシブがダメージを受けて生き残るかどうか。
-    /// ターン数を操作してNextTurnでのTurnSurvivalで消えるようにする。
-    /// </summary>
-    void UpdateDamageAllPassiveSurvival()
-    {
-        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
-        var copy = _passiveList.ToArray();
-        foreach (var pas in copy)
-        {
-            pas.UpdateDamageSurvival();
         }
     }
     /// <summary>
@@ -496,7 +499,45 @@ public abstract class BaseStates
         // 符号を戻し、0～±100 にスケール
         return sign * eff * 100f;
     }
+    /// <summary>
+    /// 指定された対象範囲のパッシブIDリストを返す
+    /// スキル実行時に追加適用される。
+    /// </summary>
+    public List<int> ExtraPassivesIdOnSkillACT(allyOrEnemy whichAllyOrEnemy)
+    {
+        var result = new List<int>();
+        foreach (var pas in _passiveList)
+        {
+            foreach(var bind in pas.ExtraPassivesIdOnSkillACT)
+            {
+                //敵味方どっちにも追加適用されるパッシブなら
+                if(bind.TargetScope == PassiveTargetScope.Both)
+                {
+                    result.Add(bind.PassiveId);
+                    continue;
+                }
 
+                //敵味方の区別があるなら
+                switch(whichAllyOrEnemy)
+                {
+                    case allyOrEnemy.alliy:
+                        if(bind.TargetScope == PassiveTargetScope.Allies)
+                        {
+                            result.Add(bind.PassiveId);
+                        }
+                        break;
+                    case allyOrEnemy.Enemyiy:
+                        if(bind.TargetScope == PassiveTargetScope.Enemies)
+                        {
+                            result.Add(bind.PassiveId);
+                        }
+                        break;
+                }
+            }
+        }
+        return result;
+    }
+    
     public IReadOnlyList<BaseVitalLayer> VitalLayers => _vitalLayerList;
     /// <summary>
     /// インスペクタ上で設定されたIDを通じて特定の追加HPを持ってるか調べる
@@ -5660,8 +5701,6 @@ public abstract class BaseStates
 
         //ダメージ直前のパッシブ効果
         PassivesOnBeforeDamage();
-        //ダメージ時に消えるパッシブ(NextTurnで消えるように)
-        UpdateDamageAllPassiveSurvival();
 
 
         //もしカウンター用の防御無視率が攻撃者が持ってたら(本来の防御無視率より多ければ)
@@ -6493,7 +6532,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     bool BadPassiveHit(BaseSkill skill)
     {
         var hit = false;
-        foreach (var id in skill.subEffects.Where(id => PassiveManager.Instance.GetAtID(id).IsBad))
+        foreach (var id in skill.SubEffects.Where(id => PassiveManager.Instance.GetAtID(id).IsBad))
         {//付与する瞬間はインスタンス作成のディープコピーがまだないので、passivemanagerで調査する
             ApplyPassiveBufferInBattleByID(id);
             hit = true;//goodpassiveHitに説明
@@ -6568,7 +6607,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     bool GoodPassiveHit(BaseSkill skill)
     {
         var hit = false;
-        foreach (var id in skill.subEffects.Where(id => !PassiveManager.Instance.GetAtID(id).IsBad))
+        foreach (var id in skill.SubEffects.Where(id => !PassiveManager.Instance.GetAtID(id).IsBad))
         {
             ApplyPassiveBufferInBattleByID(id);
             hit = true;//スキル命中率を介してるのだから、適合したかどうかはヒットしたかしないかに関係ない。 = ApplyPassiveで元々適合したかどうかをhitに代入してた
@@ -6821,15 +6860,53 @@ private int CalcTransformCountIncrement(int tightenStage)
         return HitResult.Hit;
     }
     /// <summary>
-    /// スキルに対するリアクション ここでスキルの解釈をする。
+    /// 現在のNowUseSkillにパッシブ由来の追加パッシブを`適用する
     /// </summary>
-    /// <param name="skill"></param>
+    void ApplyExtraPassivesToSkill(BaseStates ene)
+    {
+        var AllyOrEnemy = allyOrEnemy.Enemyiy;//基本は敵攻撃
+        if(manager.IsFriend(ene, this))//もし味方なら
+        {
+            AllyOrEnemy = allyOrEnemy.alliy;
+        };
+        //パッシブ付与バッファーリストにリストを渡す。
+        NowUseSkill.SetBufferSubEffects(new List<int>(ExtraPassivesIdOnSkillACT(AllyOrEnemy)));
+
+        //もし実行スキルが付与スキル性質を持っていなかったら、
+        if(!NowUseSkill.HasType(SkillType.addPassive))
+        {
+            NowUseSkill.SetBufferSkillType(SkillType.addPassive);//一時的に付与。
+        }
+    }
+    /// <summary>
+    /// 一人に対するスキル実行が終わった時のコールバック
+    /// </summary>
+    void OnAttackerOneSkillActEnd()
+    {
+        //バッファをクリア
+        NowUseSkill.EraseBufferSkillType();//攻撃性質のバッファ
+        NowUseSkill.EraseBufferSubEffects();//スキルの追加パッシブ付与リスト
+        
+    }
+    /// <summary>
+    /// 一人に対するスキル実行が始まった時のコールバック
+    /// </summary>
+    void OnAttackerOneSkillActStart(BaseStates UnderAtker)
+    {
+        ApplyExtraPassivesToSkill(UnderAtker);//攻撃者にスキルの追加パッシブ性質を適用
+        NowUseSkill.CalcCradleSkillLevel(UnderAtker);//「攻撃者の」スキルのゆりかご計算
+        NowUseSkill.RefilCanEraceCount();//除去スキル用の消せるカウント回数の補充
+    }
+    /// <summary>
+/// スキルに対するリアクション ここでスキルの解釈をする。
+/// </summary>
+/// <param name="skill"></param>
     /// <param name="UnderIndex">攻撃される人の順番　スキルのPowerSpreadの順番に同期している</param>
     public virtual string ReactionSkill(BaseStates attacker, float spread)
     {
+        attacker.OnAttackerOneSkillActStart(this);//攻撃者の一人へのスキル実行開始時のコールバック
+
         var skill = attacker.NowUseSkill;
-        skill.CalcCradleSkillLevel(attacker);//「攻撃者の」スキルのゆりかご計算
-        skill.RefilCanEraceCount();//除去スキル用の消せるカウント回数の補充
 
         //スキルパワーの精神属性による計算
         var modifier = GetSkillVsCharaSpiritualModifier(skill.SkillSpiritual, attacker);
@@ -7050,6 +7127,7 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         //ここで攻撃者の攻撃記録を記録する
         attacker.ActDoOneSkillDatas.Add(new ACTSkillData(thisAtkTurn,skill,this,isAttackerHit));//発動したのか、何のスキルなのかを記録
+        attacker.OnAttackerOneSkillActEnd();//攻撃者の一人へのスキル実行終了時のコールバック
         //被害の記録
         damageDatas.Add(new DamageData//クソ長い
         (isAtkHit,isBadPassiveHit,isBadPassiveRemove,isGoodPassiveHit,isGoodPassiveRemove,isGoodVitalLayerHit,isGoodVitalLayerRemove,
@@ -7123,10 +7201,12 @@ private int CalcTransformCountIncrement(int tightenStage)
             }
         }
 
+        //キャラクターに対して実行
         for (var i = 0; i < Unders.Count; i++)
         {
             var ene = Unders.GetAtCharacter(i);
             ApplyCharaConditionalToSpecial(ene);//キャラ限定補正を通常の特別補正リストに追加　キャラが合ってればね
+
             txt += ene.ReactionSkill(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
         }
 
@@ -7604,6 +7684,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     public void OnNextTurnNoArgument()
     {
         UpdateTurnAllPassiveSurvival();
+        UpdateNotVanguardAllPassiveSurvival();
 
         //生きている場合にのみする処理
         if(!Death())
