@@ -244,7 +244,7 @@ public abstract class BaseStates
     }
     /// <summary>
     /// バッファのパッシブリストから指定したIDのパッシブを取得する。存在しない場合はnullを返す
-    /// もし、一回のターンで複数個の重複されたパッシブがあった場合、それの複数取得(そしてそれらへの何らかの適用)に対応出来てないよ...
+    /// もし、一回のターンで複数個の重複された"ID"のパッシブがあった場合、それの複数取得(そしてそれらへの何らかの適用)に対応出来てないよ...
     /// バッファシステムとパッシブの初期値変更に完璧に対応できていない。
     /// </summary>
     public BasePassive GetBufferPassiveByID(int passiveId)
@@ -260,23 +260,9 @@ public abstract class BaseStates
         var status = PassiveManager.Instance.GetAtID(id).DeepCopy();//idを元にpassiveManagerから取得 ディープコピーでないとインスタンス共有される
 
         // 条件(OkType,OkImpression) は既にチェック済みならスキップ
-        if (!HasCharacterType(status.OkType)) return;
-        if (!HasCharacterImpression(status.OkImpression)) return;
+        if (!CanApplyPassive(status)) return;
 
-        // すでに持ってるかどうか
-        var existing = _passiveList.FirstOrDefault(p => p.ID == status.ID);
-        if (existing != null)
-        {
-            // 重ね掛け
-            existing.AddPassivePower(1);
-        }
-        else
-        {
-            // 新規追加
-            _passiveList.Add(status);
-            // パッシブ側のOnApplyを呼ぶ
-            status.OnApply(this);
-        }
+        ApplyPassive(status);
 
     }
     /// <summary>
@@ -298,7 +284,14 @@ public abstract class BaseStates
         if (existing != null)
         {
             // 重ね掛け
-            existing.AddPassivePower(1);
+
+            var pasPower = existing.PassivePower;//今のpassivepower
+            RemovePassive(existing);
+            ApplyPassive(passive);//新しいパッシブ側の変更された想定のプロパティを優先するため、入れ替える。
+            //これは再帰的な処理だが、ループはしない。
+            
+            passive.SetPassivePower(pasPower);//保存しといた前の時のPassivePowerを代入
+            passive.AddPassivePower(1);//その上で挿げ替えた方のpassivepowerを増やす
         }
         else
         {
@@ -325,13 +318,13 @@ public abstract class BaseStates
     /// <summary>
     ///ダメージ直前のパッシブ効果
     /// </summary>
-    public void PassivesOnBeforeDamage()
+    public void PassivesOnBeforeDamage(BaseStates Atker)
     {
         // 途中でRemoveされる可能性があるのでコピーを取ってから回す
         var copy = _passiveList.ToArray();
         foreach (var pas in copy)
         {
-            pas.OnBeforeDamage();
+            pas.OnBeforeDamage(Atker);
         }
     }
     
@@ -353,7 +346,7 @@ public abstract class BaseStates
     /// <summary>
     /// パッシブを指定して除去
     /// </summary>
-    public void RemovePassive(BasePassive passive)
+    public void     RemovePassive(BasePassive passive)
     {
         // パッシブがあるか確認
         if (_passiveList.Remove(passive))
@@ -498,6 +491,25 @@ public abstract class BaseStates
 
         // 符号を戻し、0～±100 にスケール
         return sign * eff * 100f;
+    }
+    /// <summary>
+    /// 持ってるパッシブ全てのスキル発動率を平均化して返す
+    /// このキャラクターのパッシブ由来のスキル発動率
+    /// 全ての値が100% の場合　平均化しても100% その場合100として呼び出す元に返った時計算が省かれる
+    /// </summary>
+    /// <returns></returns>
+    public float PassivesSkillActivationRate()
+    {
+        // -1 を除外して有効な確率を収集
+        var rates = _passiveList
+            .Select(p => p.SkillActivationRate())
+            .Where(r => r >= 0f)//念のため0以上のみが入るようにする
+            .ToList();
+        if (rates.Count == 0) return 100f;//もし要素がなければ100を返す
+
+        // 平均確率
+        var avgRate = rates.Average();
+        return avgRate;
     }
     /// <summary>
     /// 指定された対象範囲のパッシブIDリストを返す
@@ -5700,7 +5712,7 @@ public abstract class BaseStates
         var skill = Atker.NowUseSkill;
 
         //ダメージ直前のパッシブ効果
-        PassivesOnBeforeDamage();
+        PassivesOnBeforeDamage(Atker);
 
 
         //もしカウンター用の防御無視率が攻撃者が持ってたら(本来の防御無視率より多ければ)

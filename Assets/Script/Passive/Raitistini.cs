@@ -17,7 +17,7 @@ public class Raitistini : BasePassive
 
         //「前のめり交代阻止のパッシブ」を付与
         _owner.ApplyPassiveBufferInBattleByID(8);
-        var pas =_owner.GetBufferPassiveByID(8);
+        var pas =_owner.GetBufferPassiveByID(8);//勘違いしがちだけど　この段階で実体化ディープコピーされてるから変更しても大丈夫だよ
         if(pas != null)pas.DurationTurn = 3;//持続ターンを3ターンに変更する
     }
 }

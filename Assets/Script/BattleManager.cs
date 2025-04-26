@@ -337,7 +337,7 @@ public class BattleManager
     /// <summary>
     /// そのキャラクターと同じパーティーの生存者のリストを取得(自分自身を除く)
     /// </summary>
-    List<BaseStates> GetOtherAlliesAlive(BaseStates chara) => 
+    public List<BaseStates> GetOtherAlliesAlive(BaseStates chara) => 
     RemoveDeathCharacters(FactionToGroup(GetCharacterFaction(chara)).Ours).Where(x => x != chara).ToList();
 
     private BattleStartSituation firstSituation;
@@ -710,7 +710,6 @@ public class BattleManager
     /// <summary>
     /// 俳優の行動の分岐
     /// </summary>
-    /// <returns></returns>
     public TabState CharacterActBranching()
     {
         var skill = Acter.NowUseSkill;
@@ -726,21 +725,18 @@ public class BattleManager
         {
             return DominoEscapeACT();//連鎖逃走の処理へ
         }
+        /*
         //誰も動けないのでスキップし、時間が進む
         if(ACTSkipACTBecauseNobodyACT)
         {
             ACTSkipACTBecauseNobodyACT = false;
             return ACTPop();
-        }
+        }*/ //ここ間違ってる？　下に同じ処理あるけど　よく分からんから残しとく
 
-        //スキルのStockACT ストック
+        //スキルのStockACT ストック　/  FreezeConsecutiveの削除予約実行ターンとして
         if(DoNothing)
         {
-            BeVanguard_SkillStockACT();//前のめりになるかならないか
-            //小さなアイコン辺りに無音の灰色円縮小エフェクトを入れる     何もしないエフェクト
-            DoNothing = false;
-            NextTurn(true);
-            return ACTPop();//何もせず行動準備へ
+            return DoNothingACT();
         }
         
         if(IsEscape)
@@ -765,10 +761,32 @@ public class BattleManager
         else//発動カウントが-1以下　つまりカウントしてないまたは終わったなら
         {
             skill.ReturnTrigger();//トリガーのカウントを成功したときの戻らせ方させて
-            return SkillACT();
-        }
 
+            if(CheckPassivesSkillActivation())
+            {
+                return SkillACT();
+            }
+            //ここに　スキル発動失敗のエフェクトを入れる
+            return DoNothingACT();//発動失敗したら何もせず行動準備へ
+        }
+        
     }
+    /// <summary>
+    /// パッシブによる発動率判定
+    /// </summary>
+    bool CheckPassivesSkillActivation() 
+    {
+        //if(Acter.PassivesSkillActivationRate() >= 100) return true;//別にこの行要らないか
+        return rollper(Acter.PassivesSkillActivationRate());
+    }
+    TabState DoNothingACT()
+    {
+        BeVanguard_SkillStockACT();//前のめりになるかならないか
+        //小さなアイコン辺りに無音の灰色円縮小エフェクトを入れる     何もしないエフェクト
+        DoNothing = false;
+        NextTurn(true);
+        return ACTPop();//何もせず行動準備へ
+}
     float GetRunOutRateByCharacterImpression(SpiritualProperty property)
     {
         switch(property)

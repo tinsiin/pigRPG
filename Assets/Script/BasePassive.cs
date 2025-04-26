@@ -179,17 +179,26 @@ public class BasePassive
     {
         PassivePower = value;
     }
+    /// <summary>
+    ///     パッシブの残りターン数と歩数などの生存条件系を再補充
+    /// </summary>
+    protected void DurationRefill()
+    {
+        DurationTurnCounter = DurationTurn;
+        DurationWalkCounter = DurationWalk;
+    }
 
     /// <summary>
-    ///     パッシブを重ね掛けする。
+    ///     パッシブを重ね掛けした際呼び出す関数
+    ///     PassivePowerを加算したり、それによる影響を操作(ここでの操作は主にターン数、歩数などの補充)
     /// </summary>
     /// <param name="addpoint"></param>
-    public void AddPassivePower(int addpoint)
+    public virtual void AddPassivePower(int addpoint)
     {
         PassivePower += addpoint;
         if (PassivePower > MaxPassivePower) PassivePower = MaxPassivePower; //設定値を超えたら設定値にする
 
-        DurationTurnCounter = DurationTurn;//パッシブの残りターン数を再補充
+        DurationRefill();//PassivePowerを増やしたため、念のため生存時間を補充
     }
 
     /// <summary>
@@ -197,8 +206,7 @@ public class BasePassive
     /// </summary>
     public virtual void OnApply(BaseStates user)
     {
-        DurationTurnCounter = DurationTurn;
-        DurationWalkCounter = DurationWalk;
+        DurationRefill();//生存時間を補充
         // ここで Timing == OnApply の VitalLayer を付与
         if (VitalLayers != null)
         {
@@ -231,7 +239,7 @@ public class BasePassive
     /// <summary>
     /// ダメージを受ける直前に
     /// </summary>
-    public virtual void OnBeforeDamage()
+    public virtual void OnBeforeDamage(BaseStates Atker)
     {
         //派生クラスで実装して
         UpdateDamageSurvival();//パッシブが生存判定
@@ -470,10 +478,31 @@ public class BasePassive
     [SerializeField]
     float _agiFixedValue;
     /// <summary>
-    /// 固定値でATKに作用する効果
+    /// パッシブの四大ステの固定補正値をセットする。
     /// </summary>
-    /// <returns></returns>
-    public virtual float ATKFixedValueEffect()
+    public void SetFixedValue(whatModify what, float value)
+{
+    switch (what)
+    {
+        case whatModify.atk:
+            _atkFixedValue = value;
+            break;
+        case whatModify.def:
+            _defFixedValue = value;
+            break;
+        case whatModify.eye:
+            _eyeFixedValue = value;
+            break;
+        case whatModify.agi:
+            _agiFixedValue = value;
+            break;
+    }
+}
+    /// <summary>
+    /// 固定値でATKに作用する効果
+/// </summary>
+/// <returns></returns>
+public virtual float ATKFixedValueEffect()
     {
         return _atkFixedValue;
     }
@@ -510,6 +539,27 @@ public class BasePassive
     float _eyePercentageModifier=1f;
     [SerializeField]
     float _agiPercentageModifier=1f;
+    /// <summary>
+    /// パッシブの四大ステの倍率補正値をセットする。
+    /// </summary>
+    public void SetPercentageModifier(whatModify what, float value)
+    {
+    switch (what)
+        {
+            case whatModify.atk:
+                _atkPercentageModifier = value;
+                break;
+            case whatModify.def:
+                _defPercentageModifier = value;
+                break;
+            case whatModify.eye:
+                _eyePercentageModifier = value;
+                break;
+            case whatModify.agi:
+                _agiPercentageModifier = value;
+                break;
+        }
+    }
     /// <summary>
     ///ATKに作用する補正値の倍率
     /// </summary>
@@ -554,6 +604,25 @@ public class BasePassive
     /// 100~-100　の範囲　0なら計算にあまり使われない
     /// </summary>
     public float TargetProbability = 0f;
+
+    /// <summary>
+    /// スキル発動率のバッキングフィールド
+    /// 本来計算されない概念なので、初期値は100　範囲は0~100
+    /// </summary>
+    [SerializeField]
+    float _skillActivationRate = 100f;
+    /// <summary>
+    /// スキル発動率セット関数
+    /// </summary>
+    public void SetSkillActivationRate(float value) { _skillActivationRate = value; }
+
+    /// <summary>
+    /// スキル発動率
+    /// </summary>
+    public virtual float SkillActivationRate()
+    {
+        return _skillActivationRate;
+    }
 
 
     //これらで操り切れない部分は、直接baseStatesでのforeachでpassiveListから探す関数でゴリ押しすればいい。
