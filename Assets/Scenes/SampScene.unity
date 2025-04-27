@@ -2553,6 +2553,7 @@ MonoBehaviour:
   - rid: 2127851343115190273
   - rid: 2127851343115190274
   - rid: 2127851343115190275
+  - rid: 2127851384214913024
   references:
     version: 2
     RefIds:
@@ -2574,7 +2575,9 @@ MonoBehaviour:
         RemoveOnDeath: 0
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
         VitalLayers: []
         BlockVanguardByAlly_IfImVanguard: 1
@@ -2609,7 +2612,9 @@ MonoBehaviour:
         RemoveOnDeath: 0
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
         VitalLayers: []
         BlockVanguardByAlly_IfImVanguard: 1
@@ -2644,7 +2649,9 @@ MonoBehaviour:
         RemoveOnDeath: 0
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 1
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
         VitalLayers: []
         BlockVanguardByAlly_IfImVanguard: 0
@@ -2679,7 +2686,9 @@ MonoBehaviour:
         RemoveOnDeath: 0
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 1
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
         VitalLayers: []
         BlockVanguardByAlly_IfImVanguard: 0
@@ -2714,7 +2723,9 @@ MonoBehaviour:
         RemoveOnDeath: 0
         RemoveOnDamage: 1
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
         VitalLayers: []
         BlockVanguardByAlly_IfImVanguard: 0
@@ -2749,7 +2760,9 @@ MonoBehaviour:
         RemoveOnDeath: 1
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
         VitalLayers: []
         BlockVanguardByAlly_IfImVanguard: 0
@@ -2784,7 +2797,9 @@ MonoBehaviour:
         RemoveOnDeath: 1
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT:
         - PassiveId: 15
           TargetScope: 1
@@ -2821,7 +2836,9 @@ MonoBehaviour:
         RemoveOnDeath: 1
         RemoveOnDamage: 1
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
         VitalLayers: []
         BlockVanguardByAlly_IfImVanguard: 0
@@ -2856,7 +2873,9 @@ MonoBehaviour:
         RemoveOnDeath: 1
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
         VitalLayers: []
         BlockVanguardByAlly_IfImVanguard: 0
@@ -2873,6 +2892,43 @@ MonoBehaviour:
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 44
+    - rid: 2127851384214913024
+      type: {class: geino_Slaim, ns: , asm: Assembly-CSharp}
+      data:
+        OkImpression: -1
+        OkType: -1
+        IsCantACT: 0
+        IsBad: 0
+        MaxPassivePower: 0
+        PassiveName: "\u30B8\u30FC\u30CE\u306E\u30B9\u30EC\u30FC\u30E0"
+        SmallPassiveName: "\u30B8\u30B9\u30EC\u30A4\u30E0"
+        ID: 17
+        DurationTurn: 6
+        DurationTurnCounter: 0
+        DurationWalk: -1
+        DurationWalkCounter: 0
+        RemoveOnDeath: 0
+        RemoveOnDamage: 1
+        RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
+        RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
+        ExtraPassivesIdOnSkillACT: []
+        VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 0
+        BeVanguardOnApply: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 0.44
+        DontDamageHpMinRatio: -1
+        DamageReductionRateOnDamage: 0.38
+        TargetProbability: 48
+        _skillActivationRate: 100
     - rid: 3171372632022712320
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -2891,7 +2947,9 @@ MonoBehaviour:
         RemoveOnDeath: 0
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
         VitalLayers: []
         BlockVanguardByAlly_IfImVanguard: 0
@@ -2926,7 +2984,9 @@ MonoBehaviour:
         RemoveOnDeath: 0
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
         VitalLayers:
         - VitalLayerId: 0
@@ -2969,7 +3029,9 @@ MonoBehaviour:
         RemoveOnDeath: 0
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
         VitalLayers:
         - VitalLayerId: 1
@@ -3008,13 +3070,11 @@ MonoBehaviour:
         RemoveOnDeath: 0
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
-        VitalLayers:
-        - VitalLayerId: 0
-          GrantTiming: 0
-          IsSurvivalCondition: 0
-          RemoveOnPassiveRemove: 0
+        VitalLayers: []
         BlockVanguardByAlly_IfImVanguard: 0
         BeVanguardOnApply: 0
         _atkFixedValue: 0
@@ -3047,7 +3107,9 @@ MonoBehaviour:
         RemoveOnDeath: 1
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
         VitalLayers: []
         BlockVanguardByAlly_IfImVanguard: 0
@@ -3082,7 +3144,9 @@ MonoBehaviour:
         RemoveOnDeath: 1
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
         VitalLayers: []
         BlockVanguardByAlly_IfImVanguard: 0
@@ -3117,16 +3181,18 @@ MonoBehaviour:
         RemoveOnDeath: 1
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
         VitalLayers: []
         BlockVanguardByAlly_IfImVanguard: 0
         BeVanguardOnApply: 0
         _atkFixedValue: 0
         _defFixedValue: 0
-        _eyeFixedValue: 0
+        _eyeFixedValue: 100
         _agiFixedValue: 0
-        _atkPercentageModifier: 1
+        _atkPercentageModifier: 2
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
@@ -3134,8 +3200,6 @@ MonoBehaviour:
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
-        _attackMultipiler: 2
-        _eyeBonus: 100
     - rid: 8980149223421378560
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -3154,18 +3218,20 @@ MonoBehaviour:
         RemoveOnDeath: 1
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
         RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
         VitalLayers: []
         BlockVanguardByAlly_IfImVanguard: 0
         BeVanguardOnApply: 0
         _atkFixedValue: 0
         _defFixedValue: 0
-        _eyeFixedValue: 0
+        _eyeFixedValue: -10
         _agiFixedValue: 0
-        _atkPercentageModifier: 1
+        _atkPercentageModifier: 0.81
         _defPercentageModifier: 1
-        _eyePercentageModifier: 1
+        _eyePercentageModifier: 0.8
         _agiPercentageModifier: 1
         DontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1

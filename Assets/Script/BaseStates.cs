@@ -48,9 +48,13 @@ public abstract class BaseStates
     /// <summary>
     /// キャラクターの対ひとりごとの行動記録
     /// </summary>
-    public List<ACTSkillData> ActDoOneSkillDatas;
+    public List<ACTSkillDataForOneTarget> ActDoOneSkillDatas;
     /// <summary>
-    /// アクション事のスキルデータ
+    /// 直近の行動記録
+    /// </summary>
+    public ACTSkillDataForOneTarget RecentACTSkillData => ActDoOneSkillDatas[ActDoOneSkillDatas.Count - 1];
+    /// <summary>
+    /// アクション事のスキルデータ AttackChara単位で記録　= スキル一回に対して
     /// </summary>
     public List<ActionSkillData> DidActionSkillDatas;
     /// <summary>
@@ -162,7 +166,7 @@ public abstract class BaseStates
     /// <summary>
     /// 直近の行動記録
     /// </summary>
-    public ACTSkillData RecentSkillData => ActDoOneSkillDatas[ActDoOneSkillDatas.Count - 1];
+    public ACTSkillDataForOneTarget RecentSkillData => ActDoOneSkillDatas[ActDoOneSkillDatas.Count - 1];
     /// <summary>
     /// 直近の被害記録
     /// </summary>
@@ -327,7 +331,32 @@ public abstract class BaseStates
             pas.OnBeforeDamage(Atker);
         }
     }
-    
+
+    /// <summary>
+    /// 攻撃後のパッシブ効果
+    /// </summary>
+    public void PassivesOnAfterAttack()
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.OnAfterAttack();
+        }
+    }
+
+    /// <summary>
+    /// 味方や自分がダメージを食らった後のパッシブ効果
+    /// </summary>
+    public void PassivesOnAfterAlliesDamage(BaseStates Atker)
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.OnAfterAlliesDamage(Atker);
+        }
+    }
     
     /// <summary>
     /// パッシブをIDで除去
@@ -511,6 +540,7 @@ public abstract class BaseStates
         var avgRate = rates.Average();
         return avgRate;
     }
+
     /// <summary>
     /// 指定された対象範囲のパッシブIDリストを返す
     /// スキル実行時に追加適用される。
@@ -4782,24 +4812,6 @@ public abstract class BaseStates
             eye += AGI() / agiPer;
         }
 
-        //パッシブ「食らわせ」による命中低下
-        var HurtDownPower = GetPassiveByID(2);
-        if(HurtDownPower != null)
-        {
-            eye -= 10;
-            eye *= 0.8f;
-        }
-
-
-
-        //割り込みカウンターパッシブなら+100
-        var CounterPower = GetPassiveByID(1) as InterruptCounterPassive;
-        if (CounterPower != null)
-        {
-            
-            eye += CounterPower.EyeBonus;
-        }
-
         //パッシブの補正　固定値
         eye += _passiveList.Sum(p => p.EYEFixedValueEffect());
 
@@ -4867,22 +4879,6 @@ public abstract class BaseStates
                 atk += AGI() / 6;
             }
         }
-
-        //割り込みカウンターパッシブがあるなら二倍の攻撃力
-                //割り込みカウンターパッシブなら+100
-        var CounterPower = GetPassiveByID(1) as InterruptCounterPassive;
-        if (CounterPower != null)
-        {
-            atk *= CounterPower.AttackMultiplier;
-        }
-
-        //パッシブ「食らわせ」による威力低下
-        var HurtDownPower = GetPassiveByID(2);
-        if(HurtDownPower != null)
-        {
-            atk *= 0.81f;
-        }
-
         //パッシブの補正　固定値を加算する
         atk += _passiveList.Sum(p => p.ATKFixedValueEffect());
 
@@ -5154,8 +5150,9 @@ public abstract class BaseStates
 
     /// <summary>
     /// 基礎山型分布によるダメージ補正
+    /// 返り値で攻撃が乱れたかどうか -15%以下なら乱れたのでTrueが返ります。
     /// </summary>
-    StatesPowerBreakdown GetBaseCalcDamageWithPlusMinus22Percent(StatesPowerBreakdown baseDamage)
+    bool GetBaseCalcDamageWithPlusMinus22Percent(ref StatesPowerBreakdown baseDamage)
     {
         // 1) 8d5501 を振る（8回ランダム）
         int diceSum = 0;
@@ -5174,7 +5171,9 @@ public abstract class BaseStates
         StatesPowerBreakdown finalDamage = baseDamage * (1f + offset);
 
         // 5) float で返す（丸めたくないのでそのまま）
-        return finalDamage;
+        baseDamage = finalDamage;//ダメージに代入。
+
+        return offset <= -0.15f;//-15%以下なら乱れた
     }
     /// <summary>
     /// 防ぎ方(AimStyle)の不一致がある場合、クランプする
@@ -5707,7 +5706,7 @@ public abstract class BaseStates
     ///オーバライド可能なダメージ関数
     /// </summary>
     /// <param name="atkPoint"></param>
-    public virtual float Damage(BaseStates Atker, float SkillPower,float SkillPowerForMental,HitResult hitResult)
+    public virtual float Damage(BaseStates Atker, float SkillPower,float SkillPowerForMental,HitResult hitResult,ref bool isdisturbed)
     {
         var skill = Atker.NowUseSkill;
 
@@ -5739,9 +5738,11 @@ public abstract class BaseStates
             mentalDmg = ((Atker.ATK() * mentalATKBoost - MentalDEF()) * SkillPowerForMental) + SkillPowerForMental ;//精神攻撃
         }
         
-
+        isdisturbed = false;//攻撃が乱れたかどうか　　受けた攻撃としての視点から乱れていたかどうか
         if(NowPower > ThePower.lowlow)//たるくなければ基礎山形補正がある。
-        dmg = GetBaseCalcDamageWithPlusMinus22Percent(dmg);//基礎山型補正
+        {
+            isdisturbed = GetBaseCalcDamageWithPlusMinus22Percent(ref dmg);//基礎山型補正
+        }
 
         //物理耐性による減衰
         dmg = ApplyPhysicalResistance(dmg,skill);
@@ -5824,20 +5825,29 @@ public abstract class BaseStates
         if (CounterPower != null)
         {
             //攻撃者の割り込みカウンターパッシブの威力が下がる
-            CounterPower.DecayEffects();//割り込みカウンターパッシブ効果半減　sameturnの連続攻撃で発揮する。(パッシブ自体は1ターンで終わる)
+            ///とりあえずOnAfterAttackに入れた
 
             //割り込みカウンターをされた = さっき「自分は連続攻撃」をしていた
             //その連続攻撃の追加硬直値分だけ、「食らわせ」というパッシブを食らう。
-            var DurationTurn = ActDoOneSkillDatas[ActDoOneSkillDatas.Count - 1].Skill.SKillDidWaitCount;//食らうターン
-            if(DurationTurn > 0)//持続ターンが存在すれば、
+
+            //ただし範囲攻撃で巻き添えの場合もあるから追加で判定　
+            if(!RecentACTSkillData.IsDone && RecentACTSkillData.Target == Atker)//直近の攻撃行動で割り込みされてたか And 割り込みしてきた(攻撃対象)のが今の割り込みパッシブ攻撃者か
             {
-                ApplyPassiveBufferInBattleByID(2);//パッシブ、食らわせを入手する。
-                var hurt = GetBufferPassiveByID(2);//適合したなら(適合条件がある)`
-                if(CanApplyPassive(hurt))
+                var DurationTurn = RecentACTSkillData.Skill.SKillDidWaitCount;//食らうターン
+                if(DurationTurn > 0)//持続ターンが存在すれば、
                 {
-                    hurt.DurationTurn = DurationTurn;//持続ターンを入れる
+                    ApplyPassiveBufferInBattleByID(2);//パッシブ、食らわせを入手する。
+                    var hurt = GetBufferPassiveByID(2);
+                    if(CanApplyPassive(hurt))//適合したなら(適合条件がある)
+                    {
+                        hurt.DurationTurn = DurationTurn;//持続ターンを入れる
+                    }
                 }
             }
+
+
+
+            
 
         }
 
@@ -6937,6 +6947,8 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         //発動するかどうか
         var thisAtkTurn = true;
+        //攻撃が乱れたかどうか
+        var isdisturbed = false;
 
         //被害記録用の一時保存boolなど
         var isBadPassiveHit = false;
@@ -6985,7 +6997,7 @@ private int CalcTransformCountIncrement(int tightenStage)
                     CheckPhysicsConsecutiveAimBoost(attacker);
                     
                     //成功されるとダメージを受ける
-                    damageAmount = Damage(attacker, skillPower,skillPowerForMental,hitResult);
+                    damageAmount = Damage(attacker, skillPower,skillPowerForMental,hitResult,ref isdisturbed);
                     isAtkHit = true;//攻撃をしたからtrue
 
                     ApplyNonDamageHostileEffects(skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove, hitResult);
@@ -7138,12 +7150,18 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
 
         //ここで攻撃者の攻撃記録を記録する
-        attacker.ActDoOneSkillDatas.Add(new ACTSkillData(thisAtkTurn,skill,this,isAttackerHit));//発動したのか、何のスキルなのかを記録
+        attacker.ActDoOneSkillDatas.Add(new ACTSkillDataForOneTarget(thisAtkTurn,isdisturbed,skill,this,isAttackerHit));//発動したのか、何のスキルなのかを記録
         attacker.OnAttackerOneSkillActEnd();//攻撃者の一人へのスキル実行終了時のコールバック
         //被害の記録
         damageDatas.Add(new DamageData//クソ長い
         (isAtkHit,isBadPassiveHit,isBadPassiveRemove,isGoodPassiveHit,isGoodPassiveRemove,isGoodVitalLayerHit,isGoodVitalLayerRemove,
         isBadVitalLayerHit,isBadVitalLayerRemove,isHeal,skill,damageAmount,healAmount,attacker));
+
+        if(isAtkHit)//このboolは攻撃のスキルを食らったかどうかの判定になる。
+        {
+            //グループ全員分の「味方と自分」がダメージを食らった際のコールバックを呼び出す
+            manager.MyGroup(this).PartyPassivesOnAfterAlliesDamage(attacker);
+        }
 
         return txt;
     }
@@ -7225,6 +7243,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルの攻撃回数をカウントアップ
         NowUseSkill.DoSkillCountUp();//使用したスキルの使用回数をカウントアップ
         RemoveUseThings();//特別な補正を消去
+        PassivesOnAfterAttack();//攻撃後のパッシブ効果
         Debug.Log("AttackChara");
 
         //今回の攻撃で一回でもヒットしていれば
@@ -7739,7 +7758,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         Rivahal = 0;//ライバハル値を初期化
         DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
         DecisionSacriFaithAdaptToSkillGrouping();
-        ActDoOneSkillDatas = new List<ACTSkillData>();//スキルの行動記録はbm単位で記録する。
+        ActDoOneSkillDatas = new List<ACTSkillDataForOneTarget>();//スキルの行動記録はbm単位で記録する。
         DidActionSkillDatas = new();//スキルのアクション事の記録データを初期化
         damageDatas = new();
         FocusSkillImpressionList = new();//慣れ補正用スキル印象リストを初期化
@@ -9368,19 +9387,25 @@ public enum CharacterType
 }
 /// <summary>
 /// スキルの行動記録　リストで記録する
+/// 一人一人に対するものってニュアンス
 /// </summary>
-public class ACTSkillData
+public class ACTSkillDataForOneTarget
 {
     public bool IsDone;
+    /// <summary>
+    /// 攻撃が乱れたかどうか
+    /// </summary>
+    public bool IsDisturbed;
     public bool IsHit;
     public BaseSkill Skill;
     public BaseStates Target;   
-    public ACTSkillData(bool isdone,BaseSkill skill,BaseStates target,bool ishit)
+    public ACTSkillDataForOneTarget(bool isdone, bool isdisturbed, BaseSkill skill, BaseStates target, bool ishit)
     {
         IsDone = isdone;
         Skill = skill;
         Target = target;
         IsHit = ishit;
+        IsDisturbed = isdisturbed;
     }
 }
 public class ActionSkillData

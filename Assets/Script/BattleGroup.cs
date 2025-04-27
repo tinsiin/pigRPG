@@ -135,7 +135,26 @@ public class BattleGroup
         }
         return true;//全員死んでるからtrue
     }
-        /// <summary>
+    /// <summary>
+    /// パーティー全員分のパッシブの自分たちの誰かがダメージを食らった際のコールバックを呼び出す
+    /// </summary>
+    /// <param name="Attacker"></param>
+    public void PartyPassivesOnAfterAlliesDamage(BaseStates Attacker)
+    {
+        foreach(var chara in RemoveDeathCharacters(Ours))
+        {
+            chara.PassivesOnAfterAlliesDamage(Attacker);
+        }
+    }
+    public void PartySlaimsEasterNoshiirEffectOnEnemyDisturbedAttack()
+    {
+        foreach(var chara in RemoveDeathCharacters(Ours))
+        {
+            //chara.GetPassiveByID(12)
+        }
+    }
+    
+    /// <summary>
     /// このターンで死んだキャラクターのリストに変換
     /// </summary>
     /// <returns></returns>

@@ -89,6 +89,26 @@ public class Slaim : BasePassive
         }
 
         pas.SetSkillActivationRate(rate);//タクトブルフの発動率を設定
+    }
 
+    /// <summary>
+    /// 味方や自分への、「敵の乱れ攻撃」に反応するイースターノジール用コールバック
+    /// 味方や自分ごと処理しやすいBattleGroupから呼び出す。
+    /// </summary>
+    public virtual void OnAlliesEnemyDisturbedAttack()
+    {
+        //ジーノのスレーム側でパワー条件が変わる
+        //通常スレームでは高いと使用できる
+        if(_owner.NowPower == ThePower.high)
+        {
+            EasterNoshiir();
+        }
+    }
+    /// <summary>
+    /// イースターノジールの効果の関数
+    /// </summary>
+    protected void EasterNoshiir()
+    {
+        
     }
 }

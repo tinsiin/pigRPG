@@ -7,52 +7,55 @@ using UnityEngine;
 public class InterruptCounterPassive : BasePassive
 {
     //スキル命中率は常に100%だからプロパティの必要なし。
-    [SerializeField]
-    float _attackMultipiler = 2f;
+
+
     /// <summary>
     /// 攻撃力に乗算する値（2倍）
     /// passivepowerに応じて、攻撃乗算値は増えていく
     /// </summary>
-    public float AttackMultiplier 
+    public override float ATKPercentageModifier()
     { 
-        get 
+        var plusAtk = 0f;
+        for(int i = 0 ; i<PassivePower;i++)
         {
-            var plusAtk = 0f;
-            for(int i = 0 ; i<PassivePower;i++)
-            {
-                plusAtk += 0.26f;
-            }
-            return _attackMultipiler + plusAtk;
-        } 
+            plusAtk += 0.26f;
+        }
+        return base.ATKPercentageModifier() + plusAtk;
+        
     }
     
-    [SerializeField]
-    float _eyeBonus = 100f;
     /// <summary>
     /// 命中率に加算する値（+100）
     /// </summary>
-    public float EyeBonus 
+    public override float EYEFixedValueEffect()
     {
-        get 
+        var plusEye = 0f;
+        for(int i = 0 ; i<PassivePower;i++)
         {
-            var plusEye = 0f;
-            for(int i = 0 ; i<PassivePower;i++)
-            {
-                plusEye += 12;
-            }
-            return _eyeBonus + plusEye;
-        } 
-    }
+        plusEye += 12;
+        }
+        return base.EYEFixedValueEffect() + plusEye;
+    } 
 
     /// <summary>
     /// パッシブ効果を半減させる。AttackMultiplierは1.0が下限
     /// </summary>
-    public void DecayEffects()
+    void DecayEffects()
     {
         // 攻撃力乗算値を半減（1.0未満にはならない）
-        _attackMultipiler = Mathf.Max(1.0f, _attackMultipiler / 2f);
+        var curATK = ATKPercentageModifier();
+        SetPercentageModifier(whatModify.atk, Mathf.Max(1.0f, curATK / 2f));
         
         // 命中率ボーナスを半減
-        _eyeBonus /= 2f;
+        var curEye = EYEFixedValueEffect();
+        SetFixedValue(whatModify.eye, Mathf.Max(0f, curEye / 2f));
     }
+
+    public override void OnAfterAttack()
+    {
+        //攻撃者の割り込みカウンターパッシブの威力が下がる
+        DecayEffects();//割り込みカウンターパッシブ効果半減　sameturnの連続攻撃で発揮する。(パッシブ自体は1ターンで終わる)
+        base.OnAfterAttack();
+    }
+
 }

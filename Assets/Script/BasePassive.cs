@@ -144,11 +144,22 @@ public class BasePassive
     bool RemoveOnInterruptCounter = false;
 
     /// <summary>
+    /// 攻撃後に消えるパッシブかどうか
+    /// </summary>
+    [SerializeField]
+    bool RemoveOnAfterAttack = false;
+
+    /// <summary>
     /// 前のめりでないなら消えるパッシブかどうか
     /// </summary>
     [SerializeField]
     bool RemoveOnNotVanguard = false;
-
+    /// <summary>
+    /// 味方や自分が攻撃を受けた後に消えるパッシブかどうか
+    /// </summary>
+    [SerializeField]
+    bool RemoveOnAfterAlliesDamage = false;
+    
     /// <summary>
     /// スキル実行時に付与するパッシブ
     /// </summary>
@@ -229,12 +240,22 @@ public class BasePassive
 
         _owner = user;
 }
+
+    /// <summary>
     /// 割り込みカウンター発生時
     /// </summary>
     public virtual void OnInterruptCounter()
     {
         //メイン効果は派生クラスで実装して
         UpdateInterruptCounterSurvival();//パッシブ消えるかどうか
+    }
+    /// <summary>
+    /// 攻撃後
+    /// </summary>
+    public virtual void OnAfterAttack()
+    {
+        //派生クラスで実装して
+        UpdateAfterAttackSurvival();//パッシブ消えるかどうか
     }
     /// <summary>
     /// ダメージを受ける直前に
@@ -244,6 +265,15 @@ public class BasePassive
         //派生クラスで実装して
         UpdateDamageSurvival();//パッシブが生存判定
     }
+    /// <summary>
+    /// 味方や自分がダメージを食らった後に
+    /// </summary>
+    public virtual void OnAfterAlliesDamage(BaseStates Atker)
+    {
+        //派生クラスで実装して
+        UpdateAfterAlliesDamageSurvival();//パッシブ消えるかどうか
+    }
+
     public virtual float OnDamageReductionEffect()
     {
         return DamageReductionRateOnDamage;
@@ -383,6 +413,26 @@ public class BasePassive
     void UpdateInterruptCounterSurvival()
     {
         if (RemoveOnInterruptCounter)
+        {
+            DurationTurnCounter = 0;
+        }
+    }
+    /// <summary>
+    /// 攻撃後にパッシブ消えるなら消す関数
+    /// </summary>
+    void UpdateAfterAttackSurvival()
+    {
+        if (RemoveOnAfterAttack)
+        {
+            DurationTurnCounter = 0;
+        }
+    }
+    /// <summary>
+    /// 味方や自分が攻撃を受けた後にパッシブ消えるなら消す関数
+    /// </summary>
+    void UpdateAfterAlliesDamageSurvival()
+    {
+        if (RemoveOnAfterAlliesDamage)
         {
             DurationTurnCounter = 0;
         }
@@ -544,7 +594,7 @@ public virtual float ATKFixedValueEffect()
     /// </summary>
     public void SetPercentageModifier(whatModify what, float value)
     {
-    switch (what)
+        switch (what)
         {
             case whatModify.atk:
                 _atkPercentageModifier = value;
