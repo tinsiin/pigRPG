@@ -5,6 +5,24 @@ using System.Linq;
 using UnityEditor.Rendering;
 using Unity.VisualScripting;
 
+
+/// <summary>
+/// 特定キャラクター（BaseStates）にのみ適用する補正倍率を保持するデータ構造
+/// </summary>
+public class CharacterSpecificModifier
+{
+    /// <summary>補正に反応するキャラ</summary>
+    public BaseStates TargetCharacter { get; }
+
+    /// <summary>掛ける補正倍率、または加算する固定値</summary>
+    public float Modifier { get; }
+
+    public CharacterSpecificModifier(BaseStates targetCharacter, float modifier)
+    {
+        TargetCharacter = targetCharacter;
+        Modifier        = modifier;
+    }
+}
 /// <summary>
 /// パッシブの対象範囲
 /// </summary>
@@ -506,7 +524,7 @@ public class BasePassive
 
     }
     /// <summary>
-    ///行動時効果
+    /// 行動時効果
     /// </summary>
     public virtual void ACTEffect()
     {
@@ -638,7 +656,80 @@ public virtual float ATKFixedValueEffect()
     {
         return _agiPercentageModifier;
     }
+    /// <summary>
+    /// 特定の攻撃者に反応する防御力補正　パーセント補正
+    /// 特定の攻撃者なんてインスペクタの登録時は分かんないから、「付与時に変更する値だよ」
+    /// </summary>
+    List<CharacterSpecificModifier> defensePercentageModifiersByAttacker;
+    /// <summary>
+    /// 特定の攻撃者に反応する防御力パーセンテージ補正 を攻撃者をチェックして返す補正。
+    /// </summary>
+    public float CheckDefencePercentageModifierByAttacker(BaseStates Attacker)
+    {
+        if (defensePercentageModifiersByAttacker == null || defensePercentageModifiersByAttacker.Count == 0)
+            return -1f;
 
+        foreach (var modifier in defensePercentageModifiersByAttacker)
+        {
+            if (modifier.TargetCharacter == Attacker)
+            {
+                return modifier.Modifier;
+            }
+        }
+        return -1f;//-1なら呼び出し元で候補に加えられない
+    }
+    /// <summary>
+    /// 防御力対象者限定補正リストに新しい要素を追加します。
+    /// </summary>
+    /// <param name="targetCharacter">対象となるキャラクター</param>
+    /// <param name="modifierValue">適用する補正値</param>
+    public void AddDefensePercentageModifierByAttacker(BaseStates targetCharacter, float modifierValue)
+    {
+        if (defensePercentageModifiersByAttacker == null)
+            defensePercentageModifiersByAttacker = new List<CharacterSpecificModifier>();
+            
+        CharacterSpecificModifier newModifier = new CharacterSpecificModifier(targetCharacter, modifierValue);
+        
+        defensePercentageModifiersByAttacker.Add(newModifier);
+    }
+
+    /// <summary>
+    /// 特定の攻撃者に反応する回避補正　パーセント補正
+    /// 特定の攻撃者なんてインスペクタの登録時は分かんないから、「付与時に変更する値だよ」
+    /// AGIには影響を与えない。
+    /// </summary>
+    List<CharacterSpecificModifier> EvasionPercentageModifiersByAttacker;
+    /// <summary>
+    /// 特定の攻撃者に反応する回避補正 を攻撃者をチェックして返す補正。
+    /// </summary>
+    public float CheckEvasionPercentageModifierByAttacker(BaseStates Attacker)
+    {
+        if (EvasionPercentageModifiersByAttacker == null || EvasionPercentageModifiersByAttacker.Count == 0)
+        return -1f;
+
+        foreach (var modifier in EvasionPercentageModifiersByAttacker)
+        {
+            if (modifier.TargetCharacter == Attacker)
+            {
+                return modifier.Modifier;
+            }
+        }
+        return -1f;//-1なら呼び出し元で候補に加えられない
+    }
+    /// <summary>
+    /// 特定の攻撃者に反応する回避率対象者限定補正リストに新しい要素を追加します。
+    /// </summary>
+    /// <param name="targetCharacter">対象となるキャラクター</param>
+    /// <param name="modifierValue">適用する補正値</param>
+    public void AddEvasionPercentageModifierByAttacker(BaseStates targetCharacter, float modifierValue)
+    {
+        if (EvasionPercentageModifiersByAttacker == null)
+            EvasionPercentageModifiersByAttacker = new List<CharacterSpecificModifier>();
+            
+        CharacterSpecificModifier newModifier = new CharacterSpecificModifier(targetCharacter, modifierValue);
+        
+        EvasionPercentageModifiersByAttacker.Add(newModifier);
+    }
     /// <summary>
     /// 0.0~1.0の範囲で、最大HPのその割合よりもダメージを食らうことは絶対にない。　禁忌のプロパティなので全然使うな！
     /// </summary>

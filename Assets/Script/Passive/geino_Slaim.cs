@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static CommonCalc;
 
 /// <summary>
 /// ジーノのスレーム
@@ -17,5 +18,15 @@ public class geino_Slaim : Slaim
         }
         
         base.OnBeforeDamage(Atker);
+    }
+    /// <summary>
+    /// ジーノのは35%の確率でロックがかからない
+    /// </summary>
+    public override void EasterNoshiirLock()
+    {
+        if(rollper(65))
+        {
+            SlaimLockKey = true;
+        }
     }
 }

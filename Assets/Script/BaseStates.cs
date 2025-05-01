@@ -540,7 +540,6 @@ public abstract class BaseStates
         var avgRate = rates.Average();
         return avgRate;
     }
-
     /// <summary>
     /// 指定された対象範囲のパッシブIDリストを返す
     /// スキル実行時に追加適用される。
@@ -578,6 +577,80 @@ public abstract class BaseStates
             }
         }
         return result;
+    }
+    /// <summary>
+    /// 与えられた補正倍率リストを“積と平均のブレンド”でひとつの倍率にまとめて返す
+    /// 空なら1倍が返るので、補正対象の値に何の影響も与えない。
+    /// </summary>
+    private static float CalculateBlendedPercentageModifier(IEnumerable<float> factors)
+    {
+        const float alpha = 0.26f;  // 1:積寄り／0:平均寄り
+        if (!factors.Any()) return 1f;//補正要素がなければパーセンテージ補正なしとして1倍を返す
+
+        // 積と算術平均を計算
+        float product = 1f;
+        foreach (var f in factors) product *= f;
+        float average = factors.Sum() / factors.Count();
+
+        // α でブレンド
+        return Mathf.Pow(product, alpha) * Mathf.Pow(average, 1f - alpha);
+    }
+    /// <summary>
+    /// パッシブのパーセンテージ補正を返す  特別補正と違い一個一個掛ける
+    ///  特別補正と違い、積と平均の中間を取る（ブレンド方式）　CalculateBlendedModifierのconstで操作
+    /// </summary>
+    public void PassivesPercentageModifier(whatModify mod,ref StatesPowerBreakdown value)
+    {
+        // 1) モディファイアを収集
+        var factors = new List<float>();
+        switch (mod)
+        {
+            case whatModify.atk:
+                foreach (var pas in _passiveList) factors.Add(pas.ATKPercentageModifier());
+                break;
+            case whatModify.def:
+                foreach (var pas in _passiveList) factors.Add(pas.DEFPercentageModifier());
+                break;
+            case whatModify.eye:
+                foreach (var pas in _passiveList) factors.Add(pas.EYEPercentageModifier());
+                break;
+            case whatModify.agi:
+                foreach (var pas in _passiveList) factors.Add(pas.AGIPercentageModifier());
+                break;
+            default:
+                return;
+        }
+        if (factors.Count == 0) return;
+
+        // 3) ブレンド乗算
+        float blend = CalculateBlendedPercentageModifier(factors);
+        value *= blend;
+    }
+    /// <summary>
+    /// 持ってる全てのパッシブによる防御力パーセンテージ補正
+    /// </summary>
+    public float PassivesDefencePercentageModifierByAttacker()
+    {
+        // 各パッシブから「この攻撃者に対する防御倍率」を取得
+        var factors = _passiveList
+            .Select(p => p.CheckDefencePercentageModifierByAttacker(manager.Acter))
+            .Where(mod => mod >= 0f);
+
+        // ブレンドして返却　　
+        return CalculateBlendedPercentageModifier(factors);
+    }
+    /// <summary>
+    /// 持ってる全てのパッシブによる回避パーセンテージ補正
+    /// </summary>
+    public float PassivesEvasionPercentageModifierByAttacker()
+    {
+        // 各パッシブから「この攻撃者に対する回避倍率」を取得
+        var factors = _passiveList
+            .Select(p => p.CheckEvasionPercentageModifierByAttacker(manager.Acter))
+            .Where(mod => mod >= 0f);
+
+        // ブレンドして返却　　
+        return CalculateBlendedPercentageModifier(factors);
     }
     
     public IReadOnlyList<BaseVitalLayer> VitalLayers => _vitalLayerList;
@@ -4646,7 +4719,7 @@ public abstract class BaseStates
         _specialModifiers.Add(mod);
     }
     /// <summary>
-    /// 特別な補正を利用  パーセンテージ補正用
+    /// 特別な補正を利用  パーセンテージ補正用  戦闘の状況で要所要所で傾くイメージなので平均化
     /// </summary>
     public float GetSpecialPercentModifier(whatModify mod)
     {
@@ -4783,7 +4856,7 @@ public abstract class BaseStates
         StatesPowerBreakdown eye = b_EYE;//基礎命中率
 
         eye *= GetSpecialPercentModifier(whatModify.eye);//命中率補正。リスト内がゼロならちゃんと1.0fが返る。
-        eye *= _passiveList.Aggregate(1.0f, (total, m) => total * m.EYEPercentageModifier());//パッシブの乗算補正
+        PassivesPercentageModifier(whatModify.eye, ref eye);//パッシブの乗算補正
         eye += GetSpecialFixedModifier(whatModify.eye);//命中率固定値補正
 
         //範囲意志によるボーナス
@@ -4827,7 +4900,7 @@ public abstract class BaseStates
         StatesPowerBreakdown agi = b_AGI;//基礎回避率
 
         agi *= GetSpecialPercentModifier(whatModify.agi);//回避率補正。リスト内がゼロならちゃんと1.0fが返る。
-        agi *= _passiveList.Aggregate(1.0f, (total, m) => total * m.AGIPercentageModifier());//パッシブの乗算補正
+        PassivesPercentageModifier(whatModify.agi, ref agi);//パッシブの乗算補正
         agi += GetSpecialFixedModifier(whatModify.agi);//回避率固定値補正
 
         if (manager.IsVanguard(this))//自分が前のめりなら
@@ -4853,7 +4926,7 @@ public abstract class BaseStates
         StatesPowerBreakdown atk = b_ATK;//基礎攻撃力
 
         atk *= GetSpecialPercentModifier(whatModify.atk);//攻撃力補正
-        atk *= _passiveList.Aggregate(1.0f, (total, m) => total * m.ATKPercentageModifier());//パッシブの乗算補正
+        PassivesPercentageModifier(whatModify.atk, ref atk);
         atk += GetSpecialFixedModifier(whatModify.atk);//攻撃力固定値補正
 
         atk *= AttackModifier;//攻撃補正  実際の攻撃時のみに参照される。
@@ -4901,8 +4974,10 @@ public abstract class BaseStates
         }
 
         def *= GetSpecialPercentModifier(whatModify.def);//防御力補正
-        def *= _passiveList.Aggregate(1.0f, (total, m) => total * m.DEFPercentageModifier());//パッシブの乗算補正
+        PassivesPercentageModifier(whatModify.def, ref def);//パッシブの乗算補正
         def += GetSpecialFixedModifier(whatModify.def);//防御力固定値補正
+
+        def *= PassivesDefencePercentageModifierByAttacker();//パッシブ由来の攻撃者を限定する補正
 
         var minusAmount = def * minusPer;//防御低減率
 
@@ -5773,6 +5848,11 @@ public abstract class BaseStates
 
         //TLOAスキルの威力減衰 本体HPの割合に対するダメージの削り切れる限界というもの。
         ApplyTLOADamageReduction(ref dmg,ref ResonanceDmg);
+
+        if(isdisturbed)
+        {//もし乱れ攻撃なら、味方(自分も含む)のスレームパッシブのイースターノジール効果を発動を判定
+            manager.MyGroup(this).PartySlaimsEasterNoshiirEffectOnEnemyDisturbedAttack(Atker,ref dmg,ref ResonanceDmg);
+        }
         
         //思えのダメージ発生  各クリティカルのダメージを考慮するためクリティカル後に
         ResonanceDamage(ResonanceDmg, skill, Atker);
@@ -6188,6 +6268,9 @@ public abstract class BaseStates
 
         if(Attacker.BattleFirstSurpriseAttacker)//bm最初のターンで先手攻撃を受ける場合
         evasionRate  = baseAgi * 0.7f;//0.7倍で固定
+
+        //パッシブ由来のキャラクタ限定回避補正
+        evasionRate *= PassivesEvasionPercentageModifierByAttacker();
 
         return evasionRate;
     }

@@ -146,14 +146,125 @@ public class BattleGroup
             chara.PassivesOnAfterAlliesDamage(Attacker);
         }
     }
-    public void PartySlaimsEasterNoshiirEffectOnEnemyDisturbedAttack()
+    /// <summary>
+    /// イースターノジールの効果にて、
+    /// どちらのパッシブの効果ターンをどれだけにするかを対象者と付与者の十日能力を比較して決定する
+    /// 詳しくは　スレーム=>イースターノジール
+    /// </summary>
+    void DecideNoshiirTurnByAbilityComparison(ref int noshiirTurn,ref int backFacingTurn,BaseStates target,BaseStates attacker)
     {
-        foreach(var chara in RemoveDeathCharacters(Ours))
+        var targetSilent = target.TenDayValues().GetValueOrZero(TenDayAbility.SilentTraining);//対象者のサイレント練度
+        var attackerPilmagreatifull = attacker.TenDayValues().GetValueOrZero(TenDayAbility.Pilmagreatifull);//付与者のピルマグレイトフル
+        var targetStar = target.TenDayValues().GetValueOrZero(TenDayAbility.StarTersi);//対象者の星テルシ
+        var attackerStar = attacker.TenDayValues().GetValueOrZero(TenDayAbility.StarTersi);//付与者の星テルシ
+        var targetHeavenAndEndWar = target.TenDayValues().GetValueOrZero(TenDayAbility.HeavenAndEndWar);//対象者の天と終戦
+
+        //星テルシが26以上で、尚且つ相手に対して多ければ、それぞれのピグマ、サイレント練度比較用の値を1.1倍する
+        if(attackerStar>=26 && attackerStar >targetStar)
         {
-            //chara.GetPassiveByID(12)
+            attackerPilmagreatifull *= 1.1f;
+        }else if(targetStar>=26 && targetStar >attackerStar)
+        {
+            targetSilent *= 1.1f;
         }
+
+        //付与者のピルマ - 対象者のサイレント練度　それが>0なら その余剰÷　対象者のサイレント練度
+        var overhead = attackerPilmagreatifull - targetSilent;
+        if(overhead > 0 &&  targetSilent > 0)//余剰が合って、対象者のサイレント練度も0よりあるなら
+        {
+            var Addd = Mathf.Min((int)(overhead / targetSilent),3);//余剰÷対象者のサイレント練度 最大三ターン増える
+            noshiirTurn += Addd;
+            backFacingTurn += Addd;//背面ターンとノジール両方増やす。
+        }
+
+        //天と終戦が 20以降10で割った数分、背面パッシブを減らすことが出来る。　二つまで減らせる
+        backFacingTurn -=  (int)Mathf.Min(Mathf.Max(targetHeavenAndEndWar - 20, 0) /10,2);
+        
+
+        
     }
-    
+    /// <summary>
+    /// パーティー全員のイースターノジールの効果を適用と判定の関数
+    /// </summary>
+    public void PartySlaimsEasterNoshiirEffectOnEnemyDisturbedAttack(BaseStates Attacker,ref StatesPowerBreakdown dmg,ref StatesPowerBreakdown ResonanceDmg)
+    {
+        const int geinoSlaimID = 17;
+        const int slaimID = 12;
+        int id = 0;//初期値
+        BaseStates Doer = null;//スレーム実行者
+
+        // 1) ジーノスレーム優先検索
+        foreach (var chara in RemoveDeathCharacters(Ours))
+        {
+            var gePas = chara.GetPassiveByID(geinoSlaimID) as geino_Slaim;
+            var noPas = chara.GetPassiveByID(slaimID) as Slaim;
+            if ((gePas != null &&gePas.EasterNoshiirLockKey) ||(noPas != null &&noPas.EasterNoshiirLockKey)
+                || chara.NowPower  < ThePower.low)   
+                continue; //パワーが低い未満か(ノジールの否定条件)、またはどっちかのスレームが存在して、ロックがかかっていたら、スキップ
+
+            id   = geinoSlaimID;
+            Doer = chara;
+            break;
+        }
+
+        // 2) ジーノがなければ普通スレームを検索
+        if (id == 0)
+        {
+            foreach (var chara in RemoveDeathCharacters(Ours))
+            {
+                var gePas = chara.GetPassiveByID(geinoSlaimID) as geino_Slaim;
+                var noPas = chara.GetPassiveByID(slaimID) as Slaim;
+                if ((gePas != null &&gePas.EasterNoshiirLockKey) ||(noPas != null &&noPas.EasterNoshiirLockKey)
+                || chara.NowPower  < ThePower.high)   
+                    continue; //パワーが高い未満か(ノジール条件の否定)、またはどっちかのスレームが存在して、ロックがかかっていたら、スキップ
+
+                id   = slaimID;
+                Doer = chara;
+                break;
+            }
+        }
+
+
+        if(id == 0)//スレーム所持者がいないなら終わり
+            return;
+
+        //今回のスレームパッシブ
+        var pas = Doer.GetPassiveByID(id) as Slaim;
+        //イースターノジール効果の効果としてダメージを半減
+        dmg /= 2;
+        ResonanceDmg /= 2;
+        //スレームロックを掛ける。
+        pas.EasterNoshiirLock();
+        
+        int noshiirTurn=2;//ノジールパッシブの効果ターン　　基本ターンが代入しておく
+        int backFacingTurn=2;//背面パッシブの効果ターン
+        const int noshiirID = 19;
+        const int backFacingID = 18;
+        
+        //ターン数を十日能力の比較で決める
+        DecideNoshiirTurnByAbilityComparison(ref noshiirTurn,ref backFacingTurn,Attacker,Doer);
+
+        if(noshiirTurn > 0)//ノジールパッシブの効果ターンがあるなら
+        {
+            //実行者にノジーラのパッシブを付与する。
+            Doer.ApplyPassiveBufferInBattleByID(noshiirID);
+            var handle = Doer.GetBufferPassiveByID(noshiirID);//パッシブに付与するハンドル
+            handle.DurationTurn = noshiirTurn;//ターン数を代入
+            handle.AddEvasionPercentageModifierByAttacker(Attacker, 1.2f);//攻撃者(対象者)に対する20%の回避率
+
+        }
+        if(backFacingTurn > 0)//背面パッシブの効果ターンがあるなら
+        {
+            //攻撃者に背面パッシブの効果付与する。
+            Attacker.ApplyPassiveBufferInBattleByID(backFacingID);
+            var handle = Attacker.GetBufferPassiveByID(backFacingID);
+            handle.DurationTurn = backFacingTurn;
+            handle.AddDefensePercentageModifierByAttacker(Doer, 0.7f);//付与者からの攻撃の際防御力が30%低下
+            //付与者のピルマグレイトフルを分、攻撃者(対象者)の回避率を減らす。
+            handle.SetFixedValue(whatModify.agi, -Doer.TenDayValues().GetValueOrZero(TenDayAbility.Pilmagreatifull));
+        }
+        
+    }
     /// <summary>
     /// このターンで死んだキャラクターのリストに変換
     /// </summary>

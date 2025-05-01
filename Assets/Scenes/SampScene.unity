@@ -2554,6 +2554,8 @@ MonoBehaviour:
   - rid: 2127851343115190274
   - rid: 2127851343115190275
   - rid: 2127851384214913024
+  - rid: 2127851432044396544
+  - rid: 2127851432044396545
   references:
     version: 2
     RefIds:
@@ -2928,6 +2930,80 @@ MonoBehaviour:
         DontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: 0.38
         TargetProbability: 48
+        _skillActivationRate: 100
+    - rid: 2127851432044396544
+      type: {class: BasePassive, ns: , asm: Assembly-CSharp}
+      data:
+        OkImpression: -1
+        OkType: -1
+        IsCantACT: 0
+        IsBad: 1
+        MaxPassivePower: 0
+        PassiveName: "\u80CC\u9762"
+        SmallPassiveName: 
+        ID: 18
+        DurationTurn: 2
+        DurationTurnCounter: 0
+        DurationWalk: -1
+        DurationWalkCounter: 0
+        RemoveOnDeath: 1
+        RemoveOnDamage: 0
+        RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 1
+        RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
+        ExtraPassivesIdOnSkillACT: []
+        VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 0
+        BeVanguardOnApply: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 0.8
+        _agiPercentageModifier: 1
+        DontDamageHpMinRatio: -1
+        DamageReductionRateOnDamage: -1
+        TargetProbability: 0
+        _skillActivationRate: 100
+    - rid: 2127851432044396545
+      type: {class: BasePassive, ns: , asm: Assembly-CSharp}
+      data:
+        OkImpression: 0
+        OkType: 0
+        IsCantACT: 0
+        IsBad: 0
+        MaxPassivePower: 0
+        PassiveName: "\u30CE\u30B8\u30FC\u30E9"
+        SmallPassiveName: 
+        ID: 19
+        DurationTurn: 2
+        DurationTurnCounter: 0
+        DurationWalk: -1
+        DurationWalkCounter: 0
+        RemoveOnDeath: 1
+        RemoveOnDamage: 1
+        RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 1
+        RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
+        ExtraPassivesIdOnSkillACT: []
+        VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 0
+        BeVanguardOnApply: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        DontDamageHpMinRatio: -1
+        DamageReductionRateOnDamage: -1
+        TargetProbability: 0
         _skillActivationRate: 100
     - rid: 3171372632022712320
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}

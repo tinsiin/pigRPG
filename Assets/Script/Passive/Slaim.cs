@@ -90,8 +90,25 @@ public class Slaim : BasePassive
 
         pas.SetSkillActivationRate(rate);//タクトブルフの発動率を設定
     }
-
     /// <summary>
+    /// イースターノジールの効果がロックされているかどうか
+    /// </summary>
+    [HideInInspector]
+    public bool EasterNoshiirLockKey = false;
+    /// <summary>
+    /// 一回でもスレームが実行されたら、ロックする。
+    /// </summary>
+    public virtual void EasterNoshiirLock(){EasterNoshiirLockKey = true;}
+
+    /*  パーティーの方の関数で直接実行してるので、コメントアウト
+    /// <summary>
+    /// イースターノジールの効果の関数
+    /// </summary>
+    protected void EasterNoshiir()
+    {
+        
+    }
+        /// <summary>
     /// 味方や自分への、「敵の乱れ攻撃」に反応するイースターノジール用コールバック
     /// 味方や自分ごと処理しやすいBattleGroupから呼び出す。
     /// </summary>
@@ -104,11 +121,5 @@ public class Slaim : BasePassive
             EasterNoshiir();
         }
     }
-    /// <summary>
-    /// イースターノジールの効果の関数
-    /// </summary>
-    protected void EasterNoshiir()
-    {
-        
-    }
+    */
 }
