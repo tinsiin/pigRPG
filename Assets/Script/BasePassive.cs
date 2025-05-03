@@ -84,6 +84,23 @@ public class PassiveVitalLayerBinding
         };
     }
 }
+    /// <summary>
+    /// パッシブ同士のリンク関係を表すクラス
+    /// </summary>
+    public class LinkedPassive
+    {
+        /// <summary>リンクされているパッシブ</summary>
+        public BasePassive Passive { get; }
+
+        /// <summary>親パッシブ(リスト実体のある方)が消えたときに一緒に消えるかどうか</summary>
+        public bool RemoveWithMe { get; }
+
+        public LinkedPassive(BasePassive passive, bool removeWithMe)
+        {
+            Passive = passive;
+            RemoveWithMe = removeWithMe;
+        }
+    }
 
 
 /// <summary>
@@ -199,7 +216,21 @@ public class BasePassive
     /// </summary>
     public int PassivePower { get; private set; }
 
-    protected BaseStates _owner;//オーナー
+    /// <summary>
+    /// オーナー
+    /// </summary>
+    protected BaseStates _owner;
+
+    /// <summary>
+    /// 付与者
+    /// </summary>
+    protected BaseStates _grantor;
+
+    /// <summary>
+    /// リンクするパッシブのリスト
+    /// 基本的にはキャンセル連携など
+    /// </summary>
+    List<LinkedPassive> _passiveLinkList = new();
 
     /// <summary>
     /// PassivePowerを上書きする
@@ -233,7 +264,7 @@ public class BasePassive
     /// <summary>
     /// パッシブ付与時
     /// </summary>
-    public virtual void OnApply(BaseStates user)
+    public virtual void OnApply(BaseStates user,BaseStates grantor)
     {
         DurationRefill();//生存時間を補充
         // ここで Timing == OnApply の VitalLayer を付与
@@ -257,6 +288,7 @@ public class BasePassive
         UpdateNotVanguardSurvival(user);
 
         _owner = user;
+        _grantor = grantor;
 }
 
     /// <summary>
@@ -296,7 +328,13 @@ public class BasePassive
     {
         return DamageReductionRateOnDamage;
     }
-    
+    /// <summary>
+    /// パッシブ側からオーナーのRemovePassiveを呼び出し、オーナーに消してもらう
+    /// </summary>
+    public void RemovePassiveByOwnerCall()
+    {
+        _owner.RemovePassive(this);
+    }
     /// <summary>
     /// パッシブがキャラからRemoveされる時 (OnRemove)
     /// </summary>
@@ -332,6 +370,14 @@ public class BasePassive
                     Debug.LogWarning
                     ($"{_owner}に付与された{PassiveName}の追加HP({bind.VitalLayerId})はOnRemoveというパッシブが消されるタイミングで付与されますが、同時にパッシブ終了時にも消される設定です。この場合、削除処理が優先され、追加HPは付与されませんでした。\n");
                 }
+            }
+        }
+        //リンクされたパッシブが消えるかどうか
+        foreach(var passiveLink in _passiveLinkList)
+        {
+            if(passiveLink.RemoveWithMe)
+            {//リンクされたパッシブがそのオーナーから消える。
+                passiveLink.Passive.RemovePassiveByOwnerCall();
             }
         }
 
@@ -568,16 +614,14 @@ public class BasePassive
 }
     /// <summary>
     /// 固定値でATKに作用する効果
-/// </summary>
-/// <returns></returns>
-public virtual float ATKFixedValueEffect()
+    /// </summary>
+    public virtual float ATKFixedValueEffect()
     {
         return _atkFixedValue;
     }
     /// <summary>
     /// 固定値でDEFに作用する効果
     /// </summary>
-    /// <returns></returns>
     public virtual float DEFFixedValueEffect()
     {
         return _defFixedValue;
@@ -585,7 +629,6 @@ public virtual float ATKFixedValueEffect()
     /// <summary>
     /// 固定値でEYEに作用する効果
     /// </summary>
-    /// <returns></returns>
     public virtual float EYEFixedValueEffect()
     {
         return _eyeFixedValue;
@@ -593,7 +636,6 @@ public virtual float ATKFixedValueEffect()
     /// <summary>
     /// 固定値でAGIに作用する効果
     /// </summary>
-    /// <returns></returns>
     public virtual float AGIFixedValueEffect()
     {
         return _agiFixedValue;

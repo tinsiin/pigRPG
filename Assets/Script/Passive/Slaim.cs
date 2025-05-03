@@ -10,23 +10,23 @@ using UnityEngine;
 public class Slaim : BasePassive
 {
 
-    public override void OnApply(BaseStates user)
+    public override void OnApply(BaseStates user,BaseStates grantor)
     {
         //サイレント練度により、ターン数加算
         var silentTrain = user.TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining);
         var AddTurn = Mathf.Min(4,silentTrain / 11); //加算限界は　4ターン　　サイレント練度÷ 11分ね
         DurationTurn += (int)AddTurn;//int変換して小数省いて加算
 
-        base.OnApply(user);
+        base.OnApply(user,grantor);
     }
     public override void OnBeforeDamage(BaseStates Atker)
     {
         //自分に雲隠れを付与
-        _owner.ApplyPassiveBufferInBattleByID(14);
+        _owner.ApplyPassiveBufferInBattleByID(14,_owner);
         //雲隠れの2ターンと十日能力の比較分のリーディングステップを味方に付与
         foreach(var live in Walking.bm.GetOtherAlliesAlive(_owner))
         {
-            live.ApplyPassiveBufferInBattleByID(13);
+            live.ApplyPassiveBufferInBattleByID(13,_owner);
             var pas = live.GetBufferPassiveByID(13);
             pas.SetPercentageModifier(whatModify.agi, 1.04f);//4%上げる
             pas.SetFixedValue(whatModify.agi,_owner.TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton)/3 *
@@ -56,7 +56,7 @@ public class Slaim : BasePassive
 
 
         //攻撃者にタクトブルフを付与
-        AtkerButPassiveDefender.ApplyPassiveBufferInBattleByID(16);
+        AtkerButPassiveDefender.ApplyPassiveBufferInBattleByID(16,_owner);
         var pas = AtkerButPassiveDefender.GetBufferPassiveByID(16);
 
         //ここ以降AtkerButPassiveDefender  => defender 狩られる側として変数で扱ってるよ

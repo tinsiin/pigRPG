@@ -26,7 +26,7 @@ public class geino_Slaim : Slaim
     {
         if(rollper(65))
         {
-            SlaimLockKey = true;
+            EasterNoshiirLockKey = true;
         }
     }
 }

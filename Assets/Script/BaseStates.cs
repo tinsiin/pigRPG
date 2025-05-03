@@ -187,7 +187,7 @@ public abstract class BaseStates
     /// パッシブの設計上、即座に適用するのではなく、NextTurnにてUpdateTurnSurvivalの後に適用するためのバッファリスト
     /// 詳しくは豚のパッシブを参照
     /// </summary>
-    List<BasePassive> BufferApplyingPassiveList = new();
+    List<(BasePassive passive,BaseStates grantor)> BufferApplyingPassiveList = new();
     /// <summary>
     /// バッファのパッシブを追加する。
     /// </summary>
@@ -195,18 +195,20 @@ public abstract class BaseStates
     {
         foreach(var passive in BufferApplyingPassiveList)
         {
-            ApplyPassive(passive);
+            ApplyPassive(passive.passive,passive.grantor);
         }
         BufferApplyingPassiveList.Clear();//追加したからバッファ消す
 
     }
     /// <summary>
     /// 戦闘中のパッシブ追加は基本バッファに入れよう
+    /// 付与者が自分自身ではないのなら、grantorに自分以外の付与者を渡す
     /// </summary>
-    public void ApplyPassiveBufferInBattleByID(int id)
+    public void ApplyPassiveBufferInBattleByID(int id,BaseStates grantor = null)
     {
+        if(grantor == null) grantor = this;//指定してないのなら、付与者は自分自身
         var status = PassiveManager.Instance.GetAtID(id).DeepCopy();//idを元にpassiveManagerから取得 ディープコピーでないとインスタンス共有される
-        BufferApplyingPassiveList.Add(status);
+        BufferApplyingPassiveList.Add((status,grantor));
     }
 
 
@@ -253,20 +255,21 @@ public abstract class BaseStates
     /// </summary>
     public BasePassive GetBufferPassiveByID(int passiveId)
     {
-        return BufferApplyingPassiveList.FirstOrDefault(p => p.ID == passiveId);
+        return BufferApplyingPassiveList.FirstOrDefault(p => p.passive.ID == passiveId).passive;
     }
 
     /// <summary>
     ///     パッシブを適用
     /// </summary>
-    public void ApplyPassiveByID(int id)
+    public void ApplyPassiveByID(int id,BaseStates grantor = null)
     {
+        if(grantor == null) grantor = this;//指定してないのなら、付与者は自分自身
         var status = PassiveManager.Instance.GetAtID(id).DeepCopy();//idを元にpassiveManagerから取得 ディープコピーでないとインスタンス共有される
 
         // 条件(OkType,OkImpression) は既にチェック済みならスキップ
         if (!CanApplyPassive(status)) return;
 
-        ApplyPassive(status);
+        ApplyPassive(status,grantor);
 
     }
     /// <summary>
@@ -278,8 +281,10 @@ public abstract class BaseStates
         if (!HasCharacterImpression(passive.OkImpression)) return false;
         return true;
     }
-    public void ApplyPassive(BasePassive passive)
+    public void ApplyPassive(BasePassive passive,BaseStates grantor = null)
     {
+        if(grantor == null) grantor = this;//指定してないのなら、付与者は自分自身
+
         // 条件(OkType,OkImpression) は既にチェック済みならスキップ
         if (!CanApplyPassive(passive)) return;
 
@@ -291,8 +296,8 @@ public abstract class BaseStates
 
             var pasPower = existing.PassivePower;//今のpassivepower
             RemovePassive(existing);
-            ApplyPassive(passive);//新しいパッシブ側の変更された想定のプロパティを優先するため、入れ替える。
-            //これは再帰的な処理だが、ループはしない。
+            ApplyPassive(passive,grantor);//新しいパッシブ側の変更された想定のプロパティを優先するため、入れ替える。
+            //これは再帰的な処理だが、ループはしない。詳しくはAIに聞けよ
             
             passive.SetPassivePower(pasPower);//保存しといた前の時のPassivePowerを代入
             passive.AddPassivePower(1);//その上で挿げ替えた方のpassivepowerを増やす
@@ -302,7 +307,7 @@ public abstract class BaseStates
             // 新規追加
             _passiveList.Add(passive);
             // パッシブ側のOnApplyを呼ぶ
-            passive.OnApply(this);
+            passive.OnApply(this,grantor);
         }
 
     }
@@ -375,7 +380,7 @@ public abstract class BaseStates
     /// <summary>
     /// パッシブを指定して除去
     /// </summary>
-    public void     RemovePassive(BasePassive passive)
+    public void RemovePassive(BasePassive passive)
     {
         // パッシブがあるか確認
         if (_passiveList.Remove(passive))
@@ -5916,7 +5921,7 @@ public abstract class BaseStates
                 var DurationTurn = RecentACTSkillData.Skill.SKillDidWaitCount;//食らうターン
                 if(DurationTurn > 0)//持続ターンが存在すれば、
                 {
-                    ApplyPassiveBufferInBattleByID(2);//パッシブ、食らわせを入手する。
+                    ApplyPassiveBufferInBattleByID(2,Atker);//パッシブ、食らわせを入手する。
                     var hurt = GetBufferPassiveByID(2);
                     if(CanApplyPassive(hurt))//適合したなら(適合条件がある)
                     {
@@ -6634,12 +6639,12 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>
     /// 悪いパッシブ付与処理
     /// </summary>
-    bool BadPassiveHit(BaseSkill skill)
+    bool BadPassiveHit(BaseSkill skill,BaseStates grantor)
     {
         var hit = false;
         foreach (var id in skill.SubEffects.Where(id => PassiveManager.Instance.GetAtID(id).IsBad))
         {//付与する瞬間はインスタンス作成のディープコピーがまだないので、passivemanagerで調査する
-            ApplyPassiveBufferInBattleByID(id);
+            ApplyPassiveBufferInBattleByID(id,grantor);
             hit = true;//goodpassiveHitに説明
         }
         return hit;
@@ -6709,12 +6714,12 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>
     /// 良いパッシブ付与処理
     /// </summary>
-    bool GoodPassiveHit(BaseSkill skill)
+    bool GoodPassiveHit(BaseSkill skill,BaseStates grantor)
     {
         var hit = false;
         foreach (var id in skill.SubEffects.Where(id => !PassiveManager.Instance.GetAtID(id).IsBad))
         {
-            ApplyPassiveBufferInBattleByID(id);
+            ApplyPassiveBufferInBattleByID(id,grantor);
             hit = true;//スキル命中率を介してるのだから、適合したかどうかはヒットしたかしないかに関係ない。 = ApplyPassiveで元々適合したかどうかをhitに代入してた
             //。。。バッファーリストの関係で一々シミュレイト用関数作るのがめんどくさかったけど、この考えが割と合理的だったからそうしたけどね。
             //それに、このhitしたのに敵になかったら、プレイヤーはこのパッシブの適合条件で適合しなかったことを察せれるし。
@@ -6784,7 +6789,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>
     /// 直接攻撃じゃない敵対行動系
     /// </summary>
-    void ApplyNonDamageHostileEffects(BaseSkill skill,out bool isBadPassiveHit, out bool isBadVitalLayerHit, out bool isGoodPassiveRemove, out bool isGoodVitalLayerRemove,HitResult hitResult)
+    void ApplyNonDamageHostileEffects(BaseStates Atker,BaseSkill skill,out bool isBadPassiveHit, out bool isBadVitalLayerHit, out bool isGoodPassiveRemove, out bool isGoodVitalLayerRemove,HitResult hitResult)
     {
         isBadPassiveHit = false;
         isBadVitalLayerHit = false;
@@ -6802,7 +6807,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (rollper(rndFrequency))
             {
                 //悪いパッシブを付与しようとしてるのなら、命中回避計算
-                isBadPassiveHit = BadPassiveHit(skill);
+                isBadPassiveHit = BadPassiveHit(skill,Atker);
             }else
             {
                 Debug.Log("悪いパッシブを付与が上手く発動しなかった。");
@@ -7083,7 +7088,7 @@ private int CalcTransformCountIncrement(int tightenStage)
                     damageAmount = Damage(attacker, skillPower,skillPowerForMental,hitResult,ref isdisturbed);
                     isAtkHit = true;//攻撃をしたからtrue
 
-                    ApplyNonDamageHostileEffects(skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove, hitResult);
+                    ApplyNonDamageHostileEffects(attacker,skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove, hitResult);
                 }
             }
         }
@@ -7095,7 +7100,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             hitResult = AllyEvade_HitMixDown(hitResult,AllyEvade);
             if (hitResult != HitResult.CompleteEvade)
             {
-                ApplyNonDamageHostileEffects(skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove, hitResult);        
+                ApplyNonDamageHostileEffects(attacker,skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove, hitResult);        
             }
         }
 
@@ -7149,7 +7154,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //良いパッシブを付与しようとしてるのなら、スキル命中計算のみ
-                isGoodPassiveHit = GoodPassiveHit(skill);
+                isGoodPassiveHit = GoodPassiveHit(skill,attacker);
             }
         }
         if (skill.HasType(SkillType.AddVitalLayer))

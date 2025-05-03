@@ -1938,6 +1938,7 @@ public class BattleManager
             }
         }
     }
+    
     private void NextTurn(bool Next)
     {
         if (Acts.Count > 0)//先約リストでの実行なら削除

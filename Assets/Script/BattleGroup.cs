@@ -247,7 +247,7 @@ public class BattleGroup
         if(noshiirTurn > 0)//ノジールパッシブの効果ターンがあるなら
         {
             //実行者にノジーラのパッシブを付与する。
-            Doer.ApplyPassiveBufferInBattleByID(noshiirID);
+            Doer.ApplyPassiveBufferInBattleByID(noshiirID,Doer);
             var handle = Doer.GetBufferPassiveByID(noshiirID);//パッシブに付与するハンドル
             handle.DurationTurn = noshiirTurn;//ターン数を代入
             handle.AddEvasionPercentageModifierByAttacker(Attacker, 1.2f);//攻撃者(対象者)に対する20%の回避率
@@ -255,8 +255,8 @@ public class BattleGroup
         }
         if(backFacingTurn > 0)//背面パッシブの効果ターンがあるなら
         {
-            //攻撃者に背面パッシブの効果付与する。
-            Attacker.ApplyPassiveBufferInBattleByID(backFacingID);
+            //攻撃者に背面パッシブの効果付与する。 Doerの影響でね
+            Attacker.ApplyPassiveBufferInBattleByID(backFacingID,Doer);
             var handle = Attacker.GetBufferPassiveByID(backFacingID);
             handle.DurationTurn = backFacingTurn;
             handle.AddDefensePercentageModifierByAttacker(Doer, 0.7f);//付与者からの攻撃の際防御力が30%低下
