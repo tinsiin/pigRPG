@@ -2744,6 +2744,7 @@ MonoBehaviour:
         DamageReductionRateOnDamage: 0.38
         TargetProbability: 48
         _skillActivationRate: 100
+        EasterNoshiirLockKey: 0
     - rid: 2127851343115190272
       type: {class: LeadingStep, ns: , asm: Assembly-CSharp}
       data:
@@ -2931,6 +2932,7 @@ MonoBehaviour:
         DamageReductionRateOnDamage: 0.38
         TargetProbability: 48
         _skillActivationRate: 100
+        EasterNoshiirLockKey: 0
     - rid: 2127851432044396544
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:

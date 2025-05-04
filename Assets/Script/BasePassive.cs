@@ -169,8 +169,7 @@ public class BasePassive
     /// <summary>
     /// ダメージで消えるパッシブかどうか
     /// </summary>
-    [SerializeField]
-    bool RemoveOnDamage = false;
+    public bool RemoveOnDamage = false;
 
     /// <summary>
     /// 割り込みカウンターで消えるパッシブかどうか

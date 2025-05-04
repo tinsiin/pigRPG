@@ -22,7 +22,9 @@ public enum SkillType
     DeathHeal = 1 << 4,
     AddVitalLayer =1 << 5,
     RemoveVitalLayer =1 << 6,
-    MentalHeal = 1 << 7
+    MentalHeal = 1 << 7,
+    Manual1_GoodHitCalc = 1 << 8,
+    Manual1_BadHitCalc = 1 << 9,
 }
 /// <summary>
 /// スキル範囲の性質
@@ -1248,7 +1250,7 @@ public class BaseSkill
     /// スキル命中onlyならデフォルトで普通のHitが指定されるので渡さなくてOK
     /// </summary>
     /// <param name="supremacyBonus">命中ボーナス　主に命中凌駕用途</param>>
-    public virtual HitResult SkillHitCalc(float supremacyBonus = 0,HitResult hitResult = HitResult.Hit,bool PreliminaryMagicGrazeRoll = false)
+    public virtual HitResult SkillHitCalc(BaseStates target,float supremacyBonus = 0,HitResult hitResult = HitResult.Hit,bool PreliminaryMagicGrazeRoll = false)
     {
         //割り込みカウンターなら確実
         if(Doer.HasPassive(1)) return hitResult;
@@ -1271,6 +1273,14 @@ public class BaseSkill
         }
 
         return result;
+    }
+    /// <summary>
+    /// Manual系のスキルでの用いるスキルごとの独自効果
+    /// </summary>
+    /// <param name="target"></param>
+    public virtual void ManualSkillEffect(BaseStates target,HitResult hitResult)
+    {
+        
     }
 
     /// <summary>

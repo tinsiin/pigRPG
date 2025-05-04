@@ -5643,69 +5643,6 @@ public abstract class BaseStates
         return finalRate; // 最終的なレートは 0.02f ～ 0.35f の範囲になる
     }
     /// <summary>
-    /// 命中結果の合算
-    /// 主に味方別口回避と既存の計算結果を混ぜるため
-    /// MIXテーブルの通りにAIに実装してもらたｗ
-    /// </summary>
-    HitResult AllyEvade_HitMixDown(HitResult existingHit, HitResult allyEvadeHit)
-    {
-        // 完全回避 + 完全回避 または かすり + 完全回避
-        if ((existingHit == HitResult.CompleteEvade && allyEvadeHit == HitResult.CompleteEvade) ||
-            (existingHit == HitResult.CompleteEvade && allyEvadeHit == HitResult.Graze) ||
-            (existingHit == HitResult.Graze && allyEvadeHit == HitResult.CompleteEvade))
-        {
-            return HitResult.CompleteEvade;
-        }
-        
-        // HIT + 完全回避 = かすり
-        if ((existingHit == HitResult.Hit && allyEvadeHit == HitResult.CompleteEvade) ||
-            (existingHit == HitResult.CompleteEvade && allyEvadeHit == HitResult.Hit))
-        {
-            return HitResult.Graze;
-        }
-        
-        // クリティカル + 完全回避 = HITまたは1/2の確率でかすり
-        if ((existingHit == HitResult.Critical && allyEvadeHit == HitResult.CompleteEvade) ||
-            (existingHit == HitResult.CompleteEvade && allyEvadeHit == HitResult.Critical))
-        {
-            // 50%の確率でかすり、それ以外はHIT
-            return rollper(50) ? HitResult.Graze : HitResult.Hit;
-        }
-        
-        // かすり + HIT = かすり
-        if ((existingHit == HitResult.Graze && allyEvadeHit == HitResult.Hit) ||
-            (existingHit == HitResult.Hit && allyEvadeHit == HitResult.Graze))
-        {
-            return HitResult.Graze;
-        }
-        
-        // クリティカル + HIT = HIT
-        if ((existingHit == HitResult.Critical && allyEvadeHit == HitResult.Hit) ||
-            (existingHit == HitResult.Hit && allyEvadeHit == HitResult.Critical))
-        {
-            return HitResult.Hit;
-        }
-        
-        // クリティカル + かすり = HIT
-        if ((existingHit == HitResult.Critical && allyEvadeHit == HitResult.Graze) ||
-            (existingHit == HitResult.Graze && allyEvadeHit == HitResult.Critical))
-        {
-            return HitResult.Hit;
-        }
-        
-        // それ以外の場合は、同じ値ならそのまま返す
-        if (existingHit == allyEvadeHit)
-        {
-            return existingHit;
-        }
-        
-        // 上記以外のケースは、ここには来ないはずだが、安全のため
-        // 値が小さい方（より回避側）を選択
-        return ((int)existingHit < (int)allyEvadeHit) ? existingHit : allyEvadeHit;
-
-
-    }
-    /// <summary>
     /// 命中段階で分かれるダメージ分岐
     /// ダメージを受ける側で呼び出す
     /// </summary>
@@ -6345,14 +6282,14 @@ public abstract class BaseStates
             }
 
             //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
-            return skill.SkillHitCalc(AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult);
+            return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult);
         }
         //回避されたので、まずは魔法スキルなら魔法かすりする　三分の一で
         //事前魔法かすり判定である。(攻撃性質スキル以外はスキル命中のみで魔法かすり判定をするという違いがある為。)
         if(skill.IsMagic && RandomEx.Shared.NextFloat(3) < 1)
         {
             //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
-            return skill.SkillHitCalc(AccuracySupremacy(Attacker.EYE().Total, AGI().Total), HitResult.Graze, true);
+            return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), HitResult.Graze, true);
         }
 
 
@@ -6382,7 +6319,7 @@ public abstract class BaseStates
             }
 
             //爆破型なのでかすりだが、そもそものスキル命中の計算をする介する
-            return skill.SkillHitCalc(AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult);
+            return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult);
         }
 
 
@@ -6908,17 +6845,25 @@ private int CalcTransformCountIncrement(int tightenStage)
         //攻撃者と被害者(自分)が味方同士で、かつ、
         if(manager.IsFriend(attacker, this))
         {
-            //自分の持ってるパッシブに一つでも「行動不能」と「現存してる追加HPが生存条件である」パッシブの二つが同時に含まれていれば
+            //自分の持ってるパッシブに一つでも「行動不能」と「現存してる追加HPが生存条件である」プロパティの二つが同時に含まれていれば
+            //または、「行動不能」と「RemoveOnDamage」の二つが同時に含まれていれば
             foreach (var pas in _passiveList)//自分の持ってるパッシブで回す
             {
                 if(pas.IsCantACT)//行動不能のパッシブなら
                 {
+                    if(pas.RemoveOnDamage)//RemoveOnDamageが有効なら
+                    {
+                        hitResult = atkSkill.SkillHitCalc(this);//一個でも条件を満たせば善意攻撃なのでループを抜けていい
+                        HitResultSet = true;
+                        break;
+                    }
                     if(pas.VitalLayers == null) continue;//パッシブに追加HPが無ければ飛ばす
 
                     if(pas.HasRemainingSurvivalVitalLayer(this))//生存条件としてのVitalLayerを今持っているかどうか
                     {
-                        hitResult = atkSkill.SkillHitCalc();//一個でも条件を満たせば善意攻撃なのでループを抜けていい
+                        hitResult = atkSkill.SkillHitCalc(this);//一個でも条件を満たせば善意攻撃なのでループを抜けていい
                         HitResultSet = true;
+                        break;
                     }
                 }
             }
@@ -6927,6 +6872,84 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         return hitResult;
     }
+    /// <summary>
+    /// AllyEvade 計算  ➜  既存 HitResult と合成して返すショートハンド
+    /// 味方別口回避
+    /// </summary>
+    HitResult MixAllyEvade(HitResult existingHit, BaseStates attacker)
+    {
+        var allyEvade = AllyEvadeCalculation(attacker);
+        return AllyEvade_HitMixDown(existingHit, allyEvade);
+    }
+    /// <summary>
+    /// 命中結果の合算
+    /// 主に味方別口回避と既存の計算結果を混ぜるため
+    /// MIXテーブルの通りにAIに実装してもらたｗ
+    /// </summary>
+    HitResult AllyEvade_HitMixDown(HitResult existingHit, HitResult allyEvadeHit)
+    {
+        if(allyEvadeHit == HitResult.none)
+        {//味方別口回避がなければ、既存のをそのまま返す
+            return existingHit;
+        }
+
+        // 完全回避 + 完全回避 または かすり + 完全回避
+        if ((existingHit == HitResult.CompleteEvade && allyEvadeHit == HitResult.CompleteEvade) ||
+            (existingHit == HitResult.CompleteEvade && allyEvadeHit == HitResult.Graze) ||
+            (existingHit == HitResult.Graze && allyEvadeHit == HitResult.CompleteEvade))
+        {
+            return HitResult.CompleteEvade;
+        }
+        
+        // HIT + 完全回避 = かすり
+        if ((existingHit == HitResult.Hit && allyEvadeHit == HitResult.CompleteEvade) ||
+            (existingHit == HitResult.CompleteEvade && allyEvadeHit == HitResult.Hit))
+        {
+            return HitResult.Graze;
+        }
+        
+        // クリティカル + 完全回避 = HITまたは1/2の確率でかすり
+        if ((existingHit == HitResult.Critical && allyEvadeHit == HitResult.CompleteEvade) ||
+            (existingHit == HitResult.CompleteEvade && allyEvadeHit == HitResult.Critical))
+        {
+            // 50%の確率でかすり、それ以外はHIT
+            return rollper(50) ? HitResult.Graze : HitResult.Hit;
+        }
+        
+        // かすり + HIT = かすり
+        if ((existingHit == HitResult.Graze && allyEvadeHit == HitResult.Hit) ||
+            (existingHit == HitResult.Hit && allyEvadeHit == HitResult.Graze))
+        {
+            return HitResult.Graze;
+        }
+        
+        // クリティカル + HIT = HIT
+        if ((existingHit == HitResult.Critical && allyEvadeHit == HitResult.Hit) ||
+            (existingHit == HitResult.Hit && allyEvadeHit == HitResult.Critical))
+        {
+            return HitResult.Hit;
+        }
+        
+        // クリティカル + かすり = HIT
+        if ((existingHit == HitResult.Critical && allyEvadeHit == HitResult.Graze) ||
+            (existingHit == HitResult.Graze && allyEvadeHit == HitResult.Critical))
+        {
+            return HitResult.Hit;
+        }
+        
+        // それ以外の場合は、同じ値ならそのまま返す
+        if (existingHit == allyEvadeHit)
+        {
+            return existingHit;
+        }
+        
+        // 上記以外のケースは、ここには来ないはずだが、安全のため
+        // 値が小さい方（より回避側）を選択
+        return ((int)existingHit < (int)allyEvadeHit) ? existingHit : allyEvadeHit;
+
+
+    }
+
     /// <summary>
     /// パーティー属性という雰囲気における味方同士の攻撃の別口回避
     /// 既存の計算とは独立している
@@ -6947,7 +6970,7 @@ private int CalcTransformCountIncrement(int tightenStage)
                 evasionRate = 0.5f;
                 break;
                 default:
-                return HitResult.Hit;
+                return HitResult.none;//発生しなかった。
             }
 
             //相性値による回避率のすげ替え
@@ -6967,7 +6990,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             }
         
         }
-        return HitResult.Hit;
+        return HitResult.none;//発生せず
     }
     /// <summary>
     /// 現在のNowUseSkillにパッシブ由来の追加パッシブを`適用する
@@ -7008,9 +7031,9 @@ private int CalcTransformCountIncrement(int tightenStage)
         NowUseSkill.RefilCanEraceCount();//除去スキル用の消せるカウント回数の補充
     }
     /// <summary>
-/// スキルに対するリアクション ここでスキルの解釈をする。
-/// </summary>
-/// <param name="skill"></param>
+    /// スキルに対するリアクション ここでスキルの解釈をする。
+    /// </summary>
+    /// <param name="skill"></param>
     /// <param name="UnderIndex">攻撃される人の順番　スキルのPowerSpreadの順番に同期している</param>
     public virtual string ReactionSkill(BaseStates attacker, float spread)
     {
@@ -7056,12 +7079,23 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         //スキルの持ってる性質を全て処理として実行
 
+        //Manual1
+        if(skill.HasType(SkillType.Manual1_GoodHitCalc))//良い攻撃
+        {
+            var hitResult = skill.SkillHitCalc(this);//良い攻撃なのでスキル命中のみ
+            hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
+        }
+        if(skill.HasType(SkillType.Manual1_BadHitCalc))//悪い攻撃
+        {
+            var hitResult = IsReactHIT(attacker);//攻撃タイプでないので直接IsReactHitね
+            hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
+        }
+
         if (skill.HasType(SkillType.Attack))
         {
             var hitResult = ATKTypeSkillReactHitCalc(attacker, skill);
             //味方別口回避の発生と回避判定
-            var AllyEvade = AllyEvadeCalculation(attacker);
-            hitResult = AllyEvade_HitMixDown(hitResult,AllyEvade);
+            hitResult = MixAllyEvade(hitResult,attacker);
             if (hitResult != HitResult.CompleteEvade)//完全回避以外なら = HITしてるなら
             {
                 //割り込みカウンターの判定
@@ -7094,10 +7128,9 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
         else//atktypeがないと各自で判定
         {
-            var hitResult = ATKTypeSkillReactHitCalc(attacker, skill);
+            var hitResult = IsReactHIT(attacker);
             //味方別口回避の発生と回避判定
-            var AllyEvade = AllyEvadeCalculation(attacker);
-            hitResult = AllyEvade_HitMixDown(hitResult,AllyEvade);
+            hitResult = MixAllyEvade(hitResult,attacker);
             if (hitResult != HitResult.CompleteEvade)
             {
                 ApplyNonDamageHostileEffects(attacker,skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove, hitResult);        
@@ -7108,9 +7141,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         if(skill.HasType(SkillType.DeathHeal))
         {
             //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc();
-            var AllyEvade = AllyEvadeCalculation(attacker);
-            hitResult = AllyEvade_HitMixDown(hitResult,AllyEvade);
+            var hitResult = skill.SkillHitCalc(this);
+            hitResult = MixAllyEvade(hitResult,attacker);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 Angel();//降臨　アイコンがノイズで満たされるようなエフェクト
@@ -7121,10 +7153,9 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         if (skill.HasType(SkillType.Heal))
         {
-            //味方別口回避の発生と回避判定
-            var AllyEvade = AllyEvadeCalculation(attacker);
-            var hitResult = skill.SkillHitCalc();
-            hitResult = AllyEvade_HitMixDown(hitResult,AllyEvade);
+            
+            var hitResult = skill.SkillHitCalc(this);
+            hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 healAmount= Heal(skillPower);
@@ -7135,9 +7166,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         if (skill.HasType(SkillType.MentalHeal))
         {
             //味方別口回避の発生と回避判定
-            var AllyEvade = AllyEvadeCalculation(attacker);
-            var hitResult = skill.SkillHitCalc();
-            hitResult = AllyEvade_HitMixDown(hitResult,AllyEvade);
+            var hitResult = skill.SkillHitCalc(this);
+            hitResult = MixAllyEvade(hitResult,attacker);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 MentalHeal(skillPower);
@@ -7148,9 +7178,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         if (skill.HasType(SkillType.addPassive))
         {
             //味方別口回避の発生と回避判定
-            var AllyEvade = AllyEvadeCalculation(attacker);
-            var hitResult = skill.SkillHitCalc();
-            hitResult = AllyEvade_HitMixDown(hitResult,AllyEvade);
+            var hitResult = skill.SkillHitCalc(this);
+            hitResult = MixAllyEvade(hitResult,attacker);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //良いパッシブを付与しようとしてるのなら、スキル命中計算のみ
@@ -7160,9 +7189,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         if (skill.HasType(SkillType.AddVitalLayer))
         {
             //味方別口回避の発生と回避判定
-            var AllyEvade = AllyEvadeCalculation(attacker);
-            var hitResult = skill.SkillHitCalc();
-            hitResult = AllyEvade_HitMixDown(hitResult,AllyEvade);
+            var hitResult = skill.SkillHitCalc(this);
+            hitResult = MixAllyEvade(hitResult,attacker);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //良い追加HPを付与しようとしてるのなら、スキル命中のみ
@@ -7176,9 +7204,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         if(skill.HasType(SkillType.RemovePassive))
         {
             //味方別口回避の発生と回避判定
-            var AllyEvade = AllyEvadeCalculation(attacker);
-            var hitResult = skill.SkillHitCalc();
-            hitResult = AllyEvade_HitMixDown(hitResult,AllyEvade);
+            var hitResult = skill.SkillHitCalc(this);
+            hitResult = MixAllyEvade(hitResult,attacker);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //悪いパッシブを取り除くのなら、スキル命中のみ
@@ -7188,9 +7215,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         if (skill.HasType(SkillType.RemoveVitalLayer))
         {
             //味方別口回避の発生と回避判定
-            var AllyEvade = AllyEvadeCalculation(attacker);
-            var hitResult = skill.SkillHitCalc();
-            hitResult = AllyEvade_HitMixDown(hitResult,AllyEvade);
+            var hitResult = skill.SkillHitCalc(this);
+            hitResult = MixAllyEvade(hitResult,attacker);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //悪い追加HPを取り除こうとしてるのなら、スキル命中のみ
@@ -9748,7 +9774,9 @@ public enum HitResult
     Hit,
     
     /// <summary>クリティカルヒット（大ダメージ）</summary>
-    Critical
+    Critical,
+    /// <summary>結果ナシ</summary>
+    none
 }
 /// <summary>
 ///     精神属性、スキル、キャラクターに依存し、キャラクターは直前に使った物が適用される
