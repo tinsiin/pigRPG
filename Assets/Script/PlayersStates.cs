@@ -254,44 +254,83 @@ public class PlayersStates:MonoBehaviour
     /// <summary>
     /// 指定したZoneTraitとスキル性質を所持するスキルのみを、有効化しそれ以外を無効化するコールバック
     /// </summary>
-    public void OnlyInteractHasZoneTraitSkills_geino(SkillZoneTrait trait,SkillType type)
+    public void OnlySelectActs_geino(SkillZoneTrait trait,SkillType type,bool OnlyCantACTPassiveCancel)
     {
         foreach(var skill in geino.SkillList.Cast<AllySkill>())
         {
             //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
             var hold = skillButtonList_geino.Find(hold => hold.skillID == skill.ID);
-            //一つでも持ってればOK
-            if (hold != null)
+            if(OnlyCantACTPassiveCancel)//キャンセル可能な行動可能パッシブを消せるなら
             {
-                hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);
+                //一つでも持ってればOK
+                if (hold != null)
+                {
+                    hold.button.interactable = false;//有効なスキルは全て無効
+                }
+            }else//それ以外は
+            {
+                
+                //一つでも持ってればOK
+                if (hold != null)
+                {
+                    hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);
+                }
             }
         }
+        //キャンセル可能な行動可能パッシブを作成する。
+        CancelPassiveButtonField_geino.ShowPassiveButtons(geino,OnlyCantACTPassiveCancel);
     }
-    public void OnlyInteractHasZoneTraitSkills_normalia(SkillZoneTrait trait,SkillType type)
+    public void OnlySelectActs_normalia(SkillZoneTrait trait, SkillType type, bool OnlyCantACTPassiveCancel)
     {
         foreach(var skill in noramlia.SkillList.Cast<AllySkill>())
         {
             //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
             var hold = skillButtonList_noramlia.Find(hold => hold.skillID == skill.ID);
-            //一つでも持ってればOK
-            if (hold != null)
+            if(OnlyCantACTPassiveCancel)//キャンセル可能な行動可能パッシブを消せるなら
             {
-                hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);
+                //一つでも持ってればOK
+                if (hold != null)
+                {
+                    hold.button.interactable = false;//有効なスキルは全て無効
+                }
+            }
+            else//それ以外は
+            {
+                //一つでも持ってればOK
+                if (hold != null)
+                {
+                    hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);
+                }
             }
         }
+        //キャンセル可能な行動可能パッシブを作成する。
+        CancelPassiveButtonField_normalia.ShowPassiveButtons(noramlia, OnlyCantACTPassiveCancel);
     }
-    public void OnlyInteractHasZoneTraitSkills_sites(SkillZoneTrait trait,SkillType type)
+    public void OnlySelectActs_sites(SkillZoneTrait trait, SkillType type, bool OnlyCantACTPassiveCancel)
     {
         foreach(var skill in sites.SkillList.Cast<AllySkill>())
         {
             //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
             var hold = skillButtonList_sites.Find(hold => hold.skillID == skill.ID);
-            //一つでも持ってればOK
-            if (hold != null)
+            if(OnlyCantACTPassiveCancel)//キャンセル可能な行動可能パッシブを消せるなら
             {
-                hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);
+                //一つでも持ってればOK
+                if (hold != null)
+                {
+                    hold.button.interactable = false;//有効なスキルは全て無効
+                }
+            }
+            else//それ以外は
+            {
+                //一つでも持ってればOK
+                if (hold != null)
+                {
+                    hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);
+                }
             }
         }
+        //キャンセル可能な行動可能パッシブを作成する。
+        CancelPassiveButtonField_sites.ShowPassiveButtons(sites, OnlyCantACTPassiveCancel);
     }
     /// <summary>
     /// 刃物武器でないと刃物スキルが表示されない処理。
@@ -442,6 +481,66 @@ public class PlayersStates:MonoBehaviour
         StopFreezeConsecutiveButton_Sites.gameObject.SetActive(sites.IsNeedDeleteMyFreezeConsecutive());//消去予約が可能ならボタンを表示する
 
 
+    }
+    /// <summary>
+    /// スキル選択画面の一番デフォルトのエリア
+    /// </summary>
+    [SerializeField] GameObject DefaultButtonArea_geino;
+    [SerializeField] GameObject DefaultButtonArea_sites;
+    [SerializeField] GameObject DefaultButtonArea_normalia;
+    /// <summary>
+    /// パッシブをキャンセルするボタンのエリア
+    /// </summary>
+    [SerializeField] SelectCancelPassiveButtons CancelPassiveButtonField_geino;
+    [SerializeField] SelectCancelPassiveButtons CancelPassiveButtonField_sites;
+    [SerializeField] SelectCancelPassiveButtons CancelPassiveButtonField_normalia;
+    /// <summary>
+    /// スキル選択デフォルト画面からパッシブキャンセルエリアへ進むボタン
+    /// </summary>
+    [SerializeField] Button GoToCancelPassiveFieldButton_geino;
+    [SerializeField] Button GoToCancelPassiveFieldButton_sites;
+    [SerializeField] Button GoToCancelPassiveFieldButton_normalia;
+    /// <summary>
+    /// パッシブをキャンセルするエリアからデフォルトのスキル選択のエリアまで戻るボタン
+    /// </summary>
+    [SerializeField] Button ReturnCancelPassiveToDefaultAreaButton_geino;
+    [SerializeField] Button ReturnCancelPassiveToDefaultAreaButton_sites;
+    [SerializeField] Button ReturnCancelPassiveToDefaultAreaButton_normalia;
+    /// <summary>
+    /// デフォルトのスキル選択のエリアからキャンセルパッシブのエリアまで進むボタン処理
+    /// </summary>
+    public void GoToCancelPassiveField_geino()
+    {
+        DefaultButtonArea_geino.gameObject.SetActive(false);
+        CancelPassiveButtonField_geino.gameObject.SetActive(true);
+    }
+    public void GoToCancelPassiveField_sites()
+    {
+        DefaultButtonArea_sites.gameObject.SetActive(false);
+        CancelPassiveButtonField_sites.gameObject.SetActive(true);
+    }
+    public void GoToCancelPassiveField_normalia()
+    {
+        DefaultButtonArea_normalia.gameObject.SetActive(false);
+        CancelPassiveButtonField_normalia.gameObject.SetActive(true);
+    }
+    /// <summary>
+    /// キャンセルパッシブのエリアからデフォルトのスキル選択のエリアまで戻る
+    /// </summary>
+    public void ReturnCancelPassiveToDefaultArea_geino()
+    {
+        CancelPassiveButtonField_geino.gameObject.SetActive(false);
+        DefaultButtonArea_geino.gameObject.SetActive(true);
+    }
+    public void ReturnCancelPassiveToDefaultArea_sites()
+    {
+        CancelPassiveButtonField_sites.gameObject.SetActive(false);
+        DefaultButtonArea_sites.gameObject.SetActive(true);
+    }
+    public void ReturnCancelPassiveToDefaultArea_normalia()
+    {
+        CancelPassiveButtonField_normalia.gameObject.SetActive(false);
+        DefaultButtonArea_normalia.gameObject.SetActive(true);
     }
 
 

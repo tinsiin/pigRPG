@@ -609,13 +609,18 @@ public class BattleManager
         if (ActerFaction == allyOrEnemy.alliy)
         {//味方が行動するならば
 
+            bool isFreezeByPassives = Acter.IsFreezeByPassives;//パッシブ由来で行動できないかどうか。
+            bool hasCanCancelCantACTPassive = Acter.HasCanCancelCantACTPassive;//パッシブ由来で行動できないかどうか。
+            
             if (!Acter.IsFreeze)//強制続行中のスキルがなければ
             {
-                //スキル選択ボタンを各キャラの物にしてから
-                SwitchAllySkillUiState();
-
-                //スキル選択ボタンを返す
-                return TabState.Skill;
+                if (!isFreezeByPassives || hasCanCancelCantACTPassive)
+                {
+                    // パッシブによる行動不能でない、または
+                    // キャンセル可能なパッシブを持っている場合
+                    SwitchAllySkillUiState(hasCanCancelCantACTPassive);
+                    return TabState.Skill;
+                }
             }
             else//スキル強制続行中なら、
             {
@@ -659,8 +664,9 @@ public class BattleManager
     /// <summary>
     /// スキルボタンのUIを各キャラクターの物にする。
     /// スキル画面へ遷移する際のコールバックタイミングでもある
+    /// 只CantACTPassiveCancelがtrueならば、「行動不能と消せる」パッシブを消去する以外の行動ができない。
     /// </summary>
-    void SwitchAllySkillUiState()
+    void SwitchAllySkillUiState(bool OnlyCantACTPassiveCancel)
     {
         var ps = PlayersStates.Instance;
 
@@ -687,18 +693,18 @@ public class BattleManager
         {
              case StairStates:
                 //ここでスキルを指定した範囲性質を持つもののみinteractable=trueになるようにする。
-                ps.OnlyInteractHasZoneTraitSkills_geino(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);//ボタンのオンオフをするコールバック
+                ps.OnlySelectActs_geino(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType,OnlyCantACTPassiveCancel);//ボタンのオンオフをするコールバック
                 ps.OnSkillSelectionScreenTransition_geino();//遷移時のここの引数必要のないコールバック
                 Walking.SKILLUI_state.Value = SkillUICharaState.geino;
                 break;
 
             case SateliteProcessStates:
-                ps.OnlyInteractHasZoneTraitSkills_sites(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);
+                ps.OnlySelectActs_sites(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType,OnlyCantACTPassiveCancel);
                 ps.OnSkillSelectionScreenTransition_sites();
                 Walking.SKILLUI_state.Value = SkillUICharaState.sites;
                 break;
             case BassJackStates:
-                ps.OnlyInteractHasZoneTraitSkills_normalia(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);
+                ps.OnlySelectActs_normalia(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType,OnlyCantACTPassiveCancel);
                 ps.OnSkillSelectionScreenTransition_noramlia();
                 Walking.SKILLUI_state.Value = SkillUICharaState.normalia;
                 break;
@@ -733,7 +739,7 @@ public class BattleManager
             return ACTPop();
         }*/ //ここ間違ってる？　下に同じ処理あるけど　よく分からんから残しとく
 
-        //スキルのStockACT ストック　/  FreezeConsecutiveの削除予約実行ターンとして
+        //スキルのStockACT ストック　/  FreezeConsecutiveの削除予約実行ターン　/ パッシブキャンセルボタンを押した。
         if(DoNothing)
         {
             return DoNothingACT();
@@ -1367,7 +1373,6 @@ public class BattleManager
         skill.SetDeltaTurn(BattleTurnCount);//スキルのdeltaTurnをセット
         CreateBattleMessage(Acter.AttackChara(unders));//攻撃の処理からメッセージが返る。
 
-        Acter.CalmDownSet(skill.EvasionModifier,skill.AttackModifier);//スキル回避率と落ち着きカウントをセット
         
 
         //慣れフラットロゼが起こるかどうかの判定　

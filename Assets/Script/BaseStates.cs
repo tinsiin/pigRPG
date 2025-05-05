@@ -336,6 +336,18 @@ public abstract class BaseStates
             pas.OnBeforeDamage(Atker);
         }
     }
+    /// <summary>
+    ///ダメージ食らった後のパッシブ効果
+    /// </summary>
+    public void PassivesOnAfterDamage(BaseStates Atker, StatesPowerBreakdown damage)
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.OnAfterDamage(Atker, damage);
+        }
+    }
 
     /// <summary>
     /// 攻撃後のパッシブ効果
@@ -2418,6 +2430,16 @@ public abstract class BaseStates
     {
         FreezeRangeWill = NowRangeWill;
     }
+    /// <summary>
+    /// パッシブの中に一つでもIsCantACTがtrueのものがあればtrue
+    /// 行動できません。　が、CanCancelのパッシブがあるのならCanCancel限定のスキル行動画面へ移動する。
+    /// </summary>
+    public bool IsFreezeByPassives => _passiveList.Any(p => p.IsCantACT);
+    /// <summary>
+    /// 動けなくなるが、中断可能なパッシブを一つでも持っているのなら
+    /// </summary>
+    public bool HasCanCancelCantACTPassive => _passiveList.Any(p => p.CanCancel && p.IsCantACT);
+    
     /// <summary>
     /// SkillACT内(damage関数やReactionSkill)などで行動をキャンセルされたかどうか。
     /// </summary>
@@ -5723,7 +5745,7 @@ public abstract class BaseStates
     ///オーバライド可能なダメージ関数
     /// </summary>
     /// <param name="atkPoint"></param>
-    public virtual float Damage(BaseStates Atker, float SkillPower,float SkillPowerForMental,HitResult hitResult,ref bool isdisturbed)
+    public virtual StatesPowerBreakdown Damage(BaseStates Atker, float SkillPower,float SkillPowerForMental,HitResult hitResult,ref bool isdisturbed)
     {
         var skill = Atker.NowUseSkill;
 
@@ -5805,7 +5827,7 @@ public abstract class BaseStates
 
         
         HP -= totalDmg;
-        CantKillSkillClamp(Atker,skill);
+        CantKillSkillClamp(Atker,skill);//殺せない系再代入クランプ処理
         Debug.Log("攻撃が実行された");
 
         //攻撃者がダメージを殺すまでに与えたダメージ辞書に記録する
@@ -5874,7 +5896,28 @@ public abstract class BaseStates
         }
 
 
-        return totalDmg;
+        return dmg;
+    }
+    /// <summary>
+    /// パッシブの毒ダメや、パッシブリンク等の単純なfloatダメージ用
+    /// TLOAスキルなどの殺せない系のクランプ処理だけ入る感じ
+    /// </summary>
+    /// <param name="Atker">攻撃者</param>
+    /// <param name="damage">ダメージ</param>
+    /// <param name="LayerDamage">VitalLayerを通すかどうか</param>
+    public void RaterDamage(BaseStates Atker,StatesPowerBreakdown damage,bool LayerDamage,float DamageRatio)
+    {
+        StatesPowerBreakdown notUseDamage = damage;//使わないが、引数に渡す必要がある
+        damage *= DamageRatio;//ダメージの倍率を掛ける
+
+        //vitalLayerを通る処理
+        if(LayerDamage)
+        {
+            BarrierLayers(ref damage,ref notUseDamage, Atker);
+        }
+
+        HP -= damage.Total;
+        CantKillSkillClamp(Atker,Atker.NowUseSkill);//殺せない系再代入クランプ処理
     }
     /// <summary>
     /// 思えダメージの精神属性合致補正
@@ -7073,7 +7116,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         var isHeal = false;
         var isAtkHit = false;
         var healAmount = 0f;
-        var damageAmount = 0f;
+        var damageAmount = new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
 
         
 
@@ -7084,11 +7127,15 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             var hitResult = skill.SkillHitCalc(this);//良い攻撃なのでスキル命中のみ
             hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
+
+            skill.ManualSkillEffect(this,hitResult);//効果
         }
         if(skill.HasType(SkillType.Manual1_BadHitCalc))//悪い攻撃
         {
             var hitResult = IsReactHIT(attacker);//攻撃タイプでないので直接IsReactHitね
             hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
+
+            skill.ManualSkillEffect(this,hitResult);//効果
         }
 
         if (skill.HasType(SkillType.Attack))
@@ -7269,12 +7316,14 @@ private int CalcTransformCountIncrement(int tightenStage)
         //被害の記録
         damageDatas.Add(new DamageData//クソ長い
         (isAtkHit,isBadPassiveHit,isBadPassiveRemove,isGoodPassiveHit,isGoodPassiveRemove,isGoodVitalLayerHit,isGoodVitalLayerRemove,
-        isBadVitalLayerHit,isBadVitalLayerRemove,isHeal,skill,damageAmount,healAmount,attacker));
+        isBadVitalLayerHit,isBadVitalLayerRemove,isHeal,skill,damageAmount.Total,healAmount,attacker));
 
-        if(isAtkHit)//このboolは攻撃のスキルを食らったかどうかの判定になる。
+        if(isAtkHit)//このboolは「攻撃性質」のスキルを食らったかどうかの判定になる。
         {
             //グループ全員分の「味方と自分」がダメージを食らった際のコールバックを呼び出す
             manager.MyGroup(this).PartyPassivesOnAfterAlliesDamage(attacker);
+            //パッシブのダメージ食らった後のコールバックを呼び出す
+            PassivesOnAfterDamage(attacker,damageAmount);
         }
 
         return txt;
@@ -7360,11 +7409,12 @@ private int CalcTransformCountIncrement(int tightenStage)
         PassivesOnAfterAttack();//攻撃後のパッシブ効果
         Debug.Log("AttackChara");
 
-        //今回の攻撃で一回でもヒットしていれば
+        //今回の攻撃で一回でもヒットしていれば  「攻撃者側の攻撃の単位 = 範囲攻撃でも一回だけ = 攻撃者の為の処理」で実行されてほしい
         if (IsAnyHitInRecentSkillData(NowUseSkill, Unders.Count))
         {
             //当たったので精神回復　行動が一応成功したからメンタルが安心する。
             MentalHealOnAttack();
+            CalmDownSet(NowUseSkill.EvasionModifier,NowUseSkill.AttackModifier);//スキル回避率と落ち着きカウントをセット
         }
         //HIT分の十日能力の成長
         foreach(var growData in TenDayGrowthListByHIT)

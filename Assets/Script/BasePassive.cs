@@ -95,10 +95,19 @@ public class PassiveVitalLayerBinding
         /// <summary>親パッシブ(リスト実体のある方)が消えたときに一緒に消えるかどうか</summary>
         public bool RemoveWithMe { get; }
 
-        public LinkedPassive(BasePassive passive, bool removeWithMe)
+        /// <summary>リンクされたパッシブユーザー「に対してどれ程ダメージを食らわせるか」。</summary>
+        public float DamageLinkRatio { get; }
+        /// <summary>
+        /// ダメージリンクのダメージが追加HPを通るかどうか。
+        /// </summary>
+        public bool LayerDamage { get; }
+
+        public LinkedPassive(BasePassive passive, bool removeWithMe, float damageLinkRatio = 0, bool layerDamage = false)
         {
             Passive = passive;
             RemoveWithMe = removeWithMe;
+            DamageLinkRatio = damageLinkRatio;
+            LayerDamage = layerDamage;
         }
     }
 
@@ -123,6 +132,10 @@ public class BasePassive
     /// 存在してる間行動できないかどうか。
     /// </summary>
     public bool IsCantACT;
+    /// <summary>
+    /// このパッシブをキャンセルできるかどうか。
+    /// </summary>
+    public bool CanCancel;
     /// <summary>
     /// trueなら悪いパッシブで、SkillType.RemovePassiveでSkillHitCalcだけで解除される。
     /// falseならIsReactHitの判定(良いパッシブを無理やり外すっていう攻撃だからね)
@@ -230,6 +243,10 @@ public class BasePassive
     /// 基本的にはキャンセル連携など
     /// </summary>
     List<LinkedPassive> _passiveLinkList = new();
+    public void SetPassiveLink(LinkedPassive link)
+    {
+        _passiveLinkList.Add(link);
+    }
 
     /// <summary>
     /// PassivePowerを上書きする
@@ -321,6 +338,23 @@ public class BasePassive
     {
         //派生クラスで実装して
         UpdateAfterAlliesDamageSurvival();//パッシブ消えるかどうか
+    }
+    /// <summary>
+    /// ダメージ食らった後。
+    /// </summary>
+    public virtual void OnAfterDamage(BaseStates Atker, StatesPowerBreakdown damage)
+    {
+        //ダメージ時のパッシブ生存判定はOnBeforeDamageで行う
+
+        //ダメージリンクの処理
+        foreach(var link in _passiveLinkList)
+        {
+            if(link.DamageLinkRatio>0)//ダメージ率があるなら
+            {
+                //パッシブ所持者のレイザーダメージ
+                link.Passive._owner.RaterDamage(Atker,damage,link.LayerDamage,link.DamageLinkRatio);
+            }
+        }
     }
 
     public virtual float OnDamageReductionEffect()

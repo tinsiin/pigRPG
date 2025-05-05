@@ -845,9 +845,6 @@ public class BaseSkill
     /// </summary>
     public float TenDayValuesSum => TenDayValues().Sum(kvp => kvp.Value);
 
-    [SerializeField]
-    private string _name;
-
     private int _doConsecutiveCount;//スキルを連続実行した回数
     private int _doCount;//スキルを実行した回数
     protected int _recordDoCount;
@@ -1501,7 +1498,6 @@ public class BaseSkill
         {
             dst.TenDayValues.Add(tenDay.Key,tenDay.Value);
         }*///十日能力は有限スキルレベルリストから参照する
-        dst._name = _name;
         dst._triggerCountMax = _triggerCountMax;
         dst._triggerRollBackCount = _triggerRollBackCount;
         dst._RandomConsecutivePer = _RandomConsecutivePer;
