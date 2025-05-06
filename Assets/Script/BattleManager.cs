@@ -1503,7 +1503,7 @@ public class BattleManager
             //ランダム範囲に切り替わるので、既にあるターゲットと範囲意志を初期化
             Acter.Target = 0;
             Acter.RangeWill = 0;
-            //unders = 対象者は初期化しない。　　 
+            //unders = 対象者は初期化しない。　　 つまり完全単体選択の場合はランダム範囲と同居が可能
         }
 
         //全部　全範囲　単体ランダム　前のめり後衛
@@ -1675,40 +1675,64 @@ public class BattleManager
         //選抜グループ決定する処理☆☆☆☆☆☆☆☆☆☆☆
         if (ActerFaction == allyOrEnemy.alliy)
         {//味方なら敵グループから、
-            SelectGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);
-
-            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))//自陣も対象に選べるなら
+            if(Acter.HasRangeWill(SkillZoneTrait.SelectOnlyAlly))//味方だけを選べるのなら
             {
-                OurGroup = new BattleGroup(AllyGroup.Ours, AllyGroup.OurImpression, AllyGroup.which);//自陣
-                if(!skill.HasZoneTrait(SkillZoneTrait.CanSelectMyself))//自分自身を対象にする性質がないなら
+                SelectGroup = new BattleGroup(AllyGroup.Ours, AllyGroup.OurImpression, AllyGroup.which);
+                if(!Acter.HasRangeWill(SkillZoneTrait.CanSelectMyself))//自分自身を対象にする性質がないなら
                 {
-                    OurGroup.Ours.Remove(Acter);//自分自身を対象から除く
+                    SelectGroup.Ours.Remove(Acter);//自分自身を対象から除く
                 }
-            }else if(skill.HasZoneTrait(SkillZoneTrait.CanSelectMyself))//自分自身だけを対象にできるなら、
-            {
-                //自分自身だけを対象にする
-                OurGroup = new BattleGroup(new List<BaseStates>{Acter}, AllyGroup.OurImpression, AllyGroup.which);//自陣
             }
+            else//それ以外の敵を主軸と選択する範囲性質なら
+            {
+                SelectGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);
+
+                if (Acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//自陣も対象に選べるなら
+                {
+                    OurGroup = new BattleGroup(AllyGroup.Ours, AllyGroup.OurImpression, AllyGroup.which);//自陣
+                    if(!Acter.HasRangeWill(SkillZoneTrait.CanSelectMyself))//自分自身を対象にする性質がないなら
+                    {
+                        OurGroup.Ours.Remove(Acter);//自分自身を対象から除く
+                    }
+                }else if(Acter.HasRangeWill(SkillZoneTrait.CanSelectMyself))//自分自身だけを対象にできるなら、
+                {
+                    //自分自身だけを対象にする
+                    OurGroup = new BattleGroup(new List<BaseStates>{Acter}, AllyGroup.OurImpression, AllyGroup.which);//自陣
+                }
+            }
+            
         }
         else
         {//敵なら味方グループから選別する ディープコピー。
-            SelectGroup = new BattleGroup(AllyGroup.Ours, AllyGroup.OurImpression, AllyGroup.which);
-            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))//自陣も対象に選べるなら
+
+            if(Acter.HasRangeWill(SkillZoneTrait.SelectOnlyAlly))//味方だけを選べるのなら
             {
-                OurGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);//自陣
-                if(!skill.HasZoneTrait(SkillZoneTrait.CanSelectMyself))//自分自身を対象にする性質がないなら
+                SelectGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);
+                if(!Acter.HasRangeWill(SkillZoneTrait.CanSelectMyself))//自分自身を対象にする性質がないなら
                 {
-                    OurGroup.Ours.Remove(Acter);//自分自身を対象から除く
+                    SelectGroup.Ours.Remove(Acter);//自分自身を対象から除く
                 }
-            }else if(skill.HasZoneTrait(SkillZoneTrait.CanSelectMyself))//自分自身だけを対象にできるなら、
+            }
+            else//それ以外の敵を主軸と選択する範囲性質なら
             {
-                OurGroup = new BattleGroup(new List<BaseStates>{Acter}, EnemyGroup.OurImpression, EnemyGroup.which);//自陣
+                SelectGroup = new BattleGroup(AllyGroup.Ours, AllyGroup.OurImpression, AllyGroup.which);
+                if (Acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//自陣も対象に選べるなら
+                {
+                    OurGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);//自陣
+                    if(!Acter.HasRangeWill(SkillZoneTrait.CanSelectMyself))//自分自身を対象にする性質がないなら
+                    {
+                        OurGroup.Ours.Remove(Acter);//自分自身を対象から除く
+                    }
+                }else if(Acter.HasRangeWill(SkillZoneTrait.CanSelectMyself))//自分自身だけを対象にできるなら、
+                {
+                    OurGroup = new BattleGroup(new List<BaseStates>{Acter}, EnemyGroup.OurImpression, EnemyGroup.which);//自陣
+                }
             }
 
         }
 
         //死者は省く
-        if (!skill.HasZoneTrait(SkillZoneTrait.CanSelectDeath))//死を選べないのなら　死を省く
+        if (!Acter.HasRangeWill(SkillZoneTrait.CanSelectDeath))//死を選べないのなら　死を省く
         {
             SelectGroup.SetCharactersList(RemoveDeathCharacters(SelectGroup.Ours));
             if (OurGroup != null)
@@ -1784,7 +1808,7 @@ public class BattleManager
                     UA.Add(RandomEx.Shared.GetItem(selects));//s選別リストからランダムで選択
                 }
                 else //他メイン分岐とは違い、意志ではないので、スキルの範囲性質で指定する。
-                if (skill.HasZoneTrait(SkillZoneTrait.ControlByThisSituation))//状況のみに縛られる。(前のめりにしか当たらないなら
+                if (Acter.HasRangeWill(SkillZoneTrait.ControlByThisSituation))//状況のみに縛られる。(前のめりにしか当たらないなら
                 {
                     if (SelectGroup.InstantVanguard == null)//対象者グループに前のめりがいない場合。事故が起きる
                     {
@@ -1795,7 +1819,7 @@ public class BattleManager
                         //前のめりいないことによる事故☆☆☆☆☆☆☆☆☆☆
 
                         //シングルにあたるなら
-                        if (skill.HasZoneTrait(SkillZoneTrait.RandomSingleTarget))
+                        if (Acter.HasRangeWill(SkillZoneTrait.RandomSingleTarget))
                         {
                             BaseStates[] selects = SelectGroup.Ours.ToArray();
                             if (OurGroup != null)//自陣グループも選択可能なら
@@ -1807,7 +1831,7 @@ public class BattleManager
                         //前のめりがいないんだから、　前のめりか後衛単位での　集団事故は起こらないため　RandomSelectMultiTargetによる場合分けはない。
 
                         //全範囲事故なら
-                        if (skill.HasZoneTrait(SkillZoneTrait.AllTarget))
+                        if (Acter.HasRangeWill(SkillZoneTrait.AllTarget))
                         {
                             BaseStates[] selects = SelectGroup.Ours.ToArray();
                             if (OurGroup != null)//自陣グループも選択可能なら
@@ -1816,7 +1840,7 @@ public class BattleManager
                             UA.AddRange(selects);//対象範囲を全て加える
                         }
                         //ランダム範囲事故なら
-                        if (skill.HasZoneTrait(SkillZoneTrait.RandomMultiTarget))
+                        if (Acter.HasRangeWill(SkillZoneTrait.RandomMultiTarget))
                         {
                             BaseStates[] selects = SelectGroup.Ours.ToArray();
                             if (OurGroup != null)//自陣グループも選択可能なら

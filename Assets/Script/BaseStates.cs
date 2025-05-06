@@ -7920,6 +7920,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         _tempVanguard = false;
         _tempLive = true;
         Rivahal = 0;//ライバハル値を初期化
+        Target = 0;//どの辺りを狙うかの初期値
+        RangeWill = 0;//範囲意志の初期値
         DecisionKinderAdaptToSkillGrouping();//慣れ補正の優先順位のグルーピング形式を決定するような関数とか
         DecisionSacriFaithAdaptToSkillGrouping();
         ActDoOneSkillDatas = new List<ACTSkillDataForOneTarget>();//スキルの行動記録はbm単位で記録する。

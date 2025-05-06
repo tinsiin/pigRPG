@@ -107,6 +107,14 @@ public enum SkillZoneTrait
     /// 自分自身を対象にすることができるかどうか
     /// </summary>
     CanSelectMyself = 1 << 16,
+    /// <summary>
+    /// 自陣のみ選べる
+    /// </summary>
+    SelectOnlyAlly = 1 << 17,
+    /// <summary>
+    /// 自分自身の為のスキル
+    /// </summary>
+    SelfSkill = 1 << 18,
 
 }
 /// <summary>

@@ -65,216 +65,333 @@ public class SelectRangeButtons : MonoBehaviour
 
 
         //random以外の範囲の性質がスキル性質に含まれてる分だけ、その範囲の性質を選ぶ
+        //主流排他的範囲意志の選択。
 
-
-        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectSingleTarget))//前のめりか後衛内ランダムかで選べるなら
+        if(skill.HasZoneTrait(SkillZoneTrait.SelectOnlyAlly))//味方のみを対象を前提としたスキルならば、
         {
-            //.CanSelectSingleTargetを今回の範囲とするボタンを作成する。
-            var button = Instantiate(buttonPrefab, transform);
-            var rect = button.GetComponent<RectTransform>();
-
-            // 親オブジェクトの右端を超える場合は次の行に移動
-            if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+            if (skill.HasZoneTrait(SkillZoneTrait.CanPerfectSelectSingleTarget))//個々で選べるなら
             {
-                // 左端にリセット
-                currentX = startX;
+                //.CanSelectSingleTargetを今回の範囲とするボタンを作成する。
+                var button = Instantiate(buttonPrefab, transform);
+                var rect = button.GetComponent<RectTransform>();
 
-                // 次の行に移動
-                currentY -= (buttonSize.y + verticalPadding);
+                // 親オブジェクトの右端を超える場合は次の行に移動
+                if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+                {
+                    // 左端にリセット
+                    currentX = startX;
+
+                    // 次の行に移動
+                    currentY -= (buttonSize.y + verticalPadding);
+                }
+
+                // ボタンの位置を設定
+                rect.anchoredPosition = new Vector2(currentX, currentY);
+
+                // 次のボタンのX位置を更新
+                currentX += (buttonSize.x + horizontalPadding);
+
+                button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanPerfectSelectSingleTarget));
+                button.GetComponentInChildren<TextMeshProUGUI>().text =
+                    "個々を狙う" + AddPercentageTextOnButton(SkillZoneTrait.CanPerfectSelectSingleTarget);//ボタンのテキスト
+                buttonList.Add(button);//ボタンリストに入れる
+
+            }
+            if (skill.HasZoneTrait(SkillZoneTrait.AllTarget))//全範囲なら
+            {
+                var button = Instantiate(buttonPrefab, transform);
+                var rect = button.GetComponent<RectTransform>();
+
+                // 親オブジェクトの右端を超える場合は次の行に移動
+                if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+                {
+                    // 左端にリセット
+                    currentX = startX;
+
+                    // 次の行に移動
+                    currentY -= (buttonSize.y + verticalPadding);
+                }
+
+                // ボタンの位置を設定
+                rect.anchoredPosition = new Vector2(currentX, currentY);
+
+                // 次のボタンのX位置を更新
+                currentX += (buttonSize.x + horizontalPadding);
+
+                button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.AllTarget));
+                button.GetComponentInChildren<TextMeshProUGUI>().text =
+                    "味方の全範囲を狙う" + AddPercentageTextOnButton(SkillZoneTrait.AllTarget);//ボタンのテキスト
+                buttonList.Add(button);//ボタンリストに入れる
+
+            }
+        }
+        else//味方オンリーでない、標準的な戦闘の範囲選択の場合
+        {
+            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectSingleTarget))//前のめりか後衛内ランダムかで選べるなら
+            {
+                //.CanSelectSingleTargetを今回の範囲とするボタンを作成する。
+                var button = Instantiate(buttonPrefab, transform);
+                var rect = button.GetComponent<RectTransform>();
+
+                // 親オブジェクトの右端を超える場合は次の行に移動
+                if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+                {
+                    // 左端にリセット
+                    currentX = startX;
+
+                    // 次の行に移動
+                    currentY -= (buttonSize.y + verticalPadding);
+                }
+
+                // ボタンの位置を設定
+                rect.anchoredPosition = new Vector2(currentX, currentY);
+
+                // 次のボタンのX位置を更新
+                currentX += (buttonSize.x + horizontalPadding);
+
+                button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectSingleTarget));
+                button.GetComponentInChildren<TextMeshProUGUI>().text =
+                    "前のめりまたはそれ以外のどちらかを狙う" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectSingleTarget);//ボタンのテキスト
+                buttonList.Add(button);//ボタンリストに入れる
+
             }
 
-            // ボタンの位置を設定
-            rect.anchoredPosition = new Vector2(currentX, currentY);
-
-            // 次のボタンのX位置を更新
-            currentX += (buttonSize.x + horizontalPadding);
-
-            button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectSingleTarget));
-            button.GetComponentInChildren<TextMeshProUGUI>().text =
-                "前のめりまたはそれ以外のどちらかを狙う" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectSingleTarget);//ボタンのテキスト
-            buttonList.Add(button);//ボタンリストに入れる
-
-        }
-
-        if (skill.HasZoneTrait(SkillZoneTrait.CanPerfectSelectSingleTarget))//個々で選べるなら
-        {
-            //.CanSelectSingleTargetを今回の範囲とするボタンを作成する。
-            var button = Instantiate(buttonPrefab, transform);
-            var rect = button.GetComponent<RectTransform>();
-
-            // 親オブジェクトの右端を超える場合は次の行に移動
-            if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+            if (skill.HasZoneTrait(SkillZoneTrait.CanPerfectSelectSingleTarget))//個々で選べるなら
             {
-                // 左端にリセット
-                currentX = startX;
+                //.CanSelectSingleTargetを今回の範囲とするボタンを作成する。
+                var button = Instantiate(buttonPrefab, transform);
+                var rect = button.GetComponent<RectTransform>();
 
-                // 次の行に移動
-                currentY -= (buttonSize.y + verticalPadding);
+                // 親オブジェクトの右端を超える場合は次の行に移動
+                if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+                {
+                    // 左端にリセット
+                    currentX = startX;
+
+                    // 次の行に移動
+                    currentY -= (buttonSize.y + verticalPadding);
+                }
+
+                // ボタンの位置を設定
+                rect.anchoredPosition = new Vector2(currentX, currentY);
+
+                // 次のボタンのX位置を更新
+                currentX += (buttonSize.x + horizontalPadding);
+
+                button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanPerfectSelectSingleTarget));
+                button.GetComponentInChildren<TextMeshProUGUI>().text =
+                    "個々を狙う" + AddPercentageTextOnButton(SkillZoneTrait.CanPerfectSelectSingleTarget);//ボタンのテキスト
+                buttonList.Add(button);//ボタンリストに入れる
+
+            }
+            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectMultiTarget))//前のめりまたは後衛の団体かで選べるなら
+            {
+                //.CanSelectSingleTargetを今回の範囲とするボタンを作成する。
+                var button = Instantiate(buttonPrefab, transform);
+                var rect = button.GetComponent<RectTransform>();
+
+                // 親オブジェクトの右端を超える場合は次の行に移動
+                if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+                {
+                    // 左端にリセット
+                    currentX = startX;
+
+                    // 次の行に移動
+                    currentY -= (buttonSize.y + verticalPadding);
+                }
+
+                // ボタンの位置を設定
+                rect.anchoredPosition = new Vector2(currentX, currentY);
+
+                // 次のボタンのX位置を更新
+                currentX += (buttonSize.x + horizontalPadding);
+
+                button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectMultiTarget));
+                button.GetComponentInChildren<TextMeshProUGUI>().text =
+                    "前のめりかそれ以外二人を狙う" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectMultiTarget);//ボタンのテキスト
+                buttonList.Add(button);//ボタンリストに入れる
+
             }
 
-            // ボタンの位置を設定
-            rect.anchoredPosition = new Vector2(currentX, currentY);
 
-            // 次のボタンのX位置を更新
-            currentX += (buttonSize.x + horizontalPadding);
-
-            button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanPerfectSelectSingleTarget));
-            button.GetComponentInChildren<TextMeshProUGUI>().text =
-                "個々を狙う" + AddPercentageTextOnButton(SkillZoneTrait.CanPerfectSelectSingleTarget);//ボタンのテキスト
-            buttonList.Add(button);//ボタンリストに入れる
-
-        }
-        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectMultiTarget))//前のめりまたは後衛の団体かで選べるなら
-        {
-            //.CanSelectSingleTargetを今回の範囲とするボタンを作成する。
-            var button = Instantiate(buttonPrefab, transform);
-            var rect = button.GetComponent<RectTransform>();
-
-            // 親オブジェクトの右端を超える場合は次の行に移動
-            if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+            if (skill.HasZoneTrait(SkillZoneTrait.AllTarget))//全範囲なら
             {
-                // 左端にリセット
-                currentX = startX;
+                var button = Instantiate(buttonPrefab, transform);
+                var rect = button.GetComponent<RectTransform>();
 
-                // 次の行に移動
-                currentY -= (buttonSize.y + verticalPadding);
+                // 親オブジェクトの右端を超える場合は次の行に移動
+                if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+                {
+                    // 左端にリセット
+                    currentX = startX;
+
+                    // 次の行に移動
+                    currentY -= (buttonSize.y + verticalPadding);
+                }
+
+                // ボタンの位置を設定
+                rect.anchoredPosition = new Vector2(currentX, currentY);
+
+                // 次のボタンのX位置を更新
+                currentX += (buttonSize.x + horizontalPadding);
+
+                button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.AllTarget));
+                button.GetComponentInChildren<TextMeshProUGUI>().text =
+                    "敵の全範囲を狙う" + AddPercentageTextOnButton(SkillZoneTrait.AllTarget);//ボタンのテキスト
+                buttonList.Add(button);//ボタンリストに入れる
+
             }
-
-            // ボタンの位置を設定
-            rect.anchoredPosition = new Vector2(currentX, currentY);
-
-            // 次のボタンのX位置を更新
-            currentX += (buttonSize.x + horizontalPadding);
-
-            button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectMultiTarget));
-            button.GetComponentInChildren<TextMeshProUGUI>().text =
-                "前のめりかそれ以外二人を狙う" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectMultiTarget);//ボタンのテキスト
-            buttonList.Add(button);//ボタンリストに入れる
-
         }
-
-
-        if (skill.HasZoneTrait(SkillZoneTrait.AllTarget))//全範囲なら
-        {
-            var button = Instantiate(buttonPrefab, transform);
-            var rect = button.GetComponent<RectTransform>();
-
-            // 親オブジェクトの右端を超える場合は次の行に移動
-            if (currentX + buttonSize.x / 2 > parentSize.x / 2)
-            {
-                // 左端にリセット
-                currentX = startX;
-
-                // 次の行に移動
-                currentY -= (buttonSize.y + verticalPadding);
-            }
-
-            // ボタンの位置を設定
-            rect.anchoredPosition = new Vector2(currentX, currentY);
-
-            // 次のボタンのX位置を更新
-            currentX += (buttonSize.x + horizontalPadding);
-
-            button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.AllTarget));
-            button.GetComponentInChildren<TextMeshProUGUI>().text =
-                "敵の全範囲を狙う" + AddPercentageTextOnButton(SkillZoneTrait.AllTarget);//ボタンのテキスト
-            buttonList.Add(button);//ボタンリストに入れる
-
-        }
-
 
         //ここからオプションのボタン
 
         currentX = optionStartX;
         currentY = optionStartY;
-
-        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))//味方を選ぶオプションを追加するなら
+        if(skill.HasZoneTrait(SkillZoneTrait.SelectOnlyAlly))//味方のみを対象を前提としたスキルならば、
         {
-            var button = Instantiate(buttonPrefab, transform);
-            var rect = button.GetComponent<RectTransform>();
-
-            // 親オブジェクトの右端を超える場合は次の行に移動
-            if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectMyself))//自分自身を選ぶオプションを追加するなら
             {
-                // 左端にリセット
-                currentX = startX;
+                var button = Instantiate(buttonPrefab, transform);
+                var rect = button.GetComponent<RectTransform>();
 
-                // 次の行に移動
-                currentY -= buttonSize.y + verticalPadding;
+                // 親オブジェクトの右端を超える場合は次の行に移動
+                if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+                {
+                    // 左端にリセット
+                    currentX = startX;
+
+                    // 次の行に移動
+                    currentY -= buttonSize.y + verticalPadding;
+                }
+
+                // ボタンの位置を設定
+                rect.anchoredPosition = new Vector2(currentX, currentY);
+
+                // 次のボタンのX位置を更新
+                currentX += (buttonSize.x + horizontalPadding);
+
+                button.onClick.AddListener(() => OnClickOptionRangeBtn(button, SkillZoneTrait.CanSelectMyself));
+                button.GetComponentInChildren<TextMeshProUGUI>().text =
+                    "自分自身" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectMyself);//ボタンのテキスト
+                buttonList.Add(button);//ボタンリストに入れる
+
             }
 
-            // ボタンの位置を設定
-            rect.anchoredPosition = new Vector2(currentX, currentY);
-
-            // 次のボタンのX位置を更新
-            currentX += (buttonSize.x + horizontalPadding);
-
-            button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectAlly));
-            button.GetComponentInChildren<TextMeshProUGUI>().text =
-                "味方" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectAlly);//ボタンのテキスト
-            buttonList.Add(button);//ボタンリストに入れる
-
-        }
-
-        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectMyself))//自分自身を選ぶオプションを追加するなら
-        {
-            var button = Instantiate(buttonPrefab, transform);
-            var rect = button.GetComponent<RectTransform>();
-
-            // 親オブジェクトの右端を超える場合は次の行に移動
-            if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectDeath))//死者を選ぶオプションを追加するなら
             {
-                // 左端にリセット
-                currentX = startX;
+                var button = Instantiate(buttonPrefab, transform);
+                var rect = button.GetComponent<RectTransform>();
 
-                // 次の行に移動
-                currentY -= buttonSize.y + verticalPadding;
+                // 親オブジェクトの右端を超える場合は次の行に移動
+                if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+                {
+                    // 左端にリセット
+                    currentX = startX;
+
+                    // 次の行に移動
+                    currentY -= (buttonSize.y + verticalPadding);
+                }
+
+                // ボタンの位置を設定
+                rect.anchoredPosition = new Vector2(currentX, currentY);
+
+                // 次のボタンのX位置を更新
+                currentX += (buttonSize.x + horizontalPadding);
+
+                button.onClick.AddListener(() => OnClickOptionRangeBtn(button, SkillZoneTrait.CanSelectDeath));
+                button.GetComponentInChildren<TextMeshProUGUI>().text =
+                    "死者" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectDeath);//ボタンのテキスト
+                buttonList.Add(button);//ボタンリストに入れる
+
             }
 
-            // ボタンの位置を設定
-            rect.anchoredPosition = new Vector2(currentX, currentY);
-
-            // 次のボタンのX位置を更新
-            currentX += (buttonSize.x + horizontalPadding);
-
-            button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectMyself));
-            button.GetComponentInChildren<TextMeshProUGUI>().text =
-                "自分自身" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectMyself);//ボタンのテキスト
-            buttonList.Add(button);//ボタンリストに入れる
-
         }
-
-        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectDeath))//死者を選ぶオプションを追加するなら
+        else //標準的な敵を主軸に置くスキルなら
         {
-            var button = Instantiate(buttonPrefab, transform);
-            var rect = button.GetComponent<RectTransform>();
-
-            // 親オブジェクトの右端を超える場合は次の行に移動
-            if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectAlly))//味方を選ぶオプションを追加するなら
             {
-                // 左端にリセット
-                currentX = startX;
+                var button = Instantiate(buttonPrefab, transform);
+                var rect = button.GetComponent<RectTransform>();
 
-                // 次の行に移動
-                currentY -= (buttonSize.y + verticalPadding);
+                // 親オブジェクトの右端を超える場合は次の行に移動
+                if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+                {
+                    // 左端にリセット
+                    currentX = startX;
+
+                    // 次の行に移動
+                    currentY -= buttonSize.y + verticalPadding;
+                }
+
+                // ボタンの位置を設定
+                rect.anchoredPosition = new Vector2(currentX, currentY);
+
+                // 次のボタンのX位置を更新
+                currentX += (buttonSize.x + horizontalPadding);
+
+                button.onClick.AddListener(() => OnClickOptionRangeBtn(button, SkillZoneTrait.CanSelectAlly));
+                button.GetComponentInChildren<TextMeshProUGUI>().text =
+                    "味方" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectAlly);//ボタンのテキスト
+                buttonList.Add(button);//ボタンリストに入れる
+
             }
 
-            // ボタンの位置を設定
-            rect.anchoredPosition = new Vector2(currentX, currentY);
+            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectMyself))//自分自身を選ぶオプションを追加するなら
+            {
+                var button = Instantiate(buttonPrefab, transform);
+                var rect = button.GetComponent<RectTransform>();
 
-            // 次のボタンのX位置を更新
-            currentX += (buttonSize.x + horizontalPadding);
+                // 親オブジェクトの右端を超える場合は次の行に移動
+                if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+                {
+                    // 左端にリセット
+                    currentX = startX;
 
-            button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectDeath));
-            button.GetComponentInChildren<TextMeshProUGUI>().text =
-                "死者" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectDeath);//ボタンのテキスト
-            buttonList.Add(button);//ボタンリストに入れる
+                    // 次の行に移動
+                    currentY -= buttonSize.y + verticalPadding;
+                }
 
+                // ボタンの位置を設定
+                rect.anchoredPosition = new Vector2(currentX, currentY);
+
+                // 次のボタンのX位置を更新
+                currentX += (buttonSize.x + horizontalPadding);
+
+                button.onClick.AddListener(() => OnClickOptionRangeBtn(button, SkillZoneTrait.CanSelectMyself));
+                button.GetComponentInChildren<TextMeshProUGUI>().text =
+                    "自分自身" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectMyself);//ボタンのテキスト
+                buttonList.Add(button);//ボタンリストに入れる
+
+            }
+
+            if (skill.HasZoneTrait(SkillZoneTrait.CanSelectDeath))//死者を選ぶオプションを追加するなら
+            {
+                var button = Instantiate(buttonPrefab, transform);
+                var rect = button.GetComponent<RectTransform>();
+
+                // 親オブジェクトの右端を超える場合は次の行に移動
+                if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+                {
+                    // 左端にリセット
+                    currentX = startX;
+
+                    // 次の行に移動
+                    currentY -= (buttonSize.y + verticalPadding);
+                }
+
+                // ボタンの位置を設定
+                rect.anchoredPosition = new Vector2(currentX, currentY);
+
+                // 次のボタンのX位置を更新
+                currentX += (buttonSize.x + horizontalPadding);
+
+                button.onClick.AddListener(() => OnClickOptionRangeBtn(button, SkillZoneTrait.CanSelectDeath));
+                button.GetComponentInChildren<TextMeshProUGUI>().text =
+                    "死者" + AddPercentageTextOnButton(SkillZoneTrait.CanSelectDeath);//ボタンのテキスト
+                buttonList.Add(button);//ボタンリストに入れる
+
+            }
         }
-
-
-
-
 
 
     }

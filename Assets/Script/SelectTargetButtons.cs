@@ -81,53 +81,67 @@ public class SelectTargetButtons : MonoBehaviour
 
 
         //buttonPrefabをスキル性質に応じてbmのグループを特定の人数分だけ作って生成する
+        NeedSelectCountAlly = 0;
+        NeedSelectCountEnemy = 0;
         bool EnemyTargeting = false;//敵の対象選択
         bool AllyTargeting = false;//味方の対象選択
         bool MySelfTargeting = acter.HasRangeWill(SkillZoneTrait.CanSelectMyself);//自分自身の対象選択
         bool EnemyVanguardOrBackLine = false;//敵の前のめりor後衛
 
-
-        if (acter.HasRangeWill(SkillZoneTrait.CanPerfectSelectSingleTarget))//選択可能な単体対象
+        if(skill.HasZoneTrait(SkillZoneTrait.SelectOnlyAlly))//味方のみを対象を前提とした性質ならば、
         {
-            EnemyTargeting = true;
-            NeedSelectCountEnemy = 1;
-
-            if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))
+            if (acter.HasRangeWill(SkillZoneTrait.CanPerfectSelectSingleTarget))//選択可能な単体対象
             {
-                AllyTargeting = true;//味方も選べたら味方も追加
-                NeedSelectCountAlly = 1;
-            }else if (MySelfTargeting)
-            {
+                AllyTargeting = true;
                 NeedSelectCountAlly = 1;
             }
 
         }
-        if (acter.HasRangeWill(SkillZoneTrait.CanSelectSingleTarget))//前のめりか後衛(ランダム単体)を狙うか
+        else//敵を主軸とした標準的な範囲性質なら
         {
-            EnemyVanguardOrBackLine = true;
-            if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//味方も選べるなら
+            if (acter.HasRangeWill(SkillZoneTrait.CanPerfectSelectSingleTarget))//選択可能な単体対象
             {
-                AllyTargeting = true;//味方は単体でしか選べない
-                //一人または二人単位 
-                NeedSelectCountAlly = Random.Range(1, 3);
-            }else if (MySelfTargeting)
-            {
-                NeedSelectCountAlly = 1;
-            }
-        }
+                EnemyTargeting = true;
+                NeedSelectCountEnemy = 1;
 
-        if (acter.HasRangeWill(SkillZoneTrait.CanSelectMultiTarget))//前のめりか後衛(範囲)を狙うか
-        {
-            EnemyVanguardOrBackLine = true;
-            if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//味方も選べるなら
-            {
-                AllyTargeting = true;//味方は単体でしか選べない
-                //二人範囲 
-                NeedSelectCountAlly = 2;
-            }else if (MySelfTargeting)
-            {
-                NeedSelectCountAlly = 1;
+                if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))
+                {
+                    AllyTargeting = true;//味方も選べたら味方も追加
+                    NeedSelectCountAlly = 1;
+                }else if (MySelfTargeting)
+                {
+                    NeedSelectCountAlly = 1;
+                }
+
             }
+            if (acter.HasRangeWill(SkillZoneTrait.CanSelectSingleTarget))//前のめりか後衛(ランダム単体)を狙うか
+            {
+                EnemyVanguardOrBackLine = true;
+                if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//味方も選べるなら
+                {
+                    AllyTargeting = true;//味方は単体でしか選べない
+                    //一人または二人単位 
+                    NeedSelectCountAlly = Random.Range(1, 3);
+                }else if (MySelfTargeting)
+                {
+                    NeedSelectCountAlly = 1;
+                }
+            }
+
+            if (acter.HasRangeWill(SkillZoneTrait.CanSelectMultiTarget))//前のめりか後衛(範囲)を狙うか
+            {
+                EnemyVanguardOrBackLine = true;
+                if (acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//味方も選べるなら
+                {
+                    AllyTargeting = true;//味方は単体でしか選べない
+                    //二人範囲 
+                    NeedSelectCountAlly = 2;
+                }else if (MySelfTargeting)
+                {
+                    NeedSelectCountAlly = 1;
+                }
+            }
+
         }
 
         //ボタン作成フェーズ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
