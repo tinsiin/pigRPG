@@ -1494,6 +1494,9 @@ public class BattleManager
     {
         var skill = Acter.NowUseSkill;
 
+        if(skill.HasZoneTrait(SkillZoneTrait.SelfSkill))return;
+        //セルフスキルなら、CanSelectMySelfと違い、選択性を排除した優先的性質なので、RandomRangeが間違って含まれても絶対に反応しない。
+
         //範囲意志かターゲットが既にいたら、35%で既に選んでるのが取り消してランダム範囲が入る。
         //逆に言うと35%に引っかからないと、既に選んでるのでOK = ランダム範囲の処理を切り上げる。
         if(Acter.Target != 0 || Acter.RangeWill != 0)
@@ -1503,8 +1506,26 @@ public class BattleManager
             //ランダム範囲に切り替わるので、既にあるターゲットと範囲意志を初期化
             Acter.Target = 0;
             Acter.RangeWill = 0;
-            //unders = 対象者は初期化しない。　　 つまり完全単体選択の場合はランダム範囲と同居が可能
+            //unders = 対象者は初期化しない。　　 つまり完全単体選択/対象者ボーナスの場合はランダム範囲と同居が可能
         }
+
+        // スキルの全性質をまず範囲意志に代入（サブ的性質も含むために）
+        Acter.RangeWill = skill.ZoneTrait;
+
+        // すべてのランダム選択性質を一度除去する（これらは分岐のための性質なので実際の実行時には不要）=>詳しくはメモ、範囲性質の仕様書を参照
+        SkillZoneTrait randomTraits = SkillZoneTrait.RandomTargetALLSituation | 
+                                     SkillZoneTrait.RandomTargetALLorMulti | 
+                                     SkillZoneTrait.RandomTargetALLorSingle | 
+                                     SkillZoneTrait.RandomTargetMultiOrSingle;
+        Acter.RangeWill &= ~randomTraits;//まぁ別にこれ実行時に悪影響与えないから(そもそもここ以外で使われないし)別にここで無理に省かなくていいけど。
+
+        // 実際の範囲性質（AllTarget, RandomMultiTarget, RandomSelectMultiTarget, RandomSingleTarget）も
+        // 一度除去して、これから適切なものを選択して追加するため=>詳しくはメモ、範囲性質の仕様書を参照
+        SkillZoneTrait rangeTraits = SkillZoneTrait.AllTarget | 
+                                    SkillZoneTrait.RandomMultiTarget | 
+                                    SkillZoneTrait.RandomSelectMultiTarget | 
+                                    SkillZoneTrait.RandomSingleTarget;
+        Acter.RangeWill &= ~rangeTraits;
 
         //全部　全範囲　単体ランダム　前のめり後衛
         if (skill.HasZoneTrait(SkillZoneTrait.RandomTargetALLSituation))
@@ -1518,7 +1539,13 @@ public class BattleManager
                     }
                 case 1:
                     {
-                        Acter.RangeWill |= SkillZoneTrait.RandomSelectMultiTarget;//前のめり後衛ランダム(複数単位)
+                        if(Acter.HasRangeWill(SkillZoneTrait.SelectOnlyAlly))
+                        {
+                            Acter.RangeWill |= SkillZoneTrait.RandomMultiTarget;//完全複数ランダムに変化(味方だけに前のめり区別とかないから。)
+                        }else
+                        {
+                            Acter.RangeWill |= SkillZoneTrait.RandomSelectMultiTarget;//前のめり後衛ランダム(複数単位)
+                        }
                         break;
                     }
                 case 2:
@@ -1539,7 +1566,13 @@ public class BattleManager
                     }
                 case 1:
                     {
-                        Acter.RangeWill |= SkillZoneTrait.RandomSelectMultiTarget;//前のめり後衛ランダム(複数単位)
+                        if(Acter.HasRangeWill(SkillZoneTrait.SelectOnlyAlly))
+                        {
+                            Acter.RangeWill |= SkillZoneTrait.RandomMultiTarget;//完全複数ランダムに変化(味方だけに前のめり区別とかないから。)
+                        }else
+                        {
+                            Acter.RangeWill |= SkillZoneTrait.RandomSelectMultiTarget;//前のめり後衛ランダム(複数単位)
+                        }
                         break;
                     }
             }
@@ -1566,7 +1599,13 @@ public class BattleManager
             {
                 case 0:
                     {
-                        Acter.RangeWill |= SkillZoneTrait.RandomSelectMultiTarget;//前のめり後衛ランダム(複数単位)
+                        if(Acter.HasRangeWill(SkillZoneTrait.SelectOnlyAlly))
+                        {
+                            Acter.RangeWill |= SkillZoneTrait.RandomMultiTarget;//完全複数ランダムに変化(味方だけに前のめり区別とかないから。)
+                        }else
+                        {
+                            Acter.RangeWill |= SkillZoneTrait.RandomSelectMultiTarget;//前のめり後衛ランダム(複数単位)
+                        }
                         break;
                     }
                 case 1:
@@ -1667,6 +1706,13 @@ public class BattleManager
     /// </summary>
     private void SelectTargetFromWill()
     {
+
+        if (Acter.HasRangeWill(SkillZoneTrait.SelfSkill))//セルフスキルなら
+        {
+            unders.CharaAdd(Acter);//自分を対象者に入れてさっさと終わり
+            return;
+        }
+        
         BattleGroup SelectGroup;//我々から見た敵陣
         BattleGroup OurGroup = null;//我々自陣          nullの場合はスキルの範囲性質に味方選択がないということ
         var skill = Acter.NowUseSkill;

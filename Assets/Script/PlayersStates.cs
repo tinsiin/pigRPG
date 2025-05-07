@@ -958,19 +958,21 @@ public class AllyClass : BaseStates
     {
         //var acter = Walking.bm.Acter;
 
-        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))//範囲を選べるのなら
+        //範囲を選べるのなら　　(自分だけのスキルなら範囲選択の性質があってもできない、本来できないもの)
+        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectRange) && !skill.HasZoneTrait(SkillZoneTrait.SelfSkill))
         {
             return TabState.SelectRange;//範囲選択画面へ飛ぶ
         }
-        else if (skill.HasZoneTrait(SkillZoneTrait.CanPerfectSelectSingleTarget) || 
+        else if ((skill.HasZoneTrait(SkillZoneTrait.CanPerfectSelectSingleTarget) || 
                 skill.HasZoneTrait(SkillZoneTrait.CanSelectSingleTarget) || 
-                skill.HasZoneTrait(SkillZoneTrait.CanSelectMultiTarget))//選択できる系なら
-        {
+                skill.HasZoneTrait(SkillZoneTrait.CanSelectMultiTarget))&& !skill.HasZoneTrait(SkillZoneTrait.SelfSkill))
+        {//選択できる系なら (自分だけのスキルなら範囲選択の性質があってもできない、本来なら範囲性質に含めてないはず)
             return TabState.SelectTarget;//選択画面へ飛ぶ
         }
         else if (skill.HasZoneTrait(SkillZoneTrait.ControlByThisSituation))
         {
-            //実行意志ではないので、RangeWillに入れない。
+            //~~実行意志ではないので、RangeWillに入れない。~~
+            //普通にSelectTargetWillの直前で範囲意志に入ります。
             return TabState.NextWait;//何もないなら事象ボタンへ
         }
 
