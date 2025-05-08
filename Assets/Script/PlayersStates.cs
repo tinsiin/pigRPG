@@ -752,7 +752,7 @@ public class AllyClass : BaseStates
         //キャラクターの持つ十日能力を多い順に重み付き抽選リストに入れ、処理をする。
         var AbilityList = new WeightedList<TenDayAbility>();
         //linqで値の多い順にゲット
-        foreach(var ability in TenDayValues().OrderByDescending(x => x.Value))
+        foreach(var ability in TenDayValues(false).OrderByDescending(x => x.Value))
         {
             AbilityList.Add(ability.Key,ability.Value);//キーが十日能力の列挙体　重みの部分に能力の値が入る。
         }
@@ -1060,7 +1060,7 @@ public class AllyClass : BaseStates
     {
         if(MentalHP < MentalMaxHP)
         {
-            MentalHP += TenDayValues().GetValueOrZero(TenDayAbility.Rain) + MentalMaxHP * 0.16f;
+            MentalHP += TenDayValues(false).GetValueOrZero(TenDayAbility.Rain) + MentalMaxHP * 0.16f;
         }
         //ポイント回復用で結局は戦闘開始時にmaxになるんだし、こんぐらいの割合で丁度いいと思う
     }
@@ -1128,7 +1128,7 @@ public class AllyClass : BaseStates
     public void AllyVictoryBoost()
     {
         //まず主人公グループと敵グループの強さの倍率
-        var ratio = Walking.bm.EnemyGroup.OurTenDayPowerSum / Walking.bm.AllyGroup.OurTenDayPowerSum;
+        var ratio = Walking.bm.EnemyGroup.OurTenDayPowerSum(false) / Walking.bm.AllyGroup.OurTenDayPowerSum(false);
         VictoryBoost(ratio);
 
     }

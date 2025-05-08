@@ -1106,7 +1106,7 @@ public abstract class BaseStates
             var attackerValue = 0f;
             if(tenDay.Value > 0)//ゼロ除算対策
             {
-                attackerValue = Atker.TenDayValues().GetValueOrZero(tenDay.Key) / tenDay.Value;
+                attackerValue = Atker.TenDayValues(true).GetValueOrZero(tenDay.Key) / tenDay.Value;
             }
             baseValue += attackerValue;
         }
@@ -1127,10 +1127,18 @@ public abstract class BaseStates
     [SerializeField]
     TenDayAbilityDictionary _baseTenDayValues = new();
     /// <summary>
-    /// 十日能力値
+    /// 基本十日能力値データ構造への参照を返すメソッド
+    /// 要は十日能力値の値をいじる用途
+    /// </summary>
+    public TenDayAbilityDictionary BaseTenDayValues
+    {
+        get { return _baseTenDayValues; }
+    }
+    /// <summary>
+    /// 読み取り専用の十日能力値、直接代入しないで
     /// スキル専属十日値を参照するかは引数で指定する
     /// </summary>
-    public TenDayAbilityDictionary TenDayValues(bool IsSkillEffect = true)
+    public ReadOnlyIndexTenDayAbilityDictionary TenDayValues(bool IsSkillEffect)
     {
         //武器ボーナスを参照する。
         var IsBladeSkill = false;
@@ -1143,7 +1151,8 @@ public abstract class BaseStates
             IsTLOASkill = NowUseSkill.IsTLOA;
         }
         var weaponBonus = NowUseWeapon.TenDayBonusData.GetTenDayAbilityDictionary(IsBladeSkill, IsMagicSkill, IsTLOASkill);
-        return _baseTenDayValues + weaponBonus;
+        var result = _baseTenDayValues + weaponBonus;
+        return new ReadOnlyIndexTenDayAbilityDictionary(result);
     }
     /// <summary>
     /// ある程度の自信ブーストを記録する辞書
@@ -1173,7 +1182,7 @@ public abstract class BaseStates
     /// <summary>
     /// 十日能力の総量
     /// </summary>
-    public float TenDayValuesSum => TenDayValues().Values.Sum();
+    public float TenDayValuesSum(bool IsSkillEffect) => TenDayValues(IsSkillEffect).Values.Sum();
 
     /// <summary>
     /// 十日能力成長値を勝利ブースト用に記録する
@@ -1253,7 +1262,7 @@ public abstract class BaseStates
             float extra = totalGained * (multiplier - 1f);//リアルタイムで加算済みなので倍率から1減らす
             
             // 追加で足す
-            TenDayValues()[ability] += extra;
+            BaseTenDayValues[ability] += extra;
 
             // battleGainに今回のバトルで上がった分をすべて代入する。
             battleGain[ability] = totalGained * multiplier;
@@ -1266,13 +1275,13 @@ public abstract class BaseStates
     /// </summary>
     void TenDayGrow(TenDayAbility ability, float growthAmount)
     {
-        if (TenDayValues().ContainsKey(ability))
+        if (BaseTenDayValues.ContainsKey(ability))
         {
-            TenDayValues()[ability] += growthAmount;
+            BaseTenDayValues[ability] += growthAmount;
         }
         else
         {
-            TenDayValues()[ability] = growthAmount;
+            BaseTenDayValues[ability] = growthAmount;
         }
 
         if (battleGain.ContainsKey(ability))
@@ -1304,14 +1313,14 @@ public abstract class BaseStates
         float topTenDayValue = 0f;
         foreach(var ten in SpritualTenDayAbilitysMap[MyImpression])
         {
-            topTenDayValue = TenDayValues().GetValueOrZero(ten) > topTenDayValue ? TenDayValues().GetValueOrZero(ten) : topTenDayValue;
+            topTenDayValue = TenDayValues(true).GetValueOrZero(ten) > topTenDayValue ? TenDayValues(true).GetValueOrZero(ten) : topTenDayValue;
         }
 
         //トップ能力の60%以内の「十日能力の列挙体と値」を該当スキルの該当能力値との距離比較用にピックアップ
         List<(TenDayAbility,float)> pickupSpiritualTenDays = new List<(TenDayAbility,float)>();
         foreach(var ten in SpritualTenDayAbilitysMap[MyImpression])
         {
-            var value = TenDayValues().GetValueOrZero(ten);
+            var value = TenDayValues(true).GetValueOrZero(ten);
             if(value > topTenDayValue * topValueThresholdRate)
             {
                 pickupSpiritualTenDays.Add((ten,value));
@@ -1363,7 +1372,7 @@ public abstract class BaseStates
             var confidenceBoost = 1.0f;
             if(ConfidenceBoosts.ContainsKey(GrowSkillTenDayValue.Key))//自信ブーストの辞書に今回の能力値が含まれていたら
             {
-                confidenceBoost = 1.3f + TenDayValues().GetValueOrZero(TenDayAbility.Baka) * 0.01f;
+                confidenceBoost = 1.3f + TenDayValues(true).GetValueOrZero(TenDayAbility.Baka) * 0.01f;
             }
             
             // 成長量を計算（スキルの該当能力値と減衰係数から）
@@ -1382,25 +1391,25 @@ public abstract class BaseStates
             // StatesPowerBreakdownのインスタンスを作成
             var breakdown = new StatesPowerBreakdown(new TenDayAbilityDictionary(), b_b_agi);
 
-            breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues().GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.3f);
-            breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues().GetValueOrZero(TenDayAbility.Taraiton) * 0.3f);
-            breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues().GetValueOrZero(TenDayAbility.BlazingFire) * 0.9f);
-            breakdown.TenDayAdd(TenDayAbility.HeavenAndEndWar, TenDayValues().GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 1.0f);
-            breakdown.TenDayAdd(TenDayAbility.FaceToHand, TenDayValues().GetValueOrZero(TenDayAbility.FaceToHand) * 0.2f);
-            breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues().GetValueOrZero(TenDayAbility.Vail) * 0.1f);
-            breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues().GetValueOrZero(TenDayAbility.Vond) * 0.4f);
-            breakdown.TenDayAdd(TenDayAbility.HeatHaze, TenDayValues().GetValueOrZero(TenDayAbility.HeatHaze) * 0.6f);
-            breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues().GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.6f);
-            breakdown.TenDayAdd(TenDayAbility.PersonaDivergence, TenDayValues().GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.2f);
-            breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues().GetValueOrZero(TenDayAbility.SilentTraining) * 0.02f);
-            breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues().GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.2f);
-            breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues().GetValueOrZero(TenDayAbility.SpringNap) * 0.03f);
-            breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues().GetValueOrZero(TenDayAbility.NightDarkness) * 0.1f);
-            breakdown.TenDayAdd(TenDayAbility.ElementFaithPower, TenDayValues().GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.04f);
-            breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues().GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.1f);
-            breakdown.TenDayAdd(TenDayAbility.UnextinguishedPath, TenDayValues().GetValueOrZero(TenDayAbility.UnextinguishedPath) * 0.14f);
-            breakdown.TenDayAdd(TenDayAbility.Raincoat, TenDayValues().GetValueOrZero(TenDayAbility.Raincoat) * 0.1f);
-            breakdown.TenDayAdd(TenDayAbility.Baka, TenDayValues().GetValueOrZero(TenDayAbility.Baka) * 2f);
+            breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues(false).GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.3f);
+            breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton) * 0.3f);
+            breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire) * 0.9f);
+            breakdown.TenDayAdd(TenDayAbility.HeavenAndEndWar, TenDayValues(false).GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 1.0f);
+            breakdown.TenDayAdd(TenDayAbility.FaceToHand, TenDayValues(false).GetValueOrZero(TenDayAbility.FaceToHand) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues(false).GetValueOrZero(TenDayAbility.Vail) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues(false).GetValueOrZero(TenDayAbility.Vond) * 0.4f);
+            breakdown.TenDayAdd(TenDayAbility.HeatHaze, TenDayValues(false).GetValueOrZero(TenDayAbility.HeatHaze) * 0.6f);
+            breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.6f);
+            breakdown.TenDayAdd(TenDayAbility.PersonaDivergence, TenDayValues(false).GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining) * 0.02f);
+            breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues(false).GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap) * 0.03f);
+            breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.ElementFaithPower, TenDayValues(false).GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.04f);
+            breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues(false).GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.UnextinguishedPath, TenDayValues(false).GetValueOrZero(TenDayAbility.UnextinguishedPath) * 0.14f);
+            breakdown.TenDayAdd(TenDayAbility.Raincoat, TenDayValues(false).GetValueOrZero(TenDayAbility.Raincoat) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.Baka, TenDayValues(false).GetValueOrZero(TenDayAbility.Baka) * 2f);
 
             return breakdown;
         }
@@ -1417,49 +1426,49 @@ public abstract class BaseStates
             var breakdown = new StatesPowerBreakdown(new TenDayAbilityDictionary(), b_b_atk);
             
             //共通の十日能力をまず加算する。
-            breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues().GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.5f);
-            breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues().GetValueOrZero(TenDayAbility.BlazingFire) * 0.8f);
-            breakdown.TenDayAdd(TenDayAbility.HeavenAndEndWar, TenDayValues().GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 0.3f);
-            breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues().GetValueOrZero(TenDayAbility.Rain) * 0.058f);
-            breakdown.TenDayAdd(TenDayAbility.FaceToHand, TenDayValues().GetValueOrZero(TenDayAbility.FaceToHand) * 0.01f);
-            breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues().GetValueOrZero(TenDayAbility.StarTersi) * 0.02f);
-            breakdown.TenDayAdd(TenDayAbility.dokumamusi, TenDayValues().GetValueOrZero(TenDayAbility.dokumamusi) * 0.4f);
-            breakdown.TenDayAdd(TenDayAbility.HeatHaze, TenDayValues().GetValueOrZero(TenDayAbility.HeatHaze) * 0.0666f);
-            breakdown.TenDayAdd(TenDayAbility.Leisure, TenDayValues().GetValueOrZero(TenDayAbility.Leisure) * 0.01f);
-            breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues().GetValueOrZero(TenDayAbility.SilentTraining) * 0.2f);
-            breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues().GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.56f);
-            breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues().GetValueOrZero(TenDayAbility.NightDarkness) * 0.09f);
-            breakdown.TenDayAdd(TenDayAbility.NightInkKnight, TenDayValues().GetValueOrZero(TenDayAbility.NightInkKnight) * 0.45f);
-            breakdown.TenDayAdd(TenDayAbility.ElementFaithPower, TenDayValues().GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.04f);
-            breakdown.TenDayAdd(TenDayAbility.JoeTeeth, TenDayValues().GetValueOrZero(TenDayAbility.JoeTeeth) * 0.5f);
-            breakdown.TenDayAdd(TenDayAbility.Blades, TenDayValues().GetValueOrZero(TenDayAbility.Blades) * 1.0f);
-            breakdown.TenDayAdd(TenDayAbility.Glory, TenDayValues().GetValueOrZero(TenDayAbility.Glory) * 0.1f);
-            breakdown.TenDayAdd(TenDayAbility.Smiler, TenDayValues().GetValueOrZero(TenDayAbility.Smiler) * 0.02f);
-            breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues().GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.23f);
-            breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues().GetValueOrZero(TenDayAbility.Enokunagi) * 3f);
-            breakdown.TenDayAdd(TenDayAbility.Raincoat, TenDayValues().GetValueOrZero(TenDayAbility.Raincoat) * 22f);
-            breakdown.TenDayAdd(TenDayAbility.Baka, TenDayValues().GetValueOrZero(TenDayAbility.Baka) * -11f);
+            breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues(false).GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.5f);
+            breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire) * 0.8f);
+            breakdown.TenDayAdd(TenDayAbility.HeavenAndEndWar, TenDayValues(false).GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 0.3f);
+            breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues(false).GetValueOrZero(TenDayAbility.Rain) * 0.058f);
+            breakdown.TenDayAdd(TenDayAbility.FaceToHand, TenDayValues(false).GetValueOrZero(TenDayAbility.FaceToHand) * 0.01f);
+            breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues(false).GetValueOrZero(TenDayAbility.StarTersi) * 0.02f);
+            breakdown.TenDayAdd(TenDayAbility.dokumamusi, TenDayValues(false).GetValueOrZero(TenDayAbility.dokumamusi) * 0.4f);
+            breakdown.TenDayAdd(TenDayAbility.HeatHaze, TenDayValues(false).GetValueOrZero(TenDayAbility.HeatHaze) * 0.0666f);
+            breakdown.TenDayAdd(TenDayAbility.Leisure, TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure) * 0.01f);
+            breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues(false).GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.56f);
+            breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) * 0.09f);
+            breakdown.TenDayAdd(TenDayAbility.NightInkKnight, TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight) * 0.45f);
+            breakdown.TenDayAdd(TenDayAbility.ElementFaithPower, TenDayValues(false).GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.04f);
+            breakdown.TenDayAdd(TenDayAbility.JoeTeeth, TenDayValues(false).GetValueOrZero(TenDayAbility.JoeTeeth) * 0.5f);
+            breakdown.TenDayAdd(TenDayAbility.Blades, TenDayValues(false).GetValueOrZero(TenDayAbility.Blades) * 1.0f);
+            breakdown.TenDayAdd(TenDayAbility.Glory, TenDayValues(false).GetValueOrZero(TenDayAbility.Glory) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.Smiler, TenDayValues(false).GetValueOrZero(TenDayAbility.Smiler) * 0.02f);
+            breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues(false).GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.23f);
+            breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues(false).GetValueOrZero(TenDayAbility.Enokunagi) * 3f);
+            breakdown.TenDayAdd(TenDayAbility.Raincoat, TenDayValues(false).GetValueOrZero(TenDayAbility.Raincoat) * 22f);
+            breakdown.TenDayAdd(TenDayAbility.Baka, TenDayValues(false).GetValueOrZero(TenDayAbility.Baka) * -11f);
 
             //戦闘規格により分岐する
             switch (NowBattleProtocol)
             {
                 case BattleProtocol.LowKey:
-                    breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues().GetValueOrZero(TenDayAbility.Taraiton) * 0.9f);
-                    breakdown.TenDayAdd(TenDayAbility.SpringWater, TenDayValues().GetValueOrZero(TenDayAbility.SpringWater) * 1.7f);
-                    breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues().GetValueOrZero(TenDayAbility.HumanKiller) * 1.0f);
-                    breakdown.TenDayAdd(TenDayAbility.UnextinguishedPath, TenDayValues().GetValueOrZero(TenDayAbility.UnextinguishedPath) * 0.3f);
+                    breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton) * 0.9f);
+                    breakdown.TenDayAdd(TenDayAbility.SpringWater, TenDayValues(false).GetValueOrZero(TenDayAbility.SpringWater) * 1.7f);
+                    breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues(false).GetValueOrZero(TenDayAbility.HumanKiller) * 1.0f);
+                    breakdown.TenDayAdd(TenDayAbility.UnextinguishedPath, TenDayValues(false).GetValueOrZero(TenDayAbility.UnextinguishedPath) * 0.3f);
                     break;
                 case BattleProtocol.Tricky:
-                    breakdown.TenDayAdd(TenDayAbility.Miza, TenDayValues().GetValueOrZero(TenDayAbility.Miza) * 1.2f);
-                    breakdown.TenDayAdd(TenDayAbility.PersonaDivergence, TenDayValues().GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.8f);
-                    breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues().GetValueOrZero(TenDayAbility.Vond) * 0.7f);
-                    breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues().GetValueOrZero(TenDayAbility.Enokunagi) * 0.5f);
-                    breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues().GetValueOrZero(TenDayAbility.Rain) * 0.6f);
+                    breakdown.TenDayAdd(TenDayAbility.Miza, TenDayValues(false).GetValueOrZero(TenDayAbility.Miza) * 1.2f);
+                    breakdown.TenDayAdd(TenDayAbility.PersonaDivergence, TenDayValues(false).GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.8f);
+                    breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues(false).GetValueOrZero(TenDayAbility.Vond) * 0.7f);
+                    breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues(false).GetValueOrZero(TenDayAbility.Enokunagi) * 0.5f);
+                    breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues(false).GetValueOrZero(TenDayAbility.Rain) * 0.6f);
                     break;
                 case BattleProtocol.Showey:
-                    breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues().GetValueOrZero(TenDayAbility.Vail) * 1.11f);
-                    breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues().GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.2f);
-                    breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues().GetValueOrZero(TenDayAbility.HumanKiller) * 1.0f);
+                    breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues(false).GetValueOrZero(TenDayAbility.Vail) * 1.11f);
+                    breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.2f);
+                    breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues(false).GetValueOrZero(TenDayAbility.HumanKiller) * 1.0f);
                     break;
                 //noneの場合、そもそもこの追加攻撃力がない。
             }
@@ -1476,89 +1485,89 @@ public abstract class BaseStates
         var breakdown = new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
 
         // 共通の十日能力をまず加算
-        breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues().GetValueOrZero(TenDayAbility.FlameBreathingWife) * 1.0f);
-        breakdown.TenDayAdd(TenDayAbility.NightInkKnight, TenDayValues().GetValueOrZero(TenDayAbility.NightInkKnight) * 1.3f);
-        breakdown.TenDayAdd(TenDayAbility.Raincoat, TenDayValues().GetValueOrZero(TenDayAbility.Raincoat) * 1.0f);
-        breakdown.TenDayAdd(TenDayAbility.JoeTeeth, TenDayValues().GetValueOrZero(TenDayAbility.JoeTeeth) * 0.8f);
-        breakdown.TenDayAdd(TenDayAbility.HeavenAndEndWar, TenDayValues().GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 0.3f);
-        breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues().GetValueOrZero(TenDayAbility.Vond) * 0.34f);
-        breakdown.TenDayAdd(TenDayAbility.HeatHaze, TenDayValues().GetValueOrZero(TenDayAbility.HeatHaze) * 0.23f);
-        breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues().GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.38f);
-        breakdown.TenDayAdd(TenDayAbility.Leisure, TenDayValues().GetValueOrZero(TenDayAbility.Leisure) * 0.47f);
-        breakdown.TenDayAdd(TenDayAbility.Blades, TenDayValues().GetValueOrZero(TenDayAbility.Blades) * 0.3f);
-        breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues().GetValueOrZero(TenDayAbility.BlazingFire) * 0.01f);
-        breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues().GetValueOrZero(TenDayAbility.Rain) * 0.2f);
-        breakdown.TenDayAdd(TenDayAbility.FaceToHand, TenDayValues().GetValueOrZero(TenDayAbility.FaceToHand) * 0.013f);
-        breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues().GetValueOrZero(TenDayAbility.Vail) * 0.02f);
-        breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues().GetValueOrZero(TenDayAbility.StarTersi) * 0.04f);
-        breakdown.TenDayAdd(TenDayAbility.SpringWater, TenDayValues().GetValueOrZero(TenDayAbility.SpringWater) * 0.035f);
-        breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues().GetValueOrZero(TenDayAbility.SilentTraining) * 0.09f);
-        breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues().GetValueOrZero(TenDayAbility.NightDarkness) * 0.01f);
-        breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues().GetValueOrZero(TenDayAbility.HumanKiller) * 0.07f);
-        breakdown.TenDayAdd(TenDayAbility.Baka, TenDayValues().GetValueOrZero(TenDayAbility.Baka) * -0.1f);
+        breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues(false).GetValueOrZero(TenDayAbility.FlameBreathingWife) * 1.0f);
+        breakdown.TenDayAdd(TenDayAbility.NightInkKnight, TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight) * 1.3f);
+        breakdown.TenDayAdd(TenDayAbility.Raincoat, TenDayValues(false).GetValueOrZero(TenDayAbility.Raincoat) * 1.0f);
+        breakdown.TenDayAdd(TenDayAbility.JoeTeeth, TenDayValues(false).GetValueOrZero(TenDayAbility.JoeTeeth) * 0.8f);
+        breakdown.TenDayAdd(TenDayAbility.HeavenAndEndWar, TenDayValues(false).GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 0.3f);
+        breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues(false).GetValueOrZero(TenDayAbility.Vond) * 0.34f);
+        breakdown.TenDayAdd(TenDayAbility.HeatHaze, TenDayValues(false).GetValueOrZero(TenDayAbility.HeatHaze) * 0.23f);
+        breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues(false).GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.38f);
+        breakdown.TenDayAdd(TenDayAbility.Leisure, TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure) * 0.47f);
+        breakdown.TenDayAdd(TenDayAbility.Blades, TenDayValues(false).GetValueOrZero(TenDayAbility.Blades) * 0.3f);
+        breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire) * 0.01f);
+        breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues(false).GetValueOrZero(TenDayAbility.Rain) * 0.2f);
+        breakdown.TenDayAdd(TenDayAbility.FaceToHand, TenDayValues(false).GetValueOrZero(TenDayAbility.FaceToHand) * 0.013f);
+        breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues(false).GetValueOrZero(TenDayAbility.Vail) * 0.02f);
+        breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues(false).GetValueOrZero(TenDayAbility.StarTersi) * 0.04f);
+        breakdown.TenDayAdd(TenDayAbility.SpringWater, TenDayValues(false).GetValueOrZero(TenDayAbility.SpringWater) * 0.035f);
+        breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining) * 0.09f);
+        breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) * 0.01f);
+        breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues(false).GetValueOrZero(TenDayAbility.HumanKiller) * 0.07f);
+        breakdown.TenDayAdd(TenDayAbility.Baka, TenDayValues(false).GetValueOrZero(TenDayAbility.Baka) * -0.1f);
 
         switch (style)
         {
             case AimStyle.CentralHeavenStrike: // 中天一弾
-                breakdown.TenDayAdd(TenDayAbility.Smiler, TenDayValues().GetValueOrZero(TenDayAbility.Smiler) * 0.78f);
-                breakdown.TenDayAdd(TenDayAbility.CryoniteQuality, TenDayValues().GetValueOrZero(TenDayAbility.CryoniteQuality) * 1.0f);
-                breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues().GetValueOrZero(TenDayAbility.SilentTraining) * 0.4f);
-                breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues().GetValueOrZero(TenDayAbility.Vail) * 0.5f);
-                breakdown.TenDayAdd(TenDayAbility.JoeTeeth, TenDayValues().GetValueOrZero(TenDayAbility.JoeTeeth) * 0.9f);
-                breakdown.TenDayAdd(TenDayAbility.ElementFaithPower, TenDayValues().GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.3f);
-                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues().GetValueOrZero(TenDayAbility.NightDarkness) * 0.1f);
-                breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues().GetValueOrZero(TenDayAbility.BlazingFire) * 0.6f);
-                breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues().GetValueOrZero(TenDayAbility.SpringNap) * -0.3f);
+                breakdown.TenDayAdd(TenDayAbility.Smiler, TenDayValues(false).GetValueOrZero(TenDayAbility.Smiler) * 0.78f);
+                breakdown.TenDayAdd(TenDayAbility.CryoniteQuality, TenDayValues(false).GetValueOrZero(TenDayAbility.CryoniteQuality) * 1.0f);
+                breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues(false).GetValueOrZero(TenDayAbility.Vail) * 0.5f);
+                breakdown.TenDayAdd(TenDayAbility.JoeTeeth, TenDayValues(false).GetValueOrZero(TenDayAbility.JoeTeeth) * 0.9f);
+                breakdown.TenDayAdd(TenDayAbility.ElementFaithPower, TenDayValues(false).GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) * 0.1f);
+                breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire) * 0.6f);
+                breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap) * -0.3f);
                 break;
 
             case AimStyle.AcrobatMinor: // アクロバマイナ体術1
-                breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues().GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 1.0f);
-                breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues().GetValueOrZero(TenDayAbility.Taraiton) * 0.1f);
-                breakdown.TenDayAdd(TenDayAbility.Blades, TenDayValues().GetValueOrZero(TenDayAbility.Blades) * 1.1f);
-                breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues().GetValueOrZero(TenDayAbility.StarTersi) * 0.1f);
-                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues().GetValueOrZero(TenDayAbility.NightDarkness) * 0.3f);
-                breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues().GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.6f);
+                breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues(false).GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 1.0f);
+                breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton) * 0.1f);
+                breakdown.TenDayAdd(TenDayAbility.Blades, TenDayValues(false).GetValueOrZero(TenDayAbility.Blades) * 1.1f);
+                breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues(false).GetValueOrZero(TenDayAbility.StarTersi) * 0.1f);
+                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.6f);
                 break;
 
             case AimStyle.Doublet: // ダブレット
-                breakdown.TenDayAdd(TenDayAbility.HeatHaze, TenDayValues().GetValueOrZero(TenDayAbility.HeatHaze) * 0.7f);
-                breakdown.TenDayAdd(TenDayAbility.Sort, TenDayValues().GetValueOrZero(TenDayAbility.Sort) * 0.3f);
-                breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues().GetValueOrZero(TenDayAbility.SpringNap) * 0.4f);
-                breakdown.TenDayAdd(TenDayAbility.NightInkKnight, TenDayValues().GetValueOrZero(TenDayAbility.NightInkKnight) * 0.3f);
-                breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues().GetValueOrZero(TenDayAbility.BlazingFire) * 1.0f);
-                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues().GetValueOrZero(TenDayAbility.Vond) * 0.2f);
+                breakdown.TenDayAdd(TenDayAbility.HeatHaze, TenDayValues(false).GetValueOrZero(TenDayAbility.HeatHaze) * 0.7f);
+                breakdown.TenDayAdd(TenDayAbility.Sort, TenDayValues(false).GetValueOrZero(TenDayAbility.Sort) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.NightInkKnight, TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire) * 1.0f);
+                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues(false).GetValueOrZero(TenDayAbility.Vond) * 0.2f);
                 break;
 
             case AimStyle.QuadStrike: // 四弾差し込み
-                breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues().GetValueOrZero(TenDayAbility.SpringNap) * 1.0f);
-                breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues().GetValueOrZero(TenDayAbility.Rain) * 0.2f);
-                breakdown.TenDayAdd(TenDayAbility.SpringWater, TenDayValues().GetValueOrZero(TenDayAbility.SpringWater) * 0.3f);
-                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues().GetValueOrZero(TenDayAbility.Vond) * 0.6f);
-                breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues().GetValueOrZero(TenDayAbility.Enokunagi) * 0.5f);
-                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues().GetValueOrZero(TenDayAbility.Vond) * 0.17f);
-                breakdown.TenDayAdd(TenDayAbility.TentVoid, TenDayValues().GetValueOrZero(TenDayAbility.TentVoid) * 0.4f);
-                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues().GetValueOrZero(TenDayAbility.NightDarkness) * -0.2f);
-                breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues().GetValueOrZero(TenDayAbility.ColdHeartedCalm) * -1.0f);
+                breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap) * 1.0f);
+                breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues(false).GetValueOrZero(TenDayAbility.Rain) * 0.2f);
+                breakdown.TenDayAdd(TenDayAbility.SpringWater, TenDayValues(false).GetValueOrZero(TenDayAbility.SpringWater) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues(false).GetValueOrZero(TenDayAbility.Vond) * 0.6f);
+                breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues(false).GetValueOrZero(TenDayAbility.Enokunagi) * 0.5f);
+                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues(false).GetValueOrZero(TenDayAbility.Vond) * 0.17f);
+                breakdown.TenDayAdd(TenDayAbility.TentVoid, TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) * -0.2f);
+                breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues(false).GetValueOrZero(TenDayAbility.ColdHeartedCalm) * -1.0f);
                 break;
 
             case AimStyle.Duster: // ダスター
-                breakdown.TenDayAdd(TenDayAbility.Miza, TenDayValues().GetValueOrZero(TenDayAbility.Miza) * 0.6f);
-                breakdown.TenDayAdd(TenDayAbility.Glory, TenDayValues().GetValueOrZero(TenDayAbility.Glory) * 0.8f);
-                breakdown.TenDayAdd(TenDayAbility.TentVoid, TenDayValues().GetValueOrZero(TenDayAbility.TentVoid) * -0.2f);
-                breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues().GetValueOrZero(TenDayAbility.WaterThunderNerve) * -0.2f);
-                breakdown.TenDayAdd(TenDayAbility.Raincoat, TenDayValues().GetValueOrZero(TenDayAbility.Raincoat) * 0.4f);
-                breakdown.TenDayAdd(TenDayAbility.Sort, TenDayValues().GetValueOrZero(TenDayAbility.Sort) * 0.1f);
-                breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues().GetValueOrZero(TenDayAbility.SilentTraining) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.Miza, TenDayValues(false).GetValueOrZero(TenDayAbility.Miza) * 0.6f);
+                breakdown.TenDayAdd(TenDayAbility.Glory, TenDayValues(false).GetValueOrZero(TenDayAbility.Glory) * 0.8f);
+                breakdown.TenDayAdd(TenDayAbility.TentVoid, TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid) * -0.2f);
+                breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) * -0.2f);
+                breakdown.TenDayAdd(TenDayAbility.Raincoat, TenDayValues(false).GetValueOrZero(TenDayAbility.Raincoat) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.Sort, TenDayValues(false).GetValueOrZero(TenDayAbility.Sort) * 0.1f);
+                breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining) * 0.4f);
                 break;
 
             case AimStyle.PotanuVolf: // ポタヌヴォルフのほうき術
-                breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues().GetValueOrZero(TenDayAbility.Taraiton) * 0.4f);
-                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues().GetValueOrZero(TenDayAbility.NightDarkness) * 0.2f);
-                breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues().GetValueOrZero(TenDayAbility.Pilmagreatifull) * 1.4f);
-                breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues().GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.2f);
-                breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues().GetValueOrZero(TenDayAbility.BlazingFire) * -0.2f);
-                breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues().GetValueOrZero(TenDayAbility.StarTersi) * 0.3f);
-                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues().GetValueOrZero(TenDayAbility.Vond) * -0.2f);
+                breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) * 0.2f);
+                breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues(false).GetValueOrZero(TenDayAbility.Pilmagreatifull) * 1.4f);
+                breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.2f);
+                breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire) * -0.2f);
+                breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues(false).GetValueOrZero(TenDayAbility.StarTersi) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues(false).GetValueOrZero(TenDayAbility.Vond) * -0.2f);
                 break;
             //none 掴んで投げるスキルの場合はこの排他ステはない。
         }
@@ -1599,29 +1608,29 @@ public abstract class BaseStates
             // StatesPowerBreakdownのインスタンスを作成
             var breakdown = new StatesPowerBreakdown(new TenDayAbilityDictionary(), b_b_eye);
             
-            breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues().GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.2f);
-            breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues().GetValueOrZero(TenDayAbility.Taraiton) * 0.2f);
-            breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues().GetValueOrZero(TenDayAbility.Rain) * 0.1f);
-            breakdown.TenDayAdd(TenDayAbility.FaceToHand, TenDayValues().GetValueOrZero(TenDayAbility.FaceToHand) * 0.8f);
-            breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues().GetValueOrZero(TenDayAbility.Vail) * 0.25f);
-            breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues().GetValueOrZero(TenDayAbility.StarTersi) * 0.6f);
-            breakdown.TenDayAdd(TenDayAbility.SpringWater, TenDayValues().GetValueOrZero(TenDayAbility.SpringWater) * 0.04f);
-            breakdown.TenDayAdd(TenDayAbility.dokumamusi, TenDayValues().GetValueOrZero(TenDayAbility.dokumamusi) * 0.1f);
-            breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues().GetValueOrZero(TenDayAbility.WaterThunderNerve) * 1.0f);
-            breakdown.TenDayAdd(TenDayAbility.Leisure, TenDayValues().GetValueOrZero(TenDayAbility.Leisure) * 0.1f);
-            breakdown.TenDayAdd(TenDayAbility.PersonaDivergence, TenDayValues().GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.02f);
-            breakdown.TenDayAdd(TenDayAbility.TentVoid, TenDayValues().GetValueOrZero(TenDayAbility.TentVoid) * 0.3f);
-            breakdown.TenDayAdd(TenDayAbility.Sort, TenDayValues().GetValueOrZero(TenDayAbility.Sort) * 0.6f);
-            breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues().GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.01f);
-            breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues().GetValueOrZero(TenDayAbility.SpringNap) * 0.04f);
-            breakdown.TenDayAdd(TenDayAbility.ElementFaithPower, TenDayValues().GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.001f);
-            breakdown.TenDayAdd(TenDayAbility.Miza, TenDayValues().GetValueOrZero(TenDayAbility.Miza) * 0.5f);
-            breakdown.TenDayAdd(TenDayAbility.JoeTeeth, TenDayValues().GetValueOrZero(TenDayAbility.JoeTeeth) * 0.03f);
-            breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues().GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.2f);
-            breakdown.TenDayAdd(TenDayAbility.NightInkKnight, TenDayValues().GetValueOrZero(TenDayAbility.NightInkKnight) * 1.0f);
-            breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues().GetValueOrZero(TenDayAbility.HumanKiller) * 0.2f);
-            breakdown.TenDayAdd(TenDayAbility.CryoniteQuality, TenDayValues().GetValueOrZero(TenDayAbility.CryoniteQuality) * 0.3f);
-            breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues().GetValueOrZero(TenDayAbility.Enokunagi) * -0.5f);
+            breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues(false).GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues(false).GetValueOrZero(TenDayAbility.Rain) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.FaceToHand, TenDayValues(false).GetValueOrZero(TenDayAbility.FaceToHand) * 0.8f);
+            breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues(false).GetValueOrZero(TenDayAbility.Vail) * 0.25f);
+            breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues(false).GetValueOrZero(TenDayAbility.StarTersi) * 0.6f);
+            breakdown.TenDayAdd(TenDayAbility.SpringWater, TenDayValues(false).GetValueOrZero(TenDayAbility.SpringWater) * 0.04f);
+            breakdown.TenDayAdd(TenDayAbility.dokumamusi, TenDayValues(false).GetValueOrZero(TenDayAbility.dokumamusi) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) * 1.0f);
+            breakdown.TenDayAdd(TenDayAbility.Leisure, TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure) * 0.1f);
+            breakdown.TenDayAdd(TenDayAbility.PersonaDivergence, TenDayValues(false).GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.02f);
+            breakdown.TenDayAdd(TenDayAbility.TentVoid, TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid) * 0.3f);
+            breakdown.TenDayAdd(TenDayAbility.Sort, TenDayValues(false).GetValueOrZero(TenDayAbility.Sort) * 0.6f);
+            breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues(false).GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.01f);
+            breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap) * 0.04f);
+            breakdown.TenDayAdd(TenDayAbility.ElementFaithPower, TenDayValues(false).GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.001f);
+            breakdown.TenDayAdd(TenDayAbility.Miza, TenDayValues(false).GetValueOrZero(TenDayAbility.Miza) * 0.5f);
+            breakdown.TenDayAdd(TenDayAbility.JoeTeeth, TenDayValues(false).GetValueOrZero(TenDayAbility.JoeTeeth) * 0.03f);
+            breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues(false).GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.NightInkKnight, TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight) * 1.0f);
+            breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues(false).GetValueOrZero(TenDayAbility.HumanKiller) * 0.2f);
+            breakdown.TenDayAdd(TenDayAbility.CryoniteQuality, TenDayValues(false).GetValueOrZero(TenDayAbility.CryoniteQuality) * 0.3f);
+            breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues(false).GetValueOrZero(TenDayAbility.Enokunagi) * -0.5f);
             
             return breakdown;
         }
@@ -1798,12 +1807,12 @@ public abstract class BaseStates
         get
         {
             // テント空洞と夜暗黒の基本値計算
-            var tentVoidValue = TenDayValues().GetValueOrZero(TenDayAbility.TentVoid) * 2;
-            var nightDarknessValue = TenDayValues().GetValueOrZero(TenDayAbility.NightDarkness) * 1.6f;
+            var tentVoidValue = TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid) * 2;
+            var nightDarknessValue = TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) * 1.6f;
             
             // ミザとスマイラー、元素信仰力の減算値計算
-            var mizaValue = TenDayValues().GetValueOrZero(TenDayAbility.Miza) / 4f * TenDayValues().GetValueOrZero(TenDayAbility.Smiler);
-            var elementFaithValue = TenDayValues().GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.7f;
+            var mizaValue = TenDayValues(false).GetValueOrZero(TenDayAbility.Miza) / 4f * TenDayValues(false).GetValueOrZero(TenDayAbility.Smiler);
+            var elementFaithValue = TenDayValues(false).GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.7f;
         
             // 最終計算
             var finalValue = (int)(tentVoidValue + nightDarknessValue - (mizaValue + elementFaithValue));
@@ -1999,7 +2008,7 @@ public abstract class BaseStates
     }
     void MentalHPHealOnTurn()
     {
-        MentalHP += TenDayValues().GetValueOrZero(TenDayAbility.Rain);
+        MentalHP += TenDayValues(false).GetValueOrZero(TenDayAbility.Rain);
     }
     
     void MentalHPOnDeath()
@@ -2019,7 +2028,7 @@ public abstract class BaseStates
                 break;
             case SpiritualProperty.cquiest:
                 // 10%加算 + 元素信仰力
-                MentalHP += MentalMaxHP * 0.1f + TenDayValues().GetValueOrZero(TenDayAbility.ElementFaithPower) / 3;
+                MentalHP += MentalMaxHP * 0.1f + TenDayValues(false).GetValueOrZero(TenDayAbility.ElementFaithPower) / 3;
                 break;
             case SpiritualProperty.devil:
                 // 10%減る
@@ -2027,8 +2036,8 @@ public abstract class BaseStates
                 break;
             case SpiritualProperty.doremis:
                 // 春仮眠の夜暗黒に対する多さ 割
-                var darkNight = TenDayValues().GetValueOrZero(TenDayAbility.NightDarkness);
-                var springNap = TenDayValues().GetValueOrZero(TenDayAbility.SpringNap);
+                var darkNight = TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness);
+                var springNap = TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap);
                 if (springNap > 0)
                 {
                     MentalHP = MentalMaxHP * (springNap / darkNight);
@@ -2070,8 +2079,8 @@ public abstract class BaseStates
     /// <returns></returns>
     float GetMentalDivergenceThreshold()
     {
-        var ExtraValue = (TenDayValues().GetValueOrZero(TenDayAbility.NightDarkness) - TenDayValues().GetValueOrZero(TenDayAbility.KereKere)) * 0.01f;//0クランプいらない
-        var EnokunagiValue = TenDayValues().GetValueOrZero(TenDayAbility.Enokunagi) * 0.005f;
+        var ExtraValue = (TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) - TenDayValues(false).GetValueOrZero(TenDayAbility.KereKere)) * 0.01f;//0クランプいらない
+        var EnokunagiValue = TenDayValues(false).GetValueOrZero(TenDayAbility.Enokunagi) * 0.005f;
         switch (NowCondition)
         {
             case HumanConditionCircumstances.Angry:
@@ -2099,9 +2108,9 @@ public abstract class BaseStates
     /// </summary>
     int GetMentalDivergenceMaxCount()
     {
-        if(TenDayValues().GetValueOrZero(TenDayAbility.NightDarkness)> 0)//ゼロ除算対策
+        if(TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness)> 0)//ゼロ除算対策
         {
-            var maxCount = (int)((TenDayValues().GetValueOrZero(TenDayAbility.SpringNap) - TenDayValues().GetValueOrZero(TenDayAbility.TentVoid ) / 2) / TenDayValues().GetValueOrZero(TenDayAbility.NightDarkness));
+            var maxCount = (int)((TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap) - TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid ) / 2) / TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness));
             if(maxCount > 0)return maxCount;//0より大きければ返す
         }
         return 0 ;
@@ -2141,7 +2150,7 @@ public abstract class BaseStates
     /// </summary>
     int GetMentalDivergenceRefulMaxCount()
     {
-        var refil = TenDayValues().GetValueOrZero(TenDayAbility.TentVoid) * 3 - TenDayValues().GetValueOrZero(TenDayAbility.Miza) / 4 * TenDayValues().GetValueOrZero(TenDayAbility.Smiler);
+        var refil = TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid) * 3 - TenDayValues(false).GetValueOrZero(TenDayAbility.Miza) / 4 * TenDayValues(false).GetValueOrZero(TenDayAbility.Smiler);
         if(refil < 0)return 0;
         return (int)refil;
     }
@@ -2211,7 +2220,7 @@ public abstract class BaseStates
                 _vitalLayerList.RemoveAt(i);
                 // リストを削除したので、 i はインクリメントしない（要注意）
                 //破壊慣れまたは破壊負け
-                var kerekere = TenDayValues().GetValueOrZero(TenDayAbility.KereKere);
+                var kerekere = atker.TenDayValues(true).GetValueOrZero(TenDayAbility.KereKere);
                 if (skillPhy == PhysicalProperty.heavy)//暴断なら破壊慣れ
                 {
                     dmg += dmg * 0.015f * kerekere;
@@ -2290,13 +2299,13 @@ public abstract class BaseStates
         get 
         { 
             //基本値
-            var baseValue = TenDayValuesSum * 0.56f;
+            var baseValue = TenDayValuesSum(false) * 0.56f;
             //スキル数による微小スケーリング
             baseValue = CalculateResonanceSkillCountMicroScaling(SkillList.Count, baseValue);
             //思慮係数によるスケーリング
             baseValue = CalculateResonanceThinkingScaling(baseValue, 11f);
 
-            return baseValue + TenDayValues().GetValueOrZero(TenDayAbility.Baka) * 1.3f;//馬鹿を加算する 
+            return baseValue + TenDayValues(false).GetValueOrZero(TenDayAbility.Baka) * 1.3f;//馬鹿を加算する 
         }
     }
     /// <summary>
@@ -2349,7 +2358,7 @@ public abstract class BaseStates
     /// </summary>
     public void ResonanceHealingOnWalking() 
     { 
-        ResonanceHeal(_resonanceHealingOnWalkingFactor + TenDayValues().GetValueOrZero(TenDayAbility.SpringNap) * 1.5f);
+        ResonanceHeal(_resonanceHealingOnWalkingFactor + TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap) * 1.5f);
     }
     
 
@@ -2578,7 +2587,7 @@ public abstract class BaseStates
     /// </summary>
     public void ApplyConditionOnBattleStart(float eneTenDays)
     {
-        var myTenDays = TenDayValuesSum;
+        var myTenDays = TenDayValuesSum(false);
         // 安全策として、0除算を避ける
         float ratio = (eneTenDays == 0) 
             ? 999999f // 敵が0なら自分が勝ってる扱い(∞倍勝ち)
@@ -3289,10 +3298,10 @@ public abstract class BaseStates
                             break;
                         case SpiritualProperty.sacrifaith:
                             var OptimisticPer = 0;//楽観的に行く確率
-                            var eneKereKere = ene.TenDayValues().GetValueOrZero(TenDayAbility.KereKere);
-                            var eneWif = ene.TenDayValues().GetValueOrZero(TenDayAbility.FlameBreathingWife);
-                            var KereKere = TenDayValues().GetValueOrZero(TenDayAbility.KereKere);
-                            var Wif = TenDayValues().GetValueOrZero(TenDayAbility.FlameBreathingWife);
+                            var eneKereKere = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.KereKere);
+                            var eneWif = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.FlameBreathingWife);
+                            var KereKere = TenDayValues(true).GetValueOrZero(TenDayAbility.KereKere);
+                            var Wif = TenDayValues(true).GetValueOrZero(TenDayAbility.FlameBreathingWife);
                             if(KereKere >= eneKereKere && Wif > eneWif)
                             {
                                 OptimisticPer = (int)(Wif - eneWif);
@@ -3315,8 +3324,8 @@ public abstract class BaseStates
                             break;
                         case SpiritualProperty.pysco:
                             var NormalPer = 0;
-                            var EneLeisure = ene.TenDayValues().GetValueOrZero(TenDayAbility.Leisure);
-                            var Leisure = TenDayValues().GetValueOrZero(TenDayAbility.Leisure);
+                            var EneLeisure = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure);
+                            var Leisure = TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure);
                             if(Leisure > EneLeisure)
                             {
                                 NormalPer = (int)(Leisure - EneLeisure);
@@ -3374,10 +3383,10 @@ public abstract class BaseStates
                         case SpiritualProperty.cquiest:
                             var C_NormalEndWarPer = 0;
                             var C_NormalNightPer = 0;
-                            var C_EneEndWar = ene.TenDayValues().GetValueOrZero(TenDayAbility.HeavenAndEndWar);
-                            var C_EneNight = ene.TenDayValues().GetValueOrZero(TenDayAbility.NightInkKnight);
-                            var C_EndWar = TenDayValues().GetValueOrZero(TenDayAbility.HeavenAndEndWar);
-                            var C_Night = TenDayValues().GetValueOrZero(TenDayAbility.NightInkKnight);
+                            var C_EneEndWar = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.HeavenAndEndWar);
+                            var C_EneNight = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight);
+                            var C_EndWar = TenDayValues(true).GetValueOrZero(TenDayAbility.HeavenAndEndWar);
+                            var C_Night = TenDayValues(true).GetValueOrZero(TenDayAbility.NightInkKnight);
                             if(C_EndWar > C_EneEndWar)
                             {
                                 C_NormalEndWarPer = (int)(C_EndWar - C_EneEndWar);
@@ -3422,8 +3431,8 @@ public abstract class BaseStates
                             break;
                         case SpiritualProperty.pillar:
                             var VondPer = 0;
-                            var Vond = TenDayValues().GetValueOrZero(TenDayAbility.Vond);
-                            var EneVond = ene.TenDayValues().GetValueOrZero(TenDayAbility.Vond);
+                            var Vond = TenDayValues(true).GetValueOrZero(TenDayAbility.Vond);
+                            var EneVond = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Vond);
                             if(Vond > EneVond)
                             {
                                 VondPer = (int)(Vond - EneVond);
@@ -3476,7 +3485,7 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.kindergarden:
-                            var KinderOptimToElated_PersonaPer = TenDayValues().GetValueOrZero(TenDayAbility.PersonaDivergence);
+                            var KinderOptimToElated_PersonaPer = TenDayValues(true).GetValueOrZero(TenDayAbility.PersonaDivergence);
                             if(KinderOptimToElated_PersonaPer> 776)KinderOptimToElated_PersonaPer = 776;//最低でも1%残るようにする
                             if(rollper(777 - KinderOptimToElated_PersonaPer))
                             {
@@ -3489,7 +3498,7 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.sacrifaith:
-                            var SacrifaithOptimToElated_HumanKillerPer = TenDayValues().GetValueOrZero(TenDayAbility.HumanKiller);
+                            var SacrifaithOptimToElated_HumanKillerPer = TenDayValues(true).GetValueOrZero(TenDayAbility.HumanKiller);
                             if(rollper(-50 + SacrifaithOptimToElated_HumanKillerPer))
                             {
                                 NowCondition = HumanConditionCircumstances.Elated;
@@ -3512,7 +3521,7 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.baledrival:
-                            var baledrivalOptimToElated_HumanKillerPer = TenDayValues().GetValueOrZero(TenDayAbility.HumanKiller);
+                            var baledrivalOptimToElated_HumanKillerPer = TenDayValues(true).GetValueOrZero(TenDayAbility.HumanKiller);
                             if(rollper(3 + baledrivalOptimToElated_HumanKillerPer*2))
                             {
                                 NowCondition = HumanConditionCircumstances.Elated;
@@ -3524,7 +3533,7 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.devil:
-                            var DevilOptimToElatedPer = TenDayValues().GetValueOrZero(TenDayAbility.TentVoid) - TenDayValues().GetValueOrZero(TenDayAbility.Enokunagi);
+                            var DevilOptimToElatedPer = TenDayValues(true).GetValueOrZero(TenDayAbility.TentVoid) - TenDayValues(true).GetValueOrZero(TenDayAbility.Enokunagi);
                             if(rollper(60 - DevilOptimToElatedPer))
                             {
                                 NowCondition = HumanConditionCircumstances.Elated;
@@ -3592,7 +3601,7 @@ public abstract class BaseStates
                     break;
 
                 case HumanConditionCircumstances.Resolved:
-                    var ResolvedToOptimisticPer = TenDayValues().GetValueOrZero(TenDayAbility.FlameBreathingWife) - ene.TenDayValues().GetValueOrZero(TenDayAbility.FlameBreathingWife);
+                    var ResolvedToOptimisticPer = TenDayValues(true).GetValueOrZero(TenDayAbility.FlameBreathingWife) - ene.TenDayValues(false).GetValueOrZero(TenDayAbility.FlameBreathingWife);
                     if(ResolvedToOptimisticPer < 0)
                     {
                         ResolvedToOptimisticPer = 0;
@@ -3612,7 +3621,7 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.kindergarden:
-                            var ResolvedToOptimisticKinder_luck = TenDayValues().GetValueOrZero(TenDayAbility.Lucky);
+                            var ResolvedToOptimisticKinder_luck = TenDayValues(true).GetValueOrZero(TenDayAbility.Lucky);
                             if(rollper(77 + ResolvedToOptimisticKinder_luck + ResolvedToOptimisticPer))
                             {
                                 NowCondition = HumanConditionCircumstances.Optimistic;
@@ -3624,7 +3633,7 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.sacrifaith:
-                            var ResolvedToOptimisticSacrifaith_UnextinguishedPath = TenDayValues().GetValueOrZero(TenDayAbility.UnextinguishedPath);
+                            var ResolvedToOptimisticSacrifaith_UnextinguishedPath = TenDayValues(true).GetValueOrZero(TenDayAbility.UnextinguishedPath);
                             if(rollper(15 -ResolvedToOptimisticSacrifaith_UnextinguishedPath + ResolvedToOptimisticPer))
                             {
                                 NowCondition = HumanConditionCircumstances.Optimistic;
@@ -3636,7 +3645,7 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.pysco:
-                            if(rollper(10 + TenDayValues().GetValueOrZero(TenDayAbility.StarTersi) * 0.9f + ResolvedToOptimisticPer))
+                            if(rollper(10 + TenDayValues(true).GetValueOrZero(TenDayAbility.StarTersi) * 0.9f + ResolvedToOptimisticPer))
                             {
                                 NowCondition = HumanConditionCircumstances.Optimistic;
                             }
@@ -3647,7 +3656,7 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.baledrival:
-                            if(rollper(40 + ResolvedToOptimisticPer + TenDayValues().GetValueOrZero(TenDayAbility.SpringWater)))
+                            if(rollper(40 + ResolvedToOptimisticPer + TenDayValues(true).GetValueOrZero(TenDayAbility.SpringWater)))
                             {
                                 NowCondition = HumanConditionCircumstances.Optimistic;
                             }
@@ -3658,8 +3667,8 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.devil:
-                            var ResolvedToOptimisticDevil_BalePer= TenDayValues().GetValueOrZero(TenDayAbility.Vail) - ene.TenDayValues().GetValueOrZero(TenDayAbility.Vail);
-                            var ResolvedToOptimisticDevil_FaceToHandPer= TenDayValues().GetValueOrZero(TenDayAbility.FaceToHand) - ene.TenDayValues().GetValueOrZero(TenDayAbility.FaceToHand);
+                            var ResolvedToOptimisticDevil_BalePer= TenDayValues(true).GetValueOrZero(TenDayAbility.Vail) - ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Vail);
+                            var ResolvedToOptimisticDevil_FaceToHandPer= TenDayValues(true).GetValueOrZero(TenDayAbility.FaceToHand) - ene.TenDayValues(false).GetValueOrZero(TenDayAbility.FaceToHand);
                             if(rollper(40 + ResolvedToOptimisticPer + (ResolvedToOptimisticDevil_BalePer - ResolvedToOptimisticDevil_FaceToHandPer)))
                             {
                                 NowCondition = HumanConditionCircumstances.Optimistic;
@@ -3671,7 +3680,7 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.cquiest:
-                            if(rollper(12 + (TenDayValues().GetValueOrZero(TenDayAbility.SpringWater) - TenDayValues().GetValueOrZero(TenDayAbility.Taraiton)) + ResolvedToOptimisticPer))
+                            if(rollper(12 + (TenDayValues(true).GetValueOrZero(TenDayAbility.SpringWater) - TenDayValues(true).GetValueOrZero(TenDayAbility.Taraiton)) + ResolvedToOptimisticPer))
                             {
                                 NowCondition = HumanConditionCircumstances.Optimistic;
                             }
@@ -3725,10 +3734,10 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.kindergarden:
-                            var AngryEneVail = ene.TenDayValues().GetValueOrZero(TenDayAbility.Vail);
-                            var AngryVail = TenDayValues().GetValueOrZero(TenDayAbility.Vail);
-                            var AngryEneWaterThunder = ene.TenDayValues().GetValueOrZero(TenDayAbility.WaterThunderNerve);
-                            var AngryWaterThunder = TenDayValues().GetValueOrZero(TenDayAbility.WaterThunderNerve);
+                            var AngryEneVail = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Vail);
+                            var AngryVail = TenDayValues(true).GetValueOrZero(TenDayAbility.Vail);
+                            var AngryEneWaterThunder = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve);
+                            var AngryWaterThunder = TenDayValues(true).GetValueOrZero(TenDayAbility.WaterThunderNerve);
                             var AngryToElated_KinderPer = AngryVail - AngryEneVail + (AngryWaterThunder - AngryEneWaterThunder);
                             if(rollper(50 + AngryToElated_KinderPer))
                             {
@@ -3741,7 +3750,7 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.sacrifaith:
-                            if(rollper(30 - TenDayValues().GetValueOrZero(TenDayAbility.BlazingFire)))
+                            if(rollper(30 - TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire)))
                             {
                                 NowCondition = HumanConditionCircumstances.Elated;
                             }
@@ -3752,7 +3761,7 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.pysco:
-                            if(rollper(TenDayValues().GetValueOrZero(TenDayAbility.HumanKiller)))
+                            if(rollper(TenDayValues(true).GetValueOrZero(TenDayAbility.HumanKiller)))
                             {
                                 NowCondition = HumanConditionCircumstances.Elated;
                             }
@@ -3765,7 +3774,7 @@ public abstract class BaseStates
                         case SpiritualProperty.baledrival:
                             const float Threshold = 37.5f;
                             var AngryToElated_BaledrivalPer = Threshold;
-                            var AngryToElated_Baledrival_VailValue = TenDayValues().GetValueOrZero(TenDayAbility.Vail)/2;
+                            var AngryToElated_Baledrival_VailValue = TenDayValues(true).GetValueOrZero(TenDayAbility.Vail)/2;
                             if(AngryToElated_Baledrival_VailValue >Threshold)AngryToElated_BaledrivalPer = AngryToElated_Baledrival_VailValue;
                             if(rollper(AngryToElated_BaledrivalPer))
                             {
@@ -3778,7 +3787,7 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.devil:
-                            if(rollper(40 + (20 - TenDayValues().GetValueOrZero(TenDayAbility.BlazingFire))))
+                            if(rollper(40 + (20 - TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire))))
                             {
                                 NowCondition = HumanConditionCircumstances.Elated;
                             }
@@ -3839,7 +3848,7 @@ public abstract class BaseStates
                     switch (imp)
                     {
                         case SpiritualProperty.liminalwhitetile:
-                            if(rollper(30 + TenDayValues().GetValueOrZero(TenDayAbility.SpringNap)))
+                            if(rollper(30 + TenDayValues(true).GetValueOrZero(TenDayAbility.SpringNap)))
                             {
                                 NowCondition = HumanConditionCircumstances.Optimistic;
                             }else if(rollper(46))
@@ -3873,7 +3882,7 @@ public abstract class BaseStates
                             }else if(rollper(50))
                             {
                                 NowCondition = HumanConditionCircumstances.Normal;
-                            }else if(rollper(1 + TenDayValues().GetValueOrZero(TenDayAbility.BlazingFire) + TenDayValues().GetValueOrZero(TenDayAbility.Smiler)))
+                            }else if(rollper(1 + TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) + TenDayValues(true).GetValueOrZero(TenDayAbility.Smiler)))
                             {
                                 NowCondition = HumanConditionCircumstances.Resolved;
                             }
@@ -3884,8 +3893,8 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.pysco:
-                            var eneRainCoat = ene.TenDayValues().GetValueOrZero(TenDayAbility.Raincoat);
-                            var EndWar = TenDayValues().GetValueOrZero(TenDayAbility.HeavenAndEndWar);
+                            var eneRainCoat = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Raincoat);
+                            var EndWar = TenDayValues(true).GetValueOrZero(TenDayAbility.HeavenAndEndWar);
                             if(rollper(40 - (EndWar - eneRainCoat)))
                             {
                                 NowCondition = HumanConditionCircumstances.Optimistic;
@@ -3900,13 +3909,13 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.baledrival:
-                            if(rollper(80 + TenDayValues().GetValueOrZero(TenDayAbility.Rain)))
+                            if(rollper(80 + TenDayValues(true).GetValueOrZero(TenDayAbility.Rain)))
                             {
                                 NowCondition = HumanConditionCircumstances.Optimistic;
-                            }else if(rollper(90 + TenDayValues().GetValueOrZero(TenDayAbility.ColdHeartedCalm) / 4))
+                            }else if(rollper(90 + TenDayValues(true).GetValueOrZero(TenDayAbility.ColdHeartedCalm) / 4))
                             {
                                 NowCondition = HumanConditionCircumstances.Normal;
-                            }else if(rollper(TenDayValues().GetValueOrZero(TenDayAbility.BlazingFire) * 1.2f))
+                            }else if(rollper(TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) * 1.2f))
                             {
                                 NowCondition = HumanConditionCircumstances.Resolved;
                             }
@@ -3917,13 +3926,13 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.devil:
-                            if(rollper(32 + TenDayValues().GetValueOrZero(TenDayAbility.Leisure)))
+                            if(rollper(32 + TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure)))
                             {
                                 NowCondition = HumanConditionCircumstances.Optimistic;
                             }else if(rollper(50))
                             {
                                 NowCondition = HumanConditionCircumstances.Normal;
-                            }else if(rollper((TenDayValues().GetValueOrZero(TenDayAbility.UnextinguishedPath)-2) / 5))
+                            }else if(rollper((TenDayValues(true).GetValueOrZero(TenDayAbility.UnextinguishedPath)-2) / 5))
                             {
                                 NowCondition = HumanConditionCircumstances.Resolved;
                             }
@@ -3935,9 +3944,9 @@ public abstract class BaseStates
                             break;
                         case SpiritualProperty.cquiest:
                             var DoubtfulToOptimistic_CPer = 0f;
-                            if(ene.TenDayValues().GetValueOrZero(TenDayAbility.Leisure) < TenDayValues().GetValueOrZero(TenDayAbility.NightInkKnight) * 0.3f)
+                            if(ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure) < TenDayValues(true).GetValueOrZero(TenDayAbility.NightInkKnight) * 0.3f)
                             {
-                                DoubtfulToOptimistic_CPer = TenDayValues().GetValueOrZero(TenDayAbility.ElementFaithPower);
+                                DoubtfulToOptimistic_CPer = TenDayValues(true).GetValueOrZero(TenDayAbility.ElementFaithPower);
                             }
 
                             if(rollper(38 + DoubtfulToOptimistic_CPer))
@@ -3946,7 +3955,7 @@ public abstract class BaseStates
                             }else if(rollper(33))
                             {
                                 NowCondition = HumanConditionCircumstances.Normal;
-                            }else if(rollper((TenDayValues().GetValueOrZero(TenDayAbility.HeavenAndEndWar) - 6) / 2))
+                            }else if(rollper((TenDayValues(true).GetValueOrZero(TenDayAbility.HeavenAndEndWar) - 6) / 2))
                             {
                                 NowCondition = HumanConditionCircumstances.Resolved;
                             }
@@ -3957,7 +3966,7 @@ public abstract class BaseStates
                             }
                             break;
                         case SpiritualProperty.godtier:
-                            if(rollper(27 - TenDayValues().GetValueOrZero(TenDayAbility.NightInkKnight)))
+                            if(rollper(27 - TenDayValues(true).GetValueOrZero(TenDayAbility.NightInkKnight)))
                             {
                                 NowCondition = HumanConditionCircumstances.Optimistic;
                             }else if(rollper(85))
@@ -3986,16 +3995,16 @@ public abstract class BaseStates
                             break;
                         case SpiritualProperty.doremis:
                             const float Threshold = 49f;
-                            var DoubtfulToNorml_Doremis_nightDarknessAndVoidValue = TenDayValues().GetValueOrZero(TenDayAbility.NightDarkness) + TenDayValues().GetValueOrZero(TenDayAbility.TentVoid);
+                            var DoubtfulToNorml_Doremis_nightDarknessAndVoidValue = TenDayValues(true).GetValueOrZero(TenDayAbility.NightDarkness) + TenDayValues(true).GetValueOrZero(TenDayAbility.TentVoid);
                             var DoubtfulToNorml_DoremisPer = Threshold;
                             if(DoubtfulToNorml_Doremis_nightDarknessAndVoidValue < Threshold) DoubtfulToNorml_DoremisPer = DoubtfulToNorml_Doremis_nightDarknessAndVoidValue;
-                            if(rollper(TenDayValues().GetValueOrZero(TenDayAbility.NightDarkness) + 30))
+                            if(rollper(TenDayValues(true).GetValueOrZero(TenDayAbility.NightDarkness) + 30))
                             {
                                 NowCondition = HumanConditionCircumstances.Optimistic;
                             }else if(rollper(DoubtfulToNorml_DoremisPer))
                             {
                                 NowCondition = HumanConditionCircumstances.Normal;
-                            }else if(rollper(TenDayValues().GetValueOrZero(TenDayAbility.StarTersi) / 1.7f))
+                            }else if(rollper(TenDayValues(true).GetValueOrZero(TenDayAbility.StarTersi) / 1.7f))
                             {
                                 NowCondition = HumanConditionCircumstances.Resolved;
                             }
@@ -4027,14 +4036,14 @@ public abstract class BaseStates
                             break;
                         case SpiritualProperty.kindergarden:
                             var ConfusedToPainful_Kindergarden_DokumamusiAndRainCoatAverage = 
-                            (TenDayValues().GetValueOrZero(TenDayAbility.dokumamusi) + TenDayValues().GetValueOrZero(TenDayAbility.Raincoat)) / 2;
+                            (TenDayValues(true).GetValueOrZero(TenDayAbility.dokumamusi) + TenDayValues(true).GetValueOrZero(TenDayAbility.Raincoat)) / 2;
                             if(rollper(20))
                             {
                                 NowCondition = HumanConditionCircumstances.Painful;
-                            }else if(rollper(80 - (ConfusedToPainful_Kindergarden_DokumamusiAndRainCoatAverage - TenDayValues().GetValueOrZero(TenDayAbility.ColdHeartedCalm))))
+                            }else if(rollper(80 - (ConfusedToPainful_Kindergarden_DokumamusiAndRainCoatAverage - TenDayValues(true).GetValueOrZero(TenDayAbility.ColdHeartedCalm))))
                             {
                                 NowCondition = HumanConditionCircumstances.Normal;
-                            }else if(rollper(20 + TenDayValues().GetValueOrZero(TenDayAbility.Raincoat) * 0.4f + TenDayValues().GetValueOrZero(TenDayAbility.dokumamusi) * 0.6f))
+                            }else if(rollper(20 + TenDayValues(true).GetValueOrZero(TenDayAbility.Raincoat) * 0.4f + TenDayValues(true).GetValueOrZero(TenDayAbility.dokumamusi) * 0.6f))
                             {
                                 NowCondition = HumanConditionCircumstances.Elated;
                             }
@@ -4048,7 +4057,7 @@ public abstract class BaseStates
                             if(rollper(40))
                             {
                                 NowCondition = HumanConditionCircumstances.Painful;
-                            }else if(rollper(70 + (TenDayValues().GetValueOrZero(TenDayAbility.Sort)-4)))
+                            }else if(rollper(70 + (TenDayValues(true).GetValueOrZero(TenDayAbility.Sort)-4)))
                             {
                                 NowCondition = HumanConditionCircumstances.Normal;
                             }else if(rollper(60))
@@ -4150,7 +4159,7 @@ public abstract class BaseStates
                             }else if(rollper(60))
                             {
                                 NowCondition = HumanConditionCircumstances.Normal;
-                            }else if(rollper(3 - TenDayValues().GetValueOrZero(TenDayAbility.SpringWater)))
+                            }else if(rollper(3 - TenDayValues(true).GetValueOrZero(TenDayAbility.SpringWater)))
                             {
                                 NowCondition = HumanConditionCircumstances.Elated;
                             }
@@ -4181,7 +4190,7 @@ public abstract class BaseStates
                     break;
 
                 case HumanConditionCircumstances.Normal:
-                    var y = TenDayValues().GetValueOrZero(TenDayAbility.Leisure) - ene.TenDayValues().GetValueOrZero(TenDayAbility.Leisure);//余裕の差
+                    var y = TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure) - ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure);//余裕の差
                     switch (imp)
                     {
                         case SpiritualProperty.liminalwhitetile:
@@ -4306,7 +4315,7 @@ public abstract class BaseStates
                             break;
                         case SpiritualProperty.doremis:
                             var NormalToElated_DoremisPer = 0f;
-                            if(y > 0) NormalToElated_DoremisPer = TenDayValues().GetValueOrZero(TenDayAbility.BlazingFire) + TenDayValues().GetValueOrZero(TenDayAbility.Miza);
+                            if(y > 0) NormalToElated_DoremisPer = TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) + TenDayValues(true).GetValueOrZero(TenDayAbility.Miza);
                             if(rollper(38 + y/2))
                             {
                                 NowCondition = HumanConditionCircumstances.Optimistic;
@@ -5374,7 +5383,7 @@ public abstract class BaseStates
         //ダメージの大きさからして絶対に死んでるからDeath判定は要らず、だからDeath辺りでの判定がいらない。(DeathCallBackが起こらない)
         if(LiveHP >= _maxhp*0.2f)//HPが二割以上の時に、
         {
-            if(atker.TenDayValuesSum <= TenDayValuesSum * 1.6f)//自分の十日能力の総量の1.6倍以下なら
+            if(atker.TenDayValuesSum(true) <= TenDayValuesSum(false) * 1.6f)//自分の十日能力の総量の1.6倍以下なら
             {
                 if (dmg >= _maxhp * 0.34f && dmg <= _maxhp * 0.66f )//大体半分くらいの攻撃なら  
                 {
@@ -5396,47 +5405,47 @@ public abstract class BaseStates
         var flowmax = 0f;
 
         //基本値
-        flowmax = TenDayValues().GetValueOrZero(TenDayAbility.HumanKiller) * 2 + TenDayValues().GetValueOrZero(TenDayAbility.dokumamusi) * 0.4f;
+        flowmax = TenDayValues(true).GetValueOrZero(TenDayAbility.HumanKiller) * 2 + TenDayValues(true).GetValueOrZero(TenDayAbility.dokumamusi) * 0.4f;
 
         switch(MyImpression)//精神属性で分岐　
         {
             case SpiritualProperty.liminalwhitetile:
-                flowmax += TenDayValues().GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.8f;
+                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.8f;
                 break;
             case SpiritualProperty.kindergarden:
-                flowmax += TenDayValues().GetValueOrZero(TenDayAbility.BlazingFire) * 2;
+                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) * 2;
                 break;
                 
             case SpiritualProperty.sacrifaith:
-                flowmax += TenDayValues().GetValueOrZero(TenDayAbility.BlazingFire) * 0.5f + TenDayValues().GetValueOrZero(TenDayAbility.NightInkKnight);
+                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) * 0.5f + TenDayValues(true).GetValueOrZero(TenDayAbility.NightInkKnight);
                 break;
                 
             case SpiritualProperty.pysco:
-                flowmax += TenDayValues().GetValueOrZero(TenDayAbility.Raincoat) * 6 * TenDayValues().GetValueOrZero(TenDayAbility.UnextinguishedPath);
+                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.Raincoat) * 6 * TenDayValues(true).GetValueOrZero(TenDayAbility.UnextinguishedPath);
                 break;
                 
             case SpiritualProperty.baledrival:
-                flowmax += TenDayValues().GetValueOrZero(TenDayAbility.Leisure) * 3;
+                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure) * 3;
                 break;
                 
             case SpiritualProperty.devil:
-                flowmax += TenDayValues().GetValueOrZero(TenDayAbility.NightDarkness) + TenDayValues().GetValueOrZero(TenDayAbility.ColdHeartedCalm);
+                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.NightDarkness) + TenDayValues(true).GetValueOrZero(TenDayAbility.ColdHeartedCalm);
                 break;
                 
             case SpiritualProperty.cquiest:
-                flowmax += TenDayValues().GetValueOrZero(TenDayAbility.JoeTeeth) * 1.7f - TenDayValues().GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.11f;
+                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.JoeTeeth) * 1.7f - TenDayValues(true).GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.11f;
                 break;
                 
             case SpiritualProperty.godtier:
-                flowmax += TenDayValues().GetValueOrZero(TenDayAbility.CryoniteQuality);
+                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.CryoniteQuality);
                 break;
                 
             case SpiritualProperty.pillar:
-                flowmax += TenDayValues().GetValueOrZero(TenDayAbility.PersonaDivergence) - TenDayValues().GetValueOrZero(TenDayAbility.Pilmagreatifull);
+                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.PersonaDivergence) - TenDayValues(true).GetValueOrZero(TenDayAbility.Pilmagreatifull);
                 break;
                 
             case SpiritualProperty.doremis:
-                flowmax += TenDayValues().GetValueOrZero(TenDayAbility.SpringNap) - TenDayValues().GetValueOrZero(TenDayAbility.ElementFaithPower); 
+                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.SpringNap) - TenDayValues(true).GetValueOrZero(TenDayAbility.ElementFaithPower); 
                 break;
             case SpiritualProperty.none:
                 //noneならそもそも最大余剰ダメージ発生せず
@@ -5593,9 +5602,9 @@ public abstract class BaseStates
     bool BladeCriticalCalculation(ref StatesPowerBreakdown dmg, ref StatesPowerBreakdown resonanceDmg, BaseStates Atker, BaseSkill skill)
     {
         var LiveHP = HP - dmg.Total;//もし即死が発生したときに、ダメージに加算される即死に足りないfloat
-        var atkerBlade = Atker.TenDayValues().GetValueOrZero(TenDayAbility.Blades);
-        var UnderBlade = TenDayValues().GetValueOrZero(TenDayAbility.Blades);
-        var UnderPower = TenDayValuesSum;
+        var atkerBlade = Atker.TenDayValues(true).GetValueOrZero(TenDayAbility.Blades);
+        var UnderBlade = TenDayValues(false).GetValueOrZero(TenDayAbility.Blades);
+        var UnderPower = TenDayValuesSum(false);
 
         //まずしきい値発生から
         var CriticalHPThreshold = Mathf.Min(atkerBlade/150f,1f) * (5/12) *100;
@@ -5621,8 +5630,8 @@ public abstract class BaseStates
     {
         if(NowPower < ThePower.high)return;//パワーが高くないなら発生しないって感じに
 
-        var underBlade = TenDayValues().GetValueOrZero(TenDayAbility.Blades);
-        var AtkerBlade = Atker.TenDayValues().GetValueOrZero(TenDayAbility.Blades);
+        var underBlade = TenDayValues(false).GetValueOrZero(TenDayAbility.Blades);
+        var AtkerBlade = Atker.TenDayValues(true).GetValueOrZero(TenDayAbility.Blades);
 
         //刃物能力を乱数比較して被害者の方のが出たなら、
         if(rollComparison(underBlade,AtkerBlade))
@@ -5798,7 +5807,7 @@ public abstract class BaseStates
         def = ClampDefenseByAimStyle(skill,def);//防ぎ方(AimStyle)の不一致がある場合、クランプする
 
         StatesPowerBreakdown dmg, mentalDmg;
-        var mentalATKBoost = Mathf.Max(Atker.TenDayValues().GetValueOrZero(TenDayAbility.Leisure) - TenDayValues().GetValueOrZero(TenDayAbility.Leisure),0)
+        var mentalATKBoost = Mathf.Max(Atker.TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure) - TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure),0)
         * Atker.MentalHP * 0.2f;//相手との余裕の差と精神HPの0.2倍を掛ける 
 
         //下の魔法スキル以外の計算式を基本計算式と考えましょう
@@ -6006,7 +6015,7 @@ public abstract class BaseStates
     public void ResonanceDamage(StatesPowerBreakdown dmg, BaseSkill skill, BaseStates Atker)
     {   
         //攻撃者がこちらに対してどれだけ強いか
-        var powerRatio = Atker.TenDayValuesSum / TenDayValuesSum;
+        var powerRatio = Atker.TenDayValuesSum(false) / TenDayValuesSum(false);//思えダメージはスキルの十日能力補正なし
         //相手が自分より定数倍強いとダメージが発生する
         if(powerRatio < RESONANCE_POWER_THRESHOLD) return;
 
@@ -6410,7 +6419,7 @@ public abstract class BaseStates
 /// <returns>補正段階 は増えていく。/returns>
 int GetTightenMindCorrectionStage()
 {
-    float nightinknightValue = TenDayValues().GetValueOrZero(TenDayAbility.NightInkKnight);
+    float nightinknightValue = TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight);
 
     nightinknightValue /= 10;
     nightinknightValue = Mathf.Floor(nightinknightValue);
@@ -6481,7 +6490,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         var count = DefenseTransformationThresholds[(AttackerStyle, NowDeffenceStyle)];
         if(tightenStage>=2)
         {
-            if(RandomEx.Shared.NextFloat(1)<0.31f + TenDayValues().GetValueOrZero(TenDayAbility.NightInkKnight)*0.01f)
+            if(RandomEx.Shared.NextFloat(1)<0.31f + TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight)*0.01f)
         {
                 count -= 1;
 
@@ -6581,21 +6590,21 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>
     /// 連続攻撃中の割り込みカウンターが可能かどうかを判定する
     /// </summary>
-    private bool TryInterruptCounter(BaseStates attacker)
+    private bool TryInterruptCounter(BaseStates attacker)//attacker = 割り込みカウンターの被害者ね
     {
         var skill = attacker.NowUseSkill;
         if(NowPower >= ThePower.medium)//普通のパワー以上で
-        {
-            var eneVond = attacker.TenDayValues().GetValueOrZero(TenDayAbility.Vond);
-            var myVond =  TenDayValues().GetValueOrZero(TenDayAbility.Vond);
+        {//割り込みカウンターは
+            var eneVond = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.Vond);
+            var myVond =  TenDayValues(false).GetValueOrZero(TenDayAbility.Vond);
             var plusAtkChance = myVond> eneVond ? myVond - eneVond : 0f;//ヴォンドの差による微加算値
             if(RandomEx.Shared.NextFloat(1) < skill.DEFATK/3 + plusAtkChance*0.01f)
             {
-                var mypersonDiver = TenDayValues().GetValueOrZero(TenDayAbility.PersonaDivergence);
-                var myTentvoid = TenDayValues().GetValueOrZero(TenDayAbility.TentVoid);
-                var eneSort = attacker.TenDayValues().GetValueOrZero(TenDayAbility.Sort);
-                var eneRain = attacker.TenDayValues().GetValueOrZero(TenDayAbility.Rain);
-                var eneCold = attacker.TenDayValues().GetValueOrZero(TenDayAbility.ColdHeartedCalm);
+                var mypersonDiver = TenDayValues(false).GetValueOrZero(TenDayAbility.PersonaDivergence);
+                var myTentvoid = TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid);
+                var eneSort = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.Sort);
+                var eneRain = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.Rain);
+                var eneCold = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.ColdHeartedCalm);
                 var ExVoid = PlayersStates.Instance.ExplosionVoid;
                 var counterValue = (myVond + mypersonDiver/(myTentvoid-ExVoid)) * 0.9f;//カウンターする側の特定能力値
                 var attackerValue = Mathf.Max(eneSort - eneRain/3,0)+eneCold;//攻撃者の特定能力値
@@ -7339,7 +7348,7 @@ private int CalcTransformCountIncrement(int tightenStage)
                 growRate = 0.9f;
             }
             // 攻撃者とと攻撃相手の総量の比率を使用して比率を計算
-            float clampedRatio = attacker.CalculateClampedStrengthRatio(TenDayValuesSum);
+            float clampedRatio = attacker.CalculateClampedStrengthRatio(TenDayValuesSum(false));
 
             //攻撃者のHIT分の成長を記録
             attacker.TenDayGrowthListByHIT.Add((growRate * clampedRatio, skill.TenDayValues(skill.IsTLOA)));//成長量にTLOAならゆりかごを考慮
@@ -7550,7 +7559,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     private float CalculateClampedStrengthRatio(float targetSum)
     {
         // 自分のTenDayValuesSumとの比率を計算（自分の値が0の場合は1とする）
-        float strengthRatio = TenDayValuesSum > 0 ? targetSum / TenDayValuesSum : 1f;
+        float strengthRatio = TenDayValuesSum(true) > 0 ? targetSum / TenDayValuesSum(true) : 1f;
         
         return strengthRatio;
     }
@@ -7768,7 +7777,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     void RecordConfidenceBoost(BaseStates target,float allkilldmg)
     {
         // 相手との強さの比率を計算
-        float opponentStrengthRatio = target.TenDayValuesSum / TenDayValuesSum;
+        float opponentStrengthRatio = target.TenDayValuesSum(false) / TenDayValuesSum(true);
         //自分より1.7倍以上強い敵かどうか そうじゃないならreturn
         if(opponentStrengthRatio < 1.7f)return;
         //与えたダメージが敵の最大HPの半分以上与えてるかどうか、そうじゃないならreturn
@@ -7782,7 +7791,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         var candidateAbilitiyValuesList = new List<(TenDayAbility ability , float value)>();
         foreach(var ability in candidateAbilitiesList)
         {
-            candidateAbilitiyValuesList.Add((ability, TenDayValues().GetValueOrZero(ability)));//列挙体と能力値を持つタプルのリストに変換
+            candidateAbilitiyValuesList.Add((ability, TenDayValues(false).GetValueOrZero(ability)));//列挙体と能力値を持つタプルのリストに変換
         }
 
         //複数ある場合は最大から降順で　何個ブーストされるかはパッシブや何かしらで補正されます。

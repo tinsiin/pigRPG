@@ -393,3 +393,27 @@ public class TenDayAbilityDictionary : SerializableDictionary<TenDayAbility, flo
     }
     //存在するもののみで掛け合わせる平均値の算出======================================================================終わり＝＝＝＝＝＝＝＝＝＝＝＝========================================
 }
+
+/// <summary>
+/// 読み取り専用インデクサーを持つTenDayAbilityDictionaryラッパー
+/// 読み取り専用の十日能力辞書データに入れる。　代入を禁止する。
+/// </summary>
+[Serializable]
+public class ReadOnlyIndexTenDayAbilityDictionary : TenDayAbilityDictionary
+{
+    private readonly TenDayAbilityDictionary _source;
+
+    public ReadOnlyIndexTenDayAbilityDictionary(TenDayAbilityDictionary source) : base(source)
+    {
+        _source = source;
+    }
+
+    // インデクサーをオーバーライド - get のみ実装
+    public new float this[TenDayAbility key]
+    {
+        get { return _source[key]; }
+        set { throw new InvalidOperationException("TenDayValues()の結果に直接値を代入することはできません。BaseTenDayValuesを使用してください。"); }
+    }
+
+    // その他のTenDayAbilityDictionaryのメソッドや演算子は継承されたまま
+}

@@ -81,7 +81,7 @@ public class NormalEnemy : BaseStates
     /// <summary>
     /// 敵の実体スキルリスト
     /// </summary>
-    [SerializeReference,SelectableSerializeReference] List<EnemySkill> EnemySkillList;
+    [SerializeReference,SelectableSerializeReference] List<EnemySkill> EnemySkillList = new();
     /// <summary>
     /// 敵は成長ポイントが-1に指定されたスキルのみ、実体スキルリストとして返す
     /// </summary>
@@ -287,7 +287,7 @@ public class NormalEnemy : BaseStates
     void EneVictoryBoost()
     {
         //まず主人公グループと敵グループの強さの倍率(敵視点でね)
-        var ratio = Walking.bm.AllyGroup.OurTenDayPowerSum / Walking.bm.EnemyGroup.OurTenDayPowerSum;        
+        var ratio = Walking.bm.AllyGroup.OurTenDayPowerSum(false) / Walking.bm.EnemyGroup.OurTenDayPowerSum(false);        
         VictoryBoost(ratio);       
     }
     public void OnWin()

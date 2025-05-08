@@ -442,8 +442,8 @@ public class BaseSkill
         if(!IsTLOA) return;//TLOAスキルでなければ計算しない
 
         //まずゆりかごのルート位置から決める
-        //強さ
-        var TendayAdvantage = Doer.TenDayValuesSum/underAtker.TenDayValuesSum;
+        //強さ　　　　　　　　　//TLOAも気持ちの問題なのでスキルの十日能力補正は当然かかる(TLOAスキルを参照)
+        var TendayAdvantage = Doer.TenDayValuesSum(true)/underAtker.TenDayValuesSum(false);
         //実効ライバハル　= ライバハル　÷　敵に対する強さ　
         //相手より弱いほどライバハルが増えたら変なので、1クランプする。
         var EffectiveRivahal = Doer.Rivahal / Mathf.Max(1, TendayAdvantage);
@@ -466,7 +466,7 @@ public class BaseSkill
         foreach(var tenDay in TenDayValues())//スキルの印象構造で回す
         {
             //蓄積変数にスキルの印象構造と同じ攻撃者Doerの十日能力値を足していくｐ！
-            AtkerTenDaySumMatchingSkill += Doer.TenDayValues().GetValueOrZero(tenDay.Key);
+            AtkerTenDaySumMatchingSkill += Doer.TenDayValues(true).GetValueOrZero(tenDay.Key);
         }
         //上下レート算出　印象構造対応Doerの十日能力値　÷　スキルの十日能力値の総量　「どのくらいスキルを使いこなしているか」が指標
         var MoodRangeRate = AtkerTenDaySumMatchingSkill / TenDayValuesSum;

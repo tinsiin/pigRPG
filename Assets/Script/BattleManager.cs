@@ -404,11 +404,11 @@ public class BattleManager
         //AllCharactersを使うよりもallyとenemygroupを使うほうが引数として渡すためのロジックが分かりやすい気がする
         foreach (var chara in AllyGroup.Ours)
         {
-            chara.ApplyConditionOnBattleStart(EnemyGroup.OurAvarageTenDayPower());
+            chara.ApplyConditionOnBattleStart(EnemyGroup.OurAvarageTenDayPower(false));
         }
         foreach (var chara in EnemyGroup.Ours)
         {
-            chara.ApplyConditionOnBattleStart(AllyGroup.OurAvarageTenDayPower());
+            chara.ApplyConditionOnBattleStart(AllyGroup.OurAvarageTenDayPower(false));
         }
         //初期化コールバックで変化判定用にConditionTransitionが実行され記録されるので、初期化コールバックの前に呼ばなければなりません。
 
@@ -1011,7 +1011,7 @@ public class BattleManager
     /// <returns></returns>
     float GetCoolnessFlatRozeChance()
     {
-        var coolPower = Acter.TenDayValues().GetValueOrZero(TenDayAbility.SpringWater);//泉水取得
+        var coolPower = Acter.TenDayValues(false).GetValueOrZero(TenDayAbility.SpringWater);//泉水取得
 
         return Mathf.Floor(coolPower / 16.7f) * 0.01f;
     }
@@ -1021,7 +1021,7 @@ public class BattleManager
     /// <returns></returns>
     float GetCoolnesFlatRozePower()
     {
-        var coolPower = Acter.TenDayValues().GetValueOrZero(TenDayAbility.SpringWater);//泉水取得
+        var coolPower = Acter.TenDayValues(true).GetValueOrZero(TenDayAbility.SpringWater);//泉水取得
 
         return coolPower * 0.005f;
     }
@@ -1157,23 +1157,23 @@ public class BattleManager
 
         // 前のめり引き留め側合算
         float defendSum =
-            nowVanguard.TenDayValues().GetValueOrZero(TenDayAbility.Leisure) +
-            nowVanguard.TenDayValues().GetValueOrZero(TenDayAbility.SpringNap) +
-            nowVanguard.TenDayValues().GetValueOrZero(TenDayAbility.SpringWater) +
-            nowVanguard.TenDayValues().GetValueOrZero(TenDayAbility.FlameBreathingWife);
+            nowVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure) +
+            nowVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap) +
+            nowVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.SpringWater) +
+            nowVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.FlameBreathingWife);
 
         // 前のめりになろうとする側取得
-        float blaze = newVanguard.TenDayValues().GetValueOrZero(TenDayAbility.BlazingFire);
-        float pilma = newVanguard.TenDayValues().GetValueOrZero(TenDayAbility.Pilmagreatifull);
-        float miza  = newVanguard.TenDayValues().GetValueOrZero(TenDayAbility.Miza);
+        float blaze = newVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire);
+        float pilma = newVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.Pilmagreatifull);
+        float miza  = newVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.Miza);
 
         // 冷酷冷静による個別減算
-        float coldCalm = newVanguard.TenDayValues().GetValueOrZero(TenDayAbility.ColdHeartedCalm);
+        float coldCalm = newVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.ColdHeartedCalm);
         blaze = Mathf.Max(blaze - coldCalm * 0.8f, 0f);
         pilma = Mathf.Max(pilma - coldCalm * 0.2f, 0f);
 
         // エノクナギによる全体減算
-        float enok = newVanguard.TenDayValues().GetValueOrZero(TenDayAbility.Enokunagi);
+        float enok = newVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.Enokunagi);
 
         float attackSum = blaze + pilma + miza - enok;
         attackSum = Mathf.Max(attackSum, 0f);
@@ -1482,8 +1482,8 @@ public class BattleManager
     /// <returns></returns>
     private bool ComparePressureAndRedirect(BaseStates Attacker,BaseStates Vanguard)
     {
-        var VanguardPressure = Vanguard.TenDayValues().GetValueOrZero(TenDayAbility.Glory);
-        var AttackerResilience = Attacker.TenDayValues().GetValueOrZero(TenDayAbility.JoeTeeth) + Attacker.TenDayValues().GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.5f;
+        var VanguardPressure = Vanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.Glory);
+        var AttackerResilience = Attacker.TenDayValues(false).GetValueOrZero(TenDayAbility.JoeTeeth) + Attacker.TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.5f;
 
         // 前のめり防衛側のプレッシャー値未満の合計値の乱数が出た場合、テラーズヒット,庇いが発生する
         return VanguardPressure > RandomEx.Shared.NextFloat(VanguardPressure + AttackerResilience);
