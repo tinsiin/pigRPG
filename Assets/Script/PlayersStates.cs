@@ -176,7 +176,22 @@ public class PlayersStates:MonoBehaviour
             button.AddRadioFunc(sites.OnSkillSelectAgressiveCommitBtnCallBack);
         }
 
+        //何もしないボタンを結び付ける
+        if(DoNothingButton_noramlia != null)
+        {
+            DoNothingButton_noramlia.onClick.AddListener(noramlia.OnSkillDoNothingBtnCallBack);
+        }
+        if(DoNothingButton_geino != null)
+        {
+            DoNothingButton_geino.onClick.AddListener(geino.OnSkillDoNothingBtnCallBack);
+        }
+        if(DoNothingButton_sites != null)
+        {
+            DoNothingButton_sites.onClick.AddListener(sites.OnSkillDoNothingBtnCallBack);
+        }
 
+
+        Debug.Log("ボタンとコールバックを結び付けました - ApplySkillButtons");
     }
 
     [SerializeField]
@@ -488,6 +503,9 @@ public class PlayersStates:MonoBehaviour
     [SerializeField] GameObject DefaultButtonArea_geino;
     [SerializeField] GameObject DefaultButtonArea_sites;
     [SerializeField] GameObject DefaultButtonArea_normalia;
+    [SerializeField] Button DoNothingButton_geino;
+    [SerializeField] Button DoNothingButton_sites;
+    [SerializeField] Button DoNothingButton_noramlia;
     /// <summary>
     /// パッシブをキャンセルするボタンのエリア
     /// </summary>
@@ -948,7 +966,16 @@ public class AllyClass : BaseStates
         }
         skill.IsAggressiveCommit = isAgrresiveCommit;//スキルの前のめり性に代入すべ
     }
+    /// <summary>
+    /// 直接ボタンを押して、何もしないを選ぶボタンのコールバック
+    /// </summary>
+    public void OnSkillDoNothingBtnCallBack()
+    {
+        Debug.Log("何もしない");
+        Walking.bm.DoNothing = true;//ACTBranchingで何もしないようにするboolをtrueに。
 
+        Walking.USERUI_state.Value = TabState.NextWait;//CharacterACTBranchingへ
+    }
     /// <summary>
     /// スキルの性質に基づいて、次に遷移すべき画面状態を判定する
     /// </summary>

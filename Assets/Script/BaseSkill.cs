@@ -352,6 +352,21 @@ public class BaseSkill
     {
         return skills.Any(skill => (ZoneTrait & skill) != 0);
     }
+    /// <summary>
+    /// 単体系スキル範囲性質のいずれかを持っているかを判定
+    /// </summary>
+    public bool HasAnySingleTargetTrait()
+    {
+        return (ZoneTrait & CommonCalc.SingleZoneTrait) != 0;
+    }
+    
+    /// <summary>
+    /// 単体系スキル範囲性質のすべてを持っているかを判定
+    /// </summary>
+    public bool HasAllSingleTargetTraits()
+    {
+        return (ZoneTrait & CommonCalc.SingleZoneTrait) == CommonCalc.SingleZoneTrait;
+    }
 
 
     /// <summary>

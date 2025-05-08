@@ -85,4 +85,10 @@ public static class CommonCalc
         
         return totalDistance;
     }
+    /// <summary>
+    /// 単体系のスキル範囲性質
+    /// </summary>
+    public static SkillZoneTrait SingleZoneTrait = SkillZoneTrait.CanPerfectSelectSingleTarget | SkillZoneTrait.CanSelectSingleTarget | 
+                                SkillZoneTrait.RandomSingleTarget | SkillZoneTrait.ControlByThisSituation;
+
 }

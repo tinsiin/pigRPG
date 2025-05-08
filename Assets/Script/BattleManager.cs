@@ -178,6 +178,10 @@ public class ACTList
         {
             return charas[index];
         }
+        public List<BaseStates> GetCharacterList()
+        {
+            return charas;
+        }
         public float GetAtSpreadPer(int index)
         {
             return spreadPer[index];
@@ -739,7 +743,7 @@ public class BattleManager
             return ACTPop();
         }*/ //ここ間違ってる？　下に同じ処理あるけど　よく分からんから残しとく
 
-        //スキルのStockACT ストック　/  FreezeConsecutiveの削除予約実行ターン　/ パッシブキャンセルボタンを押した。
+        //スキルのStockACT ストック　/  FreezeConsecutiveの削除予約実行ターン　/ パッシブキャンセルボタンを押した。/何もしない、のボタンを押した。
         if(DoNothing)
         {
             return DoNothingACT();
@@ -898,7 +902,6 @@ public class BattleManager
                 Debug.Log("敵は逃げ失敗");
             }
         }
-        Acter.SelectedEscape = false;//選択を解除
         NextTurn(true);
         return ACTPop();
     }
@@ -1490,7 +1493,7 @@ public class BattleManager
     /// 術者の範囲意志として性質通りにランダムで決定させる方法
     /// RandomMultiTargetは含まれない(何故ならランダムに変化する範囲としては曖昧にMultiTargetはすべて包括しているから。)
     /// </summary>
-    private void DetermineRangeRandomly()
+    private void DetermineRangeRandomly()//この段階ではFromWill前の「範囲意志代入」は行われていない。
     {
         var skill = Acter.NowUseSkill;
 
@@ -1501,13 +1504,19 @@ public class BattleManager
         //逆に言うと35%に引っかからないと、既に選んでるのでOK = ランダム範囲の処理を切り上げる。
         if(Acter.Target != 0 || Acter.RangeWill != 0)
         {
-            if(!rollper(35f)) return;
+            var RandomCaculatedPer = 35f;
+            if(skill.HasZoneTrait(SkillZoneTrait.ControlByThisSituation))
+            {
+                RandomCaculatedPer = 14f;//CotrolByThisSituationなら、更にランダム範囲が選ばれる確率を下げる
+            }
+            if(!rollper(RandomCaculatedPer)) return;
 
             //ランダム範囲に切り替わるので、既にあるターゲットと範囲意志を初期化
             Acter.Target = 0;
             Acter.RangeWill = 0;
             //unders = 対象者は初期化しない。　　 つまり完全単体選択/対象者ボーナスの場合はランダム範囲と同居が可能
         }
+        Acter.SkillCalculatedRandomRange = true;//範囲計算フラグ
 
         // スキルの全性質をまず範囲意志に代入（サブ的性質も含むために）
         Acter.RangeWill = skill.ZoneTrait;
@@ -1526,6 +1535,16 @@ public class BattleManager
                                     SkillZoneTrait.RandomSelectMultiTarget | 
                                     SkillZoneTrait.RandomSingleTarget;
         Acter.RangeWill &= ~rangeTraits;
+
+        //ここで代入するランダム範囲性質はSelectTargetFromWillで処理されるため、競合するメイン系の性質を省く
+        SkillZoneTrait MainSelectFromWillTraits = SkillZoneTrait.CanSelectSingleTarget |
+                                                  SkillZoneTrait.RandomSingleTarget|
+                                                  SkillZoneTrait.ControlByThisSituation|
+                                                  SkillZoneTrait.CanSelectMultiTarget|
+                                                  SkillZoneTrait.RandomSelectMultiTarget|
+                                                  SkillZoneTrait.RandomMultiTarget|
+                                                  SkillZoneTrait.AllTarget;
+        Acter.RangeWill &= MainSelectFromWillTraits;
 
         //全部　全範囲　単体ランダム　前のめり後衛
         if (skill.HasZoneTrait(SkillZoneTrait.RandomTargetALLSituation))

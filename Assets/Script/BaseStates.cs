@@ -1679,6 +1679,10 @@ public abstract class BaseStates
     /// </summary>
     public bool SelectedEscape;
     /// <summary>
+    /// 実行するスキルがRandomRangeの計算が用いられたかどうか。
+    /// </summary>
+    public bool SkillCalculatedRandomRange;
+    /// <summary>
     /// 強制続行中のスキル　nullならその状態でないということ
     /// </summary>
     public BaseSkill FreezeUseSkill;
@@ -2374,6 +2378,23 @@ public abstract class BaseStates
         }
         return (RangeWill & combinedSkills) == combinedSkills;
     }
+    /// <summary>
+    /// 指定されたスキルフラグのうち、一つでもRangeWillに含まれている場合はtrueを返し、
+    /// 全く含まれていない場合はfalseを返します。
+    /// </summary>
+    public bool HasRangeWillsAny(params SkillZoneTrait[] skills)
+    {
+        // 受け取ったスキルフラグをビット単位で結合
+        SkillZoneTrait combinedSkills = 0;
+        foreach (SkillZoneTrait skill in skills)
+        {
+            combinedSkills |= skill;
+        }
+
+        // RangeWillに含まれるフラグとcombinedSkillsのビットAND演算
+        // 結果が0でなければ、一つ以上のフラグが含まれている
+        return (RangeWill & combinedSkills) != 0;
+    }
 
     /// <summary>
     /// 指定されたスキルフラグのうち、一つでもRangeWillに含まれている場合はfalseを返し、
@@ -2395,6 +2416,22 @@ public abstract class BaseStates
         // 一つでも含まれていればfalse、含まれていなければtrueを返す
         return !containsAny;
     }
+    /// <summary>
+    /// 単体系スキル範囲性質のいずれかを持っているかを判定
+    /// </summary>
+    public bool HasAnySingleRangeWillTrait()
+    {
+        return (RangeWill & CommonCalc.SingleZoneTrait) != 0;
+    }
+    
+    /// <summary>
+    /// 単体系スキル範囲性質のすべてを持っているかを判定
+    /// </summary>
+    public bool HasAllSingleRangeWillTraits()
+    {
+        return (RangeWill & CommonCalc.SingleZoneTrait) == CommonCalc.SingleZoneTrait;
+    }
+
 
 
 
@@ -4867,13 +4904,12 @@ public abstract class BaseStates
     /// そこに範囲系の性質(事故で範囲攻撃に変化)がある場合はfalseが返る
     /// </summary>
     /// <returns></returns>
-    private bool IsSingleATK()
+    private bool IsPerfectSingleATK()
     {
         return DontHasRangeWill(SkillZoneTrait.CanSelectMultiTarget,
             SkillZoneTrait.RandomSelectMultiTarget, SkillZoneTrait.RandomMultiTarget,
             SkillZoneTrait.AllTarget);
     }
-
     /// <summary>
     /// 命中率計算
     /// </summary>
@@ -4901,7 +4937,7 @@ public abstract class BaseStates
 
         //単体攻撃による命中補正
         //複数性質を持っていない、完全なる単体の攻撃なら
-        if (IsSingleATK())
+        if (IsPerfectSingleATK())
         //ControlBySituationでの事故性質でも複数性質で複数事故が起こるかもしれないので、それも加味してる。
         {
             var agiPer = 6;//攻撃者のAgiの命中補正用 割る数
@@ -4972,7 +5008,7 @@ public abstract class BaseStates
         }
 
         //単体攻撃で暴断物理攻撃の場合のAgi攻撃補正
-        if (IsSingleATK())
+        if (IsPerfectSingleATK())
         {
             if (NowUseSkill.SkillPhysical == PhysicalProperty.heavy)
             {
@@ -7376,23 +7412,24 @@ private int CalcTransformCountIncrement(int tightenStage)
        
 
         //対象者ボーナスの適用
-        if(Unders.Count == 1)//結果として一人だけを選び、
-        {
-            if(NowUseSkill.HasZoneTraitAny(SkillZoneTrait.CanPerfectSelectSingleTarget,SkillZoneTrait.CanSelectSingleTarget,
-            SkillZoneTrait.RandomSingleTarget,SkillZoneTrait.ControlByThisSituation))//単体スキルなら
+        //if(Unders.Count == 1)//結果として一人だけを選び、
+        //{
+            //範囲意志で判定。
+            var randomRangeSpecialBool //RandomRangeなら範囲意志が書き変わるので、RandomRangeがあるならば、Skill.HasZoneTraitで単体スキルかどうかの判定をする
+            = SkillCalculatedRandomRange && NowUseSkill.HasAnySingleTargetTrait();
+            if(HasAnySingleRangeWillTrait()|| randomRangeSpecialBool)//単体スキルの範囲意志を持ってるのなら
             {
-                var ene =Unders.GetAtCharacter(0);
-                if(TargetBonusDatas.DoIHaveTargetBonus(ene))//対象者ボーナスを持っていれば
+                int index = -1;//判定関数でのFindIndexは見つからなかった場合-1を返す
+                if((index = TargetBonusDatas.DoIHaveTargetBonusAny_ReturnListIndex(Unders.GetCharacterList())) != -1)//対象者ボーナスを持っていれば = 選んだ敵が対象者ボーナスならば。
                 {
                     //適用
-                    var index = TargetBonusDatas.GetTargetIndex(ene);
                     SetSpecialModifier("対象者ボーナス", whatModify.atk,TargetBonusDatas.GetAtPowerBonusPercentage(index));
 
                     //適用した対象者ボーナスの削除　該当インデックスのclear関数の制作
                     TargetBonusDatas.BonusClear(index);
                 }
             }
-        }
+        //}
 
         //キャラクターに対して実行
         for (var i = 0; i < Unders.Count; i++)
@@ -7905,6 +7942,10 @@ private int CalcTransformCountIncrement(int tightenStage)
         //記録系
         _tempLive = !Death();//死んでない = 生きてるからtrue
         BattleFirstSurpriseAttacker = false;//絶対にoff bm初回先手攻撃フラグは
+        
+        //フラグ系
+        SelectedEscape = false;//選択を解除
+        SkillCalculatedRandomRange = false;//ランダム範囲計算フラグを解除
     }
 
 
@@ -7914,6 +7955,8 @@ private int CalcTransformCountIncrement(int tightenStage)
     public virtual void OnBattleStartNoArgument()
     {
         TempDamageTurn = 0;
+        SelectedEscape = false;//選択を解除
+        SkillCalculatedRandomRange = false;//ランダム範囲計算フラグを解除
         CalmDownSet(AGI().Total * 1.3f,1f);//落ち着きカウントの初回生成　
         //最初のSkillACT前までは回避率補正は1.3倍 攻撃補正はなし。=100%\
 
@@ -9430,6 +9473,15 @@ public class TargetBonusDatas
     {
         return Targets.Contains(target);
     }
+    /// <summary>
+    /// 渡されたリストの中に対象者が含まれているかどうか。
+    /// 含まれていたらその対象者のリストのインデックスを返す。
+    /// </summary>
+    public int DoIHaveTargetBonusAny_ReturnListIndex(List<BaseStates> targets)
+    {
+        return Targets.FindIndex(x => targets.Contains(x));
+    }
+    
     /// <summary>
     /// 対象者のインデックスを取得
     /// </summary>
