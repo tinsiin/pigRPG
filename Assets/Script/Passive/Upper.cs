@@ -1,3 +1,4 @@
+using RandomExtensions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -20,6 +21,22 @@ public class Upper : BasePassive//アッパー  精神HPの上の乖離の基本
     {
         var clamp = _owner.TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight) / 5f;
         return Mathf.Min(-(_owner.TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire) - clamp), 0);
+    }
+    public override void OnApply(BaseStates user, BaseStates grantor)
+    {
+        base.OnApply(user, grantor);
+
+        //キンダーの精神属性ならば、
+        if(_owner.MyImpression == SpiritualProperty.kindergarden)
+        {
+            //ランダムな十日能力が上昇する。
+            var randomTenDayAbility = _owner.GetRandomTenDayAbility();
+            //3~11%上昇
+            var randomPercent = RandomEx.Shared.NextFloat(0.03f, 0.11f);
+            _owner.TenDayGrowByPercentOfCurrent(randomTenDayAbility, randomPercent);
+            
+        }
+        
     }
 
 

@@ -656,6 +656,7 @@ MonoBehaviour:
       HitRangePercentageDictionary:
         _list: []
     SelectedEscape: 0
+    SkillCalculatedRandomRange: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
@@ -853,6 +854,7 @@ MonoBehaviour:
       HitRangePercentageDictionary:
         _list: []
     SelectedEscape: 0
+    SkillCalculatedRandomRange: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
@@ -1049,6 +1051,7 @@ MonoBehaviour:
       HitRangePercentageDictionary:
         _list: []
     SelectedEscape: 0
+    SkillCalculatedRandomRange: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
@@ -1245,6 +1248,7 @@ MonoBehaviour:
       HitRangePercentageDictionary:
         _list: []
     SelectedEscape: 0
+    SkillCalculatedRandomRange: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
@@ -1441,6 +1445,7 @@ MonoBehaviour:
       HitRangePercentageDictionary:
         _list: []
     SelectedEscape: 0
+    SkillCalculatedRandomRange: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
@@ -1637,6 +1642,7 @@ MonoBehaviour:
       HitRangePercentageDictionary:
         _list: []
     SelectedEscape: 0
+    SkillCalculatedRandomRange: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
@@ -1989,6 +1995,7 @@ MonoBehaviour:
           HitRangePercentageDictionary:
             _list: []
         SelectedEscape: 0
+        SkillCalculatedRandomRange: 0
         FreezeUseSkill:
           SkillSpiritual: 0
           Impression: 0
@@ -2239,6 +2246,7 @@ MonoBehaviour:
           HitRangePercentageDictionary:
             _list: []
         SelectedEscape: 0
+        SkillCalculatedRandomRange: 0
         FreezeUseSkill:
           SkillSpiritual: 0
           Impression: 0
@@ -2439,6 +2447,7 @@ MonoBehaviour:
           HitRangePercentageDictionary:
             _list: []
         SelectedEscape: 0
+        SkillCalculatedRandomRange: 0
         FreezeUseSkill:
           SkillSpiritual: 0
           Impression: 0

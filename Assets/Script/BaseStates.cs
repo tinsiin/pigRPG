@@ -1183,6 +1183,14 @@ public abstract class BaseStates
     /// 十日能力の総量
     /// </summary>
     public float TenDayValuesSum(bool IsSkillEffect) => TenDayValues(IsSkillEffect).Values.Sum();
+    /// <summary>
+    /// 所持してる十日能力の中から、ランダムに一つ選ぶ
+    /// </summary>
+    public TenDayAbility GetRandomTenDayAbility()
+    {
+        return RandomEx.Shared.GetItem(TenDayValues(true).Keys.ToArray());
+    }
+    
 
     /// <summary>
     /// 十日能力成長値を勝利ブースト用に記録する
@@ -1294,6 +1302,61 @@ public abstract class BaseStates
             battleGain[ability] = growthAmount;
         }
     }
+    /// <summary>
+    /// 十日能力が割合で成長する関数。既存の値に対して指定された割合分を加算する。
+    /// BaseTenDayValues と battleGain の両方に適用される。
+    /// </summary>
+    /// <param name="ability">成長させる能力の種類</param>
+    /// <param name="percent">成長させる割合（例: 0.1f で10%増加）</param>
+    public void TenDayGrowByPercentOfCurrent(TenDayAbility ability, float percent)
+    {
+        if (BaseTenDayValues.ContainsKey(ability))
+        {
+            // 成長量を計算（現在の値 * 割合）
+            float growthAmount = BaseTenDayValues[ability] * percent;
+
+            if(growthAmount <= 0)//成長量が0以下なら何もしない
+            {
+                return;
+            }
+
+            // BaseTenDayValues に成長量を加算
+            BaseTenDayValues[ability] += growthAmount;
+
+            // battleGain にも成長量を加算または新規追加
+            if (battleGain.ContainsKey(ability))
+            {
+                battleGain[ability] += growthAmount;
+            }
+            else
+            {
+                battleGain[ability] = growthAmount;
+            }
+        }
+        // BaseTenDayValuesにキーが存在しない場合は何もしない（成長の基となる値がないため）
+    }    
+    /// <summary>
+    /// 十日能力の下降する、能力値を減算する関数（0未満にはならない）
+    /// </summary>
+    void TenDayDecrease(TenDayAbility ability, float decreaseAmount)
+    {
+        if (BaseTenDayValues.ContainsKey(ability))
+        {
+            BaseTenDayValues[ability] = Mathf.Max(0, BaseTenDayValues[ability] - decreaseAmount);
+        }
+        // 存在しない場合は何もしない
+
+        // 勝利時ブーストは成長値を増やす奴なので、ここでは使わない。
+    }    
+    /// <summary>
+    /// 十日能力の下降する、能力値を減算する関数（0未満にはならない）
+    /// 割合を指定する際、ちゃんと0~1のRatioで指定する。
+    /// </summary>
+    public void TenDayDecreaseByPercent(TenDayAbility ability, float percent)
+    {
+        TenDayDecrease(ability, BaseTenDayValues[ability] * percent);
+    }    
+    
     /// <summary>
     /// ヒット分で伸びる十日能力の倍率と使用する印象構造を記録する。
     /// </summary>
@@ -2138,7 +2201,11 @@ public abstract class BaseStates
                     MentalDownerDiverGenceEffect();
                 }
             }
-            _mentalDivergenceCount++;//持続カウントをプラス
+
+            if(_mentalDivergenceRefilCount <= 0)//再充填カウントがセットされてないので、乖離が発生していないなら持続カウントをプラス
+            {
+                _mentalDivergenceCount++;//持続カウントをプラス
+            }
         }else
         {
             _mentalDivergenceCount = 0;//乖離から外れたらカウントをリセット
@@ -7936,7 +8003,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if(IsMentalDiverGenceRefilCountDown() == false)//再充填とそのカウントダウンが終わってるのなら
             {
                 MentalDiverGence();
-                if(_mentalDivergenceRefilCount > 0)//乖離が発生した直後に回復が起こらないようにするif カウントダウンがセットされたら始まってるから
+                if(_mentalDivergenceRefilCount > 0)//乖離が発生した直後に回復が起こらないようにするif 再充填カウントダウンがセットされたら始まってるから
                 {
                     MentalHPHealOnTurn();//精神HP自動回復
                 }
