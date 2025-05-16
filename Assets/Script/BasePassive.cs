@@ -833,11 +833,24 @@ public class BasePassive
     public void SetSkillActivationRate(float value) { _skillActivationRate = value; }
 
     /// <summary>
-    /// スキル発動率
+    /// スキル発動率　0~100
     /// </summary>
     public virtual float SkillActivationRate()
     {
         return _skillActivationRate;
+    }
+    /// <summary>
+    /// 回復率のバッキングフィールド
+    /// </summary>
+    [SerializeField]
+    float _healEffectRate = 100;
+    /// <summary>
+    /// Healによる回復率(パッシブによる補正)
+    /// 基本100% 0~100で設定する。
+    /// </summary>
+    public virtual float HealEffectRate()
+    {
+        return _healEffectRate;
     }
 
 

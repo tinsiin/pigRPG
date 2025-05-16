@@ -558,6 +558,47 @@ public abstract class BaseStates
         return avgRate;
     }
     /// <summary>
+    /// パッシブによる回復補正率、下の方に補正される。
+    /// </summary>
+    public float PassivesHealEffectRate()
+    {
+        // -1 を除外して有効な確率を収集
+        var rates = _passiveList
+            .Select(p => p.HealEffectRate())
+            .Where(r => r >= 0f) //念のため0以上のみが入るようにする
+            .ToList();
+
+        if (rates.Count == 0) return 100f; //もし要素がなければ100を返す
+
+        // 要素を昇順に並べ替え
+        var sortedRates = rates.OrderBy(r => r).ToList();
+        
+        // 考慮する要素数を計算 
+        // 例:(小さい方から75%の個数、小数点以下切り上げ)
+        // rates.Count = 1 => countToConsider = Ceiling(0.75) = 1
+        // rates.Count = 2 => countToConsider = Ceiling(1.5)  = 2
+        // rates.Count = 3 => countToConsider = Ceiling(2.25) = 3
+        // rates.Count = 4 => countToConsider = Ceiling(3.0)  = 3
+        int countToConsider = (int)Math.Ceiling(sortedRates.Count * 0.65f);
+
+        // 上記の計算により、countToConsider は rates.Count > 0 なら必ず1以上になります。
+        
+        // 計算対象の要素を取得
+        var takenRates = sortedRates.Take(countToConsider).ToList();
+        
+        // takenRatesが空になることは上記のロジックでは通常ありませんが、
+        // リストが空でないことを保証してからAverageを呼び出すのがより安全です。
+        if (!takenRates.Any()) 
+        {
+            // この状況は rates.Count > 0 の場合は発生しない想定です。
+            // 万が一のためのフォールバック処理（例：元のリスト全体の平均や100fなど）
+            // ここでは元のリスト全体の平均を返します。
+            return rates.Average(); 
+        }
+
+        return takenRates.Average();
+    }
+    /// <summary>
     /// 指定された対象範囲のパッシブIDリストを返す
     /// スキル実行時に追加適用される。
     /// </summary>
@@ -6222,7 +6263,7 @@ public abstract class BaseStates
     {
         if(!Death())
         {
-            HP += HealPoint;
+            HP += HealPoint * (PassivesHealEffectRate() / 100f);//パッシブ由来の補正がかかる
             Debug.Log("ヒールが実行された");
             return HealPoint;
         }
