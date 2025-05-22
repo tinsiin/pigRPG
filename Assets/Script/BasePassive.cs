@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using UnityEditor.Rendering;
 using Unity.VisualScripting;
+using static CommonCalc;
 
 
 /// <summary>
@@ -852,6 +853,31 @@ public class BasePassive
     {
         return _healEffectRate;
     }
+    /// <summary>
+    /// 攻撃時ケレン行動パーセントのバッキングフィールド
+    /// </summary>
+    [SerializeField]
+    float _attackACTKerenACTRate = KerenACTRateDefault;
+    /// <summary>
+    /// 攻撃時ケレン行動パーセント　0~100で設定する。
+    /// </summary>
+    public virtual float AttackACTKerenACTRate()
+    {
+        return _attackACTKerenACTRate;
+    }
+    /// <summary>
+    /// 防御時ケレン行動パーセントのバッキングフィールド
+    /// </summary>
+    [SerializeField]
+    float _defenceACTKerenACTRate = KerenACTRateDefault;
+    /// <summary>
+    /// 防御時ケレン行動パーセント　0~100で設定する。
+    /// </summary>
+    public virtual float DefenceACTKerenACTRate()
+    {
+        return _defenceACTKerenACTRate;
+    }
+  
 
 
     //これらで操り切れない部分は、直接baseStatesでのforeachでpassiveListから探す関数でゴリ押しすればいい。

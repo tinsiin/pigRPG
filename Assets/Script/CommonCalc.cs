@@ -5,6 +5,10 @@ using System;
 public static class CommonCalc
 {
     /// <summary>
+    /// ケレン行動パーセントのデフォルト値(偶然の定数)
+    /// </summary>
+    public const float KerenACTRateDefault = 4.4f;
+    /// <summary>
     /// RandomExtensionsを利用して、確率を判定する
     /// 百分率の数字で
     /// </summary>

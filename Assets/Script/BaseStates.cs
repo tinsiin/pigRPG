@@ -599,6 +599,34 @@ public abstract class BaseStates
         return takenRates.Average();
     }
     /// <summary>
+    /// 攻撃行動時のパッシブ由来のケレン行動パーセント
+    /// </summary>
+    public float PassivesAttackACTKerenACTRate()
+    {
+        // デフォルト値以外の値を収集する。
+        var rates = _passiveList
+            .Select(p => p.AttackACTKerenACTRate())
+            .Where(r => r != KerenACTRateDefault)
+            .ToList();
+        if (rates.Count == 0) return KerenACTRateDefault;//もし要素がなければデフォルト値を返す
+
+        // 集めたデフォ値以外の値の中から、ランダムで一つ返す
+        return RandomEx.Shared.GetItem(rates.ToArray());
+    }
+    public float PassivesDefenceACTKerenACTRate()
+    {
+        // デフォルト値以外の値を収集する。
+        var rates = _passiveList
+            .Select(p => p.DefenceACTKerenACTRate())
+            .Where(r => r != KerenACTRateDefault)
+            .ToList();
+        if (rates.Count == 0) return KerenACTRateDefault;//もし要素がなければデフォルト値を返す
+
+        // 集めたデフォ値以外の値の中から、ランダムで一つ返す
+        return RandomEx.Shared.GetItem(rates.ToArray());
+    }
+    
+    /// <summary>
     /// 指定された対象範囲のパッシブIDリストを返す
     /// スキル実行時に追加適用される。
     /// </summary>
@@ -6413,13 +6441,41 @@ public abstract class BaseStates
         return evasionRate;
     }
     /// <summary>
+    /// ミニマムヒットチャンスの発生確率を計算。
+    /// </summary>
+    float CalcMinimumHitChancePer(BaseStates Attacker,BaseStates Defender)
+    {
+        const float synergy_threshold = 7f;//高め合いボーナスの発生しきい値　　0~100で
+        const float  synergy_bonus_per = 0.2f;//高め合いボーナスの係数　ボーナスの大小を調整するのならここで。
+
+        var AtkerKerenRate = Attacker.PassivesAttackACTKerenACTRate();//攻撃側のケレン行動パーセント
+        var DefKerenRate = Defender.PassivesDefenceACTKerenACTRate();//防御側のケレン行動パーセント
+
+        //基本、攻撃側か防御側のどちらか大きい方が使われます
+        var MinimumHitChanceRate = Math.Max(AtkerKerenRate, DefKerenRate);
+
+        //もし両方とも高め合いボーナスの発生しきい値を上回っていたら発生
+        if(AtkerKerenRate > synergy_threshold && DefKerenRate > synergy_threshold)
+        {
+            //どちらもデフォ値を引いて、加算する。
+            var synergyPotential = AtkerKerenRate - KerenACTRateDefault + (DefKerenRate - KerenACTRateDefault);
+            //調整用の係数を掛ける
+            synergyPotential *= synergy_bonus_per;
+            //基本確立に加算
+            MinimumHitChanceRate += synergyPotential;
+        }
+        
+        
+        return MinimumHitChanceRate;
+    }
+    /// <summary>
     /// 攻撃者と防御者とスキルを利用してヒットするかの計算
     /// </summary>
     private HitResult IsReactHIT(BaseStates Attacker)
     {
         var skill = Attacker.NowUseSkill;
         var minusMyChance = 0f;
-        var minimumHitChancePer = 4.4f;//ミニマムヒットチャンスの発生確率
+        var minimumHitChancePer = CalcMinimumHitChancePer(Attacker,this);//ミニマムヒットチャンスの発生確率
         if(skill.IsMagic)minimumHitChancePer = 2f;
 
         //vanguardじゃなければ攻撃者の命中減少
