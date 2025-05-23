@@ -8,7 +8,7 @@ using static CommonCalc;
 
 
 /// <summary>
-/// 特定キャラクター（BaseStates）にのみ適用する補正倍率を保持するデータ構造
+/// 特定キャラクター（BaseStates）にのみ適用する補正値を保持するデータ構造
 /// </summary>
 public class CharacterSpecificModifier
 {
@@ -736,7 +736,7 @@ public class BasePassive
     /// 特定の攻撃者に反応する防御力補正　パーセント補正
     /// 特定の攻撃者なんてインスペクタの登録時は分かんないから、「付与時に変更する値だよ」
     /// </summary>
-    List<CharacterSpecificModifier> defensePercentageModifiersByAttacker;
+    List<CharacterSpecificModifier> defensePercentageModifiersByAttacker = new();
     /// <summary>
     /// 特定の攻撃者に反応する防御力パーセンテージ補正 を攻撃者をチェックして返す補正。
     /// </summary>
@@ -774,7 +774,7 @@ public class BasePassive
     /// 特定の攻撃者なんてインスペクタの登録時は分かんないから、「付与時に変更する値だよ」
     /// AGIには影響を与えない。
     /// </summary>
-    List<CharacterSpecificModifier> EvasionPercentageModifiersByAttacker;
+    List<CharacterSpecificModifier> EvasionPercentageModifiersByAttacker = new();
     /// <summary>
     /// 特定の攻撃者に反応する回避補正 を攻撃者をチェックして返す補正。
     /// </summary>
@@ -808,9 +808,56 @@ public class BasePassive
     }
     /// <summary>
     /// 0.0~1.0の範囲で、最大HPのその割合よりもダメージを食らうことは絶対にない。　禁忌のプロパティなので全然使うな！
+    /// キャラクタ限定でない通常の値
     /// </summary>
-    public float DontDamageHpMinRatio = -1;
+    public float NormalDontDamageHpMinRatio = -1;// -1なら呼び出し元で候補に加えられない
 
+
+    /// <summary>
+    /// 特定の攻撃者に反応する最大HP割合ダメージ制限
+    /// 特定の攻撃者からのダメージを最大HPの指定割合以上に受けないようにする
+    /// </summary>
+    List<CharacterSpecificModifier> dontDamageHpMinRatioByAttackers = new();
+
+    /// <summary>
+    /// 最大HP割合ダメージ制限をチェックします。
+    /// 特定の攻撃者に反応するものか、標準の値
+    /// キャラ限定の方が優先されます。
+    /// </summary>
+    public float CheckDontDamageHpMinRatioNormalOrByAttacker(BaseStates attacker)
+    {
+        //リストがなかったら
+        if (dontDamageHpMinRatioByAttackers == null || dontDamageHpMinRatioByAttackers.Count == 0)
+            return NormalDontDamageHpMinRatio;//通常の値
+
+        //リストがあったら
+        foreach (var modifier in dontDamageHpMinRatioByAttackers)
+        {
+            if (modifier.TargetCharacter == attacker)//あてはまるものが在れば
+            {
+                return modifier.Modifier;//キャラ限定の値が返る
+            }
+        }
+        return NormalDontDamageHpMinRatio; //なければ標準の値
+    }
+
+    /// <summary>
+    /// 特定の攻撃者に反応する最大HP割合ダメージ制限を追加します。
+    /// </summary>
+    public void AddDontDamageHpMinRatioByAttacker(BaseStates attacker, float minHpRatio)
+    {
+        if (minHpRatio < 0f || minHpRatio > 1f)
+        {
+            Debug.LogWarning("minHpRatioは0.0から1.0の範囲で指定してください。");
+            return;
+        }
+
+        if (dontDamageHpMinRatioByAttackers == null)
+            dontDamageHpMinRatioByAttackers = new List<CharacterSpecificModifier>();
+                
+        CharacterSpecificModifier newModifier = new CharacterSpecificModifier(attacker, minHpRatio);
+        dontDamageHpMinRatioByAttackers.Add(newModifier);
+    }
     /// <summary>
     /// ダメージに掛ける形で減衰する  0~1.0
     /// -1だと実行時に使われる平均計算に使用されない。

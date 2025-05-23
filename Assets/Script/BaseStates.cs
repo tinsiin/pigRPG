@@ -476,21 +476,30 @@ public abstract class BaseStates
 
     /// <summary>
     /// 持ってるパッシブの中で一番大きいDontDamageRatioを探し、その割合を用いてHPをクランプする
+    /// レイザーダメージは貫通する。(この補正がない。)
     /// </summary>
-    void DontDamagePassiveEffect()
+    void DontDamagePassiveEffect(BaseStates attacker = null)
+{
+    float maxDontDamageHpMinRatio = 0;//使われない値は-1としてデフォ値が入ってるので、0ならば、比較時に0以上の値が入らない。
+    foreach (var pas in _passiveList)
     {
-        float maxDontDamageHpMinRatio = 0;
-        foreach (var pas in _passiveList)//一番大きいDontDamageRatioを探す
+        float ratio = attacker != null 
+            ? pas.CheckDontDamageHpMinRatioNormalOrByAttacker(attacker)
+            : pas.NormalDontDamageHpMinRatio;
+            
+        if (ratio > maxDontDamageHpMinRatio)
         {
-            if (pas.DontDamageHpMinRatio > maxDontDamageHpMinRatio)
-            {
-                maxDontDamageHpMinRatio = pas.DontDamageHpMinRatio;
-            }
+            maxDontDamageHpMinRatio = ratio;
         }
-        // 「HPが下回らない最大HPの割合の最大値」より下回ってたらクランプ処理
+    }
+    
+    // 「HPが下回らない最大HPの割合の最大値」より下回ってたらクランプ処理
+    if (maxDontDamageHpMinRatio > 0)
+    {
         int minHp = (int)(MaxHP * maxDontDamageHpMinRatio);
         _hp = Math.Clamp(_hp, minHp, MaxHP);
     }
+}
 
     /// <summary>
     /// ダメージに対して実行されるパッシブの減衰率
@@ -6017,7 +6026,7 @@ public abstract class BaseStates
         var totalMentalDmg = mentalDmg.Total;//直接引くように変数に代入
         if(totalMentalDmg < 0)totalMentalDmg = 0;//0未満は0にする
         //パッシブによる絶対的なダメージ食らわないクランプ処理  下回ると代入するダメージの防ぎ
-        DontDamagePassiveEffect();
+        DontDamagePassiveEffect(Atker);
 
         MentalHP -= totalMentalDmg;//実ダメージで精神HPの最大値がクランプされた後に、精神攻撃が行われる。
 
@@ -6447,22 +6456,41 @@ public abstract class BaseStates
     {
         const float synergy_threshold = 7f;//高め合いボーナスの発生しきい値　　0~100で
         const float  synergy_bonus_per = 0.2f;//高め合いボーナスの係数　ボーナスの大小を調整するのならここで。
+        const float KereKereModifier_per = 0.09f;//ケレケレによる追加補正時にケレケレに掛ける係数
 
         var AtkerKerenRate = Attacker.PassivesAttackACTKerenACTRate();//攻撃側のケレン行動パーセント
-        var DefKerenRate = Defender.PassivesDefenceACTKerenACTRate();//防御側のケレン行動パーセント
+        var DefenderKerenRate = Defender.PassivesDefenceACTKerenACTRate();//防御側のケレン行動パーセント
 
         //基本、攻撃側か防御側のどちらか大きい方が使われます
-        var MinimumHitChanceRate = Math.Max(AtkerKerenRate, DefKerenRate);
+        var MinimumHitChanceRate = Math.Max(AtkerKerenRate, DefenderKerenRate);
 
         //もし両方とも高め合いボーナスの発生しきい値を上回っていたら発生
-        if(AtkerKerenRate > synergy_threshold && DefKerenRate > synergy_threshold)
+        if(AtkerKerenRate > synergy_threshold && DefenderKerenRate > synergy_threshold)
         {
             //どちらもデフォ値を引いて、加算する。
-            var synergyPotential = AtkerKerenRate - KerenACTRateDefault + (DefKerenRate - KerenACTRateDefault);
+            var synergyPotential = AtkerKerenRate - KerenACTRateDefault + (DefenderKerenRate - KerenACTRateDefault);
             //調整用の係数を掛ける
             synergyPotential *= synergy_bonus_per;
             //基本確立に加算
             MinimumHitChanceRate += synergyPotential;
+        }
+
+        //大きい方の値が偶然の定数を上回っていた場合、その大きい方の十日能力ケレケレにより加算される。(高め合いボーナス計算後に)
+        if(AtkerKerenRate>=DefenderKerenRate)//攻撃者側が大きいなら  攻撃者側のがバトルの主導は握りがちだと思うので、同値の場合も含める。
+        {
+            if(AtkerKerenRate > KerenACTRateDefault)//偶然の定数を上回っていたら
+            {
+                var AtkerKereKere = Attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.KereKere);
+                MinimumHitChanceRate += AtkerKereKere * KereKereModifier_per;
+            }
+        }
+        else
+        {
+            if(DefenderKerenRate > KerenACTRateDefault)//偶然の定数を上回っていたら
+            {
+                var DefenderKereKere = Defender.TenDayValues(true).GetValueOrZero(TenDayAbility.KereKere);
+                MinimumHitChanceRate += DefenderKereKere * KereKereModifier_per;
+            }
         }
         
         
@@ -6494,7 +6522,7 @@ public abstract class BaseStates
         }
 
         var minimumHitChanceResult= HitResult.CompleteEvade;//命中回避計算外のミニマムヒットチャンス
-        if(rollper(minimumHitChancePer))//ミニマムヒットチャンス  4.4%の確率でかすりとクリティカルの計算
+        if(rollper(minimumHitChancePer))//ミニマムヒットチャンス  ケレン行動パーセントの確率でかすりとクリティカルの計算
         {
             //三分の一で二分の一計算、三分の二ならステータス計算に入ります
             //三分の1でかすりとクリティカルは完全二分の一計算
@@ -6511,7 +6539,7 @@ public abstract class BaseStates
             }else
             {//残り三分の二で、ステータス比較の計算
                 var atkerCalcEYEAGI = Attacker.EYE().Total + Attacker.AGI().Total *0.6f;//minusMychanceは瀬戸際の攻防計算なので使用しない
-                var defCalcEYEAGI = EYE().Total + AGI().Total *0.6f;
+                var defCalcEYEAGI = EYE().Total * 0.8f + AGI().Total;
                 if(RandomEx.Shared.NextFloat(atkerCalcEYEAGI + defCalcEYEAGI) < atkerCalcEYEAGI)
                 {
                     minimumHitChanceResult = HitResult.Critical;//攻撃者側のステータスが乱数で出たなら、クリティカル
