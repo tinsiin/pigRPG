@@ -1987,10 +1987,34 @@ public abstract class BaseStates
     /// </summary>
     public bool BattleFirstSurpriseAttacker = false;
 
+
+    /// <summary>
+    /// リカバリターン/再行動クールタイムの「基礎」設定値。
+    /// </summary>
+    [SerializeField]
+    private int maxRecoveryTurn;
+    /// <summary>
+    /// パッシブ由来のリカバリターン/再行動クールタイムの設定値。
+    /// </summary>
+    int PassivesMaxRecoveryTurn()
+    {
+        var result = 0;
+        foreach (var passive in _passiveList)
+        {
+            result += passive.MaxRecoveryTurn();//全て加算する。
+        }
+        return result;
+    }
     /// <summary>
     ///     リカバリターン/再行動クールタイムの設定値。
     /// </summary>
-    public int maxRecoveryTurn;
+    public int MaxRecoveryTurn
+    {
+        get
+        {
+            return maxRecoveryTurn + PassivesMaxRecoveryTurn();//パッシブによる補正値を加算
+        }
+    }
 
     /// <summary>
     ///     recovelyTurnの基礎バッキングフィールド
@@ -2039,7 +2063,7 @@ public abstract class BaseStates
         }
 
         _tmp_EncountTurn = nowTurn;//今回のターンを次回の差異計算のために一時保存
-        if ((recoveryTurn += difference) >= maxRecoveryTurn + _tmpTurnsToAdd -_tmpTurnsToMinus)//累計ターン経過が最大値を超えたら
+        if ((recoveryTurn += difference) >= MaxRecoveryTurn + _tmpTurnsToAdd -_tmpTurnsToMinus)//累計ターン経過が最大値を超えたら
         {
             //ここでrecovelyTurnを初期化すると　リストで一括処理した時にカウントアップだけじゃなくて、
             //選ばれたことになっちゃうから、0に初期化する部分はBattleManagerで選ばれた時に処理する。
@@ -2075,7 +2099,7 @@ public abstract class BaseStates
     /// </summary>
     public void RecovelyOK()
     {
-        recoveryTurn = maxRecoveryTurn;
+        recoveryTurn = MaxRecoveryTurn;
     }
 
     //HP

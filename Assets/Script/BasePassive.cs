@@ -196,6 +196,11 @@ public class BasePassive
     /// </summary>
     [SerializeField]
     bool RemoveOnAfterAttack = false;
+    /// <summary>
+    /// 完全単体選択系の攻撃の直前消えるパッシブかどうか
+    /// </summary>
+    [SerializeField]
+    bool RemoveOnAfterPerfectSingleAttack = false;
 
     /// <summary>
     /// 前のめりでないなら消えるパッシブかどうか
@@ -323,6 +328,19 @@ public class BasePassive
     {
         //派生クラスで実装して
         UpdateAfterAttackSurvival();//パッシブ消えるかどうか
+
+        //単体攻撃ならば
+        if(_owner.Target == DirectedWill.One)
+        {
+            OnAfterPerfectSingleAttack();
+        }
+    }
+    /// <summary>
+    /// 完全単体選択系の攻撃の直後コールバック
+    /// </summary>
+    public virtual void OnAfterPerfectSingleAttack()
+    {
+        UpdateAfterPerfectSingleAttackSurvival();
     }
     /// <summary>
     /// ダメージを受ける直前に
@@ -331,6 +349,7 @@ public class BasePassive
     {
         //派生クラスで実装して
         UpdateDamageSurvival();//パッシブが生存判定
+
     }
     /// <summary>
     /// 味方や自分がダメージを食らった後に
@@ -521,6 +540,16 @@ public class BasePassive
     void UpdateAfterAttackSurvival()
     {
         if (RemoveOnAfterAttack)
+        {
+            DurationTurnCounter = 0;
+        }
+    }
+    /// <summary>
+    /// 完全単体選択系の攻撃の直前で消えるパッシブなら消す関数
+    /// </summary>
+    void UpdateAfterPerfectSingleAttackSurvival()
+    {
+        if (RemoveOnAfterPerfectSingleAttack)
         {
             DurationTurnCounter = 0;
         }
@@ -886,6 +915,18 @@ public class BasePassive
     public virtual float SkillActivationRate()
     {
         return _skillActivationRate;
+    }
+    /// <summary>
+    /// パッシブによるリカバリーターン補正値　　行動を遅らせるパッシブなら正の数、行動を早めるパッシブなら負の数と設定する。
+    /// </summary>
+    [SerializeField]
+    int _maxRecoveryTurn;
+    /// <summary>
+    /// パッシブによるリカバリターン/再行動クールタイムの設定値。
+    /// </summary>
+    public int MaxRecoveryTurn()
+    {
+        return _maxRecoveryTurn;
     }
     /// <summary>
     /// 回復率のバッキングフィールド
