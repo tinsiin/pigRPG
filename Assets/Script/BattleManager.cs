@@ -991,7 +991,7 @@ public class BattleManager
     {
         Debug.Log("発動カウント実行");
         var skill = Acter.NowUseSkill;
-        if (skill.CanCancel == false)//キャンセル不可能の場合。
+        if (skill.CanCancelTrigger == false)//キャンセル不可能の場合。
         {
             Acter.FreezeSkill();//このスキルがキャンセル不可能として俳優に凍結される。
         }

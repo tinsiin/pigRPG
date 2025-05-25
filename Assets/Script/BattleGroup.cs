@@ -54,7 +54,7 @@ public class BattleGroup
         return sum / Ours.Count;
     }
     /// <summary>
-    /// グループの十日能力の総量
+    ///グループの十日能力の総量
     /// </summary>
     public float OurTenDayPowerSum(bool IsSkillEffect)
     {

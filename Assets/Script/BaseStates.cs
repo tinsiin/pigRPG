@@ -361,6 +361,31 @@ public abstract class BaseStates
             pas.OnAfterAttack();
         }
     }
+    /// <summary>
+    /// キャラ単位への攻撃後のパッシブ効果　　命中段階を伴った処理
+    /// </summary>
+    public void PassivesOnAfterAttackToTargetWithHitresult(BaseStates UnderAttacker,HitResult hitResult)
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.OnAfterAttackToTargetWitheHitresult(UnderAttacker,hitResult);
+        }
+    }
+
+    /// <summary>
+    /// 完全単体選択系の攻撃の直後の全パッシブ効果　一人に対する攻撃ごとに使用
+    /// </summary>
+    public void PassivesOnAfterPerfectSingleAttack(BaseStates UnderAttacker)
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.OnAfterPerfectSingleAttack(UnderAttacker);
+        }
+    }
 
     /// <summary>
     /// 味方や自分がダメージを食らった後のパッシブ効果
@@ -372,6 +397,18 @@ public abstract class BaseStates
         foreach (var pas in copy)
         {
             pas.OnAfterAlliesDamage(Atker);
+        }
+    }
+    /// <summary>
+    /// 次のターンに進むときのパッシブ効果
+    /// </summary>
+    public void PassivesOnNextTurn()
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.OnNextTurn();
         }
     }
     
@@ -2001,7 +2038,7 @@ public abstract class BaseStates
         var result = 0;
         foreach (var passive in _passiveList)
         {
-            result += passive.MaxRecoveryTurn();//全て加算する。
+            result += passive.MaxRecoveryTurnModifier();//全て加算する。
         }
         return result;
     }
@@ -4961,7 +4998,8 @@ public abstract class BaseStates
         _specialModifiers.Add(mod);
     }
     /// <summary>
-    /// 特別な補正を利用  パーセンテージ補正用  戦闘の状況で要所要所で傾くイメージなので平均化
+    /// 特別な補正を利用  パーセンテージ補正用  戦闘の状況で要所要所で傾くイメージなので平均化　
+    /// パッシブの乗算補正の積とブレンドとは違う(CalculateBlendedPercentageModifier)
     /// </summary>
     public float GetSpecialPercentModifier(whatModify mod)
     {
@@ -6109,6 +6147,11 @@ public abstract class BaseStates
 
         }
 
+        //攻撃者のキャラ単位への攻撃後のパッシブ効果
+        Atker.PassivesOnAfterAttackToTargetWithHitresult(this,hitResult);
+        //攻撃者の完全単体選択なら。
+        if(Atker.Target == DirectedWill.One)
+        Atker.PassivesOnAfterPerfectSingleAttack(this);//攻撃者のパッシブの完全単体選択発動効果
 
         return dmg;
     }
@@ -6564,7 +6607,23 @@ public abstract class BaseStates
             {//残り三分の二で、ステータス比較の計算
                 var atkerCalcEYEAGI = Attacker.EYE().Total + Attacker.AGI().Total *0.6f;//minusMychanceは瀬戸際の攻防計算なので使用しない
                 var defCalcEYEAGI = EYE().Total * 0.8f + AGI().Total;
-                if(RandomEx.Shared.NextFloat(atkerCalcEYEAGI + defCalcEYEAGI) < atkerCalcEYEAGI)
+
+                // 確率計算に使用する実効値を準備       多い方の値を1.7倍することで、より強さの絶対性を高める。
+                float effectiveAtkerCalc = atkerCalcEYEAGI;
+                float effectiveDefCalc = defCalcEYEAGI;
+                // 多い方の値を1.7倍する
+                if (atkerCalcEYEAGI > defCalcEYEAGI)
+                {
+                    effectiveAtkerCalc = atkerCalcEYEAGI * 1.7f;
+                }
+                else if (defCalcEYEAGI > atkerCalcEYEAGI)
+                {
+                    effectiveDefCalc = defCalcEYEAGI * 1.7f;
+                }
+                // atkerCalcEYEAGI == defCalcEYEAGI の場合は、どちらも変更しない（元の確率計算と同じ）
+
+                
+                if(RandomEx.Shared.NextFloat(effectiveAtkerCalc + effectiveDefCalc) < effectiveAtkerCalc)
                 {
                     minimumHitChanceResult = HitResult.Critical;//攻撃者側のステータスが乱数で出たなら、クリティカル
                 }
@@ -8142,6 +8201,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     {
         UpdateTurnAllPassiveSurvival();
         UpdateNotVanguardAllPassiveSurvival();
+        PassivesOnNextTurn();//パッシブのターン進効果
 
         //生きている場合にのみする処理
         if(!Death())

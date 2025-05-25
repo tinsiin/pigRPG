@@ -876,6 +876,11 @@ public class BaseSkill
     private int _triggerCount;//発動への−カウント　このカウント分連続でやらないと発動しなかったりする　重要なのは連続でやらなくても　一気にまたゼロからになるかはスキル次第
     [SerializeField]
     private int _triggerCountMax;//発動への−カウント　の指標
+
+    /// <summary>
+    /// triggerCountが0以上の複数ターン実行が必要なスキルの場合、複数ターンに跨る発動カウント実行中に中断出来るかどうか。
+    /// </summary>
+    public bool CanCancelTrigger = true;
     /// <summary>
     /// 発動カウント中に他のスキルを選んだ際に巻き戻るカウントの量
     /// </summary>
@@ -940,10 +945,7 @@ public class BaseSkill
 
     }
 
-    /// <summary>
-    /// triggerCountが0以上の複数ターン実行が必要なスキルの場合、複数ターンに跨る発動カウント実行中に中断出来るかどうか。
-    /// </summary>
-    public bool CanCancel = true;
+    
 
     /// <summary>
     /// このスキルを利用すると前のめり状態になるかどうか
@@ -1355,6 +1357,7 @@ public class BaseSkill
     /// 現在の消せるパッシブの数
     /// ReactionSkill内で除去する度に減っていく値
     /// </summary>
+    [NonSerialized]
     public int Now_CanEraceEffectCount;
     /// <summary>
     /// 除去スキルとして使用する際に指定する消せる追加HPの数
@@ -1365,6 +1368,7 @@ public class BaseSkill
     /// 現在の消せる追加HPの数
     /// ReactionSkill内で除去する度に減っていく値
     /// </summary>
+    [NonSerialized]
     public int Now_CanEraceVitalLayerCount;
     /// <summary>
     /// 除去可能数をReactionSkill冒頭で補充する。
@@ -1527,7 +1531,7 @@ public class BaseSkill
         dst._defaultStockCount = _defaultStockCount;
         dst._stockPower = _stockPower;
         dst._stockForgetPower = _stockForgetPower;
-        dst.CanCancel = CanCancel;
+        dst.CanCancelTrigger = CanCancelTrigger;
         dst.IsAggressiveCommit = IsAggressiveCommit;
         dst.CanSelectAggressiveCommit = CanSelectAggressiveCommit;
         dst.SKillDidWaitCount = SKillDidWaitCount;

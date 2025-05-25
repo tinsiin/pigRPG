@@ -13,10 +13,10 @@ using static CommonCalc;
 public class CharacterSpecificModifier
 {
     /// <summary>補正に反応するキャラ</summary>
-    public BaseStates TargetCharacter { get; }
+    public BaseStates TargetCharacter;
 
     /// <summary>掛ける補正倍率、または加算する固定値</summary>
-    public float Modifier { get; }
+    public float Modifier;
 
     public CharacterSpecificModifier(BaseStates targetCharacter, float modifier)
     {
@@ -197,6 +197,11 @@ public class BasePassive
     [SerializeField]
     bool RemoveOnAfterAttack = false;
     /// <summary>
+    /// キャラ単位への攻撃後に消えるパッシブかどうか
+    /// </summary>
+    [SerializeField]
+    bool RemoveOnAfterAttackToTarget = false;
+    /// <summary>
     /// 完全単体選択系の攻撃の直前消えるパッシブかどうか
     /// </summary>
     [SerializeField]
@@ -237,18 +242,18 @@ public class BasePassive
     /// <summary>
     /// オーナー
     /// </summary>
-    protected BaseStates _owner;
+    public BaseStates _owner;
 
     /// <summary>
     /// 付与者
     /// </summary>
-    protected BaseStates _grantor;
+    public BaseStates _grantor;
 
     /// <summary>
     /// リンクするパッシブのリスト
     /// 基本的にはキャンセル連携など
     /// </summary>
-    List<LinkedPassive> _passiveLinkList = new();
+    protected List<LinkedPassive> _passiveLinkList = new();
     public void SetPassiveLink(LinkedPassive link)
     {
         _passiveLinkList.Add(link);
@@ -329,16 +334,22 @@ public class BasePassive
         //派生クラスで実装して
         UpdateAfterAttackSurvival();//パッシブ消えるかどうか
 
-        //単体攻撃ならば
-        if(_owner.Target == DirectedWill.One)
-        {
-            OnAfterPerfectSingleAttack();
-        }
     }
     /// <summary>
-    /// 完全単体選択系の攻撃の直後コールバック
+    /// キャラ単位への攻撃後コールバック
+    /// 命中段階を伴った処理
     /// </summary>
-    public virtual void OnAfterPerfectSingleAttack()
+    /// <param name="UnderAttacker"></param>
+    public virtual void OnAfterAttackToTargetWitheHitresult(BaseStates UnderAttacker,HitResult hitResult)
+    {
+        UpdateAfterAttackToTargetSurvival();
+    }
+
+
+    /// <summary>
+    /// 完全単体選択系の攻撃の直後コールバック  キャラ単位で実行
+    /// </summary>
+    public virtual void OnAfterPerfectSingleAttack(BaseStates UnderAttacker)
     {
         UpdateAfterPerfectSingleAttackSurvival();
     }
@@ -376,11 +387,18 @@ public class BasePassive
             }
         }
     }
+    /// <summary>
+    /// 次のターンに進むときのパッシブ効果
+    /// </summary>
+    public virtual void OnNextTurn()
+    {
+    }
 
     public virtual float OnDamageReductionEffect()
     {
         return DamageReductionRateOnDamage;
     }
+
     /// <summary>
     /// パッシブ側からオーナーのRemovePassiveを呼び出し、オーナーに消してもらう
     /// </summary>
@@ -545,7 +563,17 @@ public class BasePassive
         }
     }
     /// <summary>
-    /// 完全単体選択系の攻撃の直前で消えるパッシブなら消す関数
+    /// キャラ単位への攻撃後コールバック
+    /// </summary>
+    void UpdateAfterAttackToTargetSurvival()
+    {
+        if (RemoveOnAfterAttackToTarget)
+        {
+            DurationTurnCounter = 0;
+        }
+    }
+    /// <summary>
+    /// 完全単体選択系の攻撃の直後で消えるパッシブなら消す関数
     /// </summary>
     void UpdateAfterPerfectSingleAttackSurvival()
     {
@@ -774,6 +802,8 @@ public class BasePassive
         if (defensePercentageModifiersByAttacker == null || defensePercentageModifiersByAttacker.Count == 0)
             return -1f;
 
+
+        
         foreach (var modifier in defensePercentageModifiersByAttacker)
         {
             if (modifier.TargetCharacter == Attacker)
@@ -801,9 +831,30 @@ public class BasePassive
     /// <summary>
     /// 特定の攻撃者に反応する回避補正　パーセント補正
     /// 特定の攻撃者なんてインスペクタの登録時は分かんないから、「付与時に変更する値だよ」
-    /// AGIには影響を与えない。
+    /// AGIには影響を与えない。  小数指定
     /// </summary>
     List<CharacterSpecificModifier> EvasionPercentageModifiersByAttacker = new();
+    /// <summary>
+    /// 特定の攻撃者に反応する回避率補正を成長させる
+    /// Attackerを指定しないと、全てを成長させる。
+    /// </summary>
+    /// <param name="growValue">成長させる値</param>
+    /// <param name="attacker">対象の攻撃者（nullの場合は全ての攻撃者に適用）</param>
+    protected void GrowEvasionPercentageModifierByAttacker(float growValue, BaseStates attacker = null)
+    {
+        // リストがなかったり空の場合は終了
+        if (EvasionPercentageModifiersByAttacker == null || EvasionPercentageModifiersByAttacker.Count == 0)
+            return;
+
+        foreach (var modifier in EvasionPercentageModifiersByAttacker)
+        {
+            // 攻撃者が指定されていないか、一致する攻撃者の場合に成長値を適用
+            if (attacker == null || modifier.TargetCharacter == attacker)
+            {
+                modifier.Modifier += growValue;
+            }
+        }
+    }
     /// <summary>
     /// 特定の攻撃者に反応する回避補正 を攻撃者をチェックして返す補正。
     /// </summary>
@@ -847,6 +898,27 @@ public class BasePassive
     /// 特定の攻撃者からのダメージを最大HPの指定割合以上に受けないようにする
     /// </summary>
     List<CharacterSpecificModifier> dontDamageHpMinRatioByAttackers = new();
+
+    /// <summary>
+    /// 特定の攻撃者に反応する最大HP割合ダメージ制限を成長させる
+    /// Attackerを指定しないと、全てを成長させる。
+    /// </summary>
+    protected void GrowDontDamageHpMinRatioByAttacker(float growValue,BaseStates Attacker = null)
+    {
+        //そもそもリストがなかったり名にも登録されてなかったら終わり
+        if (dontDamageHpMinRatioByAttackers == null || dontDamageHpMinRatioByAttackers.Count == 0)
+            return;
+
+
+        
+        foreach (var modifier in dontDamageHpMinRatioByAttackers)
+        {
+            if (Attacker == null || modifier.TargetCharacter == Attacker)//攻撃者が指定されてない　OR 一致するなら　渡された成長値を成長させる。
+            {
+                modifier.Modifier += growValue;
+            }
+        }
+    }
 
     /// <summary>
     /// 最大HP割合ダメージ制限をチェックします。
@@ -920,13 +992,13 @@ public class BasePassive
     /// パッシブによるリカバリーターン補正値　　行動を遅らせるパッシブなら正の数、行動を早めるパッシブなら負の数と設定する。
     /// </summary>
     [SerializeField]
-    int _maxRecoveryTurn;
+    protected int _maxRecoveryTurnModifier;
     /// <summary>
     /// パッシブによるリカバリターン/再行動クールタイムの設定値。
     /// </summary>
-    public int MaxRecoveryTurn()
+    public int MaxRecoveryTurnModifier()
     {
-        return _maxRecoveryTurn;
+        return _maxRecoveryTurnModifier;
     }
     /// <summary>
     /// 回復率のバッキングフィールド
@@ -965,6 +1037,8 @@ public class BasePassive
     {
         return _defenceACTKerenACTRate;
     }
+    
+    
   
 
 

@@ -564,12 +564,12 @@ MonoBehaviour:
         _a_moveset: []
         _b_moveset: []
         _triggerCountMax: 0
+        CanCancelTrigger: 1
         _triggerRollBackCount: 0
         _RandomConsecutivePer: 0
         _defaultStockCount: 1
         _stockPower: 1
         _stockForgetPower: 1
-        CanCancel: 1
         IsAggressiveCommit: 1
         IsReadyTriggerAgressiveCommit: 0
         IsStockAgressiveCommit: 0
@@ -581,9 +581,7 @@ MonoBehaviour:
         canEraceEffectIDs: 
         canEraceVitalLayerIDs: 
         CanEraceEffectCount: 0
-        Now_CanEraceEffectCount: 0
         CanEraceVitalLayerCount: 0
-        Now_CanEraceVitalLayerCount: 0
         _defAtk: 0
         _baseSkillType: 0
         ConsecutiveType: 0
@@ -626,12 +624,12 @@ MonoBehaviour:
       _a_moveset: []
       _b_moveset: []
       _triggerCountMax: 0
+      CanCancelTrigger: 1
       _triggerRollBackCount: 0
       _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
-      CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
       IsStockAgressiveCommit: 0
@@ -643,9 +641,7 @@ MonoBehaviour:
       canEraceEffectIDs: 
       canEraceVitalLayerIDs: 
       CanEraceEffectCount: 0
-      Now_CanEraceEffectCount: 0
       CanEraceVitalLayerCount: 0
-      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       _baseSkillType: 0
       ConsecutiveType: 0
@@ -675,12 +671,12 @@ MonoBehaviour:
       _a_moveset: []
       _b_moveset: []
       _triggerCountMax: 0
+      CanCancelTrigger: 1
       _triggerRollBackCount: 0
       _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
-      CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
       IsStockAgressiveCommit: 0
@@ -692,9 +688,7 @@ MonoBehaviour:
       canEraceEffectIDs: 
       canEraceVitalLayerIDs: 
       CanEraceEffectCount: 0
-      Now_CanEraceEffectCount: 0
       CanEraceVitalLayerCount: 0
-      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       _baseSkillType: 0
       ConsecutiveType: 0
@@ -726,6 +720,7 @@ MonoBehaviour:
     _machineBrokenRate: 0.3
     _skillALLList:
     - rid: 2127851150886043649
+    - rid: 9189338325697429504
     ValidSkillIDList: 00000000
   Init_noramlia:
     InitpassiveIDList: 
@@ -762,12 +757,12 @@ MonoBehaviour:
         _a_moveset: []
         _b_moveset: []
         _triggerCountMax: 0
+        CanCancelTrigger: 1
         _triggerRollBackCount: 0
         _RandomConsecutivePer: 0
         _defaultStockCount: 1
         _stockPower: 1
         _stockForgetPower: 1
-        CanCancel: 1
         IsAggressiveCommit: 1
         IsReadyTriggerAgressiveCommit: 0
         IsStockAgressiveCommit: 0
@@ -779,9 +774,7 @@ MonoBehaviour:
         canEraceEffectIDs: 
         canEraceVitalLayerIDs: 
         CanEraceEffectCount: 0
-        Now_CanEraceEffectCount: 0
         CanEraceVitalLayerCount: 0
-        Now_CanEraceVitalLayerCount: 0
         _defAtk: 0
         _baseSkillType: 0
         ConsecutiveType: 0
@@ -824,12 +817,12 @@ MonoBehaviour:
       _a_moveset: []
       _b_moveset: []
       _triggerCountMax: 0
+      CanCancelTrigger: 1
       _triggerRollBackCount: 0
       _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
-      CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
       IsStockAgressiveCommit: 0
@@ -841,9 +834,7 @@ MonoBehaviour:
       canEraceEffectIDs: 
       canEraceVitalLayerIDs: 
       CanEraceEffectCount: 0
-      Now_CanEraceEffectCount: 0
       CanEraceVitalLayerCount: 0
-      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       _baseSkillType: 0
       ConsecutiveType: 0
@@ -873,12 +864,12 @@ MonoBehaviour:
       _a_moveset: []
       _b_moveset: []
       _triggerCountMax: 0
+      CanCancelTrigger: 1
       _triggerRollBackCount: 0
       _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
-      CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
       IsStockAgressiveCommit: 0
@@ -890,9 +881,7 @@ MonoBehaviour:
       canEraceEffectIDs: 
       canEraceVitalLayerIDs: 
       CanEraceEffectCount: 0
-      Now_CanEraceEffectCount: 0
       CanEraceVitalLayerCount: 0
-      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       _baseSkillType: 0
       ConsecutiveType: 0
@@ -959,12 +948,12 @@ MonoBehaviour:
         _a_moveset: []
         _b_moveset: []
         _triggerCountMax: 0
+        CanCancelTrigger: 1
         _triggerRollBackCount: 0
         _RandomConsecutivePer: 0
         _defaultStockCount: 1
         _stockPower: 1
         _stockForgetPower: 1
-        CanCancel: 1
         IsAggressiveCommit: 1
         IsReadyTriggerAgressiveCommit: 0
         IsStockAgressiveCommit: 0
@@ -976,9 +965,7 @@ MonoBehaviour:
         canEraceEffectIDs: 
         canEraceVitalLayerIDs: 
         CanEraceEffectCount: 0
-        Now_CanEraceEffectCount: 0
         CanEraceVitalLayerCount: 0
-        Now_CanEraceVitalLayerCount: 0
         _defAtk: 0
         _baseSkillType: 0
         ConsecutiveType: 0
@@ -1021,12 +1008,12 @@ MonoBehaviour:
       _a_moveset: []
       _b_moveset: []
       _triggerCountMax: 0
+      CanCancelTrigger: 1
       _triggerRollBackCount: 0
       _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
-      CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
       IsStockAgressiveCommit: 0
@@ -1038,9 +1025,7 @@ MonoBehaviour:
       canEraceEffectIDs: 
       canEraceVitalLayerIDs: 
       CanEraceEffectCount: 0
-      Now_CanEraceEffectCount: 0
       CanEraceVitalLayerCount: 0
-      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       _baseSkillType: 0
       ConsecutiveType: 0
@@ -1070,12 +1055,12 @@ MonoBehaviour:
       _a_moveset: []
       _b_moveset: []
       _triggerCountMax: 0
+      CanCancelTrigger: 1
       _triggerRollBackCount: 0
       _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
-      CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
       IsStockAgressiveCommit: 0
@@ -1087,9 +1072,7 @@ MonoBehaviour:
       canEraceEffectIDs: 
       canEraceVitalLayerIDs: 
       CanEraceEffectCount: 0
-      Now_CanEraceEffectCount: 0
       CanEraceVitalLayerCount: 0
-      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       _baseSkillType: 0
       ConsecutiveType: 0
@@ -1156,12 +1139,12 @@ MonoBehaviour:
         _a_moveset: []
         _b_moveset: []
         _triggerCountMax: 0
+        CanCancelTrigger: 1
         _triggerRollBackCount: 0
         _RandomConsecutivePer: 0
         _defaultStockCount: 1
         _stockPower: 1
         _stockForgetPower: 1
-        CanCancel: 1
         IsAggressiveCommit: 1
         IsReadyTriggerAgressiveCommit: 0
         IsStockAgressiveCommit: 0
@@ -1173,9 +1156,7 @@ MonoBehaviour:
         canEraceEffectIDs: 
         canEraceVitalLayerIDs: 
         CanEraceEffectCount: 0
-        Now_CanEraceEffectCount: 0
         CanEraceVitalLayerCount: 0
-        Now_CanEraceVitalLayerCount: 0
         _defAtk: 0
         _baseSkillType: 0
         ConsecutiveType: 0
@@ -1218,12 +1199,12 @@ MonoBehaviour:
       _a_moveset: []
       _b_moveset: []
       _triggerCountMax: 0
+      CanCancelTrigger: 1
       _triggerRollBackCount: 0
       _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
-      CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
       IsStockAgressiveCommit: 0
@@ -1235,9 +1216,7 @@ MonoBehaviour:
       canEraceEffectIDs: 
       canEraceVitalLayerIDs: 
       CanEraceEffectCount: 0
-      Now_CanEraceEffectCount: 0
       CanEraceVitalLayerCount: 0
-      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       _baseSkillType: 0
       ConsecutiveType: 0
@@ -1267,12 +1246,12 @@ MonoBehaviour:
       _a_moveset: []
       _b_moveset: []
       _triggerCountMax: 0
+      CanCancelTrigger: 1
       _triggerRollBackCount: 0
       _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
-      CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
       IsStockAgressiveCommit: 0
@@ -1284,9 +1263,7 @@ MonoBehaviour:
       canEraceEffectIDs: 
       canEraceVitalLayerIDs: 
       CanEraceEffectCount: 0
-      Now_CanEraceEffectCount: 0
       CanEraceVitalLayerCount: 0
-      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       _baseSkillType: 0
       ConsecutiveType: 0
@@ -1353,12 +1330,12 @@ MonoBehaviour:
         _a_moveset: []
         _b_moveset: []
         _triggerCountMax: 0
+        CanCancelTrigger: 1
         _triggerRollBackCount: 0
         _RandomConsecutivePer: 0
         _defaultStockCount: 1
         _stockPower: 1
         _stockForgetPower: 1
-        CanCancel: 1
         IsAggressiveCommit: 1
         IsReadyTriggerAgressiveCommit: 0
         IsStockAgressiveCommit: 0
@@ -1370,9 +1347,7 @@ MonoBehaviour:
         canEraceEffectIDs: 
         canEraceVitalLayerIDs: 
         CanEraceEffectCount: 0
-        Now_CanEraceEffectCount: 0
         CanEraceVitalLayerCount: 0
-        Now_CanEraceVitalLayerCount: 0
         _defAtk: 0
         _baseSkillType: 0
         ConsecutiveType: 0
@@ -1415,12 +1390,12 @@ MonoBehaviour:
       _a_moveset: []
       _b_moveset: []
       _triggerCountMax: 0
+      CanCancelTrigger: 1
       _triggerRollBackCount: 0
       _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
-      CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
       IsStockAgressiveCommit: 0
@@ -1432,9 +1407,7 @@ MonoBehaviour:
       canEraceEffectIDs: 
       canEraceVitalLayerIDs: 
       CanEraceEffectCount: 0
-      Now_CanEraceEffectCount: 0
       CanEraceVitalLayerCount: 0
-      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       _baseSkillType: 0
       ConsecutiveType: 0
@@ -1464,12 +1437,12 @@ MonoBehaviour:
       _a_moveset: []
       _b_moveset: []
       _triggerCountMax: 0
+      CanCancelTrigger: 1
       _triggerRollBackCount: 0
       _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
-      CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
       IsStockAgressiveCommit: 0
@@ -1481,9 +1454,7 @@ MonoBehaviour:
       canEraceEffectIDs: 
       canEraceVitalLayerIDs: 
       CanEraceEffectCount: 0
-      Now_CanEraceEffectCount: 0
       CanEraceVitalLayerCount: 0
-      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       _baseSkillType: 0
       ConsecutiveType: 0
@@ -1550,12 +1521,12 @@ MonoBehaviour:
         _a_moveset: []
         _b_moveset: []
         _triggerCountMax: 0
+        CanCancelTrigger: 1
         _triggerRollBackCount: 0
         _RandomConsecutivePer: 0
         _defaultStockCount: 1
         _stockPower: 1
         _stockForgetPower: 1
-        CanCancel: 1
         IsAggressiveCommit: 1
         IsReadyTriggerAgressiveCommit: 0
         IsStockAgressiveCommit: 0
@@ -1567,9 +1538,7 @@ MonoBehaviour:
         canEraceEffectIDs: 
         canEraceVitalLayerIDs: 
         CanEraceEffectCount: 0
-        Now_CanEraceEffectCount: 0
         CanEraceVitalLayerCount: 0
-        Now_CanEraceVitalLayerCount: 0
         _defAtk: 0
         _baseSkillType: 0
         ConsecutiveType: 0
@@ -1612,12 +1581,12 @@ MonoBehaviour:
       _a_moveset: []
       _b_moveset: []
       _triggerCountMax: 0
+      CanCancelTrigger: 1
       _triggerRollBackCount: 0
       _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
-      CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
       IsStockAgressiveCommit: 0
@@ -1629,9 +1598,7 @@ MonoBehaviour:
       canEraceEffectIDs: 
       canEraceVitalLayerIDs: 
       CanEraceEffectCount: 0
-      Now_CanEraceEffectCount: 0
       CanEraceVitalLayerCount: 0
-      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       _baseSkillType: 0
       ConsecutiveType: 0
@@ -1661,12 +1628,12 @@ MonoBehaviour:
       _a_moveset: []
       _b_moveset: []
       _triggerCountMax: 0
+      CanCancelTrigger: 1
       _triggerRollBackCount: 0
       _RandomConsecutivePer: 0
       _defaultStockCount: 1
       _stockPower: 1
       _stockForgetPower: 1
-      CanCancel: 1
       IsAggressiveCommit: 1
       IsReadyTriggerAgressiveCommit: 0
       IsStockAgressiveCommit: 0
@@ -1678,9 +1645,7 @@ MonoBehaviour:
       canEraceEffectIDs: 
       canEraceVitalLayerIDs: 
       CanEraceEffectCount: 0
-      Now_CanEraceEffectCount: 0
       CanEraceVitalLayerCount: 0
-      Now_CanEraceVitalLayerCount: 0
       _defAtk: 0
       _baseSkillType: 0
       ConsecutiveType: 0
@@ -1765,12 +1730,12 @@ MonoBehaviour:
         _a_moveset: []
         _b_moveset: []
         _triggerCountMax: 0
+        CanCancelTrigger: 1
         _triggerRollBackCount: 0
         _RandomConsecutivePer: 0
         _defaultStockCount: 1
         _stockPower: 1
         _stockForgetPower: 1
-        CanCancel: 1
         IsAggressiveCommit: 1
         IsReadyTriggerAgressiveCommit: 0
         IsStockAgressiveCommit: 0
@@ -1782,9 +1747,7 @@ MonoBehaviour:
         canEraceEffectIDs: 
         canEraceVitalLayerIDs: 
         CanEraceEffectCount: 0
-        Now_CanEraceEffectCount: 0
         CanEraceVitalLayerCount: 0
-        Now_CanEraceVitalLayerCount: 0
         _defAtk: 0
         _baseSkillType: 512
         ConsecutiveType: 0
@@ -1795,6 +1758,54 @@ MonoBehaviour:
         HitRangePercentageDictionary:
           _list: []
         _iD: 0
+    - rid: 9189338325697429504
+      type: {class: AllySkill, ns: , asm: Assembly-CSharp}
+      data:
+        SkillSpiritual: 8
+        Impression: 2
+        SkillPhysical: 3
+        IsTLOA: 1
+        IsMagic: 0
+        IsBlade: 0
+        Cantkill: 0
+        EvasionModifier: 1.1
+        AttackModifier: 1
+        _infiniteSkillPowerUnit: 0
+        _infiniteSkillTenDaysUnit: 0
+        _mentalDamageRatio: 0
+        _powerSpread: []
+        _skillHitPer: 0
+        _a_moveset: []
+        _b_moveset: []
+        _triggerCountMax: 0
+        CanCancelTrigger: 1
+        _triggerRollBackCount: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        IsAggressiveCommit: 0
+        IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
+        CanSelectAggressiveCommit: 0
+        SKillDidWaitCount: 2
+        SkillName: "\u30A2\u30AD\u30EC\u30B9\u3068\u4E80-\u6DF7\u6C8C\u6642\u9593"
+        subEffects: 
+        subVitalLayers: 
+        canEraceEffectIDs: 
+        canEraceVitalLayerIDs: 
+        CanEraceEffectCount: 0
+        CanEraceVitalLayerCount: 0
+        _defAtk: 0
+        _baseSkillType: 512
+        ConsecutiveType: 0
+        ZoneTrait: 1
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
+        _iD: 1
 --- !u!114 &78173494
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1903,12 +1914,12 @@ MonoBehaviour:
             _a_moveset: []
             _b_moveset: []
             _triggerCountMax: 0
+            CanCancelTrigger: 1
             _triggerRollBackCount: 0
             _RandomConsecutivePer: 0
             _defaultStockCount: 1
             _stockPower: 1
             _stockForgetPower: 1
-            CanCancel: 1
             IsAggressiveCommit: 1
             IsReadyTriggerAgressiveCommit: 0
             IsStockAgressiveCommit: 0
@@ -1920,9 +1931,7 @@ MonoBehaviour:
             canEraceEffectIDs: 
             canEraceVitalLayerIDs: 
             CanEraceEffectCount: 0
-            Now_CanEraceEffectCount: 0
             CanEraceVitalLayerCount: 0
-            Now_CanEraceVitalLayerCount: 0
             _defAtk: 0
             _baseSkillType: 0
             ConsecutiveType: 0
@@ -1965,12 +1974,12 @@ MonoBehaviour:
           _a_moveset: []
           _b_moveset: []
           _triggerCountMax: 0
+          CanCancelTrigger: 1
           _triggerRollBackCount: 0
           _RandomConsecutivePer: 0
           _defaultStockCount: 1
           _stockPower: 1
           _stockForgetPower: 1
-          CanCancel: 1
           IsAggressiveCommit: 1
           IsReadyTriggerAgressiveCommit: 0
           IsStockAgressiveCommit: 0
@@ -1982,9 +1991,7 @@ MonoBehaviour:
           canEraceEffectIDs: 
           canEraceVitalLayerIDs: 
           CanEraceEffectCount: 0
-          Now_CanEraceEffectCount: 0
           CanEraceVitalLayerCount: 0
-          Now_CanEraceVitalLayerCount: 0
           _defAtk: 0
           _baseSkillType: 0
           ConsecutiveType: 0
@@ -2014,12 +2021,12 @@ MonoBehaviour:
           _a_moveset: []
           _b_moveset: []
           _triggerCountMax: 0
+          CanCancelTrigger: 1
           _triggerRollBackCount: 0
           _RandomConsecutivePer: 0
           _defaultStockCount: 1
           _stockPower: 1
           _stockForgetPower: 1
-          CanCancel: 1
           IsAggressiveCommit: 1
           IsReadyTriggerAgressiveCommit: 0
           IsStockAgressiveCommit: 0
@@ -2031,9 +2038,7 @@ MonoBehaviour:
           canEraceEffectIDs: 
           canEraceVitalLayerIDs: 
           CanEraceEffectCount: 0
-          Now_CanEraceEffectCount: 0
           CanEraceVitalLayerCount: 0
-          Now_CanEraceVitalLayerCount: 0
           _defAtk: 0
           _baseSkillType: 0
           ConsecutiveType: 0
@@ -2086,12 +2091,12 @@ MonoBehaviour:
         _a_moveset: []
         _b_moveset: []
         _triggerCountMax: 0
+        CanCancelTrigger: 1
         _triggerRollBackCount: 0
         _RandomConsecutivePer: 0
         _defaultStockCount: 1
         _stockPower: 1
         _stockForgetPower: 1
-        CanCancel: 1
         IsAggressiveCommit: 1
         IsReadyTriggerAgressiveCommit: 0
         IsStockAgressiveCommit: 0
@@ -2103,9 +2108,7 @@ MonoBehaviour:
         canEraceEffectIDs: 
         canEraceVitalLayerIDs: 
         CanEraceEffectCount: 0
-        Now_CanEraceEffectCount: 0
         CanEraceVitalLayerCount: 0
-        Now_CanEraceVitalLayerCount: 0
         _defAtk: 0
         _baseSkillType: 0
         ConsecutiveType: 0
@@ -2154,12 +2157,12 @@ MonoBehaviour:
             _a_moveset: []
             _b_moveset: []
             _triggerCountMax: 0
+            CanCancelTrigger: 1
             _triggerRollBackCount: 0
             _RandomConsecutivePer: 0
             _defaultStockCount: 1
             _stockPower: 1
             _stockForgetPower: 1
-            CanCancel: 1
             IsAggressiveCommit: 1
             IsReadyTriggerAgressiveCommit: 0
             IsStockAgressiveCommit: 0
@@ -2171,9 +2174,7 @@ MonoBehaviour:
             canEraceEffectIDs: 
             canEraceVitalLayerIDs: 
             CanEraceEffectCount: 0
-            Now_CanEraceEffectCount: 0
             CanEraceVitalLayerCount: 0
-            Now_CanEraceVitalLayerCount: 0
             _defAtk: 0
             _baseSkillType: 0
             ConsecutiveType: 0
@@ -2216,12 +2217,12 @@ MonoBehaviour:
           _a_moveset: []
           _b_moveset: []
           _triggerCountMax: 0
+          CanCancelTrigger: 1
           _triggerRollBackCount: 0
           _RandomConsecutivePer: 0
           _defaultStockCount: 1
           _stockPower: 1
           _stockForgetPower: 1
-          CanCancel: 1
           IsAggressiveCommit: 1
           IsReadyTriggerAgressiveCommit: 0
           IsStockAgressiveCommit: 0
@@ -2233,9 +2234,7 @@ MonoBehaviour:
           canEraceEffectIDs: 
           canEraceVitalLayerIDs: 
           CanEraceEffectCount: 0
-          Now_CanEraceEffectCount: 0
           CanEraceVitalLayerCount: 0
-          Now_CanEraceVitalLayerCount: 0
           _defAtk: 0
           _baseSkillType: 0
           ConsecutiveType: 0
@@ -2265,12 +2264,12 @@ MonoBehaviour:
           _a_moveset: []
           _b_moveset: []
           _triggerCountMax: 0
+          CanCancelTrigger: 1
           _triggerRollBackCount: 0
           _RandomConsecutivePer: 0
           _defaultStockCount: 1
           _stockPower: 1
           _stockForgetPower: 1
-          CanCancel: 1
           IsAggressiveCommit: 1
           IsReadyTriggerAgressiveCommit: 0
           IsStockAgressiveCommit: 0
@@ -2282,9 +2281,7 @@ MonoBehaviour:
           canEraceEffectIDs: 
           canEraceVitalLayerIDs: 
           CanEraceEffectCount: 0
-          Now_CanEraceEffectCount: 0
           CanEraceVitalLayerCount: 0
-          Now_CanEraceVitalLayerCount: 0
           _defAtk: 0
           _baseSkillType: 0
           ConsecutiveType: 0
@@ -2355,12 +2352,12 @@ MonoBehaviour:
             _a_moveset: []
             _b_moveset: []
             _triggerCountMax: 0
+            CanCancelTrigger: 1
             _triggerRollBackCount: 0
             _RandomConsecutivePer: 0
             _defaultStockCount: 1
             _stockPower: 1
             _stockForgetPower: 1
-            CanCancel: 1
             IsAggressiveCommit: 1
             IsReadyTriggerAgressiveCommit: 0
             IsStockAgressiveCommit: 0
@@ -2372,9 +2369,7 @@ MonoBehaviour:
             canEraceEffectIDs: 
             canEraceVitalLayerIDs: 
             CanEraceEffectCount: 0
-            Now_CanEraceEffectCount: 0
             CanEraceVitalLayerCount: 0
-            Now_CanEraceVitalLayerCount: 0
             _defAtk: 0
             _baseSkillType: 0
             ConsecutiveType: 0
@@ -2417,12 +2412,12 @@ MonoBehaviour:
           _a_moveset: []
           _b_moveset: []
           _triggerCountMax: 0
+          CanCancelTrigger: 1
           _triggerRollBackCount: 0
           _RandomConsecutivePer: 0
           _defaultStockCount: 1
           _stockPower: 1
           _stockForgetPower: 1
-          CanCancel: 1
           IsAggressiveCommit: 1
           IsReadyTriggerAgressiveCommit: 0
           IsStockAgressiveCommit: 0
@@ -2434,9 +2429,7 @@ MonoBehaviour:
           canEraceEffectIDs: 
           canEraceVitalLayerIDs: 
           CanEraceEffectCount: 0
-          Now_CanEraceEffectCount: 0
           CanEraceVitalLayerCount: 0
-          Now_CanEraceVitalLayerCount: 0
           _defAtk: 0
           _baseSkillType: 0
           ConsecutiveType: 0
@@ -2466,12 +2459,12 @@ MonoBehaviour:
           _a_moveset: []
           _b_moveset: []
           _triggerCountMax: 0
+          CanCancelTrigger: 1
           _triggerRollBackCount: 0
           _RandomConsecutivePer: 0
           _defaultStockCount: 1
           _stockPower: 1
           _stockForgetPower: 1
-          CanCancel: 1
           IsAggressiveCommit: 1
           IsReadyTriggerAgressiveCommit: 0
           IsStockAgressiveCommit: 0
@@ -2483,9 +2476,7 @@ MonoBehaviour:
           canEraceEffectIDs: 
           canEraceVitalLayerIDs: 
           CanEraceEffectCount: 0
-          Now_CanEraceEffectCount: 0
           CanEraceVitalLayerCount: 0
-          Now_CanEraceVitalLayerCount: 0
           _defAtk: 0
           _baseSkillType: 0
           ConsecutiveType: 0
@@ -2553,6 +2544,8 @@ MonoBehaviour:
   - rid: 2127851432044396545
   - rid: 9189337874187157504
   - rid: 9189337874187157505
+  - rid: 9189338310192660480
+  - rid: 9189338323944472576
   references:
     version: 2
     RefIds:
@@ -2576,6 +2569,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -2590,10 +2585,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 2127851221303427072
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -2614,6 +2613,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -2628,10 +2629,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 2127851221303427073
       type: {class: Raitistini, ns: , asm: Assembly-CSharp}
       data:
@@ -2652,6 +2657,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 1
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -2666,10 +2673,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 2127851221303427074
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -2690,6 +2701,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 1
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -2704,10 +2717,14 @@ MonoBehaviour:
         _defPercentageModifier: 1.08
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: 0.2
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 2127851287253090304
       type: {class: Slaim, ns: , asm: Assembly-CSharp}
       data:
@@ -2728,6 +2745,8 @@ MonoBehaviour:
         RemoveOnDamage: 1
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -2742,10 +2761,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 0.44
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: 0.38
         TargetProbability: 48
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
         EasterNoshiirLockKey: 0
     - rid: 2127851343115190272
       type: {class: LeadingStep, ns: , asm: Assembly-CSharp}
@@ -2767,6 +2790,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -2781,10 +2806,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 2127851343115190273
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -2805,6 +2834,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT:
@@ -2821,10 +2852,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: -100
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 2127851343115190274
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -2845,6 +2880,8 @@ MonoBehaviour:
         RemoveOnDamage: 1
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -2859,10 +2896,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 0.936
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 2127851343115190275
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -2883,6 +2924,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -2897,10 +2940,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 44
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 2127851384214913024
       type: {class: geino_Slaim, ns: , asm: Assembly-CSharp}
       data:
@@ -2921,6 +2968,8 @@ MonoBehaviour:
         RemoveOnDamage: 1
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -2935,10 +2984,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 0.44
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: 0.38
         TargetProbability: 48
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
         EasterNoshiirLockKey: 0
     - rid: 2127851432044396544
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
@@ -2960,6 +3013,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 1
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -2974,10 +3029,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 0.8
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 2127851432044396545
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -2998,6 +3057,8 @@ MonoBehaviour:
         RemoveOnDamage: 1
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 1
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -3012,10 +3073,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 3171372632022712320
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -3036,6 +3101,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -3050,10 +3117,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 3171372632022712321
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -3074,6 +3145,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -3096,10 +3169,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 3171372633387433985
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -3120,6 +3197,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -3138,10 +3217,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 6711005805807403020
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -3162,6 +3245,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -3176,10 +3261,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 8285219776706641920
       type: {class: ForcedDowner, ns: , asm: Assembly-CSharp}
       data:
@@ -3200,6 +3289,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -3214,10 +3305,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 8285219776706641921
       type: {class: Upper, ns: , asm: Assembly-CSharp}
       data:
@@ -3238,6 +3333,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -3252,10 +3349,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 8980149206437855232
       type: {class: InterruptCounterPassive, ns: , asm: Assembly-CSharp}
       data:
@@ -3276,6 +3377,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -3290,10 +3393,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 8980149223421378560
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -3314,6 +3421,8 @@ MonoBehaviour:
         RemoveOnDamage: 0
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -3328,10 +3437,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 0.8
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 9189337874187157504
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -3352,6 +3465,8 @@ MonoBehaviour:
         RemoveOnDamage: 1
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -3366,10 +3481,14 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
     - rid: 9189337874187157505
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -3390,6 +3509,8 @@ MonoBehaviour:
         RemoveOnDamage: 1
         RemoveOnInterruptCounter: 0
         RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
         RemoveOnNotVanguard: 0
         RemoveOnAfterAlliesDamage: 0
         ExtraPassivesIdOnSkillACT: []
@@ -3404,10 +3525,102 @@ MonoBehaviour:
         _defPercentageModifier: 1
         _eyePercentageModifier: 1
         _agiPercentageModifier: 1
-        DontDamageHpMinRatio: -1
+        NormalDontDamageHpMinRatio: -1
         DamageReductionRateOnDamage: -1
         TargetProbability: 0
         _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
+    - rid: 9189338310192660480
+      type: {class: Turtle, ns: , asm: Assembly-CSharp}
+      data:
+        OkImpression: -1
+        OkType: -1
+        IsCantACT: 0
+        CanCancel: 0
+        IsBad: 0
+        MaxPassivePower: 0
+        PassiveName: "\u6DF7\u6C8C\u6642\u9593\u306E\u4E80"
+        SmallPassiveName: "\u4E80"
+        ID: 22
+        DurationTurn: 22
+        DurationTurnCounter: 0
+        DurationWalk: -1
+        DurationWalkCounter: 0
+        RemoveOnDeath: 1
+        RemoveOnDamage: 0
+        RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
+        RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
+        ExtraPassivesIdOnSkillACT: []
+        VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 0
+        BeVanguardOnApply: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        NormalDontDamageHpMinRatio: -1
+        DamageReductionRateOnDamage: -1
+        TargetProbability: 0
+        _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 22
+    - rid: 9189338323944472576
+      type: {class: Achilles, ns: , asm: Assembly-CSharp}
+      data:
+        OkImpression: -1
+        OkType: -1
+        IsCantACT: 0
+        CanCancel: 0
+        IsBad: 1
+        MaxPassivePower: 0
+        PassiveName: "\u6DF7\u6C8C\u6642\u9593\u306E\u30A2\u30AD\u30EC\u30B9"
+        SmallPassiveName: "\u30A2\u30AD\u30EC\u30B9"
+        ID: 23
+        DurationTurn: 22
+        DurationTurnCounter: 0
+        DurationWalk: -1
+        DurationWalkCounter: 0
+        RemoveOnDeath: 1
+        RemoveOnDamage: 0
+        RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
+        RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
+        ExtraPassivesIdOnSkillACT: []
+        VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 0
+        BeVanguardOnApply: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        NormalDontDamageHpMinRatio: -1
+        DamageReductionRateOnDamage: -1
+        TargetProbability: 0
+        _skillActivationRate: 100
+        _maxRecoveryTurnModifier: -2
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
 --- !u!114 &78173496
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3497,12 +3710,12 @@ MonoBehaviour:
           _a_moveset: []
           _b_moveset: []
           _triggerCountMax: 0
+          CanCancelTrigger: 1
           _triggerRollBackCount: 0
           _RandomConsecutivePer: 0
           _defaultStockCount: 1
           _stockPower: 1
           _stockForgetPower: 1
-          CanCancel: 1
           IsAggressiveCommit: 1
           IsReadyTriggerAgressiveCommit: 0
           IsStockAgressiveCommit: 0
@@ -3514,9 +3727,7 @@ MonoBehaviour:
           canEraceEffectIDs: 
           canEraceVitalLayerIDs: 
           CanEraceEffectCount: 0
-          Now_CanEraceEffectCount: 0
           CanEraceVitalLayerCount: 0
-          Now_CanEraceVitalLayerCount: 0
           _defAtk: 0
           _baseSkillType: 0
           ConsecutiveType: 0
