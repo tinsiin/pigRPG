@@ -54,14 +54,26 @@ public class ACTList
     List<bool> IsFreezeList;//スキルをフリーズ、つまり前のスキルを持続させるかどうか。
     List<BaseStates> SingleTargetList;//単体で狙うのを確定するリスト
     List<float> ExCounterDEFATKList;//割り込みカウンターの防御無視率を保持するリスト
+    List<List<BaseStates>> RaterTargetList;//レイザーダメージの対象者リスト
+    List<float> RaterDamageList;//レイザーダメージのダメージを保持するリスト
 
 
     public int Count
     {
         get => CharactorACTList.Count;
     }
+    /// <summary>
+    /// レイザーアクト用の先約リスト追加関数
+    /// </summary>
+    public void RatherAdd(string mes,List<BaseStates> raterTargets = null, float raterDamage = 0f)
+    {
+        TopMessage.Add(mes);
+        RaterTargetList.Add(raterTargets);
+        RaterDamageList.Add(raterDamage);
+    }
 
-    public void Add(BaseStates chara, allyOrEnemy charasFac, string mes = "", List<ModifierPart> modifys = null, bool isfreeze = false,BaseStates SingleTarget = null,float ExCounterDEFATK = -1)
+    public void Add(BaseStates chara, allyOrEnemy charasFac, string mes = "", List<ModifierPart> modifys = null, 
+    bool isfreeze = false,BaseStates SingleTarget = null,float ExCounterDEFATK = -1)
     {
         CharactorACTList.Add(chara);
         FactionList.Add(charasFac);
@@ -70,7 +82,6 @@ public class ACTList
         IsFreezeList.Add(isfreeze);
         SingleTargetList.Add(SingleTarget);
         ExCounterDEFATKList.Add(ExCounterDEFATK);
-
     }
 
     public ACTList()
@@ -82,13 +93,29 @@ public class ACTList
         IsFreezeList = new();
         SingleTargetList = new();
         ExCounterDEFATKList = new();
+        RaterTargetList = new();  
+        RaterDamageList = new(); 
     }
     /// <summary>
     /// 先約リスト内から死者を取り除く
     /// </summary>
     public void RemoveDeathCharacters()
     {
-        CharactorACTList = CharactorACTList.Where(chara => !chara.Death()).ToList();
+         // 生存しているキャラクターのインデックスを取得
+        var aliveIndices = Enumerable.Range(0, CharactorACTList.Count)
+            .Where(i => !CharactorACTList[i].Death())
+            .ToList();
+
+        // 各リストをフィルタリングして再構築
+        CharactorACTList = aliveIndices.Select(i => CharactorACTList[i]).ToList();
+        TopMessage = aliveIndices.Select(i => TopMessage[i]).ToList();
+        FactionList = aliveIndices.Select(i => FactionList[i]).ToList();
+        reservationStatesModifies = aliveIndices.Select(i => reservationStatesModifies[i]).ToList();
+        IsFreezeList = aliveIndices.Select(i => IsFreezeList[i]).ToList();
+        SingleTargetList = aliveIndices.Select(i => SingleTargetList[i]).ToList();
+        ExCounterDEFATKList = aliveIndices.Select(i => ExCounterDEFATKList[i]).ToList();
+        RaterTargetList = aliveIndices.Select(i => RaterTargetList[i]).ToList();
+        RaterDamageList = aliveIndices.Select(i => RaterDamageList[i]).ToList();
     }
 
     /// <summary>
@@ -104,6 +131,8 @@ public class ACTList
         IsFreezeList.RemoveAt(index);
         SingleTargetList.RemoveAt(index);
         ExCounterDEFATKList.RemoveAt(index);
+        RaterTargetList.RemoveAt(index);
+        RaterDamageList.RemoveAt(index);
     }
 
     public string GetAtTopMessage(int index)
@@ -133,6 +162,15 @@ public class ACTList
     public float GetAtExCounterDEFATK(int index)
     {
         return ExCounterDEFATKList[index];
+    }
+    public List<BaseStates> GetAtRaterTargets(int index)
+    {
+        return RaterTargetList[index];
+    }
+
+    public float GetAtRaterDamage(int index)
+    {
+        return RaterDamageList[index];
     }
 
 
@@ -353,8 +391,12 @@ public class BattleManager
     /// 行動を受ける人 
     /// </summary>
     public UnderActersEntryList unders;
+    List<BaseStates> RatherTargetList;//レイザーアクトの対象リスト
+    float RatherDamageAmount;
+    
     allyOrEnemy ActerFaction;//陣営
     bool Wipeout = false;//全滅したかどうか
+    bool IsRater = false;//レイザーダメージのターンかどうか
     bool EnemyGroupEmpty = false;//敵グループが空っぽ
     bool AlliesRunOut = false;//味方全員逃走
     NormalEnemy VoluntaryRunOutEnemy = null;//敵一人の逃走
@@ -532,6 +574,16 @@ public class BattleManager
                 }*///
             }
 
+            //レイザーダメージの対象者がいるならレイザーアクト
+            var ratherTarget = Acts.GetAtRaterTargets(0);
+            if (ratherTarget != null)
+            {
+                RatherTargetList.AddRange(ratherTarget);
+                RatherDamageAmount = Acts.GetAtRaterDamage(0);
+                IsRater = true;
+                Debug.Log("レイザーアクト");
+            }
+
             //スキルがフリーズするならする
             if (Acts.GetAtIsFreezeBool(0))
             {
@@ -599,6 +651,11 @@ public class BattleManager
             VoidTurn = false;//ターン消しとび　エフェクトなし
             NextTurn(false);
             return ACTPop();
+        }
+        //レイザーダメージアクトにはこの後のスキルの選択がいらないので
+        if(IsRater)
+        {// => CharacterActBranching
+            return TabState.NextWait;
         }
 
         if(Acter == null)//俳優がnullだとランダム選別の際に「再行動できるキャラがいない」とされて処理がキャンセルされたので
@@ -763,6 +820,13 @@ public class BattleManager
             return ACTPop();
         }
 
+        //パッシブ等のレイザーダメージアクト
+        if(IsRater)
+        {
+            IsRater = false;
+            return RatherACT();
+        }
+
         int count;//メッセージテキスト用のカウント数字
         if ((count = skill.TrigerCount()) >= 0)//発動カウントが0以上ならまだカウント中
         {
@@ -921,6 +985,24 @@ public class BattleManager
         DominoRunOutEnemies.Clear();
         NextTurn(true);
         return ACTPop();
+    }
+    /// <summary>
+    /// レイザーダメージのACT
+    /// </summary>
+    /// <returns></returns>
+    public TabState RatherACT()
+    {
+        //レイザーダメージの処理
+        var damage = new StatesPowerBreakdown(new TenDayAbilityDictionary(), RatherDamageAmount);
+        foreach(var target in RatherTargetList)//レイザー攻撃者のリストに入れる
+        {
+            target.RatherDamage(Acter,damage,false,1);
+        }
+        RatherDamageAmount = 0;//レイザー系初期化
+        RatherTargetList.Clear();
+        NextTurn(true);
+        return ACTPop();
+        
     }
     /// <summary>
     /// メッセージと共に戦闘を終わらせる

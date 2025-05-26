@@ -177,6 +177,7 @@ public abstract class BaseStates
     /// インスペクタからいじれないように、パッシブのmanagerから来たものがbaseStatesに保存されるpassive保存用
     /// </summary>
     List<BasePassive> _passiveList = new();
+    public List<BasePassive> Passives => _passiveList;
     /// <summary>
     /// 初期所持のパッシブのIDリスト
     /// </summary>
@@ -335,6 +336,21 @@ public abstract class BaseStates
         {
             pas.OnBeforeDamage(Atker);
         }
+    }
+    /// <summary>
+    ///被害者がダメージを食らうその発動前
+    /// 持ってるパッシブ中で一つでも　false(スキルは発動しない)があるなら、falseを返す
+    /// </summary>
+    public bool PassivesOnBeforeDamageActivate(BaseStates attacker)
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            //一つでもfalseがあればfalseを返す
+            if(!pas.OnBeforeDamageActivate(attacker)) return false;
+        }
+        return true;
     }
     /// <summary>
     ///ダメージ食らった後のパッシブ効果
@@ -6162,7 +6178,7 @@ public abstract class BaseStates
     /// <param name="Atker">攻撃者</param>
     /// <param name="damage">ダメージ</param>
     /// <param name="LayerDamage">VitalLayerを通すかどうか</param>
-    public void RaterDamage(BaseStates Atker,StatesPowerBreakdown damage,bool LayerDamage,float DamageRatio)
+    public void RatherDamage(BaseStates Atker,StatesPowerBreakdown damage,bool LayerDamage,float DamageRatio)
     {
         StatesPowerBreakdown notUseDamage = damage;//使わないが、引数に渡す必要がある
         damage *= DamageRatio;//ダメージの倍率を掛ける
@@ -7477,6 +7493,9 @@ private int CalcTransformCountIncrement(int tightenStage)
                         }
                     }
                 }
+
+                //攻撃される側からのパッシブ由来のスキル発動の可否を判定
+                thisAtkTurn = PassivesOnBeforeDamageActivate(attacker);
 
                 if(thisAtkTurn)
                 {

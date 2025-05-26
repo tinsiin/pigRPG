@@ -186,6 +186,12 @@ public class BasePassive
     public bool RemoveOnDamage = false;
 
     /// <summary>
+    /// 攻撃で消えるパッシブ
+    /// </summary>
+    [SerializeField]
+    bool RemoveOnAttack = false;
+
+    /// <summary>
     /// 割り込みカウンターで消えるパッシブかどうか
     /// </summary>
     [SerializeField]
@@ -363,6 +369,16 @@ public class BasePassive
 
     }
     /// <summary>
+    /// ダメージ発動前
+    /// ここでダメージの発動判定や、攻撃者、次カウンター予約などをする。
+    /// 「被害者がパッシブ由来で防ぐってイメージね」
+    /// </summary>
+    public virtual bool OnBeforeDamageActivate(BaseStates attacker)
+    {
+        //基本パッシブは攻撃の発動を防がないから return true
+        return true;
+    }
+    /// <summary>
     /// 味方や自分がダメージを食らった後に
     /// </summary>
     public virtual void OnAfterAlliesDamage(BaseStates Atker)
@@ -383,7 +399,7 @@ public class BasePassive
             if(link.DamageLinkRatio>0)//ダメージ率があるなら
             {
                 //パッシブ所持者のレイザーダメージ
-                link.Passive._owner.RaterDamage(Atker,damage,link.LayerDamage,link.DamageLinkRatio);
+                link.Passive._owner.RatherDamage(Atker,damage,link.LayerDamage,link.DamageLinkRatio);
             }
         }
     }
@@ -540,6 +556,16 @@ public class BasePassive
         if (RemoveOnDamage)//このパッシブがダメージで消える物ならば
         {
             DurationTurnCounter = 0;//TurnSurvivalで自動で消える。
+        }
+    }
+    /// <summary>
+    /// 攻撃時にパッシブ消えるなら消す関数
+    /// </summary>
+    void UpdateAttackSurvival()
+    {
+        if (RemoveOnAttack)
+        {
+            DurationTurnCounter = 0;
         }
     }
     /// <summary>
