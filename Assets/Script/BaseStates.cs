@@ -416,6 +416,18 @@ public abstract class BaseStates
         }
     }
     /// <summary>
+    /// 対全体攻撃限定で、攻撃が食らう前のパッシブ効果
+    /// </summary>
+    public void PassivesOnBeforeAllAlliesDamage(BaseStates Atker,ref UnderActersEntryList underActers)
+    {
+        // 途中でRemoveされる可能性があるのでコピーを取ってから回す
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.OnBeforeAllAlliesDamage(Atker,ref underActers);
+        }
+    }
+    /// <summary>
     /// 次のターンに進むときのパッシブ効果
     /// </summary>
     public void PassivesOnNextTurn()
@@ -7733,6 +7745,20 @@ private int CalcTransformCountIncrement(int tightenStage)
                 }
             }
         //}
+
+        //「全体攻撃時」、被害者側全員の、「自分陣営が全体攻撃食らった時の自分のパッシブコールバック」
+        if(HasRangeWill(SkillZoneTrait.AllTarget))
+        {
+            //undersに含まれる陣営を全て抽出し、その陣営グループのコールバックを呼び出す
+            var EneFaction = Unders.charas.Any(x=>manager.GetCharacterFaction(x) == allyOrEnemy.Enemyiy);
+            var AllyFaction = Unders.charas.Any(x=>manager.GetCharacterFaction(x) == allyOrEnemy.alliy);
+
+            //それぞれの陣営のコールバック
+            if(EneFaction)
+            manager.FactionToGroup(allyOrEnemy.Enemyiy).PartyPassivesOnBeforeAllAlliesDamage(this,ref Unders);
+            if(AllyFaction)
+            manager.FactionToGroup(allyOrEnemy.alliy).PartyPassivesOnBeforeAllAlliesDamage(this,ref Unders);
+        }
 
         //キャラクターに対して実行
         for (var i = 0; i < Unders.Count; i++)

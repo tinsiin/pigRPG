@@ -387,6 +387,14 @@ public class BasePassive
         UpdateAfterAlliesDamageSurvival();//パッシブ消えるかどうか
     }
     /// <summary>
+    /// 対全体攻撃限定で、攻撃が食らう前の発動是非、発動効果等
+    /// </summary>
+    public virtual void OnBeforeAllAlliesDamage(BaseStates Atker,ref UnderActersEntryList underActers)
+    {
+        //全体攻撃を食らったときに消えるって必要性がまだ考えられないから、
+        //まだ何もなし。
+    }
+    /// <summary>
     /// ダメージ食らった後。
     /// </summary>
     public virtual void OnAfterDamage(BaseStates Atker, StatesPowerBreakdown damage)

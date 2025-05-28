@@ -328,7 +328,7 @@ public class BattleManager
     /// <summary>
     /// factionのグループを返す
     /// </summary>
-    BattleGroup FactionToGroup(allyOrEnemy faction)
+    public BattleGroup FactionToGroup(allyOrEnemy faction)
     {
         switch(faction)
         {

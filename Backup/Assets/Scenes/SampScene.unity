@@ -2547,6 +2547,7 @@ MonoBehaviour:
   - rid: 9189338310192660480
   - rid: 9189338323944472576
   - rid: 9189338356401045504
+  - rid: 9189338397372055552
   references:
     version: 2
     RefIds:
@@ -3690,6 +3691,51 @@ MonoBehaviour:
         _maxRecoveryTurnModifier: 0
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
+    - rid: 9189338397372055552
+      type: {class: Slaim2, ns: , asm: Assembly-CSharp}
+      data:
+        OkImpression: 255
+        OkType: -1
+        IsCantACT: 0
+        CanCancel: 0
+        IsBad: 0
+        MaxPassivePower: 0
+        PassiveName: "\u30B9\u30EC\u30FC\u30E02-\u30ED\u30BC\u30ED"
+        SmallPassiveName: "\u30ED\u30BC\u30ED"
+        ID: 25
+        DurationTurn: 6
+        DurationTurnCounter: 0
+        DurationWalk: -1
+        DurationWalkCounter: 0
+        RemoveOnDeath: 1
+        RemoveOnDamage: 0
+        RemoveOnAttack: 0
+        RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
+        RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
+        ExtraPassivesIdOnSkillACT: []
+        VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 0
+        BeVanguardOnApply: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        NormalDontDamageHpMinRatio: -1
+        DamageReductionRateOnDamage: -1
+        TargetProbability: 0
+        _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 8.1
         _defenceACTKerenACTRate: 4.4
 --- !u!114 &78173496
 MonoBehaviour:

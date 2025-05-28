@@ -144,6 +144,16 @@ public class BattleGroup
         }
     }
     /// <summary>
+    /// パーティー全員分の対全体攻撃限定で、攻撃が食らう前のパッシブ効果
+    /// </summary>
+    public void PartyPassivesOnBeforeAllAlliesDamage(BaseStates Attacker,ref UnderActersEntryList underActers)
+    {
+        foreach(var chara in RemoveDeathCharacters(Ours))
+        {
+            chara.PassivesOnBeforeAllAlliesDamage(Attacker,ref underActers);
+        }
+    }
+    /// <summary>
     /// イースターノジールの効果にて、
     /// どちらのパッシブの効果ターンをどれだけにするかを対象者と付与者の十日能力を比較して決定する
     /// 詳しくは　スレーム=>イースターノジール
