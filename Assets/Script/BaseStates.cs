@@ -2167,6 +2167,13 @@ public abstract class BaseStates
         recoveryTurn = MaxRecoveryTurn;
     }
 
+    /// <summary>
+    /// 「標準のロジック」の割り込みカウンターが発動するかのオプション
+    /// AllyClassはUIから、EnemyはSkillAI等で継承して設定する。
+    /// とりあえずtrueで設定
+    /// </summary>
+    public virtual bool IsInterruptCounterActive => true;
+
     //HP
     [SerializeField]
     private float _hp;
@@ -6895,6 +6902,8 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     private bool TryInterruptCounter(BaseStates attacker)//attacker = 割り込みカウンターの被害者ね
     {
+        if(!IsInterruptCounterActive)return false;//割り込みカウンターActiveがfalseなら発動しない
+
         var skill = attacker.NowUseSkill;
         if(NowPower >= ThePower.medium)//普通のパワー以上で
         {//割り込みカウンターは

@@ -1,15 +1,17 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
+using System.Collections.Generic;
 
 /// <summary>
-/// 前のめりを選択するトグルグループのコントローラー
+/// 汎用的なトグルボタンのグループ
 /// </summary>
-public class ToggleGroupController_SelectAggressiveCommit : MonoBehaviour
+public class ToggleGroupController : MonoBehaviour
 {
-    // トグルグループ内のトグル
-    [SerializeField] private Toggle toggleAggressiveYes; // 前のめり「する」側のトグル
-    [SerializeField] private Toggle toggleAggressiveNo;  // 前のめり「しない」側のトグル
+    /// <summary>
+    /// トグルグループ内のトグル達。
+    /// </summary>
+    [SerializeField] List<Toggle> toggles = new(); 
     
     // コールバック
     private UnityAction<int> onToggleSelected;
@@ -17,14 +19,13 @@ public class ToggleGroupController_SelectAggressiveCommit : MonoBehaviour
     // 有効/無効設定
     public bool interactable
     {
-        get { return toggleAggressiveYes != null && toggleAggressiveYes.interactable; }
+        get { return toggles[0].interactable;}//最低一個あるはずだしそれでラジオボタングループが有効/無効の判断すればいい
         set 
         {
-            if (toggleAggressiveYes != null)
-                toggleAggressiveYes.interactable = value;
-                
-            if (toggleAggressiveNo != null)
-                toggleAggressiveNo.interactable = value;
+            foreach(var toggle in toggles)
+            {
+                toggle.interactable = value;
+            }
         }
     }
     
@@ -32,20 +33,8 @@ public class ToggleGroupController_SelectAggressiveCommit : MonoBehaviour
     {
         
         // トグルが設定されていない場合は子から自動取得
-        if (toggleAggressiveYes == null || toggleAggressiveNo == null)
-        {
-            Toggle[] toggles = GetComponentsInChildren<Toggle>();
-            if (toggles.Length >= 2)
-            {
-                toggleAggressiveYes = toggles[0];
-                toggleAggressiveNo = toggles[1];
-            }
-            else
-            {
-                Debug.LogError($"ToggleGroupController: トグルが不足しています（見つかった数: {toggles.Length}）");
-                return;
-            }
-        }
+         if (toggles.Count == 0)
+            toggles.AddRange(GetComponentsInChildren<Toggle>());
     }
     
     // コールバックを設定
@@ -55,53 +44,42 @@ public class ToggleGroupController_SelectAggressiveCommit : MonoBehaviour
         
         onToggleSelected = callback;
         
-        // リスナー登録前にクリア
-        if (toggleAggressiveYes != null)
-        {
-            toggleAggressiveYes.onValueChanged.RemoveAllListeners();
-            toggleAggressiveYes.onValueChanged.AddListener((isOn) => {
-                if (isOn && onToggleSelected != null)
-                    onToggleSelected(0); // 0 = 前のめりする
-            });
-        }
         
-        if (toggleAggressiveNo != null)
+        for (int i = 0; i < toggles.Count; i++)
         {
-            toggleAggressiveNo.onValueChanged.RemoveAllListeners();
-            toggleAggressiveNo.onValueChanged.AddListener((isOn) => {
-                if (isOn && onToggleSelected != null)
-                    onToggleSelected(1); // 1 = 前のめりしない
+            int idx = i;                           // クロージャ用ローカル変数
+            toggles[i].onValueChanged.RemoveAllListeners();// リスナー登録前にクリア
+            toggles[i].onValueChanged.AddListener(isOn =>
+            {
+                if (isOn && onToggleSelected != null) onToggleSelected(idx);
             });
         }
     }
 
     /// <summary>
-    /// 現在のスキルのIsAggressiveCommitに合わせてトグルを更新（リスナーを一時的に無効化）
+    /// 外部からトグルを更新する
+    /// 数字を渡すとそのインデックスのトグルだけがオンになる。
+    /// 全てオフ(未選択状態)にするには「-1」を渡す
     /// </summary>
-    public void UpdateToggleState(bool isAggressiveCommit)
+    public void SetOnWithoutNotify(int index)      // 外部から初期状態を合わせる用
     {
-        // 一時的にリスナーを無効化
-        if (toggleAggressiveYes != null && toggleAggressiveNo != null)
+        // -1 なら全て OFF、通常は指定 index だけ ON
+        if (index == -1)
         {
-            toggleAggressiveYes.onValueChanged.RemoveAllListeners();
-            toggleAggressiveNo.onValueChanged.RemoveAllListeners();
-            
-            // トグルの状態を設定
-            toggleAggressiveYes.isOn = isAggressiveCommit;
-            toggleAggressiveNo.isOn = !isAggressiveCommit;
-            
-            // リスナーを再設定
-            AddListener(onToggleSelected);
+            foreach (var t in toggles) t.SetIsOnWithoutNotify(false);
+            return;
         }
+
+        if (index < 0 || index >= toggles.Count) return;
+
+        foreach (var t in toggles) t.SetIsOnWithoutNotify(false);
+        toggles[index].SetIsOnWithoutNotify(true);
     }
+
     
     private void OnDestroy()
     {
         // リスナーをクリア
-        if (toggleAggressiveYes != null)
-            toggleAggressiveYes.onValueChanged.RemoveAllListeners();
-            
-        if (toggleAggressiveNo != null)
-            toggleAggressiveNo.onValueChanged.RemoveAllListeners();
+        foreach (var t in toggles) t.onValueChanged.RemoveAllListeners();
     }
 }

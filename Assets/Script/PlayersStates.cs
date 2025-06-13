@@ -20,10 +20,14 @@ public class ButtonAndSkillIDHold
         button.onClick.AddListener(() => call(skillID));
     }
 }
+/// <summary>
+/// スキルIDが必要なラジオボタン処理用のコントローラー
+/// スキルIDなどが必要のない、例えば「キャラ自体の設定用」などは直接ToggleGroupControllerを使う。
+/// </summary>
 [Serializable]
 public class RadioButtonsAndSkillIDHold
 {
-    public ToggleGroupController_SelectAggressiveCommit Controller;
+    public ToggleGroupController Controller;
     public int skillID;
     
     // UnityAction<int, int>に変更 - 第1引数：どのトグルが選ばれたか、第2引数：skillID
@@ -176,6 +180,11 @@ public class PlayersStates:MonoBehaviour
             button.AddRadioFunc(sites.OnSkillSelectAgressiveCommitBtnCallBack);
         }
 
+        //ラジオボタンに「割り込みカウンターActiveのコールバック関数」を登録する
+        SelectInterruptCounterRadioButtons_geino.AddListener(geino.OnSelectInterruptCounterActiveBtnCallBack);
+        SelectInterruptCounterRadioButtons_noramlia.AddListener(noramlia.OnSelectInterruptCounterActiveBtnCallBack);
+        SelectInterruptCounterRadioButtons_sites.AddListener(sites.OnSelectInterruptCounterActiveBtnCallBack);
+
         //何もしないボタンを結び付ける
         if(DoNothingButton_noramlia != null)
         {
@@ -216,6 +225,15 @@ public class PlayersStates:MonoBehaviour
     [SerializeField]
     private List<RadioButtonsAndSkillIDHold> skillSelectAgressiveCommitRadioList_sites = new();
 
+    //割り込みカウンターActiveのラジオボタン用リスト
+    //スキル依存でないものは直接ToggleGroupControllerを使う。
+    [SerializeField]
+    private ToggleGroupController SelectInterruptCounterRadioButtons_geino;
+    [SerializeField]
+    private ToggleGroupController SelectInterruptCounterRadioButtons_noramlia;
+    [SerializeField]
+    private ToggleGroupController SelectInterruptCounterRadioButtons_sites;
+
     /// <summary>
     /// スキル選択画面へ遷移する際のコールバック
     /// </summary>
@@ -230,7 +248,8 @@ public class PlayersStates:MonoBehaviour
         {
             BaseSkill skill = geino.SkillList[radio.skillID];
             if(skill == null) Debug.LogError("スキルがありません");
-            radio.Controller.UpdateToggleState(skill.IsAggressiveCommit);
+            //前のめり = 0 そうでないなら　1 なので　IsAgressiveCommitの三項演算子
+            radio.Controller.SetOnWithoutNotify(skill.IsAggressiveCommit ? 0 : 1);
         }
     }
     /// <summary>
@@ -245,7 +264,8 @@ public class PlayersStates:MonoBehaviour
         //「有効化されてるスキル達のみ」の前のめり選択状態を　ラジオボタンに反映する処理
         foreach(var radio in skillSelectAgressiveCommitRadioList_sites.Where(radio => sites.ValidSkillIDList.Contains(radio.skillID)))
         {
-            radio.Controller.UpdateToggleState(sites.SkillList[radio.skillID].IsAggressiveCommit);
+            //前のめり = 0 そうでないなら　1 なので　IsAgressiveCommitの三項演算子
+            radio.Controller.SetOnWithoutNotify(sites.SkillList[radio.skillID].IsAggressiveCommit ? 0 : 1);
         }
     }
 
@@ -261,7 +281,7 @@ public class PlayersStates:MonoBehaviour
         //「有効化されてるスキル達のみ」の前のめり選択状態を　ラジオボタンに反映する処理
         foreach(var radio in skillSelectAgressiveCommitRadioList_noramlia.Where(radio => noramlia.ValidSkillIDList.Contains(radio.skillID)))
         {
-            radio.Controller.UpdateToggleState(noramlia.SkillList[radio.skillID].IsAggressiveCommit);
+            radio.Controller.SetOnWithoutNotify(noramlia.SkillList[radio.skillID].IsAggressiveCommit ? 0 : 1);
         }
     }
 
@@ -966,6 +986,31 @@ public class AllyClass : BaseStates
         }
         skill.IsAggressiveCommit = isAgrresiveCommit;//スキルの前のめり性に代入すべ
     }
+    /// <summary>
+    /// UI処理用の割り込みカウンターのオンオフのbool
+    /// </summary>
+    bool IsInterruptCounterActive_UI = true;
+    /// <summary>
+    /// AllyClassの割り込みカウンターのオンオフのbool
+    /// UI処理boolを受け取るために継承
+    /// </summary>
+    public override bool IsInterruptCounterActive => IsInterruptCounterActive_UI;
+    /// <summary>
+    /// キャラの標準のロジックの割り込みカウンターを行うかどうかのラジオボタン選択時のコールバック関数
+    /// </summary>
+    /// <param name="toggleIndex"></param>
+    public void OnSelectInterruptCounterActiveBtnCallBack(int toggleIndex)
+    {
+        //割り込みカウンターをする
+        if(toggleIndex == 0)
+        {
+            IsInterruptCounterActive_UI = true;
+        }//しない
+        else
+        {
+            IsInterruptCounterActive_UI = false;
+        }
+    }    
     /// <summary>
     /// 直接ボタンを押して、何もしないを選ぶボタンのコールバック
     /// </summary>
