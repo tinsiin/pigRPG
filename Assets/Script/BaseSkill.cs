@@ -962,7 +962,6 @@ public class BaseSkill
     /// <summary>
     /// スキルが前のめりになるからならないかを選べるかどうか
     /// </summary>
-    /// </summary>
     public bool CanSelectAggressiveCommit = false;
 
 
@@ -998,6 +997,8 @@ public class BaseSkill
     {
         _doCount++;
         _recordDoCount++;
+        //スキル熟練度を上げる
+        Proficiency++;
     }
 
     /// <summary>
@@ -1117,6 +1118,11 @@ public class BaseSkill
     {
         return _nowStockCount >= DefaultAtkCount;//最大値以上ならばストックが満杯とする
     }
+
+    /// <summary>
+    /// スキル熟練度　単純な数のプロパティで、標準のロジックはスキル内ではないからここでは数だけ
+    /// </summary>
+    public int Proficiency;
 
     /// <summary>
     /// 通常の攻撃回数
