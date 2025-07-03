@@ -346,6 +346,7 @@ public class NormalEnemy : BaseStates
             {
                 AllPassiveWalkEffect();//歩行効果
                 UpdateWalkAllPassiveSurvival();//歩行によるパッシブ残存処理
+                UpdateAllSkillPassiveWalkSurvival();//スキルパッシブの歩行残存処理
                 ResonanceHealingOnWalking();//歩行時思えの値回復
                 //RecoverMentalHPOnWalk();//歩行時精神HP回復 基本的に歩行時の精神hp回復はポイント用だし、それ抜きにしたら戦闘開始時に精神HPはmaxになるし。
                 //RecoverPointOnWalk();//歩行時ポイント回復 敵には外でスキル使うとかないから、戦闘時のポイント初期化で十分なので歩行回復なし

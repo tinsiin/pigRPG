@@ -710,6 +710,7 @@ MonoBehaviour:
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
+        Proficiency: 0
         subEffects: 
         subVitalLayers: 
         canEraceEffectIDs: 
@@ -770,6 +771,7 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
+      Proficiency: 0
       subEffects: 
       subVitalLayers: 
       canEraceEffectIDs: 
@@ -817,6 +819,7 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
+      Proficiency: 0
       subEffects: 
       subVitalLayers: 
       canEraceEffectIDs: 
@@ -903,6 +906,7 @@ MonoBehaviour:
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
+        Proficiency: 0
         subEffects: 
         subVitalLayers: 
         canEraceEffectIDs: 
@@ -963,6 +967,7 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
+      Proficiency: 0
       subEffects: 
       subVitalLayers: 
       canEraceEffectIDs: 
@@ -1010,6 +1015,7 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
+      Proficiency: 0
       subEffects: 
       subVitalLayers: 
       canEraceEffectIDs: 
@@ -1094,6 +1100,7 @@ MonoBehaviour:
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
+        Proficiency: 0
         subEffects: 
         subVitalLayers: 
         canEraceEffectIDs: 
@@ -1154,6 +1161,7 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
+      Proficiency: 0
       subEffects: 
       subVitalLayers: 
       canEraceEffectIDs: 
@@ -1201,6 +1209,7 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
+      Proficiency: 0
       subEffects: 
       subVitalLayers: 
       canEraceEffectIDs: 
@@ -1285,6 +1294,7 @@ MonoBehaviour:
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
+        Proficiency: 0
         subEffects: 
         subVitalLayers: 
         canEraceEffectIDs: 
@@ -1345,6 +1355,7 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
+      Proficiency: 0
       subEffects: 
       subVitalLayers: 
       canEraceEffectIDs: 
@@ -1392,6 +1403,7 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
+      Proficiency: 0
       subEffects: 
       subVitalLayers: 
       canEraceEffectIDs: 
@@ -1476,6 +1488,7 @@ MonoBehaviour:
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
+        Proficiency: 0
         subEffects: 
         subVitalLayers: 
         canEraceEffectIDs: 
@@ -1536,6 +1549,7 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
+      Proficiency: 0
       subEffects: 
       subVitalLayers: 
       canEraceEffectIDs: 
@@ -1583,6 +1597,7 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
+      Proficiency: 0
       subEffects: 
       subVitalLayers: 
       canEraceEffectIDs: 
@@ -1667,6 +1682,7 @@ MonoBehaviour:
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: 
+        Proficiency: 0
         subEffects: 
         subVitalLayers: 
         canEraceEffectIDs: 
@@ -1727,6 +1743,7 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
+      Proficiency: 0
       subEffects: 
       subVitalLayers: 
       canEraceEffectIDs: 
@@ -1774,6 +1791,7 @@ MonoBehaviour:
       CanSelectAggressiveCommit: 0
       SKillDidWaitCount: 0
       SkillName: 
+      Proficiency: 0
       subEffects: 
       subVitalLayers: 
       canEraceEffectIDs: 
@@ -1879,6 +1897,7 @@ MonoBehaviour:
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: "\u30E9\u30D3\u30C3\u30C8\u30AD\u30E3\u30C3\u30C8"
+        Proficiency: 0
         subEffects: 
         subVitalLayers: 
         canEraceEffectIDs: 
@@ -1927,6 +1946,7 @@ MonoBehaviour:
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 2
         SkillName: "\u30A2\u30AD\u30EC\u30B9\u3068\u4E80-\u6DF7\u6C8C\u6642\u9593"
+        Proficiency: 0
         subEffects: 
         subVitalLayers: 
         canEraceEffectIDs: 
@@ -2063,6 +2083,7 @@ MonoBehaviour:
             CanSelectAggressiveCommit: 0
             SKillDidWaitCount: 0
             SkillName: 
+            Proficiency: 0
             subEffects: 
             subVitalLayers: 
             canEraceEffectIDs: 
@@ -2123,6 +2144,7 @@ MonoBehaviour:
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
+          Proficiency: 0
           subEffects: 
           subVitalLayers: 
           canEraceEffectIDs: 
@@ -2170,6 +2192,7 @@ MonoBehaviour:
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
+          Proficiency: 0
           subEffects: 
           subVitalLayers: 
           canEraceEffectIDs: 
@@ -2240,6 +2263,7 @@ MonoBehaviour:
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
         SkillName: "\u3053\u3053\u306B\u540D\u524D\u3092\u5165\u308C\u3066\u304F\u3060\u3055\u3044"
+        Proficiency: 0
         subEffects: 
         subVitalLayers: 
         canEraceEffectIDs: 
@@ -2306,6 +2330,7 @@ MonoBehaviour:
             CanSelectAggressiveCommit: 0
             SKillDidWaitCount: 0
             SkillName: 
+            Proficiency: 0
             subEffects: 
             subVitalLayers: 
             canEraceEffectIDs: 
@@ -2366,6 +2391,7 @@ MonoBehaviour:
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
+          Proficiency: 0
           subEffects: 
           subVitalLayers: 
           canEraceEffectIDs: 
@@ -2413,6 +2439,7 @@ MonoBehaviour:
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
+          Proficiency: 0
           subEffects: 
           subVitalLayers: 
           canEraceEffectIDs: 
@@ -2501,6 +2528,7 @@ MonoBehaviour:
             CanSelectAggressiveCommit: 0
             SKillDidWaitCount: 0
             SkillName: 
+            Proficiency: 0
             subEffects: 
             subVitalLayers: 
             canEraceEffectIDs: 
@@ -2561,6 +2589,7 @@ MonoBehaviour:
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
+          Proficiency: 0
           subEffects: 
           subVitalLayers: 
           canEraceEffectIDs: 
@@ -2608,6 +2637,7 @@ MonoBehaviour:
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
+          Proficiency: 0
           subEffects: 
           subVitalLayers: 
           canEraceEffectIDs: 
@@ -3975,6 +4005,7 @@ MonoBehaviour:
           CanSelectAggressiveCommit: 0
           SKillDidWaitCount: 0
           SkillName: 
+          Proficiency: 0
           subEffects: 
           subVitalLayers: 
           canEraceEffectIDs: 

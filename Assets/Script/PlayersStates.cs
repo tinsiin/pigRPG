@@ -1144,6 +1144,7 @@ public class AllyClass : BaseStates
     {
         AllPassiveWalkEffect();//全パッシブの歩行効果を呼ぶ
         UpdateWalkAllPassiveSurvival();
+        UpdateAllSkillPassiveWalkSurvival();//スキルパッシブの歩行残存処理
         TransitionPowerOnWalkByCharacterImpression();
 
         RecoverMentalHPOnWalk();//歩行時精神HP回復

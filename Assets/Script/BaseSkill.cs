@@ -304,6 +304,18 @@ public class BaseSkill
     public SkillImpression Impression;
 
     /// <summary>
+    /// スキルに掛ってるパッシブリスト
+    /// </summary>
+    public List<BaseSkillPassive> SkillPassiveList = new();
+    /// <summary>
+    /// スキルパッシブをリストから除去する
+    /// </summary>
+    public void RemoveSkillPassive(BaseSkillPassive passive)
+    {
+        SkillPassiveList.Remove(passive);
+    }
+
+    /// <summary>
     /// スキル性質を持ってるかどうか
     /// 複数指定した場合は全て当てはまってるかどうかで判断
     /// </summary>
@@ -1246,6 +1258,12 @@ public class BaseSkill
         ReturnTrigger();//発動カウントはカウントダウンするから最初っから
         _tmpSkillUseTurn = -1;//前回とのターン比較用の変数をnullに
         ResetStock();
+
+        ///スキルパッシブの終了時の処理
+        foreach(var pas in SkillPassiveList.Where(pas => pas.DurationWalkTurn < 0))
+        {
+            RemoveSkillPassive(pas);
+        }
     }
 
     /// <summary>
@@ -1586,6 +1604,7 @@ public class BaseSkill
         dst.canEraceVitalLayerIDs = new(canEraceVitalLayerIDs);
         dst.CanEraceEffectCount = CanEraceEffectCount;
         dst.CanEraceVitalLayerCount = CanEraceVitalLayerCount;
+        dst.SkillPassiveList = new(SkillPassiveList);
 
     }
 

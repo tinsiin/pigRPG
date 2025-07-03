@@ -478,6 +478,37 @@ public abstract class BaseStates
     }
 
     /// <summary>
+    /// 全スキルの、パッシブリストを全てが消えるかどうか
+    /// </summary>
+    void UpdateAllSkillPassiveSurvival()
+    {
+        //スキルのリスト
+        foreach (var skill in SkillList)
+        {
+            //スキルが持つパッシブリストで回す
+            foreach (var pas in skill.SkillPassiveList)
+            {
+                pas.Update();
+            }
+        }
+    }
+    /// <summary>
+    /// 全スキルの、パッシブリストを全てが歩行で消えるかどうか
+    /// </summary>
+    protected void UpdateAllSkillPassiveWalkSurvival()
+    {
+        //スキルのリスト
+        foreach (var skill in SkillList)
+        {
+            //スキルが持つパッシブリストで回す
+            foreach (var pas in skill.SkillPassiveList)
+            {
+                pas.UpdateWalk();
+            }
+        }
+    }
+
+    /// <summary>
     /// 全パッシブのUpdateTurnSurvivalを呼ぶ ターン経過時パッシブが生存するかどうか
     /// NextTurnで呼び出す
     /// </summary>
@@ -8254,6 +8285,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     public void OnNextTurnNoArgument()
     {
         UpdateTurnAllPassiveSurvival();
+        UpdateAllSkillPassiveSurvival();
         UpdateNotVanguardAllPassiveSurvival();
         PassivesOnNextTurn();//パッシブのターン進効果
 
@@ -8287,7 +8319,25 @@ private int CalcTransformCountIncrement(int tightenStage)
         SkillCalculatedRandomRange = false;//ランダム範囲計算フラグを解除
     }
 
-
+    /// <summary>
+    /// 戦闘開始時に「パッシブ」の持続歩行ターンの場合により、持続戦闘ターン数をリセットする
+    /// </summary>
+    public void PassivesReSetDurationTurnOnBattleStart()
+    {
+        foreach (var pas in Passives)//全ての所持パッシブ
+        {
+            //歩行ターンのif文戦闘ターンの処理分け
+            if(pas.DurationWalk - 2 >= pas.DurationWalkCounter)//現在値が設定値-2　以下なら
+            {
+                //歩行ターンがどの程度減っているかを割合で入手
+                var rate = pas.DurationWalkCounter / pas.DurationWalk;
+                //その割合を戦闘ターン設定値に掛けて、再代入する。
+                pas.DurationTurnCounter = pas.DurationTurn * rate;
+                Debug.Log("戦闘パッシブのターンが歩行ターンが2以下になったので再変更の機会	→変化: " + pas.DurationTurnCounter + " / " + pas.DurationTurn 
+                + "× " + rate);
+            }
+        }
+    }
     /// <summary>
     ///bm生成時に初期化される関数
     /// </summary>
@@ -8318,6 +8368,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         _mentalPointRecoveryCountUp = 0;//精神HP自然回復のカウントをゼロに戻す
         DamageDealtToEnemyUntilKill = new();//戦闘開始時にキャラクターを殺すまでに与えたダメージを記録する辞書を初期化する
         battleGain = new();//バトルが開始するたびに勝利ブースト用の値を初期化
+        PassivesReSetDurationTurnOnBattleStart();//パッシブの持続戦闘ターン数を場合により計算して再代入する。
 
         InitPByNowPower();//Pの初期値設定
 
@@ -8344,6 +8395,11 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             RemovePassive(passive);//歩行残存ターンが-1の場合戦闘終了時に消える。
         }
+        foreach (var pas in _passiveList)
+        {
+            pas.DurationTurnCounter = -1;//歩行ターンがあれば残存するが、それには関わらず戦闘ターンは意味がなくなるので全て-1 = 戦闘ターンによる消えるのをなくす。
+        }
+        //スキルパッシブの戦闘終了時の歩行ターンによる処理は下のスキルコールバックでやってます。
     
         //スキルの戦闘終了時コールバック
         OnBattleEndSkills();

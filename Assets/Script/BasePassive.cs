@@ -138,6 +138,10 @@ public class BasePassive
     /// </summary>
     public bool CanCancel;
     /// <summary>
+    /// 永続パッシブかどうか
+    /// </summary>
+    public bool IsEternal;
+    /// <summary>
     /// trueなら悪いパッシブで、SkillType.RemovePassiveでSkillHitCalcだけで解除される。
     /// falseならIsReactHitの判定(良いパッシブを無理やり外すっていう攻撃だからね)
     /// </summary>
@@ -485,8 +489,12 @@ public class BasePassive
     /// </summary>
     public virtual void UpdateTurnSurvival(BaseStates user)
     {
+        if(IsEternal)
+        {
+            return;
+        }
 
-        // 1) ターン経過による自動解除 (Duration >= 0)
+        // 1) ターン経過による自動解除 (Duration >= 0)　　戦闘ターンによる経過削除は、歩行ターンを無視する。
         if (DurationTurnCounter > 0)
         {
             DurationTurnCounter--;
@@ -526,14 +534,16 @@ public class BasePassive
     /// </summary>
     public virtual void UpdateWalkSurvival(BaseStates user)
     {
-        if (DurationWalkCounter > 0)//歩行回数による自動解除
+        if(IsEternal)
         {
-            DurationWalkCounter --;
-            if(DurationWalkCounter <= 0)
-            {
-                user.RemovePassive(this);
-                return;
-            }
+            return;
+        }
+        
+        DurationWalkCounter --;
+        if(DurationWalkCounter <= 0)
+        {
+            user.RemovePassive(this);
+            return;
         }
     }
     /// <summary>
