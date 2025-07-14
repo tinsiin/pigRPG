@@ -2725,6 +2725,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 0
         PassiveName: "\u5473\u65B9\u524D\u306E\u3081\u308A\u4EA4\u4EE3\u963B\u6B62"
@@ -2770,6 +2771,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 0
         PassiveName: "\u7A7A-----------------------------------------------------"
@@ -2815,6 +2817,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 0
         PassiveName: "\u30E9\u30A4\u30C6\u30A3\u30B9\u30C6\u30A3\u30CB"
@@ -2860,6 +2863,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 0
         PassiveName: "\u30E9\u30A4\u30C6\u30A3\u30B9\u30C6\u30A3\u30CB\u8005\u306E\u56DE\u907F\u56DE\u904A"
@@ -2905,6 +2909,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 0
         PassiveName: "\u30B9\u30EC\u30FC\u30E0"
@@ -2951,6 +2956,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 7
         PassiveName: "\u30EA\u30FC\u30C7\u30A3\u30F3\u30B0\u30B9\u30C6\u30C3\u30D7"
@@ -2996,6 +3002,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 0
         PassiveName: "\u96F2\u96A0\u308C"
@@ -3043,6 +3050,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 1
         MaxPassivePower: 0
         PassiveName: "\u5F71\u8E0F\u307E\u308C"
@@ -3088,6 +3096,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 1
         MaxPassivePower: 0
         PassiveName: "\u30BF\u30AF\u30C8\u30D6\u30EB\u30D5"
@@ -3133,6 +3142,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 0
         PassiveName: "\u30B8\u30FC\u30CE\u306E\u30B9\u30EC\u30FC\u30E0"
@@ -3179,6 +3189,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 1
         MaxPassivePower: 0
         PassiveName: "\u80CC\u9762"
@@ -3224,6 +3235,7 @@ MonoBehaviour:
         OkType: 0
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 0
         PassiveName: "\u30CE\u30B8\u30FC\u30E9"
@@ -3269,6 +3281,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 0
         PassiveName: "TLOA\u3067\u306F\u3068\u3069\u3081\u304C\u3055\u305B\u306A\u3044"
@@ -3314,6 +3327,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 1
         CanCancel: 0
+        IsEternal: 0
         IsBad: 1
         MaxPassivePower: 0
         PassiveName: "\u4E0D\u8001\u4E0D\u6B7B\u306E\u5316\u77F3_1"
@@ -3367,6 +3381,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 1
         CanCancel: 0
+        IsEternal: 0
         IsBad: 1
         MaxPassivePower: 0
         PassiveName: "\u571F_1"
@@ -3416,6 +3431,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 0
         PassiveName: "\u6DE1\u3005\u3068\u3057\u305F\u30ED\u30BC"
@@ -3461,6 +3477,7 @@ MonoBehaviour:
         OkType: 6
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 1
         MaxPassivePower: 3
         PassiveName: "\u5F37\u5236\u30C0\u30A6\u30CA\u30FC"
@@ -3506,6 +3523,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 1
         MaxPassivePower: 4
         PassiveName: "\u30A2\u30C3\u30D1\u30FC"
@@ -3551,6 +3569,7 @@ MonoBehaviour:
         OkType: 4
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 11
         PassiveName: "\u5272\u308A\u8FBC\u307F\u30AB\u30A6\u30F3\u30BF\u30FC"
@@ -3596,6 +3615,7 @@ MonoBehaviour:
         OkType: 5
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 1
         MaxPassivePower: 0
         PassiveName: "\u98DF\u3089\u308F\u305B"
@@ -3641,6 +3661,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 1
         CanCancel: 0
+        IsEternal: 0
         IsBad: 1
         MaxPassivePower: 0
         PassiveName: "\u30E9\u30D3\u30C3\u30C8"
@@ -3686,6 +3707,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 1
         CanCancel: 1
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 0
         PassiveName: "\u30AD\u30E3\u30C3\u30C8"
@@ -3731,6 +3753,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 0
         PassiveName: "\u6DF7\u6C8C\u6642\u9593\u306E\u4E80"
@@ -3776,6 +3799,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 1
         MaxPassivePower: 0
         PassiveName: "\u6DF7\u6C8C\u6642\u9593\u306E\u30A2\u30AD\u30EC\u30B9"
@@ -3821,6 +3845,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 1
         PassiveName: "\u30AB\u30B2\u30ED\u30F3\u30AB\u30A6\u30F3\u30BF\u30FC"
@@ -3866,6 +3891,7 @@ MonoBehaviour:
         OkType: -1
         IsCantACT: 0
         CanCancel: 0
+        IsEternal: 0
         IsBad: 0
         MaxPassivePower: 0
         PassiveName: "\u30B9\u30EC\u30FC\u30E02-\u30ED\u30BC\u30ED"

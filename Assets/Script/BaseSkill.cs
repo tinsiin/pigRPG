@@ -25,6 +25,18 @@ public enum SkillType
     MentalHeal = 1 << 7,
     Manual1_GoodHitCalc = 1 << 8,
     Manual1_BadHitCalc = 1 << 9,
+    /// <summary>
+    /// スキルパッシブを付与する
+    /// </summary>
+    addSkillPassive = 1 << 10,
+    /// <summary>
+    /// 良いスキルパッシブを除去する
+    /// </summary>
+    removeGoodSkillPassive = 1 << 11,
+    /// <summary>
+    /// 悪いスキルパッシブを除去する
+    /// </summary>
+    removeBadSkillPassive = 1 << 12,
 }
 /// <summary>
 /// スキル範囲の性質
@@ -303,17 +315,8 @@ public class BaseSkill
     /// </summary>
     public SkillImpression Impression;
 
-    /// <summary>
-    /// スキルに掛ってるパッシブリスト
-    /// </summary>
-    public List<BaseSkillPassive> SkillPassiveList = new();
-    /// <summary>
-    /// スキルパッシブをリストから除去する
-    /// </summary>
-    public void RemoveSkillPassive(BaseSkillPassive passive)
-    {
-        SkillPassiveList.Remove(passive);
-    }
+
+
 
     /// <summary>
     /// スキル性質を持ってるかどうか
@@ -1260,7 +1263,7 @@ public class BaseSkill
         ResetStock();
 
         ///スキルパッシブの終了時の処理
-        foreach(var pas in SkillPassiveList.Where(pas => pas.DurationWalkTurn < 0))
+        foreach(var pas in ReactiveSkillPassiveList.Where(pas => pas.DurationWalkTurn < 0))
         {
             RemoveSkillPassive(pas);
         }
@@ -1537,6 +1540,146 @@ public class BaseSkill
     /// </summary>
     public SerializableDictionary<SkillZoneTrait, float>
         HitRangePercentageDictionary;
+
+
+    [Header("スキルパッシブ設定")]
+    /// <summary>
+    /// スキルに掛ってるパッシブリスト
+    /// </summary>
+    public List<BaseSkillPassive> ReactiveSkillPassiveList = new();
+    /// <summary>
+    /// このスキルがスキルパッシブ付与スキルとして実行される際の、装弾されたスキルパッシブです
+    /// 除去スキルはスキルパッシブごとに判別しないため、これは付与スキルパッシブのみのリストです
+    /// </summary>
+    public List<BaseSkillPassive> AggressiveSkillPassiveList = new();
+    /// <summary>
+    /// スキルパッシブをリストから除去する
+    /// </summary>
+    public void RemoveSkillPassive(BaseSkillPassive passive)
+    {
+        ReactiveSkillPassiveList.Remove(passive);
+    }
+    /// <summary>
+    /// スキル効果により、一気にスキルパッシブを抹消する関数
+    /// スキルパッシブの性質によるもの
+    /// </summary>
+    public void SkillRemoveSkillPassive()
+    {
+        ReactiveSkillPassiveList.Clear();
+    }
+    /// <summary>
+    /// スキルパッシブを付与する。
+    /// </summary>
+    /// <param name="passive"></param>
+    public void ApplySkillPassive(BaseSkillPassive passive)
+    {
+        ReactiveSkillPassiveList.Add(passive);
+    }
+
+    /// <summary>
+    /// スキルパッシブバージョンの付与処理用バッファーリスト
+    /// </summary>
+    List<BaseSkillPassive> BufferApplyingSkillPassiveList = new();
+    /// <summary>
+    /// バッファのスキルパッシブを追加する。
+    /// </summary>
+    public void ApplyBufferApplyingSkillPassive()
+    {
+        foreach(var passive in BufferApplyingSkillPassiveList)
+        {
+            ApplySkillPassive(passive);
+        }
+        BufferApplyingSkillPassiveList.Clear();//追加したからバッファ消す
+    }
+    /// <summary>
+    /// 戦闘中のスキルパッシブ追加は基本バッファに入れよう
+    /// </summary>
+    public void ApplySkillPassiveBufferInBattle(BaseSkillPassive passive)
+    {
+        BufferApplyingSkillPassiveList.Add(passive);
+    }
+
+
+
+    /// <summary>
+    /// 付与するスキルを選択する方式。
+    /// </summary>
+    public SkillPassiveTargetSelection TargetSelection;
+
+    /// <summary>
+    /// スキルパッシブ付与スキルである際の、反応式の対象キャラとスキル
+    /// </summary>
+    public List<SkillPassiveReactionCharaAndSkill> ReactionCharaAndSkillList = new();
+
+    /// <summary>
+    /// スキルパッシブ付与スキルだとして、何個まで付与できるか。
+    /// </summary>
+    public int SkillPassiveEffectCount = 1;
+
+    /// <summary>
+    /// スキルパッシブの付与対象となるスキルを対象者のスキルリストから選ぶ。
+    /// </summary>
+    public List<BaseSkill> SelectSkillPassiveAddTarget(BaseStates target)
+    {
+        var targetSkills = target.SkillList;//ターゲットの現在解放されてるスキル
+        if(targetSkills.Count == 0)
+        {
+        Debug.LogError("スキルパッシブの対象スキルの選別を試みましたが、\n対象者のスキルリストが空です");
+        return null;}
+
+        if(TargetSelection == SkillPassiveTargetSelection.Select)
+        {
+            
+        }
+
+        //反応式
+        if(TargetSelection == SkillPassiveTargetSelection.Reaction)
+        {
+            var correctReactSkills = new List<BaseSkill>();
+
+            //そのキャラのターゲットスキルに対して反応する「キャラとスキルの」リストが一致したら
+            foreach(var targetSkill in targetSkills)
+            {
+                foreach(var hold in ReactionCharaAndSkillList)//反応するキャラとスキルのリスト
+                {
+                    //そもそもキャラ名が違っていたら、飛ばす
+                    if(target.CharacterName != hold.CharaName) continue;
+                    
+                    if(targetSkill.SkillName == hold.SkillName)//スキル名まで一致したら
+                    {
+                        correctReactSkills.Add(targetSkill);//今回のターゲットスキルを入れる。
+                        break;//スキルが一致して、他のスキルネームで検証する必要がなくなったので、次の対象スキルへ
+                    }
+                }
+            }
+            if(correctReactSkills.Count == 0)
+            {
+                Debug.Log("スキルパッシブ付与スキルはどのスキルにも反応しませんでした。");
+                return null;
+            }
+            return correctReactSkills;
+        }
+
+
+        //ランダム方式(random区切りは未実装,動作的雰囲気とかの奴ね)
+        if(TargetSelection == SkillPassiveTargetSelection.Random)
+        {
+            var randomSkills = new List<BaseSkill>();
+
+            //全体からrandomに一つ選ぶ単純な方式
+            for(int i = 0; i < SkillPassiveEffectCount; i++)//すきる
+            {
+                randomSkills.Add(RandomEx.Shared.GetItem(targetSkills.ToArray()));
+            }
+
+            return randomSkills;
+        }
+        return null;
+    }
+
+
+
+
     /// <summary>
     /// ランタイム用にスキルをディープコピーする関数
     /// </summary>
@@ -1604,7 +1747,7 @@ public class BaseSkill
         dst.canEraceVitalLayerIDs = new(canEraceVitalLayerIDs);
         dst.CanEraceEffectCount = CanEraceEffectCount;
         dst.CanEraceVitalLayerCount = CanEraceVitalLayerCount;
-        dst.SkillPassiveList = new(SkillPassiveList);
+        dst.ReactiveSkillPassiveList = new(ReactiveSkillPassiveList);
 
     }
 

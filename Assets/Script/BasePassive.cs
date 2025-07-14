@@ -32,7 +32,7 @@ public enum PassiveTargetScope { Allies, Enemies, Both }
 /// <summary>
 /// パッシブが付与/除去されるタイミングで追加HPをいつ追加するか
 /// </summary>
-public enum PassiveVitalTiming
+public enum PassiveLinkedComponentTiming
 {
     /// <summary> パッシブが追加(Apply)されたタイミング </summary>
     OnApply,
@@ -65,7 +65,7 @@ public class PassiveVitalLayerBinding
     public int VitalLayerId;
 
     /// <summary> 付与のタイミング </summary>
-    public PassiveVitalTiming GrantTiming;
+    public PassiveLinkedComponentTiming GrantTiming;
 
     /// <summary>
     /// このレイヤーが生存条件となるかどうか
@@ -232,7 +232,7 @@ public class BasePassive
     /// スキル実行時に付与するパッシブ
     /// </summary>
     public List<ExtraPassiveBinding> ExtraPassivesIdOnSkillACT = new();
-    
+
     /// <summary>
     /// パッシブが持つ追加HP　IDで扱う。
     /// </summary>
@@ -309,7 +309,7 @@ public class BasePassive
         {
             foreach (var bind in VitalLayers)
             {
-                if (bind.GrantTiming == PassiveVitalTiming.OnApply)
+                if (bind.GrantTiming == PassiveLinkedComponentTiming.OnApply)
                 {
                     user.ApplyVitalLayer(bind.VitalLayerId);
                 }
@@ -444,7 +444,7 @@ public class BasePassive
         {
             foreach (var bind in VitalLayers)
             {
-                if (bind.GrantTiming == PassiveVitalTiming.OnRemove)
+                if (bind.GrantTiming == PassiveLinkedComponentTiming.OnRemove)
                 {
                     user.ApplyVitalLayer(bind.VitalLayerId);
                 }
@@ -458,13 +458,13 @@ public class BasePassive
                 }
 
                 //矛盾してる場合を警告する
-                if(bind.GrantTiming == PassiveVitalTiming.OnRemove && bind.IsSurvivalCondition)
+                if(bind.GrantTiming == PassiveLinkedComponentTiming.OnRemove && bind.IsSurvivalCondition)
                 {
                     Debug.LogWarning
                     ($"{_owner}に付与された{PassiveName}の追加HP({bind.VitalLayerId})はOnRemoveというパッシブが消されるタイミングで付与されますが、/n同時にパッシブの生存条件であるというプロパティも存在します。 パッシブは正常に削除された為、エラーは起きません。\n");
                 }
 
-                if(bind.GrantTiming == PassiveVitalTiming.OnRemove && bind.RemoveOnPassiveRemove)
+                if(bind.GrantTiming == PassiveLinkedComponentTiming.OnRemove && bind.RemoveOnPassiveRemove)
                 {
                     Debug.LogWarning
                     ($"{_owner}に付与された{PassiveName}の追加HP({bind.VitalLayerId})はOnRemoveというパッシブが消されるタイミングで付与されますが、同時にパッシブ終了時にも消される設定です。この場合、削除処理が優先され、追加HPは付与されませんでした。\n");
@@ -1109,6 +1109,7 @@ public class BasePassive
         {
             copy.VitalLayers.Add(vital.DeepCopy());
         }
+        
         copy.PassivePower = PassivePower;
         
         return copy;

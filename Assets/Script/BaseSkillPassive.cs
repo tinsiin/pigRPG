@@ -5,6 +5,35 @@ using System.Linq;
 using UnityEditor.Rendering;
 using Unity.VisualScripting;
 using static CommonCalc;
+using RandomExtensions;
+
+/// <summary>
+/// スキルパッシブはどうやって付与されるスキルを選ぶのかの形式
+/// </summary>
+public enum SkillPassiveTargetSelection
+{
+    /// <summary> 
+    /// 直接選択式(UI,標準ロジックで渡される値)
+    /// </summary>
+    Select,
+    /// <summary> 
+    /// 付与するスキルをランダムで選ぶ、完全ランダム
+    ///  </summary>
+    Random,
+    /// <summary> 
+    /// 特定のキャラとスキルに対応するタイプ
+    ///  </summary>
+    Reaction
+}
+/// <summary>
+/// スキルパッシブが反応するキャラとスキルを保持するクラス
+/// </summary>
+public class SkillPassiveReactionCharaAndSkill
+{
+    public string CharaName;
+    public string SkillName;
+}
+
 
 /// <summary>
 ///     スキルのパッシブ
@@ -53,7 +82,6 @@ public class BaseSkillPassive
     }
 
 
-
     /// <summary>
     /// スキルパワーを百分率で増減させる
     /// </summary>
@@ -68,6 +96,11 @@ public class BaseSkillPassive
     public bool IsLock;
 
     /// <summary>
+    /// 悪いパッシブかどうか
+    /// </summary>
+    public bool IsBad;
+
+    /// <summary>
     /// 熟練度上下レート
     /// TLOAの思い入れでのメリットなど
     /// </summary>
@@ -78,5 +111,19 @@ public class BaseSkillPassive
     /// 主にTLOAの思い入れでのメリット用
     /// </summary>
     public float HPFixedValueEffect;
+
+    public BaseSkillPassive DeepCopy()
+    {
+        return new BaseSkillPassive()
+        {
+            DurationTurn = DurationTurn,
+            DurationWalkTurn = DurationWalkTurn,
+            SkillPowerRate = SkillPowerRate,
+            IsLock = IsLock,
+            ProficiencyRate = ProficiencyRate,
+            HPFixedValueEffect = HPFixedValueEffect,
+            OwnerSkill = OwnerSkill
+        };
+    }
 
 }

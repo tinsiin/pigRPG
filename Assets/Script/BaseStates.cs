@@ -202,6 +202,17 @@ public abstract class BaseStates
 
     }
     /// <summary>
+    /// すべてのスキルのバッファのスキルパッシブをスキルに適用する。
+    /// </summary>
+    void ApplySkillsBufferApplyingSkillPassive()
+    {
+        foreach(var skill in SkillList)
+        {
+            skill.ApplyBufferApplyingSkillPassive();
+        }
+    }
+
+    /// <summary>
     /// 戦闘中のパッシブ追加は基本バッファに入れよう
     /// 付与者が自分自身ではないのなら、grantorに自分以外の付与者を渡す
     /// </summary>
@@ -211,6 +222,7 @@ public abstract class BaseStates
         var status = PassiveManager.Instance.GetAtID(id).DeepCopy();//idを元にpassiveManagerから取得 ディープコピーでないとインスタンス共有される
         BufferApplyingPassiveList.Add((status,grantor));
     }
+    
 
 
 
@@ -486,7 +498,7 @@ public abstract class BaseStates
         foreach (var skill in SkillList)
         {
             //スキルが持つパッシブリストで回す
-            foreach (var pas in skill.SkillPassiveList)
+            foreach (var pas in skill.ReactiveSkillPassiveList)
             {
                 pas.Update();
             }
@@ -501,7 +513,7 @@ public abstract class BaseStates
         foreach (var skill in SkillList)
         {
             //スキルが持つパッシブリストで回す
-            foreach (var pas in skill.SkillPassiveList)
+            foreach (var pas in skill.ReactiveSkillPassiveList)
             {
                 pas.UpdateWalk();
             }
@@ -7118,6 +7130,76 @@ private int CalcTransformCountIncrement(int tightenStage)
         return done;
     }
     /// <summary>
+    /// 良いスキルパッシブ付与処理
+    /// </summary>
+    bool GoodSkillPassiveHit(BaseSkill skill)
+    {
+        var hit = false;
+        foreach (var pas in skill.AggressiveSkillPassiveList.Where(pas => !pas.IsBad))//スキルパッシブスキルに装弾されたスキルパッシブ
+        {
+            //スキルパッシブ付与対象のスキル
+            var targetedSkill = skill.SelectSkillPassiveAddTarget(this);
+            //付与対象のスキルで回す
+            foreach(var targetSkill in targetedSkill)
+            {
+                targetSkill.ApplySkillPassiveBufferInBattle(pas);//追加用バッファに追加
+            }
+
+            //ヒットしたことを返すフラグ
+            hit = true;//スキル命中率を介してるのだから。。。。[適合条件はスキルパッシブにはない]
+        }
+        return hit;
+    }
+    /// <summary>
+    /// 悪いスキルパッシブ付与処理
+    /// </summary>
+    bool BadSkillPassiveHit(BaseSkill skill)
+    {
+        var hit = false;
+        foreach (var pas in skill.AggressiveSkillPassiveList.Where(pas => pas.IsBad))//スキルパッシブスキルに装弾されたスキルパッシブ
+        {
+            //スキルパッシブ付与対象のスキル
+            var targetedSkill = skill.SelectSkillPassiveAddTarget(this);
+            //付与対象のスキルで回す
+            foreach(var targetSkill in targetedSkill)
+            {
+                targetSkill.ApplySkillPassiveBufferInBattle(pas);//追加用バッファに追加
+            }
+
+            //ヒットしたことを返すフラグ
+            hit = true;//スキル命中率を介してるのだから。。。。[適合条件はスキルパッシブにはない]
+        }
+        return hit;
+    }
+    /// <summary>
+    /// 良いスキルパッシブ解除処理
+    /// 各スキルパッシブのisbadで場合分けせずに、スキルそのもので場合分けするため、
+    /// スキル攻撃性質でgoodかbad指定での友好的、敵対的の命中計算の場合分けをしているため、
+    /// ここでgoodかbadを区別して処理する必要はないのでパッシブ除去と違いgood,badの冠詞は付かない
+    /// </summary>
+    bool SkillPassiveRemove(BaseSkill skill)
+    {
+        var done = false;
+        //個別指定の反応式
+        foreach(var hold in skill.ReactionCharaAndSkillList)//反応するキャラとスキルのリスト
+        {
+                //そもそもキャラ名が違っていたら、飛ばす
+            if(CharacterName != hold.CharaName) continue;
+
+            foreach(var targetSkill in SkillList)//対象者である自分の有効スキルすべてで回す。
+            {
+                if(targetSkill.SkillName == hold.SkillName)//スキル名まで一致したら
+                {
+                    targetSkill.SkillRemoveSkillPassive();//スキル効果ですべて抹消
+                    done = true;
+                    break;//スキルが一致して、他のスキルネームで検証する必要がなくなったので、次の対象スキルへ
+                }
+            }
+        }
+
+        return done;
+    }
+    /// <summary>
     /// 良い追加HP付与処理
     /// </summary>
     /// <param name="skill"></param>
@@ -7157,14 +7239,17 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>
     /// 直接攻撃じゃない敵対行動系
     /// </summary>
-    void ApplyNonDamageHostileEffects(BaseStates Atker,BaseSkill skill,out bool isBadPassiveHit, out bool isBadVitalLayerHit, out bool isGoodPassiveRemove, out bool isGoodVitalLayerRemove,HitResult hitResult)
+    void ApplyNonDamageHostileEffects(BaseStates Atker,BaseSkill skill,out bool isBadPassiveHit, out bool isBadVitalLayerHit, 
+    out bool isGoodPassiveRemove, out bool isGoodVitalLayerRemove, out bool isBadSkillPassiveHit, out bool isGoodSkillPassiveRemove,HitResult hitResult)
     {
         isBadPassiveHit = false;
         isBadVitalLayerHit = false;
         isGoodPassiveRemove = false;
         isGoodVitalLayerRemove = false;
+        isBadSkillPassiveHit = false;
+        isGoodSkillPassiveRemove = false;
 
-        var rndFrequency = 98;//ランダム発動率　基本的に100%発動する　　　　　　　　　　　　　　　　　　　　　　　　　　　微妙に攻撃タイプ以外の敵対行動を発動しにくくして、攻撃することの優位性を高める　ドキュメント記述なし
+        var rndFrequency = 90;//ランダム発動率　基本的に100%発動する　　　　　　　　　　　　　　　　　　　　　　　　　　　微妙に攻撃タイプ以外の敵対行動を発動しにくくして、攻撃することの優位性を高める　ドキュメント記述なし
         if(hitResult == HitResult.Graze)
         {
             rndFrequency = 50;//かすりHitなので、二分の一で発動
@@ -7213,6 +7298,28 @@ private int CalcTransformCountIncrement(int tightenStage)
             }else
             {
                 Debug.Log("良い追加HPを取り除くのが上手く発動しなかった。");
+            }
+        }
+        if(skill.HasType(SkillType.removeGoodSkillPassive))
+        {
+            if (rollper(rndFrequency))
+            {
+                //良いスキルパッシブを取り除こうとしてるのなら、命中回避計算
+                isGoodSkillPassiveRemove = SkillPassiveRemove(skill);
+            }else
+            {
+                Debug.Log("良い「スキル」パッシブを取り除くのが上手く発動しなかった。");
+            }
+        }
+        if(skill.HasType(SkillType.addSkillPassive))
+        {
+            if (rollper(rndFrequency))
+            {
+                //悪いスキルパッシブを付与しようとしてるのなら、命中回避計算
+                isBadSkillPassiveHit = BadSkillPassiveHit(skill);
+            }else
+            {
+                Debug.Log("悪い「スキル」パッシブを付与が上手く発動しなかった。");
             }
         }
     }
@@ -7501,6 +7608,10 @@ private int CalcTransformCountIncrement(int tightenStage)
         var isBadVitalLayerRemove = false;
         var isGoodVitalLayerHit = false;
         var isGoodVitalLayerRemove = false;
+        var isBadSkillPassiveHit = false;
+        var isGoodSkillPassiveHit = false;
+        var isBadSkillPassiveRemove = false;
+        var isGoodSkillPassiveRemove = false;
         var isHeal = false;
         var isAtkHit = false;
         var healAmount = 0f;
@@ -7560,7 +7671,8 @@ private int CalcTransformCountIncrement(int tightenStage)
                     damageAmount = Damage(attacker, skillPower,skillPowerForMental,hitResult,ref isdisturbed);
                     isAtkHit = true;//攻撃をしたからtrue
 
-                    ApplyNonDamageHostileEffects(attacker,skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove, hitResult);
+                    ApplyNonDamageHostileEffects(attacker,skill,out isBadPassiveHit, out isBadVitalLayerHit,
+                     out isGoodPassiveRemove, out isGoodVitalLayerRemove,out isBadSkillPassiveHit,out isGoodSkillPassiveRemove, hitResult);
                 }
             }
         }
@@ -7571,7 +7683,8 @@ private int CalcTransformCountIncrement(int tightenStage)
             hitResult = MixAllyEvade(hitResult,attacker);
             if (hitResult != HitResult.CompleteEvade)
             {
-                ApplyNonDamageHostileEffects(attacker,skill,out isBadPassiveHit, out isBadVitalLayerHit, out isGoodPassiveRemove, out isGoodVitalLayerRemove, hitResult);        
+                ApplyNonDamageHostileEffects(attacker,skill,out isBadPassiveHit, out isBadVitalLayerHit,
+                 out isGoodPassiveRemove, out isGoodVitalLayerRemove,out isBadSkillPassiveHit,out isGoodSkillPassiveRemove, hitResult);        
             }
         }
 
@@ -7613,6 +7726,9 @@ private int CalcTransformCountIncrement(int tightenStage)
             }
         }
 
+        //付与や除去系の友好的スキル(敵対的な物はApplyNonDamageHostileEffectsで処理)
+        //攻撃要素あるにかかわらず、回復系と同じで独立している。
+
         if (skill.HasType(SkillType.addPassive))
         {
             //味方別口回避の発生と回避判定
@@ -7636,7 +7752,28 @@ private int CalcTransformCountIncrement(int tightenStage)
                 isGoodVitalLayerHit = true;
             }
         }
-
+        if (skill.HasType(SkillType.addSkillPassive))
+        {
+            //味方別口回避の発生と回避判定
+            var hitResult = skill.SkillHitCalc(this);
+            hitResult = MixAllyEvade(hitResult,attacker);
+            if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
+            {
+                //良いパッシブを付与しようとしてるのなら、スキル命中計算のみ
+                isGoodSkillPassiveHit = GoodSkillPassiveHit(skill);
+            }
+        }
+        if (skill.HasType(SkillType.removeBadSkillPassive))
+        {
+            //味方別口回避の発生と回避判定
+            var hitResult = skill.SkillHitCalc(this);
+            hitResult = MixAllyEvade(hitResult,attacker);
+            if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
+            {
+                //悪いパッシブを取り除くのなら、スキル命中のみ
+                isBadSkillPassiveRemove = SkillPassiveRemove(skill);
+            }
+        }
 
 
         if(skill.HasType(SkillType.RemovePassive))
@@ -7675,7 +7812,8 @@ private int CalcTransformCountIncrement(int tightenStage)
             isAttackerHit = thisAtkTurn;
         }else{
                 isAttackerHit = isBadPassiveHit || isBadPassiveRemove || isGoodPassiveHit || isGoodPassiveRemove || 
-                isGoodVitalLayerHit || isGoodVitalLayerRemove || isBadVitalLayerHit || isBadVitalLayerRemove || isHeal;
+                isGoodVitalLayerHit || isGoodVitalLayerRemove || isBadVitalLayerHit || isBadVitalLayerRemove ||
+                isBadSkillPassiveHit || isGoodSkillPassiveHit || isBadSkillPassiveRemove || isGoodSkillPassiveRemove || isHeal;
         }
         //攻撃がいわゆるヒットをしたならば、
         if (isAttackerHit)
@@ -7707,7 +7845,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         //被害の記録
         damageDatas.Add(new DamageData//クソ長い
         (isAtkHit,isBadPassiveHit,isBadPassiveRemove,isGoodPassiveHit,isGoodPassiveRemove,isGoodVitalLayerHit,isGoodVitalLayerRemove,
-        isBadVitalLayerHit,isBadVitalLayerRemove,isHeal,skill,damageAmount.Total,healAmount,attacker));
+        isBadVitalLayerHit,isBadVitalLayerRemove,isGoodSkillPassiveHit,isGoodSkillPassiveRemove,isBadSkillPassiveHit,isBadSkillPassiveRemove,
+        isHeal,skill,damageAmount.Total,healAmount,attacker));
 
         if(isAtkHit)//このboolは「攻撃性質」のスキルを食らったかどうかの判定になる。
         {
@@ -8309,6 +8448,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
        
         ApplyBufferApplyingPassive();//パッシブをここで付与。 =>詳細は豚のパッシブみとけ
+        ApplySkillsBufferApplyingSkillPassive();//スキルパッシブも付与
 
         //記録系
         _tempLive = !Death();//死んでない = 生きてるからtrue
@@ -10056,6 +10196,11 @@ public class DamageData
     public bool IsBadVitalLayerHit;
     public bool IsBadVitalLayerRemove;
 
+    public bool IsGoodSkillPassiveHit;
+    public bool IsGoodSkillPassiveRemove;
+    public bool IsBadSkillPassiveHit;
+    public bool IsBadSkillPassiveRemove;
+
 
     /// <summary>
     /// 死回復も含める
@@ -10067,7 +10212,10 @@ public class DamageData
     //public BasePassive whatPassive;  多いしまだ必要ないから一旦コメントアウト
     //public int DamagePercent　最大HPはBaseStates側にあるからそっちから取得する
     public BaseSkill Skill;
-    public DamageData(bool isAtkHit,bool isBadPassiveHit,bool isBadPassiveRemove,bool isGoodPassiveHit,bool isGoodPassiveRemove,bool isGoodVitalLayerHit,bool isGoodVitalLayerRemove,bool isBadVitalLayerHit,bool isBadVitalLayerRemove,bool isHeal,BaseSkill skill,float damage,float heal,BaseStates attacker)
+    public DamageData(bool isAtkHit,bool isBadPassiveHit,bool isBadPassiveRemove,bool isGoodPassiveHit,bool isGoodPassiveRemove,
+    bool isGoodVitalLayerHit,bool isGoodVitalLayerRemove,bool isBadVitalLayerHit,bool isBadVitalLayerRemove,
+    bool isGoodSkillPassiveHit,bool isGoodSkillPassiveRemove,bool isBadSkillPassiveHit,bool isBadSkillPassiveRemove,
+    bool isHeal,BaseSkill skill,float damage,float heal,BaseStates attacker)
     {
         IsAtkHit = isAtkHit;
         IsBadPassiveHit = isBadPassiveHit;
@@ -10078,6 +10226,10 @@ public class DamageData
         IsGoodVitalLayerRemove = isGoodVitalLayerRemove;
         IsBadVitalLayerHit = isBadVitalLayerHit;
         IsBadVitalLayerRemove = isBadVitalLayerRemove;
+        IsGoodSkillPassiveHit = isGoodSkillPassiveHit;
+        IsGoodSkillPassiveRemove = isGoodSkillPassiveRemove;
+        IsBadSkillPassiveHit = isBadSkillPassiveHit;
+        IsBadSkillPassiveRemove = isBadSkillPassiveRemove;
         IsHeal = isHeal;
 
         Skill = skill;
