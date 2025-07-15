@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using R3;
 using TMPro;
@@ -90,9 +91,9 @@ public class Walking : MonoBehaviour
         }
     }
 
-    private void OnClickNextWaitBtn()
+    private async UniTask OnClickNextWaitBtn()
     {
-        USERUI_state.Value = bm.CharacterActBranching();
+        USERUI_state.Value = await bm.CharacterActBranching();
     }
 
     public static BattleManager bm;
@@ -122,7 +123,9 @@ public class Walking : MonoBehaviour
 
             wui.FirstImpressionZoom();
             USERUI_state.Value = bm.ACTPop();//一番最初のUSERUIの状態を変更させるのと戦闘ループの最初の準備処理。
-            _nextWaitBtn.onClick.AddListener(OnClickNextWaitBtn);//ボタンにbmの処理を追加
+            _nextWaitBtn.onClick.AddListener(()=>OnClickNextWaitBtn().Forget());;//ボタンにbmの処理を追加
+            //非同期なのでボタン処理自体は非同期で実行されるが、例えばUI側での他のボタンや、このボタン自体の処理を防ぐってのはないけど、
+            //そこは内部でのUI処理で対応してるから平気
         }
         else
         {

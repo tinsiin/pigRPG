@@ -7132,13 +7132,13 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>
     /// 良いスキルパッシブ付与処理
     /// </summary>
-    bool GoodSkillPassiveHit(BaseSkill skill)
+    async UniTask<bool> GoodSkillPassiveHit(BaseSkill skill)
     {
         var hit = false;
         foreach (var pas in skill.AggressiveSkillPassiveList.Where(pas => !pas.IsBad))//スキルパッシブスキルに装弾されたスキルパッシブ
         {
             //スキルパッシブ付与対象のスキル
-            var targetedSkill = skill.SelectSkillPassiveAddTarget(this);
+            var targetedSkill =  await skill.SelectSkillPassiveAddTarget(this);
             //付与対象のスキルで回す
             foreach(var targetSkill in targetedSkill)
             {
@@ -7153,13 +7153,13 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>
     /// 悪いスキルパッシブ付与処理
     /// </summary>
-    bool BadSkillPassiveHit(BaseSkill skill)
+    async UniTask<bool> BadSkillPassiveHit(BaseSkill skill)
     {
         var hit = false;
         foreach (var pas in skill.AggressiveSkillPassiveList.Where(pas => pas.IsBad))//スキルパッシブスキルに装弾されたスキルパッシブ
         {
             //スキルパッシブ付与対象のスキル
-            var targetedSkill = skill.SelectSkillPassiveAddTarget(this);
+            var targetedSkill = await skill.SelectSkillPassiveAddTarget(this);
             //付与対象のスキルで回す
             foreach(var targetSkill in targetedSkill)
             {
@@ -7239,15 +7239,15 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>
     /// 直接攻撃じゃない敵対行動系
     /// </summary>
-    void ApplyNonDamageHostileEffects(BaseStates Atker,BaseSkill skill,out bool isBadPassiveHit, out bool isBadVitalLayerHit, 
-    out bool isGoodPassiveRemove, out bool isGoodVitalLayerRemove, out bool isBadSkillPassiveHit, out bool isGoodSkillPassiveRemove,HitResult hitResult)
+    async UniTask<HostileEffectResult>
+    ApplyNonDamageHostileEffects(BaseStates Atker,BaseSkill skill,HitResult hitResult)
     {
-        isBadPassiveHit = false;
-        isBadVitalLayerHit = false;
-        isGoodPassiveRemove = false;
-        isGoodVitalLayerRemove = false;
-        isBadSkillPassiveHit = false;
-        isGoodSkillPassiveRemove = false;
+        var badPassiveHit = false;
+        var badVitalLayerHit = false;
+        var goodPassiveRemove = false;
+        var goodVitalLayerRemove = false;
+        var badSkillPassiveHit = false;
+        var goodSkillPassiveRemove = false;
 
         var rndFrequency = 90;//ランダム発動率　基本的に100%発動する　　　　　　　　　　　　　　　　　　　　　　　　　　　微妙に攻撃タイプ以外の敵対行動を発動しにくくして、攻撃することの優位性を高める　ドキュメント記述なし
         if(hitResult == HitResult.Graze)
@@ -7260,7 +7260,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (rollper(rndFrequency))
             {
                 //悪いパッシブを付与しようとしてるのなら、命中回避計算
-                isBadPassiveHit = BadPassiveHit(skill,Atker);
+                badPassiveHit = BadPassiveHit(skill,Atker);
             }else
             {
                 Debug.Log("悪いパッシブを付与が上手く発動しなかった。");
@@ -7272,7 +7272,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (rollper(rndFrequency))
             {
                 //悪い追加HPを付与しようとしてるのなら、命中回避計算
-                isBadVitalLayerHit = BadVitalLayerHit(skill);
+                badVitalLayerHit = BadVitalLayerHit(skill);
             }else
             {
                 Debug.Log("悪い追加HPを付与が上手く発動しなかった。");
@@ -7283,7 +7283,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (rollper(rndFrequency))
             {
                 //良いパッシブを取り除こうとしてるのなら、命中回避計算
-                isGoodPassiveRemove = GoodPassiveRemove(skill);
+                goodPassiveRemove = GoodPassiveRemove(skill);
             }else
             {
                 Debug.Log("良いパッシブを取り除くのが上手く発動しなかった。");
@@ -7294,7 +7294,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (rollper(rndFrequency))
             {
                 //良い追加HPを取り除こうとしてるのなら、命中回避計算
-                isGoodVitalLayerRemove = GoodVitalLayerRemove(skill);
+                goodVitalLayerRemove = GoodVitalLayerRemove(skill);
             }else
             {
                 Debug.Log("良い追加HPを取り除くのが上手く発動しなかった。");
@@ -7305,7 +7305,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (rollper(rndFrequency))
             {
                 //良いスキルパッシブを取り除こうとしてるのなら、命中回避計算
-                isGoodSkillPassiveRemove = SkillPassiveRemove(skill);
+                goodSkillPassiveRemove = SkillPassiveRemove(skill);
             }else
             {
                 Debug.Log("良い「スキル」パッシブを取り除くのが上手く発動しなかった。");
@@ -7316,13 +7316,20 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (rollper(rndFrequency))
             {
                 //悪いスキルパッシブを付与しようとしてるのなら、命中回避計算
-                isBadSkillPassiveHit = BadSkillPassiveHit(skill);
+                badSkillPassiveHit = await BadSkillPassiveHit(skill);
             }else
             {
                 Debug.Log("悪い「スキル」パッシブを付与が上手く発動しなかった。");
             }
         }
-    }
+
+        return new HostileEffectResult(badPassiveHit,
+            badVitalLayerHit,
+            goodPassiveRemove,
+            goodVitalLayerRemove,
+            badSkillPassiveHit,
+            goodSkillPassiveRemove);
+    }//async化すると非同期処理ではoutで引数渡す形にするとfalseで返ってだめらしいから戻り値構造体で返す
 
     /// <summary>
     /// 精神補正用にスキルの属性を精神属性用に特殊分岐した後に渡す関数
@@ -7573,7 +7580,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     /// <param name="skill"></param>
     /// <param name="UnderIndex">攻撃される人の順番　スキルのPowerSpreadの順番に同期している</param>
-    public virtual string ReactionSkill(BaseStates attacker, float spread)
+    public virtual async UniTask<string> ReactionSkill(BaseStates attacker, float spread)
     {
         attacker.OnAttackerOneSkillActStart(this);//攻撃者の一人へのスキル実行開始時のコールバック
 
@@ -7600,18 +7607,18 @@ private int CalcTransformCountIncrement(int tightenStage)
         var isdisturbed = false;
 
         //被害記録用の一時保存boolなど
-        var isBadPassiveHit = false;
-        var isBadPassiveRemove = false;
-        var isGoodPassiveRemove = false;
-        var isGoodPassiveHit = false;
-        var isBadVitalLayerHit = false;
-        var isBadVitalLayerRemove = false;
-        var isGoodVitalLayerHit = false;
-        var isGoodVitalLayerRemove = false;
-        var isBadSkillPassiveHit = false;
-        var isGoodSkillPassiveHit = false;
-        var isBadSkillPassiveRemove = false;
-        var isGoodSkillPassiveRemove = false;
+        var BadPassiveHit = false;
+        var BadPassiveRemove = false;
+        var GoodPassiveRemove = false;
+        var GoodPassiveHit = false;
+        var BadVitalLayerHit = false;
+        var BadVitalLayerRemove = false;
+        var GoodVitalLayerHit = false;
+        var GoodVitalLayerRemove = false;
+        var BadSkillPassiveHit = false;
+        var GoodSkillPassiveHit = false;
+        var BadSkillPassiveRemove = false;
+        var GoodSkillPassiveRemove = false;
         var isHeal = false;
         var isAtkHit = false;
         var healAmount = 0f;
@@ -7671,8 +7678,13 @@ private int CalcTransformCountIncrement(int tightenStage)
                     damageAmount = Damage(attacker, skillPower,skillPowerForMental,hitResult,ref isdisturbed);
                     isAtkHit = true;//攻撃をしたからtrue
 
-                    ApplyNonDamageHostileEffects(attacker,skill,out isBadPassiveHit, out isBadVitalLayerHit,
-                     out isGoodPassiveRemove, out isGoodVitalLayerRemove,out isBadSkillPassiveHit,out isGoodSkillPassiveRemove, hitResult);
+                    var result = await ApplyNonDamageHostileEffects(attacker,skill,hitResult);
+                    BadPassiveHit = result.BadPassiveHit;
+                    BadVitalLayerHit = result.BadVitalLayerHit;
+                    GoodPassiveRemove = result.GoodPassiveRemove;
+                    GoodVitalLayerRemove = result.GoodVitalLayerRemove;
+                    BadSkillPassiveHit = result.BadSkillPassiveHit;
+                    GoodSkillPassiveRemove = result.GoodSkillPassiveRemove;
                 }
             }
         }
@@ -7683,8 +7695,13 @@ private int CalcTransformCountIncrement(int tightenStage)
             hitResult = MixAllyEvade(hitResult,attacker);
             if (hitResult != HitResult.CompleteEvade)
             {
-                ApplyNonDamageHostileEffects(attacker,skill,out isBadPassiveHit, out isBadVitalLayerHit,
-                 out isGoodPassiveRemove, out isGoodVitalLayerRemove,out isBadSkillPassiveHit,out isGoodSkillPassiveRemove, hitResult);        
+                var result = await ApplyNonDamageHostileEffects(attacker,skill,hitResult);     
+                BadPassiveHit = result.BadPassiveHit;
+                BadVitalLayerHit = result.BadVitalLayerHit;
+                GoodPassiveRemove = result.GoodPassiveRemove;
+                GoodVitalLayerRemove = result.GoodVitalLayerRemove;
+                BadSkillPassiveHit = result.BadSkillPassiveHit;
+                GoodSkillPassiveRemove = result.GoodSkillPassiveRemove;   
             }
         }
 
@@ -7737,7 +7754,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //良いパッシブを付与しようとしてるのなら、スキル命中計算のみ
-                isGoodPassiveHit = GoodPassiveHit(skill,attacker);
+                GoodPassiveHit = this.GoodPassiveHit(skill, attacker);
             }
         }
         if (skill.HasType(SkillType.AddVitalLayer))
@@ -7748,8 +7765,8 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //良い追加HPを付与しようとしてるのなら、スキル命中のみ
-               GoodVitalLayerHit(skill);
-                isGoodVitalLayerHit = true;
+               this.GoodVitalLayerHit(skill);
+                GoodVitalLayerHit = true;
             }
         }
         if (skill.HasType(SkillType.addSkillPassive))
@@ -7760,7 +7777,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //良いパッシブを付与しようとしてるのなら、スキル命中計算のみ
-                isGoodSkillPassiveHit = GoodSkillPassiveHit(skill);
+                GoodSkillPassiveHit = await this.GoodSkillPassiveHit(skill);
             }
         }
         if (skill.HasType(SkillType.removeBadSkillPassive))
@@ -7771,7 +7788,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //悪いパッシブを取り除くのなら、スキル命中のみ
-                isBadSkillPassiveRemove = SkillPassiveRemove(skill);
+                BadSkillPassiveRemove = SkillPassiveRemove(skill);
             }
         }
 
@@ -7784,7 +7801,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //悪いパッシブを取り除くのなら、スキル命中のみ
-                isBadPassiveRemove = BadPassiveRemove(skill);
+                BadPassiveRemove = this.BadPassiveRemove(skill);
             }
         }
         if (skill.HasType(SkillType.RemoveVitalLayer))
@@ -7795,7 +7812,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //悪い追加HPを取り除こうとしてるのなら、スキル命中のみ
-                isBadVitalLayerRemove = BadVitalLayerRemove(skill);
+                BadVitalLayerRemove = this.BadVitalLayerRemove(skill);
             }
         }
 
@@ -7811,9 +7828,9 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             isAttackerHit = thisAtkTurn;
         }else{
-                isAttackerHit = isBadPassiveHit || isBadPassiveRemove || isGoodPassiveHit || isGoodPassiveRemove || 
-                isGoodVitalLayerHit || isGoodVitalLayerRemove || isBadVitalLayerHit || isBadVitalLayerRemove ||
-                isBadSkillPassiveHit || isGoodSkillPassiveHit || isBadSkillPassiveRemove || isGoodSkillPassiveRemove || isHeal;
+                isAttackerHit = BadPassiveHit || BadPassiveRemove || GoodPassiveHit || GoodPassiveRemove || 
+                GoodVitalLayerHit || GoodVitalLayerRemove || BadVitalLayerHit || BadVitalLayerRemove ||
+                BadSkillPassiveHit || GoodSkillPassiveHit || BadSkillPassiveRemove || GoodSkillPassiveRemove || isHeal;
         }
         //攻撃がいわゆるヒットをしたならば、
         if (isAttackerHit)
@@ -7844,8 +7861,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         attacker.OnAttackerOneSkillActEnd();//攻撃者の一人へのスキル実行終了時のコールバック
         //被害の記録
         damageDatas.Add(new DamageData//クソ長い
-        (isAtkHit,isBadPassiveHit,isBadPassiveRemove,isGoodPassiveHit,isGoodPassiveRemove,isGoodVitalLayerHit,isGoodVitalLayerRemove,
-        isBadVitalLayerHit,isBadVitalLayerRemove,isGoodSkillPassiveHit,isGoodSkillPassiveRemove,isBadSkillPassiveHit,isBadSkillPassiveRemove,
+        (isAtkHit,BadPassiveHit,BadPassiveRemove,GoodPassiveHit,GoodPassiveRemove,GoodVitalLayerHit,GoodVitalLayerRemove,
+        BadVitalLayerHit,BadVitalLayerRemove,GoodSkillPassiveHit,GoodSkillPassiveRemove,BadSkillPassiveHit,BadSkillPassiveRemove,
         isHeal,skill,damageAmount.Total,healAmount,attacker));
 
         if(isAtkHit)//このboolは「攻撃性質」のスキルを食らったかどうかの判定になる。
@@ -7888,7 +7905,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <summary>
     /// クラスを通じて相手を攻撃する
     /// </summary>
-    public virtual string AttackChara(UnderActersEntryList Unders)
+    public virtual async UniTask<string> AttackChara(UnderActersEntryList Unders)
     {
         TenDayGrowthListByHIT = new();//ヒット分成長リストを初期化する。
 
@@ -7945,7 +7962,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             var ene = Unders.GetAtCharacter(i);
             ApplyCharaConditionalToSpecial(ene);//キャラ限定補正を通常の特別補正リストに追加　キャラが合ってればね
 
-            txt += ene.ReactionSkill(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
+            txt += await ene.ReactionSkill(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
         }
 
         NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルの攻撃回数をカウントアップ
@@ -10944,5 +10961,33 @@ public class StatesPowerBreakdown
     public static bool operator >(StatesPowerBreakdown left, float right)
     {
         return left.Total > right;
+    }
+}
+/// <summary>
+/// 敵対的行動のヒット結果を返す構造体
+/// </summary>
+public struct HostileEffectResult
+{
+    public bool BadPassiveHit;
+    public bool BadVitalLayerHit;
+    public bool GoodPassiveRemove;
+    public bool GoodVitalLayerRemove;
+    public bool BadSkillPassiveHit;
+    public bool GoodSkillPassiveRemove;
+
+    public HostileEffectResult(
+        bool badPassiveHit,
+        bool badVitalLayerHit,
+        bool goodPassiveRemove,
+        bool goodVitalLayerRemove,
+        bool badSkillPassiveHit,
+        bool goodSkillPassiveRemove)
+    {
+        BadPassiveHit        = badPassiveHit;
+        BadVitalLayerHit     = badVitalLayerHit;
+        GoodPassiveRemove    = goodPassiveRemove;
+        GoodVitalLayerRemove = goodVitalLayerRemove;
+        BadSkillPassiveHit   = badSkillPassiveHit;
+        GoodSkillPassiveRemove = goodSkillPassiveRemove;
     }
 }

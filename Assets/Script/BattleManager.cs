@@ -16,6 +16,7 @@ using TMPro;
 using UnityEditor;
 using static CommonCalc;
 using UnityEditor.UIElements;
+using System.Threading.Tasks;
 
 /// <summary>
 /// 戦闘の先手が起ったかどうか
@@ -777,7 +778,7 @@ public class BattleManager
     /// <summary>
     /// 俳優の行動の分岐
     /// </summary>
-    public TabState CharacterActBranching()
+    public async UniTask<TabState> CharacterActBranching()
     {
         var skill = Acter.NowUseSkill;
         var IsEscape = Acter.SelectedEscape;//逃げる意思
@@ -838,7 +839,7 @@ public class BattleManager
 
             if(CheckPassivesSkillActivation())
             {
-                return SkillACT();
+                return await SkillACT();
             }
             //ここに　スキル発動失敗のエフェクトを入れる
             return DoNothingACT();//発動失敗したら何もせず行動準備へ
@@ -1421,7 +1422,7 @@ public class BattleManager
     /// スキルアクトを実行
     /// </summary>
     /// <returns></returns>
-    private TabState SkillACT()
+    private async UniTask<TabState> SkillACT()
     {
         Debug.Log("スキル行使実行");
         var skill = Acter.NowUseSkill;
@@ -1456,7 +1457,8 @@ public class BattleManager
 
         //実行処理
         skill.SetDeltaTurn(BattleTurnCount);//スキルのdeltaTurnをセット
-        CreateBattleMessage(Acter.AttackChara(unders));//攻撃の処理からメッセージが返る。
+        var message = await Acter.AttackChara(unders);//非同期で取得
+        CreateBattleMessage(message);//攻撃の処理からメッセージが返る。
 
         
 

@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using static CommonCalc;
+using Cysharp.Threading.Tasks;   // UniTask
 [Serializable]
 public class ButtonAndSkillIDHold
 {
@@ -60,6 +61,8 @@ public class PlayersStates:MonoBehaviour
 {
     //staticなインスタンス
     public static PlayersStates Instance { get; private set; }
+
+    public GameObject EyeArea;
 
     private void Awake()
     {
@@ -666,6 +669,9 @@ public class PlayersStates:MonoBehaviour
         return PartyProperty.MelaneGroup;//基本的にif文で全てのパターンを網羅しているので、ここには来ない
     }
 
+
+
+
     /// <summary>
     ///     進行度を増やす
     /// </summary>
@@ -726,6 +732,45 @@ public class PlayersStates:MonoBehaviour
         sites.OnWalkCallBack(walkCount);
         noramlia.OnWalkCallBack(walkCount);
     }
+
+    //モーダルエリア
+    public GameObject ModalArea;
+
+    void GoToModalArea()
+    {
+        ModalArea.gameObject.SetActive(true);
+        EyeArea.gameObject.SetActive(false);//eyeAreaが上に映っちゃうから非表示
+    }
+    void ReturnModalArea()
+    {
+        EyeArea.gameObject.SetActive(true);//eyeAreaを元に戻す
+        ModalArea.gameObject.SetActive(false);
+    }
+
+    //スキルパッシブ対象スキル選択ボタン管理エリア
+    [SerializeField]SelectSkillPassiveTargetSkillButtons SelectSkillPassiveTargetHandle;
+    /// <summary>
+    /// スキルパッシブ対象スキル選択画面へ行く
+    /// </summary>
+    public async UniTask<List<BaseSkill>> GoToSelectSkillPassiveTargetSkillButtonsArea
+    (List<BaseSkill> skills, int selectCount)
+    {
+        GoToModalArea();//モーダルエリアの表示
+        
+        SelectSkillPassiveTargetHandle.gameObject.SetActive(true);//ボタンエリアの表示
+        return await SelectSkillPassiveTargetHandle.ShowSkillsButtons(skills, selectCount);//スキル選択ボタンの生成
+    }
+    /// <summary>
+    /// スキルパッシブ対象スキル選択画面から戻る
+    /// </summary>
+    public void ReturnSelectSkillPassiveTargetSkillButtonsArea()
+    {
+        SelectSkillPassiveTargetHandle.gameObject.SetActive(false);//ボタンエリアの非表示
+        ReturnModalArea();//モーダルエリアの非表示
+    }
+    
+
+
     
 
     //中央決定値など---------------------------------------------------------中央決定値

@@ -7,6 +7,7 @@ using Unity.VisualScripting;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UI;
+using Cysharp.Threading.Tasks;
 
 
 /// <summary>
@@ -306,6 +307,7 @@ public class SkillLevelData
 [Serializable]
 public class BaseSkill
 {
+    protected BattleManager manager => Walking.bm;
     /// <summary>
     ///     スキルの精神属性
     /// </summary>
@@ -1619,7 +1621,7 @@ public class BaseSkill
     /// <summary>
     /// スキルパッシブの付与対象となるスキルを対象者のスキルリストから選ぶ。
     /// </summary>
-    public List<BaseSkill> SelectSkillPassiveAddTarget(BaseStates target)
+    public async UniTask<List<BaseSkill>> SelectSkillPassiveAddTarget(BaseStates target)
     {
         var targetSkills = target.SkillList;//ターゲットの現在解放されてるスキル
         if(targetSkills.Count == 0)
@@ -1627,9 +1629,32 @@ public class BaseSkill
         Debug.LogError("スキルパッシブの対象スキルの選別を試みましたが、\n対象者のスキルリストが空です");
         return null;}
 
+        //直接選択式(UI)
         if(TargetSelection == SkillPassiveTargetSelection.Select)
         {
-            
+            //区切りによりUIに並ぶスキルが限定されるのは未実装
+
+            //敵ならAIで 未実装
+            if(manager.GetCharacterFaction(Doer) == allyOrEnemy.Enemyiy)
+            {
+                
+            }
+
+            //味方はUI選択
+            if(manager.GetCharacterFaction(Doer) == allyOrEnemy.alliy)
+            {
+                //選択ボタンエリア生成と受け取り
+                var result = await PlayersStates.Instance.
+                GoToSelectSkillPassiveTargetSkillButtonsArea(targetSkills.ToList(), SkillPassiveEffectCount);
+
+                if(result.Count == 0)
+                {
+                    Debug.LogError("スキルパッシブの対象スキルを直接選択しましたが何も返ってきません");
+                    return null;
+                }
+                return result;
+            }
+
         }
 
         //反応式
