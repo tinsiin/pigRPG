@@ -7139,10 +7139,11 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             //スキルパッシブ付与対象のスキル
             var targetedSkill =  await skill.SelectSkillPassiveAddTarget(this);
+            if(targetedSkill == null)continue;//付与対象のスキルがなかったら、次のループへ
             //付与対象のスキルで回す
             foreach(var targetSkill in targetedSkill)
             {
-                targetSkill.ApplySkillPassiveBufferInBattle(pas);//追加用バッファに追加
+                targetSkill.ApplySkillPassiveBufferInBattle(pas);//スキルパッシブ追加用バッファに追加
             }
 
             //ヒットしたことを返すフラグ
@@ -7160,6 +7161,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             //スキルパッシブ付与対象のスキル
             var targetedSkill = await skill.SelectSkillPassiveAddTarget(this);
+            if(targetedSkill == null)continue;//付与対象のスキルがなかったら、次のループへ
             //付与対象のスキルで回す
             foreach(var targetSkill in targetedSkill)
             {
@@ -7183,7 +7185,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         //個別指定の反応式
         foreach(var hold in skill.ReactionCharaAndSkillList)//反応するキャラとスキルのリスト
         {
-                //そもそもキャラ名が違っていたら、飛ばす
+            //そもそもキャラ名が違っていたら、飛ばす
             if(CharacterName != hold.CharaName) continue;
 
             foreach(var targetSkill in SkillList)//対象者である自分の有効スキルすべてで回す。

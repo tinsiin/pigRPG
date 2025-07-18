@@ -9,6 +9,16 @@ using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 
+/// <summary>
+/// スキル特殊判別性質
+/// </summary>
+[Flags]
+public enum SkillSpecialFlag
+{
+    TLOA = 1 << 0,
+    Magic = 1 << 1,
+    Blade = 1 << 2,
+}
 
 /// <summary>
 /// スキルの実行性質
@@ -240,6 +250,7 @@ public enum SkillImpression
     /// </summary>
     SubAssult_Machine,
 }
+
 /// <summary>
 /// スキルレベルに含まれるデータ
 /// </summary>
@@ -316,6 +327,10 @@ public class BaseSkill
     /// スキル印象　タグや慣れ補正で使う
     /// </summary>
     public SkillImpression Impression;
+    /// <summary>
+    /// 動作的雰囲気　スキル印象の裏バージョン
+    /// </summary>
+    public MotionFlavorTag MotionFlavor;// 空なら「唯一無二」のユニークスキルであるということ。
 
 
 
@@ -392,19 +407,41 @@ public class BaseSkill
     public PhysicalProperty SkillPhysical;
 
     public BaseStates Doer;//行使者
-
-        /// <summary>
+    /// <summary>
+    /// スキルの特殊判別性質
+    /// </summary>
+    public SkillSpecialFlag SpecialFlags;
+    /// <summary>
+    /// スキルの特殊判別性質を持っているかどうか
+    /// </summary>
+    public bool HasSpecialFlag(SkillSpecialFlag skill)
+    {
+        return (SpecialFlags & skill) == skill;
+    }
+    /// <summary>
     /// TLOAかどうか
     /// </summary>
-    public bool IsTLOA;
+    public bool IsTLOA
+    {
+        get { return HasSpecialFlag(SkillSpecialFlag.TLOA); }
+    }
     /// <summary>
     /// 魔法スキルかどうか
     /// </summary>
-    public bool IsMagic;
+    public bool IsMagic
+    {
+        get { return HasSpecialFlag(SkillSpecialFlag.Magic); }
+    }
     /// <summary>
     /// 切物スキルかどうか
     /// </summary>
-    public bool IsBlade;
+    public bool IsBlade
+    {
+        get { return HasSpecialFlag(SkillSpecialFlag.Blade); }
+    }
+
+
+
     /// <summary>
     /// 殺せないスキルかどうか
     /// 1残る
@@ -1617,13 +1654,17 @@ public class BaseSkill
     /// スキルパッシブ付与スキルだとして、何個まで付与できるか。
     /// </summary>
     public int SkillPassiveEffectCount = 1;
+    /// <summary>
+    /// スキルパッシブ付与スキルのスキルの区別フィルター
+    /// </summary>
+    [SerializeField] SkillFilter _skillPassiveGibeSkill_SkillFilter = new();
 
     /// <summary>
     /// スキルパッシブの付与対象となるスキルを対象者のスキルリストから選ぶ。
     /// </summary>
     public async UniTask<List<BaseSkill>> SelectSkillPassiveAddTarget(BaseStates target)
     {
-        var targetSkills = target.SkillList;//ターゲットの現在解放されてるスキル
+        var targetSkills = target.SkillList.ToList();//ターゲットの現在解放されてるスキル
         if(targetSkills.Count == 0)
         {
         Debug.LogError("スキルパッシブの対象スキルの選別を試みましたが、\n対象者のスキルリストが空です");
@@ -1632,8 +1673,6 @@ public class BaseSkill
         //直接選択式(UI)
         if(TargetSelection == SkillPassiveTargetSelection.Select)
         {
-            //区切りによりUIに並ぶスキルが限定されるのは未実装
-
             //敵ならAIで 未実装
             if(manager.GetCharacterFaction(Doer) == allyOrEnemy.Enemyiy)
             {
@@ -1643,9 +1682,22 @@ public class BaseSkill
             //味方はUI選択
             if(manager.GetCharacterFaction(Doer) == allyOrEnemy.alliy)
             {
+                if(_skillPassiveGibeSkill_SkillFilter != null && _skillPassiveGibeSkill_SkillFilter.HasAnyCondition)//フィルタ条件があるなら絞り込む
+                {
+                    //フィルタで絞り込む
+                    targetSkills = targetSkills.Where(s => s.MatchFilter(_skillPassiveGibeSkill_SkillFilter)).ToList();
+                    // 絞り込み後に候補が0件の場合
+                    if(targetSkills.Count == 0)
+                    {
+                        Debug.LogWarning("フィルタ条件に合致するスキルがありませんでした。UI選択をキャンセルします。");
+                        return null;
+                    }
+                }
+
                 //選択ボタンエリア生成と受け取り
                 var result = await PlayersStates.Instance.
-                GoToSelectSkillPassiveTargetSkillButtonsArea(targetSkills.ToList(), SkillPassiveEffectCount);
+                GoToSelectSkillPassiveTargetSkillButtonsArea(targetSkills, SkillPassiveEffectCount);
+
 
                 if(result.Count == 0)
                 {
@@ -1686,15 +1738,39 @@ public class BaseSkill
         }
 
 
-        //ランダム方式(random区切りは未実装,動作的雰囲気とかの奴ね)
+        //ランダム方式(フィルタ条件による区切り実装済み)
         if(TargetSelection == SkillPassiveTargetSelection.Random)
         {
             var randomSkills = new List<BaseSkill>();
 
-            //全体からrandomに一つ選ぶ単純な方式
-            for(int i = 0; i < SkillPassiveEffectCount; i++)//すきる
+            if(_skillPassiveGibeSkill_SkillFilter != null && _skillPassiveGibeSkill_SkillFilter.HasAnyCondition)
             {
-                randomSkills.Add(RandomEx.Shared.GetItem(targetSkills.ToArray()));
+                // フィルタ条件がある場合：絞り込んでから抽選
+                var candidates = targetSkills.Where(s => s.MatchFilter(_skillPassiveGibeSkill_SkillFilter)).ToList();
+                if(candidates.Count == 0)
+                {
+                    Debug.LogWarning("フィルタ条件に合致するスキルがありませんでした。");
+                    return null;
+                }
+                
+                int selectCount = Math.Min(SkillPassiveEffectCount, candidates.Count);
+                for(int i = 0; i < selectCount; i++)// 絞り込んだスキルリスト からランダム選択
+                {
+                    var  item = RandomEx.Shared.GetItem(candidates.ToArray());
+                    randomSkills.Add(item);
+                    candidates.Remove(item);
+                }
+            }
+            else
+            {//全体からrandomに一つ(指定個数分)選ぶ単純な方式
+                //付与対象のスキル数が指定個数より少ない場合、ループが終わる
+                int selectCount = Math.Min(SkillPassiveEffectCount, targetSkills.Count);
+                for(int i = 0; i < selectCount; i++)
+                {
+                    var  item = RandomEx.Shared.GetItem(targetSkills.ToArray());//ランダムに選んで
+                    randomSkills.Add(item);//追加
+                    targetSkills.Remove(item);//重複を防ぐため削除
+                }
             }
 
             return randomSkills;
@@ -1702,7 +1778,64 @@ public class BaseSkill
         return null;
     }
 
+    public bool MatchFilter(SkillFilter filter)
+{
+    if (filter == null || !filter.HasAnyCondition) return true;
 
+    // 基本方式の判定
+    if (filter.Impressions.Count > 0 && !filter.Impressions.Contains(Impression))//スキル印象
+        return false;
+    if (filter.MotionFlavors.Count > 0 && !filter.MotionFlavors.Contains(MotionFlavor))//動作的雰囲気
+        return false;
+    if (filter.MentalAttrs.Count > 0 && !filter.MentalAttrs.Contains(SkillSpiritual))//精神属性
+        return false;
+    if (filter.PhysicalAttrs.Count > 0 && !filter.PhysicalAttrs.Contains(SkillPhysical))//物理属性
+        return false;
+    if (filter.AttackTypes.Count > 0 && !filter.AttackTypes.Contains(DistributionType))//スキル分散性質
+        return false;
+
+    // b方式の判定
+    //十日能力
+    if (filter.TenDayAbilities.Count > 0 && 
+        !SkillFilterUtil.CheckContain(EnumerateTenDayAbilities(), filter.TenDayAbilities, filter.TenDayMode))
+        return false;
+
+    //スキルの攻撃性質
+    if (filter.SkillTypes.Count > 0 && 
+        !SkillFilterUtil.CheckContain(EnumerateSkillTypes(), filter.SkillTypes, filter.SkillTypeMode))
+        return false;
+
+    //スキル特殊判別性質
+    if (filter.SpecialFlags.Count > 0 && 
+        !SkillFilterUtil.CheckContain(EnumerateSpecialFlags(), filter.SpecialFlags, filter.SpecialFlagMode))
+        return false;
+
+    return true;
+}
+    
+    /// <summary>
+    /// SkillTypeを列挙可能にする
+    /// </summary>
+    public IEnumerable<SkillType> EnumerateSkillTypes()
+    {
+        return SkillFilterUtil.FlagsToEnumerable<SkillType>(SkillType);
+    }
+
+    /// <summary>
+    /// SpecialFlagを列挙可能にする  
+    /// </summary>
+    public IEnumerable<SkillSpecialFlag> EnumerateSpecialFlags()
+    {
+        return SkillFilterUtil.FlagsToEnumerable<SkillSpecialFlag>(SpecialFlags);
+    }
+
+    /// <summary>
+    /// TenDayAbilityを列挙可能にする
+    /// </summary>
+    public IEnumerable<TenDayAbility> EnumerateTenDayAbilities()
+    {
+        return TenDayValues().Keys;
+    }
 
 
     /// <summary>
@@ -1728,8 +1861,7 @@ public class BaseSkill
         dst.CanSelectAggressiveCommit = CanSelectAggressiveCommit;
         dst.SKillDidWaitCount = SKillDidWaitCount;
         dst.SkillName = SkillName;
-        dst.IsTLOA = IsTLOA;
-        dst.IsMagic = IsMagic;
+        dst.SpecialFlags = SpecialFlags;//特殊判別性質
         dst._powerSpread = _powerSpread;//通常の分散割合
         dst._mentalDamageRatio = _mentalDamageRatio;//通常の精神攻撃率
         dst._infiniteSkillPowerUnit = _infiniteSkillPowerUnit;//無限スキルの威力単位
@@ -1848,4 +1980,69 @@ public class MoveSet: ISerializationCallbackReceiver
 
 
 
+}
+
+/// <summary>
+/// スキルの区別判定方式
+/// </summary>
+public enum ContainMode { Any, All }   // b方式のどちらで判定するか
+public static class SkillFilterUtil
+{
+    // Flags列挙体として使われるビットフラグを個別の列挙体に分解
+    public static IEnumerable<TEnum> FlagsToEnumerable<TEnum>(Enum flags)
+    {
+        foreach (TEnum val in Enum.GetValues(typeof(TEnum)))
+            if (flags.HasFlag((Enum)(object)val)) yield return val;
+    }
+
+    // 条件判定
+    public static bool CheckContain<T>(IEnumerable<T> skillValues, 
+                                       List<T> filterValues, 
+                                       ContainMode mode)
+    {
+        var filterSet = new HashSet<T>(filterValues);
+        return mode == ContainMode.Any 
+            ? skillValues.Any(filterSet.Contains)
+            : filterSet.All(skillValues.Contains);
+    }
+}
+
+/// <summary>
+/// スキル区別方式
+/// 特定のプロパティに応じてスキルを区分けするためのフィルタークラス
+/// </summary>
+[Serializable]
+public class SkillFilter
+{
+    // —— 基本方式 ——            
+/// <summary>スキル印象の区切り</summary>
+    public List<SkillImpression> Impressions = new();
+/// <summary>動作的雰囲気の区切り</summary>
+    public List<MotionFlavorTag> MotionFlavors = new();
+/// <summary>精神属性の区切り</summary>
+    public List<SpiritualProperty> MentalAttrs = new();
+/// <summary>物理属性の区切り</summary>
+    public List<PhysicalProperty> PhysicalAttrs = new();
+/// <summary>スキルの分散割合タイプの区切り</summary>
+    public List<AttackDistributionType> AttackTypes = new();
+
+    // —— b方式（スキル側が複数値を持ち得るもの）——
+/// <summary>十日能力の区切り</summary>
+    public List<TenDayAbility> TenDayAbilities = new();
+    public ContainMode TenDayMode = ContainMode.Any;
+    /// <summary>スキルの攻撃性質の区切り</summary>
+    public List<SkillType> SkillTypes = new();
+    public ContainMode SkillTypeMode = ContainMode.Any;
+    /// <summary>スキルの特殊判別性質の区切り</summary>
+    public List<SkillSpecialFlag> SpecialFlags = new();
+    public ContainMode SpecialFlagMode = ContainMode.Any;
+
+    
+
+    /// <summary>
+    /// 条件が 1 つもセットされていない場合は「フィルタ無し」とみなす
+    /// </summary>
+    public bool HasAnyCondition =>
+        Impressions.Count + MotionFlavors.Count + MentalAttrs.Count + PhysicalAttrs.Count +
+        AttackTypes.Count + TenDayAbilities.Count + SkillTypes.Count + SpecialFlags.Count > 0;
 }

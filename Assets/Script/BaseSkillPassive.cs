@@ -38,9 +38,10 @@ public class SkillPassiveReactionCharaAndSkill
 /// <summary>
 ///     スキルのパッシブ
 /// </summary>
+[Serializable]
 public class BaseSkillPassive
 {
-    public BaseSkill OwnerSkill;
+    BaseSkill OwnerSkill;
     /// <summary>
     /// 持続ターン数 -1なら消えない
     /// </summary>

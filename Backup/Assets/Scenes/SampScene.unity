@@ -684,10 +684,9 @@ MonoBehaviour:
       WeaponSkill:
         SkillSpiritual: 0
         Impression: 0
+        MotionFlavor: {fileID: 0}
         SkillPhysical: 0
-        IsTLOA: 0
-        IsMagic: 0
-        IsBlade: 0
+        SpecialFlags: 0
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
@@ -727,8 +726,22 @@ MonoBehaviour:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+        ReactiveSkillPassiveList: []
+        AggressiveSkillPassiveList: []
         TargetSelection: 0
         SkillPassiveEffectCount: 1
+        _skillPassiveGibeSkill_SkillFilter:
+          Impressions: 
+          MotionFlavors: []
+          MentalAttrs: 
+          PhysicalAttrs: 
+          AttackTypes: 
+          TenDayAbilities: 
+          TenDayMode: 0
+          SkillTypes: 
+          SkillTypeMode: 0
+          SpecialFlags: 
+          SpecialFlagMode: 0
       TenDayBonusData:
         TLOAData:
           _list: []
@@ -747,10 +760,9 @@ MonoBehaviour:
     NowUseSkill:
       SkillSpiritual: 0
       Impression: 0
+      MotionFlavor: {fileID: 0}
       SkillPhysical: 0
-      IsTLOA: 0
-      IsMagic: 0
-      IsBlade: 0
+      SpecialFlags: 0
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
@@ -790,17 +802,30 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+      ReactiveSkillPassiveList: []
+      AggressiveSkillPassiveList: []
       TargetSelection: 0
       SkillPassiveEffectCount: 1
+      _skillPassiveGibeSkill_SkillFilter:
+        Impressions: 
+        MotionFlavors: []
+        MentalAttrs: 
+        PhysicalAttrs: 
+        AttackTypes: 
+        TenDayAbilities: 
+        TenDayMode: 0
+        SkillTypes: 
+        SkillTypeMode: 0
+        SpecialFlags: 
+        SpecialFlagMode: 0
     SelectedEscape: 0
     SkillCalculatedRandomRange: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
+      MotionFlavor: {fileID: 0}
       SkillPhysical: 0
-      IsTLOA: 0
-      IsMagic: 0
-      IsBlade: 0
+      SpecialFlags: 0
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
@@ -840,8 +865,22 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+      ReactiveSkillPassiveList: []
+      AggressiveSkillPassiveList: []
       TargetSelection: 0
       SkillPassiveEffectCount: 1
+      _skillPassiveGibeSkill_SkillFilter:
+        Impressions: 
+        MotionFlavors: []
+        MentalAttrs: 
+        PhysicalAttrs: 
+        AttackTypes: 
+        TenDayAbilities: 
+        TenDayMode: 0
+        SkillTypes: 
+        SkillTypeMode: 0
+        SpecialFlags: 
+        SpecialFlagMode: 0
     IsDeleteMyFreezeConsecutive: 0
     _tempVanguard: 0
     _tempLive: 0
@@ -865,6 +904,7 @@ MonoBehaviour:
     _skillALLList:
     - rid: 2127851150886043649
     - rid: 9189338325697429504
+    - rid: 7137335011432464384
     ValidSkillIDList: 00000000
   Init_noramlia:
     InitpassiveIDList: 
@@ -886,10 +926,9 @@ MonoBehaviour:
       WeaponSkill:
         SkillSpiritual: 0
         Impression: 0
+        MotionFlavor: {fileID: 0}
         SkillPhysical: 0
-        IsTLOA: 0
-        IsMagic: 0
-        IsBlade: 0
+        SpecialFlags: 0
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
@@ -929,8 +968,22 @@ MonoBehaviour:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+        ReactiveSkillPassiveList: []
+        AggressiveSkillPassiveList: []
         TargetSelection: 0
         SkillPassiveEffectCount: 1
+        _skillPassiveGibeSkill_SkillFilter:
+          Impressions: 
+          MotionFlavors: []
+          MentalAttrs: 
+          PhysicalAttrs: 
+          AttackTypes: 
+          TenDayAbilities: 
+          TenDayMode: 0
+          SkillTypes: 
+          SkillTypeMode: 0
+          SpecialFlags: 
+          SpecialFlagMode: 0
       TenDayBonusData:
         TLOAData:
           _list: []
@@ -949,10 +1002,9 @@ MonoBehaviour:
     NowUseSkill:
       SkillSpiritual: 0
       Impression: 0
+      MotionFlavor: {fileID: 0}
       SkillPhysical: 0
-      IsTLOA: 0
-      IsMagic: 0
-      IsBlade: 0
+      SpecialFlags: 0
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
@@ -992,17 +1044,30 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+      ReactiveSkillPassiveList: []
+      AggressiveSkillPassiveList: []
       TargetSelection: 0
       SkillPassiveEffectCount: 1
+      _skillPassiveGibeSkill_SkillFilter:
+        Impressions: 
+        MotionFlavors: []
+        MentalAttrs: 
+        PhysicalAttrs: 
+        AttackTypes: 
+        TenDayAbilities: 
+        TenDayMode: 0
+        SkillTypes: 
+        SkillTypeMode: 0
+        SpecialFlags: 
+        SpecialFlagMode: 0
     SelectedEscape: 0
     SkillCalculatedRandomRange: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
+      MotionFlavor: {fileID: 0}
       SkillPhysical: 0
-      IsTLOA: 0
-      IsMagic: 0
-      IsBlade: 0
+      SpecialFlags: 0
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
@@ -1042,8 +1107,22 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+      ReactiveSkillPassiveList: []
+      AggressiveSkillPassiveList: []
       TargetSelection: 0
       SkillPassiveEffectCount: 1
+      _skillPassiveGibeSkill_SkillFilter:
+        Impressions: 
+        MotionFlavors: []
+        MentalAttrs: 
+        PhysicalAttrs: 
+        AttackTypes: 
+        TenDayAbilities: 
+        TenDayMode: 0
+        SkillTypes: 
+        SkillTypeMode: 0
+        SpecialFlags: 
+        SpecialFlagMode: 0
     IsDeleteMyFreezeConsecutive: 0
     _tempVanguard: 0
     _tempLive: 0
@@ -1086,10 +1165,9 @@ MonoBehaviour:
       WeaponSkill:
         SkillSpiritual: 0
         Impression: 0
+        MotionFlavor: {fileID: 0}
         SkillPhysical: 0
-        IsTLOA: 0
-        IsMagic: 0
-        IsBlade: 0
+        SpecialFlags: 0
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
@@ -1129,8 +1207,22 @@ MonoBehaviour:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+        ReactiveSkillPassiveList: []
+        AggressiveSkillPassiveList: []
         TargetSelection: 0
         SkillPassiveEffectCount: 1
+        _skillPassiveGibeSkill_SkillFilter:
+          Impressions: 
+          MotionFlavors: []
+          MentalAttrs: 
+          PhysicalAttrs: 
+          AttackTypes: 
+          TenDayAbilities: 
+          TenDayMode: 0
+          SkillTypes: 
+          SkillTypeMode: 0
+          SpecialFlags: 
+          SpecialFlagMode: 0
       TenDayBonusData:
         TLOAData:
           _list: []
@@ -1149,10 +1241,9 @@ MonoBehaviour:
     NowUseSkill:
       SkillSpiritual: 0
       Impression: 0
+      MotionFlavor: {fileID: 0}
       SkillPhysical: 0
-      IsTLOA: 0
-      IsMagic: 0
-      IsBlade: 0
+      SpecialFlags: 0
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
@@ -1192,17 +1283,30 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+      ReactiveSkillPassiveList: []
+      AggressiveSkillPassiveList: []
       TargetSelection: 0
       SkillPassiveEffectCount: 1
+      _skillPassiveGibeSkill_SkillFilter:
+        Impressions: 
+        MotionFlavors: []
+        MentalAttrs: 
+        PhysicalAttrs: 
+        AttackTypes: 
+        TenDayAbilities: 
+        TenDayMode: 0
+        SkillTypes: 
+        SkillTypeMode: 0
+        SpecialFlags: 
+        SpecialFlagMode: 0
     SelectedEscape: 0
     SkillCalculatedRandomRange: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
+      MotionFlavor: {fileID: 0}
       SkillPhysical: 0
-      IsTLOA: 0
-      IsMagic: 0
-      IsBlade: 0
+      SpecialFlags: 0
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
@@ -1242,8 +1346,22 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+      ReactiveSkillPassiveList: []
+      AggressiveSkillPassiveList: []
       TargetSelection: 0
       SkillPassiveEffectCount: 1
+      _skillPassiveGibeSkill_SkillFilter:
+        Impressions: 
+        MotionFlavors: []
+        MentalAttrs: 
+        PhysicalAttrs: 
+        AttackTypes: 
+        TenDayAbilities: 
+        TenDayMode: 0
+        SkillTypes: 
+        SkillTypeMode: 0
+        SpecialFlags: 
+        SpecialFlagMode: 0
     IsDeleteMyFreezeConsecutive: 0
     _tempVanguard: 0
     _tempLive: 0
@@ -1286,10 +1404,9 @@ MonoBehaviour:
       WeaponSkill:
         SkillSpiritual: 0
         Impression: 0
+        MotionFlavor: {fileID: 0}
         SkillPhysical: 0
-        IsTLOA: 0
-        IsMagic: 0
-        IsBlade: 0
+        SpecialFlags: 0
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
@@ -1329,8 +1446,22 @@ MonoBehaviour:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+        ReactiveSkillPassiveList: []
+        AggressiveSkillPassiveList: []
         TargetSelection: 0
         SkillPassiveEffectCount: 1
+        _skillPassiveGibeSkill_SkillFilter:
+          Impressions: 
+          MotionFlavors: []
+          MentalAttrs: 
+          PhysicalAttrs: 
+          AttackTypes: 
+          TenDayAbilities: 
+          TenDayMode: 0
+          SkillTypes: 
+          SkillTypeMode: 0
+          SpecialFlags: 
+          SpecialFlagMode: 0
       TenDayBonusData:
         TLOAData:
           _list: []
@@ -1349,10 +1480,9 @@ MonoBehaviour:
     NowUseSkill:
       SkillSpiritual: 0
       Impression: 0
+      MotionFlavor: {fileID: 0}
       SkillPhysical: 0
-      IsTLOA: 0
-      IsMagic: 0
-      IsBlade: 0
+      SpecialFlags: 0
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
@@ -1392,17 +1522,30 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+      ReactiveSkillPassiveList: []
+      AggressiveSkillPassiveList: []
       TargetSelection: 0
       SkillPassiveEffectCount: 1
+      _skillPassiveGibeSkill_SkillFilter:
+        Impressions: 
+        MotionFlavors: []
+        MentalAttrs: 
+        PhysicalAttrs: 
+        AttackTypes: 
+        TenDayAbilities: 
+        TenDayMode: 0
+        SkillTypes: 
+        SkillTypeMode: 0
+        SpecialFlags: 
+        SpecialFlagMode: 0
     SelectedEscape: 0
     SkillCalculatedRandomRange: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
+      MotionFlavor: {fileID: 0}
       SkillPhysical: 0
-      IsTLOA: 0
-      IsMagic: 0
-      IsBlade: 0
+      SpecialFlags: 0
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
@@ -1442,8 +1585,22 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+      ReactiveSkillPassiveList: []
+      AggressiveSkillPassiveList: []
       TargetSelection: 0
       SkillPassiveEffectCount: 1
+      _skillPassiveGibeSkill_SkillFilter:
+        Impressions: 
+        MotionFlavors: []
+        MentalAttrs: 
+        PhysicalAttrs: 
+        AttackTypes: 
+        TenDayAbilities: 
+        TenDayMode: 0
+        SkillTypes: 
+        SkillTypeMode: 0
+        SpecialFlags: 
+        SpecialFlagMode: 0
     IsDeleteMyFreezeConsecutive: 0
     _tempVanguard: 0
     _tempLive: 0
@@ -1486,10 +1643,9 @@ MonoBehaviour:
       WeaponSkill:
         SkillSpiritual: 0
         Impression: 0
+        MotionFlavor: {fileID: 0}
         SkillPhysical: 0
-        IsTLOA: 0
-        IsMagic: 0
-        IsBlade: 0
+        SpecialFlags: 0
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
@@ -1529,8 +1685,22 @@ MonoBehaviour:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+        ReactiveSkillPassiveList: []
+        AggressiveSkillPassiveList: []
         TargetSelection: 0
         SkillPassiveEffectCount: 1
+        _skillPassiveGibeSkill_SkillFilter:
+          Impressions: 
+          MotionFlavors: []
+          MentalAttrs: 
+          PhysicalAttrs: 
+          AttackTypes: 
+          TenDayAbilities: 
+          TenDayMode: 0
+          SkillTypes: 
+          SkillTypeMode: 0
+          SpecialFlags: 
+          SpecialFlagMode: 0
       TenDayBonusData:
         TLOAData:
           _list: []
@@ -1549,10 +1719,9 @@ MonoBehaviour:
     NowUseSkill:
       SkillSpiritual: 0
       Impression: 0
+      MotionFlavor: {fileID: 0}
       SkillPhysical: 0
-      IsTLOA: 0
-      IsMagic: 0
-      IsBlade: 0
+      SpecialFlags: 0
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
@@ -1592,17 +1761,30 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+      ReactiveSkillPassiveList: []
+      AggressiveSkillPassiveList: []
       TargetSelection: 0
       SkillPassiveEffectCount: 1
+      _skillPassiveGibeSkill_SkillFilter:
+        Impressions: 
+        MotionFlavors: []
+        MentalAttrs: 
+        PhysicalAttrs: 
+        AttackTypes: 
+        TenDayAbilities: 
+        TenDayMode: 0
+        SkillTypes: 
+        SkillTypeMode: 0
+        SpecialFlags: 
+        SpecialFlagMode: 0
     SelectedEscape: 0
     SkillCalculatedRandomRange: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
+      MotionFlavor: {fileID: 0}
       SkillPhysical: 0
-      IsTLOA: 0
-      IsMagic: 0
-      IsBlade: 0
+      SpecialFlags: 0
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
@@ -1642,8 +1824,22 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+      ReactiveSkillPassiveList: []
+      AggressiveSkillPassiveList: []
       TargetSelection: 0
       SkillPassiveEffectCount: 1
+      _skillPassiveGibeSkill_SkillFilter:
+        Impressions: 
+        MotionFlavors: []
+        MentalAttrs: 
+        PhysicalAttrs: 
+        AttackTypes: 
+        TenDayAbilities: 
+        TenDayMode: 0
+        SkillTypes: 
+        SkillTypeMode: 0
+        SpecialFlags: 
+        SpecialFlagMode: 0
     IsDeleteMyFreezeConsecutive: 0
     _tempVanguard: 0
     _tempLive: 0
@@ -1686,10 +1882,9 @@ MonoBehaviour:
       WeaponSkill:
         SkillSpiritual: 0
         Impression: 0
+        MotionFlavor: {fileID: 0}
         SkillPhysical: 0
-        IsTLOA: 0
-        IsMagic: 0
-        IsBlade: 0
+        SpecialFlags: 0
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
@@ -1729,8 +1924,22 @@ MonoBehaviour:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+        ReactiveSkillPassiveList: []
+        AggressiveSkillPassiveList: []
         TargetSelection: 0
         SkillPassiveEffectCount: 1
+        _skillPassiveGibeSkill_SkillFilter:
+          Impressions: 
+          MotionFlavors: []
+          MentalAttrs: 
+          PhysicalAttrs: 
+          AttackTypes: 
+          TenDayAbilities: 
+          TenDayMode: 0
+          SkillTypes: 
+          SkillTypeMode: 0
+          SpecialFlags: 
+          SpecialFlagMode: 0
       TenDayBonusData:
         TLOAData:
           _list: []
@@ -1749,10 +1958,9 @@ MonoBehaviour:
     NowUseSkill:
       SkillSpiritual: 0
       Impression: 0
+      MotionFlavor: {fileID: 0}
       SkillPhysical: 0
-      IsTLOA: 0
-      IsMagic: 0
-      IsBlade: 0
+      SpecialFlags: 0
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
@@ -1792,17 +2000,30 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+      ReactiveSkillPassiveList: []
+      AggressiveSkillPassiveList: []
       TargetSelection: 0
       SkillPassiveEffectCount: 1
+      _skillPassiveGibeSkill_SkillFilter:
+        Impressions: 
+        MotionFlavors: []
+        MentalAttrs: 
+        PhysicalAttrs: 
+        AttackTypes: 
+        TenDayAbilities: 
+        TenDayMode: 0
+        SkillTypes: 
+        SkillTypeMode: 0
+        SpecialFlags: 
+        SpecialFlagMode: 0
     SelectedEscape: 0
     SkillCalculatedRandomRange: 0
     FreezeUseSkill:
       SkillSpiritual: 0
       Impression: 0
+      MotionFlavor: {fileID: 0}
       SkillPhysical: 0
-      IsTLOA: 0
-      IsMagic: 0
-      IsBlade: 0
+      SpecialFlags: 0
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
@@ -1842,8 +2063,22 @@ MonoBehaviour:
         _list: []
       HitRangePercentageDictionary:
         _list: []
+      ReactiveSkillPassiveList: []
+      AggressiveSkillPassiveList: []
       TargetSelection: 0
       SkillPassiveEffectCount: 1
+      _skillPassiveGibeSkill_SkillFilter:
+        Impressions: 
+        MotionFlavors: []
+        MentalAttrs: 
+        PhysicalAttrs: 
+        AttackTypes: 
+        TenDayAbilities: 
+        TenDayMode: 0
+        SkillTypes: 
+        SkillTypeMode: 0
+        SpecialFlags: 
+        SpecialFlagMode: 0
     IsDeleteMyFreezeConsecutive: 0
     _tempVanguard: 0
     _tempLive: 0
@@ -1909,10 +2144,9 @@ MonoBehaviour:
       data:
         SkillSpiritual: 1
         Impression: 2
+        MotionFlavor: {fileID: 0}
         SkillPhysical: 3
-        IsTLOA: 0
-        IsMagic: 0
-        IsBlade: 0
+        SpecialFlags: 0
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1.6
@@ -1952,18 +2186,95 @@ MonoBehaviour:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+        ReactiveSkillPassiveList: []
+        AggressiveSkillPassiveList: []
         TargetSelection: 0
         SkillPassiveEffectCount: 1
+        _skillPassiveGibeSkill_SkillFilter:
+          Impressions: 
+          MotionFlavors: []
+          MentalAttrs: 
+          PhysicalAttrs: 
+          AttackTypes: 
+          TenDayAbilities: 
+          TenDayMode: 0
+          SkillTypes: 
+          SkillTypeMode: 0
+          SpecialFlags: 
+          SpecialFlagMode: 0
+        _iD: 0
+    - rid: 7137335011432464384
+      type: {class: AllySkill, ns: , asm: Assembly-CSharp}
+      data:
+        SkillSpiritual: 0
+        Impression: 0
+        MotionFlavor: {fileID: 0}
+        SkillPhysical: 0
+        SpecialFlags: 0
+        Cantkill: 0
+        EvasionModifier: 1
+        AttackModifier: 1
+        _infiniteSkillPowerUnit: 0
+        _infiniteSkillTenDaysUnit: 0
+        _mentalDamageRatio: 0
+        _powerSpread: []
+        _skillHitPer: 0
+        _a_moveset: []
+        _b_moveset: []
+        _triggerCountMax: 0
+        CanCancelTrigger: 1
+        _triggerRollBackCount: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
+        CanSelectAggressiveCommit: 0
+        SKillDidWaitCount: 0
+        SkillName: "\u3053\u3053\u306B\u540D\u524D\u3092\u5165\u308C\u3066\u304F\u3060\u3055\u3044"
+        Proficiency: 0
+        subEffects: 
+        subVitalLayers: 
+        canEraceEffectIDs: 
+        canEraceVitalLayerIDs: 
+        CanEraceEffectCount: 0
+        CanEraceVitalLayerCount: 0
+        _defAtk: 0
+        _baseSkillType: 0
+        ConsecutiveType: 0
+        ZoneTrait: 0
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
+        ReactiveSkillPassiveList: []
+        AggressiveSkillPassiveList: []
+        TargetSelection: 0
+        SkillPassiveEffectCount: 1
+        _skillPassiveGibeSkill_SkillFilter:
+          Impressions: 
+          MotionFlavors: []
+          MentalAttrs: 
+          PhysicalAttrs: 
+          AttackTypes: 
+          TenDayAbilities: 
+          TenDayMode: 0
+          SkillTypes: 
+          SkillTypeMode: 0
+          SpecialFlags: 
+          SpecialFlagMode: 0
         _iD: 0
     - rid: 9189338325697429504
       type: {class: AllySkill, ns: , asm: Assembly-CSharp}
       data:
         SkillSpiritual: 8
         Impression: 2
+        MotionFlavor: {fileID: 0}
         SkillPhysical: 3
-        IsTLOA: 1
-        IsMagic: 0
-        IsBlade: 0
+        SpecialFlags: 0
         Cantkill: 0
         EvasionModifier: 1.1
         AttackModifier: 1
@@ -2003,8 +2314,22 @@ MonoBehaviour:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+        ReactiveSkillPassiveList: []
+        AggressiveSkillPassiveList: []
         TargetSelection: 0
         SkillPassiveEffectCount: 1
+        _skillPassiveGibeSkill_SkillFilter:
+          Impressions: 
+          MotionFlavors: []
+          MentalAttrs: 
+          PhysicalAttrs: 
+          AttackTypes: 
+          TenDayAbilities: 
+          TenDayMode: 0
+          SkillTypes: 
+          SkillTypeMode: 0
+          SpecialFlags: 
+          SpecialFlagMode: 0
         _iD: 1
 --- !u!114 &78173494
 MonoBehaviour:
@@ -2099,10 +2424,9 @@ MonoBehaviour:
           WeaponSkill:
             SkillSpiritual: 0
             Impression: 0
+            MotionFlavor: {fileID: 0}
             SkillPhysical: 0
-            IsTLOA: 0
-            IsMagic: 0
-            IsBlade: 0
+            SpecialFlags: 0
             Cantkill: 0
             EvasionModifier: 1
             AttackModifier: 1
@@ -2142,8 +2466,22 @@ MonoBehaviour:
               _list: []
             HitRangePercentageDictionary:
               _list: []
+            ReactiveSkillPassiveList: []
+            AggressiveSkillPassiveList: []
             TargetSelection: 0
             SkillPassiveEffectCount: 1
+            _skillPassiveGibeSkill_SkillFilter:
+              Impressions: 
+              MotionFlavors: []
+              MentalAttrs: 
+              PhysicalAttrs: 
+              AttackTypes: 
+              TenDayAbilities: 
+              TenDayMode: 0
+              SkillTypes: 
+              SkillTypeMode: 0
+              SpecialFlags: 
+              SpecialFlagMode: 0
           TenDayBonusData:
             TLOAData:
               _list: []
@@ -2162,10 +2500,9 @@ MonoBehaviour:
         NowUseSkill:
           SkillSpiritual: 0
           Impression: 0
+          MotionFlavor: {fileID: 0}
           SkillPhysical: 0
-          IsTLOA: 0
-          IsMagic: 0
-          IsBlade: 0
+          SpecialFlags: 0
           Cantkill: 0
           EvasionModifier: 1
           AttackModifier: 1
@@ -2205,17 +2542,30 @@ MonoBehaviour:
             _list: []
           HitRangePercentageDictionary:
             _list: []
+          ReactiveSkillPassiveList: []
+          AggressiveSkillPassiveList: []
           TargetSelection: 0
           SkillPassiveEffectCount: 1
+          _skillPassiveGibeSkill_SkillFilter:
+            Impressions: 
+            MotionFlavors: []
+            MentalAttrs: 
+            PhysicalAttrs: 
+            AttackTypes: 
+            TenDayAbilities: 
+            TenDayMode: 0
+            SkillTypes: 
+            SkillTypeMode: 0
+            SpecialFlags: 
+            SpecialFlagMode: 0
         SelectedEscape: 0
         SkillCalculatedRandomRange: 0
         FreezeUseSkill:
           SkillSpiritual: 0
           Impression: 0
+          MotionFlavor: {fileID: 0}
           SkillPhysical: 0
-          IsTLOA: 0
-          IsMagic: 0
-          IsBlade: 0
+          SpecialFlags: 0
           Cantkill: 0
           EvasionModifier: 1
           AttackModifier: 1
@@ -2255,8 +2605,22 @@ MonoBehaviour:
             _list: []
           HitRangePercentageDictionary:
             _list: []
+          ReactiveSkillPassiveList: []
+          AggressiveSkillPassiveList: []
           TargetSelection: 0
           SkillPassiveEffectCount: 1
+          _skillPassiveGibeSkill_SkillFilter:
+            Impressions: 
+            MotionFlavors: []
+            MentalAttrs: 
+            PhysicalAttrs: 
+            AttackTypes: 
+            TenDayAbilities: 
+            TenDayMode: 0
+            SkillTypes: 
+            SkillTypeMode: 0
+            SpecialFlags: 
+            SpecialFlagMode: 0
         IsDeleteMyFreezeConsecutive: 0
         _tempVanguard: 0
         _tempLive: 0
@@ -2285,10 +2649,9 @@ MonoBehaviour:
       data:
         SkillSpiritual: 0
         Impression: 0
+        MotionFlavor: {fileID: 0}
         SkillPhysical: 0
-        IsTLOA: 0
-        IsMagic: 0
-        IsBlade: 0
+        SpecialFlags: 0
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
@@ -2328,8 +2691,22 @@ MonoBehaviour:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+        ReactiveSkillPassiveList: []
+        AggressiveSkillPassiveList: []
         TargetSelection: 0
         SkillPassiveEffectCount: 1
+        _skillPassiveGibeSkill_SkillFilter:
+          Impressions: 
+          MotionFlavors: []
+          MentalAttrs: 
+          PhysicalAttrs: 
+          AttackTypes: 
+          TenDayAbilities: 
+          TenDayMode: 0
+          SkillTypes: 
+          SkillTypeMode: 0
+          SpecialFlags: 
+          SpecialFlagMode: 0
         growthPoint: 0
         _initSkillLevel: 0
     - rid: 3171372139819302913
@@ -2354,10 +2731,9 @@ MonoBehaviour:
           WeaponSkill:
             SkillSpiritual: 0
             Impression: 0
+            MotionFlavor: {fileID: 0}
             SkillPhysical: 0
-            IsTLOA: 0
-            IsMagic: 0
-            IsBlade: 0
+            SpecialFlags: 0
             Cantkill: 0
             EvasionModifier: 1
             AttackModifier: 1
@@ -2397,8 +2773,22 @@ MonoBehaviour:
               _list: []
             HitRangePercentageDictionary:
               _list: []
+            ReactiveSkillPassiveList: []
+            AggressiveSkillPassiveList: []
             TargetSelection: 0
             SkillPassiveEffectCount: 1
+            _skillPassiveGibeSkill_SkillFilter:
+              Impressions: 
+              MotionFlavors: []
+              MentalAttrs: 
+              PhysicalAttrs: 
+              AttackTypes: 
+              TenDayAbilities: 
+              TenDayMode: 0
+              SkillTypes: 
+              SkillTypeMode: 0
+              SpecialFlags: 
+              SpecialFlagMode: 0
           TenDayBonusData:
             TLOAData:
               _list: []
@@ -2417,10 +2807,9 @@ MonoBehaviour:
         NowUseSkill:
           SkillSpiritual: 0
           Impression: 0
+          MotionFlavor: {fileID: 0}
           SkillPhysical: 0
-          IsTLOA: 0
-          IsMagic: 0
-          IsBlade: 0
+          SpecialFlags: 0
           Cantkill: 0
           EvasionModifier: 1
           AttackModifier: 1
@@ -2460,17 +2849,30 @@ MonoBehaviour:
             _list: []
           HitRangePercentageDictionary:
             _list: []
+          ReactiveSkillPassiveList: []
+          AggressiveSkillPassiveList: []
           TargetSelection: 0
           SkillPassiveEffectCount: 1
+          _skillPassiveGibeSkill_SkillFilter:
+            Impressions: 
+            MotionFlavors: []
+            MentalAttrs: 
+            PhysicalAttrs: 
+            AttackTypes: 
+            TenDayAbilities: 
+            TenDayMode: 0
+            SkillTypes: 
+            SkillTypeMode: 0
+            SpecialFlags: 
+            SpecialFlagMode: 0
         SelectedEscape: 0
         SkillCalculatedRandomRange: 0
         FreezeUseSkill:
           SkillSpiritual: 0
           Impression: 0
+          MotionFlavor: {fileID: 0}
           SkillPhysical: 0
-          IsTLOA: 0
-          IsMagic: 0
-          IsBlade: 0
+          SpecialFlags: 0
           Cantkill: 0
           EvasionModifier: 1
           AttackModifier: 1
@@ -2510,8 +2912,22 @@ MonoBehaviour:
             _list: []
           HitRangePercentageDictionary:
             _list: []
+          ReactiveSkillPassiveList: []
+          AggressiveSkillPassiveList: []
           TargetSelection: 0
           SkillPassiveEffectCount: 1
+          _skillPassiveGibeSkill_SkillFilter:
+            Impressions: 
+            MotionFlavors: []
+            MentalAttrs: 
+            PhysicalAttrs: 
+            AttackTypes: 
+            TenDayAbilities: 
+            TenDayMode: 0
+            SkillTypes: 
+            SkillTypeMode: 0
+            SpecialFlags: 
+            SpecialFlagMode: 0
         IsDeleteMyFreezeConsecutive: 0
         _tempVanguard: 0
         _tempLive: 0
@@ -2558,10 +2974,9 @@ MonoBehaviour:
           WeaponSkill:
             SkillSpiritual: 0
             Impression: 0
+            MotionFlavor: {fileID: 0}
             SkillPhysical: 0
-            IsTLOA: 0
-            IsMagic: 0
-            IsBlade: 0
+            SpecialFlags: 0
             Cantkill: 0
             EvasionModifier: 1
             AttackModifier: 1
@@ -2601,8 +3016,22 @@ MonoBehaviour:
               _list: []
             HitRangePercentageDictionary:
               _list: []
+            ReactiveSkillPassiveList: []
+            AggressiveSkillPassiveList: []
             TargetSelection: 0
             SkillPassiveEffectCount: 1
+            _skillPassiveGibeSkill_SkillFilter:
+              Impressions: 
+              MotionFlavors: []
+              MentalAttrs: 
+              PhysicalAttrs: 
+              AttackTypes: 
+              TenDayAbilities: 
+              TenDayMode: 0
+              SkillTypes: 
+              SkillTypeMode: 0
+              SpecialFlags: 
+              SpecialFlagMode: 0
           TenDayBonusData:
             TLOAData:
               _list: []
@@ -2621,10 +3050,9 @@ MonoBehaviour:
         NowUseSkill:
           SkillSpiritual: 0
           Impression: 0
+          MotionFlavor: {fileID: 0}
           SkillPhysical: 0
-          IsTLOA: 0
-          IsMagic: 0
-          IsBlade: 0
+          SpecialFlags: 0
           Cantkill: 0
           EvasionModifier: 1
           AttackModifier: 1
@@ -2664,17 +3092,30 @@ MonoBehaviour:
             _list: []
           HitRangePercentageDictionary:
             _list: []
+          ReactiveSkillPassiveList: []
+          AggressiveSkillPassiveList: []
           TargetSelection: 0
           SkillPassiveEffectCount: 1
+          _skillPassiveGibeSkill_SkillFilter:
+            Impressions: 
+            MotionFlavors: []
+            MentalAttrs: 
+            PhysicalAttrs: 
+            AttackTypes: 
+            TenDayAbilities: 
+            TenDayMode: 0
+            SkillTypes: 
+            SkillTypeMode: 0
+            SpecialFlags: 
+            SpecialFlagMode: 0
         SelectedEscape: 0
         SkillCalculatedRandomRange: 0
         FreezeUseSkill:
           SkillSpiritual: 0
           Impression: 0
+          MotionFlavor: {fileID: 0}
           SkillPhysical: 0
-          IsTLOA: 0
-          IsMagic: 0
-          IsBlade: 0
+          SpecialFlags: 0
           Cantkill: 0
           EvasionModifier: 1
           AttackModifier: 1
@@ -2714,8 +3155,22 @@ MonoBehaviour:
             _list: []
           HitRangePercentageDictionary:
             _list: []
+          ReactiveSkillPassiveList: []
+          AggressiveSkillPassiveList: []
           TargetSelection: 0
           SkillPassiveEffectCount: 1
+          _skillPassiveGibeSkill_SkillFilter:
+            Impressions: 
+            MotionFlavors: []
+            MentalAttrs: 
+            PhysicalAttrs: 
+            AttackTypes: 
+            TenDayAbilities: 
+            TenDayMode: 0
+            SkillTypes: 
+            SkillTypeMode: 0
+            SpecialFlags: 
+            SpecialFlagMode: 0
         IsDeleteMyFreezeConsecutive: 0
         _tempVanguard: 0
         _tempLive: 0
@@ -4067,10 +4522,9 @@ MonoBehaviour:
         WeaponSkill:
           SkillSpiritual: 0
           Impression: 0
+          MotionFlavor: {fileID: 0}
           SkillPhysical: 0
-          IsTLOA: 0
-          IsMagic: 0
-          IsBlade: 0
+          SpecialFlags: 0
           Cantkill: 0
           EvasionModifier: 1
           AttackModifier: 1
@@ -4110,8 +4564,22 @@ MonoBehaviour:
             _list: []
           HitRangePercentageDictionary:
             _list: []
+          ReactiveSkillPassiveList: []
+          AggressiveSkillPassiveList: []
           TargetSelection: 0
           SkillPassiveEffectCount: 1
+          _skillPassiveGibeSkill_SkillFilter:
+            Impressions: 
+            MotionFlavors: []
+            MentalAttrs: 
+            PhysicalAttrs: 
+            AttackTypes: 
+            TenDayAbilities: 
+            TenDayMode: 0
+            SkillTypes: 
+            SkillTypeMode: 0
+            SpecialFlags: 
+            SpecialFlagMode: 0
         TenDayBonusData:
           TLOAData:
             _list: []
