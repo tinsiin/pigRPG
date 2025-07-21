@@ -357,8 +357,7 @@ public class PlayersStates:MonoBehaviour
                 {
                     hold.button.interactable = false;//有効なスキルは全て無効
                 }
-            }
-            else//それ以外は
+            }else//それ以外は
             {
                 //一つでも持ってればOK
                 if (hold != null)
@@ -768,10 +767,49 @@ public class PlayersStates:MonoBehaviour
         SelectSkillPassiveTargetHandle.gameObject.SetActive(false);//ボタンエリアの非表示
         ReturnModalArea();//モーダルエリアの非表示
     }
+
+    /// <summary>
+    /// 思い入れスキル選択UI
+    /// </summary>
+    [SerializeField]SelectEmotionalAttachmentSkillButtons EmotionalAttachmentSkillSelectUIArea;
+    ///思い入れスキル弱体化用スキルパッシブ
+    public BaseSkillPassive EmotionalAttachmentSkillWeakeningPassive;
+    /// <summary>
+    /// ジーノの思い入れスキル選択UI表示ボタン
+    /// </summary>
+    public void Geino_OpenEmotionalAttachmentSkillSelectUIArea()
+    {
+        EmotionalAttachmentSkillSelectUIArea.OpenEmotionalAttachmentSkillSelectUIArea();
+        EmotionalAttachmentSkillSelectUIArea.ShowSkillsButtons
+        (geino.SkillList.Cast<AllySkill>().Where(skill => skill.IsTLOA).ToList(),//TLOAスキルのみ
+         geino.EmotionalAttachmentSkillID, geino.OnEmotionalAttachmentSkillIDChange);
+        //キャラのスキルリストと、現在の思い入れスキルIDを渡す
+    }
+    public void Sites_OpenEmotionalAttachmentSkillSelectUIArea()
+    {
+        EmotionalAttachmentSkillSelectUIArea.OpenEmotionalAttachmentSkillSelectUIArea();
+        EmotionalAttachmentSkillSelectUIArea.ShowSkillsButtons
+        (sites.SkillList.Cast<AllySkill>().Where(skill => skill.IsTLOA).ToList(),
+         sites.EmotionalAttachmentSkillID, sites.OnEmotionalAttachmentSkillIDChange);
+        //キャラのスキルリストと、現在の思い入れスキルIDを渡す
+    }
+    public void Noramlia_OpenEmotionalAttachmentSkillSelectUIArea()
+    {
+        EmotionalAttachmentSkillSelectUIArea.OpenEmotionalAttachmentSkillSelectUIArea();
+        EmotionalAttachmentSkillSelectUIArea.ShowSkillsButtons
+        (noramlia.SkillList.Cast<AllySkill>().Where(skill => skill.IsTLOA).ToList(),
+         noramlia.EmotionalAttachmentSkillID, noramlia.OnEmotionalAttachmentSkillIDChange);
+        //キャラのスキルリストと、現在の思い入れスキルIDを渡す
+    }
     
 
-
-    
+    /// <summary>
+    /// バトルスタート時のUI管理
+    /// </summary>
+    public void OnBattleStart()
+    {
+        EmotionalAttachmentSkillSelectUIArea.CloseEmotionalAttachmentSkillSelectUIArea();//思い入れスキル選択UIが開きっぱなしなら閉じる
+    }
 
     //中央決定値など---------------------------------------------------------中央決定値
     /// <summary>
@@ -792,6 +830,14 @@ public class AllyClass : BaseStates
     [SerializeReference,SelectableSerializeReference]
     List<AllySkill> _skillALLList = new();
     /// <summary>
+    /// IDでスキルを取得する
+    /// </summary>
+    AllySkill SkillByID(int ID)
+    {
+        return _skillALLList.Find(skill => skill.ID == ID);
+    }
+
+    /// <summary>
     /// 有効なスキルリスト
     /// </summary>
     public List<int> ValidSkillIDList = new();
@@ -804,7 +850,90 @@ public class AllyClass : BaseStates
             skill.OnInitialize(this);
         }
     }
+    /// <summary>
+    /// 現在のTLOAの思い入れスキルID
+    /// </summary>
+    public int EmotionalAttachmentSkillID = 0;
+    /// <summary>
+    /// 現在のTLOAの思い入れスキル
+    /// </summary>
+    public AllySkill EmotionalAttachmentSkill => SkillByID(EmotionalAttachmentSkillID);
+    /// <summary>
+    /// 思い入れスキルの思い入れ量 (0~800)
+    /// </summary>
+    private float _emotionalAttachmentSkillQuantity = 0;
+    /// <summary>
+    /// 思い入れスキルの思い入れ量を取得・設定する
+    /// </summary>
+    public float EmotionalAttachmentSkillQuantity 
+    { 
+        get => _emotionalAttachmentSkillQuantity;
+        set => _emotionalAttachmentSkillQuantity = Mathf.Clamp(value, 0, 800);
+    }
 
+    /// <summary>
+    /// 思い入れスキルIDを変更する関数
+    /// 思い入れスキル変更ボタンUIに渡す用のコールバック
+    /// </summary>
+    public void OnEmotionalAttachmentSkillIDChange(int NewSkillID)
+    {
+        var oldSkill = SkillByID(EmotionalAttachmentSkillID);
+        var newSkill = SkillByID(NewSkillID);//まず入れ替えの前に
+
+        EmotionalAttachmentSkillID = NewSkillID;//ID変更
+        Debug.Log(NewSkillID + " :思い入れスキルIDを記録");
+
+        //思い入れ量の弱体処理
+        EmotionalAttachmentSkillQuantityChangeWeakening(oldSkill, newSkill);
+        EmotionalAttachmentSkillQuantityChangeSkillWeakening(oldSkill);
+    }
+    /// <summary>
+    /// 思い入れ量から熟練度倍率を計算 (1.2~12倍)
+    /// </summary>
+    /// <returns>熟練度倍率 (1.2~12)</returns>
+    public float GetProficiencyMultiplierFromQuantity()
+    {
+        // 0~800を0~1に正規化
+        float normalizedQuantity = Mathf.Clamp01(EmotionalAttachmentSkillQuantity / 800f);
+        
+        // 1.2~12の範囲にスケーリング
+        return Mathf.Lerp(1.2f, 12f, normalizedQuantity);
+    }
+    /// <summary>
+    /// 思い入れ量から現在HP固定加算倍率を計算 (0.01~0.3)
+    /// </summary>
+    /// <returns>現在HP固定加算倍率 (0.01~0.3)</returns>
+    public float GetCurrentHPFixedAdditionMultiplier()
+    {
+        // 0~800を0~1に正規化
+        float normalizedQuantity = Mathf.Clamp01(EmotionalAttachmentSkillQuantity / 800f);
+        
+        // 0.01~0.3の範囲にスケーリング
+        return Mathf.Lerp(0.01f, 0.3f, normalizedQuantity);
+    }
+    /// <summary>
+    /// 思い入れ量の弱体処理
+    /// </summary>
+    void EmotionalAttachmentSkillQuantityChangeWeakening(AllySkill oldSkill, AllySkill newSkill)
+    {
+        if(oldSkill.MotionFlavor == newSkill.MotionFlavor)
+        {
+            EmotionalAttachmentSkillQuantity *= 0.7f;//動作的雰囲気が一致してたら0.7倍
+        }else
+        {
+            EmotionalAttachmentSkillQuantity = 0;//それ以外は0で最初から
+        }
+    }
+    /// <summary>
+    /// 思い入れスキルが変更された際、前に選ばれてたスキルに弱体化スキルパッシブを付与する
+    /// 専用付与関数で二つ重複しない
+    /// </summary>
+    void EmotionalAttachmentSkillQuantityChangeSkillWeakening(AllySkill oldSkill)
+    {
+        oldSkill.ApplyEmotionalAttachmentSkillQuantityChangeSkillWeakeningPassive//弱体化スキルパッシブ専用の付与関数
+        (PlayersStates.Instance.EmotionalAttachmentSkillWeakeningPassive);
+    }
+    
     
     /// <summary>
     /// キャラクターのデフォルト精神属性を決定する関数　十日能力が変動するたびに決まる。
@@ -981,7 +1110,7 @@ public class AllyClass : BaseStates
 
         
     }
-     /// <summary>
+    /// <summary>
     /// スキル攻撃回数ストックボタンからはそのまま次のターンへ移行する(対象者選択や範囲選択などはない。)
     /// </summary>
     /// <param name="skillListIndex"></param>
@@ -1075,7 +1204,7 @@ public class AllyClass : BaseStates
     {
         //var acter = Walking.bm.Acter;
 
-        //範囲を選べるのなら　　(自分だけのスキルなら範囲選択の性質があってもできない、本来できないもの)
+        //範囲を選べるのなら　　 (自分だけのスキルなら範囲選択の性質があってもできない、本来できないもの)
         if (skill.HasZoneTrait(SkillZoneTrait.CanSelectRange) && !skill.HasZoneTrait(SkillZoneTrait.SelfSkill))
         {
             return TabState.SelectRange;//範囲選択画面へ飛ぶ
@@ -1422,6 +1551,7 @@ public class AllyClass : BaseStates
             dst._skillALLList.Add(skill.InitAllyDeepCopy());
         }
         dst.ValidSkillIDList = new List<int>(ValidSkillIDList);  //主人公達の初期有効化スキルIDをランタイム用リストにセット
+        dst.EmotionalAttachmentSkillID = EmotionalAttachmentSkillID;//思い入れスキルIDをコピー
         Debug.Log("AllyClassディープコピー完了");
     }
 
@@ -1470,12 +1600,113 @@ public class AllySkill : BaseSkill
     /// </summary>
     public int ID => _iD;
 
+    /// <summary>
+    /// allySkillにおける行使者はAllyClassなのでキャストして返す
+    /// </summary>
+    public new AllyClass Doer => (AllyClass)base.Doer;
+
+    /// <summary>
+    /// スキル熟練度　単純な数のプロパティで、標準のロジックはスキル内ではないからここでは数だけ
+    /// </summary>
+    public float Proficiency;
+
+    /// <summary>
+    /// スキル使用回数をカウントアップする
+    /// allySkillでは熟練度が加算される
+    /// </summary>
+    public override void DoSkillCountUp()
+    {
+        base.DoSkillCountUp();
+        AddProficiency();
+        AddEmotionalAttachmentSkillQuantity();
+    }
+
+    /// <summary>
+    /// 熟練度を加算する（思い入れ量に応じてスケーリング）
+    /// </summary>
+    void AddProficiency()
+    {
+        // このスキルが思い入れスキルかどうかチェック
+        if (Doer.EmotionalAttachmentSkillID == ID)
+        {
+            // 思い入れスキルの場合、思い入れ量に応じてスケーリング
+            float multiplier = Doer.GetProficiencyMultiplierFromQuantity();
+            Proficiency += multiplier;
+            Debug.Log($"思い入れスキル熟練度加算: +{multiplier:F2} (思い入れ量: {Doer.EmotionalAttachmentSkillQuantity})");
+        }
+        else
+        {
+            // 通常スキルは1.0倍
+            Proficiency += 1.0f;
+        }
+    }
+    /// <summary>
+    /// allySkillで継承したスキルパワー関数
+    /// </summary>
+    protected override float _skillPower(bool IsCradle)
+    {
+        //スキルの思い入れ由来のhp固定加算値
+        return base._skillPower(IsCradle) + CurrentHPFixedAdditionSkillPower();
+    }
+    /// <summary>
+    /// 現在HP固定加算をスキルパワーに加算する用の関数
+    /// スキルの思い入れ由来の固定加算値
+    /// </summary>
+    float CurrentHPFixedAdditionSkillPower()
+    {
+        if(Doer.EmotionalAttachmentSkillID == ID)//思い入れスキルならhp固定加算が入る
+        {
+            // 思い入れ量から倍率を取得
+            float multiplier = Doer.GetCurrentHPFixedAdditionMultiplier();
+            
+            // 基礎値×現在HP = SkillPower加算値
+            float currentHP = Doer.HP;
+            float additionPower = multiplier * currentHP;
+            
+            Debug.Log($"思い入れスキルHP固定加算: +{additionPower:F2} (倍率: {multiplier:F3}, 現在HP: {currentHP}, 思い入れ量: {Doer.EmotionalAttachmentSkillQuantity})");
+            return additionPower;
+        }
+        return 0;
+    }
+    /// <summary>
+    /// 思い入れ量を加算する用の関数
+    /// </summary>
+    void AddEmotionalAttachmentSkillQuantity()
+    {
+        Doer.EmotionalAttachmentSkillQuantity++;
+    }
+    /// <summary>
+    /// TLOAの思い入れスキル用弱体化スキルパッシブを付与する専用の関数
+    /// 重複を防ぐため既にあった場合、同名のパッシブを削除する
+    /// </summary>
+    /// <param name="passive">ここに渡すのは弱体化スキルパッシブ(スキルの思い入れ由来)専用</param>
+    public void ApplyEmotionalAttachmentSkillQuantityChangeSkillWeakeningPassive(BaseSkillPassive passive)
+    {
+        if(passive.Name == PlayersStates.Instance.EmotionalAttachmentSkillWeakeningPassive.Name)
+        {
+            //弱体化スキルパッシブに該当するものが一つでもあったら、それを消す
+            for (int i = ReactiveSkillPassiveList.Count - 1; i >= 0; i--)//回してるリストから削除するのでfor文で逆順に回すと安心
+            {
+                if(ReactiveSkillPassiveList[i].Name == passive.Name)
+                {
+                    ReactiveSkillPassiveList.RemoveAt(i);
+                }
+            }
+            //思い入れ弱体化スキルパッシブを付与する
+            ApplySkillPassive(passive);
+        }else
+        {
+            Debug.LogError("思い入れ弱体化スキルパッシブ付与関数に\n渡されたパッシブがスキルの思い入れ専用の弱体化スキルパッシブではありません");
+        }
+    }
+    
     public AllySkill InitAllyDeepCopy()
     {
         var clone = new AllySkill();
         InitDeepCopy(clone);
 
         clone._iD = _iD;
+        clone.Proficiency = Proficiency;//熟練度
         return clone;
     }
 }

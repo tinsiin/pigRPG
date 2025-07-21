@@ -41,6 +41,7 @@ public class SkillPassiveReactionCharaAndSkill
 [Serializable]
 public class BaseSkillPassive
 {
+    public string Name;
     BaseSkill OwnerSkill;
     /// <summary>
     /// 持続ターン数 -1なら消えない
@@ -86,7 +87,7 @@ public class BaseSkillPassive
     /// <summary>
     /// スキルパワーを百分率で増減させる
     /// </summary>
-    public float SkillPowerRate;
+    public float SkillPowerRate = 1.0f;
 
     //スキルレベルが操作されると何か絡み合いすぎるし、ゆりかごシステムとも嚙み合って変になるし、
     // パッシブでレベルが動くのはおかしいからパワーにダイレクト影響が普通だと思う
@@ -101,17 +102,6 @@ public class BaseSkillPassive
     /// </summary>
     public bool IsBad;
 
-    /// <summary>
-    /// 熟練度上下レート
-    /// TLOAの思い入れでのメリットなど
-    /// </summary>
-    public float ProficiencyRate;
-
-    /// <summary>
-    /// HP固定加算率
-    /// 主にTLOAの思い入れでのメリット用
-    /// </summary>
-    public float HPFixedValueEffect;
 
     public BaseSkillPassive DeepCopy()
     {
@@ -121,8 +111,6 @@ public class BaseSkillPassive
             DurationWalkTurn = DurationWalkTurn,
             SkillPowerRate = SkillPowerRate,
             IsLock = IsLock,
-            ProficiencyRate = ProficiencyRate,
-            HPFixedValueEffect = HPFixedValueEffect,
             OwnerSkill = OwnerSkill
         };
     }

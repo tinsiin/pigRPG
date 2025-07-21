@@ -5193,6 +5193,10 @@ public abstract class BaseStates
     /// </summary>
     public abstract IReadOnlyList<BaseSkill> SkillList { get; }
     /// <summary>
+    /// 現在有効なTLOAスキルリスト
+    /// </summary>
+    public List<BaseSkill> TLOA_SkillList => SkillList.Where(x => x.IsTLOA).ToList();
+    /// <summary>
     /// 完全な単体攻撃かどうか
     /// (例えばControlByThisSituationの場合はrangeWillにそのままskillのzoneTraitが入るので、
     /// そこに範囲系の性質(事故で範囲攻撃に変化)がある場合はfalseが返る

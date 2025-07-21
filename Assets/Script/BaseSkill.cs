@@ -652,9 +652,10 @@ public class BaseSkill
     /// スキルのパワー　
     /// ゆりかご効果によるスキルレベルを参照するか、そうでないか。
     /// </summary>
-    float _skillPower(bool IsCradle)
+    protected virtual float _skillPower(bool IsCradle)
     {
         var Level = _nowSkillLevel;
+        var powerMultiplier = SkillPassiveSkillPowerRate();//スキルパワーに乗算する値
         if(IsCradle)
         {
             Level = _cradleSkillLevel;//ゆりかごならゆりかご用計算されたスキルレベルが
@@ -662,7 +663,7 @@ public class BaseSkill
         // スキルレベルが有限範囲ならそれを返す
         if (FixedSkillLevelData.Count > Level)
         {
-            return FixedSkillLevelData[Level].SkillPower;
+            return FixedSkillLevelData[Level].SkillPower * powerMultiplier;
         }
         else
         {// そうでないなら有限最終以降と無限単位の加算
@@ -671,13 +672,13 @@ public class BaseSkill
             var baseSkillPower = FixedSkillLevelData[FixedSkillLevelData.Count - 1].SkillPower;
 
             // 有限リストの超過分、無限単位にどの程度かけるかの数
-                var infiniteLevelMultiplier = Level - (FixedSkillLevelData.Count - 1);
+            var infiniteLevelMultiplier = Level - (FixedSkillLevelData.Count - 1);
 
-                // 基礎値に無限単位に超過分を掛けたものを加算して返す
-                return baseSkillPower + _infiniteSkillPowerUnit * infiniteLevelMultiplier;
-                
-                // 有限リストがないってことはない。必ず一つは設定されてるはずだしね。
-            }
+            // 基礎値に無限単位に超過分を掛けたものを加算して返す
+            return (baseSkillPower + _infiniteSkillPowerUnit * infiniteLevelMultiplier) * powerMultiplier;
+
+            // 有限リストがないってことはない。必ず一つは設定されてるはずだしね。
+        }
     }
     /// <summary>
     /// スキルのパワー
@@ -687,6 +688,15 @@ public class BaseSkill
     /// 精神HPへのスキルのパワー
     /// </summary>
     public float GetSkillPowerForMental(bool IsCradle = false) => _skillPower(IsCradle) * MentalDamageRatio;
+    /// <summary>
+    /// スキルパッシブ由来のスキルパワー百分率
+    /// </summary>
+    public float SkillPassiveSkillPowerRate()
+    {
+        //初期値を1にして、すべてのかかってるスキルパッシブのSkillPowerRateを掛ける
+        var rate = ReactiveSkillPassiveList.Aggregate(1.0f, (acc, pas) => acc * (1.0f + pas.SkillPowerRate));
+        return rate;
+    }
 
     /// <summary>
     /// 通常の精神攻撃率
@@ -1047,12 +1057,10 @@ public class BaseSkill
     /// <summary>
     /// 永続的なものと一時的な物両方のスキル使用回数をカウントアップ
     /// </summary>
-    public void DoSkillCountUp()
+    public virtual void DoSkillCountUp()
     {
         _doCount++;
         _recordDoCount++;
-        //スキル熟練度を上げる
-        Proficiency++;
     }
 
     /// <summary>
@@ -1172,11 +1180,6 @@ public class BaseSkill
     {
         return _nowStockCount >= DefaultAtkCount;//最大値以上ならばストックが満杯とする
     }
-
-    /// <summary>
-    /// スキル熟練度　単純な数のプロパティで、標準のロジックはスキル内ではないからここでは数だけ
-    /// </summary>
-    public int Proficiency;
 
     /// <summary>
     /// 通常の攻撃回数
@@ -1582,8 +1585,10 @@ public class BaseSkill
 
 
     [Header("スキルパッシブ設定")]
+    
     /// <summary>
     /// スキルに掛ってるパッシブリスト
+    /// このスキルが感染してる病気ってこと
     /// </summary>
     public List<BaseSkillPassive> ReactiveSkillPassiveList = new();
     /// <summary>

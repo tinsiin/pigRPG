@@ -122,6 +122,7 @@ public class Walking : MonoBehaviour
             var TimeLine = new BattleTimeLine(new List<BattleManager>{bm}); //バトルのタイムラインを管理するクラス
 
             wui.FirstImpressionZoom();
+            PlayersStates.Instance.OnBattleStart();
             USERUI_state.Value = bm.ACTPop();//一番最初のUSERUIの状態を変更させるのと戦闘ループの最初の準備処理。
             _nextWaitBtn.onClick.AddListener(()=>OnClickNextWaitBtn().Forget());;//ボタンにbmの処理を追加
             //非同期なのでボタン処理自体は非同期で実行されるが、例えばUI側での他のボタンや、このボタン自体の処理を防ぐってのはないけど、
