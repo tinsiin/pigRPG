@@ -1314,21 +1314,19 @@ public class BaseSkill
     /// <summary>
     /// スキルパワーの計算
     /// </summary>
-    public virtual float SkillPowerCalc(float spread,bool IsCradle = false)
+    public virtual float SkillPowerCalc(bool IsCradle = false)
     {
         var pwr = GetSkillPower(IsCradle);//基礎パワー
 
 
 
-        pwr *= spread;//分散値を掛ける
 
         return pwr;
     }
-    public virtual float SkillPowerForMentalCalc(float spread,bool IsCradle = false)
+    public virtual float SkillPowerForMentalCalc(bool IsCradle = false)
     {
         var pwr = GetSkillPowerForMental(IsCradle);//基礎パワー
 
-        pwr *= spread;//分散値を掛ける
 
         return pwr;
     }

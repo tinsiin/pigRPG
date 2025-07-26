@@ -6074,6 +6074,34 @@ public abstract class BaseStates
 
         return;
     }
+    /// <summary>
+    /// 魔法スキルのダメージ計算
+    /// </summary>
+    public StatesPowerBreakdown MagicDamageCalculation(BaseStates Atker, float SkillPower,StatesPowerBreakdown def)
+    {
+        return (MagicBlendVSCalc(Atker.ATK(Atker.SkillAttackModifier),def) * (SkillPower * 0.5f)) + SkillPower * Atker.ATK() * 0.09f;//(攻撃-対象者の防御) にスキルパワー加算と乗算
+    }
+    /// <summary>
+    /// 魔法スキルの精神ダメージ計算
+    /// </summary>
+    public StatesPowerBreakdown MagicMentalDamageCalculation(BaseStates Atker,float mentalATKBoost,float SkillPowerForMental)
+    {
+        return  (Atker.ATK() * mentalATKBoost / MentalDEF() * (SkillPowerForMental * 0.6f)) + SkillPowerForMental * 0.7f ;//精神攻撃
+    }
+    /// <summary>
+    /// 魔法スキル以外のダメージ計算
+    /// </summary>
+    public StatesPowerBreakdown NonMagicDamageCalculation(BaseStates Atker, float SkillPower,StatesPowerBreakdown def)
+    {
+        return ((Atker.ATK(Atker.SkillAttackModifier) - def) * SkillPower) + SkillPower;//(攻撃-対象者の防御) にスキルパワー加算と乗算
+    }
+    /// <summary>
+    /// 魔法スキル以外の精神ダメージ計算
+    /// </summary>
+    public StatesPowerBreakdown NonMagicMentalDamageCalculation(BaseStates Atker,float mentalATKBoost,float SkillPowerForMental)
+    {
+        return  ((Atker.ATK() * mentalATKBoost - MentalDEF()) * SkillPowerForMental) + SkillPowerForMental ;//精神攻撃
+    }
     
     /// <summary>
     ///オーバライド可能なダメージ関数
@@ -6102,13 +6130,13 @@ public abstract class BaseStates
         //下の魔法スキル以外の計算式を基本計算式と考えましょう
         if(skill.IsMagic)//魔法スキルのダメージ計算
         {
-            dmg = (MagicBlendVSCalc(Atker.ATK(Atker.SkillAttackModifier),def) * (SkillPower * 0.5f)) + SkillPower * Atker.ATK() * 0.09f;//(攻撃-対象者の防御) にスキルパワー加算と乗算
-            mentalDmg = (Atker.ATK() * mentalATKBoost / MentalDEF() * (SkillPowerForMental * 0.6f)) + SkillPowerForMental * 0.7f ;//精神攻撃
+            dmg = MagicDamageCalculation(Atker, SkillPower, def);
+            mentalDmg = MagicMentalDamageCalculation(Atker, mentalATKBoost, SkillPowerForMental);
         }
         else//それ以外のスキルのダメージ計算
         {
-            dmg = ((Atker.ATK(Atker.SkillAttackModifier) - def) * SkillPower) + SkillPower;//(攻撃-対象者の防御) にスキルパワー加算と乗算
-            mentalDmg = ((Atker.ATK() * mentalATKBoost - MentalDEF()) * SkillPowerForMental) + SkillPowerForMental ;//精神攻撃
+            dmg = NonMagicDamageCalculation(Atker, SkillPower, def);
+            mentalDmg = NonMagicMentalDamageCalculation(Atker, mentalATKBoost, SkillPowerForMental);
         }
         
         isdisturbed = false;//攻撃が乱れたかどうか　　受けた攻撃としての視点から乱れていたかどうか
@@ -6236,6 +6264,216 @@ public abstract class BaseStates
         Atker.PassivesOnAfterPerfectSingleAttack(this);//攻撃者のパッシブの完全単体選択発動効果
 
         return dmg;
+    }
+    /// <summary>
+    /// AIのブルートフォースダメージシミュレイト用関数
+    /// </summary>
+    public float SimulateDamage(BaseStates attacker, BaseSkill skill, SkillAnalysisPolicy policy)
+    {
+        //スキルパワー取得
+        //damage関数と違う内容　spread,敵による分散値が乗算されない
+        var simulateHP = HP;//計算用HP
+        var simulateMentalHP = MentalHP;//計算用精神HP
+
+        //スキルパワーの精神属性による計算
+        var modifier = GetSkillVsCharaSpiritualModifier(skill.SkillSpiritual, attacker);
+        var SpiritualModifierPercentage = 0.2f;//IsTLOAスキル以外は20%の精神補正
+        if(skill.IsTLOA) SpiritualModifierPercentage = 0.4f;//IsTLOAなら40%の精神補正
+
+
+        var modifierForSkillPower = modifier.GetValue(SpiritualModifierPercentage);//精神補正値
+        var modifierForSkillPowerForMental = modifier.GetValue();//精神補正値100%
+        if(attacker.NowUseWeapon.IsBlade) modifierForSkillPower = 1.0f;//刃物武器なら精神補正なし
+        
+        //精神補正のオプションがfalseなら精神補正なし
+        if(!policy.spiritualModifier)
+        {
+            modifierForSkillPower = 1.0f;
+            modifierForSkillPowerForMental = 1.0f;
+        }
+        
+        //TLOAスキルならゆりかごされたスキルレベルを参照する(IsTLOAを渡して判断)
+        var skillPower = skill.SkillPowerCalc(skill.IsTLOA) * modifierForSkillPower;
+        var skillPowerForMental = skill.SkillPowerForMentalCalc(skill.IsTLOA) * modifierForSkillPowerForMental;
+
+        //防御力
+        var def = DEF();
+        //防御力のオプションがfalseなら防御力なし
+        if(!policy.SimlateEnemyDEF) def =  new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
+
+
+        //精神攻撃ブーストはシミュレートでは考慮しない
+        var mentalATKBoost = 1.0f;
+
+        //ダメージを計算
+        StatesPowerBreakdown dmg, mentalDmg;
+        if(skill.IsMagic)//魔法スキルのダメージ計算
+        {
+            dmg = MagicDamageCalculation(attacker, skillPower, def);
+            mentalDmg = MagicMentalDamageCalculation(attacker, mentalATKBoost, skillPowerForMental);
+        }
+        else//それ以外のスキルのダメージ計算
+        {
+            dmg = NonMagicDamageCalculation(attacker, skillPower, def);
+            mentalDmg = NonMagicMentalDamageCalculation(attacker, mentalATKBoost, skillPowerForMental);
+        }
+
+        //物理耐性による減衰(オプション)
+        if(policy.physicalResistance)
+        {
+            dmg = ApplyPhysicalResistance(dmg,skill);
+        }
+
+        //追加HP（バリア層）のシミュレート処理（オプション）
+        if(policy.SimlateVitalLayerPenetration)
+        {
+            SimulateBarrierLayers(ref dmg, ref mentalDmg, attacker);
+        }
+
+        //シミュレートするダメージの種類で分岐
+        if(policy.damageType == SimulateDamageType.dmg)
+        {
+            return dmg.Total;
+        }
+        if(policy.damageType == SimulateDamageType.mentalDmg)
+        {
+            return mentalDmg.Total;
+        }
+        Debug.LogError("BaseStatesのダメージシミュレート関数に渡されたダメージタイプが正しくありません");
+        return 0;
+    }
+
+    /// <summary>
+    /// バリア層のシミュレート処理（実際のバリア層を変更せずにダメージ計算のみ行う）
+    /// PenetrateLayerのロジックを再現しつつ、実体を変更しない
+    /// </summary>
+    private void SimulateBarrierLayers(ref StatesPowerBreakdown dmg, ref StatesPowerBreakdown mentalDmg, BaseStates atker)
+    {
+        // バリア層のシミュレート用データを作成（実体は変更しない）
+        var simulateVitalLayers = new List<(float layerHP, float maxLayerHP, BaseVitalLayer originalLayer)>();
+        
+        // 元のバリア層リストから必要な情報をコピー
+        foreach(var layer in _vitalLayerList)
+        {
+            simulateVitalLayers.Add((layer.LayerHP, layer.MaxLayerHP, layer));
+        }
+
+        for (int i = 0; i < simulateVitalLayers.Count;)
+        {
+            var (layerHP, maxLayerHP, originalLayer) = simulateVitalLayers[i];
+            var skillPhy = atker.NowUseSkill.SkillPhysical;
+            
+            // PenetrateLayerのロジックを再現（実体を変更せずに）
+            var (newDmg, newMentalDmg, newLayerHP, isDestroyed) = SimulatePenetrateLayer(
+                dmg, mentalDmg, layerHP, originalLayer, skillPhy);
+            
+            dmg = newDmg;
+            mentalDmg = newMentalDmg;
+
+            if (isDestroyed)
+            {
+                // このレイヤーは破壊された
+                simulateVitalLayers.RemoveAt(i);
+                // リストを削除したので、 i はインクリメントしない
+                
+                //破壊慣れまたは破壊負け
+                var kerekere = atker.TenDayValues(true).GetValueOrZero(TenDayAbility.KereKere);
+                if (skillPhy == PhysicalProperty.heavy)//暴断なら破壊慣れ
+                {
+                    dmg += dmg * 0.015f * kerekere;
+                }
+                if (skillPhy == PhysicalProperty.volten)//vol天なら破壊負け
+                {
+                    dmg -= dmg * 0.022f * (atker.b_ATK.Total - kerekere);
+                    //b_atk < kerekereになった際、減らずに逆に威力が増えるので、そういう場合の演出差分が必要
+                }
+            }
+            else
+            {
+                // レイヤーが残ったら i を進める
+                simulateVitalLayers[i] = (newLayerHP, maxLayerHP, originalLayer);
+                i++;
+            }
+
+            // dmg が 0 以下になったら、もうこれ以上削る必要ない
+            if (dmg.Total <= 0f)
+            {
+                break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// PenetrateLayerのロジックをシミュレート（実体を変更しない）
+    /// </summary>
+    /// <returns>(新しいdmg, 新しいmentalDmg, 新しいlayerHP, 破壊されたかどうか)</returns>
+    private (StatesPowerBreakdown dmg, StatesPowerBreakdown mentalDmg, float layerHP, bool isDestroyed) 
+        SimulatePenetrateLayer(StatesPowerBreakdown dmg, StatesPowerBreakdown mentalDmg, float layerHP, 
+                              BaseVitalLayer originalLayer, PhysicalProperty impactProperty)
+    {
+        // 1) 物理属性に応じた耐性率を取得
+        float resistRate = 1.0f;
+        switch (impactProperty)
+        {
+            case PhysicalProperty.heavy:
+                resistRate = originalLayer.HeavyResistance;
+                break;
+            case PhysicalProperty.volten:
+                resistRate = originalLayer.voltenResistance;
+                break;
+            case PhysicalProperty.dishSmack:
+                resistRate = originalLayer.DishSmackRsistance;
+                break;
+        }
+
+        // 2) 軽減後の実ダメージ
+        StatesPowerBreakdown dmgAfter = dmg * resistRate;
+
+        // 3) レイヤーHPを削る（シミュレート）
+        StatesPowerBreakdown leftover = layerHP - dmgAfter; // leftover "HP" => もしマイナスなら破壊
+
+        //精神dmgが現存する攻撃に削られる前のLayerを通る
+        mentalDmg -= layerHP * (1 - originalLayer.MentalPenetrateRatio);//精神HPの通過率の分だけ通るので、つまり100%ならmentalDMgの低減はないということ。
+
+        if (leftover <= 0f)
+        {
+            // 破壊された
+            StatesPowerBreakdown overkill = -leftover; // -negative => positive
+            var tmpHP = layerHP;//仕組みC用に今回受ける時のLayerHPを保存。
+            
+            // 仕組みの違い
+            switch (originalLayer.ResistMode)
+            {
+                case BarrierResistanceMode.A_SimpleNoReturn:
+                    // Aは一度軽減した分は戻さない: overkill をそのまま次へ
+                    return (overkill, mentalDmg, 0f, true);
+
+                case BarrierResistanceMode.B_RestoreWhenBreak:
+                    // Bは「軽減後ダメージ」分を元に戻す => leftover を "÷ resistRate" で拡大
+                    StatesPowerBreakdown restored = overkill / resistRate;
+                    return (restored, mentalDmg, 0f, true);
+
+                case BarrierResistanceMode.C_IgnoreWhenBreak:
+                    // Cは元攻撃 - 現在のLayerHP
+                    StatesPowerBreakdown cValue = dmg - tmpHP;
+                    return (cValue, mentalDmg, 0f, true);
+                    
+                case BarrierResistanceMode.C_IgnoreWhenBreak_MaxHP:
+                    // Cは元攻撃 - 最大LayerHP
+                    StatesPowerBreakdown cmValue = dmg - originalLayer.MaxLayerHP;
+                    return (cmValue, mentalDmg, 0f, true);
+            }
+        }
+        else
+        {
+            // バリアで耐えた（破壊されなかった）
+            float newLayerHP = leftover.Total;//レイヤーHPに戻すのでtotal
+            StatesPowerBreakdown zeroDmg = new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0f); // 余剰ダメージなし
+            return (zeroDmg, mentalDmg, newLayerHP, false);
+        }
+        
+        // デフォルト（通常ここには来ない）
+        return (dmg, mentalDmg, layerHP, false);
     }
     /// <summary>
     /// パッシブの毒ダメや、パッシブリンク等の単純なfloatダメージ用
@@ -7601,8 +7839,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         if(attacker.NowUseWeapon.IsBlade) modifierForSkillPower = 1.0f;//刃物武器なら精神補正なし
         
         //TLOAスキルならゆりかごされたスキルレベルを参照する(IsTLOAを渡して判断)
-        var skillPower = skill.SkillPowerCalc(spread,skill.IsTLOA) * modifierForSkillPower;
-        var skillPowerForMental = skill.SkillPowerForMentalCalc(spread,skill.IsTLOA) * modifier.GetValue();//精神HPへのパワーは精神補正100%
+        var skillPower = skill.SkillPowerCalc(skill.IsTLOA) * modifierForSkillPower * spread;
+        var skillPowerForMental = skill.SkillPowerForMentalCalc(skill.IsTLOA) * modifier.GetValue() * spread;//精神HPへのパワーは精神補正100%
 
         //メッセージテキスト用
         var txt = "";

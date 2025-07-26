@@ -361,7 +361,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 150.35, y: -232.99}
+  m_AnchoredPosition: {x: -150.35, y: -145.95}
   m_SizeDelta: {x: 779.3, y: 87.03}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &60655923
@@ -8427,8 +8427,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 78173493}
-        m_TargetAssemblyTypeName: PlayersStates, Assembly-CSharp
+      - m_Target: {fileID: 965992562}
+        m_TargetAssemblyTypeName: SelectEmotionalAttachmentSkillButtons, Assembly-CSharp
         m_MethodName: CloseEmotionalAttachmentSkillSelectUIArea
         m_Mode: 1
         m_Arguments:
@@ -9443,7 +9443,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &965992559
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9518,6 +9518,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ButtonPrefab: {fileID: 9092262324443117950, guid: 13f8d72072f7c1c44ab2819630c85382, type: 3}
   bascketField: {fileID: 965992559}
+  memo: {fileID: 60655923}
+  defaultText: "\u30FB\u601D\u3044\u5165\u308C\u304C\u3042\u308B\u3068\u3044\u30B9\u30AD\u30EB\u3092\u9078\u3093\u3067\u307F\u3066\u30FB"
+  textOnChange: "<color=red>{0}\u304B\u3089\u6C17\u6301\u3061\u304C\u96E2\u308C\u305F...</color>"
   horizontalPadding: 10
   verticalPadding: 10
 --- !u!1 &1037068248
