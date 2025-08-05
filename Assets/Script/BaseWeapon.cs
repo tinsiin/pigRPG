@@ -15,7 +15,7 @@ public class BaseWeapon
     /// <summary>
     /// 武器専用スキル
     /// </summary>
-    public BaseSkill  WeaponSkill;
+    public BaseSkill WeaponSkill;
 
     /// <summary>
     /// 武器の十日能力ボーナス

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -35,7 +35,7 @@ public class EnemyCollectManager : MonoBehaviour
     ///     同じペアは逆順でも自動的に対応されるので、
     ///     わざわざ追加しなくてOK
     /// </summary>
-    private Dictionary<(CharacterType, CharacterType), int> TypeMatchupTable;
+    private Dictionary<(CharacterType, CharacterType), int> TypeMatchupTable = new();
 
     // staticなインスタンス
     public static EnemyCollectManager Instance { get; private set; }
@@ -160,6 +160,14 @@ public class EnemyCollectManager : MonoBehaviour
     /// <returns></returns>
     public bool LonelyMatchUp(SpiritualProperty I)
     {
+        // キーが存在しない場合のエラーハンドリング
+        if (!LonelyMatchImpression.ContainsKey(I))
+        {
+            Debug.LogError($"SpiritualProperty '{I}' (value: {(int)I}) is not found in LonelyMatchImpression dictionary. Returning false."
+            + "\n 精神属性に多分スキル用の精神属性をセットしちゃってますよ敵に多分");
+            return false;
+        }
+
         var matchPer = LonelyMatchImpression[I];
         if (RandomEx.Shared.NextInt(100) < matchPer) return true;
 
@@ -179,10 +187,31 @@ public class EnemyCollectManager : MonoBehaviour
         //1<2 ならtrueなので(1,2)が返り、　2<1ならfalseなので逆にして(1,2)が返る。常に同じキーを生成するロジック。
         //このロジックのお陰で順序を気にしなくていい。　characteTypeのenumは暗黙的に数値で扱われること前提。
 
+        // 0値（未初期化）のチェック
+        if (I == 0 || You == 0)
+        {
+            Debug.LogError("TypeMatchUP:キャラクターの種別を設定してないから、種別でのキャラ同士の判定ができない。");
+            return false;
+        }
+
+        // TypeMatchupTableにキーが存在するかチェック
+        if (!TypeMatchupTable.ContainsKey(sortedPair))
+        {
+            // 同一種族同士の場合は無条件でtrue
+            if (I == You)
+            {
+                return true;
+            }
+            else
+            {
+                Debug.LogError($"TypeMatchUP:種族ペア '{I}' と '{You}' の相性データが辞書に存在しません。falseを返します。");
+                return false;
+            }
+        }
+
         var matchPer = TypeMatchupTable[sortedPair]; //ジャッジ確率
 
         if (RandomEx.Shared.NextInt(100) < matchPer) return true;
-
 
         return false; //相性が合わなかった場合失敗を返す。
     }

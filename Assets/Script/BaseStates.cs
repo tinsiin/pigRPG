@@ -161,7 +161,7 @@ public abstract class BaseStates
     /// <summary>
     /// 現在持ってる対象者のボーナスデータ
     /// </summary>
-    public TargetBonusDatas TargetBonusDatas ;
+    public TargetBonusDatas TargetBonusDatas = new();
 
     /// <summary>
     /// 直近の行動記録
@@ -1560,6 +1560,7 @@ public abstract class BaseStates
 
         //現在の精神属性を構成する十日能力の中で最も大きいものを算出
         float topTenDayValue = 0f;
+        Debug.Log($"(スキル成長)精神属性のチェック : {MyImpression},キャラ:{CharacterName}");
         foreach(var ten in SpritualTenDayAbilitysMap[MyImpression])
         {
             topTenDayValue = TenDayValues(true).GetValueOrZero(ten) > topTenDayValue ? TenDayValues(true).GetValueOrZero(ten) : topTenDayValue;
@@ -2216,6 +2217,10 @@ public abstract class BaseStates
     /// とりあえずtrueで設定
     /// </summary>
     public virtual bool IsInterruptCounterActive => true;
+    /// <summary>
+    /// HPバーUI　　敵はスクリプト経由で生成する
+    /// </summary>
+    public CombinedStatesBar HPBar;
 
     //HP
     [SerializeField]
@@ -2230,6 +2235,16 @@ public abstract class BaseStates
                 _hp = MaxHP;
             }
             else _hp = value;
+            if(HPBar != null)
+            {
+                HPBar.HPPercent = value / MaxHP;
+            }
+
+            //精神HPのチェック
+            if(_mentalHP > MentalMaxHP)//最大値超えてたらカットする。
+            {
+                _mentalHP = MentalMaxHP;
+            }
         }
     }
     [SerializeField]
@@ -2259,6 +2274,11 @@ public abstract class BaseStates
                 _mentalHP = MentalMaxHP;
             }
             else _mentalHP = value;
+            if(HPBar != null)
+            {
+                HPBar.MentalRatio = value / MentalMaxHP;//精神HPを設定
+                HPBar.DivergenceMultiplier = GetMentalDivergenceThreshold();//UIの乖離指標の幅を設定
+            }
         }
     }
     /// <summary>
@@ -2332,8 +2352,8 @@ public abstract class BaseStates
                 MentalHP += MentalMaxHP * 0.35f;
                 break;
             case SpiritualProperty.baledrival:
-                // 10割回復
-                MentalHP = MentalMaxHP;
+                // 7割回復
+                MentalHP = MentalMaxHP * 0.7f;
                 break;
             case SpiritualProperty.pysco:
                 // 20%加算
@@ -2357,9 +2377,10 @@ public abstract class BaseStates
     /// 実HPに比べて何倍離れているのだろうか。
     /// </summary>
     /// <returns></returns>
-    float GetMentalDivergenceThreshold()
+    public float GetMentalDivergenceThreshold()
     {
-        var ExtraValue = (TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) - TenDayValues(false).GetValueOrZero(TenDayAbility.KereKere)) * 0.01f;//0クランプいらない
+        var ExtraValue = (TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) -
+         TenDayValues(false).GetValueOrZero(TenDayAbility.KereKere)) * 0.01f;//0クランプいらない
         var EnokunagiValue = TenDayValues(false).GetValueOrZero(TenDayAbility.Enokunagi) * 0.005f;
         switch (NowCondition)
         {
@@ -2782,10 +2803,16 @@ public abstract class BaseStates
     public CharacterType MyType;
 
 
+    [SerializeField] //フィールドをシリアライズ
+    private SpiritualProperty _myImpression;
     /// <summary>
     ///     このキャラクターの属性 精神属性が入る
     /// </summary>
-    public SpiritualProperty MyImpression { get; protected set; }
+    public SpiritualProperty MyImpression
+    {
+        get => _myImpression;       // 取得は公開
+        protected set => _myImpression = value;  // 変更は継承クラス内のみ許可
+    }
 
     /// <summary>
     ///     このキャラクターの"デフォルト"属性 精神属性が入る
@@ -5057,7 +5084,7 @@ public abstract class BaseStates
     /// <summary>
     /// 特別補正用保持リスト
     /// </summary>
-    private List<ModifierPart> _specialModifiers;
+    private List<ModifierPart> _specialModifiers = new();
     /// <summary>
     /// 特別補正をセットする。
     /// オプション変数部分が固定値
@@ -5264,7 +5291,11 @@ public abstract class BaseStates
         PassivesPercentageModifier(whatModify.agi, ref agi);//パッシブの乗算補正
         agi += GetSpecialFixedModifier(whatModify.agi);//回避率固定値補正
 
-        if (manager.IsVanguard(this))//自分が前のめりなら
+        if(manager == null)
+        {
+            Debug.Log("BattleManagerがnullです、恐らく戦闘開始前のステータス計算をしている可能性があります。回避率の前のめり補正をスキップします。");
+        }
+        else if (manager.IsVanguard(this))//自分が前のめりなら
         {
             agi /= 2;//回避率半減
         }
@@ -7598,6 +7629,7 @@ private int CalcTransformCountIncrement(int tightenStage)
                 imp = skillSpiritual;
                 break;
         }
+        Debug.Log($"スキルの属性解釈 : {skillSpiritual},キャラ:{CharacterName}");
         return imp;
     }
     /// <summary>
@@ -7609,8 +7641,15 @@ private int CalcTransformCountIncrement(int tightenStage)
         var castSkillImp = GetCastImpressionToModifier(skillImp,attacker);//補正に投げる特殊スキル属性を純正な精神属性に変換
 
         if(castSkillImp == SpiritualProperty.none) return new FixedOrRandomValue(100);//noneなら補正なし(100%なので無変動)
-        
-        var resultModifier = SpiritualModifier[(castSkillImp, MyImpression)];//スキルの精神属性と自分の精神属性による補正
+
+        var key = (castSkillImp, MyImpression);
+        if (!SpiritualModifier.ContainsKey(key))
+        {
+            Debug.LogError($"SpiritualModifier辞書にキー {key} が存在しません。castSkillImp={castSkillImp}({(int)castSkillImp}), MyImpression={MyImpression}"
+            + $" 多分スキルの精神属性に入れてなくて、デフォ値の0がスキル精神属性に入ってることによるエラーかも");
+        }
+
+        var resultModifier = SpiritualModifier[key];//スキルの精神属性と自分の精神属性による補正
         
         if(attacker.DefaultImpression == skillImp)
         {
@@ -8279,6 +8318,12 @@ private int CalcTransformCountIncrement(int tightenStage)
         var SuggestionJudgementSkillTenDay =new TenDayAbilityDictionary(NowUseSkill.TenDayValues());
         //キーリストを取得
         var SuggestionJudgementSkillTenDayKeys = SuggestionJudgementSkillTenDay.Keys.ToList();
+        Debug.Log($"(使用スキルの乖離判定)判定するスキル印象構造の種類数 : {SuggestionJudgementSkillTenDayKeys.Count}");    
+        if(SuggestionJudgementSkillTenDayKeys.Count <= 0)
+        {
+            Debug.Log("(使用スキルの乖離判定)判定するスキル印象構造の種類数が0以下、つまりスキルに印象構造がセットされてないので、GetIsSkillDivergenceはfalseを返し終了します。");
+            return false;
+        }
         //キーリストをシャッフルする
         SuggestionJudgementSkillTenDayKeys.Shuffle();
 
@@ -8286,6 +8331,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         var JudgementSkillTenDays =new HashSet<TenDayAbility>();
         for(var i = 0; i < NeedJudgementSkillTenDayCount; i++)
         {
+            Debug.Log($"{i} : {SuggestionJudgementSkillTenDayKeys[i]} スキルが乖離してるかどうかを判定するリストに代入");
             var key = SuggestionJudgementSkillTenDayKeys[i];
             JudgementSkillTenDays.Add(key);
         }
@@ -8367,7 +8413,10 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     public void DeleteConsecutiveATK()
     {
-        FreezeUseSkill.ResetAtkCountUp();//強制実行中のスキルの攻撃カウントアップをリセット
+        if(FreezeUseSkill != null)
+        {
+            FreezeUseSkill.ResetAtkCountUp();//強制実行中のスキルの攻撃カウントアップをリセット
+        }
         Defrost();//解除
         IsDeleteMyFreezeConsecutive = false;
 
@@ -10087,6 +10136,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         dst.ApplyWeapon(InitWeaponID);//ここで初期武器と戦闘規格を設定
         dst._p = _p;
         dst.maxRecoveryTurn = maxRecoveryTurn;
+        dst.HPBar = HPBar;
         dst._hp = _hp;
         dst._maxhp = _maxhp;
         dst._mentalHP = _mentalHP;
@@ -10100,8 +10150,14 @@ private int CalcTransformCountIncrement(int tightenStage)
         //思えの値現在値をランダム化
         dst.InitializeNowResonanceValue();
 
+        if(DefaultImpression == 0)
+        {
+            Debug.LogError("DefaultImpressionが0です、敵はディープコピー時デフォルトの精神属性が入ります。");
+        }
+
         Debug.Log("BaseStatesディープコピー完了");
         //パワーは初期値　medium allyは歩行で変化　enemyは再遭遇時コールバックで一回だけ歩行変化で判別
+        
     }
 }
 

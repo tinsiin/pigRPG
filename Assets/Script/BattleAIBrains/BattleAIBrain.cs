@@ -7,9 +7,9 @@ using RandomExtensions;
 /// <summary>
 /// EnemyClass等基礎クラスで関数を共通して扱う 付け替え可能なAI用の抽象クラス
 /// </summary>
-public abstract class BattleAIBrain
+public abstract class BattleAIBrain : ScriptableObject
 {
-    BattleManager manager;
+    protected BattleManager manager;
     /// <summary>
     /// 思考部分のメイン関数
     /// 呼び出し側に値を返すのではなくmanagerを操作する形、managerが存在するときしか使わないし
@@ -22,7 +22,7 @@ public abstract class BattleAIBrain
     /// <summary>
     /// ダメージシミュレートのシミュレート内容
     /// </summary>
-    [SerializeField]SkillAnalysisPolicy policy;
+    [SerializeField]SkillAnalysisPolicy _damageSimulatePolicy;
     /// <summary>
     /// 利用可能なスキルの中から最もダメージを与えられるスキルとターゲットを分析する
     ///  敵グループに対してどのスキルが最もダメージを与えられるかを分析する
@@ -54,22 +54,22 @@ public abstract class BattleAIBrain
         }
 
         //敵グループのHPに対して有効なスキルを分析する
-        if(policy.groupType == TargetGroupType.Group)
+        if(_damageSimulatePolicy.groupType == TargetGroupType.Group)
         {
             return MultiBestDamageAndTargetAnalyzer(availableSkills, potentialTargets);
         }
         //敵単体に対して有効なスキルを分析する
-        if(policy.groupType == TargetGroupType.Single)
+        if(_damageSimulatePolicy.groupType == TargetGroupType.Single)
         {
-            if(policy.hpType == TargetHPType.Highest)//グループの中で最もHPが高い
+            if(_damageSimulatePolicy.hpType == TargetHPType.Highest)//グループの中で最もHPが高い
             {
                 ResultTarget = potentialTargets.OrderByDescending(x => x.HP).First();
             }
-            if(policy.hpType == TargetHPType.Lowest)//グループの中で最もHPが低い
+            if(_damageSimulatePolicy.hpType == TargetHPType.Lowest)//グループの中で最もHPが低い
             {
                 ResultTarget = potentialTargets.OrderBy(x => x.HP).First();
             }
-            if(policy.hpType == TargetHPType.Random)//グループから一人をランダム
+            if(_damageSimulatePolicy.hpType == TargetHPType.Random)//グループから一人をランダム
             {
                 ResultTarget = RandomEx.Shared.GetItem(potentialTargets.ToArray());
             }
@@ -80,7 +80,7 @@ public abstract class BattleAIBrain
         {
             foreach(var target in potentialTargets)
             {
-                var damage = target.SimulateDamage(manager.Acter, skill, policy);
+                var damage = target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy);
             }
         }
         return new BruteForceResult
@@ -107,7 +107,7 @@ public abstract class BattleAIBrain
         BaseSkill ResultSkill = null;
         foreach(var skill in availableSkills)
         {
-            var damage = target.SimulateDamage(manager.Acter, skill, policy);
+            var damage = target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy);
             if(damage > potential)//与えたダメージが多ければ
             {
                 potential = damage;//基準を更新
@@ -144,7 +144,7 @@ public abstract class BattleAIBrain
         {
             foreach(var target in potentialTargets)
             {
-                var damage = target.SimulateDamage(manager.Acter, skill, policy);
+                var damage = target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy);
                 if(damage > maxDamage)
                 {
                     maxDamage = damage;
@@ -198,16 +198,6 @@ public struct SkillAnalysisPolicy
     public bool SimlateEnemyDEF;//敵のDEF
 }
 
-//各キャラ用AI
+//各キャラ用AIはScriptableObejctとして扱うため、UnityのSOを継承するpublicクラスは、
+//ファイル名 = クラス名でなくてはならないというUnityの仕様により、別ファイルに分ける。
 
-public class TestAI1 : BattleAIBrain
-{
-
-    public override void Think()
-    {
-        base.Think();
-
-    }
-
-
-}

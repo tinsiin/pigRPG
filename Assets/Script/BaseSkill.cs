@@ -254,6 +254,7 @@ public enum SkillImpression
 /// <summary>
 /// スキルレベルに含まれるデータ
 /// </summary>
+[Serializable]
 public class SkillLevelData
 {
     public TenDayAbilityDictionary TenDayValues;
@@ -901,6 +902,7 @@ public class BaseSkill
     /// </summary>
     public TenDayAbilityDictionary TenDayValues(bool IsCradle = false)
     {
+        Debug.Log($"スキル印象構造の取得 : スキル有限レベルリストの数:{FixedSkillLevelData.Count},キャラ:{Doer.CharacterName}");
         var Level = _nowSkillLevel;
         if(IsCradle)
         {

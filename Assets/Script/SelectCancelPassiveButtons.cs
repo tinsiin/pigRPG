@@ -34,6 +34,7 @@ public class SelectCancelPassiveButtons : MonoBehaviour
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
+            Debug.LogError("SelectCancelPassiveButtonsのインスタンスが複数存在します");
             return;
         }
         Instance = this;

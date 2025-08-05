@@ -63,6 +63,7 @@ public class PlayersStates:MonoBehaviour
     public static PlayersStates Instance { get; private set; }
 
     public GameObject EyeArea;
+    public ActionMarkUI ActionMar;
 
     private void Awake()
     {
@@ -316,6 +317,7 @@ public class PlayersStates:MonoBehaviour
             }
         }
         //キャンセル可能な行動可能パッシブを作成する。
+        if(CancelPassiveButtonField_geino == null) Debug.LogError("CancelPassiveButtonField_geinoがnullです");
         CancelPassiveButtonField_geino.ShowPassiveButtons(geino,OnlyCantACTPassiveCancel);
     }
     public void OnlySelectActs_normalia(SkillZoneTrait trait, SkillType type, bool OnlyCantACTPassiveCancel)
@@ -600,9 +602,17 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     public int NowAreaID { get; private set; }
 
+    void AllyAlliesUISetActive(bool isActive)
+    {
+        if (geino?.UIObject != null) geino.UIObject.SetActive(isActive);
+        if (sites?.UIObject != null) sites.UIObject.SetActive(isActive);
+        if (noramlia?.UIObject != null) noramlia.UIObject.SetActive(isActive);
+    }
+
     public BattleGroup GetParty()
     {
-        var playerGroup = new List<BaseStates> { geino, sites, noramlia }; //キャラ
+        //var playerGroup = new List<BaseStates> { geino, sites, noramlia }; //キャラ
+        var playerGroup = new List<BaseStates> {geino}; //テストプレイはジーノのみ
         var nowOurImpression = GetPartyImpression(); //パーティー属性を彼らのHPから決定
         var CompatibilityData = new Dictionary<(BaseStates,BaseStates),int>();//相性値のデータ保存用
 
@@ -610,6 +620,21 @@ public class PlayersStates:MonoBehaviour
         if (playerGroup.Count >= 2)
         {
             //ストーリー依存
+        }
+        
+        //UI表示いるキャラだけ
+        AllyAlliesUISetActive(false);
+        foreach(var chara in playerGroup)
+        {
+            if(chara is AllyClass ally)
+            {
+                ally.UIObject.SetActive(true);
+                //HPバーを初期化
+                ally.HPBar.SetBothBarsImmediate(
+                    ally.HP / ally.MaxHP,
+                    ally.MentalHP / ally.MaxHP,
+                    ally.GetMentalDivergenceThreshold());
+            }
         }
 
         return new BattleGroup(playerGroup, nowOurImpression,allyOrEnemy.alliy,CompatibilityData); //パーティー属性を返す
@@ -824,6 +849,7 @@ public class PlayersStates:MonoBehaviour
 
 public class AllyClass : BaseStates
 {
+    public GameObject UIObject;
     /// <summary>
     /// 主人公達の全所持スキルリスト
     /// </summary>
@@ -1552,6 +1578,7 @@ public class AllyClass : BaseStates
         }
         dst.ValidSkillIDList = new List<int>(ValidSkillIDList);  //主人公達の初期有効化スキルIDをランタイム用リストにセット
         dst.EmotionalAttachmentSkillID = EmotionalAttachmentSkillID;//思い入れスキルIDをコピー
+        dst.UIObject = UIObject;//参照なのでそのまま渡す
         Debug.Log("AllyClassディープコピー完了");
     }
 

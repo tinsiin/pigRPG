@@ -1,10 +1,40 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using RandomExtensions;
 using RandomExtensions.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 using static CommonCalc;
+
+/// <summary>
+/// 敵UI配置タイプ
+/// </summary>
+public enum EnemyUIPlacementType
+{
+    RandomInArea,    // エリア内ランダム配置
+    DirectPosition   // 直接位置指定
+}
+
+/// <summary>
+/// 敵キャラの個人用UIオブジェクトをまとめたもの
+/// </summary>
+[Serializable]
+public class EnemyCharacterUIObjects
+{   
+    /// <summary>
+    /// 敵グラフィック画像（メインの敵画像）
+    /// </summary>
+    public Sprite EnemyGraphicSprite;
+    
+
+    public EnemyCharacterUIObjects DeepCopy()
+    {
+        var clone = new EnemyCharacterUIObjects();
+        clone.EnemyGraphicSprite = EnemyGraphicSprite;
+        return clone;
+    }
+}
 
 /// <summary>
 ///     通常の敵
@@ -12,6 +42,8 @@ using static CommonCalc;
 [Serializable]
 public class NormalEnemy : BaseStates
 {
+    [SerializeField] BattleAIBrain _brain;
+
     /// <summary>
     ///     この敵キャラクターの復活する歩数
     ///     手動だが基本的に生命キャラクターのみにこの歩数は設定する?
@@ -112,9 +144,7 @@ public class NormalEnemy : BaseStates
     /// </summary>
     public virtual void SkillAI()
     {
-        //まず使うスキル使えるスキルを選ぶ
-
-        //そのスキル上のオプションを選ぶ
+        _brain.Think();
     }
 
     //スキル成長の処理など------------------------------------------------------------------------------------------------------スキル成長の処理などーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
@@ -362,14 +392,28 @@ public class NormalEnemy : BaseStates
         TransitionPowerOnWalkByCharacterImpression();//パワー変化　精神属性で変化するがその精神属性は既に決まっているので
 
         //遭遇地点を記録する。
-        _lastEncounterProgress = PlayersStates.Instance.NowProgress;
+        if (PlayersStates.Instance != null)
+        {
+            _lastEncounterProgress = PlayersStates.Instance.NowProgress;
+        }
+        else
+        {
+            Debug.LogWarning("PlayersStates.Instance が null です。遭遇地点の記録をスキップします。");
+        }
 
         //死亡判定
             if (Death())//死亡時コールバックも呼ばれる
             {
                 if(Reborn && !broken)//復活するタイプであり、壊れてないものだけ
                 {
-                    ReadyRecovelyStep(PlayersStates.Instance.NowProgress);//復活歩数準備
+                    if (PlayersStates.Instance != null)
+                    {
+                        ReadyRecovelyStep(PlayersStates.Instance.NowProgress);//復活歩数準備
+                    }
+                    else
+                    {
+                        Debug.LogWarning("PlayersStates.Instance が null です。復活歩数準備をスキップします。");
+                    }
                 }
             }
     }
@@ -395,6 +439,15 @@ public class NormalEnemy : BaseStates
             clone.EnemySkillList.Add(skill.InitEnemyDeepCopy());
         }
 
+        // UI配置設定をコピー
+        clone._uiPlacementType = this._uiPlacementType;
+        clone._enemySize = this._enemySize;
+        clone._marginSize = this._marginSize;
+        
+        // 敵UIオブジェクトのコピー（UIコンポーネントは参照コピー）
+        clone._enemyUIObjects = this._enemyUIObjects?.DeepCopy();
+        clone._brain = this._brain;            // AIをコピー
+
         /*clone.broken = this.broken;
         clone._recovelyStepCount = this._recovelyStepCount;
         clone._lastEncountProgressForReborn = this._lastEncountProgressForReborn;
@@ -405,7 +458,40 @@ public class NormalEnemy : BaseStates
         return clone;
     }
 
+    /// <summary>
+    /// 戦闘UI配置設定
+    /// </summary>
+    [Header("戦闘UI配置設定")]
+    [SerializeField] private EnemyUIPlacementType _uiPlacementType = EnemyUIPlacementType.RandomInArea;
+    
+    [Header("ランダム配置用設定")]
+    [SerializeField] private Vector2 _enemySize = new Vector2(100, 100); // 敵UIのサイズ
+    [SerializeField] private float _marginSize = 10f;                    // 他の敵との余白
+    
+    [Header("敵UIオブジェクト設定")]
+    [SerializeField] private EnemyCharacterUIObjects _enemyUIObjects;    // 敵UIオブジェクトの参照
+    
+    /// <summary>
+    /// UI配置タイプ
+    /// </summary>
+    public EnemyUIPlacementType UIPlacementType => _uiPlacementType;
+    
+    /// <summary>
+    /// 敵UIのサイズ
+    /// </summary>
+    public Vector2 EnemySize => _enemySize;
+    
+    /// <summary>
+    /// 他の敵との余白
+    /// </summary>
+    public float MarginSize => _marginSize;
+    
+    /// <summary>
+    /// 敵UIオブジェクトの参照
+    /// </summary>
+    public EnemyCharacterUIObjects EnemyUIObjects => _enemyUIObjects;
 }
+
 [Serializable]
 public class EnemySkill : BaseSkill
 {
@@ -413,7 +499,7 @@ public class EnemySkill : BaseSkill
     /// このスキルが有効化されるかどうかの成長ポイント
     /// 0以下になったら有効化されてるとみなす。 -1が有効化状態
     /// </summary>
-    public float growthPoint;
+    public float growthPoint = -1;
     /// <summary>
     /// スキルの成長ポイントを減算する。
     /// </summary>
@@ -428,7 +514,7 @@ public class EnemySkill : BaseSkill
         }
     }
 
-        /// <summary>
+    /// <summary>
     /// 敵は初期スキルレベルを指定可能。
     /// つまり敵は使用回数に関係なく最初からスキルのレベルが上がってることを表現できるし、
     /// その上でちゃんと使用回数でも成長する。

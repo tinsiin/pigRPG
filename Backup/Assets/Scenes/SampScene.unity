@@ -798,6 +798,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   EyeArea: {fileID: 132546428}
+  ActionMar: {fileID: 686993905}
   Init_geino:
     InitpassiveIDList: 
     InitVitalLaerIDList: 
@@ -824,6 +825,7 @@ MonoBehaviour:
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
+        FixedSkillLevelData: []
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
@@ -899,6 +901,7 @@ MonoBehaviour:
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
+      FixedSkillLevelData: []
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -961,6 +964,7 @@ MonoBehaviour:
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
+      FixedSkillLevelData: []
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1017,6 +1021,7 @@ MonoBehaviour:
     _tempLive: 0
     BattleFirstSurpriseAttacker: 0
     maxRecoveryTurn: 0
+    HPBar: {fileID: 1596761442}
     _hp: 4444
     _maxhp: 6.767677e+13
     _mentalHP: 0.34
@@ -1026,12 +1031,14 @@ MonoBehaviour:
     FreezeRangeWill: 0
     IsActiveCancelInSkillACT: 0
     MyType: 0
-    DefaultImpression: 0
+    _myImpression: 2
+    DefaultImpression: 256
     HeavyResistance: 2.91
     voltenResistance: 4.91
     DishSmackRsistance: 6.28
     broken: 0
     _machineBrokenRate: 0.3
+    UIObject: {fileID: 1822201462}
     _skillALLList:
     - rid: 2127851150886043649
     - rid: 9189338325697429504
@@ -1064,6 +1071,7 @@ MonoBehaviour:
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
+        FixedSkillLevelData: []
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
@@ -1139,6 +1147,7 @@ MonoBehaviour:
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
+      FixedSkillLevelData: []
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1201,6 +1210,7 @@ MonoBehaviour:
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
+      FixedSkillLevelData: []
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1257,6 +1267,7 @@ MonoBehaviour:
     _tempLive: 0
     BattleFirstSurpriseAttacker: 0
     maxRecoveryTurn: 0
+    HPBar: {fileID: 0}
     _hp: 0
     _maxhp: 0
     _mentalHP: 0
@@ -1266,12 +1277,14 @@ MonoBehaviour:
     FreezeRangeWill: 0
     IsActiveCancelInSkillACT: 0
     MyType: 0
-    DefaultImpression: 0
+    _myImpression: 0
+    DefaultImpression: 1
     HeavyResistance: 1
     voltenResistance: 1
     DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
+    UIObject: {fileID: 422419475}
     _skillALLList: []
     ValidSkillIDList: 
     EmotionalAttachmentSkillID: 0
@@ -1301,6 +1314,7 @@ MonoBehaviour:
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
+        FixedSkillLevelData: []
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
@@ -1376,6 +1390,7 @@ MonoBehaviour:
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
+      FixedSkillLevelData: []
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1438,6 +1453,7 @@ MonoBehaviour:
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
+      FixedSkillLevelData: []
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1494,6 +1510,7 @@ MonoBehaviour:
     _tempLive: 0
     BattleFirstSurpriseAttacker: 0
     maxRecoveryTurn: 0
+    HPBar: {fileID: 0}
     _hp: 0
     _maxhp: 0
     _mentalHP: 0
@@ -1503,12 +1520,14 @@ MonoBehaviour:
     FreezeRangeWill: 0
     IsActiveCancelInSkillACT: 0
     MyType: 0
-    DefaultImpression: 0
+    _myImpression: 0
+    DefaultImpression: 8
     HeavyResistance: 1
     voltenResistance: 1
     DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
+    UIObject: {fileID: 613264198}
     _skillALLList: []
     ValidSkillIDList: 
     EmotionalAttachmentSkillID: 0
@@ -1538,6 +1557,7 @@ MonoBehaviour:
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
+        FixedSkillLevelData: []
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
@@ -1613,6 +1633,7 @@ MonoBehaviour:
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
+      FixedSkillLevelData: []
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1675,6 +1696,7 @@ MonoBehaviour:
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
+      FixedSkillLevelData: []
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1731,6 +1753,7 @@ MonoBehaviour:
     _tempLive: 0
     BattleFirstSurpriseAttacker: 0
     maxRecoveryTurn: 0
+    HPBar: {fileID: 0}
     _hp: 3
     _maxhp: 0
     _mentalHP: 0
@@ -1740,12 +1763,14 @@ MonoBehaviour:
     FreezeRangeWill: 0
     IsActiveCancelInSkillACT: 0
     MyType: 0
+    _myImpression: 0
     DefaultImpression: 0
     HeavyResistance: 1
     voltenResistance: 1
     DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
+    UIObject: {fileID: 0}
     _skillALLList: []
     ValidSkillIDList: 
     EmotionalAttachmentSkillID: 0
@@ -1775,6 +1800,7 @@ MonoBehaviour:
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
+        FixedSkillLevelData: []
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
@@ -1850,6 +1876,7 @@ MonoBehaviour:
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
+      FixedSkillLevelData: []
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1912,6 +1939,7 @@ MonoBehaviour:
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
+      FixedSkillLevelData: []
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -1968,6 +1996,7 @@ MonoBehaviour:
     _tempLive: 0
     BattleFirstSurpriseAttacker: 0
     maxRecoveryTurn: 0
+    HPBar: {fileID: 0}
     _hp: 0
     _maxhp: 0
     _mentalHP: 0
@@ -1977,12 +2006,14 @@ MonoBehaviour:
     FreezeRangeWill: 0
     IsActiveCancelInSkillACT: 0
     MyType: 0
+    _myImpression: 0
     DefaultImpression: 0
     HeavyResistance: 1
     voltenResistance: 1
     DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
+    UIObject: {fileID: 0}
     _skillALLList: []
     ValidSkillIDList: 
     EmotionalAttachmentSkillID: 0
@@ -2012,6 +2043,7 @@ MonoBehaviour:
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
+        FixedSkillLevelData: []
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
@@ -2087,6 +2119,7 @@ MonoBehaviour:
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
+      FixedSkillLevelData: []
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -2149,6 +2182,7 @@ MonoBehaviour:
       Cantkill: 0
       EvasionModifier: 1
       AttackModifier: 1
+      FixedSkillLevelData: []
       _infiniteSkillPowerUnit: 0
       _infiniteSkillTenDaysUnit: 0
       _mentalDamageRatio: 0
@@ -2205,6 +2239,7 @@ MonoBehaviour:
     _tempLive: 0
     BattleFirstSurpriseAttacker: 0
     maxRecoveryTurn: 0
+    HPBar: {fileID: 0}
     _hp: 0
     _maxhp: 0
     _mentalHP: 0
@@ -2214,16 +2249,20 @@ MonoBehaviour:
     FreezeRangeWill: 0
     IsActiveCancelInSkillACT: 0
     MyType: 0
+    _myImpression: 0
     DefaultImpression: 0
     HeavyResistance: 1
     voltenResistance: 1
     DishSmackRsistance: 1
     broken: 0
     _machineBrokenRate: 0.3
+    UIObject: {fileID: 0}
     _skillALLList: []
     ValidSkillIDList: 
     EmotionalAttachmentSkillID: 0
-  skillButtonList_geino: []
+  skillButtonList_geino:
+  - button: {fileID: 602005237}
+    skillID: 2
   skillButtonList_noramlia: []
   skillButtonList_sites: []
   skillStockButtonList_geino: []
@@ -2246,7 +2285,7 @@ MonoBehaviour:
   DoNothingButton_geino: {fileID: 1568280088}
   DoNothingButton_sites: {fileID: 0}
   DoNothingButton_noramlia: {fileID: 0}
-  CancelPassiveButtonField_geino: {fileID: 1400616398}
+  CancelPassiveButtonField_geino: {fileID: 1400616400}
   CancelPassiveButtonField_sites: {fileID: 0}
   CancelPassiveButtonField_normalia: {fileID: 0}
   GoToCancelPassiveFieldButton_geino: {fileID: 263722060}
@@ -2280,6 +2319,7 @@ MonoBehaviour:
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1.6
+        FixedSkillLevelData: []
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
@@ -2336,7 +2376,7 @@ MonoBehaviour:
     - rid: 7137335011432464384
       type: {class: AllySkill, ns: , asm: Assembly-CSharp}
       data:
-        SkillSpiritual: 0
+        SkillSpiritual: 8
         Impression: 0
         MotionFlavor: {fileID: 0}
         SkillPhysical: 0
@@ -2344,6 +2384,15 @@ MonoBehaviour:
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
+        FixedSkillLevelData:
+        - TenDayValues:
+            _list: []
+          SkillPower: 3
+          OptionMentalDamageRatio: 0
+          OptionPowerSpread: []
+          OptionSkillHitPer: 0
+          OptionA_MoveSet: []
+          OptionB_MoveSet: []
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
@@ -2363,7 +2412,7 @@ MonoBehaviour:
         IsStockAgressiveCommit: 0
         CanSelectAggressiveCommit: 0
         SKillDidWaitCount: 0
-        SkillName: "\u3053\u3053\u306B\u540D\u524D\u3092\u5165\u308C\u3066\u304F\u3060\u3055\u3044"
+        SkillName: "\u30C6\u30B9\u30C8\u30B7\u30F3\u30D7\u30EB\u653B\u6483\u30B9\u30AD\u30EB"
         subEffects: 
         subVitalLayers: 
         canEraceEffectIDs: 
@@ -2373,7 +2422,7 @@ MonoBehaviour:
         _defAtk: 0
         _baseSkillType: 0
         ConsecutiveType: 0
-        ZoneTrait: 0
+        ZoneTrait: 16384
         DistributionType: 0
         PowerRangePercentageDictionary:
           _list: []
@@ -2408,6 +2457,7 @@ MonoBehaviour:
         Cantkill: 0
         EvasionModifier: 1.1
         AttackModifier: 1
+        FixedSkillLevelData: []
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
@@ -2475,6 +2525,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   StageDates:
   - _stageName: "\u30A8\u30F3\u30C8\u30E9\u30F3\u30B9\u30DB\u30FC\u30EB"
+    StageThemeColorUI:
+      ActionMarkColor: {r: 0, g: 0, b: 0, a: 0}
+      SideObjectANDArrowColor: {r: 0, g: 0, b: 0, a: 0}
     _cutArea:
     - _areaName: "\u5165\u53E3"
       _id: 0
@@ -2493,7 +2546,6 @@ MonoBehaviour:
       _mapLineE: {x: 0, y: 0}
       _mapsrc: 
       _enemyList:
-      - rid: 3171372139819302913
       - rid: 720943376607215620
       - rid: 6711005805807403016
       _sideObject_Lefts:
@@ -2501,7 +2553,7 @@ MonoBehaviour:
       - {fileID: 4505394165267339441, guid: 453d3bd738f719744994a2f1cdc94e68, type: 3}
       _sideObject_Rights:
       - {fileID: 4505394165267339441, guid: fadad38d3e8a5554692345edb047c679, type: 3}
-      EncounterRate: 60
+      EncounterRate: 100
       EscapeRate: 50
     Satelite_StageBonus:
       ATKBpunus: 0
@@ -2560,6 +2612,7 @@ MonoBehaviour:
             Cantkill: 0
             EvasionModifier: 1
             AttackModifier: 1
+            FixedSkillLevelData: []
             _infiniteSkillPowerUnit: 0
             _infiniteSkillTenDaysUnit: 0
             _mentalDamageRatio: 0
@@ -2635,6 +2688,7 @@ MonoBehaviour:
           Cantkill: 0
           EvasionModifier: 1
           AttackModifier: 1
+          FixedSkillLevelData: []
           _infiniteSkillPowerUnit: 0
           _infiniteSkillTenDaysUnit: 0
           _mentalDamageRatio: 0
@@ -2697,6 +2751,7 @@ MonoBehaviour:
           Cantkill: 0
           EvasionModifier: 1
           AttackModifier: 1
+          FixedSkillLevelData: []
           _infiniteSkillPowerUnit: 0
           _infiniteSkillTenDaysUnit: 0
           _mentalDamageRatio: 0
@@ -2753,40 +2808,133 @@ MonoBehaviour:
         _tempLive: 0
         BattleFirstSurpriseAttacker: 0
         maxRecoveryTurn: 0
-        _hp: 0
-        _maxhp: 0
-        _mentalHP: 0
+        HPBar: {fileID: 0}
+        _hp: 44
+        _maxhp: 44
+        _mentalHP: 44
         _thinkingFactor: 0
         Target: 0
         RangeWill: 0
         FreezeRangeWill: 0
         IsActiveCancelInSkillACT: 0
-        MyType: 0
-        DefaultImpression: 0
+        MyType: 4
+        _myImpression: 256
+        DefaultImpression: 256
         HeavyResistance: 1
         voltenResistance: 1
         DishSmackRsistance: 1
         broken: 0
         _machineBrokenRate: 0.3
+        _brain: {fileID: 11400000, guid: fa03e9b4c70b45f4782dc1a672559a09, type: 2}
         RecovelySteps: 0
         EscapeAttemptRate: 0
-        EnemySkillList: []
-    - rid: 2127851150886043648
+        EnemySkillList:
+        - rid: 5115254770960171009
+        _uiPlacementType: 0
+        _enemySize: {x: 100, y: 100}
+        _marginSize: 10
+        _enemyUIObjects:
+          EnemyGraphicSprite: {fileID: 21300000, guid: ee80f713ef34368448c50a62c97524ab, type: 3}
+    - rid: 5115254770960171008
       type: {class: EnemySkill, ns: , asm: Assembly-CSharp}
       data:
-        SkillSpiritual: 0
-        Impression: 0
+        SkillSpiritual: 1
+        Impression: 2
         MotionFlavor: {fileID: 0}
         SkillPhysical: 0
-        SpecialFlags: 0
+        SpecialFlags: 4
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
+        FixedSkillLevelData:
+        - TenDayValues:
+            _list: []
+          SkillPower: 2
+          OptionMentalDamageRatio: 0
+          OptionPowerSpread: []
+          OptionSkillHitPer: 0
+          OptionA_MoveSet: []
+          OptionB_MoveSet: []
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
         _mentalDamageRatio: 0
         _powerSpread: []
-        _skillHitPer: 0
+        _skillHitPer: 50
+        _a_moveset: []
+        _b_moveset: []
+        _triggerCountMax: 0
+        CanCancelTrigger: 1
+        _triggerRollBackCount: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
+        CanSelectAggressiveCommit: 0
+        SKillDidWaitCount: 0
+        SkillName: test1
+        subEffects: 
+        subVitalLayers: 
+        canEraceEffectIDs: 
+        canEraceVitalLayerIDs: 
+        CanEraceEffectCount: 0
+        CanEraceVitalLayerCount: 0
+        _defAtk: 0
+        _baseSkillType: 1
+        ConsecutiveType: 0
+        ZoneTrait: 16384
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
+        ReactiveSkillPassiveList: []
+        AggressiveSkillPassiveList: []
+        TargetSelection: 0
+        SkillPassiveEffectCount: 1
+        _skillPassiveGibeSkill_SkillFilter:
+          Impressions: 
+          MotionFlavors: []
+          MentalAttrs: 
+          PhysicalAttrs: 
+          AttackTypes: 
+          TenDayAbilities: 
+          TenDayMode: 0
+          SkillTypes: 
+          SkillTypeMode: 0
+          SpecialFlags: 
+          SpecialFlagMode: 0
+        growthPoint: -1
+        _initSkillLevel: 0
+    - rid: 5115254770960171009
+      type: {class: EnemySkill, ns: , asm: Assembly-CSharp}
+      data:
+        SkillSpiritual: 16
+        Impression: 0
+        MotionFlavor: {fileID: 0}
+        SkillPhysical: 1
+        SpecialFlags: 0
+        Cantkill: 0
+        EvasionModifier: 1
+        AttackModifier: 1
+        FixedSkillLevelData:
+        - TenDayValues:
+            _list:
+            - key: 15
+              value: 4
+          SkillPower: 1
+          OptionMentalDamageRatio: 0
+          OptionPowerSpread: []
+          OptionSkillHitPer: 0
+          OptionA_MoveSet: []
+          OptionB_MoveSet: []
+        _infiniteSkillPowerUnit: 0
+        _infiniteSkillTenDaysUnit: 0
+        _mentalDamageRatio: 0
+        _powerSpread: []
+        _skillHitPer: 60
         _a_moveset: []
         _b_moveset: []
         _triggerCountMax: 0
@@ -2809,9 +2957,9 @@ MonoBehaviour:
         CanEraceEffectCount: 0
         CanEraceVitalLayerCount: 0
         _defAtk: 0
-        _baseSkillType: 0
+        _baseSkillType: 1
         ConsecutiveType: 0
-        ZoneTrait: 0
+        ZoneTrait: 16384
         DistributionType: 0
         PowerRangePercentageDictionary:
           _list: []
@@ -2833,10 +2981,10 @@ MonoBehaviour:
           SkillTypeMode: 0
           SpecialFlags: 
           SpecialFlagMode: 0
-        growthPoint: 0
+        growthPoint: -1
         _initSkillLevel: 0
-    - rid: 3171372139819302913
-      type: {class: NormalEnemy, ns: , asm: Assembly-CSharp}
+    - rid: 6711005805807403016
+      type: {class: butterfly, ns: , asm: Assembly-CSharp}
       data:
         InitpassiveIDList: 
         InitVitalLaerIDList: 
@@ -2863,6 +3011,7 @@ MonoBehaviour:
             Cantkill: 0
             EvasionModifier: 1
             AttackModifier: 1
+            FixedSkillLevelData: []
             _infiniteSkillPowerUnit: 0
             _infiniteSkillTenDaysUnit: 0
             _mentalDamageRatio: 0
@@ -2938,6 +3087,7 @@ MonoBehaviour:
           Cantkill: 0
           EvasionModifier: 1
           AttackModifier: 1
+          FixedSkillLevelData: []
           _infiniteSkillPowerUnit: 0
           _infiniteSkillTenDaysUnit: 0
           _mentalDamageRatio: 0
@@ -3000,6 +3150,7 @@ MonoBehaviour:
           Cantkill: 0
           EvasionModifier: 1
           AttackModifier: 1
+          FixedSkillLevelData: []
           _infiniteSkillPowerUnit: 0
           _infiniteSkillTenDaysUnit: 0
           _mentalDamageRatio: 0
@@ -3056,264 +3207,33 @@ MonoBehaviour:
         _tempLive: 0
         BattleFirstSurpriseAttacker: 0
         maxRecoveryTurn: 0
-        _hp: 0
-        _maxhp: 0
-        _mentalHP: 0
+        HPBar: {fileID: 0}
+        _hp: 33
+        _maxhp: 34
+        _mentalHP: 20
         _thinkingFactor: 0
         Target: 0
         RangeWill: 0
         FreezeRangeWill: 0
         IsActiveCancelInSkillACT: 0
-        MyType: 0
-        DefaultImpression: 0
+        MyType: 4
+        _myImpression: 128
+        DefaultImpression: 2
         HeavyResistance: 1
         voltenResistance: 1
         DishSmackRsistance: 1
         broken: 0
         _machineBrokenRate: 0.3
+        _brain: {fileID: 11400000, guid: fa03e9b4c70b45f4782dc1a672559a09, type: 2}
         RecovelySteps: 0
         EscapeAttemptRate: 0
         EnemySkillList:
-        - rid: 2127851150886043648
-    - rid: 6711005805807403016
-      type: {class: butterfly, ns: , asm: Assembly-CSharp}
-      data:
-        InitpassiveIDList: 
-        InitVitalLaerIDList: 
-        NowPower: 0
-        Rivahal: 0
-        b_b_atk: 4
-        b_b_def: 4
-        b_b_eye: 4
-        b_b_agi: 4
-        _baseTenDayValues:
-          _list: []
-        CharacterName: 
-        ImpressionStringName: 
-        NowUseWeapon:
-          id: 0
-          name: 
-          protocol: 0
-          WeaponSkill:
-            SkillSpiritual: 0
-            Impression: 0
-            MotionFlavor: {fileID: 0}
-            SkillPhysical: 0
-            SpecialFlags: 0
-            Cantkill: 0
-            EvasionModifier: 1
-            AttackModifier: 1
-            _infiniteSkillPowerUnit: 0
-            _infiniteSkillTenDaysUnit: 0
-            _mentalDamageRatio: 0
-            _powerSpread: []
-            _skillHitPer: 0
-            _a_moveset: []
-            _b_moveset: []
-            _triggerCountMax: 0
-            CanCancelTrigger: 1
-            _triggerRollBackCount: 0
-            _RandomConsecutivePer: 0
-            _defaultStockCount: 1
-            _stockPower: 1
-            _stockForgetPower: 1
-            IsAggressiveCommit: 1
-            IsReadyTriggerAgressiveCommit: 0
-            IsStockAgressiveCommit: 0
-            CanSelectAggressiveCommit: 0
-            SKillDidWaitCount: 0
-            SkillName: 
-            subEffects: 
-            subVitalLayers: 
-            canEraceEffectIDs: 
-            canEraceVitalLayerIDs: 
-            CanEraceEffectCount: 0
-            CanEraceVitalLayerCount: 0
-            _defAtk: 0
-            _baseSkillType: 0
-            ConsecutiveType: 0
-            ZoneTrait: 0
-            DistributionType: 0
-            PowerRangePercentageDictionary:
-              _list: []
-            HitRangePercentageDictionary:
-              _list: []
-            ReactiveSkillPassiveList: []
-            AggressiveSkillPassiveList: []
-            TargetSelection: 0
-            SkillPassiveEffectCount: 1
-            _skillPassiveGibeSkill_SkillFilter:
-              Impressions: 
-              MotionFlavors: []
-              MentalAttrs: 
-              PhysicalAttrs: 
-              AttackTypes: 
-              TenDayAbilities: 
-              TenDayMode: 0
-              SkillTypes: 
-              SkillTypeMode: 0
-              SpecialFlags: 
-              SpecialFlagMode: 0
-          TenDayBonusData:
-            TLOAData:
-              _list: []
-            MagicData:
-              _list: []
-            BladeData:
-              _list: []
-            NormalData:
-              _list: []
-          TenDayValues:
-            _list: []
-          IsBlade: 0
-        InitWeaponID: 0
-        NowBattleProtocol: 0
-        NowDeffenceStyle: 0
-        NowUseSkill:
-          SkillSpiritual: 0
-          Impression: 0
-          MotionFlavor: {fileID: 0}
-          SkillPhysical: 0
-          SpecialFlags: 0
-          Cantkill: 0
-          EvasionModifier: 1
-          AttackModifier: 1
-          _infiniteSkillPowerUnit: 0
-          _infiniteSkillTenDaysUnit: 0
-          _mentalDamageRatio: 0
-          _powerSpread: []
-          _skillHitPer: 0
-          _a_moveset: []
-          _b_moveset: []
-          _triggerCountMax: 0
-          CanCancelTrigger: 1
-          _triggerRollBackCount: 0
-          _RandomConsecutivePer: 0
-          _defaultStockCount: 1
-          _stockPower: 1
-          _stockForgetPower: 1
-          IsAggressiveCommit: 1
-          IsReadyTriggerAgressiveCommit: 0
-          IsStockAgressiveCommit: 0
-          CanSelectAggressiveCommit: 0
-          SKillDidWaitCount: 0
-          SkillName: 
-          subEffects: 
-          subVitalLayers: 
-          canEraceEffectIDs: 
-          canEraceVitalLayerIDs: 
-          CanEraceEffectCount: 0
-          CanEraceVitalLayerCount: 0
-          _defAtk: 0
-          _baseSkillType: 0
-          ConsecutiveType: 0
-          ZoneTrait: 0
-          DistributionType: 0
-          PowerRangePercentageDictionary:
-            _list: []
-          HitRangePercentageDictionary:
-            _list: []
-          ReactiveSkillPassiveList: []
-          AggressiveSkillPassiveList: []
-          TargetSelection: 0
-          SkillPassiveEffectCount: 1
-          _skillPassiveGibeSkill_SkillFilter:
-            Impressions: 
-            MotionFlavors: []
-            MentalAttrs: 
-            PhysicalAttrs: 
-            AttackTypes: 
-            TenDayAbilities: 
-            TenDayMode: 0
-            SkillTypes: 
-            SkillTypeMode: 0
-            SpecialFlags: 
-            SpecialFlagMode: 0
-        SelectedEscape: 0
-        SkillCalculatedRandomRange: 0
-        FreezeUseSkill:
-          SkillSpiritual: 0
-          Impression: 0
-          MotionFlavor: {fileID: 0}
-          SkillPhysical: 0
-          SpecialFlags: 0
-          Cantkill: 0
-          EvasionModifier: 1
-          AttackModifier: 1
-          _infiniteSkillPowerUnit: 0
-          _infiniteSkillTenDaysUnit: 0
-          _mentalDamageRatio: 0
-          _powerSpread: []
-          _skillHitPer: 0
-          _a_moveset: []
-          _b_moveset: []
-          _triggerCountMax: 0
-          CanCancelTrigger: 1
-          _triggerRollBackCount: 0
-          _RandomConsecutivePer: 0
-          _defaultStockCount: 1
-          _stockPower: 1
-          _stockForgetPower: 1
-          IsAggressiveCommit: 1
-          IsReadyTriggerAgressiveCommit: 0
-          IsStockAgressiveCommit: 0
-          CanSelectAggressiveCommit: 0
-          SKillDidWaitCount: 0
-          SkillName: 
-          subEffects: 
-          subVitalLayers: 
-          canEraceEffectIDs: 
-          canEraceVitalLayerIDs: 
-          CanEraceEffectCount: 0
-          CanEraceVitalLayerCount: 0
-          _defAtk: 0
-          _baseSkillType: 0
-          ConsecutiveType: 0
-          ZoneTrait: 0
-          DistributionType: 0
-          PowerRangePercentageDictionary:
-            _list: []
-          HitRangePercentageDictionary:
-            _list: []
-          ReactiveSkillPassiveList: []
-          AggressiveSkillPassiveList: []
-          TargetSelection: 0
-          SkillPassiveEffectCount: 1
-          _skillPassiveGibeSkill_SkillFilter:
-            Impressions: 
-            MotionFlavors: []
-            MentalAttrs: 
-            PhysicalAttrs: 
-            AttackTypes: 
-            TenDayAbilities: 
-            TenDayMode: 0
-            SkillTypes: 
-            SkillTypeMode: 0
-            SpecialFlags: 
-            SpecialFlagMode: 0
-        IsDeleteMyFreezeConsecutive: 0
-        _tempVanguard: 0
-        _tempLive: 0
-        BattleFirstSurpriseAttacker: 0
-        maxRecoveryTurn: 0
-        _hp: 0
-        _maxhp: 0
-        _mentalHP: 0
-        _thinkingFactor: 0
-        Target: 0
-        RangeWill: 0
-        FreezeRangeWill: 0
-        IsActiveCancelInSkillACT: 0
-        MyType: 0
-        DefaultImpression: 0
-        HeavyResistance: 1
-        voltenResistance: 1
-        DishSmackRsistance: 1
-        broken: 0
-        _machineBrokenRate: 0.3
-        RecovelySteps: 0
-        EscapeAttemptRate: 0
-        EnemySkillList: []
+        - rid: 5115254770960171008
+        _uiPlacementType: 0
+        _enemySize: {x: 100, y: 100}
+        _marginSize: 10
+        _enemyUIObjects:
+          EnemyGraphicSprite: {fileID: 21300000, guid: ee80f713ef34368448c50a62c97524ab, type: 3}
 --- !u!114 &78173495
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4648,6 +4568,7 @@ MonoBehaviour:
           Cantkill: 0
           EvasionModifier: 1
           AttackModifier: 1
+          FixedSkillLevelData: []
           _infiniteSkillPowerUnit: 0
           _infiniteSkillTenDaysUnit: 0
           _mentalDamageRatio: 0
@@ -5114,8 +5035,10 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1849761112}
-  - {fileID: 2062172917}
+  - {fileID: 1282119029}
+  - {fileID: 381190890}
+  - {fileID: 1721764568}
+  - {fileID: 338619100}
   - {fileID: 715286165}
   - {fileID: 391554956}
   m_Father: {fileID: 94103472}
@@ -5148,7 +5071,8 @@ MonoBehaviour:
   StagesString: {fileID: 62301320}
   MapImg: {fileID: 141850410}
   bgRect: {fileID: 1849761112}
-  _waveManager: {fileID: 1689300670}
+  _waveManager: {fileID: 0}
+  EnemyHPBars: {fileID: 4221240375367215414, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
   _firstZoomAnimationCurve:
     serializedVersion: 2
     m_Curve:
@@ -5174,10 +5098,23 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   _firstZoomSpeedTime: 0.3
-  _gotoPos: {x: 40.3, y: 752.2}
+  _gotoPos: {x: 0, y: 200}
   _gotoScaleXY: {x: 1.76, y: 1.76}
-  _NormalPos: {x: 0, y: 439.3047}
-  _NormalScaleXY: {x: 1, y: 1}
+  backgroundZoomLayer: {fileID: 1849761112}
+  enemyBattleLayer: {fileID: 879111140}
+  allyBattleLayer: {fileID: 715286165}
+  fixedUILayer: {fileID: 0}
+  hpBarSizeRatio: {x: 1, y: 0.15}
+  enemySpawnArea: {fileID: 1282119029}
+  allySpawnPositions:
+  - {fileID: 613264199}
+  - {fileID: 1822201463}
+  - {fileID: 422419476}
+  allySlideStartOffset: {x: 0, y: -200}
+  zoomBackContainer: {fileID: 381190890}
+  zoomFrontContainer: {fileID: 338619100}
+  enableEditorPreview: 0
+  previewBoxColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!1 &136360488
 GameObject:
   m_ObjectHideFlags: 0
@@ -5963,12 +5900,12 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 715286165}
+  m_Father: {fileID: 1822201463}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 111, y: 0.000030517578}
-  m_SizeDelta: {x: 84.86, y: 128.72}
+  m_AnchoredPosition: {x: -23.995, y: 22}
+  m_SizeDelta: {x: 157.99, y: 239.65}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &290894495
 MonoBehaviour:
@@ -6302,6 +6239,42 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 317534456}
   m_CullTransparentMesh: 1
+--- !u!1 &338619099
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 338619100}
+  m_Layer: 5
+  m_Name: ZoomFrontContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &338619100
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 338619099}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 879111140}
+  m_Father: {fileID: 132546429}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &348096246
 GameObject:
   m_ObjectHideFlags: 0
@@ -6355,6 +6328,42 @@ MonoBehaviour:
   bascketField: {fileID: 348096247}
   horizontalPadding: 10
   verticalPadding: 10
+--- !u!1 &381190889
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 381190890}
+  m_Layer: 5
+  m_Name: ZoomBackContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &381190890
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 381190889}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1849761112}
+  m_Father: {fileID: 132546429}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &383980969
 GameObject:
   m_ObjectHideFlags: 0
@@ -6468,11 +6477,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7987678286807958412, guid: 0468dad8e990cfa40a0caca4d4c71ca4, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 7987678286807958412, guid: 0468dad8e990cfa40a0caca4d4c71ca4, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 0
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 7987678286807958412, guid: 0468dad8e990cfa40a0caca4d4c71ca4, type: 3}
       propertyPath: m_LocalPosition.x
@@ -6553,7 +6562,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &396914254
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6639,8 +6648,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 217.1, y: 0.000030517578}
-  m_SizeDelta: {x: 84.86, y: 128.72}
+  m_AnchoredPosition: {x: 312, y: 57}
+  m_SizeDelta: {x: 169.52, y: 257.14}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &422419477
 MonoBehaviour:
@@ -7944,8 +7953,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0.000030517578}
-  m_SizeDelta: {x: 84.86, y: 128.72}
+  m_AnchoredPosition: {x: -135.32, y: 65.05}
+  m_SizeDelta: {x: 170.63, y: 258.82}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &613264200
 MonoBehaviour:
@@ -8028,6 +8037,101 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 680251390}
+  m_CullTransparentMesh: 1
+--- !u!1 &686993903
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 686993904}
+  - component: {fileID: 686993906}
+  - component: {fileID: 686993905}
+  m_Layer: 5
+  m_Name: ActionMark
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &686993904
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 686993903}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1721764568}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -30, y: -395.56}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &686993905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 686993903}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cffb74e257f65aa4aaab38a29a535883, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.995328, g: 0, b: 0.004672, a: 0.2896098}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Width: 100
+  m_Height: 100
+  m_ColorA: {r: 1, g: 0, b: 0, a: 0.2901961}
+  m_ColorB: {r: 0, g: 0, b: 1, a: 0.16470589}
+  m_ChangeSpeed: 1
+  m_AutoStart: 1
+  m_InterpolationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!222 &686993906
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 686993903}
   m_CullTransparentMesh: 1
 --- !u!1 &708745342
 GameObject:
@@ -8284,7 +8388,7 @@ RectTransform:
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 613264199}
-  - {fileID: 290894494}
+  - {fileID: 1822201463}
   - {fileID: 422419476}
   m_Father: {fileID: 132546429}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -8959,6 +9063,41 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!1 &879111139
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 879111140}
+  m_Layer: 5
+  m_Name: EnemyArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &879111140
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 879111139}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 338619100}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 14.79, y: 93.11}
+  m_SizeDelta: {x: 880.57, y: 719.78}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &888938907
 GameObject:
   m_ObjectHideFlags: 0
@@ -9523,6 +9662,54 @@ MonoBehaviour:
   textOnChange: "<color=red>{0}\u304B\u3089\u6C17\u6301\u3061\u304C\u96E2\u308C\u305F...</color>"
   horizontalPadding: 10
   verticalPadding: 10
+--- !u!1 &1033096838
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1033096839}
+  - component: {fileID: 1033096840}
+  m_Layer: 5
+  m_Name: CharacterUI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1033096839
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1033096838}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1869100685}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1033096840
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1033096838}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3ed149c4c0ddff4d9bd1d96328eb6be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1037068248
 GameObject:
   m_ObjectHideFlags: 0
@@ -10051,7 +10238,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1190210407
 RectTransform:
   m_ObjectHideFlags: 0
@@ -10213,7 +10400,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1242296982}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
@@ -10681,6 +10868,41 @@ MonoBehaviour:
   SkillObject: {fileID: 0}
   SelectTargetObject: {fileID: 0}
   SelectRangeObject: {fileID: 0}
+--- !u!1 &1282119028
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1282119029}
+  m_Layer: 5
+  m_Name: EnemyRandomSpawnArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1282119029
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1282119028}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 132546429}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 11.93, y: -39.08}
+  m_SizeDelta: {x: 926.72, y: 643.1}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1286961439
 GameObject:
   m_ObjectHideFlags: 0
@@ -12412,6 +12634,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1568280086}
   m_CullTransparentMesh: 1
+--- !u!224 &1596761441 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+  m_PrefabInstance: {fileID: 181672850925056353}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1596761442 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4221240375367215414, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+  m_PrefabInstance: {fileID: 181672850925056353}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c7a4f31291ad2343ae18d1fe3913570, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1627627760
 GameObject:
   m_ObjectHideFlags: 0
@@ -12801,17 +13039,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1638120965}
   m_CullTransparentMesh: 1
---- !u!114 &1689300670 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5430376141061670128, guid: 0468dad8e990cfa40a0caca4d4c71ca4, type: 3}
-  m_PrefabInstance: {fileID: 391554955}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fbe59653deded244586ec6b342d440ea, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1712592639
 GameObject:
   m_ObjectHideFlags: 0
@@ -12946,6 +13173,42 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1712592639}
   m_CullTransparentMesh: 1
+--- !u!1 &1721764567
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1721764568}
+  m_Layer: 5
+  m_Name: MiddleFixedContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1721764568
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1721764567}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 686993904}
+  m_Father: {fileID: 132546429}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1734461210
 GameObject:
   m_ObjectHideFlags: 0
@@ -13374,6 +13637,43 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -35.78}
   m_SizeDelta: {x: 0, y: -71.55}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1822201462
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1822201463}
+  m_Layer: 5
+  m_Name: Geino
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1822201463
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1822201462}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1596761441}
+  - {fileID: 290894494}
+  m_Father: {fileID: 715286165}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 96, y: 14.36}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1833282121
 GameObject:
   m_ObjectHideFlags: 0
@@ -13651,7 +13951,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1849761111}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -13660,12 +13960,13 @@ RectTransform:
   - {fileID: 1353248582}
   - {fileID: 507282504}
   - {fileID: 1491147756}
-  m_Father: {fileID: 132546429}
+  - {fileID: 2062172917}
+  m_Father: {fileID: 381190890}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 1080, y: 1041.4}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1865409127
 GameObject:
@@ -13885,6 +14186,7 @@ RectTransform:
   - {fileID: 1734461211}
   - {fileID: 823573502}
   - {fileID: 2061243747}
+  - {fileID: 1033096839}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -15108,7 +15410,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 132546429}
+    m_TransformParent: {fileID: 1849761112}
     m_Modifications:
     - target: {fileID: 2292920649390489989, guid: 43acfed962e53114fb40aa5ad91586fe, type: 3}
       propertyPath: m_Pivot.x
@@ -15472,6 +15774,103 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2142212231}
   m_CullTransparentMesh: 1
+--- !u!1001 &181672850925056353
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1822201463}
+    m_Modifications:
+    - target: {fileID: 1609270375883032060, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_Name
+      value: HPBar
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 200
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -75.325
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5174109161175015999, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 1b050aa6d1917a14989cfd1fe8a3c5f5, type: 3}
 --- !u!1001 &474800726722792207
 PrefabInstance:
   m_ObjectHideFlags: 0

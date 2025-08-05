@@ -138,39 +138,48 @@ public class ACTList
 
     public string GetAtTopMessage(int index)
     {
+        if (index < 0 || index >= TopMessage.Count) return "";
         return TopMessage[index];
     }
     public BaseStates GetAtCharacter(int index)
     {
+        if (index < 0 || index >= CharactorACTList.Count) return null;
         return CharactorACTList[index];
     }
     public allyOrEnemy GetAtFaction(int index)
     {
+        if (index < 0 || index >= FactionList.Count) return allyOrEnemy.alliy; // デフォルト値
         return FactionList[index];
     }
     public List<ModifierPart> GetAtModifyList(int index)
     {
+        if (index < 0 || index >= reservationStatesModifies.Count) return null;
         return reservationStatesModifies[index];
     }
     public bool GetAtIsFreezeBool(int index)
     {
+        if (index < 0 || index >= IsFreezeList.Count) return false;
         return IsFreezeList[index];
     }
     public BaseStates GetAtSingleTarget(int index)
     {
+        if (index < 0 || index >= SingleTargetList.Count) return null;
         return SingleTargetList[index];
     }
     public float GetAtExCounterDEFATK(int index)
     {
+        if (index < 0 || index >= ExCounterDEFATKList.Count) return -1f;
         return ExCounterDEFATKList[index];
     }
     public List<BaseStates> GetAtRaterTargets(int index)
     {
+        if (index < 0 || index >= RaterTargetList.Count) return null;
         return RaterTargetList[index];
     }
 
     public float GetAtRaterDamage(int index)
     {
+        if (index < 0 || index >= RaterDamageList.Count) return 0f;
         return RaterDamageList[index];
     }
 
@@ -670,17 +679,19 @@ public class BattleManager
         //俳優が味方なら
         if (ActerFaction == allyOrEnemy.alliy)
         {//味方が行動するならば
-
+            Debug.Log(Acter.CharacterName + "(主人公キャラ)は行動する");
             bool isFreezeByPassives = Acter.IsFreezeByPassives;//パッシブ由来で行動できないかどうか。
             bool hasCanCancelCantACTPassive = Acter.HasCanCancelCantACTPassive;//パッシブ由来で行動できないかどうか。
             
             if (!Acter.IsFreeze)//強制続行中のスキルがなければ
             {
+                Debug.Log(Acter.CharacterName + "主人公キャラの強制続行スキルがないのでスキル選択へのパッシブ判定処理へと進みます。");
                 if (!isFreezeByPassives || hasCanCancelCantACTPassive)
                 {
                     // パッシブによる行動不能でない、または
                     // キャンセル可能なパッシブを持っている場合
                     SwitchAllySkillUiState(hasCanCancelCantACTPassive);
+                    Debug.Log(Acter.CharacterName + "(主人公キャラ)はスキル選択");
                     return TabState.Skill;
                 }
             }
@@ -691,6 +702,7 @@ public class BattleManager
                 {
                     Acter.DeleteConsecutiveATK();//連続実行FreezeConsecutiveを削除
                     DoNothing = true;//何もしない
+                    Debug.Log(Acter.CharacterName + "（主人公キャラ）は何もしない");
                     return TabState.NextWait;// nextwait = CharacterACTBranching
                 }
                 
@@ -703,6 +715,7 @@ public class BattleManager
                 && skill.HasConsecutiveType(SkillConsecutiveType.CanOprate))
                 {
                     //範囲画面と対象者選択画面どちらに向かうかの判定
+                    Debug.Log(Acter.CharacterName + "（主人公キャラ）は連続攻撃中の操作へ");
                     return AllyClass.DetermineNextUIState(skill);
                 }
             }
@@ -1819,7 +1832,7 @@ public class BattleManager
         BattleGroup SelectGroup;//我々から見た敵陣
         BattleGroup OurGroup = null;//我々自陣          nullの場合はスキルの範囲性質に味方選択がないということ
         var skill = Acter.NowUseSkill;
-        List<BaseStates> UA = null;
+        List<BaseStates> UA = new();
 
         //選抜グループ決定する処理☆☆☆☆☆☆☆☆☆☆☆
         if (ActerFaction == allyOrEnemy.alliy)

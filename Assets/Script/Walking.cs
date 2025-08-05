@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
@@ -77,7 +77,7 @@ public class Walking : MonoBehaviour
             });
 
         //USERUIの初期状態
-        USERUI_state.Value = TabState.Skill;
+        //USERUI_state.Value = TabState.;
     }
 
     /// <summary>
@@ -117,13 +117,15 @@ public class Walking : MonoBehaviour
 
 
             //BattleManagerを生成
-            bm = new BattleManager(allyGroup, enemyGroup,BattleStartSituation.Normal); //バトルを管理するクラス
-            //battleTimeLineを生成
-            var TimeLine = new BattleTimeLine(new List<BattleManager>{bm}); //バトルのタイムラインを管理するクラス
+        bm = new BattleManager(allyGroup, enemyGroup,BattleStartSituation.Normal); //バトルを管理するクラス
+        //battleTimeLineを生成
+        var TimeLine = new BattleTimeLine(new List<BattleManager>{bm}); //バトルのタイムラインを管理するクラス
 
-            wui.FirstImpressionZoom();
-            PlayersStates.Instance.OnBattleStart();
-            USERUI_state.Value = bm.ACTPop();//一番最初のUSERUIの状態を変更させるのと戦闘ループの最初の準備処理。
+        // 敵UI配置システムのテスト実行（戦闘参加敵のみ）
+        TestEnemyUIPlacement(enemyGroup).Forget();
+        
+        PlayersStates.Instance.OnBattleStart();
+        USERUI_state.Value = bm.ACTPop();//一番最初のUSERUIの状態を変更させるのと戦闘ループの最初の準備処理。
             _nextWaitBtn.onClick.AddListener(()=>OnClickNextWaitBtn().Forget());;//ボタンにbmの処理を追加
             //非同期なのでボタン処理自体は非同期で実行されるが、例えばUI側での他のボタンや、このボタン自体の処理を防ぐってのはないけど、
             //そこは内部でのUI処理で対応してるから平気
@@ -230,6 +232,27 @@ public class Walking : MonoBehaviour
         AreaResponse = returnid; //ここで0～の数字を渡されることでボタン選択処理の非同期待ちが進行
     }
 
+
+    /// <summary>
+    /// 敵UI配置システムのテスト用メソッド（戦闘参加敵のみ）
+    /// </summary>
+    private async UniTask TestEnemyUIPlacement(BattleGroup enemyGroup)
+    {
+        try
+        {
+            Debug.Log("=== 敵UI配置システムテスト開始（戦闘参加敵のみ） ===");
+            Debug.Log($"戦闘参加敵数: {enemyGroup?.Ours?.Count ?? 0}体");
+            
+            // 改良版ズーム実行（敵UI生成も内部で並行実行される）
+            await wui.FirstImpressionZoomImproved();
+            
+            Debug.Log("=== 敵UI配置システムテスト完了 ===");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"敵UI配置システムテストでエラーが発生: {e.Message}");
+        }
+    }
 
     //最終的にeyearea側で一気にeyeareaのUIを処理するのを作って、そっちにデータを渡すようにする。
     private void TestProgressUIUpdate() //テスト用

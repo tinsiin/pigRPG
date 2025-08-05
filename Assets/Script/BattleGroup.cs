@@ -78,6 +78,7 @@ public class BattleGroup
     /// </summary>
     public void VanGuardDeath()
     {
+        if(InstantVanguard == null) return;//前のめりがいなかったらそのまま返す
         if (InstantVanguard.Death())
         {
             RemoveVanguard();

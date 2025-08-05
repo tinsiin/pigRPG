@@ -81,10 +81,34 @@ public class Stages : MonoBehaviour
         }
     }
 
+    /// <summary>
+    ///UIごとに対応したステージのテーマカラー
+    /// </summary>
+    [Serializable]
+    public class StageThemeColorUI
+    {
+        /// <summary>
+        /// 行動者のアイコンの裏に描画する色
+        /// </summary>
+        public Color ActionMarkColor;
+        /// <summary>
+        /// 歩行時のサイドオブジェクトと、EYEAREAでの矢印を描画する色
+        /// </summary>
+        public Color SideObjectANDArrowColor;
+        public StageThemeColorUI DeepCopy()
+        {
+            var copy = new StageThemeColorUI();
+            copy.ActionMarkColor = this.ActionMarkColor;
+            copy.SideObjectANDArrowColor = this.SideObjectANDArrowColor;
+            return copy;
+        }
+
+    }
     [Serializable]
     public class StageData //ステージデータのクラス
     {
         [SerializeField] private string _stageName;
+        public StageThemeColorUI StageThemeColorUI;
         [SerializeField] private List<StageCut> _cutArea;
         /// <summary>
         ///     ステージごとに設定される主人公陣営たちのボーナス。
@@ -137,6 +161,7 @@ public class Stages : MonoBehaviour
             newData.Satelite_StageBonus = Satelite_StageBonus.DeepCopy();//ステージボーナスはフィールドあるのでディープコピーメゾット
             newData.Bass_StageBonus = Bass_StageBonus.DeepCopy();
             newData.Stair_StageBonus = Stair_StageBonus.DeepCopy();
+            newData.StageThemeColorUI = StageThemeColorUI.DeepCopy();
 
             return newData;
         }
@@ -314,6 +339,11 @@ public class Stages : MonoBehaviour
 
 
             //数判定(一人判定)　または　もう待機リストに誰もいなかった場合
+            if(ResultList[0].MyImpression == 0)
+            {
+                Debug.LogError("EnemyCollectAI: 最初の一人の精神属性が0です。これはキャラの精神属性に何もセットされていないです。" 
+                + ResultList[0].MyImpression);
+            }
             if (EnemyCollectManager.Instance.LonelyMatchUp(ResultList[0].MyImpression) || validEnemies.Count <= 0)
             {
                 //パーティー属性を決める　一人なのでその一人の属性をそのままパーティー属性にする
