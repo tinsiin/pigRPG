@@ -255,7 +255,7 @@ public class ACTList
 
             float item = 1;//分散しなかったらデフォルトで100%
 
-            if (skill.PowerSpread.Length > 0 && skill.PowerSpread != null)//スキル分散値配列のサイズがゼロより大きかったら分散する
+            if (skill.PowerSpread != null && skill.PowerSpread.Length > 0)//スキル分散値配列のサイズがゼロより大きかったら分散する
             {
                 //爆発的
                 if (skill.DistributionType == AttackDistributionType.Explosion)
@@ -321,6 +321,7 @@ public class ACTList
 /// </summary>
 public class BattleManager
 {
+    SchizoLog schizoLog => SchizoLog.Instance;
     /// <summary>
     ///     プレイヤー側のバトルグループ　ここに味方のバトルグループオブジェクトをリンクする？
     /// </summary>
@@ -620,6 +621,7 @@ public class BattleManager
     /// </summary>
     public TabState ACTPop()
     {
+        schizoLog.DisplayAllAsync().Forget();//ログの更新
         ResetManagerTemp();//一時保存要素をリセット
         Acts.RemoveDeathCharacters();//先約リストから死者を取り除く
 
@@ -793,6 +795,7 @@ public class BattleManager
     /// </summary>
     public async UniTask<TabState> CharacterActBranching()
     {
+        Debug.Log("俳優の行動の分岐-NextWaitボタンが押されました。");
         var skill = Acter.NowUseSkill;
         var IsEscape = Acter.SelectedEscape;//逃げる意思
 
@@ -1972,38 +1975,46 @@ public class BattleManager
                 else //他メイン分岐とは違い、意志ではないので、スキルの範囲性質で指定する。
                 if (Acter.HasRangeWill(SkillZoneTrait.ControlByThisSituation))//状況のみに縛られる。(前のめりにしか当たらないなら
                 {
+                    Debug.Log("ControlByThisSituationのスキル分岐(SelectTargetFromWill)");
                     if (SelectGroup.InstantVanguard == null)//対象者グループに前のめりがいない場合。事故が起きる
                     {
+                        Debug.Log("ControlByThisSituationのスキル分岐(SelectTargetFromWill)で前のめりがいない");
                         //前のめりしか選べなくても、もし前のめりがいなかったら、その**平坦なグループ**にスキル性質による攻撃が当たる。
                         //平坦 = 前のめり、後衛の区別がないまっさらということか？
 
 
                         //前のめりいないことによる事故☆☆☆☆☆☆☆☆☆☆
+                        bool isAccident = false;
 
                         //シングルにあたるなら
                         if (Acter.HasRangeWill(SkillZoneTrait.RandomSingleTarget))
                         {
+                            Debug.Log("ランダムシングル事故");
                             BaseStates[] selects = SelectGroup.Ours.ToArray();
                             if (OurGroup != null)//自陣グループも選択可能なら
                                 selects.AddRange(OurGroup.Ours);
                             
                             // 単体ランダム（want=1）
                             UA.AddRange(SelectByPassiveAndRandom(selects, 1));
+                            isAccident = true;
                         }
                         //前のめりがいないんだから、　前のめりか後衛単位での　集団事故は起こらないため　RandomSelectMultiTargetによる場合分けはない。
 
                         //全範囲事故なら
                         if (Acter.HasRangeWill(SkillZoneTrait.AllTarget))
                         {
+                            Debug.Log("全範囲事故");
                             BaseStates[] selects = SelectGroup.Ours.ToArray();
                             if (OurGroup != null)//自陣グループも選択可能なら
                                 selects.AddRange(OurGroup.Ours);
 
                             UA.AddRange(selects);//対象範囲を全て加える
+                            isAccident = true;
                         }
                         //ランダム範囲事故なら
                         if (Acter.HasRangeWill(SkillZoneTrait.RandomMultiTarget))
                         {
+                            Debug.Log("ランダム範囲事故");
                             BaseStates[] selects = SelectGroup.Ours.ToArray();
                             if (OurGroup != null)//自陣グループも選択可能なら
                                 selects.AddRange(OurGroup.Ours);
@@ -2011,6 +2022,12 @@ public class BattleManager
                             // グループ乱数分（want＝1〜Count）
                             int want = RandomEx.Shared.NextInt(1, selects.Length + 1);
                             UA.AddRange(SelectByPassiveAndRandom(selects, want));
+                            isAccident = true;
+                        }
+
+                        if(!isAccident)
+                        {
+                            Debug.LogAssertion("ControlByThisSituationによるNon前のめり事故が起きなかった\n事故用に範囲意志をスキルに設定する必要があります。");
                         }
                     }
                     else

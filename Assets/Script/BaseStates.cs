@@ -41,6 +41,7 @@ public abstract class BaseStates
     }
 
     protected BattleManager manager => Walking.bm;
+    protected SchizoLog schizoLog => SchizoLog.Instance;
     /// <summary>
     /// キャラクターの被害記録
     /// </summary>
@@ -6222,6 +6223,7 @@ public abstract class BaseStates
         HP -= totalDmg;
         CantKillSkillClamp(Atker,skill);//殺せない系再代入クランプ処理
         Debug.Log("攻撃が実行された");
+        schizoLog.AddLog(Atker.CharacterName + "が" + this.CharacterName + "を攻撃した-" + totalDmg + "ダメージを与えた");
 
         //攻撃者がダメージを殺すまでに与えたダメージ辞書に記録する
         Atker.RecordDamageDealtToEnemyUntilKill(dmg.Total,this);
@@ -7969,6 +7971,9 @@ private int CalcTransformCountIncrement(int tightenStage)
                     BadSkillPassiveHit = result.BadSkillPassiveHit;
                     GoodSkillPassiveRemove = result.GoodSkillPassiveRemove;
                 }
+            }else   
+            {
+                schizoLog.AddLog(attacker.CharacterName + "は外した");
             }
         }
         else//atktypeがないと各自で判定
@@ -8252,7 +8257,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         NowUseSkill.DoSkillCountUp();//使用したスキルの使用回数をカウントアップ
         RemoveUseThings();//特別な補正を消去
         PassivesOnAfterAttack();//攻撃後のパッシブ効果
-        Debug.Log("AttackChara");
+        Debug.Log("AttackChara- 攻撃した人数:" + Unders.Count);
 
         //今回の攻撃で一回でもヒットしていれば  「攻撃者側の攻撃の単位 = 範囲攻撃でも一回だけ = 攻撃者の為の処理」で実行されてほしい
         if (IsAnyHitInRecentSkillData(NowUseSkill, Unders.Count))
@@ -8399,7 +8404,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <returns></returns>
     public bool IsNeedDeleteMyFreezeConsecutive()
     {
-        if(NowUseSkill.NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃中で、
+        if(NowUseSkill?.NowConsecutiveATKFromTheSecondTimeOnward() == true)//連続攻撃中で、
         {
             if(NowUseSkill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive))
             {

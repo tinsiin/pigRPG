@@ -253,13 +253,14 @@ public class TenDayAbilityDictionary : SerializableDictionary<TenDayAbility, flo
     /// </summary>
     public static TenDayAbilityDictionary operator +(TenDayAbilityDictionary dict, float value)
     {
-        TenDayAbilityDictionary result = new TenDayAbilityDictionary(dict);
-        
-        foreach (var key in result.Keys)
+        // 安全案1: 元の辞書(dict)を列挙し、新しい辞書に書き込む
+        TenDayAbilityDictionary result = new TenDayAbilityDictionary();
+
+        foreach (var pair in dict)
         {
-            result[key] += value;
+            result[pair.Key] = pair.Value + value;
         }
-        
+
         return result;
     }
 

@@ -35,6 +35,7 @@ public class Stages : MonoBehaviour
     /// </summary>
     private void OnInitializeAllStageCharas()
     {
+        Debug.Log("ステージのキャラクターの初期化を実行");
         foreach (var stage in RunTimeStageDates)
         {
             stage.OnInitializeAllAreaCharas();

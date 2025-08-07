@@ -902,6 +902,11 @@ public class BaseSkill
     /// </summary>
     public TenDayAbilityDictionary TenDayValues(bool IsCradle = false)
     {
+        if(Doer == null)
+        {
+            Debug.LogError("Doerがnullです-" + SkillName);
+            return null;
+        }
         Debug.Log($"スキル印象構造の取得 : スキル有限レベルリストの数:{FixedSkillLevelData.Count},キャラ:{Doer.CharacterName}");
         var Level = _nowSkillLevel;
         if(IsCradle)
