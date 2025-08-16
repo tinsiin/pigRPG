@@ -10,12 +10,13 @@ using UnityEngine.UI;
 
 public class Walking : MonoBehaviour
 {
-    [SerializeField] private WatchUIUpdate wui;
+    WatchUIUpdate wui;
     [SerializeField] private TextMeshProUGUI tmp;
     [SerializeField] private Button walkbtn;
     [SerializeField] private Button _nextWaitBtn;
     [SerializeField] private SelectButton SelectButtonPrefab;
     [SerializeField] private int SelectBtnSize;
+    [SerializeField] private MessageDropper MessageDropper;
 
     /// <summary>
     /// USERUIの状態
@@ -54,8 +55,9 @@ public class Walking : MonoBehaviour
     private  void Start()
     {
         ps = PlayersStates.Instance;//変数にキャッシュして使用
+        stages = Stages.Instance;
+        wui = WatchUIUpdate.Instance;
         BaseStates.CsvLoad();
-        stages = GetComponent<Stages>();
         
         //初期UI更新　最適化のため最終開発の段階で初期UIの更新だけをするようにする。
         TestProgressUIUpdate();
@@ -85,6 +87,8 @@ public class Walking : MonoBehaviour
     /// </summary>
     public async void OnWalkBtn()
     {
+        if(stages == null)Debug.LogError("stagesが認識されていない");
+        if(ps == null)Debug.LogError("psが認識されていない");
         if (stages && ps != null)
         {
             await Walk(1);
@@ -99,6 +103,7 @@ public class Walking : MonoBehaviour
     public static BattleManager bm;
     private  void Encount()
     {
+        //Debug.Log("エンカウント処理WalkingのEncountメソッド");
         BattleGroup enemyGroup = null; //敵グループ
         BattleGroup allyGroup = null; //味方グループ
         if ((enemyGroup = NowStageCut.EnemyCollectAI()) != null) //nullでないならエンカウントし、敵グループ
@@ -117,7 +122,7 @@ public class Walking : MonoBehaviour
 
 
             //BattleManagerを生成
-        bm = new BattleManager(allyGroup, enemyGroup,BattleStartSituation.Normal); //バトルを管理するクラス
+        bm = new BattleManager(allyGroup, enemyGroup,BattleStartSituation.Normal, MessageDropper); //バトルを管理するクラス
         //battleTimeLineを生成
         var TimeLine = new BattleTimeLine(new List<BattleManager>{bm}); //バトルのタイムラインを管理するクラス
 

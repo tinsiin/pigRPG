@@ -6,6 +6,7 @@ using RandomExtensions.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using static CommonCalc;
+using Cysharp.Threading.Tasks;
 
 /// <summary>
 /// 敵UI配置タイプ
@@ -16,25 +17,6 @@ public enum EnemyUIPlacementType
     DirectPosition   // 直接位置指定
 }
 
-/// <summary>
-/// 敵キャラの個人用UIオブジェクトをまとめたもの
-/// </summary>
-[Serializable]
-public class EnemyCharacterUIObjects
-{   
-    /// <summary>
-    /// 敵グラフィック画像（メインの敵画像）
-    /// </summary>
-    public Sprite EnemyGraphicSprite;
-    
-
-    public EnemyCharacterUIObjects DeepCopy()
-    {
-        var clone = new EnemyCharacterUIObjects();
-        clone.EnemyGraphicSprite = EnemyGraphicSprite;
-        return clone;
-    }
-}
 
 /// <summary>
 ///     通常の敵
@@ -439,13 +421,13 @@ public class NormalEnemy : BaseStates
             clone.EnemySkillList.Add(skill.InitEnemyDeepCopy());
         }
 
-        // UI配置設定をコピー
+        // UI設定をコピー
         clone._uiPlacementType = this._uiPlacementType;
-        clone._enemySize = this._enemySize;
-        clone._marginSize = this._marginSize;
+        // グラフィック（スプライト）をコピー（未コピーだとUIが白表示になる）
+        clone.EnemyGraphicSprite = this.EnemyGraphicSprite;
         
         // 敵UIオブジェクトのコピー（UIコンポーネントは参照コピー）
-        clone._enemyUIObjects = this._enemyUIObjects?.DeepCopy();
+
         clone._brain = this._brain;            // AIをコピー
 
         /*clone.broken = this.broken;
@@ -464,32 +446,16 @@ public class NormalEnemy : BaseStates
     [Header("戦闘UI配置設定")]
     [SerializeField] private EnemyUIPlacementType _uiPlacementType = EnemyUIPlacementType.RandomInArea;
     
-    [Header("ランダム配置用設定")]
-    [SerializeField] private Vector2 _enemySize = new Vector2(100, 100); // 敵UIのサイズ
-    [SerializeField] private float _marginSize = 10f;                    // 他の敵との余白
     
     [Header("敵UIオブジェクト設定")]
-    [SerializeField] private EnemyCharacterUIObjects _enemyUIObjects;    // 敵UIオブジェクトの参照
-    
+    /// <summary>
+    /// 敵グラフィック画像（メインの敵画像）
+    /// </summary>
+    public Sprite EnemyGraphicSprite;
     /// <summary>
     /// UI配置タイプ
     /// </summary>
     public EnemyUIPlacementType UIPlacementType => _uiPlacementType;
-    
-    /// <summary>
-    /// 敵UIのサイズ
-    /// </summary>
-    public Vector2 EnemySize => _enemySize;
-    
-    /// <summary>
-    /// 他の敵との余白
-    /// </summary>
-    public float MarginSize => _marginSize;
-    
-    /// <summary>
-    /// 敵UIオブジェクトの参照
-    /// </summary>
-    public EnemyCharacterUIObjects EnemyUIObjects => _enemyUIObjects;
 }
 
 [Serializable]

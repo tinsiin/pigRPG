@@ -1,12 +1,16 @@
 using Cysharp.Threading.Tasks;
 using LitMotion;
 using LitMotion.Extensions;
+using RandomExtensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 /// <summary>
 /// WatchUIUpdateクラスに戦闘画面用のレイヤー分離システムを追加しました。
@@ -15,14 +19,23 @@ using UnityEngine.UI;
 /// </summary>
 public class WatchUIUpdate : MonoBehaviour
 {
+    // シングルトン参照
+    public static WatchUIUpdate Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(this.gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
     [SerializeField] private TextMeshProUGUI StagesString; //ステージとエリア名のテキスト
     [SerializeField] private TenmetuNowImage MapImg; //直接で現在位置表示する簡易マップ
     [SerializeField] private RectTransform bgRect; //背景のRectTransform
     [SerializeField] private DarkWaveManager _waveManager;
-    /// <summary>
-    /// 敵キャラの参照用HPバー
-    /// </summary>
-    public CombinedStatesBar EnemyHPBars;
 
     //ズーム用変数
     [SerializeField] private AnimationCurve _firstZoomAnimationCurve;
@@ -50,6 +63,14 @@ public class WatchUIUpdate : MonoBehaviour
     [Header("敵HPバー設定")]
     [SerializeField] private Vector2 hpBarSizeRatio = new Vector2(1.0f, 0.15f); // x: バー幅/アイコン幅, y: バー高/アイコン幅
     
+    // 敵UIプレハブ（UIController付き）
+    [Header("敵UI Prefab")]
+    [SerializeField] private UIController enemyUIPrefab;
+    
+    // 敵ランダム配置時の余白（ピクセル）
+    [Header("敵ランダム配置 余白設定")]
+    [SerializeField] private float enemyMargin = 10f;
+    
     // 戦闘エリア設定（ズーム後座標系）
     [Header("戦闘エリア設定（ズーム後座標系）")]
     [SerializeField] private RectTransform enemySpawnArea;   // 敵ランダム配置エリア（単一・ズーム対象外）
@@ -60,6 +81,19 @@ public class WatchUIUpdate : MonoBehaviour
     [Header("ズーム対象コンテナ")]
     [SerializeField] private Transform zoomBackContainer;  // 背景用ズームコンテナ
     [SerializeField] private Transform zoomFrontContainer; // 敵用ズームコンテナ
+
+    [Header("前のめりUI設定")]
+    [SerializeField] private Vector2 vanguardOffsetPxRange = new Vector2(8f, 16f);//前のめり時の移動量
+    [SerializeField] private Vector2 vanguardDurationSecRange = new Vector2(0.12f, 0.2f);//前のめり時のアニメーション時間
+    /// <summary>
+    /// 前のめり時の移動量
+    /// </summary>
+    public float BeVanguardOffset { get=> RandomEx.Shared.NextFloat(vanguardOffsetPxRange.x, vanguardOffsetPxRange.y); }
+    /// <summary>
+    /// 前のめり時のアニメーション時間
+    /// </summary>
+    public float BaVanguardDurationSec { get=> RandomEx.Shared.NextFloat(vanguardDurationSecRange.x, vanguardDurationSecRange.y); }
+    
 
     private void Start()
     {
@@ -542,16 +576,20 @@ public class WatchUIUpdate : MonoBehaviour
     /// ズーム後にspawnArea内に収まるズーム前のローカル座標を取得
     /// 逆算ロジックでズーム後の目標位置を先に決めてからズーム前座標を算出
     /// </summary>
-    private Vector2 GetRandomPreZoomLocalPosition(Vector2 enemySize, List<Vector2> existingWorldPositions, float marginSize)
+    private Vector2 GetRandomPreZoomLocalPosition(Vector2 enemySize, List<Vector2> existingWorldPositions, float marginSize, out Vector2 chosenWorldPos)
     {
         if (enemySpawnArea == null)
         {
             Debug.LogWarning("enemySpawnAreaが設定されていません。");
+            chosenWorldPos = Vector2.zero;
             return Vector2.zero;
         }
 
         var rect = enemySpawnArea.rect;
         var halfEnemySize = enemySize / 2 + Vector2.one * marginSize;
+
+        // デバッグ: 範囲とサイズを一度だけ出力
+        Debug.Log($"SpawnArea rect: xMin={rect.xMin:F2}, xMax={rect.xMax:F2}, yMin={rect.yMin:F2}, yMax={rect.yMax:F2} | enemySize={enemySize}, half+margin={halfEnemySize}, existingCount={existingWorldPositions?.Count ?? 0}");
 
         var minX = rect.xMin + halfEnemySize.x;
         var maxX = rect.xMax - halfEnemySize.x;
@@ -566,14 +604,53 @@ public class WatchUIUpdate : MonoBehaviour
             var spawnAreaLocal = new Vector2(randomX, randomY);
             var targetWorldPos = enemySpawnArea.TransformPoint(spawnAreaLocal);
 
-            if (IsWorldPositionValid(targetWorldPos, enemySize, existingWorldPositions, marginSize))
+            // デバッグ: 最初の数回のみ詳細ログ
+            if (attempt < 3)
             {
+                Debug.Log($"Attempt#{attempt}: local={spawnAreaLocal}, world={targetWorldPos}");
+
+                // Overlap判定の内訳ログ（最大2件）
+                Vector2 halfSize = enemySize / 2 + Vector2.one * marginSize;
+                Rect candidateRect = new Rect(spawnAreaLocal - halfSize, enemySize + Vector2.one * marginSize * 2);
+                int toShow = Mathf.Min(existingWorldPositions.Count, 2);
+                for (int i = 0; i < toShow; i++)
+                {
+                    var existingWorld = existingWorldPositions[i];
+                    var existingLocal = (Vector2)enemySpawnArea.InverseTransformPoint(new Vector3(existingWorld.x, existingWorld.y, 0));
+                    Rect existingRect = new Rect(existingLocal - halfSize, enemySize + Vector2.one * marginSize * 2);
+                    bool overlap = candidateRect.Overlaps(existingRect);
+                    Debug.Log($"  vs existing[{i}]: localPos={existingLocal}, overlap={overlap}, candRect(local)={candidateRect}, existRect(local)={existingRect}");
+                }
+            }
+
+            // ローカル座標系での重複判定
+            bool validLocal = true;
+            Vector2 half = enemySize / 2 + Vector2.one * marginSize;
+            Rect cand = new Rect(spawnAreaLocal - half, enemySize + Vector2.one * marginSize * 2);
+            for (int i = 0; i < existingWorldPositions.Count; i++)
+            {
+                var existWorld = existingWorldPositions[i];
+                var existLocal = (Vector2)enemySpawnArea.InverseTransformPoint(new Vector3(existWorld.x, existWorld.y, 0));
+                Rect exist = new Rect(existLocal - half, enemySize + Vector2.one * marginSize * 2);
+                if (cand.Overlaps(exist)) { validLocal = false; break; }
+            }
+
+            if (validLocal)
+            {
+                chosenWorldPos = targetWorldPos;
+                if (attempt > 0)
+                {
+                    Debug.Log($"Valid position found at attempt#{attempt}: local={spawnAreaLocal}, world={targetWorldPos}");
+                }
                 return WorldToPreZoomLocal(targetWorldPos);
             }
         }
 
         // フォールバック: スポーンエリア中央
         var fallbackWorld = enemySpawnArea.TransformPoint(rect.center);
+        var fallbackLocal = rect.center;
+        Debug.LogWarning($"GetRandomPreZoomLocalPosition: fallback to center. enemySize={enemySize}, margin={marginSize}, centerLocal={fallbackLocal}, centerWorld={fallbackWorld}");
+        chosenWorldPos = fallbackWorld;
         return WorldToPreZoomLocal(fallbackWorld);
     }
 
@@ -595,12 +672,9 @@ public class WatchUIUpdate : MonoBehaviour
             if (character is NormalEnemy enemy)
             {
                 // アイコン+HPバーを含めたUI合計サイズを事前計算
-                Vector2 iconSize = enemy.EnemySize;
-                if (iconSize == Vector2.zero && enemy.EnemyUIObjects?.EnemyGraphicSprite != null)
-                {
-                    // Sprite サイズから推測（幅のみ使用）
-                    iconSize = enemy.EnemyUIObjects.EnemyGraphicSprite.rect.size;
-                }
+                Vector2 iconSize = (enemy.EnemyGraphicSprite != null)
+                    ? enemy.EnemyGraphicSprite.rect.size
+                    : new Vector2(100f, 100f); // フォールバック
                 float iconW = iconSize.x;
                 float barH  = iconW * hpBarSizeRatio.y;
                 float vSpace = iconW * hpBarSizeRatio.y * 0.5f;
@@ -610,11 +684,11 @@ public class WatchUIUpdate : MonoBehaviour
                 var preZoomLocal = GetRandomPreZoomLocalPosition(
                     combinedSize,
                     placedWorldPositions,
-                    enemy.MarginSize);
+                    enemyMargin,
+                    out var chosenWorldPos);
 
-                // ワールド座標も記録（重複チェック用）
-                var worldPos = ((RectTransform)enemyBattleLayer).TransformPoint(preZoomLocal);
-                placedWorldPositions.Add(worldPos);
+                // ワールド座標も記録（重複チェック用）— spawnArea基準で計算した値をそのまま使用
+                placedWorldPositions.Add(chosenWorldPos);
                 
                 var placeTask = PlaceEnemyUI(enemy, preZoomLocal);
                 tasks.Add(placeTask);
@@ -629,9 +703,9 @@ public class WatchUIUpdate : MonoBehaviour
     /// </summary>
     private async UniTask PlaceEnemyUI(NormalEnemy enemy, Vector2 preZoomLocalPosition)
     {
-        if (enemy.EnemyUIObjects?.EnemyGraphicSprite == null)
+        if (enemyUIPrefab == null)
         {
-            Debug.LogWarning($"敵 '{enemy.GetHashCode()}' のEnemyGraphicSpriteが設定されていません。");
+            Debug.LogWarning("enemyUIPrefab が設定されていません。敵UIを生成できません。");
             return;
         }
 
@@ -640,68 +714,115 @@ public class WatchUIUpdate : MonoBehaviour
             Debug.LogWarning("enemyBattleLayerが設定されていません。");
             return;
         }
+        Debug.Log($"[Prefab ref] enemyUIPrefab.activeSelf={enemyUIPrefab.gameObject.activeSelf}", enemyUIPrefab);
+        Debug.Log($"[Parent] enemyBattleLayer activeSelf={enemyBattleLayer.gameObject.activeSelf}, inHierarchy={enemyBattleLayer.gameObject.activeInHierarchy}", enemyBattleLayer);
+#if UNITY_EDITOR
+        Debug.Log($"[Prefab path] {AssetDatabase.GetAssetPath(enemyUIPrefab)}", enemyUIPrefab);
+        if (!enemyUIPrefab.gameObject.activeSelf)
+        {
+            Debug.LogWarning($"[Detect] Prefab asset inactive at call. path={AssetDatabase.GetAssetPath(enemyUIPrefab)}\n{new System.Diagnostics.StackTrace(true)}", enemyUIPrefab);
+        }
+#endif
 
-        // 敵グラフィックUIを生成（enemyBattleLayer直下）
-        var graphicGO = new GameObject($"EnemyGraphic_{enemy.GetHashCode()}");
-        graphicGO.transform.SetParent(enemyBattleLayer, false);
+        // 敵UIプレハブを生成（enemyBattleLayer直下）
+        var uiInstance = Instantiate(enemyUIPrefab, enemyBattleLayer, false);
+        Debug.Log($"[Instantiated] {uiInstance.name} activeSelf={uiInstance.gameObject.activeSelf}, inHierarchy={uiInstance.gameObject.activeInHierarchy}", uiInstance);
+        var rectTransform = (RectTransform)uiInstance.transform;
 
-        // RectTransform設定
-        var rectTransform = graphicGO.AddComponent<RectTransform>();
+        // ズーム前のローカル座標で配置（ズーム後に正しい位置に収まる）
         rectTransform.pivot = new Vector2(0.5f, 0.5f);
         rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
         rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-        rectTransform.sizeDelta = enemy.EnemySize;
-
-        // ズーム前のローカル座標で配置（ズーム後に正しい位置に収まる）
         rectTransform.anchoredPosition = preZoomLocalPosition;
-        
-        // Imageコンポーネント追加と設定
-        var image = graphicGO.AddComponent<Image>();
-        image.sprite = enemy.EnemyUIObjects.EnemyGraphicSprite;
-        image.preserveAspect = true;
-        
-        // サイズを画像から自動取得（オプション）
-        if (enemy.EnemySize == Vector2.zero && image.sprite != null)
+
+
+        // アイコン設定（スプライトとサイズ）
+        if (uiInstance.Icon != null)
         {
-            var spriteSize = image.sprite.rect.size;
-            rectTransform.sizeDelta = spriteSize;
+            uiInstance.Icon.preserveAspect = true;
+            if (enemy.EnemyGraphicSprite != null)
+            {
+                uiInstance.Icon.sprite = enemy.EnemyGraphicSprite;
+                // 念のための安全初期化（Prefab側の設定で白表示になるのを防止）
+                uiInstance.Icon.type = UnityEngine.UI.Image.Type.Simple;
+                uiInstance.Icon.useSpriteMesh = true;
+                uiInstance.Icon.color = Color.white; // 透過や色乗算の影響を排除
+                uiInstance.Icon.material = null;     // UI/Default に戻す（独自マテリアルで白抜けするのを防止）
+
+                // 情報ログ（原因切り分け用）
+                var spr = uiInstance.Icon.sprite;
+                Debug.Log($"Enemy Icon sprite assigned: name={spr.name}, tex={(spr.texture != null ? spr.texture.name : "<no texture>")}, rect={spr.rect}, ppu={spr.pixelsPerUnit}");
+            }
+            else
+            {
+                // スプライトが無い場合は白矩形が出ないように一旦非表示
+                uiInstance.Icon.enabled = false;
+                Debug.LogWarning($"Enemy Icon sprite is NULL for enemy: {enemy.CharacterName}. Icon will be hidden to avoid white box.\nCheck: NormalEnemy.EnemyGraphicSprite assignment and Texture import type (Sprite [2D and UI]).");
+            }
+
+            // サイズ決定（EnemySize優先、未設定ならSpriteサイズ）
+            var iconRT = (RectTransform)uiInstance.Icon.transform;
+            if (uiInstance.Icon.sprite != null)
+            {
+                iconRT.sizeDelta = uiInstance.Icon.sprite.rect.size;
+                // ネイティブサイズも適用（RectTransformと描画の不一致を避ける）
+                uiInstance.Icon.SetNativeSize();
+                uiInstance.Icon.enabled = true; // 念のため再有効化
+            }
+            else
+            {
+                iconRT.sizeDelta = new Vector2(100f, 100f); // フォールバック
+            }
         }
-        
-        // HPバーを生成し、アイコンの子に設定
-        var hpBarGO = new GameObject($"HPBar_{enemy.GetHashCode()}");
-        hpBarGO.transform.SetParent(graphicGO.transform, false);
-        var bar = hpBarGO.AddComponent<CombinedStatesBar>();
-        
-        // バーサイズと余白をアイコンから算出
-        float iconW = rectTransform.sizeDelta.x;
-        float barW = iconW * hpBarSizeRatio.x;
-        float barH = iconW * hpBarSizeRatio.y;
-        bar.SetSize(barW, barH);
-        float verticalSpacing = iconW * hpBarSizeRatio.y * 0.5f;
-        bar.VerticalSpacing = verticalSpacing;
-        
-        // HPバーをアイコン直下に配置
-        var barRT = (RectTransform)hpBarGO.transform;
-        barRT.pivot = new Vector2(0.5f, 1f);
-        barRT.anchorMin = barRT.anchorMax = new Vector2(0.5f, 0f); // 下側基準
-        barRT.anchoredPosition = new Vector2(0f, -verticalSpacing);
-        
-        // データバインド
-        enemy.HPBar = bar;
-        bar.SetBothBarsImmediate(
-            enemy.HP / enemy.MaxHP,
-            enemy.MentalHP / enemy.MaxHP,
-            enemy.GetMentalDivergenceThreshold());
-        
-        // 敵GameObjectのサイズをアイコン+HPバーの合計サイズに更新
-        float totalBarHeight = barH * 2f + bar.VerticalSpacing; // 2段バー + 内部余白
-        float totalHeight = rectTransform.sizeDelta.y + verticalSpacing + totalBarHeight;
-        rectTransform.sizeDelta = new Vector2(rectTransform.sizeDelta.x, totalHeight);
-        
-        Debug.Log($"敵UI配置完了: {enemy.GetHashCode()} at preZoomLocal={preZoomLocalPosition}, IconSize: {iconW}x{rectTransform.sizeDelta.y}, BarSize: {barW}x{barH}");
-        
-        // フェード無し、即座に表示
-        image.color = Color.white;
+
+        //前のめり矢印画像の初期化
+        uiInstance.arrowGrowAndVanish.InitializeArrowByIcon();
+
+
+        // HPバー設定（プレハブ内のCombinedStatesBarを利用）
+        if (uiInstance.HPBar != null)
+        {
+            // バーサイズと余白をアイコン幅から算出
+            float iconW = (uiInstance.Icon != null)
+                ? ((RectTransform)uiInstance.Icon.transform).sizeDelta.x
+                : rectTransform.sizeDelta.x;
+
+            float barW = iconW * hpBarSizeRatio.x;
+            float barH = iconW * hpBarSizeRatio.y;
+            uiInstance.HPBar.SetSize(barW, barH);
+
+            float verticalSpacing = iconW * hpBarSizeRatio.y * 0.5f;
+            uiInstance.HPBar.VerticalSpacing = verticalSpacing;
+
+            // 配置（アイコン直下想定のレイアウトはPrefab側で保持、必要時のみオフセット）
+            var barRT = (RectTransform)uiInstance.HPBar.transform;
+            barRT.pivot = new Vector2(0.5f, 1f);
+            barRT.anchorMin = barRT.anchorMax = new Vector2(0.5f, 0f);
+            barRT.anchoredPosition = new Vector2(0f, -verticalSpacing);
+
+            // データバインド（即時反映）
+            uiInstance.HPBar.SetBothBarsImmediate(
+                enemy.HP / enemy.MaxHP,
+                enemy.MentalHP / enemy.MaxHP,
+                enemy.GetMentalDivergenceThreshold());
+
+            // ルート全体サイズ調整（アイコン+HPバー）
+            float totalBarHeight = barH * 2f + uiInstance.HPBar.VerticalSpacing; // 2段バー + 内部余白
+            float iconHeight = (uiInstance.Icon != null) ? ((RectTransform)uiInstance.Icon.transform).sizeDelta.y : 0f;
+            float totalHeight = iconHeight + verticalSpacing + totalBarHeight;
+            rectTransform.sizeDelta = new Vector2(Mathf.Max(rectTransform.sizeDelta.x, iconW), totalHeight);
+
+            Debug.Log($"敵UI配置完了: {enemy.GetHashCode()} at preZoomLocal={preZoomLocalPosition}, IconW: {iconW}, Bar: {barW}x{barH}");
+        }
+        Debug.Log($"[Before SetActive] instance activeSelf={uiInstance.gameObject.activeSelf}, inHierarchy={uiInstance.gameObject.activeInHierarchy}", uiInstance);
+        //uiInstance.SetActive(true);
+        Debug.Log($"[After SetActive] instance activeSelf={uiInstance.gameObject.activeSelf}, inHierarchy={uiInstance.gameObject.activeInHierarchy}", uiInstance);
+
+
+        // BaseStatesへバインド
+        Debug.Log($"[Before BindUIController] instance activeSelf={uiInstance.gameObject.activeSelf}, inHierarchy={uiInstance.gameObject.activeInHierarchy}", uiInstance);
+        enemy.BindUIController(uiInstance);
+
         await UniTask.Yield();
     }
 

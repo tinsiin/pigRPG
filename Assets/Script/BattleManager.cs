@@ -425,17 +425,18 @@ public class BattleManager
 
     public int BattleTurnCount;//バトルの経過ターン
 
-
+    private MessageDropper MessageDropper;
     /// <summary>
     ///コンストラクタ
     /// </summary>
-    public BattleManager(BattleGroup allyGroup, BattleGroup enemyGroup, BattleStartSituation first)
+    public BattleManager(BattleGroup allyGroup, BattleGroup enemyGroup, BattleStartSituation first, MessageDropper messageDropper)
     {
         AllyGroup = allyGroup;
         EnemyGroup = enemyGroup;
         firstSituation = first;
         Acts = new ACTList();
         unders = new UnderActersEntryList(this);
+        MessageDropper = messageDropper;
 
         
 
@@ -1030,7 +1031,7 @@ public class BattleManager
         {
             if (ActerFaction == allyOrEnemy.alliy)
             {
-                MessageDropper.Instance.CreateMessage("死んだ");
+                MessageDropper.CreateMessage("死んだ");
                 PlayersStates.Instance.PlayersOnLost();
 
                 //敵たちの勝利時コールバック。
@@ -1038,19 +1039,19 @@ public class BattleManager
             }
             else
             {
-                MessageDropper.Instance.CreateMessage("勝ち抜いた");
+                MessageDropper.CreateMessage("勝ち抜いた");
                 PlayersStates.Instance.PlayersOnWin();
             }
         }
         if (AlliesRunOut) 
         {
-            MessageDropper.Instance.CreateMessage("我々は逃げた");
+            MessageDropper.CreateMessage("我々は逃げた");
             PlayersStates.Instance.PlayersOnRunOut();
             EnemyGroup.EnemiesOnAllyRunOut();//敵の主人公達が逃げ出した時のコールバック
         }
         if (EnemyGroupEmpty)
         {
-            MessageDropper.Instance.CreateMessage("敵はいなくなった");
+            MessageDropper.CreateMessage("敵はいなくなった");
            //敵が逃げたときのはそれぞれコールバックしたのでここで敵のコールバックは行わない。
 
            //一応主人公達は勝った扱い
@@ -1067,7 +1068,7 @@ public class BattleManager
     /// <param name="txt"></param>
     private void CreateBattleMessage(string txt)
     {
-        MessageDropper.Instance.CreateMessage(UniqueTopMessage + txt);
+        MessageDropper.CreateMessage(UniqueTopMessage + txt);
     }
     /// <summary>
     /// 発動カウント時にTriggerACTでカウントされるスキル以外のスキルの発動カウントが巻き戻る
@@ -1203,6 +1204,16 @@ public class BattleManager
     {
         if(!TryBlockVanruard(newVanguard))
         {
+            var oldVanguard = MyGroup(newVanguard).InstantVanguard ;
+            //もし前の前のめりと異なるなら　新しいキャラに前のめりエフェクト
+            if(oldVanguard!= newVanguard)
+            {
+                newVanguard.UI.BeVanguardEffect();//新しい方が前のめりになるエフェクト
+                if(oldVanguard!=null)
+                {
+                    oldVanguard.UI.LostVanguardEffect();//古い方が前のめりを失うエフェクト
+                }
+            }
             MyGroup(newVanguard).InstantVanguard = newVanguard;
         }
     }
@@ -1470,6 +1481,11 @@ public class BattleManager
 
         //前のめりになるスキルなら前のめりになる。
         BeVanguard_SkillACT();
+
+        if(unders.Count < 1)
+        {
+            Debug.LogError("AttackChara寸前なのに、対象者(ACに渡すunders)がいません、いないということわあり得るのかな？");
+        }
 
         //実行処理
         skill.SetDeltaTurn(BattleTurnCount);//スキルのdeltaTurnをセット
@@ -1744,6 +1760,9 @@ public class BattleManager
         if (chara == EnemyGroup.InstantVanguard) return true;
         return false;
     }
+    
+    // デバッグログON/OFF切り替え（必要に応じてInspectorに出したい場合は[SerializeField]を付与）
+    private bool m_DebugSelectLog = false;
     /// <summary>
     /// パッシブのターゲット率を利用した敵選別を追加した対象者選別関数
     /// 対象者のリストを返す。
@@ -1754,78 +1773,100 @@ public class BattleManager
         int want,
         int NextChancePercent = 100)
     {
-        // positiveListを降順ソート
-        var PositiveTargetOrder = candidates
+        // 仕様: positiveSelect -> NegativeAntiSelect -> 完全ランダム
+        var pool = candidates.ToList();
+        var winners = new List<BaseStates>();
+        if (want <= 0 || pool.Count == 0)
+        {
+            if (m_DebugSelectLog)
+                Debug.Log($"[SelectByPassiveAndRandom] 早期終了: 要求数={want}, 候補数={pool.Count}, 当選数={winners.Count}（選出不要または候補なし）");
+            return winners;
+        }
+
+        // 1) positiveSelect: >0 を降順に判定
+        var positives = pool
             .Where(u => u.PassivesTargetProbability() > 0)
             .OrderByDescending(u => u.PassivesTargetProbability())
             .ToList();
-        
-
-        var winners = new List<BaseStates>();
-
-        // パッシブのターゲット率による降順ソート判定  positiveSelect
-        foreach (var u in PositiveTargetOrder)
+        foreach (var u in positives)
         {
             if (winners.Count >= want) break;
             if (rollper(u.PassivesTargetProbability()))
                 winners.Add(u);
         }
-
-        var others = PositiveTargetOrder.Except(winners).ToList();
-        if(others.Count == 0|| winners.Count >= want) return winners;//残ってんのなかったり条件満たされてたら終わり
-        // 残ってるもので-ターゲット率のキャラをnegativeListとして確率計算の候補リスト
-        var NegativeTarget = others
-            .Where(u => u.PassivesTargetProbability() < 0)
-            .ToList();
-        var negativeList = new List<BaseStates>();
-
-        //NegativeAntiSelect　ターゲット率が-以降の物を、その確率でランダム選択リストから外す。
-        foreach (var u in NegativeTarget)
+        if (winners.Count >= want)
         {
-            if (rollper(-u.PassivesTargetProbability()))
-                negativeList.Add(u);//確率計算に合致すればネガティブリストに
+            if (m_DebugSelectLog)
+                Debug.Log($"[SelectByPassiveAndRandom] Positive選抜で終了: 要求数={want}, 当選数={winners.Count}/{pool.Count}");
+            return winners;
         }
 
-        //デフォルトの判定　完全ランダム方式　持続チャンスがある。
-        if (winners.Count < want)
+        // 2) NegativeAntiSelect: <0 は除外ロール
+        var negatives = pool.Where(u => u.PassivesTargetProbability() < 0).ToList();
+        var excludedByNegative = new HashSet<BaseStates>();
+        foreach (var u in negatives)
         {
-            others = others.Except(negativeList).ToList();//ネガティブを除外。
-            if(others.Count == 0){
-                // 残ったもので重み付きリストを作成
-                //ポジティブな選ばれなかったやつ、ネガティブで選ばれなかった奴が混じってるので、重み付きリストを使います。詳細はメモを
-                var DefaultSelectList = new WeightedList<BaseStates>();
-                foreach(var u in others)
-                {//残った候補リストを全て重み付きリストに
-                    DefaultSelectList.Add(u, u.PassivesTargetProbability());
-                }
+            if (rollper(-u.PassivesTargetProbability()))
+                excludedByNegative.Add(u);
+        }
+        if (m_DebugSelectLog)
+            Debug.Log($"[SelectByPassiveAndRandom] Negative除外結果: ネガ対象数={negatives.Count}, 除外確定数={excludedByNegative.Count}");
 
-                do
-                {
-                    DefaultSelectList.RemoveRandom(out var item);//抽選してから削除
-                    winners.Add(item);
-                }while(DefaultSelectList.Count > 0 && winners.Count < want && RandomEx.Shared.NextInt(100) <= NextChancePercent);
+        // 3) 完全ランダム: 未当選かつネガ除外されていない者を重み付き抽選
+        var others = pool
+            .Except(winners)
+            .Where(u => !excludedByNegative.Contains(u))
+            .ToList();
+        if (others.Count == 0 && winners.Count < want)
+        {
+            if (m_DebugSelectLog)
+                Debug.Log($"[SelectByPassiveAndRandom] ランダム抽選スキップ: 候補0, 当選数={winners.Count}, 要求数={want}");
+        }
+        if (others.Count > 0 && winners.Count < want)
+        {
+            var weighted = new WeightedList<BaseStates>();
+            foreach (var u in others)
+            {
+                var w = u.PassivesTargetProbability();
+                if (w <= 0) w = 1; // パッシブ無し(0)は基礎重み1に補正
+                weighted.Add(u, w);
             }
-            
-            //もしまだ満たしてなければネガティブリストの内容で完全ランダム選別
-            //ただし本来選ばれない者たちであるので、NextChancePercentが100%未満ならその確率判定なしですぐ終わる。　
-            // あともちろん必要数満たされてたら終わる
-            //また、「ネガティブ確率に当選した物たちなので」、完全ランダムで選別する、確率に成功したんだから比較する必要がない。
-            if (NextChancePercent < 100) return winners;
-            negativeList.Shuffle();
-            foreach (var u in negativeList)
+            if (m_DebugSelectLog)
+                Debug.Log($"[SelectByPassiveAndRandom] ランダム抽選開始: 候補={others.Count}, 重み数={weighted.Count}, 当選数={winners.Count}, 要求数={want}, 継続率={NextChancePercent}%");
+            do
+            {
+                if (weighted.Count == 0) break;
+                weighted.RemoveRandom(out var item);
+                winners.Add(item);
+            } while (weighted.Count > 0 && winners.Count < want && RandomEx.Shared.NextInt(100) <= NextChancePercent);
+            if (m_DebugSelectLog)
+                Debug.Log($"[SelectByPassiveAndRandom] ランダム抽選終了: 当選数={winners.Count}, 残り重み={weighted.Count}");
+        }
+
+        // 4) 不足し、NextChancePercent==100 のときのみ、ネガ当選者から補充
+        if (winners.Count < want && NextChancePercent == 100)
+        {
+            var negPicked = negatives.Where(excludedByNegative.Contains).ToList();
+            negPicked.Shuffle();
+            var before = winners.Count;
+            foreach (var u in negPicked)
             {
                 if (winners.Count >= want) break;
                 winners.Add(u);
             }
+            if (m_DebugSelectLog)
+                Debug.Log($"[SelectByPassiveAndRandom] ネガ補充: 追加数={winners.Count - before}, 当選数={winners.Count}, 要求数={want}");
         }
+        if (m_DebugSelectLog)
+            Debug.Log($"[SelectByPassiveAndRandom] 最終返却: 要求数={want}, 当選数={winners.Count}/{pool.Count}, 継続率={NextChancePercent}%");
         return winners;
     }
+
     /// <summary>
     /// スキルの実行者をunderActerに入れる処理　意思が実際の選別に状況を伴って変換される処理
     /// </summary>
     private void SelectTargetFromWill()
     {
-
         if (Acter.HasRangeWill(SkillZoneTrait.SelfSkill))//セルフスキルなら
         {
             unders.CharaAdd(Acter);//自分を対象者に入れてさっさと終わり
@@ -2021,8 +2062,11 @@ public class BattleManager
 
                             // グループ乱数分（want＝1〜Count）
                             int want = RandomEx.Shared.NextInt(1, selects.Length + 1);
-                            UA.AddRange(SelectByPassiveAndRandom(selects, want));
+                            Debug.Log($"ランダム範囲事故対象者数(パッシブ判定前) : {want}");
+                            var charas = SelectByPassiveAndRandom(selects, want);
+                            UA.AddRange(charas);
                             isAccident = true;
+                            Debug.Log($"ランダム範囲事故対象者数(パッシブ判定後) : {charas.Count}");
                         }
 
                         if(!isAccident)

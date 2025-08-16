@@ -26,6 +26,22 @@ using static TenDayAbilityPosition;
 [Serializable]
 public abstract class BaseStates
 {
+    //UI
+    WatchUIUpdate wui => WatchUIUpdate.Instance;
+    /// <summary>
+    /// 一元化したキャラ用のUIコントローラー
+    /// </summary>
+    public UIController UI { get; private set; }
+    /// <summary>
+    /// それぞれの陣営でUIの生成方法をは違うので、基本クラスの一元化したフィールドに設定する。
+    /// </summary>
+    /// <param name="ui"></param>
+    public void BindUIController(UIController ui)
+    {
+        UI = ui;
+    }
+
+
     /// <summary>
     /// このキャラの種別と一致してるかどうか
     /// </summary>
@@ -157,6 +173,7 @@ public abstract class BaseStates
 
         //自分の十日能力から減らす
         _baseTenDayValues -= DecreaseTenDayValue;
+        Debug.Log($"乖離スキルの影響で、{CharacterName}の十日能力が減少しました。- {DecreaseTenDayValue}:現在値は{_baseTenDayValues}");
     }
 
     /// <summary>
@@ -1308,10 +1325,17 @@ public abstract class BaseStates
     public float b_b_eye = 4f;
     public float b_b_agi = 4f;
 
+    [Header("基本十日能力値テンプレ\n"+"初期設定用のテンプレ値です。実行時はこのテンプレからランタイム用辞書にコピーされます。(設定用クラスからランタイム用クラスにコピーされますする際に)\n"
+    +"ランタイム用の辞書は非シリアライズのため、プレイ中のインスペクタには表示・反映されません、\nつまりい、「ランタイム用クラスにはこのtenDayTempleteは何も表示されないのが正常です。」")]
     /// <summary>
     /// 基本の十日能力値、インスペクタで設定する。
     /// </summary>
     [SerializeField]
+    TenDayAbilityDictionary _tenDayTemplate = new();
+    /// <summary>
+    /// ランタイムで使用する基本十日能力値（インスペクタ非対象）。
+    /// </summary>
+    [NonSerialized]
     TenDayAbilityDictionary _baseTenDayValues = new();
     /// <summary>
     /// 基本十日能力値データ構造への参照を返すメソッド
@@ -1337,10 +1361,21 @@ public abstract class BaseStates
             IsMagicSkill = NowUseSkill.IsMagic;
             IsTLOASkill = NowUseSkill.IsTLOA;
         }
-        var weaponBonus = NowUseWeapon.TenDayBonusData.GetTenDayAbilityDictionary(IsBladeSkill, IsMagicSkill, IsTLOASkill);
+        var weaponBonus = (NowUseWeapon != null)
+            ? NowUseWeapon.TenDayBonusData.GetTenDayAbilityDictionary(IsBladeSkill, IsMagicSkill, IsTLOASkill)
+            : new TenDayAbilityDictionary();
+
+        if(NowUseWeapon == null)
+        {
+            Debug.LogError($"NowUseWeapon is null 武器にデフォルトで設定されるはずのIDが設定されてない。{CharacterName}");
+        }
+        // 素の十日能力（武器ボーナスなし）の合計値を出力
+        //Debug.Log($"{CharacterName}の素の十日能力の合計値:{_baseTenDayValues.Values.Sum()}");
         var result = _baseTenDayValues + weaponBonus;
+        //Debug.Log($"{CharacterName}の武器ボーナスを加えた十日能力の合計値:{result.Values.Sum()}");
         return new ReadOnlyIndexTenDayAbilityDictionary(result);
     }
+
     /// <summary>
     /// ある程度の自信ブーストを記録する辞書
     /// </summary>
@@ -1562,6 +1597,11 @@ public abstract class BaseStates
         //現在の精神属性を構成する十日能力の中で最も大きいものを算出
         float topTenDayValue = 0f;
         Debug.Log($"(スキル成長)精神属性のチェック : {MyImpression},キャラ:{CharacterName}");
+        if(MyImpression == SpiritualProperty.none)
+        {
+            Debug.Log($"キャラクター{CharacterName}の精神属性がnoneなので成長できません。、");
+            return;
+        }
         foreach(var ten in SpritualTenDayAbilitysMap[MyImpression])
         {
             topTenDayValue = TenDayValues(true).GetValueOrZero(ten) > topTenDayValue ? TenDayValues(true).GetValueOrZero(ten) : topTenDayValue;
@@ -1898,6 +1938,7 @@ public abstract class BaseStates
     /// <summary>
     /// 装備中の武器
     /// </summary>
+    [NonSerialized]
     public BaseWeapon NowUseWeapon;
     /// <summary>
     /// 初期所持してる武器のID
@@ -1933,6 +1974,7 @@ public abstract class BaseStates
     /// <summary>
     ///現在のの攻撃ターンで使われる
     /// </summary>
+    [NonSerialized]
     public BaseSkill NowUseSkill;
     /// <summary>
     /// 逃げる選択肢を押したかどうか
@@ -1945,6 +1987,7 @@ public abstract class BaseStates
     /// <summary>
     /// 強制続行中のスキル　nullならその状態でないということ
     /// </summary>
+    [NonSerialized]
     public BaseSkill FreezeUseSkill;
     /// <summary>
     /// 前回使ったスキルの保持
@@ -2218,12 +2261,9 @@ public abstract class BaseStates
     /// とりあえずtrueで設定
     /// </summary>
     public virtual bool IsInterruptCounterActive => true;
-    /// <summary>
-    /// HPバーUI　　敵はスクリプト経由で生成する
-    /// </summary>
-    public CombinedStatesBar HPBar;
 
     //HP
+    CombinedStatesBar HPBar => UI?.HPBar;
     [SerializeField]
     private float _hp;
     public float HP
@@ -5248,16 +5288,29 @@ public abstract class BaseStates
         PassivesPercentageModifier(whatModify.eye, ref eye);//パッシブの乗算補正
         eye += GetSpecialFixedModifier(whatModify.eye);//命中率固定値補正
 
-        //範囲意志によるボーナス
-        foreach (KeyValuePair<SkillZoneTrait, float> entry
-            in NowUseSkill.HitRangePercentageDictionary)//辞書に存在する物全てをループ
+        if(NowUseSkill == null)
         {
-            if (HasRangeWill(entry.Key))//キーの内容が範囲意志と合致した場合
-            {
-                eye += entry.Value;//範囲意志による補正は非十日能力値
+            Debug.LogError("NowUseSkillがnullです");
+        }
 
-                //基本的に範囲は一つだけのはずなので無用なループは避けてここで終了
-                break;
+        //範囲意志によるボーナス
+        var dict = NowUseSkill.HitRangePercentageDictionary;
+        if(dict == null || dict.Count <= 0)
+        {
+            Debug.Log($"{CharacterName}の{NowUseSkill.SkillName}-"
+            +"範囲意志によるボーナスがスキルに設定されていないため計算されませんでした。"
+            +"「範囲意志ボーナスが設定されていないスキルなら正常です。」");
+        }else{
+            foreach (KeyValuePair<SkillZoneTrait, float> entry
+                in NowUseSkill.HitRangePercentageDictionary)//辞書に存在する物全てをループ
+            {
+                if (HasRangeWill(entry.Key))//キーの内容が範囲意志と合致した場合
+                {
+                    eye += entry.Value;//範囲意志による補正は非十日能力値
+
+                    //基本的に範囲は一つだけのはずなので無用なループは避けてここで終了
+                    break;
+                }
             }
         }
 
@@ -7631,7 +7684,7 @@ private int CalcTransformCountIncrement(int tightenStage)
                 imp = skillSpiritual;
                 break;
         }
-        Debug.Log($"スキルの属性解釈 : {skillSpiritual},キャラ:{CharacterName}");
+        Debug.Log($"スキルの属性解釈 : {skillSpiritual},キャラ:{attacker.CharacterName}");
         return imp;
     }
     /// <summary>
@@ -7647,8 +7700,9 @@ private int CalcTransformCountIncrement(int tightenStage)
         var key = (castSkillImp, MyImpression);
         if (!SpiritualModifier.ContainsKey(key))
         {
-            Debug.LogError($"SpiritualModifier辞書にキー {key} が存在しません。castSkillImp={castSkillImp}({(int)castSkillImp}), MyImpression={MyImpression}"
-            + $" 多分スキルの精神属性に入れてなくて、デフォ値の0がスキル精神属性に入ってることによるエラーかも");
+            Debug.LogWarning($"SpiritualModifier辞書にキー {key} が存在しません。攻撃スキルcastSkillImp={castSkillImp}({(int)castSkillImp}), スキルを受ける側MyImpression={MyImpression}。"
+            +"デフォルト値100%を返します。\n(ReactionSkillの攻撃スキルと被害者の精神補正計算中)");
+            return new FixedOrRandomValue(100);
         }
 
         var resultModifier = SpiritualModifier[key];//スキルの精神属性と自分の精神属性による補正
@@ -7657,7 +7711,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             resultModifier.RandomMaxPlus(12);//一致してたら12%程乱数上昇
         }
-
+        Debug.Log($"スキルの精神属性補正 : {resultModifier}({skillImp}, {CharacterName})");
         return resultModifier;
     }
     /// <summary>
@@ -7698,8 +7752,9 @@ private int CalcTransformCountIncrement(int tightenStage)
                 }
             }
         }
-        if(!HitResultSet) hitResult = IsReactHIT(attacker);//ヒット判定が未代入なら通常のヒット判定
+        if(!HitResultSet) hitResult = IsReactHIT(attacker);//善意ヒット判定が未代入なら通常のヒット判定
 
+        Debug.Log($"攻撃スキルヒット判定結果 : {hitResult}({attacker.CharacterName}の{atkSkill.SkillName}の{CharacterName}に対する判定)");
         return hitResult;
     }
     /// <summary>
@@ -7709,7 +7764,9 @@ private int CalcTransformCountIncrement(int tightenStage)
     HitResult MixAllyEvade(HitResult existingHit, BaseStates attacker)
     {
         var allyEvade = AllyEvadeCalculation(attacker);
-        return AllyEvade_HitMixDown(existingHit, allyEvade);
+        var hitresult = AllyEvade_HitMixDown(existingHit, allyEvade);
+        Debug.Log($"味方別口回避結果 : {existingHit} → {hitresult}");
+        return hitresult;
     }
     /// <summary>
     /// 命中結果の合算
@@ -7867,6 +7924,8 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <param name="UnderIndex">攻撃される人の順番　スキルのPowerSpreadの順番に同期している</param>
     public virtual async UniTask<string> ReactionSkill(BaseStates attacker, float spread)
     {
+        Debug.Log($"{attacker.CharacterName}の{attacker.NowUseSkill.SkillName}に対する{CharacterName}のReactionSkillが始まった");
+        Debug.Log($"スキルを受ける{CharacterName}の精神属性 = {MyImpression}:(ReactionSkill)");
         attacker.OnAttackerOneSkillActStart(this);//攻撃者の一人へのスキル実行開始時のコールバック
 
         var skill = attacker.NowUseSkill;
@@ -7878,10 +7937,13 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         var modifierForSkillPower = modifier.GetValue(SpiritualModifierPercentage);//精神補正値
         if(attacker.NowUseWeapon.IsBlade) modifierForSkillPower = 1.0f;//刃物武器なら精神補正なし
+        Debug.Log($"{attacker.CharacterName}の{skill.SkillName}の精神補正率 = {SpiritualModifierPercentage}と精神補正値 = {modifier.GetValue(SpiritualModifierPercentage)}\n-精神補正値の準備終了(ReactionSkill)");
         
         //TLOAスキルならゆりかごされたスキルレベルを参照する(IsTLOAを渡して判断)
         var skillPower = skill.SkillPowerCalc(skill.IsTLOA) * modifierForSkillPower * spread;
         var skillPowerForMental = skill.SkillPowerForMentalCalc(skill.IsTLOA) * modifier.GetValue() * spread;//精神HPへのパワーは精神補正100%
+
+        Debug.Log($"{attacker.CharacterName}の{skill.SkillName}のスキルパワー = {skillPower} ,精神用スキルパワー = {skillPowerForMental}\n-スキルパワーの準備終了(ReactionSkill)");
 
         //メッセージテキスト用
         var txt = "";
@@ -7912,6 +7974,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         
 
         //スキルの持ってる性質を全て処理として実行
+        Debug.Log($"{attacker.CharacterName}の{skill.SkillName}のスキル性質 = {skill.SkillType}(ReactionSkill)");
 
         //Manual1
         if(skill.HasType(SkillType.Manual1_GoodHitCalc))//良い攻撃
@@ -7931,16 +7994,19 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         if (skill.HasType(SkillType.Attack))
         {
+            Debug.Log($"{attacker.CharacterName}の{skill.SkillName}は攻撃タイプスキルで{CharacterName}はそれに対する個別反応を開始(ReactionSkill)");
             var hitResult = ATKTypeSkillReactHitCalc(attacker, skill);
             //味方別口回避の発生と回避判定
             hitResult = MixAllyEvade(hitResult,attacker);
             if (hitResult != HitResult.CompleteEvade)//完全回避以外なら = HITしてるなら
             {
+                Debug.Log($"HITした{attacker.CharacterName}の{CharacterName}に対して{skill.SkillName}がかすり以上");
                 //割り込みカウンターの判定
                 if (skill.NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃されてる途中なら
                 {
                     if(!skill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive))//ターンをまたいだ物じゃないなら
                     {
+                        Debug.Log($"割り込みカウンターの判定{attacker.CharacterName}の{skill.SkillName}に対するもので");
                         thisAtkTurn = !TryInterruptCounter(attacker);//割り込みカウンターの判定
                         if(!thisAtkTurn)
                         {
@@ -7954,6 +8020,7 @@ private int CalcTransformCountIncrement(int tightenStage)
 
                 if(thisAtkTurn)
                 {
+                    Debug.Log($"{attacker.CharacterName}の{skill.SkillName}が{CharacterName}を攻撃した(発動成功)");
                     //防ぎ方の切り替え
                     SwitchDefenceStyle(attacker);
                     //連続攻撃の物理属性ブースト判定
@@ -7970,6 +8037,10 @@ private int CalcTransformCountIncrement(int tightenStage)
                     GoodVitalLayerRemove = result.GoodVitalLayerRemove;
                     BadSkillPassiveHit = result.BadSkillPassiveHit;
                     GoodSkillPassiveRemove = result.GoodSkillPassiveRemove;
+                }
+                else
+                {
+                    Debug.Log($"命中はしたが発動しなかった。{attacker.CharacterName}の{CharacterName}に対して{skill.SkillName}が");
                 }
             }else   
             {
@@ -8109,7 +8180,7 @@ private int CalcTransformCountIncrement(int tightenStage)
 
 
 
-        Debug.Log("ReactionSkill");
+        Debug.Log("ReactionSkillの反応部分終了、最後の処理の記録を開始");
         //攻撃者がヒットしたかどうかをタイプにより記録
         bool isAttackerHit;
         if (skill.HasType(SkillType.Attack))
@@ -10132,16 +10203,21 @@ private int CalcTransformCountIncrement(int tightenStage)
         dst.b_b_def = b_b_def;
         dst.b_b_eye = b_b_eye;
         dst.b_b_agi = b_b_agi;
-        foreach(var tenDay in _baseTenDayValues)
+
+        //十日能力のディープコピー
+        dst._baseTenDayValues = new TenDayAbilityDictionary();
+        foreach(var tenDay in _tenDayTemplate)
         {
+            //Debug.Log($"({CharacterName})ディープコピーで十日能力をコピー。-{tenDay.Key} : {tenDay.Value}");
             dst._baseTenDayValues.Add(tenDay.Key,tenDay.Value);
         }
+        //Debug.Log($"{CharacterName}のコピーした十日能力のリストの数:{dst._baseTenDayValues.Count}");
         dst.CharacterName = CharacterName;
         dst.ImpressionStringName = ImpressionStringName;
         dst.ApplyWeapon(InitWeaponID);//ここで初期武器と戦闘規格を設定
         dst._p = _p;
         dst.maxRecoveryTurn = maxRecoveryTurn;
-        dst.HPBar = HPBar;
+        //dst.UI = UI;//各キャラで扱い方が違うから
         dst._hp = _hp;
         dst._maxhp = _maxhp;
         dst._mentalHP = _mentalHP;
@@ -10155,15 +10231,18 @@ private int CalcTransformCountIncrement(int tightenStage)
         //思えの値現在値をランダム化
         dst.InitializeNowResonanceValue();
 
-        if(DefaultImpression == 0)
+        if(dst.DefaultImpression == 0)
         {
-            Debug.LogError("DefaultImpressionが0です、敵はディープコピー時デフォルトの精神属性が入ります。");
+            //Debug.LogError("DefaultImpressionが0です、敵はディープコピー時デフォルトの精神属性が入ります。");
         }
+        //Debug.Log($"{CharacterName}のDefaultImpression:{dst.DefaultImpression}");
 
-        Debug.Log("BaseStatesディープコピー完了");
+        //Debug.Log(CharacterName + "のBaseStatesディープコピー完了");
         //パワーは初期値　medium allyは歩行で変化　enemyは再遭遇時コールバックで一回だけ歩行変化で判別
         
     }
+
+    
 }
 
 /// <summary>

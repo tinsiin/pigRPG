@@ -42,6 +42,7 @@ public class SkillPassiveReactionCharaAndSkill
 public class BaseSkillPassive
 {
     public string Name;
+    [NonSerialized]
     BaseSkill OwnerSkill;
     /// <summary>
     /// 持続ターン数 -1なら消えない

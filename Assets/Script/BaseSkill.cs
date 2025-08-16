@@ -407,6 +407,7 @@ public class BaseSkill
     /// </summary>
     public PhysicalProperty SkillPhysical;
 
+    [NonSerialized]
     public BaseStates Doer;//行使者
     /// <summary>
     /// スキルの特殊判別性質
@@ -823,21 +824,21 @@ public class BaseSkill
     }
 
     /// <summary>
-    /// 通常設定されたムーブセットA
+    /// 設定用 スキルごとのムーブセット 戦闘規格ごとのaに対応するもの。
     /// </summary>
     [SerializeField]
     List<MoveSet> _a_moveset = new();
     /// <summary>
-    /// スキルごとのムーブセット 戦闘規格ごとのaに対応するもの。
+    /// キャッシュ用(スキルレベルのメモ参照)
     /// </summary>
     List<MoveSet> A_MoveSet_Cash = new();
     /// <summary>
-    /// 通常設定されたムーブセットB
+    /// 設定用 スキルごとのムーブセット 戦闘規格ごとのbに対応するもの。
     /// </summary>
     [SerializeField]
     List<MoveSet> _b_moveset = new();
     /// <summary>
-    /// スキルごとのムーブセット 戦闘規格ごとのbに対応するもの。
+    /// キャッシュ用(スキルレベルのメモ参照)
     /// </summary>
     List<MoveSet> B_MoveSet_Cash=new();
     /// <summary>
@@ -1263,12 +1264,24 @@ public class BaseSkill
         return false;
     }
     /// <summary>
+    /// 単回攻撃かどうか(連続攻撃性がないわけじゃない。(連続攻撃のメモ参照))
+    /// </summary>
+    bool IsSingleHitAtk
+    {
+        get
+        {
+            return _a_moveset.Count <= 0;//movesetのリストが空なら単体攻撃(二回目以降が設定されていないので)
+        }
+    }
+    /// <summary>
     /// 連続攻撃の値を増やす
     /// </summary>
     /// <returns></returns>
     public virtual int ConsecutiveFixedATKCountUP()
     {
         _atkCountUP++;
+        Debug.Log(SkillName +"_atkCountUP++" + _atkCountUP);
+
         return _atkCountUP;
     }
 
@@ -1279,6 +1292,7 @@ public class BaseSkill
     /// </summary>
     public void OnInitialize(BaseStates owner)
     {
+        Debug.Log("スキル" + SkillName + "の初期化" + owner.CharacterName + "をDoerとして記録");
         Doer = owner;//管理者を記録
         ResetStock();//_nowstockは最初は0になってるので、初期化でdefaultstockと同じ数にする。
     }
@@ -1503,7 +1517,7 @@ public class BaseSkill
     /// <returns></returns>
     public AimStyle NowAimStyle()
     {
-        if(!NowConsecutiveATKFromTheSecondTimeOnward())return _nowSingleAimStyle;//初回攻撃なら単体保存した変数を返す
+        if(!NowConsecutiveATKFromTheSecondTimeOnward()||IsSingleHitAtk)return _nowSingleAimStyle;//初回攻撃なら単体保存した変数を返す または単回攻撃でも
 
         return NowMoveSetState.GetAtState(_atkCountUP - 1); 
     }
@@ -1513,6 +1527,7 @@ public class BaseSkill
     /// </summary>
     float NowAimDefATK()
     {
+        //Debug.Log("NowMoveSetState.GetAtDEFATK(_atkCountUP - 1) = " +(_atkCountUP-1));
         return NowMoveSetState.GetAtDEFATK(_atkCountUP - 1); 
         //-1してる理由　ムーブセットListは二回目以降から指定されるので。
         //リストのインデックスでしっかり初回から参照されるように二回目前提として必ず-1をする。
@@ -1527,9 +1542,12 @@ public class BaseSkill
     public float DEFATK{
         get{
             
-            if(NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃中ならば、
+            if(NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃中で、
             {
-                return NowAimDefATK();//連続攻撃に設定されているDEFATKを乗算する
+                if(!IsSingleHitAtk)//単回攻撃でないなら
+                {
+                    return NowAimDefATK();//連続攻撃に設定されているDEFATKを乗算する
+                }
             }
 
             return _defAtk;
@@ -1581,12 +1599,12 @@ public class BaseSkill
     /// またはrandomRangeで範囲が複数分岐した際に使う感じ。
     /// </summary>
     public SerializableDictionary<SkillZoneTrait, float>
-        PowerRangePercentageDictionary;
+        PowerRangePercentageDictionary=new();
     /// <summary>
     /// 命中率のステータスに直接かかるスキルの範囲意志による威力補正
     /// </summary>
     public SerializableDictionary<SkillZoneTrait, float>
-        HitRangePercentageDictionary;
+        HitRangePercentageDictionary=new();
 
 
     [Header("スキルパッシブ設定")]

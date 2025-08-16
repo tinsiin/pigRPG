@@ -63,6 +63,9 @@ public class SchizoLog : MonoBehaviour
     [SerializeField] private bool _enableScrollAnimation = true;
     [SerializeField] private float _scrollAnimationDuration = 0.3f;
     
+    [Header("デバッグログ設定")]
+    [SerializeField] private bool _enableDebugLog = false; // これで全ログのオン/オフを制御
+    
     [Header("UI参照")]
     public TextMeshProUGUI LogText;
     
@@ -134,10 +137,10 @@ public class SchizoLog : MonoBehaviour
         // ブリッジ文節SOの必須チェックのみ
         if (_bridgeCollection == null)
         {
-            Debug.LogError("SchizoLog: LogBridgeCollection が未設定です。インスペクターで _bridgeCollection をアサインしてください。");
+            LogError("SchizoLog: LogBridgeCollection が未設定です。インスペクターで _bridgeCollection をアサインしてください。");
             throw new InvalidOperationException("SchizoLog requires a LogBridgeCollection assigned.");
         }
-        Debug.Log($"SchizoLog: ブリッジ文節数: {_bridgeCollection.BridgePhrases?.Count ?? 0}");
+        Log($"SchizoLog: ブリッジ文節数: {_bridgeCollection.BridgePhrases?.Count ?? 0}");
     }
 
     // テンプレ適用は不要になったため削除
@@ -153,7 +156,7 @@ public class SchizoLog : MonoBehaviour
             var entry = new SchizoLogEntry(sentence, priority, _insertOrderCounter++);
             
             _entries.Add(entry);
-            Debug.Log($"SchizoLog: エントリ追加 - 優先度:{priority}, 文章:{sentence.Substring(0, Math.Min(30, sentence.Length))}...");
+            Log($"SchizoLog: エントリ追加 - 優先度:{priority}, 文章:{sentence.Substring(0, Math.Min(30, sentence.Length))}...");
         }
     }
     
@@ -187,12 +190,12 @@ public class SchizoLog : MonoBehaviour
     {
         if (!IsUIAlive()) return;
         
-        Debug.Log("SchizoLog: DisplayAllAsync 開始");
+        Log("SchizoLog: DisplayAllAsync 開始");
         
         // ===== 割り込み対応 =====
         if (_isDisplaying)
         {
-            Debug.Log("SchizoLog: 表示処理を割り込みキャンセルし、現在の行削除結果を即時反映します");
+            Log("SchizoLog: 表示処理を割り込みキャンセルし、現在の行削除結果を即時反映します");
             // 進行中のアニメーションをキャンセル
             _displayCts?.Cancel();
 
@@ -200,22 +203,22 @@ public class SchizoLog : MonoBehaviour
             if (LogText != null)
             {
                 LogText.maxVisibleCharacters = LogText.text.Length;
-                Debug.Log($"SchizoLog: 割り込み時の現在テキスト長: {LogText.text.Length}");
+                Log($"SchizoLog: 割り込み時の現在テキスト長: {LogText.text.Length}");
             }
 
             // 旧DisplayAllAsyncの終了を待つ（_isDisplaying が false になるまで）
             await UniTask.WaitUntil(() => !_isDisplaying);
         }
         
-        Debug.Log($"SchizoLog: エントリ数: {_entries.Count}");
+        Log($"SchizoLog: エントリ数: {_entries.Count}");
         
         if (_entries.Count == 0)
         {
-            Debug.Log("SchizoLog: 表示するログがありません");
+            Log("SchizoLog: 表示するログがありません");
             return;
         }
         
-        Debug.Log($"SchizoLog: LogText状態 = {(LogText != null ? "OK" : "NULL")}");
+        Log($"SchizoLog: LogText状態 = {(LogText != null ? "OK" : "NULL")}");
         
 
         _displayCts?.Cancel();
@@ -225,7 +228,7 @@ public class SchizoLog : MonoBehaviour
         // 二重呼び出し防止
         if (_isDisplaying)
         {
-            Debug.Log("SchizoLog: 既に表示処理中のため、新しい要求をスキップします");
+            Log("SchizoLog: 既に表示処理中のため、新しい要求をスキップします");
             return;
         }
         
@@ -238,16 +241,16 @@ public class SchizoLog : MonoBehaviour
             {
                 LogText.text = "";
                 LogText.maxVisibleCharacters = 0;
-                Debug.Log("SchizoLog: LogTextをクリアしました");
+                Log("SchizoLog: LogTextをクリアしました");
             }
             else
             {
-                Debug.LogError("SchizoLog: LogTextがNULLです！");
+                LogError("SchizoLog: LogTextがNULLです！");
             }
             
             // エントリを優先度順にソート
             var sortedEntries = _entries.OrderByDescending(e => e.Priority).ThenBy(e => e.InsertOrder).ToList();
-            Debug.Log($"SchizoLog: {sortedEntries.Count}個のエントリをソートしました");
+            Log($"SchizoLog: {sortedEntries.Count}個のエントリをソートしました");
             
             // 既存バッファ長を記録
             int beforeLength = _displayBuffer.Length;
@@ -258,36 +261,36 @@ public class SchizoLog : MonoBehaviour
 
             // 追加された長さ
             int addedLength = afterLength - beforeLength;
-            Debug.Log($"SchizoLog: 追加テキスト長: {addedLength}");
+            Log($"SchizoLog: 追加テキスト長: {addedLength}");
 
             // バッファ全体を最終テキストとしてアニメーション
             string finalText = _displayBuffer.ToString();
-            Debug.Log($"SchizoLog: 最終テキスト長: {finalText.Length}");
+            Log($"SchizoLog: 最終テキスト長: {finalText.Length}");
             
             if (addedLength > 0 && LogText != null)
             {
                 string preview = finalText.Substring(beforeLength, Math.Min(30, addedLength));
-                Debug.Log($"SchizoLog: アニメーション開始 - テキスト(先頭): {preview}...");
+                Log($"SchizoLog: アニメーション開始 - テキスト(先頭): {preview}...");
                 await DisplayTextAsync(finalText, beforeLength, _displayCts.Token);
-                Debug.Log("SchizoLog: アニメーション完了");
+                Log("SchizoLog: アニメーション完了");
             }
             else
             {
-                Debug.LogWarning($"SchizoLog: アニメーションをスキップ - finalText: {finalText?.Length ?? 0}, LogText: {(LogText != null ? "OK" : "NULL")}");
+                LogWarning($"SchizoLog: アニメーションをスキップ - finalText: {finalText?.Length ?? 0}, LogText: {(LogText != null ? "OK" : "NULL")}");
             }
             
             // 表示完了後、エントリをクリア（_displayBufferは保持）
             RemoveProcessedEntries(sortedEntries);  
-            Debug.Log($"SchizoLog: 処理済み {sortedEntries.Count} 件を除去。残:{_entries.Count}");
-            Debug.Log($"SchizoLog: エントリをクリアしました。_displayBufferは保持（長さ: {_displayBuffer.Length}）");
+            Log($"SchizoLog: 処理済み {sortedEntries.Count} 件を除去。残:{_entries.Count}");
+            Log($"SchizoLog: エントリをクリアしました。_displayBufferは保持（長さ: {_displayBuffer.Length}）");
         }
         catch (OperationCanceledException)
         {
-            Debug.Log("SchizoLog: 表示処理がキャンセルされました");
+            Log("SchizoLog: 表示処理がキャンセルされました");
         }
         catch (Exception e)
         {
-            Debug.LogError($"SchizoLog: 表示処理エラー - {e.Message}");
+            LogError($"SchizoLog: 表示処理エラー - {e.Message}");
         }
         finally
         {
@@ -323,24 +326,24 @@ public class SchizoLog : MonoBehaviour
      */
     private string ConvertEntriesToString(List<SchizoLogEntry> entries)
     {
-        Debug.Log($"SchizoLog: ConvertEntriesToString 開始 - entries: {entries?.Count ?? 0}, 既存バッファ長: {_displayBuffer.Length}");
+        Log($"SchizoLog: ConvertEntriesToString 開始 - entries: {entries?.Count ?? 0}, 既存バッファ長: {_displayBuffer.Length}");
         
         if (entries == null || entries.Count == 0)
         {
-            Debug.LogWarning("SchizoLog: エントリが空またはNULLです");
+            LogWarning("SchizoLog: エントリが空またはNULLです");
             return _displayBuffer.ToString(); // 既存内容をそのまま返す
         }
         
         if (LogText == null)
         {
-            Debug.LogError("SchizoLog: LogTextがNULLです");
+            LogError("SchizoLog: LogTextがNULLです");
             return _displayBuffer.ToString();
         }
         
         // 新しいエントリを既存バッファに追加
         for (int i = 0; i < entries.Count; i++)
         {
-            Debug.Log($"SchizoLog: エントリ[{i}] - 優先度:{entries[i].Priority}, 文章:{entries[i].Sentence?.Substring(0, Math.Min(30, entries[i].Sentence?.Length ?? 0))}...");
+            Log($"SchizoLog: エントリ[{i}] - 優先度:{entries[i].Priority}, 文章:{entries[i].Sentence?.Substring(0, Math.Min(30, entries[i].Sentence?.Length ?? 0))}...");
             
             // ブリッジ文節をランダムで追加（既存バッファが空でない場合、または最初のエントリ以外）
             if ((_displayBuffer.Length > 0 || i > 0) && RandomEx.Shared.NextFloat(0f, 1f) < 0.7f)
@@ -349,7 +352,7 @@ public class SchizoLog : MonoBehaviour
                 if (!string.IsNullOrEmpty(bridgePhrase))
                 {
                     _displayBuffer.Append(bridgePhrase);
-                    Debug.Log($"SchizoLog: ブリッジ文節追加: {bridgePhrase}");
+                    Log($"SchizoLog: ブリッジ文節追加: {bridgePhrase}");
                 }
             }
             
@@ -359,18 +362,18 @@ public class SchizoLog : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"SchizoLog: エントリ[{i}]の文章が空です");
+                LogWarning($"SchizoLog: エントリ[{i}]の文章が空です");
             }
         }
         
         string finalText = _displayBuffer.ToString();
-        Debug.Log($"SchizoLog: 最終テキスト長: {finalText.Length}");
+        Log($"SchizoLog: 最終テキスト長: {finalText.Length}");
         
         // 先頭文字デバッグ
         if (finalText.Length > 0)
         {
             string headChars = finalText.Substring(0, Math.Min(5, finalText.Length));
-            Debug.Log($"SchizoLog: 先頭5文字: '{headChars}'");
+            Log($"SchizoLog: 先頭5文字: '{headChars}'");
         }
         
         return finalText;
@@ -381,17 +384,17 @@ public class SchizoLog : MonoBehaviour
     /// </summary>
     private string ApplyLineLimit(string text)
     {
-        Debug.Log($"SchizoLog: ApplyLineLimit 開始 - 入力テキスト長: {text?.Length ?? 0}");
+        Log($"SchizoLog: ApplyLineLimit 開始 - 入力テキスト長: {text?.Length ?? 0}");
         
         if (string.IsNullOrEmpty(text))
         {
-            Debug.LogWarning("SchizoLog: 入力テキストが空です");
+            LogWarning("SchizoLog: 入力テキストが空です");
             return "";
         }
         
         if (LogText == null)
         {
-            Debug.LogError("SchizoLog: LogTextがNULLです");
+            LogError("SchizoLog: LogTextがNULLです");
             return text;
         }
         
@@ -401,19 +404,19 @@ public class SchizoLog : MonoBehaviour
         LogText.ForceMeshUpdate();
         
         int lineCount = LogText.textInfo.lineCount;
-        Debug.Log($"SchizoLog: 計算された行数: {lineCount}, 最大行数: {_maxLines}");
+        Log($"SchizoLog: 計算された行数: {lineCount}, 最大行数: {_maxLines}");
         
         LogText.text = originalText; // 元に戻す
         
         // 行数が制限内ならそのまま返す
         if (lineCount <= _maxLines)
         {
-            Debug.Log($"SchizoLog: 行数制限内です（{lineCount}/{_maxLines}行） - テキストをそのまま返します");
+            Log($"SchizoLog: 行数制限内です（{lineCount}/{_maxLines}行） - テキストをそのまま返します");
             return text;
         }
         
         // 行数が超過している場合、上の行から削除
-        Debug.Log($"SchizoLog: 行数超過（{lineCount}/{_maxLines}行） - 上の行から削除します");
+        Log($"SchizoLog: 行数超過（{lineCount}/{_maxLines}行） - 上の行から削除します");
         return TrimTopLinesToFit(text);
     }
     
@@ -422,11 +425,11 @@ public class SchizoLog : MonoBehaviour
     /// </summary>
     private string TrimTopLinesToFit(string text)
     {
-        Debug.Log($"SchizoLog: TrimTopLinesToFit 開始 - 入力テキスト長: {text?.Length ?? 0}");
+        Log($"SchizoLog: TrimTopLinesToFit 開始 - 入力テキスト長: {text?.Length ?? 0}");
         
         if (LogText == null || string.IsNullOrEmpty(text))
         {
-            Debug.LogWarning("SchizoLog: LogTextがNULLまたはテキストが空です");
+            LogWarning("SchizoLog: LogTextがNULLまたはテキストが空です");
             return text;
         }
         
@@ -435,7 +438,7 @@ public class SchizoLog : MonoBehaviour
         int iteration = 0;
         int deleteStep = Math.Max(1, text.Length / 20); // 初期削除ステップ
         
-        Debug.Log($"SchizoLog: 文字単位削除開始 - 初期ステップ: {deleteStep}文字");
+        Log($"SchizoLog: 文字単位削除開始 - 初期ステップ: {deleteStep}文字");
         
         while (currentText.Length > 0)
         {
@@ -447,14 +450,14 @@ public class SchizoLog : MonoBehaviour
             LogText.ForceMeshUpdate();
             
             int lineCount = LogText.textInfo.lineCount;
-            Debug.Log($"SchizoLog: 反復{iteration} - 文字数: {currentText.Length}, 行数: {lineCount}/{_maxLines}");
+            Log($"SchizoLog: 反復{iteration} - 文字数: {currentText.Length}, 行数: {lineCount}/{_maxLines}");
             
             LogText.text = originalText; // 元に戻す
             
             if (lineCount <= _maxLines)
             {
                 int removedChars = text.Length - currentText.Length;
-                Debug.Log($"SchizoLog: 成功! {removedChars}文字を削除して行数制限内に調整しました（{lineCount}/{_maxLines}行）");
+                Log($"SchizoLog: 成功! {removedChars}文字を削除して行数制限内に調整しました（{lineCount}/{_maxLines}行）");
                 return currentText;
             }
             
@@ -465,24 +468,24 @@ public class SchizoLog : MonoBehaviour
             string deletedPart = currentText.Substring(0, Math.Min(30, charsToDelete));
             currentText = currentText.Substring(charsToDelete);
             
-            Debug.Log($"SchizoLog: {charsToDelete}文字削除: {deletedPart}...");
+            Log($"SchizoLog: {charsToDelete}文字削除: {deletedPart}...");
             
             // 進捗が遅い場合はステップを大きくする
             if (iteration > 10 && iteration % 5 == 0)
             {
                 deleteStep = Math.Max(deleteStep * 2, currentText.Length / 10);
-                Debug.Log($"SchizoLog: 削除ステップを増加: {deleteStep}文字");
+                Log($"SchizoLog: 削除ステップを増加: {deleteStep}文字");
             }
             
             // 無限ループ防止
             if (iteration > 100)
             {
-                Debug.LogError("SchizoLog: TrimTopLinesToFitで無限ループが発生しました");
+                LogError("SchizoLog: TrimTopLinesToFitで無限ループが発生しました");
                 break;
             }
         }
         
-        Debug.LogWarning("SchizoLog: 全ての文字を削除しても行数制限内に収まりませんでした");
+        LogWarning("SchizoLog: 全ての文字を削除しても行数制限内に収まりませんでした");
         return ""; // 全て削除しても収まらない場合
     }
     
@@ -508,7 +511,7 @@ public class SchizoLog : MonoBehaviour
     {
         if (!IsUIAlive()) return;               
 
-        Debug.Log($"SchizoLog: DisplayTextAsync 開始 full:{fullText.Length}  start:{startIndex}");
+        Log($"SchizoLog: DisplayTextAsync 開始 full:{fullText.Length}  start:{startIndex}");
         if (string.IsNullOrEmpty(fullText)) return;
 
         // 既存部分と追加部分に分割
@@ -542,11 +545,11 @@ public class SchizoLog : MonoBehaviour
                 AppendOneChar(newText[i]);
             }
 
-            Debug.Log("SchizoLog: 中断→残り文字を即時描画完了");
+            Log("SchizoLog: 中断→残り文字を即時描画完了");
             // 例外は握りつぶして正常終了扱いにする
         }
 
-        Debug.Log("SchizoLog: DisplayTextAsync 終了");
+        Log("SchizoLog: DisplayTextAsync 終了");
 
         // ---- ローカル関数 ----
         void AppendOneChar(char c)
@@ -578,7 +581,7 @@ public class SchizoLog : MonoBehaviour
         if (!IsUIAlive()) return;
         if (LogText == null || _displayBuffer.Length == 0)
         {
-            Debug.LogWarning("SchizoLog: RemoveTopLineFromDisplayBuffer - LogTextがNULLまたは_displayBufferが空です");
+            LogWarning("SchizoLog: RemoveTopLineFromDisplayBuffer - LogTextがNULLまたは_displayBufferが空です");
             return;
         }
         
@@ -591,14 +594,14 @@ public class SchizoLog : MonoBehaviour
             
             if (LogText.textInfo == null || LogText.textInfo.lineCount == 0)
             {
-                Debug.LogWarning("SchizoLog: textInfoがNULLまたはlineCountが0です");
+                LogWarning("SchizoLog: textInfoがNULLまたはlineCountが0です");
                 return;
             }
             
             // lineInfo配列の境界チェック
             if (LogText.textInfo.lineInfo == null || LogText.textInfo.lineInfo.Length == 0)
             {
-                Debug.LogWarning("SchizoLog: lineInfo配列が空またはNULLです");
+                LogWarning("SchizoLog: lineInfo配列が空またはNULLです");
                 return;
             }
             
@@ -608,7 +611,7 @@ public class SchizoLog : MonoBehaviour
             int lastChar = firstLine.lastCharacterIndex;
             int removeLength = lastChar - firstChar + 1; // 改行を含まない行文字数のみ
             
-            Debug.Log($"SchizoLog: 最上段行削除 - 削除文字数: {removeLength}, 行文字数: {firstLine.characterCount}");
+            Log($"SchizoLog: 最上段行削除 - 削除文字数: {removeLength}, 行文字数: {firstLine.characterCount}");
             
             if (removeLength > 0 && removeLength <= _displayBuffer.Length)
             {
@@ -620,21 +623,21 @@ public class SchizoLog : MonoBehaviour
                 {
                     _displayBuffer.Remove(0, 1);
                 }
-                Debug.Log($"SchizoLog: 削除されたテキスト: '{removedText}...'");
+                Log($"SchizoLog: 削除されたテキスト: '{removedText}...'");
             }
             else
             {
-                Debug.LogWarning($"SchizoLog: 削除長が異常です - removeLength: {removeLength}, _displayBuffer.Length: {_displayBuffer.Length}");
+                LogWarning($"SchizoLog: 削除長が異常です - removeLength: {removeLength}, _displayBuffer.Length: {_displayBuffer.Length}");
             }
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"SchizoLog: RemoveTopLineFromDisplayBufferでエラーが発生しました - {e.Message}");
+            LogError($"SchizoLog: RemoveTopLineFromDisplayBufferでエラーが発生しました - {e.Message}");
             // エラー時は先頭の10文字を強制削除して続行
             if (_displayBuffer.Length > 10)
             {
                 _displayBuffer.Remove(0, 10);
-                Debug.Log("SchizoLog: エラー回避のため先頭10文字を強制削除しました");
+                Log("SchizoLog: エラー回避のため先頭10文字を強制削除しました");
             }
         }
     }
@@ -647,7 +650,7 @@ public class SchizoLog : MonoBehaviour
         if (!IsUIAlive()) return;
         if (LogText == null || builder.Length == 0)
         {
-            Debug.LogWarning("SchizoLog: RemoveTopLineFromBuilder - LogTextがNULLまたはbuilderが空です");
+            LogWarning("SchizoLog: RemoveTopLineFromBuilder - LogTextがNULLまたはbuilderが空です");
             return;
         }
         
@@ -657,7 +660,7 @@ public class SchizoLog : MonoBehaviour
         
         if (LogText.textInfo.lineCount == 0)
         {
-            Debug.LogWarning("SchizoLog: lineCountが0です");
+            LogWarning("SchizoLog: lineCountが0です");
             return;
         }
         
@@ -665,17 +668,17 @@ public class SchizoLog : MonoBehaviour
         var firstLine = LogText.textInfo.lineInfo[0];
         int removeLength = firstLine.lastCharacterIndex + 1; // 改行文字も含める
         
-        Debug.Log($"SchizoLog: 最上段行削除 - 削除文字数: {removeLength}, 行文字数: {firstLine.characterCount}");
+        Log($"SchizoLog: 最上段行削除 - 削除文字数: {removeLength}, 行文字数: {firstLine.characterCount}");
         
         if (removeLength > 0 && removeLength <= builder.Length)
         {
             string removedText = builder.ToString(0, Math.Min(30, removeLength));
             builder.Remove(0, removeLength);
-            Debug.Log($"SchizoLog: 削除されたテキスト: '{removedText}...'");
+            Log($"SchizoLog: 削除されたテキスト: '{removedText}...'");
         }
         else
         {
-            Debug.LogWarning($"SchizoLog: 削除長が異常です - removeLength: {removeLength}, builderLength: {builder.Length}");
+            LogWarning($"SchizoLog: 削除長が異常です - removeLength: {removeLength}, builderLength: {builder.Length}");
         }
     }
     
@@ -697,15 +700,15 @@ public class SchizoLog : MonoBehaviour
     /// </summary>
     private async UniTaskVoid TestLogAnimationAsync()
     {
-        Debug.Log("SchizoLog: TestLogAnimationAsync 開始");
+        Log("SchizoLog: TestLogAnimationAsync 開始");
         
         if (_testSentences == null || _testSentences.Count == 0)
         {
-            Debug.LogWarning("SchizoLog: テスト用文章が設定されていません");
+            LogWarning("SchizoLog: テスト用文章が設定されていません");
             return;
         }
         
-        Debug.Log($"SchizoLog: LogTextの状態 = {(LogText != null ? "OK" : "NULL")}");
+        Log($"SchizoLog: LogTextの状態 = {(LogText != null ? "OK" : "NULL")}");
         
         // 既存のエントリをクリア
         _entries.Clear();
@@ -717,15 +720,15 @@ public class SchizoLog : MonoBehaviour
             var entry = new SchizoLogEntry(_testSentences[i], priority, _insertOrderCounter++);
             _entries.Add(entry);
             
-            Debug.Log($"SchizoLog: エントリ{i}追加 - 優先度:{priority}, 文章:{_testSentences[i].Substring(0, Math.Min(20, _testSentences[i].Length))}...");
+            Log($"SchizoLog: エントリ{i}追加 - 優先度:{priority}, 文章:{_testSentences[i].Substring(0, Math.Min(20, _testSentences[i].Length))}...");
         }
         
-        Debug.Log($"SchizoLog: エントリ総数: {_entries.Count}個");
+        Log($"SchizoLog: エントリ総数: {_entries.Count}個");
         
         // ログを表示
         await DisplayAllAsync();
         
-        Debug.Log("SchizoLog: TestLogAnimationAsync 完了");
+        Log("SchizoLog: TestLogAnimationAsync 完了");
     }
     
     /// <summary>
@@ -736,7 +739,7 @@ public class SchizoLog : MonoBehaviour
     {
         if (_testSentences == null || _testSentences.Count == 0)
         {
-            Debug.LogWarning("SchizoLog: テスト用文章が設定されていません");
+            LogWarning("SchizoLog: テスト用文章が設定されていません");
             return;
         }
         
@@ -747,7 +750,7 @@ public class SchizoLog : MonoBehaviour
         var entry = new SchizoLogEntry(sentence, priority, _insertOrderCounter++);
         _entries.Add(entry);
         
-        Debug.Log($"SchizoLog: 単一エントリ追加 - 優先度:{priority}, 文章:{sentence.Substring(0, Math.Min(30, sentence.Length))}...");
+        Log($"SchizoLog: 単一エントリ追加 - 優先度:{priority}, 文章:{sentence.Substring(0, Math.Min(30, sentence.Length))}...");
     }
     
     /// <summary>
@@ -767,15 +770,15 @@ public class SchizoLog : MonoBehaviour
     {
         if (_entries.Count == 0)
         {
-            Debug.Log("SchizoLog: エントリは空です");
+            Log("SchizoLog: エントリは空です");
         }
         else
         {
-            Debug.Log($"SchizoLog: エントリ数: {_entries.Count}");
+            Log($"SchizoLog: エントリ数: {_entries.Count}");
             for (int i = 0; i < _entries.Count; i++)
             {
                 var entry = _entries[i];
-                Debug.Log($"  [{i}] 優先度:{entry.Priority}, 順序:{entry.InsertOrder}, 文章:{entry.Sentence.Substring(0, Math.Min(50, entry.Sentence.Length))}...");
+                Log($"  [{i}] 優先度:{entry.Priority}, 順序:{entry.InsertOrder}, 文章:{entry.Sentence.Substring(0, Math.Min(50, entry.Sentence.Length))}...");
             }
         }
     }
@@ -794,6 +797,33 @@ public class SchizoLog : MonoBehaviour
             LogText.text = "";
             LogText.maxVisibleCharacters = 0;
         }
-        Debug.Log("SchizoLog: エントリと_displayBufferをクリアしました");
+        Log("SchizoLog: エントリと_displayBufferをクリアしました");
+    }
+
+    // =========================
+    // デバッグログ・ラッパー
+    // =========================
+    private void Log(string message)
+    {
+        if (_enableDebugLog)
+        {
+            Debug.Log(message);
+        }
+    }
+
+    private void LogWarning(string message)
+    {
+        if (_enableDebugLog)
+        {
+            Debug.LogWarning(message);
+        }
+    }
+
+    private void LogError(string message)
+    {
+        if (_enableDebugLog)
+        {
+            Debug.LogError(message);
+        }
     }
 }

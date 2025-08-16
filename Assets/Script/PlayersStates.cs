@@ -18,6 +18,7 @@ public class ButtonAndSkillIDHold
     public int skillID;
     public void AddButtonFunc(UnityAction<int> call)
     {
+        Debug.Log("AddButtonFunc" + skillID);
         button.onClick.AddListener(() => call(skillID));
     }
 }
@@ -130,9 +131,11 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     void ApplySkillButtons()
     {
+        Debug.Log("ApplySkillButtons");
         //ボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
         foreach (var button in skillButtonList_geino)
         {
+            Debug.Log("ApplySkillButtons geino");
             button.AddButtonFunc(geino.OnSkillBtnCallBack);
         }
 
@@ -222,12 +225,9 @@ public class PlayersStates:MonoBehaviour
     private List<ButtonAndSkillIDHold> skillStockButtonList_sites=new();//サテライトの該当のスキルの攻撃ストックボタン用リスト
 
     //前のめり選択が可能なスキル用に選択できるラジオボタン用リスト
-    [SerializeField]
-    private List<RadioButtonsAndSkillIDHold> skillSelectAgressiveCommitRadioList_geino = new();
-    [SerializeField]
-    private List<RadioButtonsAndSkillIDHold> skillSelectAgressiveCommitRadioList_noramlia = new();
-    [SerializeField]
-    private List<RadioButtonsAndSkillIDHold> skillSelectAgressiveCommitRadioList_sites = new();
+    [SerializeField] private List<RadioButtonsAndSkillIDHold> skillSelectAgressiveCommitRadioList_geino = new();
+    [SerializeField] private List<RadioButtonsAndSkillIDHold> skillSelectAgressiveCommitRadioList_noramlia = new();
+    [SerializeField] private List<RadioButtonsAndSkillIDHold> skillSelectAgressiveCommitRadioList_sites = new();
 
     //割り込みカウンターActiveのラジオボタン用リスト
     //スキル依存でないものは直接ToggleGroupControllerを使う。
@@ -604,9 +604,9 @@ public class PlayersStates:MonoBehaviour
 
     void AllyAlliesUISetActive(bool isActive)
     {
-        if (geino?.UIObject != null) geino.UIObject.SetActive(isActive);
-        if (sites?.UIObject != null) sites.UIObject.SetActive(isActive);
-        if (noramlia?.UIObject != null) noramlia.UIObject.SetActive(isActive);
+        if (geino?.UI != null) geino.UI.SetActive(isActive);
+        if (sites?.UI != null) sites.UI.SetActive(isActive);
+        if (noramlia?.UI != null) noramlia.UI.SetActive(isActive);
     }
 
     public BattleGroup GetParty()
@@ -626,14 +626,33 @@ public class PlayersStates:MonoBehaviour
         AllyAlliesUISetActive(false);
         foreach(var chara in playerGroup)
         {
-            if(chara is AllyClass ally)
+            if (chara == null)
             {
-                ally.UIObject.SetActive(true);
-                //HPバーを初期化
-                ally.HPBar.SetBothBarsImmediate(
-                    ally.HP / ally.MaxHP,
-                    ally.MentalHP / ally.MaxHP,
-                    ally.GetMentalDivergenceThreshold());
+                Debug.LogWarning("GetParty: playerGroup に null キャラが含まれています。");
+                continue;
+            }
+
+            if (chara.UI != null)
+            {
+                chara.UI.SetActive(true);
+
+                // HPバーを初期化（存在する場合のみ）
+                var bar = chara.UI.HPBar;
+                if (bar != null)
+                {
+                    bar.SetBothBarsImmediate(
+                        chara.HP / chara.MaxHP,
+                        chara.MentalHP / chara.MaxHP,
+                        chara.GetMentalDivergenceThreshold());
+                }
+                else
+                {
+                    Debug.LogWarning($"GetParty: {chara.CharacterName} の UI.HPBar が未割り当てです。");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"GetParty: {chara.CharacterName} の UI が未割り当てです。");
             }
         }
 
@@ -836,6 +855,18 @@ public class PlayersStates:MonoBehaviour
         EmotionalAttachmentSkillSelectUIArea.CloseEmotionalAttachmentSkillSelectUIArea();//思い入れスキル選択UIが開きっぱなしなら閉じる
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    public void CheckGeinoTenDayValuesCallBack()
+    {
+        Debug.Log($"{geino.CharacterName}の十日能力値:");
+        foreach(var tenDay in geino.BaseTenDayValues)
+        {
+            Debug.Log($"{tenDay.Key}: {tenDay.Value}");
+        }
+    }
+
     //中央決定値など---------------------------------------------------------中央決定値
     /// <summary>
     /// 中央決定値　空洞爆発の値　割り込みカウンター用
@@ -849,7 +880,12 @@ public class PlayersStates:MonoBehaviour
 
 public class AllyClass : BaseStates
 {
-    public GameObject UIObject;
+    /// <summary>
+    /// 主人公キャラはUIコントローラーを直接参照
+    /// </summary>
+    [SerializeField] UIController _uic;
+
+
     /// <summary>
     /// 主人公達の全所持スキルリスト
     /// </summary>
@@ -968,14 +1004,21 @@ public class AllyClass : BaseStates
     {
         //1~4の範囲で合致しきい値が決まる。
         var Threshold = RandomEx.Shared.NextInt(1,5);
+        Debug.Log($"{CharacterName}の今回のデフォルト精神属性の合致しきい値:{Threshold}");
 
         //キャラクターの持つ十日能力を多い順に重み付き抽選リストに入れ、処理をする。
         var AbilityList = new WeightedList<TenDayAbility>();
         //linqで値の多い順にゲット
         foreach(var ability in TenDayValues(false).OrderByDescending(x => x.Value))
         {
-            AbilityList.Add(ability.Key,ability.Value);//キーが十日能力の列挙体　重みの部分に能力の値が入る。
+            // 重みは整数として扱う前提のため、小数は切り上げし、0はスキップ
+            var weight = Mathf.CeilToInt(ability.Value);
+            if (weight > 0)
+            {
+                AbilityList.Add(ability.Key, weight);//キーが十日能力の列挙体　重みの部分に能力の値が入る。
+            }
         }
+        //Debug.Log($"[DecideDefault] {CharacterName} 重み>0 の十日能力数:{AbilityList.Count}");
 
         var SpiritualMatchCounts = new Dictionary<SpiritualProperty,int>()//一時保存用データ
         {
@@ -993,11 +1036,14 @@ public class AllyClass : BaseStates
         TenDayAbility selectedAbility;//重み付き抽選リストから抜き出す"恐らく多い順に"出てくるであろうキャラクターの十日能力変数
         
         //ここからwhileループ
+        var loopCount = 0;
         while(true)
         {
             if(AbilityList.Count <= 0)//十日能力の重み付き抽選リストが空　つまり十日能力がないなら
             {
                 DefaultImpression = SpiritualProperty.none;
+                Debug.Log($"{CharacterName}のDefaultImpressionが決定:{DefaultImpression}\n(十日能力がないため-DecideDefaultMyImpression)");
+                if(loopCount>0)Debug.Log($"十日能力がないわけではなく、尽きるまでにデフォルト精神属性が決まり切らなかったため、noneとなった。\n(DecideDefaultMyImpression)");
                 break;
             }
             AbilityList.RemoveRandom(out selectedAbility);//比較用能力値変数に重み付き抽選リストから消しながら抜き出し
@@ -1008,10 +1054,10 @@ public class AllyClass : BaseStates
             foreach(var map in SpritualTenDayAbilitysMap)
             {
                 //現在回してる互換表の、「十日能力値の必要合致リスト」の添え字に一時保存している各精神属性の合致数を渡し、必要な十日能力を抜き出す。
-                //合致リストの能力と今回の多い順から数えた能力値が合ってるかを比較。
-                if(selectedAbility == map.Value[SpiritualMatchCounts[map.Key]])
+                //順序による厳密一致ではなく、「含まれているか」で合致を判定する。合致リストの能力と今回の多い順から数えた能力値が合ってるかを比較。
+                if (map.Value.Contains(selectedAbility))
                 {
-                    SpiritualMatchCounts[map.Key]++; //合致したら合致数を1増やす
+                    SpiritualMatchCounts[map.Key]++; // 合致したら合致数を1増やす
                 }
             }
 
@@ -1032,8 +1078,10 @@ public class AllyClass : BaseStates
             {
                 //複数ダブっても、どれか一つをランダムで選ぶ
                 DefaultImpression = RandomEx.Shared.GetItem(SpOkList.ToArray());
+                Debug.Log($"{CharacterName}の今回のデフォルト精神属性が決定:{DefaultImpression}");
                 break;
             }
+            loopCount++;
         }
         
 
@@ -1563,7 +1611,11 @@ public class AllyClass : BaseStates
                 break;
         }
     }
-
+    /// <summary>
+    /// AllyClassのディープコピー
+    /// 初期化の処理もawake代わりにここでやろう
+    /// </summary>
+    /// <param name="dst"></param>
     public void DeepCopy(AllyClass dst)
     {
 
@@ -1578,9 +1630,18 @@ public class AllyClass : BaseStates
         }
         dst.ValidSkillIDList = new List<int>(ValidSkillIDList);  //主人公達の初期有効化スキルIDをランタイム用リストにセット
         dst.EmotionalAttachmentSkillID = EmotionalAttachmentSkillID;//思い入れスキルIDをコピー
-        dst.UIObject = UIObject;//参照なのでそのまま渡す
+        //dst._uic = _uic;//参照なのでそのまま渡す 主人公キャラの参照UIオブジェクト
+        if(_uic != null)
+        {
+            dst.BindUIController(_uic);//一元化された基本クラスのフィールドに設定する
+        }
+        if(dst.UI == null)Debug.LogError("UIがnullです");
+        if(dst.UI.arrowGrowAndVanish == null)Debug.LogError("arrowGrowAndVanishがnullです");
+        dst.UI.arrowGrowAndVanish.InitializeArrowByIcon();//主人公はここで矢印画像のアイコンに合わせた初期化をする。
+
         Debug.Log("AllyClassディープコピー完了");
     }
+
 
 }
 

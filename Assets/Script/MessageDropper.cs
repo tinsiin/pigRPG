@@ -15,19 +15,10 @@ public class MessageDropper : MonoBehaviour
     List<MessageBlock> messages;//一括管理用
     RectTransform rect;
 
-    public static MessageDropper Instance { get; private set; }//staticなインスタンス
-
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject); //シーン遷移しても破棄されないようにする。
-
-            rect = GetComponent<RectTransform>();
-            messages = new List<MessageBlock>();
-        }
-        else Destroy(gameObject);//nullじゃないってことは何処かで生成されてるから消す
+        rect = GetComponent<RectTransform>();
+        messages = new List<MessageBlock>();
     }
 
     public void CreateMessage(string txt)

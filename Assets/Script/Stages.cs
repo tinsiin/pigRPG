@@ -5,7 +5,7 @@ using RandomExtensions;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-[CreateAssetMenu]
+
 public class Stages : MonoBehaviour
 {
     //ステージにまつわる物を処理したり呼び出したり(ステージデータベース??
