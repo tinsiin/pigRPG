@@ -286,6 +286,7 @@ public class Stages : MonoBehaviour
             return RandomEx.Shared.NextInt(100) < EscapeRate;
         }
 
+        SchizoLog schizoLog = SchizoLog.Instance;
         /// <summary>
         ///     EnemyCollectManagerを使って敵を選ぶAI　キャラクター属性や種別などを考慮して選ぶ。
         ///     エンカウント失敗したら、nullを返す
@@ -306,6 +307,7 @@ public class Stages : MonoBehaviour
             {
                 if(!ene.Death())
                 {
+                    Debug.Log($"敵キャラが生きているから追加(enemyColllecAI){ene.CharacterName}");
                     validEnemies.Add(ene);//生きてたら追加
                     continue;
                 }
@@ -314,6 +316,7 @@ public class Stages : MonoBehaviour
                 if(ene.Reborn)//敵が復活可能タイプなら
                 if(ene.CanRebornWhatHeWill(PlayersStates.Instance.NowProgress))//復活判定をして復活可能なら
                 {
+                    Debug.Log($"敵キャラが復活可能だから追加(enemyColllecAI){ene.CharacterName}");
                     validEnemies.Add(ene);//追加
                 }
             }
@@ -326,8 +329,11 @@ public class Stages : MonoBehaviour
             //有効リストが空だった場合
             if (!validEnemies.Any())
             {
-                Debug.LogWarning("EnemyCollectAI: エリアに有効な敵が存在しません。");
+                Debug.Log("EnemyCollectAI: エリアに有効な敵が存在しません。");
                 return null; // または適切なデフォルト値を返す
+            }else
+            {
+                Debug.Log($"EnemyCollectAI: エリアに有効な敵が存在します。{validEnemies.Count}個");
             }
 
             //最初の一人はランダムで選ぶ

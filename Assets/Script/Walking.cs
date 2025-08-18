@@ -151,7 +151,7 @@ public class Walking : MonoBehaviour
         StageDataUpdate();
 
         //主人公達の歩行時の処理
-        ps.PlayersOnWalks(1);//footnumber関係なしに一歩分の効果
+        ps.PlayersOnWalks(1);//footnumber関係なしに一歩分の効果(テスト用)
 
         //エンカウント
         Encount();

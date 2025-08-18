@@ -73,7 +73,7 @@ public abstract class BaseStates
     /// <summary>
     /// アクション事のスキルデータ AttackChara単位で記録　= スキル一回に対して
     /// </summary>
-    public List<ActionSkillData> DidActionSkillDatas;
+    public List<ActionSkillData> DidActionSkillDatas = new();
     /// <summary>
     /// bm内にスキル実行した回数。
     /// </summary>
@@ -1417,7 +1417,7 @@ public abstract class BaseStates
     /// <summary>
     /// 十日能力成長値を勝利ブースト用に記録する
     /// </summary>
-    protected TenDayAbilityDictionary battleGain;
+    protected TenDayAbilityDictionary battleGain = new();
     /// <summary>
     /// 勝利時の強さの比率から成長倍率を計算する
     /// </summary>
@@ -1485,10 +1485,12 @@ public abstract class BaseStates
         // 勝利時の強さの比率から成長倍率を計算する
         var multiplier = CalculateVictoryBoostMultiplier(ratio);
 
-        foreach (var kv in battleGain)
+        // 一時的なリストにキーをコピーしてから処理
+        var abilities = battleGain.Keys.ToList();
+
+        foreach (var ability in abilities)
         {
-            var ability = kv.Key;
-            float totalGained = kv.Value; // 戦闘中に合計で上がった量
+            float totalGained = battleGain[ability]; // 戦闘中に合計で上がった量
             float extra = totalGained * (multiplier - 1f);//リアルタイムで加算済みなので倍率から1減らす
             
             // 追加で足す
@@ -2317,7 +2319,7 @@ public abstract class BaseStates
             else _mentalHP = value;
             if(HPBar != null)
             {
-                HPBar.MentalRatio = value / MentalMaxHP;//精神HPを設定
+                HPBar.MentalRatio = value / MaxHP;//精神HPを設定
                 HPBar.DivergenceMultiplier = GetMentalDivergenceThreshold();//UIの乖離指標の幅を設定
             }
         }
@@ -5288,44 +5290,44 @@ public abstract class BaseStates
         PassivesPercentageModifier(whatModify.eye, ref eye);//パッシブの乗算補正
         eye += GetSpecialFixedModifier(whatModify.eye);//命中率固定値補正
 
-        if(NowUseSkill == null)
+        if(NowUseSkill != null)//スキルがある、攻撃時限定処理
         {
-            Debug.LogError("NowUseSkillがnullです");
-        }
-
-        //範囲意志によるボーナス
-        var dict = NowUseSkill.HitRangePercentageDictionary;
-        if(dict == null || dict.Count <= 0)
-        {
-            Debug.Log($"{CharacterName}の{NowUseSkill.SkillName}-"
-            +"範囲意志によるボーナスがスキルに設定されていないため計算されませんでした。"
-            +"「範囲意志ボーナスが設定されていないスキルなら正常です。」");
-        }else{
-            foreach (KeyValuePair<SkillZoneTrait, float> entry
-                in NowUseSkill.HitRangePercentageDictionary)//辞書に存在する物全てをループ
+            //範囲意志によるボーナス
+            var dict = NowUseSkill.HitRangePercentageDictionary;
+            if(dict == null || dict.Count <= 0)
             {
-                if (HasRangeWill(entry.Key))//キーの内容が範囲意志と合致した場合
+                Debug.Log($"{CharacterName}の{NowUseSkill.SkillName}-"
+                +"範囲意志によるボーナスがスキルに設定されていないため計算されませんでした。"
+                +"「範囲意志ボーナスが設定されていないスキルなら正常です。」");
+            }else{
+                foreach (KeyValuePair<SkillZoneTrait, float> entry
+                    in NowUseSkill.HitRangePercentageDictionary)//辞書に存在する物全てをループ
                 {
-                    eye += entry.Value;//範囲意志による補正は非十日能力値
+                    if (HasRangeWill(entry.Key))//キーの内容が範囲意志と合致した場合
+                    {
+                        eye += entry.Value;//範囲意志による補正は非十日能力値
 
-                    //基本的に範囲は一つだけのはずなので無用なループは避けてここで終了
-                    break;
+                        //基本的に範囲は一つだけのはずなので無用なループは避けてここで終了
+                        break;
+                    }
                 }
             }
+
+                    //単体攻撃による命中補正
+            //複数性質を持っていない、完全なる単体の攻撃なら
+            if (IsPerfectSingleATK())
+            //ControlBySituationでの事故性質でも複数性質で複数事故が起こるかもしれないので、それも加味してる。
+            {
+                var agiPer = 6;//攻撃者のAgiの命中補正用 割る数
+                if (NowUseSkill.SkillPhysical == PhysicalProperty.heavy)//暴断攻撃なら
+                {
+                    agiPer *= 2;//割る数が二倍に
+                }
+                eye += AGI() / agiPer;
+            }
+
         }
 
-        //単体攻撃による命中補正
-        //複数性質を持っていない、完全なる単体の攻撃なら
-        if (IsPerfectSingleATK())
-        //ControlBySituationでの事故性質でも複数性質で複数事故が起こるかもしれないので、それも加味してる。
-        {
-            var agiPer = 6;//攻撃者のAgiの命中補正用 割る数
-            if (NowUseSkill.SkillPhysical == PhysicalProperty.heavy)//暴断攻撃なら
-            {
-                agiPer *= 2;//割る数が二倍に
-            }
-            eye += AGI() / agiPer;
-        }
 
         //パッシブの補正　固定値
         eye += _passiveList.Sum(p => p.EYEFixedValueEffect());
@@ -6276,7 +6278,7 @@ public abstract class BaseStates
         HP -= totalDmg;
         CantKillSkillClamp(Atker,skill);//殺せない系再代入クランプ処理
         Debug.Log("攻撃が実行された");
-        schizoLog.AddLog(Atker.CharacterName + "が" + this.CharacterName + "を攻撃した-" + totalDmg + "ダメージを与えた");
+        schizoLog.AddLog(Atker.CharacterName + "が" + this.CharacterName + "を攻撃した-「" + totalDmg + "」ダメージを与えた");
 
         //攻撃者がダメージを殺すまでに与えたダメージ辞書に記録する
         Atker.RecordDamageDealtToEnemyUntilKill(dmg.Total,this);
@@ -6974,6 +6976,7 @@ public abstract class BaseStates
     /// </summary>
     private HitResult IsReactHIT(BaseStates Attacker)
     {
+        schizoLog.AddLog("IsReactHITが呼ばれた",true);
         var skill = Attacker.NowUseSkill;
         var minusMyChance = 0f;
         var minimumHitChancePer = CalcMinimumHitChancePer(Attacker,this);//ミニマムヒットチャンスの発生確率
@@ -7004,10 +7007,12 @@ public abstract class BaseStates
                 if(RandomEx.Shared.NextFloat(2) < 1)
                 {
                     minimumHitChanceResult = HitResult.Critical;
+                    schizoLog.AddLog("ミニマムヒットチャンスの確率計算-クリティカル",true);
                 }
                 else
                 {
                     minimumHitChanceResult = HitResult.Graze;
+                    schizoLog.AddLog("ミニマムヒットチャンスの確率計算-かすり",true);
                 }
             }else
             {//残り三分の二で、ステータス比較の計算
@@ -7032,15 +7037,18 @@ public abstract class BaseStates
                 if(RandomEx.Shared.NextFloat(effectiveAtkerCalc + effectiveDefCalc) < effectiveAtkerCalc)
                 {
                     minimumHitChanceResult = HitResult.Critical;//攻撃者側のステータスが乱数で出たなら、クリティカル
+                    schizoLog.AddLog("ミニマムヒットチャンスのステータス比較計算-クリティカル",true);
                 }
                 else
                 {
                     minimumHitChanceResult = HitResult.Graze;//そうでなければかすり
+                    schizoLog.AddLog("ミニマムヒットチャンスのステータス比較計算-かすり",true);
                 }
             }
         }
 
-        //術者の命中+僕の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
+        //術者の命中+被害者の自分の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
+        schizoLog.AddLog(Attacker.CharacterName + "の命中率:" + Attacker.EYE().Total +CharacterName + "の回避率:" + EvasionRate(AGI().Total,Attacker),true);
         if (RandomEx.Shared.NextFloat(Attacker.EYE().Total + EvasionRate(AGI().Total,Attacker)) < Attacker.EYE().Total - minusMyChance || minimumHitChanceResult != HitResult.CompleteEvade)
         {
             var hitResult = minimumHitChanceResult;//ミニマムヒット前提でヒット結果変数に代入
@@ -7048,8 +7056,9 @@ public abstract class BaseStates
             if(minimumHitChanceResult == HitResult.CompleteEvade)
             {
                 hitResult = HitResult.Hit;//スキル命中に渡すヒット結果に通常のHitを代入
+                schizoLog.AddLog("IsReactHit-Hit",true);
             }
-
+            schizoLog.AddLog($"通常Hitにより更なるスキル命中計算を実行",true);
             //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
             return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult);
         }
@@ -7752,7 +7761,11 @@ private int CalcTransformCountIncrement(int tightenStage)
                 }
             }
         }
-        if(!HitResultSet) hitResult = IsReactHIT(attacker);//善意ヒット判定が未代入なら通常のヒット判定
+        if(!HitResultSet)
+        {
+            schizoLog.AddLog($"攻撃スキルヒット判定でisreactHitが呼ばれた。",true);
+            hitResult = IsReactHIT(attacker);//善意ヒット判定が未代入なら通常のヒット判定
+        }
 
         Debug.Log($"攻撃スキルヒット判定結果 : {hitResult}({attacker.CharacterName}の{atkSkill.SkillName}の{CharacterName}に対する判定)");
         return hitResult;
@@ -7889,13 +7902,31 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             AllyOrEnemy = allyOrEnemy.alliy;
         };
-        //パッシブ付与バッファーリストにリストを渡す。
-        NowUseSkill.SetBufferSubEffects(new List<int>(ExtraPassivesIdOnSkillACT(AllyOrEnemy)));
+        // 追加付与パッシブIDの取得（null 安全）
+        var baseExtra = ExtraPassivesIdOnSkillACT(AllyOrEnemy);
+        var extraList = baseExtra != null ? new List<int>(baseExtra) : new List<int>();
 
-        //もし実行スキルが付与スキル性質を持っていなかったら、
-        if(!NowUseSkill.HasType(SkillType.addPassive))
+        if (extraList.Count > 0)
         {
-            NowUseSkill.SetBufferSkillType(SkillType.addPassive);//一時的に付与。
+            // パッシブ付与バッファーリストにリストを渡す（1件以上ある場合のみ）
+            NowUseSkill.SetBufferSubEffects(extraList);
+
+            // もし実行スキルが付与スキル性質を持っていなかったら、一時的に付与
+            if (!NowUseSkill.HasType(SkillType.addPassive))
+            {
+                NowUseSkill.SetBufferSkillType(SkillType.addPassive);
+            }
+        }
+        else
+        {
+            if (NowUseSkill == null)
+            {
+                Debug.LogError("NowUseSkill is null");
+                return;
+            }
+            // 念のためクリア（前回ターゲットで付与されていた可能性に備える）
+            NowUseSkill.EraseBufferSubEffects();
+            // SkillType バッファはこの時点では付与していないため基本不要だが、保全で未使用時は触らない
         }
     }
     /// <summary>
@@ -7924,6 +7955,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <param name="UnderIndex">攻撃される人の順番　スキルのPowerSpreadの順番に同期している</param>
     public virtual async UniTask<string> ReactionSkill(BaseStates attacker, float spread)
     {
+        schizoLog.AddLog($"-ReactionSkill",true);
         Debug.Log($"{attacker.CharacterName}の{attacker.NowUseSkill.SkillName}に対する{CharacterName}のReactionSkillが始まった");
         Debug.Log($"スキルを受ける{CharacterName}の精神属性 = {MyImpression}:(ReactionSkill)");
         attacker.OnAttackerOneSkillActStart(this);//攻撃者の一人へのスキル実行開始時のコールバック
@@ -8049,6 +8081,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
         else//atktypeがないと各自で判定
         {
+            //schizoLog.AddLog($"攻撃以外のスキルヒット判定の為にでisreactHitが呼ばれた。",true);
             var hitResult = IsReactHIT(attacker);
             //味方別口回避の発生と回避判定
             hitResult = MixAllyEvade(hitResult,attacker);
@@ -8320,7 +8353,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             var ene = Unders.GetAtCharacter(i);
             ApplyCharaConditionalToSpecial(ene);//キャラ限定補正を通常の特別補正リストに追加　キャラが合ってればね
-
+            schizoLog.AddLog($"{ene.CharacterName}のReactionSkillが始まった-Undersのカウント数:{Unders.Count}",true);
             txt += await ene.ReactionSkill(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
         }
 
@@ -8387,6 +8420,13 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     public bool GetIsSkillDivergence()
     {
+        if(DefaultImpression == SpiritualProperty.none) 
+        {
+            Debug.Log($"{CharacterName}の{NowUseSkill.SkillName}-"
+            +"「DefaultImpressionがnoneなら乖離判定は行われません。」none精神属性互換の十日能力とかないからね");
+            return false;
+        }
+
         //判定するスキル印象構造の種類数を取得  1クランプする。
         var NeedJudgementSkillTenDayCount = Mathf.Max(1, (int)(NowUseSkill.TenDayValues().Count * 0.8 -1));
 

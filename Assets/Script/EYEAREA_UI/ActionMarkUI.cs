@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 /// <summary>
 /// 2つの色の間を一定間隔で変化し続ける四角形のUIコンポーネント。
@@ -21,8 +22,15 @@ public class ActionMarkUI : MaskableGraphic
     [SerializeField] bool m_AutoStart = true;       // 自動開始
     [SerializeField] AnimationCurve m_InterpolationCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f); // 補間カーブ
     
+    [Header("移動/サイズ追従設定")]
+    [SerializeField] bool m_EnableMoveAnimation = true; // マークの移動アニメーション有効
+    [SerializeField] float m_MoveDuration = 0.35f;      // 移動/サイズ補間の所要時間
+    [SerializeField] AnimationCurve m_MoveCurve = AnimationCurve.EaseInOut(0, 0, 1, 1); // 移動/サイズの補間カーブ
+    [SerializeField] float m_SizeMultiplier = 1.16f;    // 対象アイコンサイズに対する倍率
+    
     private float m_Timer = 0f;
     private bool m_IsAnimating = false;
+    private Coroutine m_MoveRoutine;
     
     #region Public API
     /// <summary>
@@ -131,11 +139,80 @@ public class ActionMarkUI : MaskableGraphic
     {
         m_Timer = 0f;
     }
+
+    /// <summary>
+    /// 指定したRectTransformの中心へ移動し、サイズも倍率に応じて追従する。
+    /// immediateがtrueの場合は即座にスナップ。
+    /// </summary>
+    /// <param name="target">対象のRectTransform（アイコンなど）</param>
+    /// <param name="immediate">即時反映するか</param>
+    public void MoveToTarget(RectTransform target, bool immediate = false)
+    {
+        if (target == null)
+        {
+            if (m_MoveRoutine != null) { StopCoroutine(m_MoveRoutine); m_MoveRoutine = null; }
+            return;
+        }
+
+        EnsureCenteredPivotAndAnchors();
+
+        // 目標位置（マークの親のローカル座標に変換された中心点）
+        var parentRT = rectTransform.parent as RectTransform;
+        if (parentRT == null)
+        {
+            // 親がRectTransformでない場合はローカル変換でフォールバック
+            Vector2 fallbackLocal = rectTransform.InverseTransformPoint(target.TransformPoint(target.rect.center));
+            ApplyMoveAndSize(fallbackLocal, target.rect.size * m_SizeMultiplier, immediate);
+            return;
+        }
+
+        Vector3 targetWorldCenter = target.TransformPoint(target.rect.center);
+        Vector2 targetLocalCenter = parentRT.InverseTransformPoint(targetWorldCenter);
+        Vector2 targetSize = target.rect.size * m_SizeMultiplier;
+
+        ApplyMoveAndSize(targetLocalCenter, targetSize, immediate);
+    }
+
+    /// <summary>
+    /// 指定したRectTransformの中心へ移動し、サイズも倍率に応じて追従する。
+    /// extraScaleでターゲットの見かけ上のスケール差を補正する。
+    /// immediateがtrueの場合は即座にスナップ。
+    /// </summary>
+    /// <param name="target">対象のRectTransform（アイコンなど）</param>
+    /// <param name="extraScale">親階層ズーム差などを補う追加スケール（target相対）</param>
+    /// <param name="immediate">即時反映するか</param>
+    public void MoveToTargetWithScale(RectTransform target, Vector2 extraScale, bool immediate = false)
+    {
+        if (target == null)
+        {
+            if (m_MoveRoutine != null) { StopCoroutine(m_MoveRoutine); m_MoveRoutine = null; }
+            return;
+        }
+
+        EnsureCenteredPivotAndAnchors();
+
+        var parentRT = rectTransform.parent as RectTransform;
+        if (parentRT == null)
+        {
+            Vector2 fallbackLocal = rectTransform.InverseTransformPoint(target.TransformPoint(target.rect.center));
+            Vector2 size = Vector2.Scale(target.rect.size * m_SizeMultiplier, extraScale);
+            ApplyMoveAndSize(fallbackLocal, size, immediate);
+            return;
+        }
+
+        Vector3 targetWorldCenter = target.TransformPoint(target.rect.center);
+        Vector2 targetLocalCenter = parentRT.InverseTransformPoint(targetWorldCenter);
+        Vector2 targetSize = Vector2.Scale(target.rect.size * m_SizeMultiplier, extraScale);
+
+        ApplyMoveAndSize(targetLocalCenter, targetSize, immediate);
+    }
     #endregion
     
     protected override void Start()
     {
         base.Start();
+        EnsureCenteredPivotAndAnchors();
+        UpdateRectTransformSize();
         if (m_AutoStart)
         {
             StartAnimation();
@@ -148,6 +225,9 @@ public class ActionMarkUI : MaskableGraphic
         m_Width = Mathf.Max(0f, m_Width);
         m_Height = Mathf.Max(0f, m_Height);
         m_ChangeSpeed = Mathf.Max(0.01f, m_ChangeSpeed);
+        m_MoveDuration = Mathf.Max(0.0f, m_MoveDuration);
+        m_SizeMultiplier = Mathf.Max(0.0f, m_SizeMultiplier);
+        EnsureCenteredPivotAndAnchors();
         UpdateRectTransformSize();
         SetVerticesDirty();
     }
@@ -189,6 +269,66 @@ public class ActionMarkUI : MaskableGraphic
         {
             rectTransform.sizeDelta = new Vector2(m_Width, m_Height);
         }
+    }
+
+    /// <summary>
+    /// アンカー/ピボットを中央に固定（座標計算の安定化）
+    /// </summary>
+    private void EnsureCenteredPivotAndAnchors()
+    {
+        if (rectTransform == null) return;
+        rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+    }
+
+    /// <summary>
+    /// 目標座標・サイズへ移動/補間する内部処理
+    /// </summary>
+    private void ApplyMoveAndSize(Vector2 targetLocalPos, Vector2 targetSize, bool immediate)
+    {
+        if (immediate || !m_EnableMoveAnimation || m_MoveDuration <= 0f)
+        {
+            rectTransform.anchoredPosition = targetLocalPos;
+            SetSize(targetSize.x, targetSize.y);
+            return;
+        }
+
+        if (m_MoveRoutine != null)
+        {
+            StopCoroutine(m_MoveRoutine);
+            m_MoveRoutine = null;
+        }
+        m_MoveRoutine = StartCoroutine(AnimateMoveAndSize(targetLocalPos, targetSize, m_MoveDuration, m_MoveCurve));
+    }
+
+    /// <summary>
+    /// 移動とサイズの同時補間コルーチン（割り込み可能）
+    /// </summary>
+    private IEnumerator AnimateMoveAndSize(Vector2 targetLocalPos, Vector2 targetSize, float duration, AnimationCurve curve)
+    {
+        Vector2 startPos = rectTransform.anchoredPosition;
+        Vector2 startSize = new Vector2(m_Width, m_Height);
+        float t = 0f;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            float u = (duration > 0f) ? Mathf.Clamp01(t / duration) : 1f;
+            float e = (curve != null) ? curve.Evaluate(u) : u;
+
+            var pos = Vector2.LerpUnclamped(startPos, targetLocalPos, e);
+            var size = Vector2.LerpUnclamped(startSize, targetSize, e);
+
+            rectTransform.anchoredPosition = pos;
+            SetSize(size.x, size.y);
+
+            yield return null;
+        }
+
+        rectTransform.anchoredPosition = targetLocalPos;
+        SetSize(targetSize.x, targetSize.y);
+        m_MoveRoutine = null;
     }
     
     protected override void OnPopulateMesh(VertexHelper vh)

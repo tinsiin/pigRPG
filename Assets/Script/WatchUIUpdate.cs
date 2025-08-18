@@ -59,6 +59,11 @@ public class WatchUIUpdate : MonoBehaviour
     [SerializeField] private Transform allyBattleLayer;      // 味方アイコンレイヤー（独立アニメーション）
     [SerializeField] private Transform fixedUILayer;         // 固定UIレイヤー（ズーム対象外）
 
+    // アクションマーク（行動順マーカー）
+    [Header("ActionMark 設定")]
+    [SerializeField] private ActionMarkUI actionMark;        // 行動対象のアイコン背面に移動させるマーカー
+    [SerializeField] private RectTransform actionMarkSpawnPoint; // ActionMarkを最初に出す基準位置（中心）
+
     // HPバーサイズ設定
     [Header("敵HPバー設定")]
     [SerializeField] private Vector2 hpBarSizeRatio = new Vector2(1.0f, 0.15f); // x: バー幅/アイコン幅, y: バー高/アイコン幅
@@ -101,6 +106,12 @@ public class WatchUIUpdate : MonoBehaviour
         LiveSideObjects = new List<SideObjectMove>[2];//生きているサイドオブジェクトのリスト
         LiveSideObjects[0] = new List<SideObjectMove>();//左右二つ分
         LiveSideObjects[1] = new List<SideObjectMove>();
+
+        // 起動時はアクションマークを非表示にしておく
+        if (actionMark != null)
+        {
+            actionMark.gameObject.SetActive(false);
+        }
     }
 
     RectTransform _rect;
@@ -148,6 +159,7 @@ public class WatchUIUpdate : MonoBehaviour
     /// </summary>
     private async UniTask ZoomBackgroundAndEnemies()
     {
+        _isZoomAnimating = true;
         var tasks = new List<UniTask>();
         
         Debug.Log($"複数コンテナズーム開始: 目標スケール={_gotoScaleXY}, 目標位置={_gotoPos}");
@@ -226,6 +238,7 @@ public class WatchUIUpdate : MonoBehaviour
         {
             Debug.LogWarning("ズーム対象コンテナが設定されていません。zoomBackContainer/zoomFrontContainerを設定してください。");
         }
+        _isZoomAnimating = false;
     }
     
     /// <summary>
@@ -284,7 +297,7 @@ public class WatchUIUpdate : MonoBehaviour
     }
     
     /// <summary>
-    /// ズーム前の状態に戻す
+    /// ズーム前の状態に戻す 引数で速度指定
     /// </summary>
     public async UniTask RestoreOriginalTransforms(float duration = 1.0f)
     {
@@ -349,6 +362,205 @@ public class WatchUIUpdate : MonoBehaviour
         }
     }
 
+    public void EraceEnemyUI()
+    {
+        var parent = enemyBattleLayer;
+        int childCount = parent.childCount;
+        for (int i = childCount - 1; i >= 0; i--)
+        {
+            // エディタ上かどうかで処理を分岐
+            #if UNITY_EDITOR
+            if (!Application.isPlaying)
+                DestroyImmediate(parent.GetChild(i).gameObject);
+            else
+            #endif
+                Destroy(parent.GetChild(i).gameObject);
+        }   
+    }
+    
+    /// <summary>
+    /// アクションマークを指定アイコンの中心へ移動（サイズは自動追従）
+    /// </summary>
+    /// <param name="targetIcon">対象アイコンのRectTransform</param>
+    /// <param name="immediate">即時反映（アニメーションなし）</param>
+    public void MoveActionMarkToIcon(RectTransform targetIcon, bool immediate = false)
+    {
+        if (actionMark == null)
+        {
+            Debug.LogWarning("ActionMarkUI が未設定です。WatchUIUpdate の Inspector で actionMark を割り当ててください。");
+            return;
+        }
+        if (targetIcon == null)
+        {
+            Debug.LogWarning("MoveActionMarkToIcon: targetIcon が null です。");
+            return;
+        }
+
+        actionMark.MoveToTarget(targetIcon, immediate);
+    }
+
+    /// <summary>
+    /// スケール補正付きでアイコンへ移動（ズーム/スライドの見かけスケール差を補正）
+    /// </summary>
+    public void MoveActionMarkToIconScaled(RectTransform targetIcon, bool immediate = false)
+    {
+        if (actionMark == null || targetIcon == null)
+        {
+            Debug.LogWarning("MoveActionMarkToIconScaled: 必要参照が不足しています。");
+            return;
+        }
+        var extraScale = ComputeScaleRatioForTarget(targetIcon);
+        actionMark.MoveToTargetWithScale(targetIcon, extraScale, immediate);
+    }
+
+    /// <summary>
+    /// アクションマークを指定アクター（BaseStates）のUIアイコンへ移動
+    /// </summary>
+    /// <param name="actor">BaseStates 派生のアクター</param>
+    /// <param name="immediate">即時反映（アニメーションなし）</param>
+    public void MoveActionMarkToActor(BaseStates actor, bool immediate = false)
+    {
+        if (actor == null)
+        {
+            Debug.LogWarning("MoveActionMarkToActor: actor が null です。");
+            return;
+        }
+
+        var ui = actor.UI;
+        if (ui == null)
+        {
+            Debug.LogWarning($"MoveActionMarkToActor: actor.UI が null です。actor={actor.GetType().Name}");
+            return;
+        }
+
+        var img = ui.Icon;
+        if (img == null)
+        {
+            Debug.LogWarning($"MoveActionMarkToActor: UI.Icon が null です。actor={actor.GetType().Name}");
+            return;
+        }
+
+        var iconRT = img.transform as RectTransform;
+        MoveActionMarkToIcon(iconRT, immediate);
+    }
+
+    /// <summary>
+    /// ズーム/スライド完了を待ってから、スケール補正付きでアクションマークを移動
+    /// </summary>
+    public async UniTask MoveActionMarkToActorScaled(BaseStates actor, bool immediate = false, bool waitAnimations = true)
+    {
+        if (actor == null)
+        {
+            Debug.LogWarning("MoveActionMarkToActorScaled: actor が null です。");
+            return;
+        }
+        var ui = actor.UI;
+        if (ui?.Icon == null)
+        {
+            Debug.LogWarning($"MoveActionMarkToActorScaled: UI.Icon が null です。actor={actor.GetType().Name}");
+            return;
+        }
+        if (waitAnimations)
+        {
+            await WaitBattleIntroAnimations();
+        }
+        var iconRT = ui.Icon.transform as RectTransform;
+        MoveActionMarkToIconScaled(iconRT, immediate);
+    }
+
+    /// <summary>
+    /// target(アイコン)の見かけスケールと、ActionMark親の見かけスケールの比率を返す
+    /// </summary>
+    private Vector2 ComputeScaleRatioForTarget(RectTransform target)
+    {
+        var parentRT = actionMark?.rectTransform?.parent as RectTransform;
+        if (target == null)
+            return Vector2.one;
+        var sTarget = GetWorldScaleXY(target);
+        var sParent = parentRT != null ? GetWorldScaleXY(parentRT) : Vector2.one;
+        float sx = (Mathf.Abs(sParent.x) > 1e-5f) ? sTarget.x / sParent.x : 1f;
+        float sy = (Mathf.Abs(sParent.y) > 1e-5f) ? sTarget.y / sParent.y : 1f;
+        return new Vector2(sx, sy);
+    }
+
+    private static Vector2 GetWorldScaleXY(RectTransform rt)
+    {
+        if (rt == null) return Vector2.one;
+        var s = rt.lossyScale;
+        return new Vector2(Mathf.Abs(s.x), Mathf.Abs(s.y));
+    }
+
+    /// <summary>
+    /// バトル導入時のズーム/スライドが完了するまで待機
+    /// </summary>
+    public async UniTask WaitBattleIntroAnimations()
+    {
+        // 既に完了なら即return
+        if (!_isZoomAnimating && !_isAllySlideAnimating) return;
+        // 状態が落ち着くまでフレーム待機
+        while (_isZoomAnimating || _isAllySlideAnimating)
+        {
+            await UniTask.Yield();
+        }
+    }
+
+    // ActionMark の表示/非表示ファサード
+    public void ShowActionMark()
+    {
+        if (actionMark == null)
+        {
+            Debug.LogWarning("ShowActionMark: ActionMarkUI が未設定です。");
+            return;
+        }
+        actionMark.gameObject.SetActive(true);
+    }
+
+    public void HideActionMark()
+    {
+        if (actionMark == null)
+        {
+            Debug.LogWarning("HideActionMark: ActionMarkUI が未設定です。");
+            return;
+        }
+        actionMark.gameObject.SetActive(false);
+    }
+
+    /// <summary>
+    /// 特別版: スポーン位置(actionMarkSpawnPoint)の中心に0サイズで出す
+    /// 次の MoveActionMarkToActor/Icon 時に、ここから拡大・移動する演出になります。
+    /// </summary>
+    public void ShowActionMarkFromSpawn(bool zeroSize = true)
+    {
+        if (actionMark == null)
+        {
+            Debug.LogWarning("ShowActionMarkFromSpawn: ActionMarkUI が未設定です。");
+            return;
+        }
+        if (actionMarkSpawnPoint == null)
+        {
+            Debug.LogWarning("ShowActionMarkFromSpawn: actionMarkSpawnPoint が未設定です。通常の ShowActionMark() を使用します。");
+            ShowActionMark();
+            return;
+        }
+
+        var markRT = actionMark.rectTransform;
+        // 念のため中央基準
+        markRT.pivot = new Vector2(0.5f, 0.5f);
+        markRT.anchorMin = new Vector2(0.5f, 0.5f);
+        markRT.anchorMax = new Vector2(0.5f, 0.5f);
+
+        // スポーン位置(中心)のワールド座標 → ActionMark親のローカル(anchoredPosition)へ
+        Vector2 worldCenter = actionMarkSpawnPoint.TransformPoint(actionMarkSpawnPoint.rect.center);
+        Vector2 anchored = WorldToAnchoredPosition(markRT, worldCenter);
+
+        actionMark.gameObject.SetActive(true);
+        markRT.anchoredPosition = anchored;
+        if (zeroSize)
+        {
+            actionMark.SetSize(0f, 0f);
+        }
+    }
+
     /// <summary>
     /// ワールド座標をRectTransformのanchoredPosition座標系へ変換
     /// </summary>
@@ -369,6 +581,7 @@ public class WatchUIUpdate : MonoBehaviour
     /// </summary>
     private async UniTask SlideInAllyIcons()
     {
+        _isAllySlideAnimating = true;
         Debug.Log($"SlideInAllyIcons: allyBattleLayer={allyBattleLayer?.name}, allySpawnPositions={allySpawnPositions?.Length}");
         
         if (allyBattleLayer == null)
@@ -417,6 +630,7 @@ public class WatchUIUpdate : MonoBehaviour
         }
         
         await UniTask.WhenAll(tasks);
+        _isAllySlideAnimating = false;
     }
 
 
@@ -873,4 +1087,7 @@ public class WatchUIUpdate : MonoBehaviour
         //lerpがベクトルを設定してくれる、調整された位置を渡す
         MapImg.LocationSet(Vector2.Lerp(sc.MapLineS, sc.MapLineE, Ratio));
     }
+
+    private bool _isZoomAnimating;
+    private bool _isAllySlideAnimating;
 }

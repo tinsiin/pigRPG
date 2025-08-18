@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -26,7 +25,7 @@ public enum BattleStartSituation
     alliFirst, EnemyFirst, Normal//味方先手、敵先手、ノーマル
 }
 /// <summary>
-///敵味方どっち
+/// 敵味方どっち
 /// </summary>
 public enum allyOrEnemy
 {
@@ -665,6 +664,17 @@ public class BattleManager
             NextTurn(false);
             return ACTPop();
         }
+        
+        // 俳優が確定したので、アクションマークをそのアイコンへ移動させる（サイズはActionMarkUI側で自動）
+        // VoidTurnでスキップされるケースを除外した直後に実行
+        {
+            var ui = WatchUIUpdate.Instance;
+            if (ui != null && Acter != null)
+            {
+                // 導入ズーム/スライド完了を待ってから、見かけスケールに合わせて移動
+                ui.MoveActionMarkToActorScaled(Acter, false, true).Forget();
+            }
+        }
         //レイザーダメージアクトにはこの後のスキルの選択がいらないので
         if(IsRater)
         {// => CharacterActBranching
@@ -797,11 +807,22 @@ public class BattleManager
     public async UniTask<TabState> CharacterActBranching()
     {
         Debug.Log("俳優の行動の分岐-NextWaitボタンが押されました。");
+        if(Acter == null)
+        {
+            Debug.LogError("俳優が認識されていない-エンカウントロジックなどに問題あり");
+            return TabState.walk;
+        }
         var skill = Acter.NowUseSkill;
+        if (skill == null)
+        {
+            Debug.LogError($"NowUseSkillがnullです。俳優:{Acter.CharacterName} の行動をスキップします。");
+            return DoNothingACT();
+        }
         var IsEscape = Acter.SelectedEscape;//逃げる意思
 
         if (Wipeout || AlliesRunOut || EnemyGroupEmpty) //全滅か主人公達逃走かでダイアログ終了アクトへ
         {
+            schizoLog.AddLog("全滅か主人公達逃走かでダイアログ終了アクトへ",true);
             //Bmは終了へ向かうので、RunOutもWipeOutもfalseにする必要はない。
             return DialogEndACT();
         }
@@ -1059,6 +1080,9 @@ public class BattleManager
         }
 
         OnBattleEnd();
+        schizoLog.AddLog("戦闘を終わらせた",true);
+        schizoLog.DisplayAllAsync().Forget();//ACTPOPが呼ばれないのでここで呼ぶ
+        //そもそも戦闘終わりはschizologではなくMessageDropperで行われるのが前提だけど、デバック用にね
         return TabState.walk;
     }
     
@@ -1091,7 +1115,7 @@ public class BattleManager
     {
         Debug.Log("発動カウント実行");
         var skill = Acter.NowUseSkill;
-        if (skill.CanCancelTrigger == false)//キャンセル不可能の場合。
+        if (skill != null && skill.CanCancelTrigger == false)//キャンセル不可能の場合。
         {
             Acter.FreezeSkill();//このスキルがキャンセル不可能として俳優に凍結される。
         }
@@ -1222,7 +1246,8 @@ public class BattleManager
     /// </summary>
     void BeVanguard_SkillACT()
     {
-        if (Acter.NowUseSkill.IsAggressiveCommit)
+        var skill = Acter.NowUseSkill;
+        if (skill != null && skill.IsAggressiveCommit)
         {
             BeVanguard(Acter);
         }
@@ -1232,7 +1257,8 @@ public class BattleManager
     /// </summary>
     void BeVanguard_TriggerACT()
     {
-        if (Acter.NowUseSkill.IsReadyTriggerAgressiveCommit)
+        var skill = Acter.NowUseSkill;
+        if (skill != null && skill.IsReadyTriggerAgressiveCommit)
         {
             BeVanguard(Acter);
         }
@@ -1242,7 +1268,8 @@ public class BattleManager
     /// </summary>
     void BeVanguard_SkillStockACT()
     {
-        if (Acter.NowUseSkill.IsStockAgressiveCommit)
+        var skill = Acter.NowUseSkill;
+        if (skill != null && skill.IsStockAgressiveCommit)
         {
             BeVanguard(Acter);
         }
@@ -2244,6 +2271,16 @@ public class BattleManager
         {
             one.OnBattleEndNoArgument();
         }
+
+        // ActionMark を表示
+        if (WatchUIUpdate.Instance != null)
+        {
+            WatchUIUpdate.Instance.HideActionMark();
+            WatchUIUpdate.Instance.RestoreOriginalTransforms(0.4f).Forget();//ズームの処理
+            WatchUIUpdate.Instance.EraceEnemyUI();//敵UI削除
+        }
+
+        PlayersStates.Instance.AllyAlliesUISetActive(false);//全味方UI非表示
     }
 
     private void OnBattleStart()
@@ -2262,8 +2299,11 @@ public class BattleManager
             one.OnBattleStartNoArgument();
         }
 
-
-
+        // ActionMark を表示
+        if (WatchUIUpdate.Instance != null)
+        {
+            WatchUIUpdate.Instance.ShowActionMarkFromSpawn();
+        }
     }
 
 }

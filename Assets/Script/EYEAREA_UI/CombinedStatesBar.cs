@@ -111,24 +111,27 @@ public class CombinedStatesBar : MaskableGraphic
             UpdateRectTransformSize();
         }
 
-        if (sizeChanged || barParamChanged)
+        // ランタイム中は、値変更時に再度セッターを呼ぶとスナップしてしまうため呼ばない。
+        // サイズ変更時のみメッシュを更新し、バー値の変更は各セッター発のアニメーションに任せる。
+        if (sizeChanged)
         {
-            // インスペクタ変更時はプロパティ経由で更新
-            if (barParamChanged)
-            {
-                SetHPPercent(m_HPPercent);
-                SetMentalRatio(m_MentalPercent);
-                SetDivergenceMultiplier(m_DivergenceMultiplier);
-            }
-            else
-            {
-                SetVerticesDirty();
-            }
-            CacheCurrentValues();
+            SafeSetVerticesDirty();
         }
+
+        // 変更検知の基準を更新（毎フレーム実施でOK）
+        CacheCurrentValues();
         
         // デバッグ情報を更新
         UpdateDebugInfo();
+    }
+
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+        // オブジェクトが無効化/破棄されるときに全アニメーションを停止
+        CancelHPAnimation();
+        CancelMentalAnimation();
+        CancelDivergenceAnimation();
     }
 
     private void CacheCurrentValues()
@@ -330,6 +333,15 @@ public class CombinedStatesBar : MaskableGraphic
     }
     #endregion
     
+    #region Safety
+    private void SafeSetVerticesDirty()
+    {
+        // UnityEngine.Object の破棄チェックとアクティブチェック
+        if (!this) return;
+        if (!isActiveAndEnabled) return;
+        SetVerticesDirty();
+    }
+    #endregion
     #region Private Methods
     /// <summary>HP割合をアニメーション付きで設定</summary>
     private void SetHPPercent(float newPercent)
@@ -349,15 +361,16 @@ public class CombinedStatesBar : MaskableGraphic
         if (m_HPAnimationCts != null)
         {
             m_DisplayHPPercent = m_TargetHPPercent;
-            SetVerticesDirty();
+            SafeSetVerticesDirty();
         }
         
         // 新しい目標値を設定してアニメーション開始
         m_TargetHPPercent = newPercent;
         m_HPPercent = newPercent;
         CancelHPAnimation();
-        
-        m_HPAnimationCts = new CancellationTokenSource();
+
+        // 破棄時に自動キャンセルされるトークンをリンク
+        m_HPAnimationCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
         AnimateHPChangeAsync(m_HPAnimationCts.Token).Forget();
     }
     
@@ -379,15 +392,16 @@ public class CombinedStatesBar : MaskableGraphic
         if (m_MentalAnimationCts != null)
         {
             m_DisplayMentalRatio = m_TargetMentalRatio;
-            SetVerticesDirty();
+            SafeSetVerticesDirty();
         }
         
         // 新しい目標値を設定してアニメーション開始
         m_TargetMentalRatio = newRatio;
         m_MentalPercent = newRatio;
         CancelMentalAnimation();
-        
-        m_MentalAnimationCts = new CancellationTokenSource();
+
+        // 破棄時に自動キャンセルされるトークンをリンク
+        m_MentalAnimationCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
         AnimateMentalChangeAsync(m_MentalAnimationCts.Token).Forget();
     }
     
@@ -408,14 +422,15 @@ public class CombinedStatesBar : MaskableGraphic
         if (m_DivergenceAnimationCts != null)
         {
             m_DisplayDivergenceMultiplier = m_TargetDivergenceMultiplier;
-            SetVerticesDirty();
+            SafeSetVerticesDirty();
         }
         
         m_TargetDivergenceMultiplier = newMultiplier;
         m_DivergenceMultiplier = newMultiplier;
         
         CancelDivergenceAnimation();
-        m_DivergenceAnimationCts = new CancellationTokenSource();
+        // 破棄時に自動キャンセルされるトークンをリンク
+        m_DivergenceAnimationCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
         AnimateDivergenceChangeAsync(m_DivergenceAnimationCts.Token).Forget();
     }
     
@@ -486,12 +501,12 @@ public class CombinedStatesBar : MaskableGraphic
                     m_DisplayHPPercent = Mathf.Max(m_TargetHPPercent, Mathf.Min(timeBasedPercent, frameBasedPercent));
                 }
                 
-                SetVerticesDirty();
+                SafeSetVerticesDirty();
                 await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
             }
             
             m_DisplayHPPercent = m_TargetHPPercent;
-            SetVerticesDirty();
+            SafeSetVerticesDirty();
         }
         catch (OperationCanceledException)
         {
@@ -539,12 +554,12 @@ public class CombinedStatesBar : MaskableGraphic
                     m_DisplayMentalRatio = Mathf.Max(m_TargetMentalRatio, Mathf.Min(timeBasedRatio, frameBasedRatio));
                 }
                 
-                SetVerticesDirty();
+                SafeSetVerticesDirty();
                 await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
             }
             
             m_DisplayMentalRatio = m_TargetMentalRatio;
-            SetVerticesDirty();
+            SafeSetVerticesDirty();
         }
         catch (OperationCanceledException)
         {
@@ -584,13 +599,13 @@ public class CombinedStatesBar : MaskableGraphic
                 float t = Mathf.Clamp01(elapsedTime / duration);
                 
                 m_DisplayDivergenceMultiplier = Mathf.Lerp(startValue, targetValue, t);
-                SetVerticesDirty();
+                SafeSetVerticesDirty();
                 
                 await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
             }
             
             m_DisplayDivergenceMultiplier = targetValue;
-            SetVerticesDirty();
+            SafeSetVerticesDirty();
         }
         catch (OperationCanceledException)
         {

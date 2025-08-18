@@ -26,11 +26,12 @@ public class NormalEnemy : BaseStates
 {
     [SerializeField] BattleAIBrain _brain;
 
+    [Header("復活歩数設定 基本生命キャラにだけ設定して、\n-1だと復活しないです。0だと即復活します。")]
     /// <summary>
     ///     この敵キャラクターの復活する歩数
-    ///     手動だが基本的に生命キャラクターのみにこの歩数は設定する?
+    ///     手動だが基本的に生命キャラクターのみにこの歩数は設定する? 
     /// </summary>
-    public int RecovelySteps;
+    public int RecovelySteps = -1;
 
     /// <summary>
     /// 復活するかどうか
@@ -71,7 +72,11 @@ public class NormalEnemy : BaseStates
     /// </summary>
     public bool CanRebornWhatHeWill(int nowProgress)
     {
-        if (_recovelyStepCount <= 0) return true;//既にカウントがゼロなら生きてるってこと。　復活カウントもせずに返す
+        if (_recovelyStepCount <= 0)
+        {
+            Debug.Log($"{CharacterName}はrecovelyStepCountがゼロなので復活可能です。");
+            return true;//既にカウントがゼロなら生きてるってこと。　復活カウントもせずに返す
+        } 
 
         var distanceTraveled = Math.Abs(nowProgress - _lastEncountProgressForReborn);//差の絶対値 = 移動距離 を取得
 
@@ -113,11 +118,21 @@ public class NormalEnemy : BaseStates
     /// </summary>
     float AverageSkillTenDays => AllSkillTenDays / SkillList.Count;
     
+    /// <summary>
+    /// スキルとキャラステータスなど初期化
+    /// </summary>
     public override void OnInitializeSkillsAndChara()
     {
         foreach (var skill in EnemySkillList)
         {
             skill.OnInitialize(this);
+        }
+        if(RecovelySteps <= 0)
+        {
+            if(RecovelySteps != -1) 
+            {
+                Debug.LogWarning($"敵キャラの復活歩数が0以下であり、-1でないので、倒しても一発で復活します。\n設定は合ってますか？{CharacterName}");
+            }
         }
     }    
     /// <summary>

@@ -601,8 +601,10 @@ public class PlayersStates:MonoBehaviour
     ///     現在のステージ内のエリア
     /// </summary>
     public int NowAreaID { get; private set; }
-
-    void AllyAlliesUISetActive(bool isActive)
+    /// <summary>
+    ///     味方のキャラクターのUIを表示するか非表示する
+    /// </summary>
+    public void AllyAlliesUISetActive(bool isActive)
     {
         if (geino?.UI != null) geino.UI.SetActive(isActive);
         if (sites?.UI != null) sites.UI.SetActive(isActive);

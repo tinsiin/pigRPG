@@ -1371,6 +1371,8 @@ MonoBehaviour:
   enemyBattleLayer: {fileID: 879111140}
   allyBattleLayer: {fileID: 715286165}
   fixedUILayer: {fileID: 0}
+  actionMark: {fileID: 686993905}
+  actionMarkSpawnPoint: {fileID: 686993904}
   hpBarSizeRatio: {x: 1, y: 0.15}
   enemyUIPrefab: {fileID: 167246213309373739, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
   enemyMargin: 10
@@ -4149,7 +4151,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -30, y: -395.56}
+  m_AnchoredPosition: {x: 0, y: -50}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &686993905
@@ -4165,7 +4167,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.0010475516, g: 0, b: 0.99895245, a: 0.16483735}
+  m_Color: {r: 0.93728465, g: 0.9410597, b: 0.93729204, a: 0.16192986}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -4174,9 +4176,9 @@ MonoBehaviour:
       m_Calls: []
   m_Width: 100
   m_Height: 100
-  m_ColorA: {r: 1, g: 0, b: 0, a: 0.2901961}
-  m_ColorB: {r: 0, g: 0, b: 1, a: 0.16470589}
-  m_ChangeSpeed: 1
+  m_ColorA: {r: 0.93725497, g: 0.94117653, b: 0.93725497, a: 0.16078432}
+  m_ColorB: {r: 0.9572924, g: 0.86240655, b: 0.9622642, a: 0.93333334}
+  m_ChangeSpeed: 0.56
   m_AutoStart: 1
   m_InterpolationCurve:
     serializedVersion: 2
@@ -4202,6 +4204,33 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  m_EnableMoveAnimation: 1
+  m_MoveDuration: 0.15
+  m_MoveCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  m_SizeMultiplier: 1.16
 --- !u!222 &686993906
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -6671,7 +6700,7 @@ MonoBehaviour:
   _charInterval: 0.04
   _enableScrollAnimation: 1
   _scrollAnimationDuration: 0.3
-  _enableDebugLog: 0
+  _outputDebugEntries: 1
   LogText: {fileID: 853315685}
   _bridgeCollection: {fileID: 11400000, guid: 782162687aafcb4418e284d36df1ca2e, type: 2}
   _testSentences:
@@ -7026,6 +7055,8 @@ MonoBehaviour:
         _skillHitPer: 68
         _a_moveset: []
         _b_moveset: []
+        _tenDayValues:
+          _list: []
         _triggerCountMax: 0
         CanCancelTrigger: 1
         _triggerRollBackCount: 0
@@ -7085,11 +7116,15 @@ MonoBehaviour:
         AttackModifier: 1
         FixedSkillLevelData:
         - TenDayValues:
-            _list: []
-          SkillPower: 3
+            _list:
+            - key: 0
+              value: 6
+            - key: 25
+              value: 8
+          SkillPower: 5
           OptionMentalDamageRatio: 0
           OptionPowerSpread: []
-          OptionSkillHitPer: 0
+          OptionSkillHitPer: -1
           OptionA_MoveSet: []
           OptionB_MoveSet: []
         _infiniteSkillPowerUnit: 0
@@ -7099,6 +7134,8 @@ MonoBehaviour:
         _skillHitPer: 100
         _a_moveset: []
         _b_moveset: []
+        _tenDayValues:
+          _list: []
         _triggerCountMax: 0
         CanCancelTrigger: 1
         _triggerRollBackCount: 0
@@ -7164,6 +7201,8 @@ MonoBehaviour:
         _skillHitPer: 0
         _a_moveset: []
         _b_moveset: []
+        _tenDayValues:
+          _list: []
         _triggerCountMax: 0
         CanCancelTrigger: 1
         _triggerRollBackCount: 0
@@ -7262,6 +7301,8 @@ MonoBehaviour:
           _skillHitPer: 0
           _a_moveset: []
           _b_moveset: []
+          _tenDayValues:
+            _list: []
           _triggerCountMax: 0
           CanCancelTrigger: 1
           _triggerRollBackCount: 0
@@ -8735,7 +8776,7 @@ MonoBehaviour:
         broken: 0
         _machineBrokenRate: 0.3
         _brain: {fileID: 11400000, guid: fa03e9b4c70b45f4782dc1a672559a09, type: 2}
-        RecovelySteps: 0
+        RecovelySteps: -1
         EscapeAttemptRate: 0
         EnemySkillList:
         - rid: 5115254770960171009
@@ -8758,7 +8799,7 @@ MonoBehaviour:
           SkillPower: 2
           OptionMentalDamageRatio: 0
           OptionPowerSpread: []
-          OptionSkillHitPer: 0
+          OptionSkillHitPer: -1
           OptionA_MoveSet: []
           OptionB_MoveSet: []
         _infiniteSkillPowerUnit: 0
@@ -8768,6 +8809,8 @@ MonoBehaviour:
         _skillHitPer: 50
         _a_moveset: []
         _b_moveset: []
+        _tenDayValues:
+          _list: []
         _triggerCountMax: 0
         CanCancelTrigger: 1
         _triggerRollBackCount: 0
@@ -8833,7 +8876,7 @@ MonoBehaviour:
           SkillPower: 1
           OptionMentalDamageRatio: 0
           OptionPowerSpread: []
-          OptionSkillHitPer: 0
+          OptionSkillHitPer: -1
           OptionA_MoveSet: []
           OptionB_MoveSet: []
         _infiniteSkillPowerUnit: 0
@@ -8843,6 +8886,8 @@ MonoBehaviour:
         _skillHitPer: 60
         _a_moveset: []
         _b_moveset: []
+        _tenDayValues:
+          _list: []
         _triggerCountMax: 0
         CanCancelTrigger: 1
         _triggerRollBackCount: 0
@@ -8931,7 +8976,7 @@ MonoBehaviour:
         broken: 0
         _machineBrokenRate: 0.3
         _brain: {fileID: 11400000, guid: fa03e9b4c70b45f4782dc1a672559a09, type: 2}
-        RecovelySteps: 0
+        RecovelySteps: -1
         EscapeAttemptRate: 0
         EnemySkillList:
         - rid: 5115254770960171008

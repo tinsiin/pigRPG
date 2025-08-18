@@ -257,9 +257,11 @@ public enum SkillImpression
 [Serializable]
 public class SkillLevelData
 {
+    [Header("必須の値")]
     public TenDayAbilityDictionary TenDayValues;
     public float SkillPower;
 
+    [Header("オプションの値")]
     /// <summary>
     /// スキルレベルによる精神攻撃率 (オプション)
     /// -1なら参照されない
@@ -271,6 +273,7 @@ public class SkillLevelData
     /// nullなら参照されない
     /// </summary>
     public float[] OptionPowerSpread = null;
+    [Header("スキルレベル命中補正は-1にすれば単一の設定値が用いられる。0のままだとこれが参照されて命中しない")]
     /// <summary>
     /// スキルレベルによる命中補正 (オプション)
     /// -1なら参照されない
@@ -319,6 +322,7 @@ public class SkillLevelData
 [Serializable]
 public class BaseSkill
 {
+    protected SchizoLog schizoLog => SchizoLog.Instance;
     protected BattleManager manager => Walking.bm;
     /// <summary>
     ///     スキルの精神属性
@@ -638,6 +642,7 @@ public class BaseSkill
     /// 固定されたスキルレベルデータ部分
     /// このリスト以降なら無限のデータ
     /// </summary>
+    [Header("固定されたスキルレベルデータ部分は必ず一つのデータを設定する必要があります。(スキルはレベルが上がるのが普通なのでそういう設計にしてるから、デバックでも必ず一つは必要)")]
     public List<SkillLevelData> FixedSkillLevelData = new();
     /// <summary>
     /// 無限に伸びる部分のスキルパワーの単位。
@@ -898,6 +903,11 @@ public class BaseSkill
         }
 
     /// <summary>
+    /// 単一設定値の十日能力値
+    /// </summary>
+    [SerializeField]
+    TenDayAbilityDictionary _tenDayValues;
+    /// <summary>
     /// スキルの印象構造　十日能力値
     /// ゆりかごするかどうかは引数で
     /// </summary>
@@ -931,7 +941,6 @@ public class BaseSkill
             //基礎値に無限単位に超過分を掛けたものを加算して返す。
             return BaseTenDayValues + _infiniteSkillTenDaysUnit * InfiniteLevelMultiplier;
         
-            //有限リストがないってことはない。必ず一つは設定されてるはずだしね。
         }
     }
 
@@ -1362,6 +1371,11 @@ public class BaseSkill
     /// <param name="supremacyBonus">命中ボーナス　主に命中凌駕用途</param>>
     public virtual HitResult SkillHitCalc(BaseStates target,float supremacyBonus = 0,HitResult hitResult = HitResult.Hit,bool PreliminaryMagicGrazeRoll = false)
     {
+        /*schizoLog.AddLog("スキル命中計算が呼ばれた",true);
+        // 関数の先頭で一時的に
+        Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.Full);
+        Debug.Log($"スキル命中計算が呼ばれた.\n{new System.Diagnostics.StackTrace(1, true)}");*/
+
         //割り込みカウンターなら確実
         if(Doer.HasPassive(1)) return hitResult;
 
@@ -1370,6 +1384,7 @@ public class BaseSkill
         if(supremacyBonus>rndMin)supremacyBonus -= rndMin;
 
         var result = RandomEx.Shared.NextInt(100) < supremacyBonus + SkillHitPer ? hitResult : HitResult.CompleteEvade;
+        //schizoLog.AddLog("スキル命中計算式-命中凌駕:" + supremacyBonus + ",スキル命中率:" + SkillHitPer + " " + result,true);
 
         if(result == HitResult.CompleteEvade && IsMagic)//もし発生しなかった場合、魔法スキルなら
         {
@@ -1381,6 +1396,7 @@ public class BaseSkill
         {
             result = hitResult;//かすりを入れる
         }
+        //schizoLog.AddLog("SkillHitCalc-" + result,true);
 
         return result;
     }
@@ -1400,7 +1416,7 @@ public class BaseSkill
     /// <summary>
     /// SubEffectsのバッファ 主にパッシブによる追加適用用など
     /// </summary>
-    List<int> bufferSubEffects;
+    List<int> bufferSubEffects = new();
     /// <summary>
     /// スキルのパッシブ付与効果に追加適用する。　
     /// バッファーのリストに追加する。
@@ -1415,6 +1431,12 @@ public class BaseSkill
     /// </summary>
     public void EraseBufferSubEffects()
     {
+        if (bufferSubEffects == null)
+        {
+            // 安全対策：未初期化なら初期化して終了
+            bufferSubEffects = new List<int>();
+            return;
+        }
         bufferSubEffects.Clear();
     }
     /// <summary>
@@ -1422,7 +1444,8 @@ public class BaseSkill
     /// </summary>
     public List<int> SubEffects
     {
-        get { return subEffects.Concat(bufferSubEffects).ToList(); }
+        get { return (subEffects ?? Enumerable.Empty<int>())
+                        .Concat(bufferSubEffects ?? Enumerable.Empty<int>()).ToList(); }
     }
     /// <summary>
     /// スキル実行時に付与する追加HP(Passive由来でない)　ID指定
@@ -1913,6 +1936,7 @@ public class BaseSkill
             dst.B_MoveSet_Cash.Add(moveSet.DeepCopy());
         }
         dst._defAtk = _defAtk;
+        dst._skillHitPer = _skillHitPer;//基本スキル命中率
         dst._baseSkillType = _baseSkillType;
         dst.ConsecutiveType = ConsecutiveType;
         dst.ZoneTrait = ZoneTrait;

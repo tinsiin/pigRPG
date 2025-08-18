@@ -63,8 +63,9 @@ public class SchizoLog : MonoBehaviour
     [SerializeField] private bool _enableScrollAnimation = true;
     [SerializeField] private float _scrollAnimationDuration = 0.3f;
     
-    [Header("デバッグログ設定")]
-    [SerializeField] private bool _enableDebugLog = false; // これで全ログのオン/オフを制御
+    private bool _enableDebugLog = false; // これで内部Debug.Log系のオン/オフを制御
+    [Tooltip("AddLog(debug:true) で追加されるデバッグ用ログを表示するか")]
+    [SerializeField] private bool _outputDebugEntries = false; // これでAddLogのデバッグエントリ出力を制御
     
     [Header("UI参照")]
     public TextMeshProUGUI LogText;
@@ -149,15 +150,22 @@ public class SchizoLog : MonoBehaviour
     /// ログを追加（生テキスト）
     /// </summary>
     /// <param name="priority">優先度（高いほど上に表示）</param>
-    public void AddLog(string sentence, int priority = 0)
+    /// <param name="debug">true の場合は "デバッグログ" として扱い、_outputDebugEntries の設定に従って出力可否を決める</param>
+    public void AddLog(string sentence, bool debug = false,int priority = 0)
     {
-        if (!string.IsNullOrEmpty(sentence))
+        if (string.IsNullOrEmpty(sentence)) return;
+
+        // 非同期中に設定が切り替わっても挙動がブレないよう、ここでスナップショットを取って判定
+        bool allowDebugEntry = _outputDebugEntries;
+        if (debug && !allowDebugEntry)
         {
-            var entry = new SchizoLogEntry(sentence, priority, _insertOrderCounter++);
-            
-            _entries.Add(entry);
-            Log($"SchizoLog: エントリ追加 - 優先度:{priority}, 文章:{sentence.Substring(0, Math.Min(30, sentence.Length))}...");
+            Log($"SchizoLog: デバッグエントリを抑制 - 優先度:{priority}, 文章:{sentence.Substring(0, Math.Min(30, sentence.Length))}...");
+            return; // デバッグ指定かつ出力オフならキューに積まない
         }
+
+        var entry = new SchizoLogEntry(sentence, priority, _insertOrderCounter++);
+        _entries.Add(entry);
+        Log($"SchizoLog: エントリ追加 - 優先度:{priority}, デバッグ:{debug}, 文章:{sentence.Substring(0, Math.Min(30, sentence.Length))}...");
     }
     
     /// <summary>
