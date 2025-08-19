@@ -1639,7 +1639,7 @@ public class AllyClass : BaseStates
         }
         if(dst.UI == null)Debug.LogError("UIがnullです");
         if(dst.UI.arrowGrowAndVanish == null)Debug.LogError("arrowGrowAndVanishがnullです");
-        dst.UI.arrowGrowAndVanish.InitializeArrowByIcon();//主人公はここで矢印画像のアイコンに合わせた初期化をする。
+        dst.UI.Init();
 
         Debug.Log("AllyClassディープコピー完了");
     }
@@ -1683,6 +1683,7 @@ public class StairStates : AllyClass //共通ステータスにプラスでそ�
 [Serializable]
 public class AllySkill : BaseSkill
 {
+    [Header("スキルのidは必ず設定、また、下にあるValidSkillIDListにIDが入ってないと有効にならない\n(実際のプレイで成長するって要素があるから、これは初期値とデバック用の話ね)")]
     [SerializeField]
     int _iD;
     /// <summary>
@@ -1694,7 +1695,7 @@ public class AllySkill : BaseSkill
     /// allySkillにおける行使者はAllyClassなのでキャストして返す
     /// </summary>
     public new AllyClass Doer => (AllyClass)base.Doer;
-
+    [Header("スキルの熟練度はプレイで成長するから、基本的にはゼロだけど、\n特殊なフレーバー要素で上げとくのもあり。")]
     /// <summary>
     /// スキル熟練度　単純な数のプロパティで、標準のロジックはスキル内ではないからここでは数だけ
     /// </summary>

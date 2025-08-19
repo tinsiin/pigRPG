@@ -44,7 +44,7 @@ public class MainContent : TabContents
                 WalkObject.SetActive(false);
                 TalkObject.SetActive(false);
                 NextObject.SetActive(false);
-                SkillObject.SetActive(true);
+                SkillObject.SetActive(false);
                 SelectTargetObject.SetActive(true);
                 SelectRangeObject.SetActive(false);
                 break;
@@ -52,7 +52,7 @@ public class MainContent : TabContents
                 WalkObject.SetActive(false);
                 TalkObject.SetActive(false);
                 NextObject.SetActive(false);
-                SkillObject.SetActive(true);
+                SkillObject.SetActive(false);
                 SelectTargetObject.SetActive(false);
                 SelectRangeObject.SetActive(true);
                 break;

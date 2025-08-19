@@ -989,11 +989,12 @@ public class WatchUIUpdate : MonoBehaviour
             }
         }
 
-        //前のめり矢印画像の初期化
-        uiInstance.arrowGrowAndVanish.InitializeArrowByIcon();
+        //UIの初期化
+        uiInstance.Init();
 
 
         // HPバー設定（プレハブ内のCombinedStatesBarを利用）
+        //敵限定だしとりあえずInitの外に置く
         if (uiInstance.HPBar != null)
         {
             // バーサイズと余白をアイコン幅から算出

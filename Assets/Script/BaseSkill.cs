@@ -642,7 +642,7 @@ public class BaseSkill
     /// 固定されたスキルレベルデータ部分
     /// このリスト以降なら無限のデータ
     /// </summary>
-    [Header("固定されたスキルレベルデータ部分は必ず一つのデータを設定する必要があります。(スキルはレベルが上がるのが普通なのでそういう設計にしてるから、デバックでも必ず一つは必要)")]
+    [Header("固定されたスキルレベルデータ部分は必ず一つのデータを設定する必要があります。\n(スキルはレベルが上がるのが普通なのでそういう設計にしてるから、デバックでも必ず一つは必要)")]
     public List<SkillLevelData> FixedSkillLevelData = new();
     /// <summary>
     /// 無限に伸びる部分のスキルパワーの単位。
@@ -828,6 +828,7 @@ public class BaseSkill
         }
     }
 
+    [Header("ムーブセットの数そのものが二回目以降の連続攻撃となる\naとbは必ず同じ数分設定しなければいけない")]
     /// <summary>
     /// 設定用 スキルごとのムーブセット 戦闘規格ごとのaに対応するもの。
     /// </summary>
@@ -902,11 +903,6 @@ public class BaseSkill
            
         }
 
-    /// <summary>
-    /// 単一設定値の十日能力値
-    /// </summary>
-    [SerializeField]
-    TenDayAbilityDictionary _tenDayValues;
     /// <summary>
     /// スキルの印象構造　十日能力値
     /// ゆりかごするかどうかは引数で
@@ -1576,6 +1572,7 @@ public class BaseSkill
             return _defAtk;
         }
     }
+    [Header("スキルの攻撃性質は必ず設定")]
     /// <summary>
     /// スキルの攻撃性質　基本的な奴
     /// </summary>
@@ -1604,11 +1601,13 @@ public class BaseSkill
     /// スキルの連撃性質
     /// </summary>
     public SkillConsecutiveType ConsecutiveType;
+    [Header("スキルの範囲性質も必ず設定")]
     /// <summary>
     /// スキルの範囲性質
     /// 初期値は0
     /// </summary>
     public SkillZoneTrait ZoneTrait = 0;//初期値
+    [Header("スキルの分散性質はrandom初期値のままでもいいけどこだわるなら設定")]
     /// <summary>
     /// スキルの分散性質
     /// </summary>

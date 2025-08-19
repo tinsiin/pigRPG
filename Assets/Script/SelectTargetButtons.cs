@@ -30,7 +30,6 @@ public class SelectTargetButtons : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -55,8 +54,8 @@ public class SelectTargetButtons : MonoBehaviour
     BattleManager bm => Walking.bm;
     int NeedSelectCountAlly;//このneedcountは基本的には対象選択のみ
     int NeedSelectCountEnemy;
-    List<Button> AllybuttonList;
-    List<Button> EnemybuttonList;
+    List<Button> AllybuttonList = new List<Button>();
+    List<Button> EnemybuttonList = new List<Button>();
 
     List<BaseStates> CashUnders;//分散値に対するランダム性を担保するための対象者キャッシュ
     /// <summary>
@@ -67,6 +66,9 @@ public class SelectTargetButtons : MonoBehaviour
         var acter = bm.Acter;
         var skill = acter.NowUseSkill;
         CashUnders = new List<BaseStates>();
+        // 前回の参照が残ると誤判定や二重Destroyの原因になるため、生成前に必ずクリア
+        AllybuttonList.Clear();
+        EnemybuttonList.Clear();
 
         //もしスキルの範囲性質にcanSelectRangeがない場合 (=範囲選択の必要がないスキルなので範囲選択が発生せず代入されないのでここで入れる)
         //範囲選択されたこと前提でこの後分岐するので。
@@ -209,7 +211,7 @@ public class SelectTargetButtons : MonoBehaviour
                 //前のめりのキャラクターが対象者ボーナスに含まれているか調査
                 var vanguard = bm.EnemyGroup.InstantVanguard;
                 var data = acter.TargetBonusDatas;
-                var txt = "前のめり";
+                var txt = "前のめり-1";
                 if(data.DoIHaveTargetBonus(vanguard))//対象者ボーナスに含まれてるのなら
                 {
                     //その対象者のボーナス倍率を取得し、ボタンテキストに追加
@@ -241,8 +243,11 @@ public class SelectTargetButtons : MonoBehaviour
                     // 次のボタンのX位置を更新
                     currentX += buttonSize.x + horizontalPadding;
 
-                    button.onClick.AddListener(() => OnClickSelectVanguardOrBacklines(button, WillSet[i]));
-                    button.GetComponentInChildren<TextMeshProUGUI>().text = BtnStringSet[i];//ボタンのテキストに前のめり等の記述
+                    var will = WillSet[i];
+                    var str = BtnStringSet[i];
+                    vanguard.UI.SetActiveSetNumber_NumberEffect(true, 1);
+                    button.onClick.AddListener(() => OnClickSelectVanguardOrBacklines(button, will));
+                    button.GetComponentInChildren<TextMeshProUGUI>().text = str;//ボタンのテキストに前のめり等の記述
                     EnemybuttonList.Add(button);//敵のボタンリストに入れる
 
                 }
@@ -291,7 +296,7 @@ public class SelectTargetButtons : MonoBehaviour
                     currentX += buttonSize.x + horizontalPadding;
 
                     var ene = selects[i];
-                    var txt = ene.CharacterName;//テキストにキャラ名
+                    var txt = $"「{i+1}」";//テキストにキャラ名
                     var data = acter.TargetBonusDatas;
                     if(data.DoIHaveTargetBonus(ene))//対象者ボーナスに含まれてるのなら
                     {
@@ -308,9 +313,10 @@ public class SelectTargetButtons : MonoBehaviour
                         //その補正をボタンテキストに追加 1.〇倍の形で表示
                         txt += "\n 隙だらけ命中補正 " + ExposureModifier + "倍";
                     }
-
-
-                    button.onClick.AddListener(() => OnClickSelectTarget(selects[i], button, allyOrEnemy.Enemyiy, DirectedWill.One));//関数を登録
+                    
+                    ene.UI.SetActiveSetNumber_NumberEffect(true, i+1);
+                    var chara = selects[i];//ここでこのままこれを渡すと、ボタンをクリックする時には、iの値が変わってしまう
+                    button.onClick.AddListener(() => OnClickSelectTarget(chara, button, allyOrEnemy.Enemyiy, DirectedWill.One));//関数を登録
                     button.GetComponentInChildren<TextMeshProUGUI>().text = txt;//ボタンのテキスト
                     EnemybuttonList.Add(button);//敵のボタンリストを入れる
 
@@ -363,9 +369,10 @@ public class SelectTargetButtons : MonoBehaviour
 
                 // 次のボタンのX位置を更新
                 currentX += buttonSize.x + horizontalPadding;
-
-                button.onClick.AddListener(() => OnClickSelectTarget(selects[i], button, allyOrEnemy.alliy, DirectedWill.One));//関数を登録
-                button.GetComponentInChildren<TextMeshProUGUI>().text = selects[i].CharacterName;//ボタンのテキストにキャラ名
+                var chara = selects[i];
+                chara.UI.SetActiveSetNumber_NumberEffect(true, i+11);
+                button.onClick.AddListener(() => OnClickSelectTarget(chara, button, allyOrEnemy.alliy, DirectedWill.One));//関数を登録
+                button.GetComponentInChildren<TextMeshProUGUI>().text = chara.CharacterName + $"「{i+11}」";//ボタンのテキストにキャラ名
                 EnemybuttonList.Add(button);//敵のボタンリストを入れる
 
             }
@@ -521,6 +528,11 @@ public class SelectTargetButtons : MonoBehaviour
         foreach (var button in EnemybuttonList)
         {
             Destroy(button);//ボタン全部削除
+        }
+
+        foreach(var one in bm.AllCharacters)
+        {
+            one.UI.SetActiveSetNumber_NumberEffect(false);//全キャラの数字を非表示
         }
     }
 }

@@ -20,6 +20,7 @@ public class UIController : MonoBehaviour
     public Image Icon;
     public UIVerticalBob verticalBob;
     public ArrowGrowAndVanish arrowGrowAndVanish;
+    public IconButtonLinkNumberEffect numberEffect;
 
     private void Awake()
     {
@@ -49,6 +50,17 @@ public class UIController : MonoBehaviour
 #endif
         this.gameObject.SetActive(isActive);
     }
+    /// <summary>
+    /// 指標用数字エフェクトのsetactiveと数字指定。
+    /// </summary>
+    /// <param name="isActive"></param>
+    /// <param name="number"></param>
+    public void SetActiveSetNumber_NumberEffect(bool isActive,int number = 0)
+    {
+        numberEffect.SetActive(isActive);
+        numberEffect.Number = number;
+    }
+    
 
     
     /// <summary>
@@ -65,6 +77,17 @@ public class UIController : MonoBehaviour
     public void LostVanguardEffect()
     {   
         verticalBob.Enabled = false;
+    }
+
+    /// <summary>
+    /// UIの初期化処理
+    /// サイズ自動調整とか
+    /// </summary>
+    public void Init()
+    {
+        arrowGrowAndVanish.InitializeArrowByIcon();//矢印画像の初期化
+        numberEffect.InitializeByIcon();//数字エフェクトの初期化
+        SetActiveSetNumber_NumberEffect(false);//数字エフェクトを非表示
     }
 
 }
