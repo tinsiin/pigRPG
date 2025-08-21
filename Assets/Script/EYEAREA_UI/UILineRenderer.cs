@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using RandomExtensions;
@@ -29,6 +29,7 @@ public class UILineRenderer : Graphic
     public List<CircleData> circles = new List<CircleData>();
 
     public float thickness = 5f;
+    [Header("線の色,ステージテーマ色で統一するものは、ここで指定しても意味がない\nテーマ色に関連しないものはここで設定。")]
     public Color lineColor = Color.white;
     public Color two = Color.blue;
     public int circleSegments = 36;
@@ -42,6 +43,26 @@ public class UILineRenderer : Graphic
     //生成時にランダムにずれる。(サイドオブジェクトのノイズ性を高めるため　ドリームリアリティってやつ)
     [SerializeField] private Vector2 bornPosRange;
     public SideObject_Type sideObject_Type;
+
+    protected override void OnEnable()
+    {
+        base.OnEnable();
+        SetAllDirty();
+    }
+
+#if UNITY_EDITOR
+    protected override void OnValidate()
+    {
+        base.OnValidate();
+        SetAllDirty();
+    }
+#endif
+
+    protected override void OnRectTransformDimensionsChange()
+    {
+        base.OnRectTransformDimensionsChange();
+        SetVerticesDirty();
+    }
 
     protected override void OnPopulateMesh(VertexHelper vh)
     {

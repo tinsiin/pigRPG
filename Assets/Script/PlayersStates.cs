@@ -1177,11 +1177,11 @@ public class AllyClass : BaseStates
         //もし先約リストによる単体指定ならば、範囲や対象者選択画面にはいかず、直接actbranchiへ移行
         if(manager.Acts.GetAtSingleTarget(0)!= null)
         {
-            Walking.USERUI_state.Value = TabState.NextWait;
+            Walking.Instance.USERUI_state.Value = TabState.NextWait;
         }else
         {
                     //スキルの性質によるボタンの行く先の分岐
-            Walking.USERUI_state.Value = DetermineNextUIState(NowUseSkill);
+            Walking.Instance.USERUI_state.Value = DetermineNextUIState(NowUseSkill);
         }
 
         
@@ -1210,9 +1210,9 @@ public class AllyClass : BaseStates
             stockSkill.ForgetStock();
         }
 
-        Walking.bm.DoNothing = true;//ACTBranchingで何もしないようにするboolをtrueに。
+        Walking.Instance.bm.DoNothing = true;//ACTBranchingで何もしないようにするboolをtrueに。
 
-        Walking.USERUI_state.Value = TabState.NextWait;//CharacterACTBranchingへ
+        Walking.Instance.USERUI_state.Value = TabState.NextWait;//CharacterACTBranchingへ
         
     }
 
@@ -1267,9 +1267,9 @@ public class AllyClass : BaseStates
     public void OnSkillDoNothingBtnCallBack()
     {
         Debug.Log("何もしない");
-        Walking.bm.DoNothing = true;//ACTBranchingで何もしないようにするboolをtrueに。
+        Walking.Instance.bm.DoNothing = true;//ACTBranchingで何もしないようにするboolをtrueに。
 
-        Walking.USERUI_state.Value = TabState.NextWait;//CharacterACTBranchingへ
+        Walking.Instance.USERUI_state.Value = TabState.NextWait;//CharacterACTBranchingへ
     }
     /// <summary>
     /// スキルの性質に基づいて、次に遷移すべき画面状態を判定する
@@ -1424,7 +1424,7 @@ public class AllyClass : BaseStates
     public void AllyVictoryBoost()
     {
         //まず主人公グループと敵グループの強さの倍率
-        var ratio = Walking.bm.EnemyGroup.OurTenDayPowerSum(false) / Walking.bm.AllyGroup.OurTenDayPowerSum(false);
+        var ratio = Walking.Instance.bm.EnemyGroup.OurTenDayPowerSum(false) / Walking.Instance.bm.AllyGroup.OurTenDayPowerSum(false);
         VictoryBoost(ratio);
 
     }

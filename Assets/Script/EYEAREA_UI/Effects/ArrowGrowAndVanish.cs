@@ -2,6 +2,8 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
+using LitMotion;
+using LitMotion.Extensions;
 
 /// <summary>
 /// 親RectTransformの下辺から子の矢印画像を上方向へ平行移動し、
@@ -46,6 +48,11 @@ public class ArrowGrowAndVanish : MonoBehaviour
     [SerializeField] private Vector2 _arrowSizeRatioToIcon = new Vector2(1f, 1f);
 
     private CancellationTokenSource _cts;
+    private MotionHandle _moveHandle;
+    private MotionHandle _vanishHandle;
+    private MotionHandle _growHandle;
+    private bool _completed;
+    private bool _vanishStarted;
 
     void Awake()
     {
@@ -80,6 +87,12 @@ public class ArrowGrowAndVanish : MonoBehaviour
             _cts = null;
         }
 
+        if (_moveHandle.IsActive()) _moveHandle.Cancel();
+        if (_vanishHandle.IsActive()) _vanishHandle.Cancel();
+        if (_growHandle.IsActive()) _growHandle.Cancel();
+        _vanishStarted = false;
+        _completed = false;
+
         // 再生中断時も非表示にしておく
         if (_arrow != null)
         {
@@ -108,62 +121,45 @@ public class ArrowGrowAndVanish : MonoBehaviour
         if (!_arrow.gameObject.activeSelf)
             _arrow.gameObject.SetActive(true);
 
-        // 初期スケールを原寸に、位置を親下辺(0)へリセット
+        // 初期スケールを原寸に、位置を親下辺(0)へリセット（元実装に忠実）
         var s = _arrow.localScale;
         s.x = 1f;
-        s.y = 1f;
+        s.y = Mathf.Max(0f, _startYScale);
         _arrow.localScale = s;
         _arrow.anchoredPosition = Vector2.zero;
 
-        // 上方向への移動フェーズ：アンカー(0.5,0)基準でYを加算し続ける
-        while (true)
-        {
-            token.ThrowIfCancellationRequested();
+        // 状態フラグ初期化
+        _completed = false;
+        _vanishStarted = false;
 
-            var pos = _arrow.anchoredPosition;
-            pos.y += _moveSpeedYPerSec * Time.unscaledDeltaTime; // UIなのでunscaled推奨
-            _arrow.anchoredPosition = pos;
-
-            // 消滅条件：矢印中心が親の上辺に触れたらブレイク
-            if (IsArrowCenterTouchingContainerTop())
-                break;
-
-            await UniTask.Yield(PlayerLoopTiming.Update, token);
-        }
-
-        // しぼみフェーズ（X=1→0）
-        if (_vanishDuration > 0f)
-        {
-            float t = 0f;
-            while (t < _vanishDuration)
+        // 上方向への移動を LitMotion で駆動（unscaled）
+        Vector2 startPos = _arrow.anchoredPosition;
+        _moveHandle = LMotion.Create(0f, 1f, 1f)
+            .WithEase(Ease.Linear)
+            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+            .WithLoops(-1, LoopType.Incremental)
+            .Bind(timeSec =>
             {
-                token.ThrowIfCancellationRequested();
-                t += Time.unscaledDeltaTime;
-                float r = Mathf.Clamp01(t / _vanishDuration);
-                var cur = _arrow.localScale;
-                cur.x = Mathf.Lerp(1f, 0f, r);
-                _arrow.localScale = cur;
-                await UniTask.Yield(PlayerLoopTiming.Update, token);
-            }
-        }
-        else
-        {
-            float x = _arrow.localScale.x;
-            float speed = Mathf.Max(0.0001f, _vanishSpeedXPerSec);
-            while (x > 0f)
-            {
-                token.ThrowIfCancellationRequested();
-                x = Mathf.Max(0f, x - speed * Time.unscaledDeltaTime);
-                var cur = _arrow.localScale;
-                cur.x = x;
-                _arrow.localScale = cur;
-                await UniTask.Yield(PlayerLoopTiming.Update, token);
-            }
-        }
+                if (_arrow == null) return;
+                float newY = startPos.y + _moveSpeedYPerSec * timeSec;
+                _arrow.anchoredPosition = new Vector2(startPos.x, newY);
 
-        if (_deactivateOnComplete)
+                // 到達判定で移動を終了し、消滅フェーズへ
+                if (!_vanishStarted && IsArrowCenterTouchingContainerTop())
+                {
+                    _vanishStarted = true;
+                    if (_moveHandle.IsActive()) _moveHandle.Cancel();
+                    StartVanishTween();
+                }
+            })
+            .AddTo(gameObject);
+
+        // Yスケール成長を LitMotion で駆動（unscaled、線形・速度指定）
+        StartGrowTween();
+
+        using (token.Register(Cancel))
         {
-            _arrow.gameObject.SetActive(false);
+            await UniTask.WaitUntil(() => _completed, cancellationToken: token);
         }
     }
 
@@ -184,6 +180,62 @@ public class ArrowGrowAndVanish : MonoBehaviour
 
         // 基本UIは回転しない想定なのでWorld Yで比較
         return arrowCenterWorld.y >= containerTopWorld.y;
+    }
+
+    private void StartVanishTween()
+    {
+        if (_vanishHandle.IsActive()) _vanishHandle.Cancel();
+        if (_growHandle.IsActive()) _growHandle.Cancel();
+
+        float duration;
+        if (_vanishDuration > 0f)
+        {
+            duration = _vanishDuration;
+        }
+        else
+        {
+            float speed = Mathf.Max(0.0001f, _vanishSpeedXPerSec);
+            duration = 1f / speed; // X=1→0 までの所要時間
+        }
+
+        _vanishHandle = LMotion.Create(1f, 0f, duration)
+            .WithEase(Ease.Linear)
+            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+            .Bind(x =>
+            {
+                if (_arrow == null) return;
+                var cur = _arrow.localScale;
+                cur.x = x;
+                _arrow.localScale = cur;
+
+                if (x <= 0f)
+                {
+                    if (_deactivateOnComplete && _arrow != null)
+                    {
+                        _arrow.gameObject.SetActive(false);
+                    }
+                    _completed = true;
+                }
+            })
+            .AddTo(gameObject);
+    }
+
+    private void StartGrowTween()
+    {
+        if (_growHandle.IsActive()) _growHandle.Cancel();
+        float baseScale = Mathf.Max(0f, _startYScale);
+        _growHandle = LMotion.Create(0f, 1f, 1f)
+            .WithEase(Ease.Linear)
+            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+            .WithLoops(-1, LoopType.Incremental)
+            .Bind(timeSec =>
+            {
+                if (_arrow == null) return;
+                var sc = _arrow.localScale;
+                sc.y = baseScale + _growSpeedPerSec * timeSec;
+                _arrow.localScale = sc;
+            })
+            .AddTo(gameObject);
     }
 
     /// <summary>

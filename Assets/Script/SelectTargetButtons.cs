@@ -1,4 +1,4 @@
-﻿using RandomExtensions;
+using RandomExtensions;
 using RandomExtensions.Linq;
 using System.Collections;
 using System.Collections.Generic;
@@ -51,7 +51,7 @@ public class SelectTargetButtons : MonoBehaviour
     float startX;
     float startY;
 
-    BattleManager bm => Walking.bm;
+    BattleManager bm => Walking.Instance.bm;
     int NeedSelectCountAlly;//このneedcountは基本的には対象選択のみ
     int NeedSelectCountEnemy;
     List<Button> AllybuttonList = new List<Button>();
@@ -512,7 +512,7 @@ public class SelectTargetButtons : MonoBehaviour
     /// </summary>
     private void ReturnNextWaitView()
     {
-        Walking.USERUI_state.Value = TabState.NextWait;
+        Walking.Instance.USERUI_state.Value = TabState.NextWait;
 
         //bmの対象者リストにキャッシュリストを入れる
         CashUnders.Shuffle();//分散値のランダム性のためシャッフル

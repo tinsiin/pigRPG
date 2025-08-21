@@ -24,7 +24,7 @@ public class Slaim : BasePassive
         //自分に雲隠れを付与
         _owner.ApplyPassiveBufferInBattleByID(14,_owner);
         //雲隠れの2ターンと十日能力の比較分のリーディングステップを味方に付与
-        foreach(var live in Walking.bm.GetOtherAlliesAlive(_owner))
+        foreach(var live in Walking.Instance.bm.GetOtherAlliesAlive(_owner))
         {
             live.ApplyPassiveBufferInBattleByID(13,_owner);
             var pas = live.GetBufferPassiveByID(13);

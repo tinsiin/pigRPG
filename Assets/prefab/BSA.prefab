@@ -1,0 +1,116 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4434041578201774601
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5731037304164723093}
+  - component: {fileID: 3402698346558660802}
+  - component: {fileID: 4184533312029259958}
+  - component: {fileID: 548151908655442752}
+  - component: {fileID: 2265532821940866569}
+  m_Layer: 5
+  m_Name: BSA
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &5731037304164723093
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4434041578201774601}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &3402698346558660802
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4434041578201774601}
+  m_CullTransparentMesh: 1
+--- !u!114 &4184533312029259958
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4434041578201774601}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9de0d70f36e46e4d9773ab070f4e16c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _line: {fileID: 548151908655442752}
+  _canvasGroup: {fileID: 2265532821940866569}
+  _thicknessMin: 2.29
+  _thicknessMax: 11.5
+  _headLength: 36
+  _headAngleDeg: 28
+  _fixedLength: 180
+  _circleRadiusSelf: 40
+  _circleHeadLength: 16
+  _circleHeadAngleDeg: 28
+  _angleNoiseDeg: 23.86
+  _lengthNoisePx: 10.96
+  _midOffsetNoiseXY: {x: 56.3, y: 31.9}
+  _headLengthNoisePx: 6.73
+  _selfCenterNoiseXY: {x: 11.57, y: 19.75}
+  _selfHeadLengthNoisePx: 9.31
+  _debugLog: 0
+--- !u!114 &548151908655442752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4434041578201774601}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 386d1e5d6220fee42b5380bbad02a686, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  lines: []
+  circles: []
+  thickness: 2.29
+  lineColor: {r: 1, g: 0, b: 1, a: 1}
+  two: {r: 1, g: 0, b: 1, a: 1}
+  circleSegments: 36
+  shakeAmplitude: 0
+  shakeFrequency: 0
+  bornPosRange: {x: 0, y: 0}
+  sideObject_Type: 1
+--- !u!225 &2265532821940866569
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4434041578201774601}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0

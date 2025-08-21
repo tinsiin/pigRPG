@@ -783,18 +783,18 @@ public class BattleManager
                 //ここでスキルを指定した範囲性質を持つもののみinteractable=trueになるようにする。
                 ps.OnlySelectActs_geino(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType,OnlyCantACTPassiveCancel);//ボタンのオンオフをするコールバック
                 ps.OnSkillSelectionScreenTransition_geino();//遷移時のここの引数必要のないコールバック
-                Walking.SKILLUI_state.Value = SkillUICharaState.geino;
+                Walking.Instance.SKILLUI_state.Value = SkillUICharaState.geino;
                 break;
 
             case SateliteProcessStates:
                 ps.OnlySelectActs_sites(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType,OnlyCantACTPassiveCancel);
                 ps.OnSkillSelectionScreenTransition_sites();
-                Walking.SKILLUI_state.Value = SkillUICharaState.sites;
+                Walking.Instance.SKILLUI_state.Value = SkillUICharaState.sites;
                 break;
             case BassJackStates:
                 ps.OnlySelectActs_normalia(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType,OnlyCantACTPassiveCancel);
                 ps.OnSkillSelectionScreenTransition_noramlia();
-                Walking.SKILLUI_state.Value = SkillUICharaState.normalia;
+                Walking.Instance.SKILLUI_state.Value = SkillUICharaState.normalia;
                 break;
 
         }
@@ -807,6 +807,7 @@ public class BattleManager
     public async UniTask<TabState> CharacterActBranching()
     {
         Debug.Log("俳優の行動の分岐-NextWaitボタンが押されました。");
+        BattleSystemArrowManager.Instance.Next();//システム矢印を進める
         if(Acter == null)
         {
             Debug.LogError("俳優が認識されていない-エンカウントロジックなどに問題あり");
@@ -961,7 +962,7 @@ public class BattleManager
         //味方の場合はエリアの逃走率判定
         if(ActerFaction == allyOrEnemy.alliy)
         {
-            var Rate = Walking.NowStageCut.EscapeRate;
+            var Rate = Walking.Instance.NowStageCut.EscapeRate;
             //人数により逃走率の分岐
             switch(AllyGroup.Ours.Count)
             {
@@ -1080,9 +1081,6 @@ public class BattleManager
         }
 
         OnBattleEnd();
-        schizoLog.AddLog("戦闘を終わらせた",true);
-        schizoLog.DisplayAllAsync().Forget();//ACTPOPが呼ばれないのでここで呼ぶ
-        //そもそも戦闘終わりはschizologではなくMessageDropperで行われるのが前提だけど、デバック用にね
         return TabState.walk;
     }
     
@@ -2281,6 +2279,12 @@ public class BattleManager
         }
 
         PlayersStates.Instance.AllyAlliesUISetActive(false);//全味方UI非表示
+        BattleSystemArrowManager.Instance.ClearQueue();//矢印を消す
+        schizoLog.HardStopAndClearAsync().Forget();
+
+        //schizoLog.AddLog("戦闘を終わらせた",true);
+        //schizoLog.DisplayAllAsync().Forget();//ACTPOPが呼ばれないのでここで呼ぶ
+        //そもそも戦闘終わりはschizologではなくMessageDropperで行われるのが前提だけど、デバック用にね
     }
 
     private void OnBattleStart()
@@ -2304,6 +2308,8 @@ public class BattleManager
         {
             WatchUIUpdate.Instance.ShowActionMarkFromSpawn();
         }
+        var sd = Walking.Instance.NowStageData;//矢印にステージテーマ色を適用
+        BattleSystemArrowManager.Instance.SetColorsForAll(sd.StageThemeColorUI.FrameArtColor,sd.StageThemeColorUI.TwoColor);
     }
 
 }

@@ -9,7 +9,7 @@ using RandomExtensions;
 using UnityEngine.Serialization;
 using UnityEditor.Rendering;
 
-public class SideObjectMove : MonoBehaviour　　//エディタ拡張からアクセスされる変数は基本的にはpublicにしなければならない。
+public class SideObjectMove : MonoBehaviour//エディタ拡張からアクセスされる変数は基本的にはpublicにしなければならない。
 {
     //フェードアウトの処理に使う
     public Vector2 bornPos; //生成時の位置

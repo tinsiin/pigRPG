@@ -119,6 +119,7 @@ public class PassiveVitalLayerBinding
 [Serializable]
 public class BasePassive
 {
+    protected BattleManager manager => Walking.Instance.bm;
     /// <summary>
     /// 適合するキャラ属性(精神属性)　
     /// </summary>
@@ -318,7 +319,7 @@ public class BasePassive
 
         if(BeVanguardOnApply)//前のめりになるパッシブなら
         {
-            Walking.bm.BeVanguard(user);
+            manager.BeVanguard(user);
         }
 
         //前のめりでないなら消えるパッシブなら、消す
@@ -561,7 +562,7 @@ public class BasePassive
     /// </summary>
     public void UpdateNotVanguardSurvival(BaseStates user)
     {
-        if (RemoveOnNotVanguard && !Walking.bm.IsVanguard(user))//前のめりでなく、前のめり出ないなら消える性質があるのなら
+        if (RemoveOnNotVanguard && !manager.IsVanguard(user))//前のめりでなく、前のめり出ないなら消える性質があるのなら
         {
             user.RemovePassive(this);
         }

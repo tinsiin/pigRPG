@@ -94,6 +94,9 @@ public class SchizoLog : MonoBehaviour
     private System.Text.StringBuilder _displayBuffer = new System.Text.StringBuilder();
 
     private bool _isQuitting = false;
+    
+    // キャンセル時に残り文字を即時描画しない抑止フラグ（既定: false = 既存挙動を維持）
+    private bool _suppressFlushOnCancel = false;
 
     // 末尾付近にユーティリティ
     private bool IsUIAlive()
@@ -547,13 +550,19 @@ public class SchizoLog : MonoBehaviour
         }
         catch (OperationCanceledException)
         {
-            // ====== 割り込み時：残りを一気に描画 ======
-            for (; i < newText.Length; i++)
+            // ====== 割り込み時：既定では残りを一気に描画 ======
+            if (!_suppressFlushOnCancel)
             {
-                AppendOneChar(newText[i]);
+                for (; i < newText.Length; i++)
+                {
+                    AppendOneChar(newText[i]);
+                }
+                Log("SchizoLog: 中断→残り文字を即時描画完了");
             }
-
-            Log("SchizoLog: 中断→残り文字を即時描画完了");
+            else
+            {
+                Log("SchizoLog: 中断→即時描画を抑止しました");
+            }
             // 例外は握りつぶして正常終了扱いにする
         }
 
@@ -806,6 +815,35 @@ public class SchizoLog : MonoBehaviour
             LogText.maxVisibleCharacters = 0;
         }
         Log("SchizoLog: エントリと_displayBufferをクリアしました");
+    }
+
+    /// <summary>
+    /// 進行中の表示をフラッシュなしで停止し、その後すべてをクリアする（既存仕様に影響しない安全な停止）
+    /// </summary>
+    public async UniTask HardStopAndClearAsync()
+    {
+        // フラッシュ抑止を有効化
+        _suppressFlushOnCancel = true;
+
+        try
+        {
+            // 進行中であればキャンセルを投げる
+            _displayCts?.Cancel();
+
+            // 表示ループの完全終了を待機（DisplayAllAsync の finally で _isDisplaying=false になる）
+            await UniTask.WaitUntil(() => !_isDisplaying);
+        }
+        catch (Exception)
+        {
+            // 念のため握りつぶし（停止優先）
+        }
+        finally
+        {
+            // すべてクリア（エントリ、バッファ、UI）
+            ClearLogs();
+            // 抑止を元に戻す（既存挙動へ）
+            _suppressFlushOnCancel = false;
+        }
     }
 
     // =========================

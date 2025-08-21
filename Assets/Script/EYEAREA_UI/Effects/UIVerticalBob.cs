@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
+using LitMotion;
+using LitMotion.Extensions;
 
 [DisallowMultipleComponent]
 public class UIVerticalBob : MonoBehaviour
@@ -35,10 +37,13 @@ public class UIVerticalBob : MonoBehaviour
         set
         {
             bobEnabled = value;
-            if (!bobEnabled && rt != null)
+            if (bobEnabled)
             {
-                // 無効化時は基準位置に戻す
-                rt.anchoredPosition = baseAnchoredPos;
+                StartBobTween();
+            }
+            else
+            {
+                StopBobTween(resetPosition: true);
             }
         }
     }
@@ -46,6 +51,8 @@ public class UIVerticalBob : MonoBehaviour
     RectTransform rt;
     Vector2 baseAnchoredPos;
     float scaleFactorInv = 1f;
+    MotionHandle bobHandle;
+    bool lastUseUnscaledTime;
 
     void Awake()
     {
@@ -71,32 +78,40 @@ public class UIVerticalBob : MonoBehaviour
     void OnEnable()
     {
         if (rt != null) baseAnchoredPos = rt.anchoredPosition;
+        if (bobEnabled)
+        {
+            StartBobTween();
+        }
     }
 
     void OnDisable()
     {
-        if (rt != null) rt.anchoredPosition = baseAnchoredPos;
+        StopBobTween(resetPosition: true);
     }
 
     void Update()
     {
         if (rt == null) return;
         
-        // 無効時は常に基準位置に固定
+        // インスペクタからの切替にも追従できるよう、フレーム毎に状態同期
         if (!bobEnabled)
         {
-            if (rt.anchoredPosition != baseAnchoredPos)
-                rt.anchoredPosition = baseAnchoredPos;
+            if (bobHandle.IsActive())
+            {
+                StopBobTween(resetPosition: true);
+            }
             return;
         }
 
-        float time = useUnscaledTime ? Time.unscaledTime : Time.time;
-        float t = time * speed;
-        // ピクセル指定をUI単位に換算
-        float ampUnits = amplitudePixels * scaleFactorInv;
-        float y = Mathf.Sin(t * frequency + phase) * ampUnits;
-
-        rt.anchoredPosition = baseAnchoredPos + new Vector2(0f, y);
+        if (!bobHandle.IsActive())
+        {
+            StartBobTween();
+        }
+        else if (lastUseUnscaledTime != useUnscaledTime)
+        {
+            // 実行中にスケジューラ種別が変わった場合は作り直す
+            StartBobTween();
+        }
     }
 
     // 外部から初期化したいとき用の簡易API
@@ -106,5 +121,48 @@ public class UIVerticalBob : MonoBehaviour
         frequency = freq;
         speed = spd;
         phase = ph;
+    }
+
+    void StartBobTween()
+    {
+        if (rt == null) return;
+        // 既存が生きていたら停止
+        if (bobHandle.IsActive())
+        {
+            bobHandle.Cancel();
+        }
+
+        // 基準位置を最新化（外部で位置が変わっている可能性に対応）
+        baseAnchoredPos = rt.anchoredPosition;
+
+        var scheduler = useUnscaledTime ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update;
+        lastUseUnscaledTime = useUnscaledTime;
+
+        // 1秒で1ずつ増える連続時間（累積）を生成し、Bind内で元のサイン波式を再現
+        bobHandle = LMotion.Create(0f, 1f, 1f)
+            .WithEase(Ease.Linear)
+            .WithScheduler(scheduler)
+            .WithLoops(-1, LoopType.Incremental)
+            .Bind(timeSec =>
+            {
+                if (rt == null) return;
+                float ampUnits = amplitudePixels * scaleFactorInv; // ピクセル→UI単位
+                float omega = speed * frequency;                   // 角速度（rad/s）
+                float y = Mathf.Sin(timeSec * omega + phase) * ampUnits;
+                rt.anchoredPosition = baseAnchoredPos + new Vector2(0f, y);
+            })
+            .AddTo(gameObject);
+    }
+
+    void StopBobTween(bool resetPosition)
+    {
+        if (bobHandle.IsActive())
+        {
+            bobHandle.Cancel();
+        }
+        if (resetPosition && rt != null)
+        {
+            rt.anchoredPosition = baseAnchoredPos;
+        }
     }
 }

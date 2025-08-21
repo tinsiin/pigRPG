@@ -16,7 +16,7 @@ public abstract class BattleAIBrain : ScriptableObject
     /// </summary>
     public virtual void Think()
     {
-        manager = Walking.bm;
+        manager = Walking.Instance.bm;
     }
 
     /// <summary>

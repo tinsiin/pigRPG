@@ -17,16 +17,31 @@ public class Walking : MonoBehaviour
     [SerializeField] private SelectButton SelectButtonPrefab;
     [SerializeField] private int SelectBtnSize;
     [SerializeField] private MessageDropper MessageDropper;
-
+    public static Walking Instance;
+    // NextWaitボタンの再入防止フラグ
+    private bool _isProcessingNext = false;
+    // 処理中に押された NextWait を次回に繰り越すフラグ
+    private bool _pendingNextClick = false;
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(this);
+        }
+    }
     /// <summary>
     /// USERUIの状態
     /// </summary>
-    public static ReactiveProperty<TabState> USERUI_state = new();
+    public ReactiveProperty<TabState> USERUI_state = new();
 
     /// <summary>
     /// スキルUIで誰のスキルが映っているか
     /// </summary>
-    public static ReactiveProperty<SkillUICharaState> SKILLUI_state = new();
+    public ReactiveProperty<SkillUICharaState> SKILLUI_state = new();
 
 
 
@@ -46,11 +61,11 @@ public class Walking : MonoBehaviour
     private List<SelectButton> buttons;
 
     private AreaDate NowAreaData;
-    public static StageCut NowStageCut;
+    public StageCut NowStageCut;
     private Stages stages;
 
     //現在のステージとエリアのデータを保存する関数
-    private StageData NowStageData;
+    public StageData NowStageData;
     private PlayersStates ps;
     private  void Start()
     {
@@ -76,6 +91,7 @@ public class Walking : MonoBehaviour
                 //それぞれ画面に移動したときに生成コールが実行されるようにする
 
                 if (state == TabState.SelectRange) SelectRangeButtons.Instance.OnCreated();
+                // NextWaitボタンの interactable 制御はここでは行わない（タイミング競合回避のため）
             });
 
         //USERUIの初期状態
@@ -97,16 +113,45 @@ public class Walking : MonoBehaviour
 
     private async UniTask OnClickNextWaitBtn()
     {
-        USERUI_state.Value = await bm.CharacterActBranching();
+        //USERUI_state.Value = await bm.CharacterActBranching();
+        if (_isProcessingNext)
+        {
+            // 処理中に押された場合は次回繰り越し
+            _pendingNextClick = true;
+            return; // 再入防止
+        }
+        _isProcessingNext = true;
+        // UIの有効/無効はここでは切り替えない（ガードで防止）
+
+        try
+        {
+            var next = await bm.CharacterActBranching();
+            USERUI_state.Value = next;
+        }
+        finally
+        {
+            _isProcessingNext = false;
+            // 処理中にクリックがあった場合、NextWait 画面なら自動的に次を進める
+            if (_pendingNextClick && USERUI_state.Value == TabState.NextWait)
+            {
+                _pendingNextClick = false;
+                OnClickNextWaitBtn().Forget();
+            }
+            else
+            {
+                _pendingNextClick = false; // いずれにせよクリア
+            }
+        }
     }
 
-    public static BattleManager bm;
+    public  BattleManager bm;
     private  void Encount()
     {
+        var enemyNumber = 2;//エンカウント人数を指定できる。　-1が普通の自動調整モード
         //Debug.Log("エンカウント処理WalkingのEncountメソッド");
         BattleGroup enemyGroup = null; //敵グループ
         BattleGroup allyGroup = null; //味方グループ
-        if ((enemyGroup = NowStageCut.EnemyCollectAI()) != null) //nullでないならエンカウントし、敵グループ
+        if ((enemyGroup = NowStageCut.EnemyCollectAI(enemyNumber)) != null) //nullでないならエンカウントし、敵グループ
         {
             //敵グループが返ってきてエンカウント
             Debug.Log("encount");
@@ -131,7 +176,9 @@ public class Walking : MonoBehaviour
         
         PlayersStates.Instance.OnBattleStart();
         USERUI_state.Value = bm.ACTPop();//一番最初のUSERUIの状態を変更させるのと戦闘ループの最初の準備処理。
-            _nextWaitBtn.onClick.AddListener(()=>OnClickNextWaitBtn().Forget());;//ボタンにbmの処理を追加
+            // リスナーの重複登録を防止
+            _nextWaitBtn.onClick.RemoveAllListeners();
+            _nextWaitBtn.onClick.AddListener(()=>OnClickNextWaitBtn().Forget()); //ボタンにbmの処理を追加
             //非同期なのでボタン処理自体は非同期で実行されるが、例えばUI側での他のボタンや、このボタン自体の処理を防ぐってのはないけど、
             //そこは内部でのUI処理で対応してるから平気
         }

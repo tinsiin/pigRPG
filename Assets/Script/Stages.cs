@@ -88,19 +88,25 @@ public class Stages : MonoBehaviour
     [Serializable]
     public class StageThemeColorUI
     {
+        [Header("ActionMarkの色 マゼンタとこの色を行き来する。 ")]
         /// <summary>
-        /// 行動者のアイコンの裏に描画する色
+        /// 行動者のアイコン強調表示色
         /// </summary>
         public Color ActionMarkColor;
+        [Header("フレーム描画用のテーマ色のメイン部分 これ自体がテーマ色のメイン")]
         /// <summary>
         /// 歩行時のサイドオブジェクトと、EYEAREAでの矢印を描画する色
+        /// フレーム描画用のテーマ色のメイン部分
         /// </summary>
-        public Color SideObjectANDArrowColor;
+        public Color FrameArtColor;
+        [Header("基本同じAlphaの離れ具合で指定するといいと思う。")]
+        public Color TwoColor;
         public StageThemeColorUI DeepCopy()
         {
             var copy = new StageThemeColorUI();
             copy.ActionMarkColor = this.ActionMarkColor;
-            copy.SideObjectANDArrowColor = this.SideObjectANDArrowColor;
+            copy.FrameArtColor = this.FrameArtColor;
+            copy.TwoColor = this.TwoColor;
             return copy;
         }
 
@@ -289,9 +295,11 @@ public class Stages : MonoBehaviour
         SchizoLog schizoLog = SchizoLog.Instance;
         /// <summary>
         ///     EnemyCollectManagerを使って敵を選ぶAI　キャラクター属性や種別などを考慮して選ぶ。
-        ///     エンカウント失敗したら、nullを返す
+        ///     エンカウント失敗したら、nullを返す　「上限人数3人」
+        ///     数を指定すると指定された分だけ返るが、自動モード同様に三人まで。
         /// </summary>
-        public BattleGroup EnemyCollectAI()
+        /// <param name="number">敵の数を指定する。-1を指定すると指定されない</param>
+        public BattleGroup EnemyCollectAI(int number = -1)
         {
             var CompatibilityData = new Dictionary<(BaseStates,BaseStates),int>();//相性値のデータ保存用
             
@@ -300,6 +308,8 @@ public class Stages : MonoBehaviour
             var ResultList = new List<NormalEnemy>(); //返す用のリスト
             PartyProperty ourImpression;
             var targetList = new List<NormalEnemy>(_enemyList); //引数のリストをコピー newを使ってディープコピー
+            var manualCount = number >= 1;
+            var targetCount = manualCount ? Mathf.Clamp(number, 1, 3) : -1;
 
             //生きてる敵や死んでても今回で復活予定の敵を有効リストに抽出
             var validEnemies = new List<NormalEnemy>(); //有効な敵のリスト
@@ -344,6 +354,16 @@ public class Stages : MonoBehaviour
             validEnemies.RemoveAt(rndIndex); //削除
             ResultList.Add(referenceOne); //追加
 
+            // 手動人数指定（1人）ならここで確定して返す
+            if (manualCount && targetCount == 1)
+            {
+                //パーティー属性を決める　一人なのでその一人の属性をそのままパーティー属性にする
+                ourImpression =
+                    EnemyCollectManager.Instance.EnemyLonelyPartyImpression
+                        [ResultList[0].MyImpression]; //()ではなく[]でアクセスすることに注意
+
+                return new BattleGroup(ResultList.Cast<BaseStates>().ToList(), ourImpression, allyOrEnemy.Enemyiy); //while文に入らずに返す  
+            }
 
             //数判定(一人判定)　または　もう待機リストに誰もいなかった場合
             if(ResultList[0].MyImpression == 0)
@@ -351,7 +371,7 @@ public class Stages : MonoBehaviour
                 Debug.LogError("EnemyCollectAI: 最初の一人の精神属性が0です。これはキャラの精神属性に何もセットされていないです。" 
                 + ResultList[0].MyImpression);
             }
-            if (EnemyCollectManager.Instance.LonelyMatchUp(ResultList[0].MyImpression) || validEnemies.Count <= 0)
+            if (!manualCount && (EnemyCollectManager.Instance.LonelyMatchUp(ResultList[0].MyImpression) || validEnemies.Count <= 0))
             {
                 //パーティー属性を決める　一人なのでその一人の属性をそのままパーティー属性にする
                 ourImpression =
@@ -364,6 +384,22 @@ public class Stages : MonoBehaviour
             //複数人加入するループ
             while (true)
             {
+                // 指定人数モード: 目標人数に達したら確定して抜ける
+                if (manualCount && ResultList.Count >= targetCount)
+                {
+                    ourImpression = (ResultList.Count == 1)
+                        ? EnemyCollectManager.Instance.EnemyLonelyPartyImpression[ResultList[0].MyImpression]
+                        : EnemyCollectManager.Instance.calculatePartyProperty(ResultList);
+                    break;
+                }
+                // 指定人数モード: 候補が尽きた場合は現在のメンバーで確定
+                if (manualCount && validEnemies.Count < 1)
+                {
+                    ourImpression = (ResultList.Count == 1)
+                        ? EnemyCollectManager.Instance.EnemyLonelyPartyImpression[ResultList[0].MyImpression]
+                        : EnemyCollectManager.Instance.calculatePartyProperty(ResultList);
+                    break;
+                }
                 //まず吟味する加入対象をランダムに選ぶ
                 var targetIndex = RandomEx.Shared.NextInt(0, validEnemies.Count - 1); //ランダムでインデックス指定
                 var target = validEnemies[targetIndex];
@@ -401,26 +437,30 @@ public class Stages : MonoBehaviour
                 }
 
                 //数判定
-                if (ResultList.Count == 1) //一人だったら(まだ一人も見つけれてない場合)
-                    if (RandomEx.Shared.NextInt(100) < 88) //88%の確率で一人で終わる計算に入る。
-                                                           //数判定(一人判定)　
-                        if (EnemyCollectManager.Instance.LonelyMatchUp(ResultList[0].MyImpression))
-                        {
-                            //パーティー属性を決める　一人なのでその一人の属性をそのままパーティー属性にする
-                            ourImpression =
-                                EnemyCollectManager.Instance.EnemyLonelyPartyImpression
-                                    [ResultList[0].MyImpression]; //()ではなく[]でアクセスすることに注意
+                if (!manualCount)
+                    if (ResultList.Count == 1) //一人だったら(まだ一人も見つけれてない場合)
+                        if (RandomEx.Shared.NextInt(100) < 88) //88%の確率で一人で終わる計算に入る。
+                                                               //数判定(一人判定)　
+                            if (EnemyCollectManager.Instance.LonelyMatchUp(ResultList[0].MyImpression))
+                            {
+                                //パーティー属性を決める　一人なのでその一人の属性をそのままパーティー属性にする
+                                ourImpression =
+                                    EnemyCollectManager.Instance.EnemyLonelyPartyImpression
+                                        [ResultList[0].MyImpression]; //()ではなく[]でアクセスすることに注意
 
+                                break;
+                            }
+
+                if (!manualCount)
+                {
+                    if (ResultList.Count == 2) //二人だったら三人目の加入を決める
+                    {
+                        if (RandomEx.Shared.NextInt(100) < 65) //この確率で終わる。
+                        {
+                            //パーティー属性を決める
+                            ourImpression = EnemyCollectManager.Instance.calculatePartyProperty(ResultList);
                             break;
                         }
-
-                if (ResultList.Count == 2) //二人だったら三人目の加入を決める
-                {
-                    if (RandomEx.Shared.NextInt(100) < 65) //この確率で終わる。
-                    {
-                        //パーティー属性を決める
-                        ourImpression = EnemyCollectManager.Instance.calculatePartyProperty(ResultList);
-                        break;
                     }
                 }
 

@@ -323,7 +323,7 @@ public class SkillLevelData
 public class BaseSkill
 {
     protected SchizoLog schizoLog => SchizoLog.Instance;
-    protected BattleManager manager => Walking.bm;
+    protected BattleManager manager => Walking.Instance.bm;
     /// <summary>
     ///     スキルの精神属性
     /// </summary>
@@ -518,7 +518,7 @@ public class BaseSkill
         var ratio = 0.7f;
         var BaseMoodRange = GetEstablishSpiritualMoodRange(BaseStates.GetOffensiveSpiritualModifier(Doer,underAtker).GetValue(ratio),ratio);
         //次にパーティ属性と自分の属性相性による調子の範囲の補正
-        var MoodRange = ModifyMoodByAttributeCompatibility(BaseMoodRange,Doer.MyImpression,Walking.bm.MyGroup(Doer).OurImpression);
+        var MoodRange = ModifyMoodByAttributeCompatibility(BaseMoodRange,Doer.MyImpression,manager.MyGroup(Doer).OurImpression);
 
         //今度は調子の範囲で使う上下レートを決める
         //スキルの印象構造と同じ攻撃者の(Doer)十日能力値の総量を取得

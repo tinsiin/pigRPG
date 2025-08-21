@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using LitMotion;
+using LitMotion.Extensions;
 
 /// <summary>
 /// 2つの色の間を一定間隔で変化し続ける四角形のUIコンポーネント。
@@ -14,8 +16,8 @@ public class ActionMarkUI : MaskableGraphic
     [SerializeField] float m_Height = 100f;         // 四角形の高さ
     
     [Header("色変化設定")]
-    [SerializeField] Color m_ColorA = Color.red;    // 変化色A
-    [SerializeField] Color m_ColorB = Color.blue;   // 変化色B
+    [SerializeField] Color m_ColorA = Color.magenta;    // 変化色A ステージテーマ色とこの色を行き来する。
+    Color m_StageThemeColor = Color.magenta;//ステージテーマ色　固定用
     [SerializeField] float m_ChangeSpeed = 1f;      // 変化スピード（1秒で1サイクル）
     
     [Header("アニメーション設定")]
@@ -28,9 +30,11 @@ public class ActionMarkUI : MaskableGraphic
     [SerializeField] AnimationCurve m_MoveCurve = AnimationCurve.EaseInOut(0, 0, 1, 1); // 移動/サイズの補間カーブ
     [SerializeField] float m_SizeMultiplier = 1.16f;    // 対象アイコンサイズに対する倍率
     
-    private float m_Timer = 0f;
+    private float m_Timer = 0f; // 色アニメの位相オフセット[0,1)
     private bool m_IsAnimating = false;
-    private Coroutine m_MoveRoutine;
+    private MotionHandle m_MoveHandle;
+    private MotionHandle m_ColorHandle;
+    private float m_ColorAccum = 0f; // LitMotion開始以降の累積値（秒換算1/s）
     
     #region Public API
     /// <summary>
@@ -75,8 +79,8 @@ public class ActionMarkUI : MaskableGraphic
     /// </summary>
     public Color ColorB
     {
-        get => m_ColorB;
-        set { m_ColorB = value; }
+        get => m_StageThemeColor;
+        set { m_StageThemeColor = value; }
     }
     
     /// <summary>
@@ -100,12 +104,11 @@ public class ActionMarkUI : MaskableGraphic
     }
     
     /// <summary>
-    /// 色を設定
+    /// ステージテーマ色を保持
     /// </summary>
-    public void SetColors(Color colorA, Color colorB)
+    public void SetStageThemeColor(Color color)
     {
-        m_ColorA = colorA;
-        m_ColorB = colorB;
+        m_StageThemeColor = color;
     }
     
     /// <summary>
@@ -114,6 +117,7 @@ public class ActionMarkUI : MaskableGraphic
     public void StartAnimation()
     {
         m_IsAnimating = true;
+        StartColorTweenIfNeeded();
     }
     
     /// <summary>
@@ -122,6 +126,7 @@ public class ActionMarkUI : MaskableGraphic
     public void StopAnimation()
     {
         m_IsAnimating = false;
+        StopColorTween();
     }
     
     /// <summary>
@@ -130,6 +135,7 @@ public class ActionMarkUI : MaskableGraphic
     public void ToggleAnimation()
     {
         m_IsAnimating = !m_IsAnimating;
+        if (m_IsAnimating) StartColorTweenIfNeeded(); else StopColorTween();
     }
     
     /// <summary>
@@ -150,7 +156,7 @@ public class ActionMarkUI : MaskableGraphic
     {
         if (target == null)
         {
-            if (m_MoveRoutine != null) { StopCoroutine(m_MoveRoutine); m_MoveRoutine = null; }
+            if (m_MoveHandle.IsActive()) { m_MoveHandle.Cancel(); }
             return;
         }
 
@@ -185,7 +191,7 @@ public class ActionMarkUI : MaskableGraphic
     {
         if (target == null)
         {
-            if (m_MoveRoutine != null) { StopCoroutine(m_MoveRoutine); m_MoveRoutine = null; }
+            if (m_MoveHandle.IsActive()) { m_MoveHandle.Cancel(); }
             return;
         }
 
@@ -217,6 +223,34 @@ public class ActionMarkUI : MaskableGraphic
         {
             StartAnimation();
         }
+        // エディタ起動直後（プレイ前）は依存先が未初期化の可能性があるためガード
+        if (Application.isPlaying)
+        {
+            var walking = Walking.Instance;
+            if (walking != null && walking.NowStageData != null && walking.NowStageData.StageThemeColorUI != null)
+            {
+                SetStageThemeColor(walking.NowStageData.StageThemeColorUI.ActionMarkColor); // ゲーム起動時のステージの色を保持
+            }
+        }
+    }
+
+    protected override void OnEnable()
+    {
+        base.OnEnable();
+        if (m_IsAnimating)
+        {
+            StartColorTweenIfNeeded();
+        }
+    }
+
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+        if (m_MoveHandle.IsActive())
+        {
+            m_MoveHandle.Cancel();
+        }
+        StopColorTween();
     }
     
     protected override void OnValidate()
@@ -236,27 +270,53 @@ public class ActionMarkUI : MaskableGraphic
     {
         if (m_IsAnimating)
         {
-            // タイマーを更新
-            m_Timer += Time.deltaTime * m_ChangeSpeed;
-            
-            // 0-1の範囲でループ
-            float normalizedTime = (m_Timer % 1f);
-            
-            // 0-1-0のパターンにするため、0.5で反転
-            float pingPongTime = normalizedTime <= 0.5f ? normalizedTime * 2f : (1f - normalizedTime) * 2f;
-            
-            // アニメーションカーブを適用
-            float curveValue = m_InterpolationCurve.Evaluate(pingPongTime);
-            
-            // 色を補間
-            Color currentColor = Color.Lerp(m_ColorA, m_ColorB, curveValue);
-            
-            // 色が変わった場合のみ再描画
-            if (color != currentColor)
+            if (!m_ColorHandle.IsActive())
             {
-                color = currentColor;
-                SetVerticesDirty();
+                StartColorTweenIfNeeded();
             }
+        }
+        else
+        {
+            if (m_ColorHandle.IsActive())
+            {
+                StopColorTween();
+            }
+        }
+    }
+
+    private void StartColorTweenIfNeeded()
+    {
+        if (m_ColorHandle.IsActive()) return;
+        // 1秒で1ずつ増加する時間を無限ループで供給し、元のロジックをBind内で再現
+        m_ColorHandle = LMotion.Create(0f, 1f, 1f)
+            .WithEase(Ease.Linear)
+            .WithScheduler(MotionScheduler.Update)
+            .WithLoops(-1, LoopType.Incremental)
+            .Bind(timeSec =>
+            {
+                // 元の実装: m_Timer += dt * m_ChangeSpeed; normalized = m_Timer % 1
+                // ここでは timeSec が開始からの累積（1秒で+1）なので、m_Timer を位相として加算
+                m_ColorAccum = timeSec;
+                float normalizedTime = (m_Timer + timeSec * m_ChangeSpeed) % 1f;
+                float pingPongTime = normalizedTime <= 0.5f ? normalizedTime * 2f : (1f - normalizedTime) * 2f;
+                float curveValue = m_InterpolationCurve != null ? m_InterpolationCurve.Evaluate(pingPongTime) : pingPongTime;
+                Color currentColor = Color.Lerp(m_ColorA, m_StageThemeColor, curveValue);
+                if (color != currentColor)
+                {
+                    color = currentColor;
+                    SetVerticesDirty();
+                }
+            })
+            .AddTo(gameObject);
+    }
+
+    private void StopColorTween()
+    {
+        if (m_ColorHandle.IsActive())
+        {
+            // 現在の累積を位相オフセットに畳み込み、再開時に続きから始める
+            m_Timer = (m_Timer + m_ColorAccum * m_ChangeSpeed) % 1f;
+            m_ColorHandle.Cancel();
         }
     }
     
@@ -287,6 +347,11 @@ public class ActionMarkUI : MaskableGraphic
     /// </summary>
     private void ApplyMoveAndSize(Vector2 targetLocalPos, Vector2 targetSize, bool immediate)
     {
+        if (m_MoveHandle.IsActive())
+        {
+            m_MoveHandle.Cancel();
+        }
+
         if (immediate || !m_EnableMoveAnimation || m_MoveDuration <= 0f)
         {
             rectTransform.anchoredPosition = targetLocalPos;
@@ -294,42 +359,24 @@ public class ActionMarkUI : MaskableGraphic
             return;
         }
 
-        if (m_MoveRoutine != null)
-        {
-            StopCoroutine(m_MoveRoutine);
-            m_MoveRoutine = null;
-        }
-        m_MoveRoutine = StartCoroutine(AnimateMoveAndSize(targetLocalPos, targetSize, m_MoveDuration, m_MoveCurve));
-    }
-
-    /// <summary>
-    /// 移動とサイズの同時補間コルーチン（割り込み可能）
-    /// </summary>
-    private IEnumerator AnimateMoveAndSize(Vector2 targetLocalPos, Vector2 targetSize, float duration, AnimationCurve curve)
-    {
         Vector2 startPos = rectTransform.anchoredPosition;
         Vector2 startSize = new Vector2(m_Width, m_Height);
-        float t = 0f;
 
-        while (t < duration)
-        {
-            t += Time.deltaTime;
-            float u = (duration > 0f) ? Mathf.Clamp01(t / duration) : 1f;
-            float e = (curve != null) ? curve.Evaluate(u) : u;
-
-            var pos = Vector2.LerpUnclamped(startPos, targetLocalPos, e);
-            var size = Vector2.LerpUnclamped(startSize, targetSize, e);
-
-            rectTransform.anchoredPosition = pos;
-            SetSize(size.x, size.y);
-
-            yield return null;
-        }
-
-        rectTransform.anchoredPosition = targetLocalPos;
-        SetSize(targetSize.x, targetSize.y);
-        m_MoveRoutine = null;
+        m_MoveHandle = LMotion.Create(0f, 1f, m_MoveDuration)
+            .WithEase(Ease.Linear)
+            .WithScheduler(MotionScheduler.Update)
+            .Bind(u =>
+            {
+                float e = (m_MoveCurve != null) ? m_MoveCurve.Evaluate(u) : u;
+                var pos = Vector2.LerpUnclamped(startPos, targetLocalPos, e);
+                var size = Vector2.LerpUnclamped(startSize, targetSize, e);
+                rectTransform.anchoredPosition = pos;
+                SetSize(size.x, size.y);
+            })
+            .AddTo(gameObject);
     }
+
+    
     
     protected override void OnPopulateMesh(VertexHelper vh)
     {

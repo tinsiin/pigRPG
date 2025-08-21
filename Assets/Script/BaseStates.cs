@@ -56,7 +56,7 @@ public abstract class BaseStates
         return (MyImpression & imp) == imp;
     }
 
-    protected BattleManager manager => Walking.bm;
+    protected BattleManager manager => Walking.Instance.bm;
     protected SchizoLog schizoLog => SchizoLog.Instance;
     /// <summary>
     /// キャラクターの被害記録
@@ -8209,6 +8209,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
 
         
+        var arrowThicknessDamagePercent = 0.05f;//ダメージを表す矢印の太さ用　デフォは10%
         
 
 
@@ -8246,7 +8247,10 @@ private int CalcTransformCountIncrement(int tightenStage)
             //攻撃者のHIT分の成長を記録
             attacker.TenDayGrowthListByHIT.Add((growRate * clampedRatio, skill.TenDayValues(skill.IsTLOA)));//成長量にTLOAならゆりかごを考慮
 
+            arrowThicknessDamagePercent = 0.2f;//ヒットしたら矢印の太さちょっと増やしとく
+
         }
+
 
         //ここで攻撃者の攻撃記録を記録する
         attacker.ActDoOneSkillDatas.Add(new ACTSkillDataForOneTarget(thisAtkTurn,isdisturbed,skill,this,isAttackerHit));//発動したのか、何のスキルなのかを記録
@@ -8263,7 +8267,14 @@ private int CalcTransformCountIncrement(int tightenStage)
             manager.MyGroup(this).PartyPassivesOnAfterAlliesDamage(attacker);
             //パッシブのダメージ食らった後のコールバックを呼び出す
             PassivesOnAfterDamage(attacker,damageAmount);
+            //自分のグループの全体現在HPに対してくらったダメージの割合が線の太さに反映される
+            var totalHP = manager.MyGroup(this).OurNowHP;
+            var groupeHP = totalHP > 0f ? damageAmount.Total / totalHP : 1f;//もしグループHPが0以下なら　1fで100%の太さを指定(死体蹴りだから)
+            arrowThicknessDamagePercent = groupeHP;
         }
+
+        //今回の攻撃結果を矢印の描画キューに
+        BattleSystemArrowManager.Instance.Enqueue(attacker,this,arrowThicknessDamagePercent);
 
         return txt;
     }

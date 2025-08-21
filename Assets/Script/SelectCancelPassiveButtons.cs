@@ -146,9 +146,9 @@ public class SelectCancelPassiveButtons : MonoBehaviour
         // パッシブのキャンセル処理
         owner.RemovePassive(passive);
         
-        Walking.bm.DoNothing = true;//ACTBranchingで何もしないようにするboolをtrueに。
+        Walking.Instance.bm.DoNothing = true;//ACTBranchingで何もしないようにするboolをtrueに。
 
-        Walking.USERUI_state.Value = TabState.NextWait;//CharacterACTBranchingへ
+        Walking.Instance.USERUI_state.Value = TabState.NextWait;//CharacterACTBranchingへ
         
         
         // ボタンをクリア

@@ -133,7 +133,7 @@ public class WatchUIUpdate : MonoBehaviour
     {
         StagesString.text = sd.StageName + "・\n" + sc.AreaName;
         NowImageCalc(sc, pla);
-        SideObjectManage(sc, SideObject_Type.Normal);//サイドオブジェクト
+        SideObjectManage(sc, SideObject_Type.Normal, sd.StageThemeColorUI.FrameArtColor,sd.StageThemeColorUI.TwoColor);//サイドオブジェクト（ステージ色適用）
     }
 
     /// <summary>
@@ -168,7 +168,7 @@ public class WatchUIUpdate : MonoBehaviour
         SaveOriginalTransforms();
         
         // ★ ズームと同時に敵UIを生成（並行実行でレスポンシブに）
-        var currentBattleManager = Walking.bm;
+        var currentBattleManager = Walking.Instance.bm;
         if (currentBattleManager?.EnemyGroup != null)
         {
             Debug.Log("ズームと同時に敵UI生成を開始");
@@ -188,11 +188,13 @@ public class WatchUIUpdate : MonoBehaviour
                 
                 var scaleTask = LMotion.Create(nowScale, _gotoScaleXY, _firstZoomSpeedTime)
                     .WithEase(_firstZoomAnimationCurve)
+                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                     .BindToLocalScaleXY(backRect)
                     .ToUniTask();
                     
                 var posTask = LMotion.Create(nowPos, _gotoPos, _firstZoomSpeedTime)
                     .WithEase(_firstZoomAnimationCurve)
+                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                     .BindToAnchoredPosition(backRect)
                     .ToUniTask();
                     
@@ -214,11 +216,13 @@ public class WatchUIUpdate : MonoBehaviour
                 
                 var scaleTask = LMotion.Create(nowScale, _gotoScaleXY, _firstZoomSpeedTime)
                     .WithEase(_firstZoomAnimationCurve)
+                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                     .BindToLocalScaleXY(frontRect)
                     .ToUniTask();
                     
                 var posTask = LMotion.Create(nowPos, _gotoPos, _firstZoomSpeedTime)
                     .WithEase(_firstZoomAnimationCurve)
+                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                     .BindToAnchoredPosition(frontRect)
                     .ToUniTask();
                     
@@ -315,11 +319,13 @@ public class WatchUIUpdate : MonoBehaviour
                 
                 var posTask = LMotion.Create(currentPos, _originalBackPos, duration)
                     .WithEase(Ease.OutQuart)
+                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                     .BindToAnchoredPosition(backRect)
                     .ToUniTask();
                     
                 var scaleTask = LMotion.Create((Vector3)currentScale, (Vector3)_originalBackScale, duration)
                     .WithEase(Ease.OutQuart)
+                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                     .BindToLocalScale(backRect)
                     .ToUniTask();
                     
@@ -338,11 +344,13 @@ public class WatchUIUpdate : MonoBehaviour
                 
                 var posTask = LMotion.Create(currentPos, _originalFrontPos, duration)
                     .WithEase(Ease.OutQuart)
+                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                     .BindToAnchoredPosition(frontRect)
                     .ToUniTask();
                     
                 var scaleTask = LMotion.Create((Vector3)currentScale, (Vector3)_originalFrontScale, duration)
                     .WithEase(Ease.OutQuart)
+                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                     .BindToLocalScale(frontRect)
                     .ToUniTask();
                     
@@ -1045,7 +1053,7 @@ public class WatchUIUpdate : MonoBehaviour
 /// <summary>
     /// 歩行の度に更新されるSideObjectの管理
     /// </summary>
-    private void SideObjectManage(StageCut nowStageCut, SideObject_Type type)
+    private void SideObjectManage(StageCut nowStageCut, SideObject_Type type, Color themeColor,Color twoColor)
     {
 
         var GetObjects = nowStageCut.GetRandomSideObject();//サイドオブジェクトLEFTとRIGHTを取得
@@ -1061,6 +1069,13 @@ public class WatchUIUpdate : MonoBehaviour
             TwoObjects[i] = Instantiate(GetObjects[i], bgRect);//サイドオブジェクトを生成、配列に代入
             var LineObject = TwoObjects[i].GetComponent<UILineRenderer>();
             LineObject.sideObject_Type = type;//引数のタイプを渡す。
+            // ステージテーマ色を適用（フェードイン初期値に反映されるようStart前にセット）
+            if (LineObject != null)
+            {
+                LineObject.lineColor = themeColor;
+                LineObject.two = twoColor;
+                LineObject.SetVerticesDirty();
+            }
             SideObjectMoves[i] = TwoObjects[i].GetComponent<SideObjectMove>();//スクリプトを取得
             SideObjectMoves[i].boostSpeed=3.0f;//スピードを初期化
             LiveSideObjects[i].Add(SideObjectMoves[i]);//生きているリスト(左右どちらか)に追加

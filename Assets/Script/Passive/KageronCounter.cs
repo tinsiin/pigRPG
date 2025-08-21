@@ -34,7 +34,6 @@ public class KageronCounter : BasePassive//カゲロンカウンター
             var LastPower = BasePower + PowerCount * 0.14f;
 
             //攻撃してきた陣営全員をレイザーアクト対象者リストとして記録
-            var manager = Walking.bm;
             var Targets = RemoveDeathCharacters(manager.MyGroup(attacker).Ours);//生きてる人限定でね
 
             //戦闘マネージャーに全体攻撃のレイザーアクトを予約  （前半二ついらんから適当に登録）

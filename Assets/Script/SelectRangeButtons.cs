@@ -49,7 +49,7 @@ public class SelectRangeButtons : MonoBehaviour
     float optionStartX;
     float optionStartY;
 
-    BattleManager bm => Walking.bm;
+    BattleManager bm => Walking.Instance.bm;
     List<Button> buttonList;
     /// <summary>
     /// 生成用コールバック
@@ -508,11 +508,11 @@ public class SelectRangeButtons : MonoBehaviour
         //全範囲ならそのままnextWait　　対象を選ぶ必要がないからね
         if (bm.Acter.HasRangeWill(SkillZoneTrait.AllTarget))
         {
-            Walking.USERUI_state.Value = TabState.NextWait;
+            Walking.Instance.USERUI_state.Value = TabState.NextWait;
         }
         else
         {
-            Walking.USERUI_state.Value = TabState.SelectTarget;//そうでないなら選択画面へ。
+            Walking.Instance.USERUI_state.Value = TabState.SelectTarget;//そうでないなら選択画面へ。
 
         }
 

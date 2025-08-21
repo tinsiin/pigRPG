@@ -42,6 +42,10 @@ public class BattleGroup
         CharaCompatibility = CompatibilityData;
     }
     /// <summary>
+    /// グループ全員の現在HP
+    /// </summary>
+    public float OurNowHP => Ours.Sum(chara => chara.HP);
+    /// <summary>
     /// グループの十日能力の総量の平均値を返す　強さの指標
     /// </summary>
     public float OurAvarageTenDayPower(bool IsSkillEffect)
@@ -206,9 +210,11 @@ public class BattleGroup
         {
             var gePas = chara.GetPassiveByID(geinoSlaimID) as geino_Slaim;
             var noPas = chara.GetPassiveByID(slaimID) as Slaim;
-            if ((gePas != null &&gePas.EasterNoshiirLockKey) ||(noPas != null &&noPas.EasterNoshiirLockKey)
+            if (gePas == null
+                || gePas.EasterNoshiirLockKey
+                || (noPas != null && noPas.EasterNoshiirLockKey)
                 || chara.NowPower  < ThePower.low)   
-                continue; //パワーが低い未満か(ノジールの否定条件)、またはどっちかのスレームが存在して、ロックがかかっていたら、スキップ
+                continue; // 未所持、ロック中、またはパワー条件未満ならスキップ
 
             id   = geinoSlaimID;
             Doer = chara;
@@ -222,9 +228,11 @@ public class BattleGroup
             {
                 var gePas = chara.GetPassiveByID(geinoSlaimID) as geino_Slaim;
                 var noPas = chara.GetPassiveByID(slaimID) as Slaim;
-                if ((gePas != null &&gePas.EasterNoshiirLockKey) ||(noPas != null &&noPas.EasterNoshiirLockKey)
-                || chara.NowPower  < ThePower.high)   
-                    continue; //パワーが高い未満か(ノジール条件の否定)、またはどっちかのスレームが存在して、ロックがかかっていたら、スキップ
+                if (noPas == null
+                    || noPas.EasterNoshiirLockKey
+                    || (gePas != null && gePas.EasterNoshiirLockKey)
+                    || chara.NowPower  < ThePower.high)   
+                    continue; // 未所持、ロック中、またはパワー条件未満ならスキップ
 
                 id   = slaimID;
                 Doer = chara;
@@ -238,6 +246,7 @@ public class BattleGroup
 
         //今回のスレームパッシブ
         var pas = Doer.GetPassiveByID(id) as Slaim;
+        if (pas == null) return;
         //イースターノジール効果の効果としてダメージを半減
         dmg /= 2;
         ResonanceDmg /= 2;
