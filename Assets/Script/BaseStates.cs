@@ -2057,6 +2057,7 @@ public abstract class BaseStates
             }
         }
     }
+    
     /// <summary>
     /// パワーに応じて戦闘開始時にポイントを初期化する関数
     /// </summary>
@@ -2073,6 +2074,396 @@ public abstract class BaseStates
             _ => 0
         };
     }
+    
+    // ================================
+    // 属性ポイント（混合上限 + DropNew）
+    // ================================
+    
+    /// <summary>
+    /// 属性ポイント総上限（混合最大値）。MAXP にパワー倍率を乗じて決定。
+    /// </summary>
+    public int CombinedAttrPMax
+    {
+        get
+        {
+            return Mathf.RoundToInt(MAXP * GetAttrCombinedCapMultiplier(NowPower));
+        }
+    }
+    
+    /// <summary>
+    /// 現在の属性ポイント総量（混合合計）。0..CombinedAttrPMax。
+    /// </summary>
+    public int CombinedAttrPTotal => _attrPTotal;
+    
+    /// <summary>
+    /// 追加可能な残容量（DropNew ポリシーで使用）。
+    /// </summary>
+    public int CombinedAttrPRemaining => Mathf.Max(0, CombinedAttrPMax - _attrPTotal);
+    
+    // 内部ストレージ：属性別ポイント
+    private readonly Dictionary<SpiritualProperty, int> _attrPMap = new();
+    private int _attrPTotal;
+    
+    // 追加履歴（最新から削るためのLIFO管理）。
+    private readonly List<AttrChunk> _attrAddHistory = new();
+    
+    private struct AttrChunk
+    {
+        public SpiritualProperty Attr;
+        public int Amount;
+        public AttrChunk(SpiritualProperty attr, int amount)
+        {
+            Attr = attr;
+            Amount = amount;
+        }
+    }
+    
+    /// <summary>
+    /// 現在の属性ポイント（該当属性が未登録なら0）。
+    /// </summary>
+    public int GetAttrP(SpiritualProperty attr)
+    {
+        return _attrPMap.TryGetValue(attr, out var v) ? v : 0;
+    }
+    
+    /// <summary>
+    /// 属性ポイントの追加（DropNew）：
+    /// CombinedAttrPMax に達している場合、または残容量が0の場合は追加できない。
+    /// 実際に追加できた量を返す。
+    /// </summary>
+    public int TryAddAttrP(SpiritualProperty attr, int amount)
+    {
+        if (amount <= 0) return 0;
+        var space = CombinedAttrPMax - _attrPTotal;
+        if (space <= 0) return 0; // DropNew: 満杯なら追加不可
+        var added = amount > space ? space : amount;
+        if (added <= 0) return 0;
+        if (_attrPMap.ContainsKey(attr)) _attrPMap[attr] += added; else _attrPMap[attr] = added;
+        _attrPTotal += added;
+        // 履歴に追加
+        _attrAddHistory.Add(new AttrChunk(attr, added));
+        return added;
+    }
+    
+    /// <summary>
+    /// 属性ポイントの消費。該当属性のプールからのみ消費（他属性の補填はしない）。
+    /// 成功時 true、残量不足で失敗時 false。
+    /// </summary>
+    public bool TrySpendAttrP(SpiritualProperty attr, int cost)
+    {
+        if (cost <= 0) return true;
+        var have = GetAttrP(attr);
+        if (have < cost) return false;
+        var remain = have - cost;
+        if (remain > 0)
+        {
+            _attrPMap[attr] = remain;
+        }
+        else
+        {
+            _attrPMap.Remove(attr);
+        }
+        _attrPTotal -= cost;
+        if (_attrPTotal < 0) _attrPTotal = 0;
+        // 履歴から「同属性の新しいものから」減算して整合を保つ
+        var toReduce = cost;
+        for (int i = _attrAddHistory.Count - 1; i >= 0 && toReduce > 0; i--)
+        {
+            if (_attrAddHistory[i].Attr != attr) continue;
+            var chunk = _attrAddHistory[i];
+            var reduce = Math.Min(chunk.Amount, toReduce);
+            chunk.Amount -= reduce;
+            toReduce -= reduce;
+            if (chunk.Amount > 0)
+            {
+                _attrAddHistory[i] = chunk;
+            }
+            else
+            {
+                _attrAddHistory.RemoveAt(i);
+            }
+        }
+        return true;
+    }
+    
+    /// <summary>
+    /// 属性ポイントを全消去。
+    /// </summary>
+    public void ClearAllAttrP()
+    {
+        _attrPMap.Clear();
+        _attrPTotal = 0;
+    }
+    
+    /// <summary>
+    /// 上限が縮小した場合などに、総量が CombinedAttrPMax を超えているとき余剰を削る。
+    /// DropNew の思想に合わせ、より多い属性から優先的に減らす単純実装。
+    /// </summary>
+    public void ReclampAttrPToCapDropNew()
+    {
+        // 仕様: 上限が縮小した際は「直近に追加された順（最新から）」で削減する。
+        var cap = CombinedAttrPMax;
+        if (_attrPTotal <= cap) return;
+        var overflow = _attrPTotal - cap;
+        for (int i = _attrAddHistory.Count - 1; i >= 0 && overflow > 0; i--)
+        {
+            var chunk = _attrAddHistory[i];
+            var reduce = Math.Min(chunk.Amount, overflow);
+            // 属性マップからも同量減らす
+            if (_attrPMap.TryGetValue(chunk.Attr, out var cur))
+            {
+                var left = cur - reduce;
+                if (left > 0) _attrPMap[chunk.Attr] = left; else _attrPMap.Remove(chunk.Attr);
+            }
+            _attrPTotal -= reduce;
+            overflow -= reduce;
+            chunk.Amount -= reduce;
+            if (chunk.Amount > 0)
+            {
+                _attrAddHistory[i] = chunk; // 一部だけ削れたら更新
+            }
+            else
+            {
+                _attrAddHistory.RemoveAt(i); // 0になったら履歴から除去
+            }
+        }
+        if (_attrPTotal < 0) _attrPTotal = 0;
+    }
+
+    // ================================
+    // UI表示用スナップショット
+    // ================================
+    [Serializable]
+    public struct AttrPSnapshotEntry
+    {
+        public SpiritualProperty Attr;
+        public int Amount;
+        public float RatioOfTotal; // CombinedAttrPTotalに対する割合
+        public float RatioOfMax;   // CombinedAttrPMaxに対する割合
+    }
+
+    /// <summary>
+    /// UI表示用に属性ポイント内訳を取得する。既定は量の多い順でソート。
+    /// </summary>
+    public List<AttrPSnapshotEntry> GetAttrPSnapshot(bool sortDesc = true)
+    {
+        var total = (float)CombinedAttrPTotal;
+        var max = (float)CombinedAttrPMax;
+        IEnumerable<KeyValuePair<SpiritualProperty, int>> seq = _attrPMap;
+        if (sortDesc) seq = seq.OrderByDescending(kv => kv.Value);
+        var list = new List<AttrPSnapshotEntry>();
+        foreach (var kv in seq)
+        {
+            var entry = new AttrPSnapshotEntry
+            {
+                Attr = kv.Key,
+                Amount = kv.Value,
+                RatioOfTotal = total > 0 ? kv.Value / total : 0f,
+                RatioOfMax = max > 0 ? kv.Value / max : 0f
+            };
+            list.Add(entry);
+        }
+        return list;
+    }
+    
+    // ================================
+    // スキル使用時: ポイント→属性ポイント変換
+    // ================================
+    
+    // ノーマル使用時の倍率レンジ
+    private const float NORMAL_TO_ATTR_MIN = 1.48f;
+    private const float NORMAL_TO_ATTR_MAX = 1.66f;
+    
+    /// <summary>
+    /// スキル使用時、消費したポイントをスキル属性の属性ポイントへ変換して加算する。
+    /// - 複合時: ノーマル消費が1以上含まれていれば、全消費合計にノーマル倍率を適用。
+    /// - それ以外: 同属性/他属性ごとに倍率を適用して加算。
+    /// 返り値は実際に追加できた量（DropNewにより減衰の可能性あり）。
+    /// 本関数はポイントの消費自体は行わない（呼び出し側で既に消費済み前提）。
+    /// </summary>
+    public int ConvertAndAddAttrPOnSkillUse(
+        SpiritualProperty skillAttr,
+        int spentNormalP,
+        Dictionary<SpiritualProperty, int> spentAttrP)
+    {
+        if (spentAttrP == null) spentAttrP = new Dictionary<SpiritualProperty, int>();
+        // 未定義属性の使用は全て例外化
+        if (!IsAttrDefinedForConversion(skillAttr))
+            throw new ArgumentOutOfRangeException(nameof(skillAttr), $"Unsupported SpiritualProperty for conversion: {skillAttr}");
+        foreach (var key in spentAttrP.Keys)
+        {
+            if (!IsAttrDefinedForConversion(key))
+                throw new ArgumentOutOfRangeException(nameof(spentAttrP), $"Unsupported SpiritualProperty for conversion: {key}");
+        }
+        int totalAdded = 0;
+        
+        // 複合時の特例: ノーマル>0なら全てノーマル倍率一括処理
+        if (spentNormalP > 0)
+        {
+            var sumAll = spentNormalP + spentAttrP.Values.Sum();
+            var m = GetNormalToAttrMultiplier();
+            var minted = Mathf.FloorToInt(sumAll * m);
+            totalAdded += TryAddAttrP(skillAttr, minted);
+            return totalAdded;
+        }
+        
+        // ノーマルなし: 各ソース別に同/他属性倍率で変換
+        int mintedTotal = 0;
+        
+        // 1) 同属性ソース
+        if (spentAttrP.TryGetValue(skillAttr, out var sameSpent) && sameSpent > 0)
+        {
+            var sameCap = GetSameAttrCap(skillAttr);
+            var sameEff = sameCap * GetTenDayConvFactor(true, skillAttr, skillAttr);
+            var add = Mathf.FloorToInt(sameSpent * Mathf.Max(0f, sameEff));
+            mintedTotal += add;
+        }
+        
+        // 2) 他属性ソース
+        foreach (var kv in spentAttrP)
+        {
+            var fromAttr = kv.Key;
+            if (fromAttr == skillAttr) continue;
+            var amount = kv.Value;
+            if (amount <= 0) continue;
+            var otherCap = GetOtherAttrCap(skillAttr, fromAttr);
+            var otherEff = otherCap * GetTenDayConvFactor(false, skillAttr, fromAttr);
+            var add = Mathf.FloorToInt(amount * Mathf.Max(0f, otherEff));
+            mintedTotal += add;
+        }
+        
+        if (mintedTotal > 0)
+        {
+            totalAdded += TryAddAttrP(skillAttr, mintedTotal);
+        }
+        return totalAdded;
+    }
+    /// <summary>
+    /// ノーマルポインントの属性変換率を乱数から取得する関数。
+    /// </summary>
+    private float GetNormalToAttrMultiplier()
+    {
+        // RandomExtensions の Shared RNG を使用
+        return RandomEx.Shared.NextFloat(NORMAL_TO_ATTR_MIN, NORMAL_TO_ATTR_MAX);
+    }
+    
+    /// <summary>
+    /// 十日能力による補正係数（0..1）を返す。現状は1.0（＝上限いっぱい）で固定。
+    /// 後で TenDay 系の値によりスケールさせる実装に差し替える前提。
+    /// </summary>
+    private float GetTenDayConvFactor(bool isSameAttr, SpiritualProperty skillAttr, SpiritualProperty fromAttr)
+    {
+        return 1f;
+    }
+    
+    /// <summary>
+    /// 同属性変換率の上限（表の値）。未指定属性は例外。
+    /// </summary>
+    private float GetSameAttrCap(SpiritualProperty attr)
+    {
+        if (!IsAttrDefinedForConversion(attr))
+            throw new ArgumentOutOfRangeException(nameof(attr), $"Unsupported SpiritualProperty for conversion: {attr}");
+        switch (attr)
+        {
+            case SpiritualProperty.liminalwhitetile: return 0.999f;
+            case SpiritualProperty.kindergarden: return 0.2f;
+            case SpiritualProperty.sacrifaith: return 0f;
+            case SpiritualProperty.cquiest: return 0f;
+            case SpiritualProperty.devil: return 0.2f;
+            case SpiritualProperty.doremis: return 0f;
+            case SpiritualProperty.pillar: return 0.7f;
+            case SpiritualProperty.godtier: return 0.3f;
+            case SpiritualProperty.baledrival: return 0.4f;
+            case SpiritualProperty.pysco: return 0f;
+        }
+        throw new ArgumentOutOfRangeException(nameof(attr), $"Unsupported SpiritualProperty for conversion: {attr}");
+    }
+    
+    /// <summary>
+    /// 他属性変換率の上限（表の値 + 例外）。未指定属性は例外。
+    /// 基本は skillAttr（スキル属性）ごとの一律倍率。必要な例外は fromAttr で上書き。
+    /// </summary>
+    private float GetOtherAttrCap(SpiritualProperty skillAttr, SpiritualProperty fromAttr)
+    {
+        if (!IsAttrDefinedForConversion(skillAttr))
+            throw new ArgumentOutOfRangeException(nameof(skillAttr), $"Unsupported SpiritualProperty for conversion: {skillAttr}");
+        if (!IsAttrDefinedForConversion(fromAttr))
+            throw new ArgumentOutOfRangeException(nameof(fromAttr), $"Unsupported SpiritualProperty for conversion: {fromAttr}");
+        
+        float baseCap;
+        switch (skillAttr)
+        {
+            case SpiritualProperty.liminalwhitetile: baseCap = 0f; break;
+            case SpiritualProperty.kindergarden: baseCap = 1.3f; break;
+            case SpiritualProperty.sacrifaith: baseCap = 0f; break;
+            case SpiritualProperty.cquiest: baseCap = 0.3f; break;
+            case SpiritualProperty.devil: baseCap = 0.2f; break;
+            case SpiritualProperty.doremis: baseCap = 0.8f; break;
+            case SpiritualProperty.pillar: baseCap = 0.1f; break;
+            case SpiritualProperty.godtier: baseCap = 0.4f; break;
+            case SpiritualProperty.baledrival: baseCap = 0.0889f; break;
+            case SpiritualProperty.pysco: baseCap = 0f; break;
+        
+            default:
+                throw new ArgumentOutOfRangeException(nameof(skillAttr), $"Unsupported SpiritualProperty for conversion: {skillAttr}");
+        }
+        
+        // 例外処理（解釈: 特定の fromAttr -> skillAttr のペア倍率）
+        // キンダーガーデン: Psycho へは 2.0 倍
+        if (skillAttr == SpiritualProperty.pysco && fromAttr == SpiritualProperty.kindergarden)
+            return 2.0f;
+        
+        // シークイエスト: Devil からは 0.0
+        if (skillAttr == SpiritualProperty.cquiest && fromAttr == SpiritualProperty.devil)
+            return 0.0f;
+        
+        // デビル: Cquiest へは 0.6 / Psycho からは 0.0
+        if (skillAttr == SpiritualProperty.devil && fromAttr == SpiritualProperty.cquiest)
+            return 0.6f;
+        if (skillAttr == SpiritualProperty.devil && fromAttr == SpiritualProperty.pysco)
+            return 0.0f;
+        
+        return baseCap;
+    }
+
+    /// <summary>
+    /// 変換表に定義済みの属性かどうか（未定義は使用禁止）。
+    /// </summary>
+    private static bool IsAttrDefinedForConversion(SpiritualProperty attr)
+    {
+        switch (attr)
+        {
+            case SpiritualProperty.liminalwhitetile:
+            case SpiritualProperty.kindergarden:
+            case SpiritualProperty.sacrifaith:
+            case SpiritualProperty.cquiest:
+            case SpiritualProperty.devil:
+            case SpiritualProperty.doremis:
+            case SpiritualProperty.pillar:
+            case SpiritualProperty.godtier:
+            case SpiritualProperty.baledrival:
+            case SpiritualProperty.pysco:
+                return true;
+            default:
+                return false;
+        }
+    }
+    
+    /// <summary>
+    /// 属性ポイントの混合上限用倍率。NowPower に応じて返す。
+    /// </summary>
+    private float GetAttrCombinedCapMultiplier(ThePower p)
+    {
+        switch (p)
+        {
+            case ThePower.lowlow: return 0.60f;
+            case ThePower.low: return 0.90f;
+            case ThePower.medium: return 1.22f;
+            case ThePower.high: return 2.00f;
+            default: return 1.00f;
+        }
+    }
+    
     /// <summary>
     /// 精神HPに応じてポイントを自然回復する関数。
     /// 回復量は精神Hp現在値を割った数とそれの実HP最大値との割合によるカット
@@ -10281,6 +10672,19 @@ private int CalcTransformCountIncrement(int tightenStage)
         dst._thinkingFactor = _thinkingFactor;
         //思えの値現在値をランダム化
         dst.InitializeNowResonanceValue();
+
+        // 属性ポイント（混合上限 + DropNew）のディープコピー
+        // - _attrPMap: 属性別の現在量
+        // - _attrPTotal: 合計量
+        // - _attrAddHistory: 追加履歴（最新から削るために保持）
+        dst._attrPMap.Clear();
+        foreach (var kv in _attrPMap)
+        {
+            dst._attrPMap[kv.Key] = kv.Value;
+        }
+        dst._attrPTotal = _attrPTotal;
+        dst._attrAddHistory.Clear();
+        dst._attrAddHistory.AddRange(_attrAddHistory);
 
         if(dst.DefaultImpression == 0)
         {

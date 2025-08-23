@@ -16,6 +16,7 @@ using UnityEditor;
 using static CommonCalc;
 using UnityEditor.UIElements;
 using System.Threading.Tasks;
+using Unity.Profiling;
 
 /// <summary>
 /// 戦闘の先手が起ったかどうか
@@ -320,6 +321,7 @@ public class ACTList
 /// </summary>
 public class BattleManager
 {
+
     SchizoLog schizoLog => SchizoLog.Instance;
     /// <summary>
     ///     プレイヤー側のバトルグループ　ここに味方のバトルグループオブジェクトをリンクする？

@@ -9,7 +9,7 @@
         "com.unity.collections": "1.5.1",
         "com.unity.mathematics": "1.0.1"
       },
-      "hash": "b6002a25d18b889216d886ee787fe1878e66be00"
+      "hash": "b651c5866fe0e3fba065ce2e56dfdfcd59d3d109"
     },
     "com.annulusgames.random-extensions.unity": {
       "version": "https://github.com/AnnulusGames/RandomExtensions.git?path=src/RandomExtensions.Unity/Assets/RandomExtensions.Unity",

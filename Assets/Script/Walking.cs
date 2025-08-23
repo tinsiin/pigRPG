@@ -6,7 +6,7 @@ using R3;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-
+using Unity.Profiling;
 
 public class Walking : MonoBehaviour
 {
@@ -33,6 +33,8 @@ public class Walking : MonoBehaviour
             Destroy(this);
         }
     }
+
+
     /// <summary>
     /// USERUIの状態
     /// </summary>

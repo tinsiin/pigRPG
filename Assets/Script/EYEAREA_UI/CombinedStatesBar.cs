@@ -1,8 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
-using Cysharp.Threading.Tasks;
-using System.Threading;
-using System;
+using LitMotion;
 
 /// <summary>
 /// HPバー（上段）と精神HPバー（下段）を統合したクラス。
@@ -59,15 +57,15 @@ public class CombinedStatesBar : MaskableGraphic
     // アニメーション用の内部変数
     private float m_DisplayHPPercent;                       // HP表示用の割合
     private float m_TargetHPPercent;                        // HP目標割合
-    private CancellationTokenSource m_HPAnimationCts;       // HPアニメーションキャンセルトークン
+    private MotionHandle m_HPHandle;                        // HPアニメーションハンドル
     
     private float m_DisplayMentalRatio;                     // 精神HP表示用の比率
     private float m_TargetMentalRatio;                      // 精神HP目標比率
-    private CancellationTokenSource m_MentalAnimationCts;   // 精神HPアニメーションキャンセルトークン
+    private MotionHandle m_MentalHandle;                    // 精神HPアニメーションハンドル
     
     private float m_DisplayDivergenceMultiplier;
     private float m_TargetDivergenceMultiplier;
-    private CancellationTokenSource m_DivergenceAnimationCts;
+    private MotionHandle m_DivergenceHandle;                // 乖離アニメーションハンドル
 
     // 実行中のインスペクタ変更検知用
     private float _prevWidth;
@@ -152,9 +150,10 @@ public class CombinedStatesBar : MaskableGraphic
         debug_TargetMentalRatio = m_TargetMentalRatio;
         debug_DisplayDivergenceMultiplier = m_DisplayDivergenceMultiplier;
         debug_TargetDivergenceMultiplier = m_TargetDivergenceMultiplier;
-        debug_IsHPAnimating = m_HPAnimationCts != null;
-        debug_IsMentalAnimating = m_MentalAnimationCts != null;
-        debug_IsDivergenceAnimating = m_DivergenceAnimationCts != null;
+        // 一部のLitMotionバージョンでは IsPlaying() が存在しないため IsActive() のみを使用
+        debug_IsHPAnimating = m_HPHandle.IsActive();
+        debug_IsMentalAnimating = m_MentalHandle.IsActive();
+        debug_IsDivergenceAnimating = m_DivergenceHandle.IsActive();
     }
 
     /// <summary>
@@ -355,23 +354,18 @@ public class CombinedStatesBar : MaskableGraphic
             SetVerticesDirty();
             return;
         }
-
-        
-        // アニメーション中の場合は、現在の目標値まで即座にスナップ
-        if (m_HPAnimationCts != null)
-        {
-            m_DisplayHPPercent = m_TargetHPPercent;
-            SafeSetVerticesDirty();
-        }
-        
-        // 新しい目標値を設定してアニメーション開始
+        // 進行中なら即時スナップ（存在時のみ完了）
+        if (m_HPHandle.IsActive()) m_HPHandle.Complete();
+        // 新しい目標値を設定
         m_TargetHPPercent = newPercent;
         m_HPPercent = newPercent;
+        // 既存アニメを停止
         CancelHPAnimation();
-
-        // 破棄時に自動キャンセルされるトークンをリンク
-        m_HPAnimationCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
-        AnimateHPChangeAsync(m_HPAnimationCts.Token).Forget();
+        // LitMotionでアニメ開始（速度はdurationを1/Speedにスケーリング）
+        float duration = Mathf.Max(0.0001f, m_AnimationDuration / Mathf.Max(0.0001f, m_AnimationSpeed));
+        m_HPHandle = LMotion.Create(m_DisplayHPPercent, m_TargetHPPercent, duration)
+            .WithEase(Ease.Linear)
+            .Bind(x => { m_DisplayHPPercent = x; SafeSetVerticesDirty(); });
     }
     
     /// <summary>精神HP比率をアニメーション付きで設定</summary>
@@ -388,21 +382,18 @@ public class CombinedStatesBar : MaskableGraphic
             return;
         }
         
-        // アニメーション中の場合は、現在の目標値まで即座にスナップ
-        if (m_MentalAnimationCts != null)
-        {
-            m_DisplayMentalRatio = m_TargetMentalRatio;
-            SafeSetVerticesDirty();
-        }
+        // 進行中なら即時スナップ（存在時のみ完了）
+        if (m_MentalHandle.IsActive()) m_MentalHandle.Complete();
         
         // 新しい目標値を設定してアニメーション開始
         m_TargetMentalRatio = newRatio;
         m_MentalPercent = newRatio;
         CancelMentalAnimation();
-
-        // 破棄時に自動キャンセルされるトークンをリンク
-        m_MentalAnimationCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
-        AnimateMentalChangeAsync(m_MentalAnimationCts.Token).Forget();
+        // LitMotionでアニメ開始
+        float duration = Mathf.Max(0.0001f, m_AnimationDuration / Mathf.Max(0.0001f, m_AnimationSpeed));
+        m_MentalHandle = LMotion.Create(m_DisplayMentalRatio, m_TargetMentalRatio, duration)
+            .WithEase(Ease.Linear)
+            .Bind(x => { m_DisplayMentalRatio = x; SafeSetVerticesDirty(); });
     }
     
     /// <summary>乖離倍率をアニメーション付きで設定</summary>
@@ -418,20 +409,18 @@ public class CombinedStatesBar : MaskableGraphic
             return;
         }
         
-        // Immediate snap if animation is in progress
-        if (m_DivergenceAnimationCts != null)
-        {
-            m_DisplayDivergenceMultiplier = m_TargetDivergenceMultiplier;
-            SafeSetVerticesDirty();
-        }
+        // 進行中なら即時スナップ（存在時のみ完了）
+        if (m_DivergenceHandle.IsActive()) m_DivergenceHandle.Complete();
         
         m_TargetDivergenceMultiplier = newMultiplier;
         m_DivergenceMultiplier = newMultiplier;
-        
+        // 既存を停止
         CancelDivergenceAnimation();
-        // 破棄時に自動キャンセルされるトークンをリンク
-        m_DivergenceAnimationCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
-        AnimateDivergenceChangeAsync(m_DivergenceAnimationCts.Token).Forget();
+        // LitMotionでアニメ開始（独自のduration/speed）
+        float duration = Mathf.Max(0.0001f, m_DivergenceAnimDuration / Mathf.Max(0.0001f, m_DivergenceAnimSpeed));
+        m_DivergenceHandle = LMotion.Create(m_DisplayDivergenceMultiplier, m_TargetDivergenceMultiplier, duration)
+            .WithEase(Ease.Linear)
+            .Bind(x => { m_DisplayDivergenceMultiplier = x; SafeSetVerticesDirty(); });
     }
     
 
@@ -439,187 +428,22 @@ public class CombinedStatesBar : MaskableGraphic
     /// <summary>HPアニメーションをキャンセル</summary>
     private void CancelHPAnimation()
     {
-        if (m_HPAnimationCts != null)
-        {
-            m_HPAnimationCts.Cancel();
-            m_HPAnimationCts.Dispose();
-            m_HPAnimationCts = null;
-        }
+        if (m_HPHandle.IsActive()) m_HPHandle.Cancel();
     }
     
     /// <summary>精神HPアニメーションをキャンセル</summary>
     private void CancelMentalAnimation()
     {
-        if (m_MentalAnimationCts != null)
-        {
-            m_MentalAnimationCts.Cancel();
-            m_MentalAnimationCts.Dispose();
-            m_MentalAnimationCts = null;
-        }
+        if (m_MentalHandle.IsActive()) m_MentalHandle.Cancel();
     }
     
     /// <summary>乖離倍率アニメーションをキャンセル</summary>
     private void CancelDivergenceAnimation()
     {
-        if (m_DivergenceAnimationCts != null)
-        {
-            m_DivergenceAnimationCts.Cancel();
-            m_DivergenceAnimationCts.Dispose();
-            m_DivergenceAnimationCts = null;
-        }
+        if (m_DivergenceHandle.IsActive()) m_DivergenceHandle.Cancel();
     }
     
-    /// <summary>HP変化アニメーション</summary>
-    private async UniTaskVoid AnimateHPChangeAsync(CancellationToken cancellationToken)
-    {
-        float startPercent = m_DisplayHPPercent;
-        float elapsedTime = 0f;
-        
-        try
-        {
-            bool isIncreasing = m_TargetHPPercent > startPercent;
-            
-            while (elapsedTime < m_AnimationDuration && 
-                   (isIncreasing ? m_DisplayHPPercent < m_TargetHPPercent : m_DisplayHPPercent > m_TargetHPPercent))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                
-                elapsedTime += Time.deltaTime;
-                
-                float timeProgress = elapsedTime / m_AnimationDuration;
-                float frameChange = (m_TargetHPPercent - startPercent) * m_AnimationSpeed * Time.deltaTime;
-                
-                float timeBasedPercent = Mathf.Lerp(startPercent, m_TargetHPPercent, timeProgress);
-                float frameBasedPercent = m_DisplayHPPercent + frameChange;
-                
-                if (isIncreasing)
-                {
-                    m_DisplayHPPercent = Mathf.Min(m_TargetHPPercent, Mathf.Max(timeBasedPercent, frameBasedPercent));
-                }
-                else
-                {
-                    m_DisplayHPPercent = Mathf.Max(m_TargetHPPercent, Mathf.Min(timeBasedPercent, frameBasedPercent));
-                }
-                
-                SafeSetVerticesDirty();
-                await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
-            }
-            
-            m_DisplayHPPercent = m_TargetHPPercent;
-            SafeSetVerticesDirty();
-        }
-        catch (OperationCanceledException)
-        {
-            // キャンセルされた場合は何もしない
-        }
-        finally
-        {
-            if (m_HPAnimationCts != null)
-            {
-                m_HPAnimationCts.Dispose();
-                m_HPAnimationCts = null;
-            }
-        }
-    }
-    
-    /// <summary>精神HP変化アニメーション</summary>
-    private async UniTaskVoid AnimateMentalChangeAsync(CancellationToken cancellationToken)
-    {
-        float startRatio = m_DisplayMentalRatio;
-        float elapsedTime = 0f;
-        
-        try
-        {
-            bool isIncreasing = m_TargetMentalRatio > startRatio;
-            
-            while (elapsedTime < m_AnimationDuration && 
-                   (isIncreasing ? m_DisplayMentalRatio < m_TargetMentalRatio : m_DisplayMentalRatio > m_TargetMentalRatio))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                
-                elapsedTime += Time.deltaTime;
-                
-                float timeProgress = elapsedTime / m_AnimationDuration;
-                float frameChange = (m_TargetMentalRatio - startRatio) * m_AnimationSpeed * Time.deltaTime;
-                
-                float timeBasedRatio = Mathf.Lerp(startRatio, m_TargetMentalRatio, timeProgress);
-                float frameBasedRatio = m_DisplayMentalRatio + frameChange;
-                
-                if (isIncreasing)
-                {
-                    m_DisplayMentalRatio = Mathf.Min(m_TargetMentalRatio, Mathf.Max(timeBasedRatio, frameBasedRatio));
-                }
-                else
-                {
-                    m_DisplayMentalRatio = Mathf.Max(m_TargetMentalRatio, Mathf.Min(timeBasedRatio, frameBasedRatio));
-                }
-                
-                SafeSetVerticesDirty();
-                await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
-            }
-            
-            m_DisplayMentalRatio = m_TargetMentalRatio;
-            SafeSetVerticesDirty();
-        }
-        catch (OperationCanceledException)
-        {
-            // キャンセルされた場合は何もしない
-        }
-        finally
-        {
-            if (m_MentalAnimationCts != null)
-            {
-                m_MentalAnimationCts.Dispose();
-                m_MentalAnimationCts = null;
-            }
-        }
-    }
-    
-    /// <summary>乖離倍率変化アニメーション</summary>
-    private async UniTaskVoid AnimateDivergenceChangeAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            float startValue = m_DisplayDivergenceMultiplier;
-            float targetValue = m_TargetDivergenceMultiplier;
-            float duration = m_DivergenceAnimDuration;
-            
-            if (Mathf.Approximately(startValue, targetValue))
-            {
-                return;
-            }
-            
-            float elapsedTime = 0f;
-            
-            while (elapsedTime < duration)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                
-                elapsedTime += Time.deltaTime * m_DivergenceAnimSpeed;
-                float t = Mathf.Clamp01(elapsedTime / duration);
-                
-                m_DisplayDivergenceMultiplier = Mathf.Lerp(startValue, targetValue, t);
-                SafeSetVerticesDirty();
-                
-                await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
-            }
-            
-            m_DisplayDivergenceMultiplier = targetValue;
-            SafeSetVerticesDirty();
-        }
-        catch (OperationCanceledException)
-        {
-            // Animation was cancelled, this is expected
-        }
-        finally
-        {
-            if (m_DivergenceAnimationCts != null)
-            {
-                m_DivergenceAnimationCts.Dispose();
-                m_DivergenceAnimationCts = null;
-            }
-        }
-    }
+    // 旧UniTaskアニメーションはLitMotionに置き換え済み
     
     /// <summary>精神HPバーの色を評価（青→黄→赤）</summary>
     private Color EvaluateMentalBarColor()

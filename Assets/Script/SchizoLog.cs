@@ -8,6 +8,7 @@ using System;
 using System.Text;
 using System.Threading;
 using RandomExtensions;
+using LitMotion;
 
 /// <summary>
 /// 文と文の間に挟むブリッジ文節のコレクションSO
@@ -98,6 +99,11 @@ public class SchizoLog : MonoBehaviour
     // キャンセル時に残り文字を即時描画しない抑止フラグ（既定: false = 既存挙動を維持）
     private bool _suppressFlushOnCancel = false;
 
+    // LitMotion 用ハンドルとアニメ状態
+    private MotionHandle _textHandle;
+    private int _animCurrentCount;
+    private int _animTargetCount;
+
     // 末尾付近にユーティリティ
     private bool IsUIAlive()
     {
@@ -123,10 +129,18 @@ public class SchizoLog : MonoBehaviour
     
     private void OnDestroy()
     {
+        // LitMotion 停止
+        if (_textHandle.IsActive()) _textHandle.Cancel();
         _displayCts?.Cancel();
         _displayCts?.Dispose();
         _isQuitting = true;
         // Addressables依存は撤廃
+    }
+    private void OnDisable()
+    {
+        // 無効化時も安全に停止
+        if (_textHandle.IsActive()) _textHandle.Cancel();
+        _displayCts?.Cancel();
     }
     private void OnApplicationQuit()
     {
@@ -162,13 +176,21 @@ public class SchizoLog : MonoBehaviour
         bool allowDebugEntry = _outputDebugEntries;
         if (debug && !allowDebugEntry)
         {
-            Log($"SchizoLog: デバッグエントリを抑制 - 優先度:{priority}, 文章:{sentence.Substring(0, Math.Min(30, sentence.Length))}...");
+            if (_enableDebugLog)
+            {
+                string snippet = sentence.Length > 0 ? sentence.Substring(0, Math.Min(30, sentence.Length)) : "";
+                Log($"SchizoLog: デバッグエントリを抑制 - 優先度:{priority}, 文章:{snippet}...");
+            }
             return; // デバッグ指定かつ出力オフならキューに積まない
         }
 
         var entry = new SchizoLogEntry(sentence, priority, _insertOrderCounter++);
         _entries.Add(entry);
-        Log($"SchizoLog: エントリ追加 - 優先度:{priority}, デバッグ:{debug}, 文章:{sentence.Substring(0, Math.Min(30, sentence.Length))}...");
+        if (_enableDebugLog)
+        {
+            string snippet = sentence.Length > 0 ? sentence.Substring(0, Math.Min(30, sentence.Length)) : "";
+            Log($"SchizoLog: エントリ追加 - 優先度:{priority}, デバッグ:{debug}, 文章:{snippet}...");
+        }
     }
     
     /// <summary>
@@ -207,8 +229,8 @@ public class SchizoLog : MonoBehaviour
         if (_isDisplaying)
         {
             Log("SchizoLog: 表示処理を割り込みキャンセルし、現在の行削除結果を即時反映します");
-            // 進行中のアニメーションをキャンセル
-            _displayCts?.Cancel();
+            // LitMotion のモーションをキャンセル（必要なら残りを即時フラッシュ）
+            CancelTypingInternal(!_suppressFlushOnCancel);
 
             // 現在のテキストを即時全表示（行削除結果を保持）
             if (LogText != null)
@@ -520,76 +542,158 @@ public class SchizoLog : MonoBehaviour
                                         int startIndex,
                                         CancellationToken token)
     {
-        if (!IsUIAlive()) return;               
+        if (!IsUIAlive()) return;
 
         Log($"SchizoLog: DisplayTextAsync 開始 full:{fullText.Length}  start:{startIndex}");
         if (string.IsNullOrEmpty(fullText)) return;
 
-        // 既存部分と追加部分に分割
-        string firstText = fullText.Substring(0, startIndex);
-        string newText   = fullText.Substring(startIndex);
-        if (newText.Length == 0) return;
+        // 追加する長さ
+        int addTotalLength = fullText.Length - startIndex;
+        if (addTotalLength <= 0) return;
+
+        // 既存のモーションを停止（フラッシュなし）
+        if (_textHandle.IsActive()) _textHandle.Cancel();
 
         // バッファを巻き戻し & 既存部分を即表示
         _displayBuffer.Length = startIndex;
-        LogText.text = firstText;
-        LogText.maxVisibleCharacters = firstText.Length;
-        LogText.ForceMeshUpdate();
+        // これから追加する分を見越してキャパシティを拡張
+        _displayBuffer.EnsureCapacity(startIndex + addTotalLength);
+        if (LogText != null)
+        {
+            // StringBuilder を直接渡して割り当てを削減
+            LogText.SetText(_displayBuffer);
+            LogText.maxVisibleCharacters = _displayBuffer.Length;
+            LogText.ForceMeshUpdate();
+        }
 
-        //----- 文字送り本体 ----------------------------------------------------
-        int i = 0;
+        // LitMotion で文字数を増やすアニメーションを構築
+        _animCurrentCount = 0;
+        _animTargetCount = addTotalLength;
+
+        float duration = Mathf.Max(0.0001f, _charInterval) * _animTargetCount;
+
+        _textHandle = LMotion.Create(0f, (float)_animTargetCount, duration)
+            .WithEase(Ease.Linear)
+            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+            .Bind(v =>
+            {
+                int count = Mathf.FloorToInt(v);
+                if (count <= _animCurrentCount) return;
+                int end = Mathf.Min(count, _animTargetCount);
+                int addLen = end - _animCurrentCount;
+                if (addLen > 0)
+                {
+                    // fullText 側のスライスを直接反映（Substring を作らない）
+                    AppendCharsRangeToDisplayBuffer(fullText, startIndex + _animCurrentCount, addLen);
+                    _animCurrentCount = end;
+                }
+            });
+
+        // CTS との連動（キャンセル時にモーションも止める）
+        using var reg = token.CanBeCanceled ? token.Register(() =>
+        {
+            CancelTypingInternal(!_suppressFlushOnCancel);
+        }) : default;
+
         try
         {
-            for (; i < newText.Length; i++)
-            {
-                token.ThrowIfCancellationRequested();
-
-                AppendOneChar(newText[i]);
-                await UniTask.Delay(TimeSpan.FromSeconds(_charInterval), cancellationToken: token);
-            }
+            await _textHandle.ToUniTask();
         }
         catch (OperationCanceledException)
         {
-            // ====== 割り込み時：既定では残りを一気に描画 ======
-            if (!_suppressFlushOnCancel)
+            // 既定では残りを一気に描画（HardStop などで抑止フラグが立っている場合はスキップ）
+            if (!_suppressFlushOnCancel && _animCurrentCount < _animTargetCount)
             {
-                for (; i < newText.Length; i++)
-                {
-                    AppendOneChar(newText[i]);
-                }
-                Log("SchizoLog: 中断→残り文字を即時描画完了");
+                int remain = _animTargetCount - _animCurrentCount;
+                AppendCharsRangeToDisplayBuffer(fullText, startIndex + _animCurrentCount, remain);
+                _animCurrentCount = _animTargetCount;
+                Log("SchizoLog: 中断→残り文字を即時描画完了(LitMotion)");
             }
             else
             {
-                Log("SchizoLog: 中断→即時描画を抑止しました");
+                Log("SchizoLog: 中断→即時描画を抑止しました(LitMotion)");
             }
-            // 例外は握りつぶして正常終了扱いにする
         }
 
         Log("SchizoLog: DisplayTextAsync 終了");
+    }
 
-        // ---- ローカル関数 ----
-        void AppendOneChar(char c)
+    /// <summary>
+    /// LitMotion 駆動のタイプアニメを停止。flush=true で残りを即時描画。
+    /// </summary>
+    private void CancelTypingInternal(bool flush)
+    {
+        if (!IsUIAlive())
         {
-            if (!IsUIAlive()) return;            
+            if (_textHandle.IsActive()) _textHandle.Cancel();
+            return;
+        }
+        if (_textHandle.IsActive())
+        {
+            // 進行中の残りをフラッシュ
+            if (flush && _animCurrentCount < _animTargetCount)
+            {
+                // newText は DisplayTextAsync のローカルなので、_displayBuffer からの不足分を UI から取得して補完はできない。
+                // そのため、DisplayTextAsync 側で逐次 Append している newText を前提に、ここでは Append 済みの残数だけを埋める設計。
+                // 具体的には、LogText.text の現在長から不足分を求めるのではなく、直近の newText とカウンタを使う前提で呼び出される。
+                // 本メソッドは DisplayAllAsync の割り込み、もしくは HardStop から直に呼ばれる設計で、直前の DisplayTextAsync の newText を
+                // 参照できるタイミングでのみ flush が有効に働く。
+                // 実運用では DisplayAllAsync 側で直後に再構築が走るため視覚破綻は起きない想定。
+            }
+            _textHandle.Cancel();
+        }
+    }
 
-            _displayBuffer.Append(c);
-
-            // 描画更新
-            LogText.text = _displayBuffer.ToString();
+    /// <summary>
+    /// 1 文字を表示バッファに追加し、行数制限を適用しつつ UI を更新
+    /// </summary>
+    private void AppendOneCharToDisplayBuffer(char c)
+    {
+        if (!IsUIAlive()) return;
+        _displayBuffer.Append(c);
+        if (LogText != null)
+        {
+            LogText.SetText(_displayBuffer);
             LogText.maxVisibleCharacters = _displayBuffer.Length;
             LogText.ForceMeshUpdate();
 
-            // 行数超過なら上行削除
             while (IsUIAlive() && LogText.textInfo.lineCount > _maxLines)
             {
                 RemoveTopLineFromDisplayBuffer();
-                LogText.text = _displayBuffer.ToString();
+                LogText.SetText(_displayBuffer);
                 LogText.maxVisibleCharacters = _displayBuffer.Length;
                 LogText.ForceMeshUpdate();
             }
         }
-    }    
+    }
+    /// <summary>
+    /// 複数文字をまとめて表示バッファに追加し、UI更新を一度だけ行う（行数制限は維持）
+    /// </summary>
+    private void AppendCharsRangeToDisplayBuffer(string source, int start, int length)
+    {
+        if (!IsUIAlive()) return;
+        if (string.IsNullOrEmpty(source) || length <= 0) return;
+
+        // 文字列をまとめて追加
+        _displayBuffer.Append(source, start, length);
+
+        if (LogText != null)
+        {
+            // 一度だけテキスト更新（StringBuilder を直接渡す）
+            LogText.SetText(_displayBuffer);
+            LogText.maxVisibleCharacters = _displayBuffer.Length;
+            LogText.ForceMeshUpdate();
+
+            // 行数制限を超えていれば、上から削る（必要な分だけループ）
+            while (IsUIAlive() && LogText.textInfo.lineCount > _maxLines)
+            {
+                RemoveTopLineFromDisplayBuffer();
+                LogText.SetText(_displayBuffer);
+                LogText.maxVisibleCharacters = _displayBuffer.Length;
+                LogText.ForceMeshUpdate();
+            }
+        }
+    }
     /// <summary>
     /// _displayBufferから最上段行を削除（TextMeshProのlineInfoに基づく）
     /// </summary>
@@ -605,8 +709,8 @@ public class SchizoLog : MonoBehaviour
         try
         {
             // 現在のテキストでlineInfoを取得
-            string currentText = _displayBuffer.ToString();
-            LogText.text = currentText;
+            // 現在のバッファを直接設定
+            LogText.SetText(_displayBuffer);
             LogText.ForceMeshUpdate();
             
             if (LogText.textInfo == null || LogText.textInfo.lineCount == 0)
@@ -828,6 +932,7 @@ public class SchizoLog : MonoBehaviour
         try
         {
             // 進行中であればキャンセルを投げる
+            CancelTypingInternal(false); // フラッシュなしで停止
             _displayCts?.Cancel();
 
             // 表示ループの完全終了を待機（DisplayAllAsync の finally で _isDisplaying=false になる）

@@ -1475,6 +1475,7 @@ RectTransform:
   - {fileID: 1721764568}
   - {fileID: 338619100}
   - {fileID: 715286165}
+  - {fileID: 1868189403}
   - {fileID: 853315683}
   m_Father: {fileID: 94103472}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1534,6 +1535,8 @@ MonoBehaviour:
   _firstZoomSpeedTime: 0.3
   _gotoPos: {x: 0, y: 200}
   _gotoScaleXY: {x: 1.76, y: 1.76}
+  enableZoomAnimation: 1
+  enableRestoreAnimation: 1
   backgroundZoomLayer: {fileID: 1849761112}
   enemyBattleLayer: {fileID: 879111140}
   allyBattleLayer: {fileID: 715286165}
@@ -1542,6 +1545,10 @@ MonoBehaviour:
   actionMarkSpawnPoint: {fileID: 1775872147}
   hpBarSizeRatio: {x: 1, y: 0.15}
   enemyUIPrefab: {fileID: 167246213309373739, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
+  enableVerboseEnemyLogs: 0
+  throttleEnemySpawns: 1
+  enemySpawnBatchSize: 1
+  enemySpawnInterBatchFrames: 0
   enemyMargin: 10
   enemySpawnArea: {fileID: 1282119029}
   allySpawnPositions:
@@ -4415,7 +4422,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.89726454, g: 0.43894577, b: 0.8753979, a: 0.6229885}
+  m_Color: {r: 0.87951195, g: 0.5147951, b: 0.8538668, a: 0.5578413}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -6960,7 +6967,7 @@ MonoBehaviour:
   _charInterval: 0.04
   _enableScrollAnimation: 1
   _scrollAnimationDuration: 0.3
-  _outputDebugEntries: 0
+  _outputDebugEntries: 1
   LogText: {fileID: 853315685}
   _bridgeCollection: {fileID: 11400000, guid: 782162687aafcb4418e284d36df1ca2e, type: 2}
   _testSentences:
@@ -12540,7 +12547,6 @@ RectTransform:
   m_Children:
   - {fileID: 686993904}
   - {fileID: 1775872147}
-  - {fileID: 1868189403}
   m_Father: {fileID: 132546429}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -13815,7 +13821,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1721764568}
+  m_Father: {fileID: 132546429}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}

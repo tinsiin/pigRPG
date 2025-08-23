@@ -1,4 +1,4 @@
-﻿using R3;
+using R3;
 using RandomExtensions;
 using System;
 using System.Collections.Generic;
@@ -446,6 +446,21 @@ public class BaseSkill
         get { return HasSpecialFlag(SkillSpecialFlag.Blade); }
     }
 
+    /// <summary>
+    /// スキルの実行に必要なポイント設定
+    /// </summary>
+    [Header("スキル実行コスト")]
+    /// <summary>
+    /// スキル実行に必要なノーマルポイント。
+    /// 0ならノーマルP消費なし。
+    /// </summary>
+    public int RequiredNormalP = 0;
+    /// <summary>
+    /// スキル実行に必要な属性ポイント内訳。
+    /// キー: SpiritualProperty, 値: 必要ポイント。
+    /// 空なら属性P消費なし。
+    /// </summary>
+    public SerializableDictionary<SpiritualProperty, int> RequiredAttrP = new SerializableDictionary<SpiritualProperty, int>();
 
 
     /// <summary>
@@ -1956,6 +1971,15 @@ public class BaseSkill
         dst.CanEraceEffectCount = CanEraceEffectCount;
         dst.CanEraceVitalLayerCount = CanEraceVitalLayerCount;
         dst.ReactiveSkillPassiveList = new(ReactiveSkillPassiveList);
+        dst.RequiredNormalP = RequiredNormalP;//スキルの必要ポインント
+        dst.RequiredAttrP = new SerializableDictionary<SpiritualProperty, int>();
+        if (RequiredAttrP != null)
+        {
+            foreach (var kv in RequiredAttrP)
+            {
+                dst.RequiredAttrP.Add(kv.Key, kv.Value);
+            }
+        }
 
     }
 
