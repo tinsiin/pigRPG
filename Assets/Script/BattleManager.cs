@@ -783,21 +783,22 @@ public class BattleManager
         {
              case StairStates:
                 //ここでスキルを指定した範囲性質を持つもののみinteractable=trueになるようにする。
-                ps.OnlySelectActs_geino(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType,OnlyCantACTPassiveCancel);//ボタンのオンオフをするコールバック
-                ps.OnSkillSelectionScreenTransition_geino();//遷移時のここの引数必要のないコールバック
+                ps.OnlySelectActs(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType,OnlyCantACTPassiveCancel,0);//ボタンのオンオフをするコールバック
+                ps.OnSkillSelectionScreenTransition(0);//遷移時のここの引数必要のないコールバック
                 Walking.Instance.SKILLUI_state.Value = SkillUICharaState.geino;
                 break;
 
-            case SateliteProcessStates:
-                ps.OnlySelectActs_sites(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType,OnlyCantACTPassiveCancel);
-                ps.OnSkillSelectionScreenTransition_sites();
-                Walking.Instance.SKILLUI_state.Value = SkillUICharaState.sites;
-                break;
             case BassJackStates:
-                ps.OnlySelectActs_normalia(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType,OnlyCantACTPassiveCancel);
-                ps.OnSkillSelectionScreenTransition_noramlia();
+                ps.OnlySelectActs(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType,OnlyCantACTPassiveCancel,1);
+                ps.OnSkillSelectionScreenTransition(1);
                 Walking.Instance.SKILLUI_state.Value = SkillUICharaState.normalia;
                 break;
+            case SateliteProcessStates:
+                ps.OnlySelectActs(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType,OnlyCantACTPassiveCancel,2);
+                ps.OnSkillSelectionScreenTransition(2);
+                Walking.Instance.SKILLUI_state.Value = SkillUICharaState.sites;
+                break;
+
 
         }
 

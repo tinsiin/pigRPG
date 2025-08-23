@@ -11,49 +11,71 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using static CommonCalc;
 using Cysharp.Threading.Tasks;   // UniTask
-[Serializable]
-public class ButtonAndSkillIDHold
-{
-    public Button button;
-    public int skillID;
-    public void AddButtonFunc(UnityAction<int> call)
+    [Serializable]
+    public class ButtonAndSkillIDHold
     {
-        Debug.Log("AddButtonFunc" + skillID);
-        button.onClick.AddListener(() => call(skillID));
-    }
-}
-/// <summary>
-/// スキルIDが必要なラジオボタン処理用のコントローラー
-/// スキルIDなどが必要のない、例えば「キャラ自体の設定用」などは直接ToggleGroupControllerを使う。
-/// </summary>
-[Serializable]
-public class RadioButtonsAndSkillIDHold
-{
-    public ToggleGroupController Controller;
-    public int skillID;
-    
-    // UnityAction<int, int>に変更 - 第1引数：どのトグルが選ばれたか、第2引数：skillID
-    public void AddRadioFunc(UnityAction<int, int> call)
-    {
-         // nullチェック
-        if (Controller == null)
+        public Button button;
+        public int skillID;
+        public void AddButtonFunc(UnityAction<int> call)
         {
-            Debug.LogError("toggleGroupがnullです！ skillID: " + skillID);
+            Debug.Log("AddButtonFunc" + skillID);
+            button.onClick.AddListener(() => call(skillID));
         }
+    }
+    /// <summary>
+    /// スキルIDが必要なラジオボタン処理用のコントローラー
+    /// スキルIDなどが必要のない、例えば「キャラ自体の設定用」などは直接ToggleGroupControllerを使う。
+    /// </summary>
+    [Serializable]
+    public class RadioButtonsAndSkillIDHold
+    {
+        public ToggleGroupController Controller;
+        public int skillID;
         
-        if (call == null)
+        // UnityAction<int, int>に変更 - 第1引数：どのトグルが選ばれたか、第2引数：skillID
+        public void AddRadioFunc(UnityAction<int, int> call)
         {
-            Debug.LogError("callがnullです！ skillID: " + skillID);
+            // nullチェック
+            if (Controller == null)
+            {
+                Debug.LogError("toggleGroupがnullです！ skillID: " + skillID);
+            }
+            
+            if (call == null)
+            {
+                Debug.LogError("callがnullです！ skillID: " + skillID);
+            }
+            // 両方の情報を渡す
+            Controller.AddListener((int toggleIndex) => call(toggleIndex, skillID));
         }
-        // 両方の情報を渡す
-        Controller.AddListener((int toggleIndex) => call(toggleIndex, skillID));
-    }
 
-    public void Interactable(bool interactable)
-    {
-        Controller.interactable = interactable;
+        public void Interactable(bool interactable)
+        {
+            Controller.interactable = interactable;
+        }
     }
-}
+    /// <summary>
+    /// 主人公キャラ達のスキルボタンなどのUIリスト
+    /// </summary>
+    [Serializable]
+    public class AllySkillUILists
+    {
+        [Header("スキルボタンリスト")]
+        /// <summary>
+        /// スキルボタンリスト
+        /// </summary>
+        public List<ButtonAndSkillIDHold> skillButtons = new();
+        [Header("ストックボタンリスト")]
+        /// <summary>
+        /// ストックボタンリスト
+        /// </summary>
+        public List<ButtonAndSkillIDHold> stockButtons = new();
+        [Header("前のめり選択が可能なスキル用に選択できるラジオボタン用リスト")]
+        /// <summary>
+        /// 前のめり選択ラジオリスト
+        /// </summary>
+        public List<RadioButtonsAndSkillIDHold> aggressiveCommitRadios = new();
+    }
 
 /// <summary>
 ///セーブでセーブされるような事柄とかメインループで操作するためのステータス太刀　シングルトン
@@ -95,21 +117,15 @@ public class PlayersStates:MonoBehaviour
         NowAreaID = 0;
 
         //初期データをランタイム用にセット
-        geino = Init_geino.DeepCopy();
-        noramlia = Init_noramlia.DeepCopy();
-        sites = Init_sites.DeepCopy();
-
-        //スキル初期化
-        geino.OnInitializeSkillsAndChara();
-        noramlia.OnInitializeSkillsAndChara();
-        sites.OnInitializeSkillsAndChara();
-
-        //デフォルト精神属性の初回設定
-        geino.DecideDefaultMyImpression();
-        noramlia.DecideDefaultMyImpression();
-        sites.DecideDefaultMyImpression();
-
-        
+        Allies = new AllyClass[] 
+        {
+            Init_geino.DeepCopy(), Init_noramlia.DeepCopy(), Init_sites.DeepCopy() 
+        };
+        foreach(var ally in Allies)
+        {
+            ally.OnInitializeSkillsAndChara();//スキル初期化
+            ally.DecideDefaultMyImpression();//デフォルト精神属性の初回設定
+        }
 
         ApplySkillButtons();//ボタンの結びつけ処理
 
@@ -121,9 +137,21 @@ public class PlayersStates:MonoBehaviour
     public StairStates Init_geino;
     public BassJackStates Init_noramlia;
     public SateliteProcessStates Init_sites;
-    public StairStates geino;
-    public BassJackStates noramlia;
-    public SateliteProcessStates sites;
+    public StairStates geino => Allies[(int)AllyId.Geino] as StairStates;
+    public BassJackStates noramlia => Allies[(int)AllyId.Noramlia] as BassJackStates;
+    public SateliteProcessStates sites => Allies[(int)AllyId.Sites] as SateliteProcessStates;
+    //一旦リファクタリングの為にコメントアウト
+
+    /// <summary>
+    /// 0=Geino, 1=Noramlia, 2=Sites
+    /// 処理のループ化のための配列ID列挙体
+    /// </summary>
+    public enum AllyId { Geino = 0, Noramlia = 1, Sites = 2 }
+    /// <summary>
+    /// 0=Geino, 1=Noramlia, 2=Sites
+    /// 味方ランタイムデータの配列　処理のループ化のための
+    /// </summary>
+    private AllyClass[] Allies; // ランタイムで生成（Inspectorでの多態シリアライズは捨てる）
 
 
     /// <summary>
@@ -131,174 +159,101 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     void ApplySkillButtons()
     {
-        Debug.Log("ApplySkillButtons");
-        //ボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
-        foreach (var button in skillButtonList_geino)
-        {
-            Debug.Log("ApplySkillButtons geino");
-            button.AddButtonFunc(geino.OnSkillBtnCallBack);
-        }
+            Debug.Log("ApplySkillButtons");
 
-        //ストックボタンに「ストックを各キャラの使用スキル変数と結びつける関数」　を登録する
-        foreach (var button in skillStockButtonList_geino)
-        {
-            button.AddButtonFunc(geino.OnSkillStockBtnCallBack);
-        }
+            // Allies と各UI配列を添え字で対応させて一括で結び付け
+            for (int i = 0; i < Allies.Length; i++)
+            {
+                var actor = Allies[i];
 
-        //ボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
-        foreach (var button in skillButtonList_noramlia)
-        {
-            button.AddButtonFunc(noramlia.OnSkillBtnCallBack);
-        }
+                // スキルボタン
+                if (skillUILists != null && i < skillUILists.Length && skillUILists[i] != null)
+                {
+                    foreach (var button in skillUILists[i].skillButtons)
+                    {
+                        button.AddButtonFunc(actor.OnSkillBtnCallBack);
+                    }
+                }
 
-        //ストックボタンに「ストックを各キャラの使用スキル変数と結びつける関数」　を登録する
-        foreach (var button in skillStockButtonList_noramlia)
-        {
-            button.AddButtonFunc(noramlia.OnSkillStockBtnCallBack);
-        }
+                // ストックボタン
+                if (skillUILists != null && i < skillUILists.Length && skillUILists[i] != null)
+                {
+                    foreach (var button in skillUILists[i].stockButtons)
+                    {
+                        button.AddButtonFunc(actor.OnSkillStockBtnCallBack);
+                    }
+                }
 
-        //ボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
-        foreach (var button in skillButtonList_sites)
-        {
-            button.AddButtonFunc(sites.OnSkillBtnCallBack);
-        }
+                // 前のめり選択ラジオ
+                if (skillUILists != null && i < skillUILists.Length && skillUILists[i] != null)
+                {
+                    foreach (var radio in skillUILists[i].aggressiveCommitRadios)
+                    {
+                        radio.AddRadioFunc(actor.OnSkillSelectAgressiveCommitBtnCallBack);
+                    }
+                }
 
-        //ストックボタンに「ストックを各キャラの使用スキル変数と結びつける関数」　を登録する
-        foreach (var button in skillStockButtonList_sites)
-        {
-            button.AddButtonFunc(sites.OnSkillStockBtnCallBack);
-        }
+                // 割り込みカウンターActive
+                if (SelectInterruptCounterRadioButtons != null && i < SelectInterruptCounterRadioButtons.Length && SelectInterruptCounterRadioButtons[i] != null)
+                {
+                    SelectInterruptCounterRadioButtons[i].AddListener(actor.OnSelectInterruptCounterActiveBtnCallBack);
+                }
 
-        //ラジオボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
-        foreach (var button in skillSelectAgressiveCommitRadioList_geino)
-        {
-            button.AddRadioFunc(geino.OnSkillSelectAgressiveCommitBtnCallBack);
-        }
+                // 何もしないボタン
+                if (DoNothingButton != null && i < DoNothingButton.Length && DoNothingButton[i] != null)
+                {
+                    DoNothingButton[i].onClick.AddListener(actor.OnSkillDoNothingBtnCallBack);
+                }
+            }
 
-        //ラジオボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
-        foreach (var button in skillSelectAgressiveCommitRadioList_noramlia)
-        {
-            button.AddRadioFunc(noramlia.OnSkillSelectAgressiveCommitBtnCallBack);
-        }
-
-        //ラジオボタンに「スキルを各キャラの使用スキル変数と結びつける関数」　を登録する
-        foreach (var button in skillSelectAgressiveCommitRadioList_sites)
-        {
-            button.AddRadioFunc(sites.OnSkillSelectAgressiveCommitBtnCallBack);
-        }
-
-        //ラジオボタンに「割り込みカウンターActiveのコールバック関数」を登録する
-        SelectInterruptCounterRadioButtons_geino.AddListener(geino.OnSelectInterruptCounterActiveBtnCallBack);
-        SelectInterruptCounterRadioButtons_noramlia.AddListener(noramlia.OnSelectInterruptCounterActiveBtnCallBack);
-        SelectInterruptCounterRadioButtons_sites.AddListener(sites.OnSelectInterruptCounterActiveBtnCallBack);
-
-        //何もしないボタンを結び付ける
-        if(DoNothingButton_noramlia != null)
-        {
-            DoNothingButton_noramlia.onClick.AddListener(noramlia.OnSkillDoNothingBtnCallBack);
-        }
-        if(DoNothingButton_geino != null)
-        {
-            DoNothingButton_geino.onClick.AddListener(geino.OnSkillDoNothingBtnCallBack);
-        }
-        if(DoNothingButton_sites != null)
-        {
-            DoNothingButton_sites.onClick.AddListener(sites.OnSkillDoNothingBtnCallBack);
-        }
-
-
-        Debug.Log("ボタンとコールバックを結び付けました - ApplySkillButtons");
+            Debug.Log("ボタンとコールバックを結び付けました - ApplySkillButtons");
     }
-
+    [Header("Geino=0, BassJack=1, Sites=2")]
     [SerializeField]
-    private List<ButtonAndSkillIDHold> skillButtonList_geino =new();//ジーノ用スキルボタン用リスト
+    ///複数存在するスキル用のUIリスト
+    private AllySkillUILists[] skillUILists = new AllySkillUILists[3];
+    [Header("割り込みカウンターActive用のラジオボタン用リスト")]
+    /// <summary>
+    /// スキル依存でないものは直接ToggleGroupControllerを使う。
+    ///割り込みカウンターActiveのラジオボタン用リスト
+    /// </summary>
     [SerializeField]
-    private List<ButtonAndSkillIDHold> skillButtonList_noramlia=new();//ノーマリア用スキルボタン用リスト
-    [SerializeField]
-    private List<ButtonAndSkillIDHold> skillButtonList_sites=new();//サテライト用スキルボタン用リスト
-
-    [SerializeField]
-    private List<ButtonAndSkillIDHold> skillStockButtonList_geino=new();//ジーノの該当のスキルの攻撃ストックボタン用リスト
-    [SerializeField]
-    private List<ButtonAndSkillIDHold> skillStockButtonList_noramlia=new();//ノーマリアの該当のスキルの攻撃ストックボタン用リスト
-    [SerializeField]
-    private List<ButtonAndSkillIDHold> skillStockButtonList_sites=new();//サテライトの該当のスキルの攻撃ストックボタン用リスト
-
-    //前のめり選択が可能なスキル用に選択できるラジオボタン用リスト
-    [SerializeField] private List<RadioButtonsAndSkillIDHold> skillSelectAgressiveCommitRadioList_geino = new();
-    [SerializeField] private List<RadioButtonsAndSkillIDHold> skillSelectAgressiveCommitRadioList_noramlia = new();
-    [SerializeField] private List<RadioButtonsAndSkillIDHold> skillSelectAgressiveCommitRadioList_sites = new();
-
-    //割り込みカウンターActiveのラジオボタン用リスト
-    //スキル依存でないものは直接ToggleGroupControllerを使う。
-    [SerializeField]
-    private ToggleGroupController SelectInterruptCounterRadioButtons_geino;
-    [SerializeField]
-    private ToggleGroupController SelectInterruptCounterRadioButtons_noramlia;
-    [SerializeField]
-    private ToggleGroupController SelectInterruptCounterRadioButtons_sites;
+    private ToggleGroupController[] SelectInterruptCounterRadioButtons = new ToggleGroupController[3];
 
     /// <summary>
     /// スキル選択画面へ遷移する際のコールバック
+    /// indexで指定されたキャラのみ
     /// </summary>
-    public void OnSkillSelectionScreenTransition_geino() 
+    public void OnSkillSelectionScreenTransition(int index) 
     {
         //OnlyInteractHasZoneTraitSkills_geino(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);//ボタンのオンオフをするコールバック
         //これは引数必要だから呼び出し元で
-        OnlyInteractHasHasBladeWeaponShowBladeSkill_geino();
+        OnlyInteractHasHasBladeWeaponShowBladeSkill(index);
 
         //「有効化されてるスキル達のみ」の前のめり選択状態を　ラジオボタンに反映する処理
-        foreach(var radio in skillSelectAgressiveCommitRadioList_geino.Where(radio => geino.ValidSkillIDList.Contains(radio.skillID)))
+        
+        //ラジオボタン
+        foreach(var radio in skillUILists[index].aggressiveCommitRadios.Where(rad => Allies[index].ValidSkillIDList.Contains(rad.skillID)))
         {
-            BaseSkill skill = geino.SkillList[radio.skillID];
+            BaseSkill skill = Allies[index].SkillList[radio.skillID];
             if(skill == null) Debug.LogError("スキルがありません");
             //前のめり = 0 そうでないなら　1 なので　IsAgressiveCommitの三項演算子
             radio.Controller.SetOnWithoutNotify(skill.IsAggressiveCommit ? 0 : 1);
         }
-    }
-    /// <summary>
-    /// スキル選択画面へ遷移する際のコールバック（sites用）
-    /// </summary>
-    public void OnSkillSelectionScreenTransition_sites() 
-    {
-        //OnlyInteractHasZoneTraitSkills_sites(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);//ボタンのオンオフをするコールバック
-        //これは引数必要だから呼び出し元で
-        OnlyInteractHasHasBladeWeaponShowBladeSkill_sites();
 
-        //「有効化されてるスキル達のみ」の前のめり選択状態を　ラジオボタンに反映する処理
-        foreach(var radio in skillSelectAgressiveCommitRadioList_sites.Where(radio => sites.ValidSkillIDList.Contains(radio.skillID)))
-        {
-            //前のめり = 0 そうでないなら　1 なので　IsAgressiveCommitの三項演算子
-            radio.Controller.SetOnWithoutNotify(sites.SkillList[radio.skillID].IsAggressiveCommit ? 0 : 1);
-        }
-    }
 
-    /// <summary>
-    /// スキル選択画面へ遷移する際のコールバック（bassjack/noramlia用）
-    /// </summary>
-    public void OnSkillSelectionScreenTransition_noramlia() 
-    {
-        //OnlyInteractHasZoneTraitSkills_noramlia(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);//ボタンのオンオフをするコールバック
-        //これは引数必要だから呼び出し元で
-        OnlyInteractHasHasBladeWeaponShowBladeSkill_noramlia();
-
-        //「有効化されてるスキル達のみ」の前のめり選択状態を　ラジオボタンに反映する処理
-        foreach(var radio in skillSelectAgressiveCommitRadioList_noramlia.Where(radio => noramlia.ValidSkillIDList.Contains(radio.skillID)))
-        {
-            radio.Controller.SetOnWithoutNotify(noramlia.SkillList[radio.skillID].IsAggressiveCommit ? 0 : 1);
-        }
     }
 
     
     /// <summary>
     /// 指定したZoneTraitとスキル性質を所持するスキルのみを、有効化しそれ以外を無効化するコールバック
     /// </summary>
-    public void OnlySelectActs_geino(SkillZoneTrait trait,SkillType type,bool OnlyCantACTPassiveCancel)
+    public void OnlySelectActs(SkillZoneTrait trait,SkillType type,bool OnlyCantACTPassiveCancel,int index)
     {
-        foreach(var skill in geino.SkillList.Cast<AllySkill>())
+        foreach(var skill in Allies[index].SkillList.Cast<AllySkill>())
         {
             //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
-            var hold = skillButtonList_geino.Find(hold => hold.skillID == skill.ID);
+            var hold = skillUILists[index].skillButtons.Find(hold => hold.skillID == skill.ID);
             if(OnlyCantACTPassiveCancel)//キャンセル可能な行動可能パッシブを消せるなら
             {
                 //一つでも持ってればOK
@@ -317,74 +272,24 @@ public class PlayersStates:MonoBehaviour
             }
         }
         //キャンセル可能な行動可能パッシブを作成する。
-        if(CancelPassiveButtonField_geino == null) Debug.LogError("CancelPassiveButtonField_geinoがnullです");
-        CancelPassiveButtonField_geino.ShowPassiveButtons(geino,OnlyCantACTPassiveCancel);
-    }
-    public void OnlySelectActs_normalia(SkillZoneTrait trait, SkillType type, bool OnlyCantACTPassiveCancel)
-    {
-        foreach(var skill in noramlia.SkillList.Cast<AllySkill>())
-        {
-            //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
-            var hold = skillButtonList_noramlia.Find(hold => hold.skillID == skill.ID);
-            if(OnlyCantACTPassiveCancel)//キャンセル可能な行動可能パッシブを消せるなら
-            {
-                //一つでも持ってればOK
-                if (hold != null)
-                {
-                    hold.button.interactable = false;//有効なスキルは全て無効
-                }
-            }
-            else//それ以外は
-            {
-                //一つでも持ってればOK
-                if (hold != null)
-                {
-                    hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);
-                }
-            }
-        }
-        //キャンセル可能な行動可能パッシブを作成する。
-        CancelPassiveButtonField_normalia.ShowPassiveButtons(noramlia, OnlyCantACTPassiveCancel);
-    }
-    public void OnlySelectActs_sites(SkillZoneTrait trait, SkillType type, bool OnlyCantACTPassiveCancel)
-    {
-        foreach(var skill in sites.SkillList.Cast<AllySkill>())
-        {
-            //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
-            var hold = skillButtonList_sites.Find(hold => hold.skillID == skill.ID);
-            if(OnlyCantACTPassiveCancel)//キャンセル可能な行動可能パッシブを消せるなら
-            {
-                //一つでも持ってればOK
-                if (hold != null)
-                {
-                    hold.button.interactable = false;//有効なスキルは全て無効
-                }
-            }else//それ以外は
-            {
-                //一つでも持ってればOK
-                if (hold != null)
-                {
-                    hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);
-                }
-            }
-        }
-        //キャンセル可能な行動可能パッシブを作成する。
-        CancelPassiveButtonField_sites.ShowPassiveButtons(sites, OnlyCantACTPassiveCancel);
+        if(CancelPassiveButtonField[index] == null) Debug.LogError("CancelPassiveButtonField_geinoがnullです");
+        CancelPassiveButtonField[index].ShowPassiveButtons(Allies[index],OnlyCantACTPassiveCancel);
     }
     /// <summary>
     /// 刃物武器でないと刃物スキルが表示されない処理。
     /// 既に全てのスキルが表示されてる前提の関数なので、
-    /// 非表示にしていくって形で。
+    /// 非表示にしていくって形で。　indexで指定したキャラのみ
     /// </summary>
-    public void OnlyInteractHasHasBladeWeaponShowBladeSkill_geino()
+    public void OnlyInteractHasHasBladeWeaponShowBladeSkill(int index)
     {
-        if(geino.NowUseWeapon.IsBlade) return;//刃物武器だから非表示の必要なし、終了。
+
+        if(Allies[index].NowUseWeapon.IsBlade) return;//刃物武器だから非表示の必要なし、終了。
 
         //刃物武器でないので、刃物スキルの非表示処理
-        foreach(var skill in geino.SkillList.Cast<AllySkill>())
+        foreach(var skill in Allies[index].SkillList.Cast<AllySkill>())
         {
             //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
-            var hold = skillButtonList_geino.Find(hold => hold.skillID == skill.ID);
+            var hold = skillUILists[index].skillButtons.Find(hold => hold.skillID == skill.ID);
             //刃物スキルのボタンを非表示にする
             if (hold != null)
             {
@@ -392,197 +297,111 @@ public class PlayersStates:MonoBehaviour
             }
         }
     }
-    public void OnlyInteractHasHasBladeWeaponShowBladeSkill_noramlia()
-    {
-        if(noramlia.NowUseWeapon.IsBlade) return;//刃物武器だから非表示の必要なし、終了。
-
-        //刃物武器でないので、刃物スキルの非表示処理
-        foreach(var skill in noramlia.SkillList.Cast<AllySkill>())
-        {
-            //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
-            var hold = skillButtonList_noramlia.Find(hold => hold.skillID == skill.ID);
-            //刃物スキルのボタンを非表示にする
-            if (hold != null)
-            {
-                hold.button.interactable = !skill.IsBlade;
-            }
-        }
-    }
-    public void OnlyInteractHasHasBladeWeaponShowBladeSkill_sites()
-    {
-        if(sites.NowUseWeapon.IsBlade) return;//刃物武器だから非表示の必要なし、終了。
-
-        //刃物武器でないので、刃物スキルの非表示処理
-        foreach(var skill in sites.SkillList.Cast<AllySkill>())
-        {
-            //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
-            var hold = skillButtonList_sites.Find(hold => hold.skillID == skill.ID);
-            //刃物スキルのボタンを非表示にする
-            if (hold != null)
-            {
-                hold.button.interactable = !skill.IsBlade;
-            }
-        }
-    }
-
     /// <summary>
     /// スキルボタンの使いを有効化する処理　可視化
+    /// 三人分行う
     /// </summary>
     void UpdateSkillButtonVisibility()
     {
-        // 有効なスキルのIDを抽出（キャストが必要ならキャストも実施）
-        var activeSkillIds_geino = new HashSet<int>(geino.SkillList.Cast<AllySkill>().Select(skill => skill.ID));
-        var activeSkillIds_normalia = new HashSet<int>(noramlia.SkillList.Cast<AllySkill>().Select(skill => skill.ID));
-        var activeSkillIds_sites = new HashSet<int>(sites.SkillList.Cast<AllySkill>().Select(skill => skill.ID));
-
-        // 各ボタンについて、対応スキルが有効かどうか判定
-        foreach (var hold in skillButtonList_geino)
+        //三キャラ全員分ループ
+        for(int i = 0; i < Allies.Length; i++)
         {
-            hold.button.interactable = activeSkillIds_geino.Contains(hold.skillID);
-        }
-        foreach (var hold in skillStockButtonList_geino)//ストックボタン
-        {
-            hold.button.interactable = activeSkillIds_geino.Contains(hold.skillID);
-        }
-        foreach(var hold in skillSelectAgressiveCommitRadioList_geino)
-        {
-            hold.Interactable(activeSkillIds_geino.Contains(hold.skillID));//前のめり選択ラジオボタンの設定
-        }
-
-        foreach (var hold in skillButtonList_noramlia)
-        {
-            hold.button.interactable = activeSkillIds_normalia.Contains(hold.skillID);
-        }
-        foreach (var hold in skillStockButtonList_noramlia)//ストックボタン
-        {
-            hold.button.interactable = activeSkillIds_normalia.Contains(hold.skillID);
-        }
-        foreach(var hold in skillSelectAgressiveCommitRadioList_noramlia)
-        {
-            hold.Interactable(activeSkillIds_normalia.Contains(hold.skillID));//前のめり選択ラジオボタンの設定
-        }
-
-        foreach (var hold in skillButtonList_sites)
-        {
-            hold.button.interactable = activeSkillIds_sites.Contains(hold.skillID);
-        }
-        foreach (var hold in skillStockButtonList_sites)//ストックボタン
-        {
-            hold.button.interactable = activeSkillIds_sites.Contains(hold.skillID);
-        }
-        foreach(var hold in skillSelectAgressiveCommitRadioList_sites)
-        {
-            hold.Interactable(activeSkillIds_sites.Contains(hold.skillID));//前のめり選択ラジオボタンの設定
+            // 有効なスキルのIDを抽出（キャストが必要ならキャストも実施）
+            var activeSkillIds = new HashSet<int>(Allies[i].SkillList.Cast<AllySkill>().Select(skill => skill.ID));
+                    // 各ボタンについて、対応スキルが有効かどうか判定
+            foreach (var hold in skillUILists[i].skillButtons)//スキルボタン
+            {
+                hold.button.interactable = activeSkillIds.Contains(hold.skillID);
+            }
+            foreach (var hold in skillUILists[i].stockButtons)//ストックボタン
+            {
+                hold.button.interactable = activeSkillIds.Contains(hold.skillID);
+            }
+            foreach(var hold in skillUILists[i].aggressiveCommitRadios)//前のめり選択ラジオボタンの設定
+            {
+                hold.Interactable(activeSkillIds.Contains(hold.skillID));
+            }
         }
     }
 
 
 
 
-    //連続実行スキル(FreezeConsecutive)の停止予約のボタン
-    //主にCharaConfigタブの方で扱う。
+    [Header("連続実行スキル(FreezeConsecutive)の停止予約のボタン")]
+    /// <summary>
+    /// 主にCharaConfigタブの方で扱う。
+    /// 連続実行スキル(FreezeConsecutive)の停止予約のボタン
+    /// </summary>
     [SerializeField]
-    Button StopFreezeConsecutiveButton_geino;
-    [SerializeField]
-    Button StopFreezeConsecutiveButton_Bassjack;
-    [SerializeField]
-    Button StopFreezeConsecutiveButton_Sites;
-    public void StarirStopFreezeConsecutiveButtonCallBack()
+    Button[] StopFreezeConsecutiveButton = new Button[3];
+    /// <summary>
+    /// FreezeConsecutiveを消去予約するボタンのコールバック
+    /// indexで指定したキャラのみ
+    /// </summary>
+    public void StopFreezeConsecutiveButtonCallBack(int index)
     {
-        geino.TurnOnDeleteMyFreezeConsecutiveFlag();
-        StopFreezeConsecutiveButton_geino.gameObject.SetActive(false);
-    }
-    public void BassJackStopFreezeConsecutiveButtonCallBack()
-    {
-        noramlia.TurnOnDeleteMyFreezeConsecutiveFlag();
-        StopFreezeConsecutiveButton_Bassjack.gameObject.SetActive(false);
-
-    }
-
-    public void SateliteStopFreezeConsecutiveButtonCallBack()
-    {
-        sites.TurnOnDeleteMyFreezeConsecutiveFlag();
-        StopFreezeConsecutiveButton_Sites.gameObject.SetActive(false);
+        Allies[index].TurnOnDeleteMyFreezeConsecutiveFlag();
+        StopFreezeConsecutiveButton[index].gameObject.SetActive(false);
     }
     /// <summary>
     /// FreezeConsecutiveを消去予約するボタンの表示設定
+    /// キャラ全員分
     /// </summary>
     public void VisiableSettingStopFreezeConsecutiveButtons()
     {
-        if(!geino.IsDeleteMyFreezeConsecutive)//現在消去予約をしていなくて、
-        StopFreezeConsecutiveButton_geino.gameObject.SetActive(geino.IsNeedDeleteMyFreezeConsecutive());//消去予約が可能ならボタンを表示する
+        for(int i = 0; i < Allies.Length; i++)
+        {
+            var ally = Allies[i];
+            if(!ally.IsDeleteMyFreezeConsecutive)//現在消去予約をしていなくて、
+            StopFreezeConsecutiveButton[i].gameObject.SetActive(ally.IsNeedDeleteMyFreezeConsecutive());//消去予約が可能ならボタンを表示する
 
-        if(!noramlia.IsDeleteMyFreezeConsecutive)//現在消去予約をしていなくて、
-        StopFreezeConsecutiveButton_Bassjack.gameObject.SetActive(noramlia.IsNeedDeleteMyFreezeConsecutive());//消去予約が可能ならボタンを表示する
+        }
 
-
-        if(!sites.IsDeleteMyFreezeConsecutive)//現在消去予約をしていなくて、
-        StopFreezeConsecutiveButton_Sites.gameObject.SetActive(sites.IsNeedDeleteMyFreezeConsecutive());//消去予約が可能ならボタンを表示する
 
 
     }
+    [Header("スキル選択画面のデフォルトのエリア")]
     /// <summary>
-    /// スキル選択画面の一番デフォルトのエリア
+    /// スキル選択画面のデフォルトのエリア
     /// </summary>
-    [SerializeField] GameObject DefaultButtonArea_geino;
-    [SerializeField] GameObject DefaultButtonArea_sites;
-    [SerializeField] GameObject DefaultButtonArea_normalia;
-    [SerializeField] Button DoNothingButton_geino;
-    [SerializeField] Button DoNothingButton_sites;
-    [SerializeField] Button DoNothingButton_noramlia;
+    [SerializeField] GameObject[] DefaultButtonArea = new GameObject[3];
+    [Header("何もしないボタン")]
+    /// <summary>
+    /// 何もしないボタン
+    /// </summary>
+    [SerializeField] Button[] DoNothingButton = new Button[3];
+    [Header("パッシブをキャンセルするボタンのエリア")]
     /// <summary>
     /// パッシブをキャンセルするボタンのエリア
     /// </summary>
-    [SerializeField] SelectCancelPassiveButtons CancelPassiveButtonField_geino;
-    [SerializeField] SelectCancelPassiveButtons CancelPassiveButtonField_sites;
-    [SerializeField] SelectCancelPassiveButtons CancelPassiveButtonField_normalia;
+    [SerializeField] SelectCancelPassiveButtons[] CancelPassiveButtonField = new SelectCancelPassiveButtons[3];
+    [Header("スキル選択デフォルト画面からパッシブキャンセルエリアへ進むボタン")]
     /// <summary>
     /// スキル選択デフォルト画面からパッシブキャンセルエリアへ進むボタン
     /// </summary>
-    [SerializeField] Button GoToCancelPassiveFieldButton_geino;
-    [SerializeField] Button GoToCancelPassiveFieldButton_sites;
-    [SerializeField] Button GoToCancelPassiveFieldButton_normalia;
+    [SerializeField] Button[] GoToCancelPassiveFieldButton = new Button[3];
+    [Header("パッシブをキャンセルするエリアからデフォルトのスキル選択のエリアまで戻るボタン")]
     /// <summary>
     /// パッシブをキャンセルするエリアからデフォルトのスキル選択のエリアまで戻るボタン
     /// </summary>
-    [SerializeField] Button ReturnCancelPassiveToDefaultAreaButton_geino;
-    [SerializeField] Button ReturnCancelPassiveToDefaultAreaButton_sites;
-    [SerializeField] Button ReturnCancelPassiveToDefaultAreaButton_normalia;
+    [SerializeField] Button[] ReturnCancelPassiveToDefaultAreaButton = new Button[3];
     /// <summary>
     /// デフォルトのスキル選択のエリアからキャンセルパッシブのエリアまで進むボタン処理
+    /// indexで指定したキャラのみ
     /// </summary>
-    public void GoToCancelPassiveField_geino()
+    public void GoToCancelPassiveField(int index)
     {
-        DefaultButtonArea_geino.gameObject.SetActive(false);
-        CancelPassiveButtonField_geino.gameObject.SetActive(true);
-    }
-    public void GoToCancelPassiveField_sites()
-    {
-        DefaultButtonArea_sites.gameObject.SetActive(false);
-        CancelPassiveButtonField_sites.gameObject.SetActive(true);
-    }
-    public void GoToCancelPassiveField_normalia()
-    {
-        DefaultButtonArea_normalia.gameObject.SetActive(false);
-        CancelPassiveButtonField_normalia.gameObject.SetActive(true);
+        DefaultButtonArea[index].gameObject.SetActive(false);
+        CancelPassiveButtonField[index].gameObject.SetActive(true);
     }
     /// <summary>
     /// キャンセルパッシブのエリアからデフォルトのスキル選択のエリアまで戻る
+    /// indexで指定したキャラのみ
     /// </summary>
-    public void ReturnCancelPassiveToDefaultArea_geino()
+    public void ReturnCancelPassiveToDefaultArea(int index)
     {
-        CancelPassiveButtonField_geino.gameObject.SetActive(false);
-        DefaultButtonArea_geino.gameObject.SetActive(true);
-    }
-    public void ReturnCancelPassiveToDefaultArea_sites()
-    {
-        CancelPassiveButtonField_sites.gameObject.SetActive(false);
-        DefaultButtonArea_sites.gameObject.SetActive(true);
-    }
-    public void ReturnCancelPassiveToDefaultArea_normalia()
-    {
-        CancelPassiveButtonField_normalia.gameObject.SetActive(false);
-        DefaultButtonArea_normalia.gameObject.SetActive(true);
+        CancelPassiveButtonField[index].gameObject.SetActive(false);
+        DefaultButtonArea[index].gameObject.SetActive(true);
     }
 
 
@@ -602,13 +421,14 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     public int NowAreaID { get; private set; }
     /// <summary>
-    ///     味方のキャラクターのUIを表示するか非表示する
+    ///     味方のキャラクター全員分のUIを表示するか非表示する
     /// </summary>
     public void AllyAlliesUISetActive(bool isActive)
     {
-        if (geino?.UI != null) geino.UI.SetActive(isActive);
-        if (sites?.UI != null) sites.UI.SetActive(isActive);
-        if (noramlia?.UI != null) noramlia.UI.SetActive(isActive);
+        for(int i = 0; i < Allies.Length; i++)
+        {
+            if (Allies[i]?.UI != null) Allies[i].UI.SetActive(isActive);
+        }
     }
 
     public BattleGroup GetParty()
@@ -747,38 +567,43 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     public void PlayersOnWin()
     {
-        geino.OnAllyWinCallBack();
-        sites.OnAllyWinCallBack();
-        noramlia.OnAllyWinCallBack();
-
+        for(int i = 0; i < Allies.Length; i++)
+        {
+            Allies[i].OnAllyWinCallBack();
+        }
     }
     /// <summary>
     /// 主人公達の負けたときのコールバック
     /// </summary>
     public void PlayersOnLost()
     {
-        geino.OnAllyLostCallBack();
-        sites.OnAllyLostCallBack();
-        noramlia.OnAllyLostCallBack();
+        for(int i = 0; i < Allies.Length; i++)
+        {
+            Allies[i].OnAllyLostCallBack();
+        }
     }
     /// <summary>
     /// 主人公達の逃げ出した時のコールバック
     /// </summary>
     public void PlayersOnRunOut()
     {
-        geino.OnAllyRunOutCallBack();
-        sites.OnAllyRunOutCallBack();
-        noramlia.OnAllyRunOutCallBack();
+        for(int i = 0; i < Allies.Length; i++)
+        {
+            Allies[i].OnAllyRunOutCallBack();
+        }
     }
 
     public void PlayersOnWalks(int walkCount)
     {
-        geino.OnWalkCallBack(walkCount);
-        sites.OnWalkCallBack(walkCount);
-        noramlia.OnWalkCallBack(walkCount);
+        for(int i = 0; i < Allies.Length; i++)
+        {
+            Allies[i].OnWalkCallBack(walkCount);
+        }
     }
-
-    //モーダルエリア
+    [Header("モーダルエリア")]
+    /// <summary>
+    /// モーダルエリア
+    /// </summary>
     public GameObject ModalArea;
 
     void GoToModalArea()
@@ -791,8 +616,10 @@ public class PlayersStates:MonoBehaviour
         EyeArea.gameObject.SetActive(true);//eyeAreaを元に戻す
         ModalArea.gameObject.SetActive(false);
     }
-
-    //スキルパッシブ対象スキル選択ボタン管理エリア
+    [Header("スキルパッシブ対象スキル選択ボタン管理エリア")]
+    /// <summary>
+    /// スキルパッシブ対象スキル選択ボタン管理エリア
+    /// </summary>
     [SerializeField]SelectSkillPassiveTargetSkillButtons SelectSkillPassiveTargetHandle;
     /// <summary>
     /// スキルパッシブ対象スキル選択画面へ行く
@@ -813,38 +640,26 @@ public class PlayersStates:MonoBehaviour
         SelectSkillPassiveTargetHandle.gameObject.SetActive(false);//ボタンエリアの非表示
         ReturnModalArea();//モーダルエリアの非表示
     }
-
+    [Header("思い入れスキル選択UI")]
     /// <summary>
     /// 思い入れスキル選択UI
     /// </summary>
     [SerializeField]SelectEmotionalAttachmentSkillButtons EmotionalAttachmentSkillSelectUIArea;
-    ///思い入れスキル弱体化用スキルパッシブ
+    [Header("思い入れスキル弱体化用スキルパッシブ")]
+    /// <summary>
+    /// 思い入れスキル弱体化用スキルパッシブ
+    /// </summary>
     public BaseSkillPassive EmotionalAttachmentSkillWeakeningPassive;
     /// <summary>
-    /// ジーノの思い入れスキル選択UI表示ボタン
+    /// 思い入れスキル選択UI表示ボタン
+    /// indexでキャラ指定
     /// </summary>
-    public void Geino_OpenEmotionalAttachmentSkillSelectUIArea()
+    public void OpenEmotionalAttachmentSkillSelectUIArea(int index)
     {
         EmotionalAttachmentSkillSelectUIArea.OpenEmotionalAttachmentSkillSelectUIArea();
         EmotionalAttachmentSkillSelectUIArea.ShowSkillsButtons
-        (geino.SkillList.Cast<AllySkill>().Where(skill => skill.IsTLOA).ToList(),//TLOAスキルのみ
-         geino.EmotionalAttachmentSkillID, geino.OnEmotionalAttachmentSkillIDChange);
-        //キャラのスキルリストと、現在の思い入れスキルIDを渡す
-    }
-    public void Sites_OpenEmotionalAttachmentSkillSelectUIArea()
-    {
-        EmotionalAttachmentSkillSelectUIArea.OpenEmotionalAttachmentSkillSelectUIArea();
-        EmotionalAttachmentSkillSelectUIArea.ShowSkillsButtons
-        (sites.SkillList.Cast<AllySkill>().Where(skill => skill.IsTLOA).ToList(),
-         sites.EmotionalAttachmentSkillID, sites.OnEmotionalAttachmentSkillIDChange);
-        //キャラのスキルリストと、現在の思い入れスキルIDを渡す
-    }
-    public void Noramlia_OpenEmotionalAttachmentSkillSelectUIArea()
-    {
-        EmotionalAttachmentSkillSelectUIArea.OpenEmotionalAttachmentSkillSelectUIArea();
-        EmotionalAttachmentSkillSelectUIArea.ShowSkillsButtons
-        (noramlia.SkillList.Cast<AllySkill>().Where(skill => skill.IsTLOA).ToList(),
-         noramlia.EmotionalAttachmentSkillID, noramlia.OnEmotionalAttachmentSkillIDChange);
+        (Allies[index].SkillList.Cast<AllySkill>().Where(skill => skill.IsTLOA).ToList(),//TLOAスキルのみ
+         Allies[index].EmotionalAttachmentSkillID, Allies[index].OnEmotionalAttachmentSkillIDChange);
         //キャラのスキルリストと、現在の思い入れスキルIDを渡す
     }
     
@@ -857,17 +672,6 @@ public class PlayersStates:MonoBehaviour
         EmotionalAttachmentSkillSelectUIArea.CloseEmotionalAttachmentSkillSelectUIArea();//思い入れスキル選択UIが開きっぱなしなら閉じる
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    public void CheckGeinoTenDayValuesCallBack()
-    {
-        Debug.Log($"{geino.CharacterName}の十日能力値:");
-        foreach(var tenDay in geino.BaseTenDayValues)
-        {
-            Debug.Log($"{tenDay.Key}: {tenDay.Value}");
-        }
-    }
 
     //中央決定値など---------------------------------------------------------中央決定値
     /// <summary>

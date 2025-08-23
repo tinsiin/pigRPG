@@ -4422,7 +4422,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.87951195, g: 0.5147951, b: 0.8538668, a: 0.5578413}
+  m_Color: {r: 0.99998534, g: 0.0000625805, b: 0.99998224, a: 0.99994624}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -7127,171 +7127,48 @@ MonoBehaviour:
     _skillALLList: []
     ValidSkillIDList: 
     EmotionalAttachmentSkillID: 0
-  geino:
-    InitpassiveIDList: 
-    InitVitalLaerIDList: 
-    NowPower: 0
-    Rivahal: 0
-    b_b_atk: 4
-    b_b_def: 4
-    b_b_eye: 4
-    b_b_agi: 4
-    _tenDayTemplate:
-      _list: []
-    CharacterName: "\u30B8\u30FC\u30CE\u7A7A\u3067\u3059\u3001\u30B3\u30D4\u30FC\u3055\u308C\u3066\u306A\u3044\u521D\u671F\u30C7\u30FC\u30BF\u304C"
-    ImpressionStringName: 
-    InitWeaponID: 0
-    NowBattleProtocol: 0
-    NowDeffenceStyle: 0
-    SelectedEscape: 0
-    SkillCalculatedRandomRange: 0
-    IsDeleteMyFreezeConsecutive: 0
-    _tempVanguard: 0
-    _tempLive: 0
-    BattleFirstSurpriseAttacker: 0
-    maxRecoveryTurn: 0
-    _hp: 3
-    _maxhp: 0
-    _mentalHP: 0
-    _thinkingFactor: 0
-    Target: 0
-    RangeWill: 0
-    FreezeRangeWill: 0
-    IsActiveCancelInSkillACT: 0
-    MyType: 0
-    _myImpression: 0
-    DefaultImpression: 0
-    HeavyResistance: 1
-    voltenResistance: 1
-    DishSmackRsistance: 1
-    broken: 0
-    _machineBrokenRate: 0.3
-    _uic: {fileID: 0}
-    _skillALLList: []
-    ValidSkillIDList: 
-    EmotionalAttachmentSkillID: 0
-  noramlia:
-    InitpassiveIDList: 
-    InitVitalLaerIDList: 
-    NowPower: 0
-    Rivahal: 0
-    b_b_atk: 4
-    b_b_def: 4
-    b_b_eye: 4
-    b_b_agi: 4
-    _tenDayTemplate:
-      _list: []
-    CharacterName: 
-    ImpressionStringName: 
-    InitWeaponID: 0
-    NowBattleProtocol: 0
-    NowDeffenceStyle: 0
-    SelectedEscape: 0
-    SkillCalculatedRandomRange: 0
-    IsDeleteMyFreezeConsecutive: 0
-    _tempVanguard: 0
-    _tempLive: 0
-    BattleFirstSurpriseAttacker: 0
-    maxRecoveryTurn: 0
-    _hp: 0
-    _maxhp: 0
-    _mentalHP: 0
-    _thinkingFactor: 0
-    Target: 0
-    RangeWill: 0
-    FreezeRangeWill: 0
-    IsActiveCancelInSkillACT: 0
-    MyType: 0
-    _myImpression: 0
-    DefaultImpression: 0
-    HeavyResistance: 1
-    voltenResistance: 1
-    DishSmackRsistance: 1
-    broken: 0
-    _machineBrokenRate: 0.3
-    _uic: {fileID: 0}
-    _skillALLList: []
-    ValidSkillIDList: 
-    EmotionalAttachmentSkillID: 0
-  sites:
-    InitpassiveIDList: 
-    InitVitalLaerIDList: 
-    NowPower: 0
-    Rivahal: 0
-    b_b_atk: 4
-    b_b_def: 4
-    b_b_eye: 4
-    b_b_agi: 4
-    _tenDayTemplate:
-      _list: []
-    CharacterName: 
-    ImpressionStringName: 
-    InitWeaponID: 0
-    NowBattleProtocol: 0
-    NowDeffenceStyle: 2
-    SelectedEscape: 0
-    SkillCalculatedRandomRange: 0
-    IsDeleteMyFreezeConsecutive: 0
-    _tempVanguard: 0
-    _tempLive: 0
-    BattleFirstSurpriseAttacker: 0
-    maxRecoveryTurn: 0
-    _hp: 0
-    _maxhp: 0
-    _mentalHP: 0
-    _thinkingFactor: 0
-    Target: 0
-    RangeWill: 0
-    FreezeRangeWill: 0
-    IsActiveCancelInSkillACT: 0
-    MyType: 0
-    _myImpression: 0
-    DefaultImpression: 0
-    HeavyResistance: 1
-    voltenResistance: 1
-    DishSmackRsistance: 1
-    broken: 0
-    _machineBrokenRate: 0.3
-    _uic: {fileID: 0}
-    _skillALLList: []
-    ValidSkillIDList: 
-    EmotionalAttachmentSkillID: 0
-  skillButtonList_geino:
-  - button: {fileID: 602005237}
-    skillID: 2
-  - button: {fileID: 85669209}
-    skillID: 3
-  skillButtonList_noramlia: []
-  skillButtonList_sites: []
-  skillStockButtonList_geino: []
-  skillStockButtonList_noramlia: []
-  skillStockButtonList_sites: []
-  skillSelectAgressiveCommitRadioList_geino:
-  - Controller: {fileID: 1312828554}
-    skillID: 0
-  skillSelectAgressiveCommitRadioList_noramlia: []
-  skillSelectAgressiveCommitRadioList_sites: []
-  SelectInterruptCounterRadioButtons_geino: {fileID: 1934314527}
-  SelectInterruptCounterRadioButtons_noramlia: {fileID: 2056187783}
-  SelectInterruptCounterRadioButtons_sites: {fileID: 1309537104}
-  StopFreezeConsecutiveButton_geino: {fileID: 294146446}
-  StopFreezeConsecutiveButton_Bassjack: {fileID: 1385335785}
-  StopFreezeConsecutiveButton_Sites: {fileID: 1833282123}
-  DefaultButtonArea_geino: {fileID: 770666932}
-  DefaultButtonArea_sites: {fileID: 0}
-  DefaultButtonArea_normalia: {fileID: 0}
-  DoNothingButton_geino: {fileID: 1568280088}
-  DoNothingButton_sites: {fileID: 0}
-  DoNothingButton_noramlia: {fileID: 0}
-  CancelPassiveButtonField_geino: {fileID: 1400616400}
-  CancelPassiveButtonField_sites: {fileID: 0}
-  CancelPassiveButtonField_normalia: {fileID: 0}
-  GoToCancelPassiveFieldButton_geino: {fileID: 263722060}
-  GoToCancelPassiveFieldButton_sites: {fileID: 0}
-  GoToCancelPassiveFieldButton_normalia: {fileID: 0}
-  ReturnCancelPassiveToDefaultAreaButton_geino: {fileID: 1157177639}
-  ReturnCancelPassiveToDefaultAreaButton_sites: {fileID: 0}
-  ReturnCancelPassiveToDefaultAreaButton_normalia: {fileID: 0}
+  skillUILists:
+  - skillButtons:
+    - button: {fileID: 602005237}
+      skillID: 2
+    - button: {fileID: 85669209}
+      skillID: 3
+    stockButtons: []
+    aggressiveCommitRadios: []
+  - skillButtons: []
+    stockButtons: []
+    aggressiveCommitRadios: []
+  - skillButtons: []
+    stockButtons: []
+    aggressiveCommitRadios: []
+  SelectInterruptCounterRadioButtons:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  StopFreezeConsecutiveButton:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  DefaultButtonArea:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  DoNothingButton:
+  - {fileID: 1568280088}
+  - {fileID: 0}
+  - {fileID: 0}
+  CancelPassiveButtonField:
+  - {fileID: 1400616400}
+  - {fileID: 0}
+  - {fileID: 0}
+  GoToCancelPassiveFieldButton:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  ReturnCancelPassiveToDefaultAreaButton:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   ModalArea: {fileID: 2061243746}
   SelectSkillPassiveTargetHandle: {fileID: 348096248}
   EmotionalAttachmentSkillSelectUIArea: {fileID: 965992562}
@@ -7314,6 +7191,9 @@ MonoBehaviour:
         MotionFlavor: {fileID: 0}
         SkillPhysical: 3
         SpecialFlags: 0
+        RequiredNormalP: 0
+        RequiredAttrP:
+          _list: []
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1.6
@@ -7379,6 +7259,9 @@ MonoBehaviour:
         MotionFlavor: {fileID: 0}
         SkillPhysical: 0
         SpecialFlags: 0
+        RequiredNormalP: 0
+        RequiredAttrP:
+          _list: []
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
@@ -7454,6 +7337,9 @@ MonoBehaviour:
         MotionFlavor: {fileID: 0}
         SkillPhysical: 0
         SpecialFlags: 0
+        RequiredNormalP: 0
+        RequiredAttrP:
+          _list: []
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
@@ -7531,6 +7417,9 @@ MonoBehaviour:
         MotionFlavor: {fileID: 0}
         SkillPhysical: 3
         SpecialFlags: 0
+        RequiredNormalP: 0
+        RequiredAttrP:
+          _list: []
         Cantkill: 0
         EvasionModifier: 1.1
         AttackModifier: 1
@@ -7629,6 +7518,9 @@ MonoBehaviour:
           MotionFlavor: {fileID: 0}
           SkillPhysical: 0
           SpecialFlags: 0
+          RequiredNormalP: 0
+          RequiredAttrP:
+            _list: []
           Cantkill: 0
           EvasionModifier: 1
           AttackModifier: 1
@@ -9128,6 +9020,9 @@ MonoBehaviour:
         MotionFlavor: {fileID: 0}
         SkillPhysical: 0
         SpecialFlags: 4
+        RequiredNormalP: 0
+        RequiredAttrP:
+          _list: []
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
@@ -9201,6 +9096,9 @@ MonoBehaviour:
         MotionFlavor: {fileID: 0}
         SkillPhysical: 1
         SpecialFlags: 0
+        RequiredNormalP: 0
+        RequiredAttrP:
+          _list: []
         Cantkill: 0
         EvasionModifier: 1
         AttackModifier: 1
@@ -10204,33 +10102,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1309537104 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 770933180919006377, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
-  m_PrefabInstance: {fileID: 1309537100}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fbc8e02ddf781f14280eff6be7e481c6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!224 &1312828550 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1566319982139485874, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
   m_PrefabInstance: {fileID: 474800726722792207}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1312828554 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 770933180919006377, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
-  m_PrefabInstance: {fileID: 474800726722792207}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fbc8e02ddf781f14280eff6be7e481c6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1353248581
 GameObject:
   m_ObjectHideFlags: 0
@@ -14116,17 +13992,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1934314527 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 770933180919006377, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
-  m_PrefabInstance: {fileID: 1934314523}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fbc8e02ddf781f14280eff6be7e481c6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1963136806
 GameObject:
   m_ObjectHideFlags: 0
@@ -14928,17 +14793,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &2056187783 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 770933180919006377, guid: 3fac7d8b99840544d86942ee8ef741be, type: 3}
-  m_PrefabInstance: {fileID: 2056187779}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fbc8e02ddf781f14280eff6be7e481c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &2056622403
