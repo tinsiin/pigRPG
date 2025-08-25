@@ -221,18 +221,12 @@ public class PlayersStates:MonoBehaviour
     private ToggleGroupController[] SelectInterruptCounterRadioButtons = new ToggleGroupController[3];
 
     /// <summary>
-    /// スキル選択画面へ遷移する際のコールバック
-    /// indexで指定されたキャラのみ
+    /// スキル選択画面へ遷移する際のコールバック 引数無しのものをここで処理
+    /// indexで指定されたキャラのみ　　
     /// </summary>
     public void OnSkillSelectionScreenTransition(int index) 
     {
-        //OnlyInteractHasZoneTraitSkills_geino(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType);//ボタンのオンオフをするコールバック
-        //これは引数必要だから呼び出し元で
-        OnlyInteractHasHasBladeWeaponShowBladeSkill(index);
-
-        //「有効化されてるスキル達のみ」の前のめり選択状態を　ラジオボタンに反映する処理
-        
-        //ラジオボタン
+        //「有効化されてるスキル達のみ」の前のめり選択状態を　ラジオボタンに反映する処理   
         foreach(var radio in skillUILists[index].aggressiveCommitRadios.Where(rad => Allies[index].ValidSkillIDList.Contains(rad.skillID)))
         {
             BaseSkill skill = Allies[index].SkillList[radio.skillID];
@@ -246,15 +240,20 @@ public class PlayersStates:MonoBehaviour
 
     
     /// <summary>
-    /// 指定したZoneTraitとスキル性質を所持するスキルのみを、有効化しそれ以外を無効化するコールバック
+    ///「使用可能な」スキルのボタンのみを有効化しそれ以外を無効化するコールバック
+    /// 指定したキャラのみ
     /// </summary>
-    public void OnlySelectActs(SkillZoneTrait trait,SkillType type,bool OnlyCantACTPassiveCancel,int index)
+    /// <param name="trait">範囲性質</param>
+    /// <param name="type">スキル攻撃性質</param>
+    /// <param name="OnlyCantACTPassiveCancel">キャンセル可能な行動可能パッシブを消せるかどうか</param>
+    /// <param name="index">キャラクターのインデックス</param>
+    public void OnlySelectActs(SkillZoneTrait trait,SkillType type,int index)
     {
         foreach(var skill in Allies[index].SkillList.Cast<AllySkill>())
         {
             //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
             var hold = skillUILists[index].skillButtons.Find(hold => hold.skillID == skill.ID);
-            if(OnlyCantACTPassiveCancel)//キャンセル可能な行動可能パッシブを消せるなら
+            if(Allies[index].HasCanCancelCantACTPassive)//キャンセル可能な行動可能パッシブを消せるなら(パッシブキャンセルの行動しか取れないのならば)
             {
                 //一つでも持ってればOK
                 if (hold != null)
@@ -263,39 +262,39 @@ public class PlayersStates:MonoBehaviour
                 }
             }else//それ以外は
             {
-                
+                Debug.Log("スキルのボタンを有効化します");
                 //一つでも持ってればOK
                 if (hold != null)
                 {
-                    hold.button.interactable = skill.HasZoneTraitAny(trait) && skill.HasType(type);
+                    hold.button.interactable =
+                        ZoneTraitAndTypeSkillMatchesUIFilter(skill, trait, type) // 表示条件（範囲/タイプ）
+                        && CanCastNow(Allies[index], skill); // 実行可否（リソース/武器）
                 }
             }
         }
         //キャンセル可能な行動可能パッシブを作成する。
-        if(CancelPassiveButtonField[index] == null) Debug.LogError("CancelPassiveButtonField_geinoがnullです");
-        CancelPassiveButtonField[index].ShowPassiveButtons(Allies[index],OnlyCantACTPassiveCancel);
+        if(CancelPassiveButtonField[index] == null) Debug.LogError("CancelPassiveButtonFieldがnullです");
+        CancelPassiveButtonField[index].ShowPassiveButtons(Allies[index]);
     }
+
     /// <summary>
-    /// 刃物武器でないと刃物スキルが表示されない処理。
-    /// 既に全てのスキルが表示されてる前提の関数なので、
-    /// 非表示にしていくって形で。　indexで指定したキャラのみ
+    /// ボタン表示のためのUIフィルタ条件（範囲/タイプ）。
     /// </summary>
-    public void OnlyInteractHasHasBladeWeaponShowBladeSkill(int index)
+    private bool ZoneTraitAndTypeSkillMatchesUIFilter(BaseSkill skill, SkillZoneTrait traitMask, SkillType typeMask)
     {
+        if (skill == null) return false;
+        return skill.HasZoneTraitAny(traitMask) && skill.HasTypeAny(typeMask);
+    }
 
-        if(Allies[index].NowUseWeapon.IsBlade) return;//刃物武器だから非表示の必要なし、終了。
-
-        //刃物武器でないので、刃物スキルの非表示処理
-        foreach(var skill in Allies[index].SkillList.Cast<AllySkill>())
-        {
-            //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
-            var hold = skillUILists[index].skillButtons.Find(hold => hold.skillID == skill.ID);
-            //刃物スキルのボタンを非表示にする
-            if (hold != null)
-            {
-                hold.button.interactable = !skill.IsBlade;
-            }
-        }
+    /// <summary>
+    /// スキルにある様々な制約を考慮して直ちに実行可能か（リソース/武器適合）。
+    /// </summary>
+    private bool CanCastNow(BaseStates actor, BaseSkill skill)
+    {
+        if (actor == null || skill == null) return false;
+        bool canConsume = SkillResourceFlow.CanConsumeOnCast(actor, skill);
+        bool weaponOK = (actor.NowUseWeapon != null && actor.NowUseWeapon.IsBlade) || !skill.IsBlade;
+        return canConsume && weaponOK;
     }
     /// <summary>
     /// スキルボタンの使いを有効化する処理　可視化
@@ -965,18 +964,8 @@ public class AllyClass : BaseStates
     /// <param name="skillListIndex"></param>
     public void OnSkillBtnCallBack(int skillListIndex)
     {
-        NowUseSkill = SkillList[skillListIndex];//使用スキルに代入する
-        Debug.Log(SkillList[skillListIndex].SkillName + "を" + CharacterName +" のNowUseSkillにボタンを押して登録しました。");
 
-        //ムーブセットをキャッシュする。
-        NowUseSkill.CashMoveSet();
-
-        //今回選んだスキル以外のストック可能なスキル全てのストックを減らす。
-        var list = SkillList.Where((skill,index) => index != skillListIndex && skill.HasConsecutiveType(SkillConsecutiveType.Stockpile)).ToList();
-        foreach(var stockSkill in list)
-        {
-            stockSkill.ForgetStock();
-        }
+        SKillUseCall(SkillList[skillListIndex]);//スキル使用
 
         //もし先約リストによる単体指定ならば、範囲や対象者選択画面にはいかず、直接actbranchiへ移行
         if(manager.Acts.GetAtSingleTarget(0)!= null)
@@ -1014,7 +1003,7 @@ public class AllyClass : BaseStates
             stockSkill.ForgetStock();
         }
 
-        Walking.Instance.bm.DoNothing = true;//ACTBranchingで何もしないようにするboolをtrueに。
+        Walking.Instance.bm.SkillStock = true;//ACTBranchingでストックboolをtrueに。
 
         Walking.Instance.USERUI_state.Value = TabState.NextWait;//CharacterACTBranchingへ
         
@@ -1105,14 +1094,6 @@ public class AllyClass : BaseStates
         Debug.Log("範囲選択も対象者選択も起こらないControlByThisSituation以外のスキル性質: " + skill.ZoneTrait);
         //acter.RangeWill = skill.ZoneTrait;//実行者の範囲意志にそのままスキルの範囲性質を入れる。
         return TabState.NextWait; // デフォルトの遷移先
-    }
-    /// <summary>
-    /// ターンをまたぐ連続実行スキル(FreezeConsecutiveの性質持ち)が実行中なのを次回のターンで消す予約をする
-    /// </summary>
-    public void TurnOnDeleteMyFreezeConsecutiveFlag()
-    {
-        Debug.Log("TurnOnDeleteMyFreezeConsecutiveFlag を呼び出しました。");
-        IsDeleteMyFreezeConsecutive = IsNeedDeleteMyFreezeConsecutive();
     }
 
     /// <summary>

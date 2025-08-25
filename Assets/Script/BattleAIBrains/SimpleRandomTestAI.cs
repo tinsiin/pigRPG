@@ -24,19 +24,22 @@ using System.Linq;
 [CreateAssetMenu(fileName = "SimpleRandomTestAI", menuName = "BattleAIBrain/SimpleRandomTestAI")]
 public class SimpleRandomTestAI : BattleAIBrain
 {
-    public override void Think()
+    protected override void Plan(AIDecision decision)
     {
-        base.Think();
-        var user = manager.Acter;
-        var rndSkill = RandomEx.Shared.GetItem(user.SkillList.ToArray());//一個適当に有効スキルから選ぶだけ
-        user.NowUseSkill = rndSkill;//スキルを設定
+        // availableSkills は Run() 内で抽出済み（基底が用意）
+        if (availableSkills == null || availableSkills.Count == 0) return;
 
-        if(rndSkill.HasZoneTraitAny(SkillZoneTrait.CanPerfectSelectSingleTarget))
+        // 一個適当に有効スキルから選ぶだけ
+        var rndSkill = RandomEx.Shared.GetItem(availableSkills.ToArray());
+        if (rndSkill == null) return;
+
+        // 結果としてスキルのみ設定（単体先約時はCommitでスキルだけ反映される）
+        decision.Skill = rndSkill;
+
+        // 完全単体選択スキルなら、単体意思を提示（先約時はCommitが無視）
+        if (rndSkill.HasZoneTraitAny(SkillZoneTrait.CanPerfectSelectSingleTarget))
         {
-            var target = RandomEx.Shared.GetItem(manager.AllyGroup.Ours.ToArray());
-            manager.Acter.Target = DirectedWill.One;//ここで単体選択し、尚且つしたの行動者決定☆の処理を飛ばせる
-            manager.unders.CharaAdd(target);//攻撃キャラ決定
+            decision.TargetWill = DirectedWill.One;
         }
-
     }
 }

@@ -4422,7 +4422,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.99998534, g: 0.0000625805, b: 0.99998224, a: 0.99994624}
+  m_Color: {r: 0.99943614, g: 0.0024091492, b: 0.9993161, a: 0.99793077}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -7012,13 +7012,12 @@ MonoBehaviour:
     NowDeffenceStyle: 0
     SelectedEscape: 0
     SkillCalculatedRandomRange: 0
-    IsDeleteMyFreezeConsecutive: 0
     _tempVanguard: 0
     _tempLive: 0
     BattleFirstSurpriseAttacker: 0
     maxRecoveryTurn: 0
     _hp: 4444
-    _maxhp: 6.767677e+13
+    _maxhp: 60
     _mentalHP: 0.34
     _thinkingFactor: 17.2
     Target: 0
@@ -7031,6 +7030,7 @@ MonoBehaviour:
     HeavyResistance: 2.91
     voltenResistance: 4.91
     DishSmackRsistance: 6.28
+    IsDeleteMyFreezeConsecutive: 0
     broken: 0
     _machineBrokenRate: 0.3
     _uic: {fileID: 1393269996}
@@ -7059,7 +7059,6 @@ MonoBehaviour:
     NowDeffenceStyle: 0
     SelectedEscape: 0
     SkillCalculatedRandomRange: 0
-    IsDeleteMyFreezeConsecutive: 0
     _tempVanguard: 0
     _tempLive: 0
     BattleFirstSurpriseAttacker: 0
@@ -7078,6 +7077,7 @@ MonoBehaviour:
     HeavyResistance: 1
     voltenResistance: 1
     DishSmackRsistance: 1
+    IsDeleteMyFreezeConsecutive: 0
     broken: 0
     _machineBrokenRate: 0.3
     _uic: {fileID: 340528245}
@@ -7102,7 +7102,6 @@ MonoBehaviour:
     NowDeffenceStyle: 0
     SelectedEscape: 0
     SkillCalculatedRandomRange: 0
-    IsDeleteMyFreezeConsecutive: 0
     _tempVanguard: 0
     _tempLive: 0
     BattleFirstSurpriseAttacker: 0
@@ -7121,6 +7120,7 @@ MonoBehaviour:
     HeavyResistance: 1
     voltenResistance: 1
     DishSmackRsistance: 1
+    IsDeleteMyFreezeConsecutive: 0
     broken: 0
     _machineBrokenRate: 0.3
     _uic: {fileID: 1845692092}
@@ -7146,9 +7146,9 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   StopFreezeConsecutiveButton:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 294146446}
+  - {fileID: 1385335785}
+  - {fileID: 1833282123}
   DefaultButtonArea:
   - {fileID: 0}
   - {fileID: 0}
@@ -8984,7 +8984,6 @@ MonoBehaviour:
         NowDeffenceStyle: 0
         SelectedEscape: 0
         SkillCalculatedRandomRange: 0
-        IsDeleteMyFreezeConsecutive: 0
         _tempVanguard: 0
         _tempLive: 0
         BattleFirstSurpriseAttacker: 0
@@ -9003,6 +9002,7 @@ MonoBehaviour:
         HeavyResistance: 1
         voltenResistance: 1
         DishSmackRsistance: 1
+        IsDeleteMyFreezeConsecutive: 0
         broken: 0
         _machineBrokenRate: 0.3
         _brain: {fileID: 11400000, guid: fa03e9b4c70b45f4782dc1a672559a09, type: 2}
@@ -9186,7 +9186,6 @@ MonoBehaviour:
         NowDeffenceStyle: 0
         SelectedEscape: 0
         SkillCalculatedRandomRange: 0
-        IsDeleteMyFreezeConsecutive: 0
         _tempVanguard: 0
         _tempLive: 0
         BattleFirstSurpriseAttacker: 0
@@ -9205,6 +9204,7 @@ MonoBehaviour:
         HeavyResistance: 1
         voltenResistance: 1
         DishSmackRsistance: 1
+        IsDeleteMyFreezeConsecutive: 0
         broken: 0
         _machineBrokenRate: 0.3
         _brain: {fileID: 11400000, guid: fa03e9b4c70b45f4782dc1a672559a09, type: 2}

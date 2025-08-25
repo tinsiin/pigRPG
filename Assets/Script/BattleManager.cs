@@ -417,6 +417,8 @@ public class BattleManager
     /// </summary>
     List<NormalEnemy> DominoRunOutEnemies = new List<NormalEnemy>();
     public bool DoNothing = false;//何もしない
+    public bool PassiveCancel = false;//パッシブキャンセル
+    public bool SkillStock = false;//スキルストック
     public bool VoidTurn = false;//そのターンは無かったことに
 
     /// <summary>
@@ -692,11 +694,11 @@ public class BattleManager
         //スキルと範囲の思考--------------------------------------------------------------------------------------------------------スキルと範囲の思考-----------------------------------------------------------
 
         //俳優が味方なら
+        bool isFreezeByPassives = Acter.IsFreezeByPassives;//パッシブ由来で行動できないかどうか。
+        bool hasCanCancelCantACTPassive = Acter.HasCanCancelCantACTPassive;//キャンセル可能な行動不能パッシブがあるかどうか。
         if (ActerFaction == allyOrEnemy.alliy)
         {//味方が行動するならば
             Debug.Log(Acter.CharacterName + "(主人公キャラ)は行動する");
-            bool isFreezeByPassives = Acter.IsFreezeByPassives;//パッシブ由来で行動できないかどうか。
-            bool hasCanCancelCantACTPassive = Acter.HasCanCancelCantACTPassive;//パッシブ由来で行動できないかどうか。
             
             if (!Acter.IsFreeze)//強制続行中のスキルがなければ
             {
@@ -705,9 +707,12 @@ public class BattleManager
                 {
                     // パッシブによる行動不能でない、または
                     // キャンセル可能なパッシブを持っている場合
-                    SwitchAllySkillUiState(hasCanCancelCantACTPassive);
+                    SwitchAllySkillUiState();
                     Debug.Log(Acter.CharacterName + "(主人公キャラ)はスキル選択");
                     return TabState.Skill;
+                }else//パッシブ由来で行動不能ならば
+                {
+                    DoNothing = true;//何もしない(できない)で飛ばす
                 }
             }
             else//スキル強制続行中なら、
@@ -740,7 +745,13 @@ public class BattleManager
         if (ActerFaction == allyOrEnemy.Enemyiy)
         {
             var ene = Acter as NormalEnemy;
-            ene.SkillAI();//ここで決めないとスキル可変オプションが下記の対象者選択で反映されないから
+            if(isFreezeByPassives && !hasCanCancelCantACTPassive)//パッシブ由来で行動できず、キャンセル可能&行動不能パッシブがないならば
+            {
+                DoNothing = true;//行動不能
+            }else
+            {
+                ene.SkillAI();//ここで決めないとスキル可変オプションが下記の対象者選択で反映されないから
+            }
         }
         //スキルと範囲の思考--------------------------------------------------------------------------------------------------------スキルと範囲の思考-----------------------------------------------------------
 
@@ -751,57 +762,52 @@ public class BattleManager
 
 
     }
-    /// <summary>
-    /// スキルボタンのUIを各キャラクターの物にする。
-    /// スキル画面へ遷移する際のコールバックタイミングでもある
-    /// 只CantACTPassiveCancelがtrueならば、「行動不能と消せる」パッシブを消去する以外の行動ができない。
-    /// </summary>
-    void SwitchAllySkillUiState(bool OnlyCantACTPassiveCancel)
-    {
-        var ps = PlayersStates.Instance;
 
+    /// <summary>
+    /// 味方のスキル選択UI状態を、現在の俳優のクラスに応じて切り替える。
+    /// ここでスキルボタンの活性条件（単体先約フィルタ）も一括適用する。
+    /// </summary>
+    private void SwitchAllySkillUiState()
+    {
+        // 単体先約の統一フィルタ（中央集約）
         //もしActs,先約リストで単体指定SingleTargetがあるならば、
         var singleTarget = Acts.GetAtSingleTarget(0);
         var OnlyRemainButtonByType = Enum.GetValues(typeof(SkillType))
                                     .Cast<SkillType>()
                                     .Aggregate((current, next) => current | next);
-        var OnlyRemainButtonByZoneTrait =(SkillZoneTrait)((1 << 16) - 1);//全てのZoneTraitを代入しておく
+        var OnlyRemainButtonByZoneTrait = Enum.GetValues(typeof(SkillZoneTrait))
+                                    .Cast<SkillZoneTrait>()
+                                    .Aggregate((SkillZoneTrait)0, (cur, next) => cur | next);
         if (singleTarget != null)
         {
             OnlyRemainButtonByZoneTrait = 0;//まず空にする
             OnlyRemainButtonByType =0;
-            
-            OnlyRemainButtonByZoneTrait |= SkillZoneTrait.CanPerfectSelectSingleTarget//単体系の範囲性質を全て入れる
-                                       | SkillZoneTrait.CanSelectSingleTarget
-                                       | SkillZoneTrait.RandomSingleTarget
-                                       | SkillZoneTrait.ControlByThisSituation;
-
-            OnlyRemainButtonByType |= SkillType.Attack;//攻撃性質を持つもの限定
+            OnlyRemainButtonByZoneTrait =SkillFilterPresets.SingleTargetZoneTraitMask;
+            OnlyRemainButtonByType =  SkillFilterPresets.SingleTargetTypeMask;
         }
+
 
         switch (Acter)
         {
-             case StairStates:
-                //ここでスキルを指定した範囲性質を持つもののみinteractable=trueになるようにする。
-                ps.OnlySelectActs(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType,OnlyCantACTPassiveCancel,0);//ボタンのオンオフをするコールバック
-                ps.OnSkillSelectionScreenTransition(0);//遷移時のここの引数必要のないコールバック
+            case StairStates ps:
+                // ここでスキルを指定した範囲性質を持つもののみ interactable=true になるようにする
+                PlayersStates.Instance.OnlySelectActs(OnlyRemainButtonByZoneTrait, OnlyRemainButtonByType, 0);
+                PlayersStates.Instance.OnSkillSelectionScreenTransition(0);
                 Walking.Instance.SKILLUI_state.Value = SkillUICharaState.geino;
                 break;
 
-            case BassJackStates:
-                ps.OnlySelectActs(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType,OnlyCantACTPassiveCancel,1);
-                ps.OnSkillSelectionScreenTransition(1);
+            case BassJackStates ps:
+                PlayersStates.Instance.OnlySelectActs(OnlyRemainButtonByZoneTrait, OnlyRemainButtonByType, 1);
+                PlayersStates.Instance.OnSkillSelectionScreenTransition(1);
                 Walking.Instance.SKILLUI_state.Value = SkillUICharaState.normalia;
                 break;
-            case SateliteProcessStates:
-                ps.OnlySelectActs(OnlyRemainButtonByZoneTrait,OnlyRemainButtonByType,OnlyCantACTPassiveCancel,2);
-                ps.OnSkillSelectionScreenTransition(2);
+
+            case SateliteProcessStates ps:
+                PlayersStates.Instance.OnlySelectActs(OnlyRemainButtonByZoneTrait, OnlyRemainButtonByType, 2);
+                PlayersStates.Instance.OnSkillSelectionScreenTransition(2);
                 Walking.Instance.SKILLUI_state.Value = SkillUICharaState.sites;
                 break;
-
-
         }
-
     }
 
     /// <summary>
@@ -843,7 +849,16 @@ public class BattleManager
             return ACTPop();
         }*/ //ここ間違ってる？　下に同じ処理あるけど　よく分からんから残しとく
 
-        //スキルのStockACT ストック　/  FreezeConsecutiveの削除予約実行ターン　/ パッシブキャンセルボタンを押した。/何もしない、のボタンを押した。
+        if(SkillStock)//スキルストック
+        {
+            return SkillStockACT();
+        }
+        if(PassiveCancel)//パッシブキャンセル
+        {
+            return PassiveCancelACT();
+        }
+
+        // FreezeConsecutiveの削除予約実行ターン/何もしない、のボタンを押した。/パッシブで行動不能
         if(DoNothing)
         {
             return DoNothingACT();
@@ -896,9 +911,23 @@ public class BattleManager
         //if(Acter.PassivesSkillActivationRate() >= 100) return true;//別にこの行要らないか
         return rollper(Acter.PassivesSkillActivationRate());
     }
-    TabState DoNothingACT()
+    TabState SkillStockACT()
     {
         BeVanguard_SkillStockACT();//前のめりになるかならないか
+        //スキルストックのエフェクト
+        SkillStock= false;
+        NextTurn(true);
+        return ACTPop();//何もせず行動準備へ
+
+    }
+    TabState PassiveCancelACT()
+    {
+        PassiveCancel = false;//パッシブキャンセルのエフェクトでも入れる
+        NextTurn(true);
+        return ACTPop();//何もせず行動準備へ
+    }
+    TabState DoNothingACT()
+    {
         //小さなアイコン辺りに無音の灰色円縮小エフェクトを入れる     何もしないエフェクト
         DoNothing = false;
         NextTurn(true);

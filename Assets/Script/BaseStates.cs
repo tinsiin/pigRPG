@@ -1996,6 +1996,33 @@ public abstract class BaseStates
     /// </summary>
     private BaseSkill _tempUseSkill;
     /// <summary>
+    /// スキル使用時の処理をまとめたコールバック
+    /// </summary>
+    public void SKillUseCall(BaseSkill useSkill)
+    {
+        //スキルのポインントの消費
+        if(!TryConsumeForSkillAtomic(useSkill))
+        {
+            Debug.LogError(CharacterName + "のスキルのポインントの消費に失敗しました。" + CharacterName +"の" + (useSkill != null ? useSkill.SkillName : "<null>") + "を実行できません。"+
+            "事前にポインント可否判定されてるはずなのにポインントが足りない。-SkillResourceFlowクラスとPs.OnlySelectActsやBattleAIBrainを確認して。" );
+            return;
+        }
+
+        NowUseSkill = useSkill;//使用スキルに代入する
+        Debug.Log(useSkill.SkillName + "を" + CharacterName +" のNowUseSkillにボタンを押して登録しました。");
+        
+        //ムーブセットをキャッシュする。
+        NowUseSkill.CashMoveSet();
+
+        //今回選んだスキル以外のストック可能なスキル全てのストックを減らす。
+        var list = SkillList.Where(skill =>  !ReferenceEquals(skill, useSkill) && skill.HasConsecutiveType(SkillConsecutiveType.Stockpile)).ToList();
+        foreach(var stockSkill in list)
+        {
+            stockSkill.ForgetStock();
+        }
+
+    }
+    /// <summary>
     /// スキルを連続実行した回数などをスキルのクラスに記録する関数
     /// </summary>
     /// <param name="useSkill"></param>
@@ -2020,10 +2047,6 @@ public abstract class BaseStates
         }
     }
 
-        /// <summary>
-    /// 現在の自分自身の実行中のFreezeConsecutiveを削除するかどうかのフラグ
-    /// </summary>
-    public bool IsDeleteMyFreezeConsecutive = false;
     
     const int HP_TO_MaxP_CONVERSION_FACTOR = 80;
     const int MentalHP_TO_P_Recovely_CONVERSION_FACTOR = 120;
@@ -2040,21 +2063,15 @@ public abstract class BaseStates
     {
         get
         {
-            if(_p > MAXP)//最大値超えてたらカット
-            {
-                _p = MAXP;
-            };
-            return _p;
+            return Mathf.Clamp(_p, 0, MAXP);
         }
         set
         {
-            if(value > MAXP)
+            if(value < 0)
             {
-                _p = MAXP;
-            }else
-            {
-                _p = value;
+                Debug.LogWarning("[BaseStates.P] negative assign detected value=" + value + " name=" + CharacterName);
             }
+            _p = Mathf.Clamp(value, 0, MAXP);
         }
     }
     
@@ -2073,6 +2090,19 @@ public abstract class BaseStates
             ThePower.high => (int)(MAXP * 0.7),
             _ => 0
         };
+    }
+    
+    /// <summary>
+    /// ノーマルポイント(P)の消費処理。
+    /// 残量不足なら消費せず false を返す。cost <= 0 は何もしないで true。
+    /// </summary>
+    public bool TrySpendP(int cost)
+    {
+        if (cost <= 0) return true;
+        if (P < cost) return false;
+        P -= cost;
+        if (P < 0) P = 0; // 念のため下限0にクランプ
+        return true;
     }
     
     // ================================
@@ -2148,6 +2178,8 @@ public abstract class BaseStates
     /// <summary>
     /// 属性ポイントの消費。該当属性のプールからのみ消費（他属性の補填はしない）。
     /// 成功時 true、残量不足で失敗時 false。
+    /// 履歴は「同属性の最新から（LIFO）」で減らし、上限縮小時の DropNew ポリシー
+    /// （最新から削る）と整合が取れるようにする。
     /// </summary>
     public bool TrySpendAttrP(SpiritualProperty attr, int cost)
     {
@@ -2187,6 +2219,89 @@ public abstract class BaseStates
     }
     
     /// <summary>
+    /// スキルに設定されたノーマルPと属性Pを「一括でアトミックに」消費する。
+    /// 事前に全コストを再チェックし、次に属性→最後にノーマルの順で清算する。
+    /// 途中で失敗した場合は、既に消費した属性Pをロールバックして false を返す。
+    /// </summary>
+    public bool TryConsumeForSkillAtomic(BaseSkill skill)
+    {
+        if (skill == null)
+        {
+            Debug.LogError("TryConsumeForSkillAtomic: skill が null です");
+            return false;
+        }
+
+        // 要求値を正規化
+        int reqNormal = Mathf.Max(0, skill.RequiredNormalP);
+        var reqAttr = skill.RequiredAttrP;
+
+        // 第1段階: 事前チェック（副作用なし）
+        if (P < reqNormal)
+        {
+            Debug.LogError($"TryConsumeForSkillAtomic: ノーマルP不足 need={reqNormal} have={P}");
+            return false;
+        }
+        if (reqAttr != null)
+        {
+            foreach (var kv in reqAttr)
+            {
+                int need = Mathf.Max(0, kv.Value);
+                if (need == 0) continue;
+                var haveAttr = GetAttrP(kv.Key);
+                if (haveAttr < need)
+                {
+                    Debug.LogError($"TryConsumeForSkillAtomic: 属性P不足 attr={kv.Key} need={need} have={haveAttr}");
+                    return false;
+                }
+            }
+        }
+
+        // 第2段階: 実消費（属性→ノーマル）。失敗時は属性をロールバック。
+        var consumedAttr = new List<KeyValuePair<SpiritualProperty, int>>();
+        if (reqAttr != null)
+        {
+            foreach (var kv in reqAttr)
+            {
+                int need = Mathf.Max(0, kv.Value);
+                if (need == 0) continue;
+                if (!TrySpendAttrP(kv.Key, need))
+                {
+                    // ロールバック（ここまでに消費した属性Pを戻す）
+                    foreach (var back in consumedAttr)
+                    {
+                        // DropNew仕様のため最新に戻るが、総量整合のために加算でよい
+                        var restored = TryAddAttrP(back.Key, back.Value);
+                        if (restored != back.Value)
+                        {
+                            Debug.LogWarning($"TryConsumeForSkillAtomic: 属性Pロールバック不足 attr={back.Key} expected={back.Value} restored={restored}");
+                        }
+                    }
+                    Debug.LogError($"TryConsumeForSkillAtomic: 属性P消費に失敗 attr={kv.Key} need={need}（事前可否との差異）");
+                    return false;
+                }
+                consumedAttr.Add(new KeyValuePair<SpiritualProperty, int>(kv.Key, need));
+            }
+        }
+
+        if (!TrySpendP(reqNormal))
+        {
+            // ノーマルで失敗時も属性をロールバック
+            foreach (var back in consumedAttr)
+            {
+                var restored = TryAddAttrP(back.Key, back.Value);
+                if (restored != back.Value)
+                {
+                    Debug.LogWarning($"TryConsumeForSkillAtomic: 属性Pロールバック不足 attr={back.Key} expected={back.Value} restored={restored}");
+                }
+            }
+            Debug.LogError($"TryConsumeForSkillAtomic: ノーマルP消費に失敗 need={reqNormal} have={P}（事前可否との差異）");
+            return false;
+        }
+
+        return true;
+    }
+    
+    /// <summary>
     /// 属性ポイントを全消去。
     /// </summary>
     public void ClearAllAttrP()
@@ -2197,7 +2312,9 @@ public abstract class BaseStates
     
     /// <summary>
     /// 上限が縮小した場合などに、総量が CombinedAttrPMax を超えているとき余剰を削る。
-    /// DropNew の思想に合わせ、より多い属性から優先的に減らす単純実装。
+    /// DropNew ポリシーに従い、_attrAddHistory を基準に
+    /// 「直近に追加された順（最新から）」で横断的（全属性）に減らす。
+    /// 履歴と属性マップ（_attrPMap）および総量（_attrPTotal）を同期して更新する。
     /// </summary>
     public void ReclampAttrPToCapDropNew()
     {
@@ -2337,6 +2454,192 @@ public abstract class BaseStates
             totalAdded += TryAddAttrP(skillAttr, mintedTotal);
         }
         return totalAdded;
+    }
+    
+    /// <summary>
+    /// スキル詠唱後、ヒット結果に応じてポイントの変換/返金を一括で処理する。
+    /// - Hit: 通常の変換をそのまま適用
+    /// - Critical: 変換ロジックの結果（総ミント量）に 1.6 倍を掛けて加算
+    /// - Graze: 変換ロジックの結果（総ミント量）にさらに 0.3 倍を掛けて加算
+    /// - CompleteEvade: 消費基礎量の 0.4 を返金（ノーマルは P へ、属性は TryAddAttrP）
+    /// 返り値は「属性ポイントに実際に加算できた量（変換分のみ。返金は含まない)」。
+    /// </summary>
+    private const float CRIT_OUTPUT_SCALE = 1.60f;    // クリティカル時、変換後の総量に対する倍率
+    private const float GRAZE_OUTPUT_SCALE = 0.30f;   // かすり時、変換後の総量に対する倍率
+    private const float EVADE_REFUND_SCALE = 0.40f;   // 完全回避時、返金倍率
+    
+    // ========= キャスト単位の命中集約API =========
+    private HitResult _castBestHitOutcome = HitResult.none;
+    private static int GetHitRank(HitResult hr)
+    {
+        switch (hr)
+        {
+            case HitResult.Critical: return 4;
+            case HitResult.Hit: return 3;
+            case HitResult.Graze: return 2;
+            case HitResult.CompleteEvade: return 1;
+            default: return 0;
+        }
+    }
+    public void BeginSkillHitAggregation()
+    {
+        _castBestHitOutcome = HitResult.none;
+    }
+    public void AggregateSkillHit(HitResult hr)
+    {
+        if (GetHitRank(hr) > GetHitRank(_castBestHitOutcome)) _castBestHitOutcome = hr;
+    }
+    public HitResult EndSkillHitAggregation()
+    {
+        var res = _castBestHitOutcome;
+        _castBestHitOutcome = HitResult.none;
+        return res;
+    }
+
+    /// <summary>
+    /// 詠唱したスキルとヒット結果に応じて、ポイントの精算を行う高水準API。
+    /// - skill.RequiredNormalP / skill.RequiredAttrP を実消費相当として利用します。
+    /// - 将来的に動的コストになる場合は、実消費を引数に取るオーバーロードを用意してください。
+    /// </summary>
+    public int SettlePointsAfterSkillOutcome(BaseSkill skill, HitResult outcome)
+    {
+        if (skill == null) return 0;
+        var skillAttr = skill.SkillSpiritual;
+
+        int spentNormalP = Mathf.Max(0, skill.RequiredNormalP);
+        var spentAttrP = skill.RequiredAttrP != null
+            ? new Dictionary<SpiritualProperty, int>(skill.RequiredAttrP)
+            : new Dictionary<SpiritualProperty, int>();
+
+        return SettlePointsAfterSkillOutcome(skillAttr, spentNormalP, spentAttrP, outcome);
+    }
+
+    /// <summary>
+    /// 実消費量を明示的に渡して精算するAPI。
+    /// </summary>
+    public int SettlePointsAfterSkillOutcome(
+        SpiritualProperty skillAttr,
+        int spentNormalP,
+        Dictionary<SpiritualProperty, int> spentAttrP,
+        HitResult outcome)
+    {
+        if (spentAttrP == null) spentAttrP = new Dictionary<SpiritualProperty, int>();
+
+        // 返金パスは skillAttr 未定義でも成立するが、変換パスでは禁止
+        bool canConvert = IsAttrDefinedForConversion(skillAttr);
+
+        switch (outcome)
+        {
+            case HitResult.Hit:
+            {
+                if (!canConvert)
+                {
+                    Debug.LogWarning($"SettlePointsAfterSkillOutcome: undefined skillAttr={skillAttr}. Skip convert.");
+                    return 0;
+                }
+                return ConvertAndAddAttrPOnSkillUse(skillAttr, spentNormalP, spentAttrP);
+            }
+            case HitResult.Critical:
+            {
+                if (!canConvert)
+                {
+                    Debug.LogWarning($"SettlePointsAfterSkillOutcome: undefined skillAttr={skillAttr}. Skip convert(critical).");
+                    return 0;
+                }
+                // クリティカルは「変換結果」に 1.6 倍を掛ける
+                int minted = ComputeAttrMintedAmount(skillAttr, spentNormalP, spentAttrP);
+                int scaled = Mathf.FloorToInt(minted * Mathf.Max(0f, CRIT_OUTPUT_SCALE));
+                if (scaled <= 0) return 0;
+                return TryAddAttrP(skillAttr, scaled);
+            }
+            case HitResult.Graze:
+            {
+                if (!canConvert)
+                {
+                    Debug.LogWarning($"SettlePointsAfterSkillOutcome: undefined skillAttr={skillAttr}. Skip convert(graze).");
+                    return 0;
+                }
+                // かすりは「変換結果」に 0.3 倍を掛ける仕様
+                int minted = ComputeAttrMintedAmount(skillAttr, spentNormalP, spentAttrP);
+                int scaled = Mathf.FloorToInt(minted * Mathf.Max(0f, GRAZE_OUTPUT_SCALE));
+                if (scaled <= 0) return 0;
+                return TryAddAttrP(skillAttr, scaled);
+            }
+            case HitResult.CompleteEvade:
+            {
+                // 完全回避は返金のみ
+                int refunded = 0;
+                int refundN = Mathf.FloorToInt(spentNormalP * Mathf.Max(0f, EVADE_REFUND_SCALE));
+                if (refundN > 0)
+                {
+                    P += refundN;
+                    P = Mathf.Clamp(P, 0, MAXP);
+                }
+                if (spentAttrP != null)
+                {
+                    foreach (var kv in spentAttrP)
+                    {
+                        int refundA = Mathf.FloorToInt(kv.Value * Mathf.Max(0f, EVADE_REFUND_SCALE));
+                        if (refundA > 0) refunded += TryAddAttrP(kv.Key, refundA);
+                    }
+                }
+                // 返り値は「変換で増えた量」を返す契約のため、返金は 0 扱い
+                return 0;
+            }
+            case HitResult.none:
+            default:
+                return 0;
+        }
+    }
+
+    /// <summary>
+    /// 変換ロジックの「計算のみ」を行い、実際には追加しない。総ミント量を返す。
+    /// ConvertAndAddAttrPOnSkillUse と同一の計算パスを辿る。
+    /// </summary>
+    private int ComputeAttrMintedAmount(
+        SpiritualProperty skillAttr,
+        int spentNormalP,
+        Dictionary<SpiritualProperty, int> spentAttrP)
+    {
+        if (spentAttrP == null) spentAttrP = new Dictionary<SpiritualProperty, int>();
+        if (!IsAttrDefinedForConversion(skillAttr))
+            throw new ArgumentOutOfRangeException(nameof(skillAttr), $"Unsupported SpiritualProperty for conversion: {skillAttr}");
+        foreach (var key in spentAttrP.Keys)
+        {
+            if (!IsAttrDefinedForConversion(key))
+                throw new ArgumentOutOfRangeException(nameof(spentAttrP), $"Unsupported SpiritualProperty for conversion: {key}");
+        }
+
+        // 複合時の特例: ノーマル>0なら全てノーマル倍率一括処理
+        if (spentNormalP > 0)
+        {
+            var sumAll = spentNormalP + spentAttrP.Values.Sum();
+            var m = GetNormalToAttrMultiplier();
+            return Mathf.FloorToInt(sumAll * m);
+        }
+
+        int mintedTotal = 0;
+        // 1) 同属性ソース
+        if (spentAttrP.TryGetValue(skillAttr, out var sameSpent) && sameSpent > 0)
+        {
+            var sameCap = GetSameAttrCap(skillAttr);
+            var sameEff = sameCap * GetTenDayConvFactor(true, skillAttr, skillAttr);
+            var add = Mathf.FloorToInt(sameSpent * Mathf.Max(0f, sameEff));
+            mintedTotal += add;
+        }
+        // 2) 他属性ソース
+        foreach (var kv in spentAttrP)
+        {
+            var fromAttr = kv.Key;
+            if (fromAttr == skillAttr) continue;
+            var amount = kv.Value;
+            if (amount <= 0) continue;
+            var otherCap = GetOtherAttrCap(skillAttr, fromAttr);
+            var otherEff = otherCap * GetTenDayConvFactor(false, skillAttr, fromAttr);
+            var add = Mathf.FloorToInt(amount * Mathf.Max(0f, otherEff));
+            mintedTotal += add;
+        }
+        return mintedTotal;
     }
     /// <summary>
     /// ノーマルポインントの属性変換率を乱数から取得する関数。
@@ -8346,6 +8649,24 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// <param name="UnderIndex">攻撃される人の順番　スキルのPowerSpreadの順番に同期している</param>
     public virtual async UniTask<string> ReactionSkill(BaseStates attacker, float spread)
     {
+        // ポイント精算用: 最も強いヒット結果を保持
+        HitResult bestHitOutcome = HitResult.none;
+        int Rank(HitResult hr)
+        {
+            switch (hr)
+            {
+                case HitResult.Critical: return 4;
+                case HitResult.Hit: return 3;
+                case HitResult.Graze: return 2;
+                case HitResult.CompleteEvade: return 1;
+                default: return 0;
+            }
+        }
+        void AccumulateHitResult(HitResult hr)
+        {
+            if (Rank(hr) > Rank(bestHitOutcome)) bestHitOutcome = hr;
+        }
+        
         schizoLog.AddLog($"-ReactionSkill",true);
         Debug.Log($"{attacker.CharacterName}の{attacker.NowUseSkill.SkillName}に対する{CharacterName}のReactionSkillが始まった");
         Debug.Log($"スキルを受ける{CharacterName}の精神属性 = {MyImpression}:(ReactionSkill)");
@@ -8404,6 +8725,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             var hitResult = skill.SkillHitCalc(this);//良い攻撃なのでスキル命中のみ
             hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
+            AccumulateHitResult(hitResult);
 
             skill.ManualSkillEffect(this,hitResult);//効果
         }
@@ -8411,6 +8733,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             var hitResult = IsReactHIT(attacker);//攻撃タイプでないので直接IsReactHitね
             hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
+            AccumulateHitResult(hitResult);
 
             skill.ManualSkillEffect(this,hitResult);//効果
         }
@@ -8421,6 +8744,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             var hitResult = ATKTypeSkillReactHitCalc(attacker, skill);
             //味方別口回避の発生と回避判定
             hitResult = MixAllyEvade(hitResult,attacker);
+            AccumulateHitResult(hitResult);
             if (hitResult != HitResult.CompleteEvade)//完全回避以外なら = HITしてるなら
             {
                 Debug.Log($"HITした{attacker.CharacterName}の{CharacterName}に対して{skill.SkillName}がかすり以上");
@@ -8476,6 +8800,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             var hitResult = IsReactHIT(attacker);
             //味方別口回避の発生と回避判定
             hitResult = MixAllyEvade(hitResult,attacker);
+            AccumulateHitResult(hitResult);
             if (hitResult != HitResult.CompleteEvade)
             {
                 var result = await ApplyNonDamageHostileEffects(attacker,skill,hitResult);     
@@ -8494,6 +8819,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             //味方別口回避の発生と回避判定
             var hitResult = skill.SkillHitCalc(this);
             hitResult = MixAllyEvade(hitResult,attacker);
+            AccumulateHitResult(hitResult);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 Angel();//降臨　アイコンがノイズで満たされるようなエフェクト
@@ -8507,6 +8833,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             
             var hitResult = skill.SkillHitCalc(this);
             hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
+            AccumulateHitResult(hitResult);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 healAmount= Heal(skillPower);
@@ -8519,6 +8846,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             //味方別口回避の発生と回避判定
             var hitResult = skill.SkillHitCalc(this);
             hitResult = MixAllyEvade(hitResult,attacker);
+            AccumulateHitResult(hitResult);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 MentalHeal(skillPower);
@@ -8534,6 +8862,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             //味方別口回避の発生と回避判定
             var hitResult = skill.SkillHitCalc(this);
             hitResult = MixAllyEvade(hitResult,attacker);
+            AccumulateHitResult(hitResult);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //良いパッシブを付与しようとしてるのなら、スキル命中計算のみ
@@ -8545,6 +8874,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             //味方別口回避の発生と回避判定
             var hitResult = skill.SkillHitCalc(this);
             hitResult = MixAllyEvade(hitResult,attacker);
+            AccumulateHitResult(hitResult);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //良い追加HPを付与しようとしてるのなら、スキル命中のみ
@@ -8557,6 +8887,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             //味方別口回避の発生と回避判定
             var hitResult = skill.SkillHitCalc(this);
             hitResult = MixAllyEvade(hitResult,attacker);
+            AccumulateHitResult(hitResult);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //良いパッシブを付与しようとしてるのなら、スキル命中計算のみ
@@ -8568,6 +8899,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             //味方別口回避の発生と回避判定
             var hitResult = skill.SkillHitCalc(this);
             hitResult = MixAllyEvade(hitResult,attacker);
+            AccumulateHitResult(hitResult);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //悪いパッシブを取り除くのなら、スキル命中のみ
@@ -8581,6 +8913,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             //味方別口回避の発生と回避判定
             var hitResult = skill.SkillHitCalc(this);
             hitResult = MixAllyEvade(hitResult,attacker);
+            AccumulateHitResult(hitResult);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //悪いパッシブを取り除くのなら、スキル命中のみ
@@ -8592,6 +8925,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             //味方別口回避の発生と回避判定
             var hitResult = skill.SkillHitCalc(this);
             hitResult = MixAllyEvade(hitResult,attacker);
+            AccumulateHitResult(hitResult);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
             {
                 //悪い追加HPを取り除こうとしてるのなら、スキル命中のみ
@@ -8663,6 +8997,9 @@ private int CalcTransformCountIncrement(int tightenStage)
             var groupeHP = totalHP > 0f ? damageAmount.Total / totalHP : 1f;//もしグループHPが0以下なら　1fで100%の太さを指定(死体蹴りだから)
             arrowThicknessDamagePercent = groupeHP;
         }
+
+        // 集約: 攻撃者へ最強ヒット結果を渡してキャスト単位で後で精算
+        attacker.AggregateSkillHit(bestHitOutcome);
 
         //今回の攻撃結果を矢印の描画キューに
         BattleSystemArrowManager.Instance.Enqueue(attacker,this,arrowThicknessDamagePercent);
@@ -8751,6 +9088,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
 
         //キャラクターに対して実行
+        BeginSkillHitAggregation();
         for (var i = 0; i < Unders.Count; i++)
         {
             var ene = Unders.GetAtCharacter(i);
@@ -8758,6 +9096,9 @@ private int CalcTransformCountIncrement(int tightenStage)
             schizoLog.AddLog($"{ene.CharacterName}のReactionSkillが始まった-Undersのカウント数:{Unders.Count}",true);
             txt += await ene.ReactionSkill(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
         }
+        // 対象処理が完了したのでキャスト単位でポイント精算
+        var overallHit = EndSkillHitAggregation();
+        SettlePointsAfterSkillOutcome(NowUseSkill, overallHit);
 
         NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルの攻撃回数をカウントアップ
         NowUseSkill.DoSkillCountUp();//使用したスキルの使用回数をカウントアップ
@@ -8912,6 +9253,11 @@ private int CalcTransformCountIncrement(int tightenStage)
 
     //FreezeConsecutiveの処理------------------------------------------------------------------------------------FreezeConsecutiveの消去、フラグの処理など-----------------------------------
     /// <summary>
+    /// 現在の自分自身の実行中のFreezeConsecutiveを削除するかどうかのフラグ
+    /// </summary>
+    public bool IsDeleteMyFreezeConsecutive = false;
+
+    /// <summary>
     /// FreezeConsecutive、ターンをまたぐ連続実行スキルが実行中かどうか。
     /// </summary>
     /// <returns></returns>
@@ -8926,6 +9272,15 @@ private int CalcTransformCountIncrement(int tightenStage)
         }
         return false;
     }
+    /// <summary>
+    /// ターンをまたぐ連続実行スキル(FreezeConsecutiveの性質持ち)が実行中なのを次回のターンで消す予約をする
+    /// </summary>
+    public void TurnOnDeleteMyFreezeConsecutiveFlag()
+    {
+        Debug.Log("TurnOnDeleteMyFreezeConsecutiveFlag を呼び出しました。");
+        IsDeleteMyFreezeConsecutive = IsNeedDeleteMyFreezeConsecutive();
+    }
+
     /// <summary>
     /// consecutiveな連続攻撃の消去
     /// </summary>
@@ -10657,11 +11012,12 @@ private int CalcTransformCountIncrement(int tightenStage)
         dst.CharacterName = CharacterName;
         dst.ImpressionStringName = ImpressionStringName;
         dst.ApplyWeapon(InitWeaponID);//ここで初期武器と戦闘規格を設定
-        dst._p = _p;
         dst.maxRecoveryTurn = maxRecoveryTurn;
         //dst.UI = UI;//各キャラで扱い方が違うから
         dst._hp = _hp;
         dst._maxhp = _maxhp;
+        // maxHPがコピーされた後に、プロパティ経由でPを設定（下限0、上限MAXP）
+        dst.P = Mathf.Clamp(this.P, 0, dst.MAXP);
         dst._mentalHP = _mentalHP;
         dst.MyType = MyType;
         dst.MyImpression = DefaultImpression;//デフォルト精神属性を最初の精神属性にする　-> エンカウント時に持ってるスキルの中でランダムに決まるけどまぁ一応ね

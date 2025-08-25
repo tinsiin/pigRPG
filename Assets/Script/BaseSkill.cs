@@ -381,7 +381,15 @@ public class BaseSkill
         }
         return (ZoneTrait & combinedSkills) == combinedSkills;
     }
-     /// <summary>
+    /// <summary>
+    /// 先約リストでのsingleTarget指定用のスキルの性質にあってるものかどうか。
+    /// </summary>
+    /// <returns></returns>
+    public bool IsEligibleForSingleTargetReservation()
+    {
+        return SkillFilterPresets.MatchesSingleTargetReservation(this);
+    }
+    /// <summary>
     /// スキル範囲性質のいずれかを持ってるかどうか
     /// 複数指定した場合はどれか一つでも当てはまればtrueを返す
     /// </summary>

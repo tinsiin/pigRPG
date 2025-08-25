@@ -64,7 +64,7 @@ public class SelectCancelPassiveButtons : MonoBehaviour
     /// そのパッシブ用のボタンを生成する
     /// </summary>
     /// <param name="chara">キャンセル可能なパッシブを持つキャラクター</param>
-    public void ShowPassiveButtons(BaseStates chara,bool OnlyCantACT)
+    public void ShowPassiveButtons(BaseStates chara)
     {
         ClearButtons();
         
@@ -73,7 +73,7 @@ public class SelectCancelPassiveButtons : MonoBehaviour
         foreach (var passive in chara.PassiveList)
         {
             //CantACTのパッシブのみならば
-            if(OnlyCantACT)
+            if(chara.HasCanCancelCantACTPassive)
             {
                 if (passive.IsCantACT)//CantACTのパッシブならば
                 {
@@ -146,7 +146,7 @@ public class SelectCancelPassiveButtons : MonoBehaviour
         // パッシブのキャンセル処理
         owner.RemovePassive(passive);
         
-        Walking.Instance.bm.DoNothing = true;//ACTBranchingで何もしないようにするboolをtrueに。
+        Walking.Instance.bm.PassiveCancel = true;//ACTBranchingでpassiveCancelするboolをtrueに。
 
         Walking.Instance.USERUI_state.Value = TabState.NextWait;//CharacterACTBranchingへ
         
