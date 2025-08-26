@@ -294,7 +294,7 @@ public class BattleGroup
     }
 
     /// <summary>
-    /// パーティー全員分相性値の高い敵が死んだときの人間状況の変化処理を行う。
+    /// パーティー全員分相性値の高い仲間が死んだときの人間状況の変化処理を行う。
     /// BaseStatesの_tempLiveの記録が行われる前に実行する必要がある。
     /// </summary>
     public void PartyApplyConditionChangeOnCloseAllyDeath()
@@ -303,7 +303,6 @@ public class BattleGroup
         var LiveCharacters = RemoveDeathCharacters(Ours);//生きてる味方のみ
         if(LiveCharacters.Count == 0)
         {
-            Debug.LogWarning("生存者がいないのに、PartApplyConditionChangeOnCloseAllyDeathが呼び出された。");
             return;
         }
 
@@ -324,7 +323,7 @@ public class BattleGroup
         }
     }
     /// <summary>
-    /// パーティー全員分相性値の高い敵が復活したときの人間状況の変化処理を行う。
+    /// パーティー全員分相性値の高い仲間が復活したときの人間状況の変化処理を行う。
     /// Angelされた瞬間に行う。
     /// </summary>
     public void PartyApplyConditionChangeOnCloseAllyAngel(BaseStates angel)
@@ -332,7 +331,6 @@ public class BattleGroup
         var LiveCharacters = RemoveDeathCharacters(Ours).Where(x => x != angel).ToList();//生きてる味方のみ 今回復活したばかりのangelを除く
         if(LiveCharacters.Count == 0)
         {
-            Debug.LogWarning("生存者がいないのに、PartApplyConditionChangeOnCloseAllyAngelが呼び出された。");
             return;
         }
 

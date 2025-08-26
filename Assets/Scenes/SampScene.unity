@@ -3559,6 +3559,140 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 564736995}
   m_CullTransparentMesh: 1
+--- !u!1 &567393290
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 567393291}
+  - component: {fileID: 567393293}
+  - component: {fileID: 567393292}
+  m_Layer: 5
+  m_Name: Text (TMP)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &567393291
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 567393290}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1852605334}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &567393292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 567393290}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: "\u4E0A\u306E\u7CBE\u795E\u5C5E\u6027\u9055\u3044\n"
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: f8047ddb955a3444c85894cadc642495, type: 2}
+  m_sharedMaterial: {fileID: -6777114694237444076, guid: f8047ddb955a3444c85894cadc642495, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4281479730
+  m_fontColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 36.65
+  m_fontSizeBase: 24
+  m_fontWeight: 400
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &567393293
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 567393290}
+  m_CullTransparentMesh: 1
 --- !u!1 &570427287
 GameObject:
   m_ObjectHideFlags: 0
@@ -4422,7 +4556,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.99943614, g: 0.0024091492, b: 0.9993161, a: 0.99793077}
+  m_Color: {r: 0.9065349, g: 0.39933735, b: 0.88664144, a: 0.65700823}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -5157,6 +5291,7 @@ RectTransform:
   - {fileID: 841515317}
   - {fileID: 1568280087}
   - {fileID: 602005236}
+  - {fileID: 1852605334}
   - {fileID: 85669208}
   m_Father: {fileID: 514049932}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -7012,6 +7147,7 @@ MonoBehaviour:
     NowDeffenceStyle: 0
     SelectedEscape: 0
     SkillCalculatedRandomRange: 0
+    _p: 0
     _tempVanguard: 0
     _tempLive: 0
     BattleFirstSurpriseAttacker: 0
@@ -7037,9 +7173,10 @@ MonoBehaviour:
     _skillALLList:
     - rid: 2127851150886043649
     - rid: 9189338325697429504
-    - rid: 7137335011432464384
-    - rid: 5115255080665743360
-    ValidSkillIDList: 00000000010000000200000003000000
+    - rid: 5115255248247586911
+    - rid: 5115255248247586912
+    - rid: 5115255248247586913
+    ValidSkillIDList: 0000000001000000020000000300000004000000
     EmotionalAttachmentSkillID: 0
   Init_noramlia:
     InitpassiveIDList: 
@@ -7059,6 +7196,7 @@ MonoBehaviour:
     NowDeffenceStyle: 0
     SelectedEscape: 0
     SkillCalculatedRandomRange: 0
+    _p: 0
     _tempVanguard: 0
     _tempLive: 0
     BattleFirstSurpriseAttacker: 0
@@ -7102,6 +7240,7 @@ MonoBehaviour:
     NowDeffenceStyle: 0
     SelectedEscape: 0
     SkillCalculatedRandomRange: 0
+    _p: 0
     _tempVanguard: 0
     _tempLive: 0
     BattleFirstSurpriseAttacker: 0
@@ -7127,12 +7266,15 @@ MonoBehaviour:
     _skillALLList: []
     ValidSkillIDList: 
     EmotionalAttachmentSkillID: 0
+  Allies: []
   skillUILists:
   - skillButtons:
     - button: {fileID: 602005237}
       skillID: 2
     - button: {fileID: 85669209}
       skillID: 3
+    - button: {fileID: 1852605335}
+      skillID: 4
     stockButtons: []
     aggressiveCommitRadios: []
   - skillButtons: []
@@ -7180,6 +7322,8 @@ MonoBehaviour:
     IsLock: 0
     IsBad: 0
   ExplosionVoid: 0
+  HP_TO_MaxP_CONVERSION_FACTOR: 1
+  MentalHP_TO_P_Recovely_CONVERSION_FACTOR: 2
   references:
     version: 2
     RefIds:
@@ -7251,15 +7395,15 @@ MonoBehaviour:
           SpecialFlagMode: 0
         _iD: 0
         Proficiency: 0
-    - rid: 5115255080665743360
+    - rid: 5115255248247586911
       type: {class: AllySkill, ns: , asm: Assembly-CSharp}
       data:
-        SkillSpiritual: 1
+        SkillSpiritual: 8
         Impression: 0
         MotionFlavor: {fileID: 0}
         SkillPhysical: 0
         SpecialFlags: 0
-        RequiredNormalP: 0
+        RequiredNormalP: 2
         RequiredAttrP:
           _list: []
         Cantkill: 0
@@ -7267,9 +7411,83 @@ MonoBehaviour:
         AttackModifier: 1
         FixedSkillLevelData:
         - TenDayValues:
-            _list:
-            - key: 19
-              value: 6
+            _list: []
+          SkillPower: 10
+          OptionMentalDamageRatio: 0
+          OptionPowerSpread: []
+          OptionSkillHitPer: -1
+          OptionA_MoveSet: []
+          OptionB_MoveSet: []
+        _infiniteSkillPowerUnit: 0
+        _infiniteSkillTenDaysUnit: 0
+        _mentalDamageRatio: 0
+        _powerSpread: []
+        _skillHitPer: 100
+        _a_moveset: []
+        _b_moveset: []
+        _triggerCountMax: 0
+        CanCancelTrigger: 1
+        _triggerRollBackCount: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
+        CanSelectAggressiveCommit: 0
+        SKillDidWaitCount: 0
+        SkillName: "\u30C6\u30B9\u30C8\u30B7\u30F3\u30D7\u30EB\u653B\u6483\u30B9\u30AD\u30EB"
+        subEffects: 
+        subVitalLayers: 
+        canEraceEffectIDs: 
+        canEraceVitalLayerIDs: 
+        CanEraceEffectCount: 0
+        CanEraceVitalLayerCount: 0
+        _defAtk: 0
+        _baseSkillType: 1
+        ConsecutiveType: 0
+        ZoneTrait: 16416
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
+        ReactiveSkillPassiveList: []
+        AggressiveSkillPassiveList: []
+        TargetSelection: 0
+        SkillPassiveEffectCount: 1
+        _skillPassiveGibeSkill_SkillFilter:
+          Impressions: 
+          MotionFlavors: []
+          MentalAttrs: 
+          PhysicalAttrs: 
+          AttackTypes: 
+          TenDayAbilities: 
+          TenDayMode: 0
+          SkillTypes: 
+          SkillTypeMode: 0
+          SpecialFlags: 
+          SpecialFlagMode: 0
+        _iD: 2
+        Proficiency: 0
+    - rid: 5115255248247586912
+      type: {class: AllySkill, ns: , asm: Assembly-CSharp}
+      data:
+        SkillSpiritual: 1
+        Impression: 0
+        MotionFlavor: {fileID: 0}
+        SkillPhysical: 0
+        SpecialFlags: 0
+        RequiredNormalP: 1
+        RequiredAttrP:
+          _list: []
+        Cantkill: 0
+        EvasionModifier: 1
+        AttackModifier: 1
+        FixedSkillLevelData:
+        - TenDayValues:
+            _list: []
           SkillPower: 55
           OptionMentalDamageRatio: 0
           OptionPowerSpread: []
@@ -7329,15 +7547,15 @@ MonoBehaviour:
           SpecialFlagMode: 0
         _iD: 3
         Proficiency: 0
-    - rid: 7137335011432464384
+    - rid: 5115255248247586913
       type: {class: AllySkill, ns: , asm: Assembly-CSharp}
       data:
-        SkillSpiritual: 8
+        SkillSpiritual: 16
         Impression: 0
         MotionFlavor: {fileID: 0}
         SkillPhysical: 0
         SpecialFlags: 0
-        RequiredNormalP: 0
+        RequiredNormalP: 2
         RequiredAttrP:
           _list: []
         Cantkill: 0
@@ -7345,11 +7563,7 @@ MonoBehaviour:
         AttackModifier: 1
         FixedSkillLevelData:
         - TenDayValues:
-            _list:
-            - key: 0
-              value: 6
-            - key: 25
-              value: 8
+            _list: []
           SkillPower: 5
           OptionMentalDamageRatio: 0
           OptionPowerSpread: []
@@ -7407,7 +7621,7 @@ MonoBehaviour:
           SkillTypeMode: 0
           SpecialFlags: 
           SpecialFlagMode: 0
-        _iD: 2
+        _iD: 4
         Proficiency: 0
     - rid: 9189338325697429504
       type: {class: AllySkill, ns: , asm: Assembly-CSharp}
@@ -8984,6 +9198,7 @@ MonoBehaviour:
         NowDeffenceStyle: 0
         SelectedEscape: 0
         SkillCalculatedRandomRange: 0
+        _p: 0
         _tempVanguard: 0
         _tempLive: 0
         BattleFirstSurpriseAttacker: 0
@@ -9186,6 +9401,7 @@ MonoBehaviour:
         NowDeffenceStyle: 0
         SelectedEscape: 0
         SkillCalculatedRandomRange: 0
+        _p: 0
         _tempVanguard: 0
         _tempLive: 0
         BattleFirstSurpriseAttacker: 0
@@ -13534,6 +13750,127 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 1080, y: 1041.4}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1852605333
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1852605334}
+  - component: {fileID: 1852605337}
+  - component: {fileID: 1852605336}
+  - component: {fileID: 1852605335}
+  m_Layer: 5
+  m_Name: testsinglelAnotherSpriSkillBtn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1852605334
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1852605333}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 0}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 567393291}
+  m_Father: {fileID: 770666933}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -342.52, y: -0.575}
+  m_SizeDelta: {x: 293.5, y: 98.85}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1852605335
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1852605333}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 1852605336}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &1852605336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1852605333}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1852605337
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1852605333}
+  m_CullTransparentMesh: 1
 --- !u!1 &1865409127
 GameObject:
   m_ObjectHideFlags: 0

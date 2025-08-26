@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 #if UNITY_EDITOR
 using System.Collections.Generic;
@@ -55,6 +55,8 @@ public sealed class SelectableSerializeReferenceAttributeDrawer : PropertyDrawer
             selectorPosition.width -= EditorGUIUtility.labelWidth;
             selectorPosition.x += EditorGUIUtility.labelWidth;
             selectorPosition.height = EditorGUIUtility.singleLineHeight;
+
+            // Type selection popup only (inline Make Unique button removed; use context menu instead)
             var selectedTypeIndex = EditorGUI.Popup(selectorPosition, _selectedIndex, _data.DerivedTypeNames);
             if (ccs.changed)
             {
@@ -62,6 +64,50 @@ public sealed class SelectableSerializeReferenceAttributeDrawer : PropertyDrawer
                 var selectedType = _data.DerivedTypes[selectedTypeIndex];
                 property.managedReferenceValue =
                     selectedType == null ? null : Activator.CreateInstance(selectedType);
+            }
+
+
+            // Context menu (Right-Click) with description and Make Unique action
+            if (Event.current.type == EventType.ContextClick && position.Contains(Event.current.mousePosition))
+            {
+                var menu = new GenericMenu();
+                // Explanation (disabled items)
+                menu.AddDisabledItem(new GUIContent("Make Unique が必要な理由"));
+                menu.AddDisabledItem(new GUIContent("Duplicate は SerializeReference の参照を複製します"));
+                menu.AddDisabledItem(new GUIContent("=> 編集が相互反映。独立複製で共有参照を解消"));
+                menu.AddSeparator("");
+                // Action
+                menu.AddItem(new GUIContent("Make Unique"), false, () =>
+                {
+                    var src = property.managedReferenceValue;
+                    if (src == null) return;
+                    object dst = null;
+                    try
+                    {
+                        var srcType = src.GetType();
+                        var m = srcType.GetMethod("InitAllyDeepCopy", BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
+                        if (m != null)
+                        {
+                            dst = m.Invoke(src, null);
+                        }
+                        if (dst == null)
+                        {
+                            dst = Activator.CreateInstance(srcType);
+                            var json = JsonUtility.ToJson(src);
+                            JsonUtility.FromJsonOverwrite(json, dst);
+                        }
+                        Undo.RecordObject(property.serializedObject.targetObject, "Make Unique SerializeReference");
+                        property.managedReferenceValue = dst;
+                        property.serializedObject.ApplyModifiedProperties();
+                        EditorUtility.SetDirty(property.serializedObject.targetObject);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError($"Make Unique failed: {e.Message}\n{e}");
+                    }
+                });
+                menu.ShowAsContext();
+                Event.current.Use();
             }
 
             EditorGUI.indentLevel = indent;

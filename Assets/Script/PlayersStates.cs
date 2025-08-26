@@ -151,6 +151,7 @@ public class PlayersStates:MonoBehaviour
     /// 0=Geino, 1=Noramlia, 2=Sites
     /// 味方ランタイムデータの配列　処理のループ化のための
     /// </summary>
+    [SerializeField]
     private AllyClass[] Allies; // ランタイムで生成（Inspectorでの多態シリアライズは捨てる）
 
 
@@ -262,13 +263,14 @@ public class PlayersStates:MonoBehaviour
                 }
             }else//それ以外は
             {
-                Debug.Log("スキルのボタンを有効化します");
+                Debug.Log("スキルのボタンを有効化します" + skill.ID);
                 //一つでも持ってればOK
                 if (hold != null)
                 {
                     hold.button.interactable =
                         ZoneTraitAndTypeSkillMatchesUIFilter(skill, trait, type) // 表示条件（範囲/タイプ）
                         && CanCastNow(Allies[index], skill); // 実行可否（リソース/武器）
+                        Debug.Log(ZoneTraitAndTypeSkillMatchesUIFilter(skill, trait, type) + " |"+hold.skillID+"| " + CanCastNow(Allies[index], skill));
                 }
             }
         }
@@ -681,8 +683,11 @@ public class PlayersStates:MonoBehaviour
     {
         ExplosionVoid = RandomEx.Shared.NextFloat(10,61);
     }
-}
+    public int HP_TO_MaxP_CONVERSION_FACTOR = 80;
+    public int MentalHP_TO_P_Recovely_CONVERSION_FACTOR = 120;
 
+}
+[Serializable]
 public class AllyClass : BaseStates
 {
     /// <summary>

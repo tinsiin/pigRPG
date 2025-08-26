@@ -324,6 +324,7 @@ public class BaseSkill
 {
     protected SchizoLog schizoLog => SchizoLog.Instance;
     protected BattleManager manager => Walking.Instance.bm;
+    [Header("スキルの精神属性 Flagsの列挙体なので複数指定できるが、必ず一つの値のみを指定して")]
     /// <summary>
     ///     スキルの精神属性
     /// </summary>

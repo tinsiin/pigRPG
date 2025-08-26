@@ -39,6 +39,16 @@ public abstract class BaseStates
     public void BindUIController(UIController ui)
     {
         UI = ui;
+        // 属性ポイントリングUIを探し、無ければ追加して初期化
+        if (UI != null && UI.Icon != null)
+        {
+            var ring = UI.GetComponentInChildren<AttrPointRingUIController>(true);
+            if (ring == null)
+            {
+                ring = UI.gameObject.AddComponent<AttrPointRingUIController>();
+            }
+            ring.Initialize(this, UI.Icon.rectTransform);
+        }
     }
 
 
@@ -2048,13 +2058,12 @@ public abstract class BaseStates
     }
 
     
-    const int HP_TO_MaxP_CONVERSION_FACTOR = 80;
-    const int MentalHP_TO_P_Recovely_CONVERSION_FACTOR = 120;
     /// <summary>
     /// 最大ポイントは実HPの最大値を定数で割ったもの。　この定数はHPのスケールの変更などに応じて、適宜調整する
     /// </summary>
-    public int MAXP => (int)_maxhp / HP_TO_MaxP_CONVERSION_FACTOR;
+    public int MAXP => (int)_maxhp / PlayersStates.Instance.HP_TO_MaxP_CONVERSION_FACTOR;
 
+    [SerializeField]
     int _p;//バッキングフィールド
     /// <summary>
     /// ポイント
@@ -2101,7 +2110,6 @@ public abstract class BaseStates
         if (cost <= 0) return true;
         if (P < cost) return false;
         P -= cost;
-        if (P < 0) P = 0; // 念のため下限0にクランプ
         return true;
     }
     
@@ -2124,7 +2132,48 @@ public abstract class BaseStates
     /// 現在の属性ポイント総量（混合合計）。0..CombinedAttrPMax。
     /// </summary>
     public int CombinedAttrPTotal => _attrPTotal;
+    public event Action<SpiritualProperty, int> OnAttrPChanged;
     
+    // バッチ通知用フィールド
+    private int _attrPBatchDepth;
+    private readonly HashSet<SpiritualProperty> _attrPDirty = new HashSet<SpiritualProperty>();
+
+    // 属性ポイント変更の通知（バッチ考慮）
+    private void NotifyAttrPChanged(SpiritualProperty a)
+    {
+        if (_attrPBatchDepth > 0) _attrPDirty.Add(a);
+        else OnAttrPChanged?.Invoke(a, GetAttrP(a));
+    }
+
+    // バッチ期間の開始/終了 (入れ子可)
+    public IDisposable BeginAttrPBatch()
+    {
+        _attrPBatchDepth++;
+        return new AttrPBatchToken(this);
+    }
+    private struct AttrPBatchToken : IDisposable
+    {
+        private readonly BaseStates _owner;
+        public AttrPBatchToken(BaseStates owner) { _owner = owner; }
+        public void Dispose()
+        {
+            if (_owner == null) return;
+            _owner._attrPBatchDepth--;
+            if (_owner._attrPBatchDepth <= 0)
+            {
+                _owner._attrPBatchDepth = 0;
+                if (_owner._attrPDirty.Count > 0)
+                {
+                    foreach (var a in _owner._attrPDirty)
+                    {
+                        _owner.OnAttrPChanged?.Invoke(a, _owner.GetAttrP(a));
+                    }
+                    _owner._attrPDirty.Clear();
+                }
+            }
+        }
+    }
+
     /// <summary>
     /// 追加可能な残容量（DropNew ポリシーで使用）。
     /// </summary>
@@ -2172,7 +2221,60 @@ public abstract class BaseStates
         _attrPTotal += added;
         // 履歴に追加
         _attrAddHistory.Add(new AttrChunk(attr, added));
+        NotifyAttrPChanged(attr);
+        ValidateAttrPInvariants();
         return added;
+    }
+
+    // 履歴削減ヘルパー（同一属性の最新から削る）
+    private void ReduceLatestForAttr(SpiritualProperty attr, int amount)
+    {
+        var toReduce = amount;
+        for (int i = _attrAddHistory.Count - 1; i >= 0 && toReduce > 0; i--)
+        {
+            if (_attrAddHistory[i].Attr != attr) continue;
+            var chunk = _attrAddHistory[i];
+            var reduce = Math.Min(chunk.Amount, toReduce);
+            chunk.Amount -= reduce;
+            toReduce -= reduce;
+            if (chunk.Amount > 0)
+            {
+                _attrAddHistory[i] = chunk;
+            }
+            else
+            {
+                _attrAddHistory.RemoveAt(i);
+            }
+        }
+    }
+
+    // 履歴削減ヘルパー（全属性横断で最新から削る）
+    private void ReduceLatestAcrossAllAttrs(int amount, HashSet<SpiritualProperty> changed)
+    {
+        var overflow = amount;
+        for (int i = _attrAddHistory.Count - 1; i >= 0 && overflow > 0; i--)
+        {
+            var chunk = _attrAddHistory[i];
+            var reduce = Math.Min(chunk.Amount, overflow);
+            // 属性マップからも同量減らす
+            if (_attrPMap.TryGetValue(chunk.Attr, out var cur))
+            {
+                var left = cur - reduce;
+                if (left > 0) _attrPMap[chunk.Attr] = left; else _attrPMap.Remove(chunk.Attr);
+                changed?.Add(chunk.Attr);
+            }
+            _attrPTotal -= reduce;
+            overflow -= reduce;
+            chunk.Amount -= reduce;
+            if (chunk.Amount > 0)
+            {
+                _attrAddHistory[i] = chunk; // 一部だけ削れたら更新
+            }
+            else
+            {
+                _attrAddHistory.RemoveAt(i); // 0になったら履歴から除去
+            }
+        }
     }
     
     /// <summary>
@@ -2198,23 +2300,9 @@ public abstract class BaseStates
         _attrPTotal -= cost;
         if (_attrPTotal < 0) _attrPTotal = 0;
         // 履歴から「同属性の新しいものから」減算して整合を保つ
-        var toReduce = cost;
-        for (int i = _attrAddHistory.Count - 1; i >= 0 && toReduce > 0; i--)
-        {
-            if (_attrAddHistory[i].Attr != attr) continue;
-            var chunk = _attrAddHistory[i];
-            var reduce = Math.Min(chunk.Amount, toReduce);
-            chunk.Amount -= reduce;
-            toReduce -= reduce;
-            if (chunk.Amount > 0)
-            {
-                _attrAddHistory[i] = chunk;
-            }
-            else
-            {
-                _attrAddHistory.RemoveAt(i);
-            }
-        }
+        ReduceLatestForAttr(attr, cost);
+        NotifyAttrPChanged(attr);
+        ValidateAttrPInvariants();
         return true;
     }
     
@@ -2257,48 +2345,51 @@ public abstract class BaseStates
         }
 
         // 第2段階: 実消費（属性→ノーマル）。失敗時は属性をロールバック。
-        var consumedAttr = new List<KeyValuePair<SpiritualProperty, int>>();
-        if (reqAttr != null)
+        using (BeginAttrPBatch())
         {
-            foreach (var kv in reqAttr)
+            var consumedAttr = new List<KeyValuePair<SpiritualProperty, int>>();
+            if (reqAttr != null)
             {
-                int need = Mathf.Max(0, kv.Value);
-                if (need == 0) continue;
-                if (!TrySpendAttrP(kv.Key, need))
+                foreach (var kv in reqAttr)
                 {
-                    // ロールバック（ここまでに消費した属性Pを戻す）
-                    foreach (var back in consumedAttr)
+                    int need = Mathf.Max(0, kv.Value);
+                    if (need == 0) continue;
+                    if (!TrySpendAttrP(kv.Key, need))
                     {
-                        // DropNew仕様のため最新に戻るが、総量整合のために加算でよい
-                        var restored = TryAddAttrP(back.Key, back.Value);
-                        if (restored != back.Value)
+                        // ロールバック（ここまでに消費した属性Pを戻す）
+                        foreach (var back in consumedAttr)
                         {
-                            Debug.LogWarning($"TryConsumeForSkillAtomic: 属性Pロールバック不足 attr={back.Key} expected={back.Value} restored={restored}");
+                            // DropNew仕様のため最新に戻るが、総量整合のために加算でよい
+                            var restored = TryAddAttrP(back.Key, back.Value);
+                            if (restored != back.Value)
+                            {
+                                Debug.LogWarning($"TryConsumeForSkillAtomic: 属性Pロールバック不足 attr={back.Key} expected={back.Value} restored={restored}");
+                            }
                         }
+                        Debug.LogError($"TryConsumeForSkillAtomic: 属性P消費に失敗 attr={kv.Key} need={need}（事前可否との差異）");
+                        return false;
                     }
-                    Debug.LogError($"TryConsumeForSkillAtomic: 属性P消費に失敗 attr={kv.Key} need={need}（事前可否との差異）");
-                    return false;
+                    consumedAttr.Add(new KeyValuePair<SpiritualProperty, int>(kv.Key, need));
                 }
-                consumedAttr.Add(new KeyValuePair<SpiritualProperty, int>(kv.Key, need));
             }
-        }
 
-        if (!TrySpendP(reqNormal))
-        {
-            // ノーマルで失敗時も属性をロールバック
-            foreach (var back in consumedAttr)
+            if (!TrySpendP(reqNormal))
             {
-                var restored = TryAddAttrP(back.Key, back.Value);
-                if (restored != back.Value)
+                // ノーマルで失敗時も属性をロールバック
+                foreach (var back in consumedAttr)
                 {
-                    Debug.LogWarning($"TryConsumeForSkillAtomic: 属性Pロールバック不足 attr={back.Key} expected={back.Value} restored={restored}");
+                    var restored = TryAddAttrP(back.Key, back.Value);
+                    if (restored != back.Value)
+                    {
+                        Debug.LogWarning($"TryConsumeForSkillAtomic: 属性Pロールバック不足 attr={back.Key} expected={back.Value} restored={restored}");
+                    }
                 }
+                Debug.LogError($"TryConsumeForSkillAtomic: ノーマルP消費に失敗 need={reqNormal} have={P}（事前可否との差異）");
+                return false;
             }
-            Debug.LogError($"TryConsumeForSkillAtomic: ノーマルP消費に失敗 need={reqNormal} have={P}（事前可否との差異）");
-            return false;
-        }
 
-        return true;
+            return true;
+        }
     }
     
     /// <summary>
@@ -2306,8 +2397,18 @@ public abstract class BaseStates
     /// </summary>
     public void ClearAllAttrP()
     {
+        var keys = _attrPMap.Keys.ToArray();
         _attrPMap.Clear();
         _attrPTotal = 0;
+        _attrAddHistory.Clear();
+        using (BeginAttrPBatch())
+        {
+            foreach (var k in keys)
+            {
+                NotifyAttrPChanged(k);
+            }
+        }
+        ValidateAttrPInvariants();
     }
     
     /// <summary>
@@ -2322,29 +2423,50 @@ public abstract class BaseStates
         var cap = CombinedAttrPMax;
         if (_attrPTotal <= cap) return;
         var overflow = _attrPTotal - cap;
-        for (int i = _attrAddHistory.Count - 1; i >= 0 && overflow > 0; i--)
+        var changed = new HashSet<SpiritualProperty>();
+        using (BeginAttrPBatch())
         {
-            var chunk = _attrAddHistory[i];
-            var reduce = Math.Min(chunk.Amount, overflow);
-            // 属性マップからも同量減らす
-            if (_attrPMap.TryGetValue(chunk.Attr, out var cur))
+            ReduceLatestAcrossAllAttrs(overflow, changed);
+            if (_attrPTotal < 0) _attrPTotal = 0;
+            foreach (var a in changed)
             {
-                var left = cur - reduce;
-                if (left > 0) _attrPMap[chunk.Attr] = left; else _attrPMap.Remove(chunk.Attr);
-            }
-            _attrPTotal -= reduce;
-            overflow -= reduce;
-            chunk.Amount -= reduce;
-            if (chunk.Amount > 0)
-            {
-                _attrAddHistory[i] = chunk; // 一部だけ削れたら更新
-            }
-            else
-            {
-                _attrAddHistory.RemoveAt(i); // 0になったら履歴から除去
+                NotifyAttrPChanged(a);
             }
         }
-        if (_attrPTotal < 0) _attrPTotal = 0;
+        ValidateAttrPInvariants();
+    }
+
+    // 開発時の不変条件チェック（Editor のみ）
+    [System.Diagnostics.Conditional("UNITY_EDITOR")]
+    private void ValidateAttrPInvariants()
+    {
+        try
+        {
+            int sumMap = 0;
+            foreach (var v in _attrPMap.Values) sumMap += v;
+            if (_attrPTotal != sumMap)
+            {
+                Debug.LogError($"[BaseStates] Invariant violation: _attrPTotal({_attrPTotal}) != sumMap({sumMap}) name={CharacterName}");
+            }
+            int sumHist = 0;
+            for (int i = 0; i < _attrAddHistory.Count; i++)
+            {
+                var amt = _attrAddHistory[i].Amount;
+                if (amt < 0)
+                {
+                    Debug.LogError($"[BaseStates] History negative amount at {i} name={CharacterName}");
+                }
+                sumHist += Math.Max(0, amt);
+            }
+            if (_attrPTotal < 0)
+            {
+                Debug.LogError($"[BaseStates] _attrPTotal negative: {_attrPTotal} name={CharacterName}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[BaseStates] ValidateAttrPInvariants exception: {ex}");
+        }
     }
 
     // ================================
@@ -2573,7 +2695,6 @@ public abstract class BaseStates
                 if (refundN > 0)
                 {
                     P += refundN;
-                    P = Mathf.Clamp(P, 0, MAXP);
                 }
                 if (spentAttrP != null)
                 {
@@ -2774,7 +2895,7 @@ public abstract class BaseStates
     protected void MentalNaturalRecovelyPont()
     {
          // 精神HPを定数で割り回復量に変換する
-        var baseRecovelyP = (int)MentalHP / MentalHP_TO_P_Recovely_CONVERSION_FACTOR;
+        var baseRecovelyP = (int)MentalHP / PlayersStates.Instance.MentalHP_TO_P_Recovely_CONVERSION_FACTOR;
         
         // 精神HPと実HP最大値との割合
         var mentalToMaxHPRatio = MentalHP / MaxHP;
