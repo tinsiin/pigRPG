@@ -633,7 +633,7 @@ public abstract class BaseStates
     if (maxDontDamageHpMinRatio > 0)
     {
         int minHp = (int)(MaxHP * maxDontDamageHpMinRatio);
-        _hp = Math.Clamp(_hp, minHp, MaxHP);
+        HP = Math.Clamp(_hp, minHp, MaxHP);
     }
 }
 
@@ -1779,6 +1779,61 @@ public abstract class BaseStates
             return breakdown;
         }   
     }
+    public StatesPowerBreakdown b_ATKSimulate(BattleProtocol simulateProtocol)
+    {
+        // StatesPowerBreakdownのインスタンスを作成
+        var breakdown = new StatesPowerBreakdown(new TenDayAbilityDictionary(), b_b_atk);
+
+        // 共通の十日能力をまず加算（b_ATK と同一）
+        breakdown.TenDayAdd(TenDayAbility.FlameBreathingWife, TenDayValues(false).GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.5f);
+        breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire) * 0.8f);
+        breakdown.TenDayAdd(TenDayAbility.HeavenAndEndWar, TenDayValues(false).GetValueOrZero(TenDayAbility.HeavenAndEndWar) * 0.3f);
+        breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues(false).GetValueOrZero(TenDayAbility.Rain) * 0.058f);
+        breakdown.TenDayAdd(TenDayAbility.FaceToHand, TenDayValues(false).GetValueOrZero(TenDayAbility.FaceToHand) * 0.01f);
+        breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues(false).GetValueOrZero(TenDayAbility.StarTersi) * 0.02f);
+        breakdown.TenDayAdd(TenDayAbility.dokumamusi, TenDayValues(false).GetValueOrZero(TenDayAbility.dokumamusi) * 0.4f);
+        breakdown.TenDayAdd(TenDayAbility.HeatHaze, TenDayValues(false).GetValueOrZero(TenDayAbility.HeatHaze) * 0.0666f);
+        breakdown.TenDayAdd(TenDayAbility.Leisure, TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure) * 0.01f);
+        breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining) * 0.2f);
+        breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues(false).GetValueOrZero(TenDayAbility.Pilmagreatifull) * 0.56f);
+        breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) * 0.09f);
+        breakdown.TenDayAdd(TenDayAbility.NightInkKnight, TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight) * 0.45f);
+        breakdown.TenDayAdd(TenDayAbility.ElementFaithPower, TenDayValues(false).GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.04f);
+        breakdown.TenDayAdd(TenDayAbility.JoeTeeth, TenDayValues(false).GetValueOrZero(TenDayAbility.JoeTeeth) * 0.5f);
+        breakdown.TenDayAdd(TenDayAbility.Blades, TenDayValues(false).GetValueOrZero(TenDayAbility.Blades) * 1.0f);
+        breakdown.TenDayAdd(TenDayAbility.Glory, TenDayValues(false).GetValueOrZero(TenDayAbility.Glory) * 0.1f);
+        breakdown.TenDayAdd(TenDayAbility.Smiler, TenDayValues(false).GetValueOrZero(TenDayAbility.Smiler) * 0.02f);
+        breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues(false).GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 0.23f);
+        breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues(false).GetValueOrZero(TenDayAbility.Enokunagi) * 3f);
+        breakdown.TenDayAdd(TenDayAbility.Raincoat, TenDayValues(false).GetValueOrZero(TenDayAbility.Raincoat) * 22f);
+        breakdown.TenDayAdd(TenDayAbility.Baka, TenDayValues(false).GetValueOrZero(TenDayAbility.Baka) * -11f);
+
+        // プロトコルによる分岐（b_ATK と同一ロジック）
+        switch (simulateProtocol)
+        {
+            case BattleProtocol.LowKey:
+                breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton) * 0.9f);
+                breakdown.TenDayAdd(TenDayAbility.SpringWater, TenDayValues(false).GetValueOrZero(TenDayAbility.SpringWater) * 1.7f);
+                breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues(false).GetValueOrZero(TenDayAbility.HumanKiller) * 1.0f);
+                breakdown.TenDayAdd(TenDayAbility.UnextinguishedPath, TenDayValues(false).GetValueOrZero(TenDayAbility.UnextinguishedPath) * 0.3f);
+                break;
+            case BattleProtocol.Tricky:
+                breakdown.TenDayAdd(TenDayAbility.Miza, TenDayValues(false).GetValueOrZero(TenDayAbility.Miza) * 1.2f);
+                breakdown.TenDayAdd(TenDayAbility.PersonaDivergence, TenDayValues(false).GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.8f);
+                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues(false).GetValueOrZero(TenDayAbility.Vond) * 0.7f);
+                breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues(false).GetValueOrZero(TenDayAbility.Enokunagi) * 0.5f);
+                breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues(false).GetValueOrZero(TenDayAbility.Rain) * 0.6f);
+                break;
+            case BattleProtocol.Showey:
+                breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues(false).GetValueOrZero(TenDayAbility.Vail) * 1.11f);
+                breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.2f);
+                breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues(false).GetValueOrZero(TenDayAbility.HumanKiller) * 1.0f);
+                break;
+            // none の場合は追加攻撃力なし
+        }
+
+        return breakdown;
+    }
     /// <summary>
     /// 指定したAimStyleでの基礎防御力を計算する
     /// </summary>
@@ -1878,6 +1933,132 @@ public abstract class BaseStates
         return breakdown;
     }
 
+    /// <summary>
+    /// 戦闘規格ごとの「排他（プロトコル固有）加算」だけを返す攻撃内訳
+    /// 基礎値や共通TenDay加算は含めない
+    /// </summary>
+    public StatesPowerBreakdown b_ATKProtocolExclusive(BattleProtocol protocol)
+    {
+        var breakdown = new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
+        switch (protocol)
+        {
+            case BattleProtocol.LowKey:
+                breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton) * 0.9f);
+                breakdown.TenDayAdd(TenDayAbility.SpringWater, TenDayValues(false).GetValueOrZero(TenDayAbility.SpringWater) * 1.7f);
+                breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues(false).GetValueOrZero(TenDayAbility.HumanKiller) * 1.0f);
+                breakdown.TenDayAdd(TenDayAbility.UnextinguishedPath, TenDayValues(false).GetValueOrZero(TenDayAbility.UnextinguishedPath) * 0.3f);
+                break;
+            case BattleProtocol.Tricky:
+                breakdown.TenDayAdd(TenDayAbility.Miza, TenDayValues(false).GetValueOrZero(TenDayAbility.Miza) * 1.2f);
+                breakdown.TenDayAdd(TenDayAbility.PersonaDivergence, TenDayValues(false).GetValueOrZero(TenDayAbility.PersonaDivergence) * 0.8f);
+                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues(false).GetValueOrZero(TenDayAbility.Vond) * 0.7f);
+                breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues(false).GetValueOrZero(TenDayAbility.Enokunagi) * 0.5f);
+                breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues(false).GetValueOrZero(TenDayAbility.Rain) * 0.6f);
+                break;
+            case BattleProtocol.Showey:
+                breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues(false).GetValueOrZero(TenDayAbility.Vail) * 1.11f);
+                breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.2f);
+                breakdown.TenDayAdd(TenDayAbility.HumanKiller, TenDayValues(false).GetValueOrZero(TenDayAbility.HumanKiller) * 1.0f);
+                break;
+            // none の場合は排他加算なし
+        }
+        return breakdown;
+    }
+
+    /// <summary>
+    /// 攻撃の排他（プロトコル固有）加算の合計値
+    /// </summary>
+    public float ATKProtocolExclusiveTotal(BattleProtocol protocol)
+    {
+        return b_ATKProtocolExclusive(protocol).Total;
+    }
+
+    /// <summary>
+    /// 防御の「AimStyle固有」加算だけを返す内訳。基礎や共通TenDayは含めない
+    /// </summary>
+    private StatesPowerBreakdown CalcDefenseExclusiveForAimStyle(AimStyle style)
+    {
+        var breakdown = new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
+        switch (style)
+        {
+            case AimStyle.CentralHeavenStrike: // 中天一弾
+                breakdown.TenDayAdd(TenDayAbility.Smiler, TenDayValues(false).GetValueOrZero(TenDayAbility.Smiler) * 0.78f);
+                breakdown.TenDayAdd(TenDayAbility.CryoniteQuality, TenDayValues(false).GetValueOrZero(TenDayAbility.CryoniteQuality) * 1.0f);
+                breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.Vail, TenDayValues(false).GetValueOrZero(TenDayAbility.Vail) * 0.5f);
+                breakdown.TenDayAdd(TenDayAbility.JoeTeeth, TenDayValues(false).GetValueOrZero(TenDayAbility.JoeTeeth) * 0.9f);
+                breakdown.TenDayAdd(TenDayAbility.ElementFaithPower, TenDayValues(false).GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) * 0.1f);
+                breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire) * 0.6f);
+                breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap) * -0.3f);
+                break;
+
+            case AimStyle.AcrobatMinor: // アクロバマイナ体術1
+                breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues(false).GetValueOrZero(TenDayAbility.ColdHeartedCalm) * 1.0f);
+                breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton) * 0.1f);
+                breakdown.TenDayAdd(TenDayAbility.Blades, TenDayValues(false).GetValueOrZero(TenDayAbility.Blades) * 1.1f);
+                breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues(false).GetValueOrZero(TenDayAbility.StarTersi) * 0.1f);
+                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.6f);
+                break;
+
+            case AimStyle.Doublet: // ダブレット
+                breakdown.TenDayAdd(TenDayAbility.HeatHaze, TenDayValues(false).GetValueOrZero(TenDayAbility.HeatHaze) * 0.7f);
+                breakdown.TenDayAdd(TenDayAbility.Sort, TenDayValues(false).GetValueOrZero(TenDayAbility.Sort) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.NightInkKnight, TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire) * 1.0f);
+                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues(false).GetValueOrZero(TenDayAbility.Vond) * 0.2f);
+                break;
+
+            case AimStyle.QuadStrike: // 四弾差し込み
+                breakdown.TenDayAdd(TenDayAbility.SpringNap, TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap) * 1.0f);
+                breakdown.TenDayAdd(TenDayAbility.Rain, TenDayValues(false).GetValueOrZero(TenDayAbility.Rain) * 0.2f);
+                breakdown.TenDayAdd(TenDayAbility.SpringWater, TenDayValues(false).GetValueOrZero(TenDayAbility.SpringWater) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues(false).GetValueOrZero(TenDayAbility.Vond) * 0.6f);
+                breakdown.TenDayAdd(TenDayAbility.Enokunagi, TenDayValues(false).GetValueOrZero(TenDayAbility.Enokunagi) * 0.5f);
+                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues(false).GetValueOrZero(TenDayAbility.Vond) * 0.17f);
+                breakdown.TenDayAdd(TenDayAbility.TentVoid, TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) * -0.2f);
+                breakdown.TenDayAdd(TenDayAbility.ColdHeartedCalm, TenDayValues(false).GetValueOrZero(TenDayAbility.ColdHeartedCalm) * -1.0f);
+                break;
+
+            case AimStyle.Duster: // ダスター
+                breakdown.TenDayAdd(TenDayAbility.Miza, TenDayValues(false).GetValueOrZero(TenDayAbility.Miza) * 0.6f);
+                breakdown.TenDayAdd(TenDayAbility.Glory, TenDayValues(false).GetValueOrZero(TenDayAbility.Glory) * 0.8f);
+                breakdown.TenDayAdd(TenDayAbility.TentVoid, TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid) * -0.2f);
+                breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) * -0.2f);
+                breakdown.TenDayAdd(TenDayAbility.Raincoat, TenDayValues(false).GetValueOrZero(TenDayAbility.Raincoat) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.Sort, TenDayValues(false).GetValueOrZero(TenDayAbility.Sort) * 0.1f);
+                breakdown.TenDayAdd(TenDayAbility.SilentTraining, TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining) * 0.4f);
+                break;
+
+            case AimStyle.PotanuVolf: // ポタヌヴォルフのほうき術
+                breakdown.TenDayAdd(TenDayAbility.Taraiton, TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton) * 0.4f);
+                breakdown.TenDayAdd(TenDayAbility.NightDarkness, TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) * 0.2f);
+                breakdown.TenDayAdd(TenDayAbility.Pilmagreatifull, TenDayValues(false).GetValueOrZero(TenDayAbility.Pilmagreatifull) * 1.4f);
+                breakdown.TenDayAdd(TenDayAbility.WaterThunderNerve, TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.2f);
+                breakdown.TenDayAdd(TenDayAbility.BlazingFire, TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire) * -0.2f);
+                breakdown.TenDayAdd(TenDayAbility.StarTersi, TenDayValues(false).GetValueOrZero(TenDayAbility.StarTersi) * 0.3f);
+                breakdown.TenDayAdd(TenDayAbility.Vond, TenDayValues(false).GetValueOrZero(TenDayAbility.Vond) * -0.2f);
+                break;
+            // none は排他加算なし
+        }
+        return breakdown;
+    }
+
+    /// <summary>
+    /// 防御のAimStyle排他加算の合計値
+    /// </summary>
+    public StatesPowerBreakdown b_DEFProtocolExclusive(AimStyle style)
+    {
+        return CalcDefenseExclusiveForAimStyle(style);
+    }
+
+    public float DEFProtocolExclusiveTotal(AimStyle style)
+    {
+        return b_DEFProtocolExclusive(style).Total;
+    }
 
     /// <summary>
     /// 基礎攻撃防御　(大事なのは、基本的にこの辺りは超スキル依存なの)
@@ -2505,6 +2686,49 @@ public abstract class BaseStates
         return list;
     }
     
+    /// <summary>
+    /// UI表示用に属性ポイント内訳を「最近追加された属性が左（新しい→古い）」の順序で取得する。
+    /// 並び順は、直近追加履歴（_attrAddHistory）における「最後に登場したインデックス」が大きいほど新しいとみなす。
+    /// 履歴に存在しない属性は最も古い（末尾）に配置し、同順位は量の多い順で安定化する。
+    /// </summary>
+    public List<AttrPSnapshotEntry> GetAttrPSnapshotRecentFirst()
+    {
+        var total = (float)CombinedAttrPTotal;
+        var max = (float)CombinedAttrPMax;
+
+        // 各属性の「最後に追加された位置」を記録（大きいほど新しい）
+        var lastIndex = new Dictionary<SpiritualProperty, int>();
+        for (int i = 0; i < _attrAddHistory.Count; i++)
+        {
+            var a = _attrAddHistory[i].Attr;
+            lastIndex[a] = i; // 最後に代入された値が最終出現位置になる
+        }
+
+        var ordered = _attrPMap
+            .Where(kv => kv.Value > 0)
+            .Select(kv => new
+            {
+                Attr = kv.Key,
+                Amount = kv.Value,
+                Index = lastIndex.TryGetValue(kv.Key, out var idx) ? idx : -1
+            })
+            .OrderByDescending(x => x.Index)      // 新しい→古い
+            .ThenByDescending(x => x.Amount);     // 同順位は量の多い順
+
+        var list = new List<AttrPSnapshotEntry>();
+        foreach (var x in ordered)
+        {
+            list.Add(new AttrPSnapshotEntry
+            {
+                Attr = x.Attr,
+                Amount = x.Amount,
+                RatioOfTotal = total > 0 ? x.Amount / total : 0f,
+                RatioOfMax = max > 0 ? x.Amount / max : 0f
+            });
+        }
+        return list;
+    }
+    
     // ================================
     // スキル使用時: ポイント→属性ポイント変換
     // ================================
@@ -3088,6 +3312,7 @@ public abstract class BaseStates
         get { return _hp; }
         set
         {
+            Debug.Log($"HP:{value}");
             if (value > MaxHP)//最大値を超えないようにする
             {
                 _hp = MaxHP;
@@ -9825,6 +10050,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     }
     public virtual void OnBattleEndNoArgument()
     {
+        DeleteConsecutiveATK();//連続攻撃を消す
         NowUseSkill = null;//現在何のスキルも使っていない。
         TempDamageTurn = 0;
         DeleteConsecutiveATK();
@@ -10560,8 +10786,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         var DeltaDamageTurn = Math.Abs(nowTurn - TempDamageTurn);
 
         //今回食らった以外の全てのスキルの記憶回数をターン数経過によって減らすーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-        var templist = FocusSkillImpressionList;
-        templist.Remove(NowFocusSkillImpression);//今回の慣れ注目スキル印象を省く
+        var templist = FocusSkillImpressionList.Where(fo => fo != NowFocusSkillImpression).ToList();//元リストを破壊しないフィルタコピー
         foreach (var fo in templist)
         {
             //まず優先順位を取得し、グループ序列(スキルの最終優先ランク)を取得
@@ -10612,7 +10837,8 @@ private int CalcTransformCountIncrement(int tightenStage)
         //二回目以降で記憶範囲にあるのなら、補正計算して返す
         if (!donthaveskillImpression)
         {
-            for (var i = 0; i < rl.Count; i++)//記憶段階と範囲のサイズ分ループ
+            var loopMax = Mathf.Min(rl.Count, FocusSkillImpressionList.Count); // 範囲外防止
+            for (var i = 0; i < loopMax; i++)//記憶段階と範囲のサイズ分ループ
             {
                 var fo = FocusSkillImpressionList[i];
                 if (fo.skillImpression == skill.Impression)//もし記憶範囲に今回のスキル印象があるならば
@@ -10862,6 +11088,207 @@ private int CalcTransformCountIncrement(int tightenStage)
 
         
     }
+
+    /// <summary>
+    /// 慣れ補正（慣れ記憶）のデバッグ用サマリ文字列を返す。
+    /// - 印象ごとの記憶回数（永続分込み/床関数値と実数値）
+    /// - 最大被ダメージ
+    /// - 使用者数
+    /// - 合計記憶量と永続記憶の詳細
+    /// - しきい値（初期・EYE基準・maxEye）
+    /// </summary>
+    public string GetAdaptationDebugText(int topN = 8)
+    {
+        try
+        {
+            var sb = new System.Text.StringBuilder();
+            // しきい値
+            float eyeThreshold = CalculateEYEBasedAdaptThreshold();
+            sb.AppendLine($"慣れ下限: 初期={initialAdaptThreshold:0.###}, EYE={eyeThreshold:0.###}, 下限={maxEyeAdaptThreshold:0.###}");
+
+            if (FocusSkillImpressionList == null || FocusSkillImpressionList.Count == 0)
+            {
+                sb.Append("記憶なし");
+                return sb.ToString();
+            }
+
+            // 精神属性の段階配列と基礎量を取得（推定軽減率計算用）
+            var rl = MemoryStageStructure();
+            float baseV = GetBaseAdaptValue();
+
+            // まず記憶回数で降順に並べて「段階インデックス」を決める（副作用回避）
+            var preOrdered = FocusSkillImpressionList
+                .Select(fo => new
+                {
+                    Impression = fo.skillImpression,
+                    MemFloor = Mathf.Floor(fo.MemoryCount(PersistentAdaptSkillImpressionMemories)),
+                    MemRaw = fo.MemoryCount(PersistentAdaptSkillImpressionMemories),
+                    TopDmg = fo.TopDmg,
+                    Users = (fo.User != null) ? fo.User.Count : 0
+                })
+                .OrderByDescending(x => x.MemFloor)
+                .ThenByDescending(x => x.TopDmg)
+                .ToList();
+
+            // 段階・推定慣れ補正(Adapt)・推定軽減率を付与
+            var enriched = preOrdered
+                .Select((x, idx) =>
+                {
+                    bool inRange = idx < rl.Count;
+                    string stageLabel = "範囲外";
+                    float prio = 0f;
+                    if (inRange)
+                    {
+                        switch (rl[idx])
+                        {
+                            case MemoryDensity.Low:
+                                stageLabel = "Low"; prio = 1.42f; break;
+                            case MemoryDensity.Medium:
+                                stageLabel = "Medium"; prio = 3.75f; break;
+                            case MemoryDensity.High:
+                                stageLabel = "High"; prio = 10f; break;
+                        }
+                    }
+
+                    float estAdapt = 1f;
+                    if (prio > 0f)
+                    {
+                        float mem = x.MemFloor;
+                        float tmp = 1f - (baseV * mem * prio);
+                        if (tmp < eyeThreshold) tmp = eyeThreshold; // EYE下限でクランプ
+                        estAdapt = tmp;
+                    }
+                    float reduction = Mathf.Clamp01(1f - estAdapt); // 軽減率（大きいほどダメ軽減が強い）
+
+                    return new
+                    {
+                        x.Impression,
+                        x.MemFloor,
+                        x.MemRaw,
+                        x.TopDmg,
+                        x.Users,
+                        Stage = stageLabel,
+                        EstAdapt = estAdapt,
+                        Reduction = reduction
+                    };
+                })
+                .ToList();
+
+            // 推定軽減率の大きい順に並び替え。タイブレークは記憶量→最大DMG
+            var ordered = enriched
+                .OrderByDescending(x => x.Reduction)
+                .ThenByDescending(x => x.MemFloor)
+                .ThenByDescending(x => x.TopDmg)
+                .ToList();
+
+            int limit = Mathf.Min(topN, ordered.Count);
+            for (int i = 0; i < limit; i++)
+            {
+                var x = ordered[i];
+                sb.AppendLine($"{i + 1}. {x.Impression} 記憶={x.MemFloor:0.##}({x.MemRaw:0.##}) 最大DMG={x.TopDmg:0.#} 使用者数={x.Users} 推定軽減={(x.Reduction * 100f):0.#}% 段階={x.Stage}");
+            }
+
+            // 合計記憶量
+            float totalMem = FocusSkillImpressionList.Sum(fo => fo.MemoryCount(PersistentAdaptSkillImpressionMemories));
+            sb.AppendLine($"総記憶={totalMem:0.##}");
+
+            // 永続記憶の詳細
+            if (PersistentAdaptSkillImpressionMemories != null && PersistentAdaptSkillImpressionMemories.Count > 0)
+            {
+                var pairs = PersistentAdaptSkillImpressionMemories
+                    .Select(kv => $"{kv.Key}:{kv.Value:0.##}");
+                sb.AppendLine("永続: " + string.Join(", ", pairs));
+            }
+
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            return $"Adaptation Debug Error: {ex.Message}";
+        }
+    }
+    
+    /// <summary>
+    /// StatesBanner向けの簡易版：現在の慣れ（推定軽減率大→小）を
+    /// "Impression:xx.x%" のコンマ区切りで返す。しきい値行や番号付与は行わない。
+    /// GetAdaptationDebugText() と同じ決定論的ロジックを使用。
+    /// </summary>
+    public string GetAdaptationBannerText(int topN = 8)
+    {
+        try
+        {
+            if (FocusSkillImpressionList == null || FocusSkillImpressionList.Count == 0)
+            {
+                return "なし";
+            }
+
+            var rl = MemoryStageStructure();
+            float baseV = GetBaseAdaptValue();
+            float eyeThreshold = CalculateEYEBasedAdaptThreshold();
+
+            var preOrdered = FocusSkillImpressionList
+                .Select(fo => new
+                {
+                    Impression = fo.skillImpression,
+                    MemFloor = Mathf.Floor(fo.MemoryCount(PersistentAdaptSkillImpressionMemories)),
+                    MemRaw = fo.MemoryCount(PersistentAdaptSkillImpressionMemories),
+                    TopDmg = fo.TopDmg,
+                    Users = (fo.User != null) ? fo.User.Count : 0
+                })
+                .OrderByDescending(x => x.MemFloor)
+                .ThenByDescending(x => x.TopDmg)
+                .ToList();
+
+            var enriched = preOrdered
+                .Select((x, idx) =>
+                {
+                    float prio = 0f;
+                    if (idx < rl.Count)
+                    {
+                        switch (rl[idx])
+                        {
+                            case MemoryDensity.Low:    prio = 1.42f; break;
+                            case MemoryDensity.Medium: prio = 3.75f; break;
+                            case MemoryDensity.High:   prio = 10f;   break;
+                        }
+                    }
+
+                    float estAdapt = 1f;
+                    if (prio > 0f)
+                    {
+                        float mem = x.MemFloor;
+                        float tmp = 1f - (baseV * mem * prio);
+                        if (tmp < eyeThreshold) tmp = eyeThreshold;
+                        estAdapt = tmp;
+                    }
+                    float reduction = Mathf.Clamp01(1f - estAdapt);
+
+                    return new { x.Impression, x.MemFloor, x.TopDmg, Reduction = reduction };
+                })
+                .OrderByDescending(y => y.Reduction)
+                .ThenByDescending(y => y.MemFloor)
+                .ThenByDescending(y => y.TopDmg)
+                .ToList();
+
+            int limit = Mathf.Min(topN, enriched.Count);
+            var partsList = enriched
+                .Take(limit)
+                .Select(y => $"{y.Impression}:{(y.Reduction * 100f):0.#}%")
+                .ToList();
+
+            if (enriched.Count > limit && partsList.Count > 0)
+            {
+                int lastIndex = partsList.Count - 1;
+                partsList[lastIndex] = partsList[lastIndex] + "・・・・";
+            }
+            return string.Join(", ", partsList);
+        }
+        catch (Exception ex)
+        {
+            return $"Adapt Banner Error: {ex.Message}";
+        }
+    }
+
     //static 静的なメゾット(戦いに関する辞書データなど)---------------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
@@ -11623,6 +12050,7 @@ public enum HumanConditionCircumstances
 /// <summary>
 /// パワー、元気、気力値　歩行やその他イベントなどで短期的に上げ下げし、
 /// 狙い流れ等の防ぎ方切り替え処理などで、さらに上下する値として導入されたりする。
+/// ThePowerExtensionsで日本語に変更可能
 /// </summary>
 public enum ThePower
 {

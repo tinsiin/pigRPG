@@ -9,6 +9,7 @@ using UnityEditorInternal.Profiling.Memory.Experimental;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 using static CommonCalc;
 using Cysharp.Threading.Tasks;   // UniTask
     [Serializable]
@@ -151,9 +152,37 @@ public class PlayersStates:MonoBehaviour
     /// 0=Geino, 1=Noramlia, 2=Sites
     /// 味方ランタイムデータの配列　処理のループ化のための
     /// </summary>
-    [SerializeField]
     private AllyClass[] Allies; // ランタイムで生成（Inspectorでの多態シリアライズは捨てる）
+    public int AllyCount => Allies?.Length ?? 0;
 
+    // Inspector 表示用ヘッダ文言（コンパイル時定数）
+    public const string AllyIndexHeader = "0: Geino, 1: Noramlia, 2: Sites (PlayersStates.AllyId 準拠)";
+
+    public bool TryGetAllyIndex(BaseStates actor, out int index)
+    {
+        index = -1;
+        if (actor == null || Allies == null) return false;
+        for (int i = 0; i < Allies.Length; i++)
+        {
+            if (ReferenceEquals(Allies[i], actor))
+            {
+                index = i;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public bool TryGetAllyId(BaseStates actor, out AllyId id)
+    {
+        id = default;
+        if (TryGetAllyIndex(actor, out var idx) && Enum.IsDefined(typeof(AllyId), idx))
+        {
+            id = (AllyId)idx;
+            return true;
+        }
+        return false;
+    }
 
     /// <summary>
     /// ボタンと全てのスキルを結びつける。
@@ -194,11 +223,8 @@ public class PlayersStates:MonoBehaviour
                     }
                 }
 
-                // 割り込みカウンターActive
-                if (SelectInterruptCounterRadioButtons != null && i < SelectInterruptCounterRadioButtons.Length && SelectInterruptCounterRadioButtons[i] != null)
-                {
-                    SelectInterruptCounterRadioButtons[i].AddListener(actor.OnSelectInterruptCounterActiveBtnCallBack);
-                }
+                // 割り込みカウンターActive（単独UIのため、ここではバインドしない）
+                // CharaconfigController 側の m_InterruptCounterRadio で、選択中キャラに応じて動的にバインドします。
 
                 // 何もしないボタン
                 if (DoNothingButton != null && i < DoNothingButton.Length && DoNothingButton[i] != null)
@@ -209,17 +235,10 @@ public class PlayersStates:MonoBehaviour
 
             Debug.Log("ボタンとコールバックを結び付けました - ApplySkillButtons");
     }
-    [Header("Geino=0, BassJack=1, Sites=2")]
+    [Header(AllyIndexHeader)]
     [SerializeField]
     ///複数存在するスキル用のUIリスト
     private AllySkillUILists[] skillUILists = new AllySkillUILists[3];
-    [Header("割り込みカウンターActive用のラジオボタン用リスト")]
-    /// <summary>
-    /// スキル依存でないものは直接ToggleGroupControllerを使う。
-    ///割り込みカウンターActiveのラジオボタン用リスト
-    /// </summary>
-    [SerializeField]
-    private ToggleGroupController[] SelectInterruptCounterRadioButtons = new ToggleGroupController[3];
 
     /// <summary>
     /// スキル選択画面へ遷移する際のコールバック 引数無しのものをここで処理
@@ -238,6 +257,8 @@ public class PlayersStates:MonoBehaviour
 
 
     }
+
+    
 
     
     /// <summary>
@@ -328,38 +349,18 @@ public class PlayersStates:MonoBehaviour
 
 
 
-    [Header("連続実行スキル(FreezeConsecutive)の停止予約のボタン")]
     /// <summary>
-    /// 主にCharaConfigタブの方で扱う。
-    /// 連続実行スキル(FreezeConsecutive)の停止予約のボタン
+    /// FreezeConsecutive 停止予約（UI非依存のビジネスロジック）
+    /// 指定 index のキャラのみ対象
     /// </summary>
-    [SerializeField]
-    Button[] StopFreezeConsecutiveButton = new Button[3];
-    /// <summary>
-    /// FreezeConsecutiveを消去予約するボタンのコールバック
-    /// indexで指定したキャラのみ
-    /// </summary>
-    public void StopFreezeConsecutiveButtonCallBack(int index)
+    public void RequestStopFreezeConsecutive(int index)
     {
-        Allies[index].TurnOnDeleteMyFreezeConsecutiveFlag();
-        StopFreezeConsecutiveButton[index].gameObject.SetActive(false);
-    }
-    /// <summary>
-    /// FreezeConsecutiveを消去予約するボタンの表示設定
-    /// キャラ全員分
-    /// </summary>
-    public void VisiableSettingStopFreezeConsecutiveButtons()
-    {
-        for(int i = 0; i < Allies.Length; i++)
+        if (index < 0 || Allies == null || index >= Allies.Length)
         {
-            var ally = Allies[i];
-            if(!ally.IsDeleteMyFreezeConsecutive)//現在消去予約をしていなくて、
-            StopFreezeConsecutiveButton[i].gameObject.SetActive(ally.IsNeedDeleteMyFreezeConsecutive());//消去予約が可能ならボタンを表示する
-
+            Debug.LogWarning($"RequestStopFreezeConsecutive: index {index} が不正です。");
+            return;
         }
-
-
-
+        Allies[index].TurnOnDeleteMyFreezeConsecutiveFlag();
     }
     [Header("スキル選択画面のデフォルトのエリア")]
     /// <summary>

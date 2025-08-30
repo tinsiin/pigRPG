@@ -699,6 +699,8 @@ public class BattleManager
         if (ActerFaction == allyOrEnemy.alliy)
         {//味方が行動するならば
             Debug.Log(Acter.CharacterName + "(主人公キャラ)は行動する");
+            // Characonfig の選択キャラを現在の主人公アクターに同期
+            CharaconfigController.Instance?.SetSelectedByActor(Acter);
             
             if (!Acter.IsFreeze)//強制続行中のスキルがなければ
             {
@@ -823,7 +825,7 @@ public class BattleManager
             return TabState.walk;
         }
         var skill = Acter.NowUseSkill;
-        if (skill == null)
+        if (skill == null && !DoNothing)
         {
             Debug.LogError($"NowUseSkillがnullです。俳優:{Acter.CharacterName} の行動をスキップします。");
             return DoNothingACT();

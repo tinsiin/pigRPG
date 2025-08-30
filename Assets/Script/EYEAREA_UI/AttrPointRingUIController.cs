@@ -12,9 +12,14 @@ using UnityEngine.UI;
 /// </summary>
 public class AttrPointRingUIController : MonoBehaviour
 {
+    // オーナー(BaseStates)毎にコントローラを引ける静的レジストリ。
+    // StatesBanner 側から属性オーブの色を引く用途で使用する。
+    private static readonly System.Collections.Generic.Dictionary<BaseStates, AttrPointRingUIController> s_registry = new();
+
     [Header("References")]
     [SerializeField] RectTransform m_RingContainer; // 未設定なら Initialize 時に自動生成（Icon の子）
     [SerializeField] Sprite m_DefaultOrbSprite;     // 未設定なら Builtin UISprite を使用
+    [SerializeField] string m_FallbackSpriteResourcePath = "UI/OrbDefault"; // Resources からのフォールバック読み込み用
 
     [Header("Ring Radius (Icon幅基準)")]
     [SerializeField, Min(0f)] float m_InnerRadiusRatio = 0.7f;
@@ -53,6 +58,12 @@ public class AttrPointRingUIController : MonoBehaviour
         {
             _owner.OnAttrPChanged -= HandleAttrPChanged;
         }
+        // レジストリから除去（Disable 時点ではまだ再有効化の可能性があるが、
+        // StatesBanner 側は Bind タイミング更新のため実害はない）
+        if (_owner != null && s_registry.TryGetValue(_owner, out var cur) && cur == this)
+        {
+            s_registry.Remove(_owner);
+        }
     }
 
     void OnDestroy()
@@ -60,6 +71,10 @@ public class AttrPointRingUIController : MonoBehaviour
         if (_owner != null)
         {
             _owner.OnAttrPChanged -= HandleAttrPChanged;
+        }
+        if (_owner != null && s_registry.TryGetValue(_owner, out var cur) && cur == this)
+        {
+            s_registry.Remove(_owner);
         }
     }
 
@@ -72,6 +87,9 @@ public class AttrPointRingUIController : MonoBehaviour
         _iconRect = iconRect;
 
         if (_owner == null || _iconRect == null) return;
+
+        // レジストリ登録（同一オーナーに対しては上書き）
+        s_registry[_owner] = this;
 
         // リングコンテナ未設定なら自動生成（Icon の"親"= UIController 配下、中心は Icon を基準に初期化時のみ合わせる）
         if (m_RingContainer == null)
@@ -165,20 +183,24 @@ public class AttrPointRingUIController : MonoBehaviour
         rt.anchoredPosition = Vector2.zero;
 
         var img = go.AddComponent<Image>();
-        if (m_DefaultOrbSprite != null)
+        Sprite sprite = m_DefaultOrbSprite;
+        if (sprite == null && !string.IsNullOrEmpty(m_FallbackSpriteResourcePath))
         {
-            img.sprite = m_DefaultOrbSprite;
-        }
-        else
-        {
-            try
+            sprite = Resources.Load<Sprite>(m_FallbackSpriteResourcePath);
+            if (sprite == null)
             {
-                var builtin = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
-                if (builtin != null) img.sprite = builtin;
+                Debug.LogWarning($"AttrPointRingUIController: Resources.Load failed for '{m_FallbackSpriteResourcePath}'. Using procedural white sprite.");
             }
-            catch { /* ランタイム環境によっては取得できない場合がある */ }
         }
+        if (sprite == null)
+        {
+            var tex = Texture2D.whiteTexture;
+            sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+        }
+        img.sprite = sprite;
         img.raycastTarget = false;
+        img.type = Image.Type.Simple;
+        img.preserveAspect = true;
 
         var orb = go.AddComponent<AttrOrbUI>();
         var color = GenerateDistinctColor();
@@ -209,6 +231,55 @@ public class AttrPointRingUIController : MonoBehaviour
         rt.anchoredPosition = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * rad;
 
         return orb;
+    }
+
+    // ========= 追加: 色取得用API =========
+    /// <summary>
+    /// 指定オーナーのリングコントローラを取得（なければ null）。
+    /// </summary>
+    public static AttrPointRingUIController TryGet(BaseStates owner)
+    {
+        if (owner == null) return null;
+        s_registry.TryGetValue(owner, out var c);
+        return c;
+    }
+
+    /// <summary>
+    /// このコントローラが保持するオーブ色のスナップショットを返す。
+    /// </summary>
+    public System.Collections.Generic.Dictionary<SpiritualProperty, Color> GetColorMapSnapshot()
+    {
+        var dict = new System.Collections.Generic.Dictionary<SpiritualProperty, Color>();
+        foreach (var kv in _orbs)
+        {
+            dict[kv.Key] = kv.Value != null ? kv.Value.Color : Color.white;
+        }
+        return dict;
+    }
+
+    /// <summary>
+    /// 単一属性の色を取得。
+    /// </summary>
+    public bool TryGetColor(SpiritualProperty attr, out Color color)
+    {
+        if (_orbs.TryGetValue(attr, out var orb) && orb != null)
+        {
+            color = orb.Color;
+            return true;
+        }
+        color = default;
+        return false;
+    }
+
+    /// <summary>
+    /// 静的経由で色取得（StatesBanner などから利用）。
+    /// </summary>
+    public static bool TryGetOrbColor(BaseStates owner, SpiritualProperty attr, out Color color)
+    {
+        color = default;
+        var c = TryGet(owner);
+        if (c == null) return false;
+        return c.TryGetColor(attr, out color);
     }
 
     float GetIconWidth()

@@ -183,7 +183,10 @@ public class NormalEnemy : BaseStates
         
 
         //近い順88%が成長する
-        int growSkillCount = Mathf.Max(1, Mathf.FloorToInt(growSkillsSortedByNearGrowTenDays.Count * 0.88f));
+        int availableWin = growSkillsSortedByNearGrowTenDays.Count;
+        if (availableWin == 0) return; // 対象が無ければ処理なし
+        int growSkillCount = Mathf.Max(1, Mathf.FloorToInt(availableWin * 0.88f));
+        growSkillCount = Mathf.Min(growSkillCount, availableWin);
         var growSkills = growSkillsSortedByNearGrowTenDays.GetRange(0, growSkillCount);//今回成長するスキルたち
 
         //成長する
@@ -216,7 +219,10 @@ public class NormalEnemy : BaseStates
         var growSkillsSortedByNearGrowTenDays = GetGrowSkillsSortedByDistance(growTenDays);
         
         //近い順33%が成長する
-        int growSkillCount = Mathf.Max(1, Mathf.FloorToInt(growSkillsSortedByNearGrowTenDays.Count * 0.33f));
+        int availableRun = growSkillsSortedByNearGrowTenDays.Count;
+        if (availableRun == 0) return; // 対象が無ければ処理なし
+        int growSkillCount = Mathf.Max(1, Mathf.FloorToInt(availableRun * 0.33f));
+        growSkillCount = Mathf.Min(growSkillCount, availableRun);
         //今回成長するスキルたち
         var growSkills = growSkillsSortedByNearGrowTenDays.GetRange(0, growSkillCount);
 
@@ -241,7 +247,10 @@ public class NormalEnemy : BaseStates
         var growSkillsSortedByNearGrowTenDays = GetGrowSkillsSortedByDistance(growTenDays);
         
         //近い順66%が成長する
-        int growSkillCount = Mathf.Max(1, Mathf.CeilToInt(growSkillsSortedByNearGrowTenDays.Count * 0.66f));
+        int availableAllyRun = growSkillsSortedByNearGrowTenDays.Count;
+        if (availableAllyRun == 0) return; // 対象が無ければ処理なし
+        int growSkillCount = Mathf.Max(1, Mathf.CeilToInt(availableAllyRun * 0.66f));
+        growSkillCount = Mathf.Min(growSkillCount, availableAllyRun);
         //今回成長するスキルたち
         var growSkills = growSkillsSortedByNearGrowTenDays.GetRange(0, growSkillCount);
 
