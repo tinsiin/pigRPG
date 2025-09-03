@@ -4,12 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
-using UnityEditor;
-using UnityEditorInternal.Profiling.Memory.Experimental;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using UnityEngine.Serialization;
 using static CommonCalc;
 using Cysharp.Threading.Tasks;   // UniTask
     [Serializable]
@@ -629,9 +626,7 @@ public class PlayersStates:MonoBehaviour
     public async UniTask<List<BaseSkill>> GoToSelectSkillPassiveTargetSkillButtonsArea
     (List<BaseSkill> skills, int selectCount)
     {
-        GoToModalArea();//モーダルエリアの表示
-        
-        SelectSkillPassiveTargetHandle.gameObject.SetActive(true);//ボタンエリアの表示
+        ModalAreaController.Instance?.ShowSingle(SelectSkillPassiveTargetHandle.gameObject);//モーダルエリアの表示 + パネル単独表示
         return await SelectSkillPassiveTargetHandle.ShowSkillsButtons(skills, selectCount);//スキル選択ボタンの生成
     }
     /// <summary>
@@ -639,8 +634,7 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     public void ReturnSelectSkillPassiveTargetSkillButtonsArea()
     {
-        SelectSkillPassiveTargetHandle.gameObject.SetActive(false);//ボタンエリアの非表示
-        ReturnModalArea();//モーダルエリアの非表示
+        ModalAreaController.Instance?.CloseFor(SelectSkillPassiveTargetHandle.gameObject);//ボタンエリアのクローズ（モーダルも必要なら閉じる）
     }
     [Header("思い入れスキル選択UI")]
     /// <summary>

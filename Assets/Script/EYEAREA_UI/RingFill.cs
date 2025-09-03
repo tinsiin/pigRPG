@@ -25,6 +25,7 @@ public class RingFill : MaskableGraphic
     public void SetRatio(float ratio) => FillPercent = ratio;
     #endregion
 
+    #if UNITY_EDITOR
     // Inspector 変更時に RectTransform サイズを更新しておく
     protected override void OnValidate()
     {
@@ -33,6 +34,7 @@ public class RingFill : MaskableGraphic
         rectTransform.sizeDelta = new Vector2(size, size);
         SetVerticesDirty();
     }
+    #endif
 
     protected override void OnPopulateMesh(VertexHelper vh)
     {

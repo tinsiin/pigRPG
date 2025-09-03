@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RectTransform))]
-public class StatesBannerColumnsChart : MonoBehaviour
+public class ColumnsChart : MonoBehaviour
 {
     [Header("Layout")]
     [SerializeField, Min(0f)] private float m_PaddingLR = 8f;
@@ -32,6 +32,7 @@ public class StatesBannerColumnsChart : MonoBehaviour
     private float[] _values = Array.Empty<float>();
     private int _highlightIndex = -1;
     private float _max = 1f;
+    private float _userScale = 1f;
     [Header("Baseline Ref")]
     [SerializeField, Tooltip("ここに下線用のGraphicを割り当てると、そのRectTransformを下端に配置・リサイズします")]
     private MaskableGraphic m_BaselineGraphic;
@@ -82,6 +83,12 @@ public class StatesBannerColumnsChart : MonoBehaviour
         _max = Mathf.Max(1f, values.Length > 0 ? values.Max() : 1f);
         EnsureColumns(values.Length);
         ApplyAll();
+    }
+
+    public void SetUserScale(float scale)
+    {
+        _userScale = Mathf.Max(0.01f, scale);
+        ApplyLayout();
     }
 
     private void Awake()
@@ -153,11 +160,14 @@ public class StatesBannerColumnsChart : MonoBehaviour
         float usedW = (n > 0) ? (n * colW + totalSpacing) : contentW;
         float startX = (width - usedW) * 0.5f;
 
+        // 有効な最大値（スケール反映）
+        float effectiveMax = Mathf.Max(1f, _max / Mathf.Max(0.01f, _userScale));
+
         // カラム配置
         for (int i = 0; i < n; i++)
         {
             float v = Mathf.Max(0f, _values[i]);
-            float h = height * (v / _max);
+            float h = height * (v / effectiveMax);
 
             var g = _cols[i];
             if (g == null) continue;

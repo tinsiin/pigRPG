@@ -226,6 +226,15 @@
       },
       "hash": "6161accf3e7beab96341813913e714c7e2fb5c5d"
     },
+    "com.unity.inputsystem": {
+      "version": "1.7.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.modules.uielements": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
+    },
     "com.unity.mathematics": {
       "version": "1.2.6",
       "depth": 1,

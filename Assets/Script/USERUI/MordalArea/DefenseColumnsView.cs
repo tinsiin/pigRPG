@@ -3,11 +3,14 @@ using System.Linq;
 using UnityEngine;
 
 [DisallowMultipleComponent]
-[RequireComponent(typeof(StatesBannerColumnsChart))]
-public class StatesBannerDefenseColumnsView : MonoBehaviour
+[RequireComponent(typeof(ColumnsChart))]
+public class DefenseColumnsView : MonoBehaviour
 {
     [Header("Refs")]
-    [SerializeField] private StatesBannerColumnsChart m_Chart;
+    [SerializeField] private ColumnsChart m_Chart;
+
+    [Header("Colors")]
+    [SerializeField] private Color m_NormalColor = Color.white;
 
     [Header("Baseline")]
     [SerializeField] private Color m_BaselineColor = new Color(1f, 1f, 1f, 0.7f);
@@ -20,12 +23,12 @@ public class StatesBannerDefenseColumnsView : MonoBehaviour
 
     private void Reset()
     {
-        if (m_Chart == null) m_Chart = GetComponent<StatesBannerColumnsChart>();
+        if (m_Chart == null) m_Chart = GetComponent<ColumnsChart>();
     }
 
     private void Awake()
     {
-        if (m_Chart == null) m_Chart = GetComponent<StatesBannerColumnsChart>();
+        if (m_Chart == null) m_Chart = GetComponent<ColumnsChart>();
     }
 
     private void OnEnable()
@@ -42,19 +45,26 @@ public class StatesBannerDefenseColumnsView : MonoBehaviour
     {
         if (actor == null || m_Chart == null) return;
 
-        // 防御は全列同一色・ディム無効（ベースラインは初回OnEnableで設定済み/未設定はチャート直指定を使用）
-        m_Chart.SetColors(Color.white, Color.white, Color.white, false);
+        // 防御は全列 NormalColor・ディム無効（ベースラインは初回OnEnableで設定済み/未設定はチャート直指定を使用）
+        m_Chart.SetColors(m_NormalColor, m_NormalColor, m_NormalColor, false);
 
         var styles = Enum.GetValues(typeof(AimStyle))
             .Cast<AimStyle>()
             .Where(s => s != AimStyle.none)
             .ToArray();
 
+        // AimStyleごとに「排他のみ」で比較
         var values = styles
             .Select(s => actor.DEFProtocolExclusiveTotal(s))
             .ToArray();
 
         // 防御側はハイライトなし
         m_Chart.SetValues(values, -1);
+    }
+
+    public void SetUserScale(float scale)
+    {
+        if (m_Chart == null) return;
+        m_Chart.SetUserScale(scale);
     }
 }

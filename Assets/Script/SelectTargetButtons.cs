@@ -4,10 +4,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using TMPro;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UI;
-using static UnityEngine.GraphicsBuffer;
 using static CommonCalc;
 
 public class SelectTargetButtons : MonoBehaviour

@@ -16,6 +16,7 @@ public class SelectEmotionalAttachmentSkillButtons : MonoBehaviour
     [SerializeField] TextMeshProUGUI memo;
     [SerializeField] string defaultText;
     [SerializeField] string textOnChange;
+    [SerializeField] TextMeshProUGUI NowEmotinalSkillText;
 
     // コールバック用のUnityEvent
     private UnityEvent<int> OnClicked = new();
@@ -110,6 +111,20 @@ public class SelectEmotionalAttachmentSkillButtons : MonoBehaviour
         // デバッグログ追加
         Debug.Log($"[EmotionalAttachment] Current Skill ID: {currentEmotionalAttachmentSkillID}");
         Debug.Log($"[EmotionalAttachment] Skills count: {skills.Count}");
+
+        string currentInfo = "現在の思い入れスキル\n";
+        if(currentOldSkill != null)
+        {
+            currentInfo += currentOldSkill.SkillName;
+        }else
+        {
+            currentInfo += "なし";
+        }
+        
+        if (NowEmotinalSkillText != null)
+        {
+            NowEmotinalSkillText.text = currentInfo;
+        }
         
         // 作るべきスキルリストのボタンを取得
         foreach (var skill in skills)
@@ -173,6 +188,8 @@ public class SelectEmotionalAttachmentSkillButtons : MonoBehaviour
     {
         // 思い入れスキルの入れ替え処理をコールバックで通知
         OnClicked.Invoke(skillID);
+
+        NowEmotinalSkillText.text = "現在の思い入れスキル\n" + skill.SkillName;
         
         // 変更前のスキル名を使ってメッセージを作成
         if (currentOldSkill != null)

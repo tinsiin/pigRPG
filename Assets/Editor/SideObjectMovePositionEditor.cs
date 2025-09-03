@@ -1,8 +1,6 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-namespace Editor
-{
     [CustomEditor(typeof(SideObjectMove))]
     public class SideObjectMovePositionEditor : UnityEditor.Editor
     {
@@ -140,4 +138,3 @@ namespace Editor
             }
         }
     }
-}

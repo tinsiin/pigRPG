@@ -1,8 +1,6 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-namespace Editor
-{
     [CustomEditor(typeof(UILineRenderer))]
     public class UILineRendererEditor : UnityEditor.Editor
     {
@@ -196,4 +194,3 @@ namespace Editor
             lineRenderer.SetAllDirty();
         }
     }
-}

@@ -476,12 +476,13 @@ public class CombinedStatesBar : MaskableGraphic
     #endregion
     
     #region Unity Lifecycle
+    #if UNITY_EDITOR
+
     protected override void OnValidate()
     {
         base.OnValidate();
         UpdateRectTransformSize();
 
-#if UNITY_EDITOR
         if (!Application.isPlaying)
         {
             // プレビュー用の表示値を設定
@@ -491,9 +492,9 @@ public class CombinedStatesBar : MaskableGraphic
             m_DisplayMentalRatio         = m_MentalPercent;
             m_DisplayDivergenceMultiplier = m_DivergenceMultiplier;
         }
-#endif
         SetVerticesDirty();
     }
+#endif
     
     protected override void OnPopulateMesh(VertexHelper vh)
     {

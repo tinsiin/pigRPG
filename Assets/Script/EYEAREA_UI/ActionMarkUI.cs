@@ -216,7 +216,7 @@ public class ActionMarkUI : MaskableGraphic
     
     protected override void Start()
     {
-        base.Start();
+        // base.Start() は必須ではないため呼び出しません（Graphic/MaskableGraphic 側での初期化に依存しない）
         EnsureCenteredPivotAndAnchors();
         UpdateRectTransformSize();
         if (m_AutoStart)
@@ -253,6 +253,7 @@ public class ActionMarkUI : MaskableGraphic
         StopColorTween();
     }
     
+    #if UNITY_EDITOR
     protected override void OnValidate()
     {
         base.OnValidate();
@@ -265,7 +266,7 @@ public class ActionMarkUI : MaskableGraphic
         UpdateRectTransformSize();
         SetVerticesDirty();
     }
-    
+#endif    
     private void Update()
     {
         if (m_IsAnimating)

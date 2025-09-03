@@ -58,6 +58,11 @@ sysinfo.txt
 # Rider setting files
 .idea/
 
+# claude code setting files
+.serena/
+.claude/
+
+
 # Builds
 *.apk
 *.aab

@@ -19,6 +19,10 @@ public class CharaconfigController : MonoBehaviour
     [Header("キャラ名表示")]
     [SerializeField] private TextMeshProUGUI m_CharacterNameText;
 
+    [Header("TenDays Viewer (Characonfig)")]
+    //[SerializeField] private Button m_OpenTenDayAbilityButton;
+    [SerializeField] private TenDaysMordaleAreaController m_TenDaysArea;
+
     [Header("Shared Buttons (Characonfig)")]
     [SerializeField] private Button m_OpenEmotionalAttachmentButton;
     [SerializeField] private Button m_StopFreezeConsecutiveButton;
@@ -63,6 +67,7 @@ public class CharaconfigController : MonoBehaviour
                 RefreshUI();
             });
         }
+
     }
 
     private void OnEnable()
@@ -89,6 +94,25 @@ public class CharaconfigController : MonoBehaviour
     {
         SetSelectedIndex(m_CurrentIndex - 1);
         Debug.Log($"[Characonfig] Prev pressed -> index: {m_CurrentIndex}");
+    }
+
+    // 外部API: 十日能力モーダルを開く（現在選択中キャラ）
+    public void OnClickOpenTenDayAbility()
+    {
+        var actor = GetActor(m_CurrentIndex);
+        if (m_TenDaysArea == null) return;
+
+        // Instance が未確立でも拾えるようフォールバック検索
+        var mc = ModalAreaController.Instance ?? FindObjectOfType<ModalAreaController>(true);
+        if (mc == null)
+        {
+            Debug.LogWarning("[Characonfig] ModalAreaController not found.");
+            return;
+        }
+
+        mc.ShowSingle(m_TenDaysArea.gameObject);
+        m_TenDaysArea.SetPageIndex(0);
+        m_TenDaysArea.Bind(actor);
     }
 
     // 外部API: インデックス指定
