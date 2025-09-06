@@ -454,6 +454,7 @@ MonoBehaviour:
   verticalBob: {fileID: 2670355129510307460}
   arrowGrowAndVanish: {fileID: 7652021932357282205}
   numberEffect: {fileID: 236761058783109967}
+  passivesListTMP: {fileID: 0}
 --- !u!114 &7652021932357282205
 MonoBehaviour:
   m_ObjectHideFlags: 0

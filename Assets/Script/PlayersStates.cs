@@ -78,6 +78,7 @@ using Cysharp.Threading.Tasks;   // UniTask
 /// <summary>
 ///セーブでセーブされるような事柄とかメインループで操作するためのステータス太刀　シングルトン
 /// </summary>
+[DefaultExecutionOrder(-800)]
 public class PlayersStates:MonoBehaviour 
 {
     //staticなインスタンス
@@ -96,10 +97,15 @@ public class PlayersStates:MonoBehaviour
         else
         {
             Destroy(gameObject);
+            return;
         }
 
+    }
+    
+    private void Start()
+    {
+        // Awake で全シングルトンの初期化が完了した後に初期化処理を行う
         Init();
-
     }
     /// <summary>
     /// ゲームの値や、主人公達のステータスの初期化
@@ -605,16 +611,6 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     public GameObject ModalArea;
 
-    void GoToModalArea()
-    {
-        ModalArea.gameObject.SetActive(true);
-        EyeArea.gameObject.SetActive(false);//eyeAreaが上に映っちゃうから非表示
-    }
-    void ReturnModalArea()
-    {
-        EyeArea.gameObject.SetActive(true);//eyeAreaを元に戻す
-        ModalArea.gameObject.SetActive(false);
-    }
     [Header("スキルパッシブ対象スキル選択ボタン管理エリア")]
     /// <summary>
     /// スキルパッシブ対象スキル選択ボタン管理エリア

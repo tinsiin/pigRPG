@@ -25,7 +25,13 @@ public class Stages : MonoBehaviour
         else
         {
             Destroy(gameObject);
+            return;
         }
+    }
+
+    private void Start()
+    {
+        // Awake 完了（全シングルトンの準備完了）後に初期化を実行
         DeepCopyToRunTime();//ランタイム用にディープコピー
         OnInitializeAllStageCharas();//全て初期化
     }

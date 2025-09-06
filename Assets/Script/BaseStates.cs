@@ -29,6 +29,8 @@ public abstract class BaseStates
     public void BindUIController(UIController ui)
     {
         UI = ui;
+        UI.BindUser(this);
+
         // 属性ポイントリングUIを探し、無ければ追加して初期化
         if (UI != null && UI.Icon != null)
         {
@@ -47,12 +49,16 @@ public abstract class BaseStates
     /// </summary>
     public bool HasCharacterType(CharacterType type)
     {
+        // Inspector の "Everything" は -1 でシリアライズされるため、全許可として扱う
+        if ((int)type == -1) return true;
         return (MyType & type) == type;
     }/// <summary>
      /// このキャラの印象/キャラクタ属性と一致してるかどうか
      /// </summary>
     public bool HasCharacterImpression(SpiritualProperty imp)
     {
+        // Inspector の "Everything" は -1 でシリアライズされるため、全許可として扱う
+        if ((int)imp == -1) return true;
         return (MyImpression & imp) == imp;
     }
 
@@ -295,10 +301,29 @@ public abstract class BaseStates
     public void ApplyPassiveByID(int id,BaseStates grantor = null)
     {
         if(grantor == null) grantor = this;//指定してないのなら、付与者は自分自身
-        var status = PassiveManager.Instance.GetAtID(id).DeepCopy();//idを元にpassiveManagerから取得 ディープコピーでないとインスタンス共有される
+
+        // マネージャ未初期化やID不正の安全ガード
+        var pm = PassiveManager.Instance;
+        if (pm == null)
+        {
+            Debug.LogError($"[ApplyPassiveByID] PassiveManager.Instance が null です。id={id}, character={CharacterName}. 初期化順序の前に呼ばれています。処理をスキップします。");
+            return;
+        }
+
+        var template = pm.GetAtID(id);
+        if (template == null)
+        {
+            Debug.LogError($"[ApplyPassiveByID] Passive ID が見つかりません。id={id}, character={CharacterName}. PassiveManager に未登録の可能性。処理をスキップします。");
+            return;
+        }
+
+        var status = template.DeepCopy();// ディープコピーでないとインスタンス共有される
 
         // 条件(OkType,OkImpression) は既にチェック済みならスキップ
-        if (!CanApplyPassive(status)) return;
+        if (!CanApplyPassive(status)){
+            Debug.LogWarning($"{status.ID}のパッシブを付与しようとしましたが、条件が満たされていません。付与者は{grantor?.CharacterName ?? "自分自身"}です。OKType: {status.OkType}, OKImpression: {status.OkImpression}");
+            return;
+        }
 
         ApplyPassive(status,grantor);
 
@@ -314,6 +339,7 @@ public abstract class BaseStates
     }
     public void ApplyPassive(BasePassive passive,BaseStates grantor = null)
     {
+        Debug.Log($"ApplyPassive");
         if(grantor == null) grantor = this;//指定してないのなら、付与者は自分自身
 
         // 条件(OkType,OkImpression) は既にチェック済みならスキップ
@@ -339,6 +365,7 @@ public abstract class BaseStates
             _passiveList.Add(passive);
             // パッシブ側のOnApplyを呼ぶ
             passive.OnApply(this,grantor);
+            Debug.Log($"{passive.ID}のパッシブを付与しました。付与者は{grantor?.CharacterName ?? "自分自身"}です。OKType: {passive.OkType}, OKImpression: {passive.OkImpression}");
         }
 
     }
@@ -494,6 +521,7 @@ public abstract class BaseStates
         {
             // パッシブ側のOnRemoveを呼ぶ
             passive.OnRemove(this);
+            Debug.Log($"RemovePassive: {passive.ID} Character: {CharacterName}");
         }
     }
     /// <summary>
@@ -1961,6 +1989,10 @@ public abstract class BaseStates
     ///     このキャラクターの名前
     /// </summary>
     public string CharacterName;
+    /// <summary>
+    ///     このキャラクターの説明
+    /// </summary>
+    public string Description = "入力されていません";
 
     /// <summary>
     /// 裏に出す種別も考慮した彼のことの名前
@@ -11361,6 +11393,7 @@ private int CalcTransformCountIncrement(int tightenStage)
         {
             foreach (var passiveID in InitpassiveIDList)
             {
+                Debug.Log($"{CharacterName}の初期パッシブ:{passiveID}");
                 dst.ApplyPassiveByID(passiveID);//applyする
             }
         }

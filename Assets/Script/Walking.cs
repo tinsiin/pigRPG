@@ -111,6 +111,8 @@ public class Walking : MonoBehaviour
 
     private async UniTask OnClickNextWaitBtn()
     {
+        // Kモードがアクティブなら即時解除（アニメなし）
+        WatchUIUpdate.Instance?.ForceExitKImmediate();
         //USERUI_state.Value = await bm.CharacterActBranching();
         if (_isProcessingNext)
         {

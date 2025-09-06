@@ -214,6 +214,13 @@ public class ActionMarkUI : MaskableGraphic
     }
     #endregion
     
+    protected override void Awake()
+    {
+        base.Awake();
+        // 初期化段階から常にクリックを遮らない
+        raycastTarget = false;
+    }
+    
     protected override void Start()
     {
         // base.Start() は必須ではないため呼び出しません（Graphic/MaskableGraphic 側での初期化に依存しない）
@@ -237,6 +244,8 @@ public class ActionMarkUI : MaskableGraphic
     protected override void OnEnable()
     {
         base.OnEnable();
+        // 再有効化時も常にブロックしない
+        raycastTarget = false;
         if (m_IsAnimating)
         {
             StartColorTweenIfNeeded();
@@ -257,6 +266,8 @@ public class ActionMarkUI : MaskableGraphic
     protected override void OnValidate()
     {
         base.OnValidate();
+        // エディタ時も常にブロックしない
+        raycastTarget = false;
         m_Width = Mathf.Max(0f, m_Width);
         m_Height = Mathf.Max(0f, m_Height);
         m_ChangeSpeed = Mathf.Max(0.01f, m_ChangeSpeed);

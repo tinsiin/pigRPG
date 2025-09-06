@@ -64,10 +64,7 @@ public abstract class PowerCoefficientsTableViewBase : MonoBehaviour
 
     [Header("表示方式: SplitHalf=左右同時表示 / Paged=ページ切替")]
     [SerializeField] private DisplayMode m_DisplayMode = DisplayMode.SplitHalf;
-    [SerializeField] private Button m_PageButton;
-    [SerializeField] private string m_Page1Label = "1";
-    [SerializeField] private string m_Page2Label = "2";
-    [SerializeField] private TextMeshProUGUI m_PageButtonLabelTMP;
+    [SerializeField] private ToggleSingleController m_PageButton;
 
     [Header("静的モード（ベイク再生）")]
     [SerializeField] private bool m_StaticMode = false;
@@ -104,10 +101,11 @@ public abstract class PowerCoefficientsTableViewBase : MonoBehaviour
     {
         if (m_PageButton != null)
         {
-            m_PageButton.onClick.RemoveListener(OnPageButtonClicked);
-            m_PageButton.onClick.AddListener(OnPageButtonClicked);
+            m_PageButton.RemoveListener(OnPageToggleIndexChanged);
+            m_PageButton.AddListener(OnPageToggleIndexChanged);
+            // 現在ページに合わせてトグル初期状態を同期（通知なし）
+            m_PageButton.SetOnWithoutNotify(m_CurrentPage == 0);
         }
-        UpdatePageButtonLabel();
 
         if (m_StaticMode)
         {
@@ -120,31 +118,19 @@ public abstract class PowerCoefficientsTableViewBase : MonoBehaviour
     {
         if (m_PageButton != null)
         {
-            m_PageButton.onClick.RemoveListener(OnPageButtonClicked);
+            m_PageButton.RemoveListener(OnPageToggleIndexChanged);
         }
     }
 
-    private void OnPageButtonClicked()
+    private void OnPageToggleIndexChanged(int index)
     {
         if (m_DisplayMode != DisplayMode.Paged) return;
-        m_CurrentPage = (m_CurrentPage == 0) ? 1 : 0;
-        UpdatePageButtonLabel();
+        m_CurrentPage = (index == 0) ? 0 : 1;
+        if (m_PageButton != null) m_PageButton.SetOnWithoutNotify(m_CurrentPage == 0);
         if (m_StaticMode && HasBakedData()) RenderFromBaked(); else Render();
     }
 
-    private void EnsurePageButtonLabelTargets()
-    {
-        if (m_PageButton == null) return;
-        if (m_PageButtonLabelTMP == null) m_PageButtonLabelTMP = m_PageButton.GetComponentInChildren<TextMeshProUGUI>(true);
-    }
-
-    private void UpdatePageButtonLabel()
-    {
-        if (m_PageButton == null) return;
-        EnsurePageButtonLabelTargets();
-        string label = (m_CurrentPage == 0) ? m_Page1Label : m_Page2Label;
-        if (m_PageButtonLabelTMP != null) m_PageButtonLabelTMP.text = label;
-    }
+    
 
     private void OnRectTransformDimensionsChange()
     {
@@ -479,7 +465,7 @@ public abstract class PowerCoefficientsTableViewBase : MonoBehaviour
             {
                 bool show = rightRows > 0;
                 if (m_PageButton.gameObject.activeSelf != show) m_PageButton.gameObject.SetActive(show);
-                if (!show && m_CurrentPage != 0) { m_CurrentPage = 0; UpdatePageButtonLabel(); }
+                if (!show && m_CurrentPage != 0) { m_CurrentPage = 0; if (m_PageButton != null) m_PageButton.SetOnWithoutNotify(true); }
             }
         }
         else

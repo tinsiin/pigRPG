@@ -44,9 +44,18 @@ public class UILineRenderer : Graphic
     [SerializeField] private Vector2 bornPosRange;
     public SideObject_Type sideObject_Type;
 
+    protected override void Awake()
+    {
+        base.Awake();
+        // 初期化段階から常にクリックを遮らない
+        raycastTarget = false;
+    }
+
     protected override void OnEnable()
     {
         base.OnEnable();
+        // 再有効化時も常にブロックしない
+        raycastTarget = false;
         SetAllDirty();
     }
 
@@ -54,6 +63,8 @@ public class UILineRenderer : Graphic
     protected override void OnValidate()
     {
         base.OnValidate();
+        // エディタ時も常にブロックしない
+        raycastTarget = false;
         SetAllDirty();
     }
 #endif

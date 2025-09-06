@@ -111,6 +111,23 @@ public class SchizoLog : MonoBehaviour
         return !_isQuitting && LogText != null;
     }
     
+    /// <summary>
+    /// 現在の可視状態（LogText のアクティブ状態）を返す
+    /// </summary>
+    public bool IsVisible()
+    {
+        return LogText != null && LogText.gameObject.activeSelf;
+    }
+    
+    /// <summary>
+    /// UI を表示/非表示にする（本体は維持し、LogText の GameObject を切替）
+    /// </summary>
+    public void SetVisible(bool visible)
+    {
+        if (LogText == null) return;
+        LogText.gameObject.SetActive(visible);
+    }
+    
     //シングルトン
     private void Awake()
     {

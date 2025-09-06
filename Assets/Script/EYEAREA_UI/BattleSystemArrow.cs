@@ -119,6 +119,9 @@ public class BattleSystemArrow : MonoBehaviour
         if (!Application.isPlaying)
         {
             EnsureComponents();
+            // エディタ時も常にブロックしない
+            if (_line != null) _line.raycastTarget = false;
+            if (_canvasGroup != null) _canvasGroup.blocksRaycasts = false;
             ApplyDefaultsToLine();
             if (_line != null) _line.SetAllDirty();
         }
@@ -129,6 +132,9 @@ public class BattleSystemArrow : MonoBehaviour
     {
         // プールからの再有効化や CanvasRenderer 再アタッチ後などに確実に再描画させる
         EnsureComponents();
+        // この描画は入力を受けない（背面のUI操作を遮らない）
+        if (_line != null) _line.raycastTarget = false;
+        if (_canvasGroup != null) _canvasGroup.blocksRaycasts = false;
         if (_line != null) _line.SetAllDirty();
     }
 
@@ -150,6 +156,10 @@ public class BattleSystemArrow : MonoBehaviour
             _canvasGroup = GetComponent<CanvasGroup>();
             if (_canvasGroup == null) _canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
+
+        // 念押しでレイキャストを遮らない設定を適用
+        if (_line != null) _line.raycastTarget = false;
+        if (_canvasGroup != null) _canvasGroup.blocksRaycasts = false;
     }
 
     private void ApplyDefaultsToLine()

@@ -5,16 +5,17 @@ using RandomExtensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 #if !UNITY_EDITOR
 // no editor specific usings
 #endif
-using Unity.Profiling;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+using System.Threading;
 
 /// <summary>
 /// WatchUIUpdateクラスに戦闘画面用のレイヤー分離システムを追加しました。
@@ -36,10 +37,337 @@ public class WatchUIUpdate : MonoBehaviour
         Instance = this;
     }
 
+    // ===== Kモード: パッシブ一覧表示（フェードイン） =====
+    private BaseStates FindActorByUI(UIController ui)
+    {
+        var bm = Walking.Instance?.bm;
+        var all = bm?.AllCharacters;
+        if (ui == null || all == null) return null;
+        foreach (var ch in all)
+        {
+            if (ch != null && ch.UI == ui) return ch;
+        }
+        return null;
+    }
+
+    private void SetKPassivesText(BaseStates actor)
+    {
+        if (kPassivesText == null) return;
+        // TMP取得＆設定をヘルパで実施
+        _kPassivesTMP = GetOrSetupTMPForBackground(kPassivesText, _kPassivesTMP, kPassivesUseRectMask);
+        // 計測のためにオブジェクトを一時可視化（アルファ0で非表示）し、レイアウトを確定
+        var go = kPassivesText.gameObject;
+        var cg0 = go.GetComponent<CanvasGroup>();
+        if (cg0 == null) cg0 = go.AddComponent<CanvasGroup>();
+        go.SetActive(true);
+        cg0.alpha = 0f;
+        Canvas.ForceUpdateCanvases();
+        string tokens = kPassivesDebugMode
+            ? BuildDummyKPassivesTokens(kPassivesDebugCount, kPassivesDebugPrefix)
+            : BuildKPassivesTokens(actor);
+        _kPassivesTokensRaw = tokens ?? string.Empty;
+        // RectTransform 内に収まるように末尾をカットして "••••" を付与
+        var fitted = FitTextIntoRectWithEllipsis(
+            _kPassivesTokensRaw,
+            kPassivesText,
+            Mathf.Max(1, kPassivesEllipsisDotCount),
+            Mathf.Max(0f, kPassivesFitSafety),
+            kPassivesAlwaysAppendEllipsis
+        );
+        // リッチテキスト無効なので、そのまま <> を表示
+        kPassivesText.text = fitted;
+        // 背景更新
+        kPassivesText.RefreshBackground();
+        // 表示はフェード側で行う。ここでは非表示に保つ。
+        // alphaは0のままにしておく
+    }
+
+    private string BuildKPassivesTokens(BaseStates actor)
+    {
+        if (actor == null || actor.Passives == null || actor.Passives.Count == 0)
+        {
+            Debug.LogWarning("actor or actor.Passives is null or empty.");
+            return string.Empty;
+        }
+        var list = actor.Passives;
+        var sb = new StringBuilder();
+        bool first = true;
+        for (int i = 0; i < list.Count; i++)
+        {
+            var p = list[i];
+            if (p == null) continue;
+            string raw = string.IsNullOrWhiteSpace(p.SmallPassiveName) ? p.ID.ToString() : p.SmallPassiveName;
+            // <noparse> で包むため、エスケープ不要。トークン間は半角スペース1個。
+            string token = $"<{raw}>";
+            if (!first) sb.Append(' ');
+            sb.Append(token);
+            first = false;
+        }
+        return sb.ToString();
+    }
+
+    // デバッグ用のダミーパッシブトークンを生成（実データは変更しない）
+    private string BuildDummyKPassivesTokens(int count, string prefix)
+    {
+        if (count <= 0) return string.Empty;
+        var sb = new StringBuilder();
+        bool first = true;
+        for (int i = 1; i <= count; i++)
+        {
+            string raw = $"{prefix}{i}";
+            string token = $"<{raw}>";
+            if (!first) sb.Append(' ');
+            sb.Append(token);
+            first = false;
+        }
+        return sb.ToString();
+    }
+
+    private async UniTask FadeInKPassives(BaseStates actor, CancellationToken ct)
+    {
+        if (kPassivesText == null) return;
+        var go = kPassivesText.gameObject;
+        if (string.IsNullOrEmpty(kPassivesText.text))
+        {
+            go.SetActive(false);
+            return;
+        }
+        var cg = go.GetComponent<CanvasGroup>();
+        if (cg == null) cg = go.AddComponent<CanvasGroup>();
+        cg.alpha = 0f;
+        go.SetActive(true);
+        // 背景更新（可視化直後）
+        kPassivesText.RefreshBackground();
+
+        // レイアウトが落ち着くのを待ってから最終フィット（初回サイズ未確定対策）
+        await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);
+        Canvas.ForceUpdateCanvases();
+        string baseTokens = string.IsNullOrEmpty(_kPassivesTokensRaw) ? (kPassivesText.text ?? string.Empty) : _kPassivesTokensRaw;
+        var finalFitted = FitTextIntoRectWithEllipsis(
+            baseTokens,
+            kPassivesText,
+            Mathf.Max(1, kPassivesEllipsisDotCount),
+            Mathf.Max(0f, kPassivesFitSafety),
+            kPassivesAlwaysAppendEllipsis
+        );
+        if (!string.Equals(finalFitted, kPassivesText.text, StringComparison.Ordinal))
+        {
+            kPassivesText.text = finalFitted;
+            kPassivesText.RefreshBackground();
+        }
+        var t = LMotion.Create(0f, 1f, kPassivesFadeDuration)
+            .WithEase(Ease.OutCubic)
+            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+            .Bind(a => cg.alpha = a)
+            .ToUniTask(ct);
+        try
+        {
+            await t;
+        }
+        catch (OperationCanceledException)
+        {
+            // 即時解除など
+        }
+    }
+
+    // ========= Kパッシブテキストのフィット計算 =========
+    private string FitTextIntoRectWithEllipsis(string src, TMPTextBackgroundImage textBg, int dotCount, float safety, bool alwaysAppendEllipsis)
+    {
+        if (string.IsNullOrEmpty(src) || textBg == null) return string.Empty;
+
+        var tmp = _kPassivesTMP != null ? _kPassivesTMP : (textBg.rectTransform != null ? textBg.rectTransform.GetComponent<TMP_Text>() : null);
+        if (tmp == null)
+        {
+            tmp = textBg.GetComponentInChildren<TMP_Text>(true);
+        }
+        if (tmp == null) return src;
+
+        string ellipsis = new string('•', Mathf.Max(1, dotCount));
+
+        var tmpRT = tmp.rectTransform;
+        string original = tmp.text;
+
+        bool Fits(string candidate)
+        {
+            // レイアウト最新化
+            Canvas.ForceUpdateCanvases();
+            var containerRT = textBg.transform as RectTransform; // 親コンテナ
+            var containerRect = containerRT != null ? containerRT.rect : tmpRT.rect;
+            // 一時的に子TMPを親サイズに合わせて計測（戻す）
+            float ow = tmpRT.rect.width;
+            float oh = tmpRT.rect.height;
+            tmpRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, containerRect.width);
+            tmpRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, containerRect.height);
+            bool prevRich = tmp.richText;
+            tmp.richText = false; // 表示と同条件
+            tmp.text = candidate;
+            tmp.ForceMeshUpdate();
+            // 折り返しを考慮した推奨高さで判定
+            float height = tmp.preferredHeight;
+            bool ok = height <= containerRect.height - safety;
+            // 元に戻す
+            tmpRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, ow);
+            tmpRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, oh);
+            tmp.richText = prevRich;
+            return ok;
+        }
+
+        // まずフルで収まるか、収まらなくても末尾に••••を付けた場合の適合を確認
+        bool srcFits = Fits(src);
+        bool srcWithDotsFits = Fits(src + ellipsis);
+        if (alwaysAppendEllipsis)
+        {
+            if (srcWithDotsFits)
+            {
+                tmp.text = original; // 元に戻す
+                return src + ellipsis;
+            }
+        }
+        else
+        {
+            if (srcFits)
+            {
+                tmp.text = original; // 元に戻す
+                return src;
+            }
+            if (srcWithDotsFits)
+            {
+                tmp.text = original; // 元に戻す
+                return src + ellipsis;
+            }
+        }
+
+        // 2分探索で最大長を探索（末尾に省略記号を付けて測定）
+        int lo = 0, hi = src.Length, bestLen = 0;
+        while (lo <= hi)
+        {
+            int mid = (lo + hi) >> 1;
+            string cand = src.Substring(0, mid);
+            cand = AvoidLoneOpeningBracket(cand);
+            string composed = cand + ellipsis;
+            if (Fits(composed))
+            {
+                bestLen = cand.Length;
+                lo = mid + 1; // もっと伸ばせる
+            }
+            else
+            {
+                hi = mid - 1; // 短くする
+            }
+        }
+
+        string best = src.Substring(0, Mathf.Min(bestLen, src.Length));
+        best = AvoidLoneOpeningBracket(best);
+        string result = best.Length > 0 ? best + ellipsis : string.Empty;
+
+        // 念のための最終安全網：まだはみ出す場合は空白境界ごとにさらに詰める
+        int guard = 0;
+        while (!string.IsNullOrEmpty(result) && !Fits(result) && guard++ < 128)
+        {
+            // 末尾の省略記号を外して再カット
+            string withoutDots = result.EndsWith(ellipsis) ? result.Substring(0, result.Length - ellipsis.Length) : result;
+            int prevSpace = withoutDots.LastIndexOf(' ');
+            if (prevSpace <= 0)
+            {
+                // これ以上切れない場合は1文字ずつ
+                withoutDots = withoutDots.Length > 0 ? withoutDots.Substring(0, withoutDots.Length - 1) : string.Empty;
+            }
+            else
+            {
+                withoutDots = withoutDots.Substring(0, prevSpace);
+            }
+            withoutDots = AvoidLoneOpeningBracket(withoutDots);
+            result = string.IsNullOrEmpty(withoutDots) ? string.Empty : withoutDots + ellipsis;
+        }
+
+        // バイナリサーチの結果が空（= 先頭すら確保できない）場合のフォールバック: トークン単位で詰める
+        if (string.IsNullOrEmpty(result))
+        {
+            var tokens = src.Split(' ');
+            var acc = new StringBuilder();
+            for (int i = 0; i < tokens.Length; i++)
+            {
+                string next = tokens[i];
+                string trial = acc.Length == 0 ? next + ellipsis : acc.ToString() + " " + next + ellipsis;
+                if (Fits(trial))
+                {
+                    if (acc.Length > 0) acc.Append(' ');
+                    acc.Append(next);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            result = acc.Length == 0 ? ellipsis : acc.ToString() + ellipsis;
+        }
+
+        tmp.text = original; // 元に戻す（呼出側で最終テキストを設定する）
+        return result;
+    }
+
+    // ---- Helper: TMP取得＆設定（背景コンテナサイズに合わせる、必要ならRectMask2D付加） ----
+    private TMP_Text GetOrSetupTMPForBackground(TMPTextBackgroundImage bg, TMP_Text cache, bool addRectMask)
+    {
+        if (bg == null) return null;
+        if (cache == null)
+        {
+            cache = bg.rectTransform != null ? bg.rectTransform.GetComponent<TMP_Text>() : null;
+            if (cache == null)
+            {
+                cache = bg.GetComponentInChildren<TMP_Text>(true);
+            }
+        }
+        if (cache == null) return null;
+
+        cache.enableWordWrapping = true;
+        cache.overflowMode = TextOverflowModes.Overflow;
+        cache.richText = false;
+        cache.enableAutoSizing = false;
+        cache.alignment = TextAlignmentOptions.TopLeft;
+
+        var contRT = bg.transform as RectTransform;
+        var childRT = cache.rectTransform;
+        if (contRT != null && childRT != null)
+        {
+            childRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contRT.rect.width);
+            childRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, contRT.rect.height);
+        }
+        if (addRectMask && contRT != null)
+        {
+            var mask = contRT.GetComponent<RectMask2D>();
+            if (mask == null) contRT.gameObject.AddComponent<RectMask2D>();
+        }
+        return cache;
+    }
+
+    // トークンの先頭 "<" のみが表示されるケース（<••••）を避ける
+    // その場合は直前のトークン境界（スペース）まで戻す
+    private string AvoidLoneOpeningBracket(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return s;
+        int lastOpen = s.LastIndexOf('<');
+        int lastClose = s.LastIndexOf('>');
+        if (lastOpen > lastClose)
+        {
+            // 直近の開き括弧以降に実文字が1文字もなければ境界へ戻す
+            int i = lastOpen + 1; // "<" の直後
+            bool hasVisible = i < s.Length; // 1文字でも続きがあれば可
+            if (!hasVisible)
+            {
+                int prevSpace = s.LastIndexOf(' ', lastOpen - 1);
+                if (prevSpace >= 0)
+                    return s.Substring(0, prevSpace);
+                else
+                    return string.Empty;
+            }
+        }
+        return s;
+    }
+
     [SerializeField] private TextMeshProUGUI StagesString; //ステージとエリア名のテキスト
     [SerializeField] private TenmetuNowImage MapImg; //直接で現在位置表示する簡易マップ
     [SerializeField] private RectTransform bgRect; //背景のRectTransform
-    [SerializeField] private DarkWaveManager _waveManager;
 
     //ズーム用変数
     [SerializeField] private AnimationCurve _firstZoomAnimationCurve;
@@ -62,10 +390,8 @@ public class WatchUIUpdate : MonoBehaviour
 
     // 戦闘画面レイヤー構成
     [Header("戦闘画面レイヤー構成")]
-    [SerializeField] private Transform backgroundZoomLayer;  // 背景ズームレイヤー
     [SerializeField] private Transform enemyBattleLayer;     // 敵配置レイヤー（背景と一緒にズーム）
     [SerializeField] private Transform allyBattleLayer;      // 味方アイコンレイヤー（独立アニメーション）
-    [SerializeField] private Transform fixedUILayer;         // 固定UIレイヤー（ズーム対象外）
 
     // アクションマーク（行動順マーカー）
     [Header("ActionMark 設定")]
@@ -110,6 +436,55 @@ public class WatchUIUpdate : MonoBehaviour
     [SerializeField] private Transform zoomBackContainer;  // 背景用ズームコンテナ
     [SerializeField] private Transform zoomFrontContainer; // 敵用ズームコンテナ
 
+    [Header("K拡大ステータス(Kモード)")]
+    [SerializeField] private RectTransform kZoomRoot;             // 画面全体をまとめるルート（Kズーム対象）
+    [SerializeField] private RectTransform kTargetRect;           // ズーム後にアイコンが収まる枠（固定UI層などK非対象）
+    [Range(0f,1f)]
+    [SerializeField] private float kFitBlend01 = 0.5f;            // 0=高さ優先, 1=横幅優先 のブレンド
+    [SerializeField] private float kZoomDuration = 0.6f;
+    [SerializeField] private Ease kZoomEase = Ease.OutQuart;
+    [Space(4)]
+    [SerializeField] private TMPTextBackgroundImage kNameText;           // 名前TMP
+    [SerializeField] private TMPTextBackgroundImage kPassivesText;       // パッシブ一覧TMP（K専用、フェード表示）
+    [SerializeField] private float kTextSlideDuration = 0.35f;
+    [SerializeField] private Ease kTextSlideEase = Ease.OutCubic;
+    [SerializeField] private float kTextSlideOffsetX = 220f;      // 右からのオフセット量
+    [SerializeField] private float kPassivesFadeDuration = 0.35f; // パッシブ用フェード時間（スライドなし）
+    [Header("Kモードテキスト表示設定")]
+    [SerializeField] private int kPassivesEllipsisDotCount = 4;    // 末尾に付与するドット数
+    [SerializeField] private float kPassivesFitSafety = 1.0f;      // 高さ方向のセーフティ余白(px相当)
+    [SerializeField] private bool kPassivesAlwaysAppendEllipsis = true; // 収まる場合でもドットを付ける
+    [SerializeField] private bool kPassivesUseRectMask = true;     // 見切れ対策としてRectMask2Dを付与
+    [Header("Kモードデバッグ")]
+    [SerializeField] private bool kPassivesDebugMode = false;     // ダミーパッシブ表示を有効化
+    [SerializeField] private int kPassivesDebugCount = 100;       // 生成するダミーパッシブの数
+    [SerializeField] private string kPassivesDebugPrefix = "pas"; // ダミートークンの接頭辞
+    [Space(4)]
+    [SerializeField] private bool lockBattleZoomDuringK = true;   // K中は既存戦闘ズームを抑制
+    [SerializeField] private bool disableIconClickWhileBattleZoom = true; // 既存ズーム中はアイコンクリック無効
+
+    // Kモード内部状態
+    private bool _isKActive = false;
+    private bool _isKAnimating = false;
+    private CancellationTokenSource _kCts;
+    private Vector2 _kOriginalPos;
+    private Vector3 _kOriginalScale;
+    private static Vector3[] s_corners;
+    // Kズーム前のトランスフォーム保存が有効か（EnterKで保存されたか）
+    private bool _kSnapshotValid = false;
+    // Kパッシブ表示: フィット用の生トークン文字列を保持（再フィット用）
+    private string _kPassivesTokensRaw = string.Empty;
+    // Kパッシブ表示: 子TMPキャッシュ
+    private TMP_Text _kPassivesTMP;
+    // K中: クリック元のUI（UIController）で、Icon以外の子を一時的にOFFにするための参照
+    private UIController _kExclusiveUI;
+    // K開始時のActionMark表示状態を退避
+    private bool _actionMarkWasActiveBeforeK = false;
+    // K開始時のSchizoLog表示状態を退避
+    private bool _schizoWasVisibleBeforeK = false;
+    // K中: 対象以外のUIControllerの有効状態を退避して一時的に非表示にする
+    private List<(UIController ui, bool wasActive)> _kHiddenOtherUIs;
+
     [Header("前のめりUI設定")]
     [SerializeField] private Vector2 vanguardOffsetPxRange = new Vector2(8f, 16f);//前のめり時の移動量
     [SerializeField] private Vector2 vanguardDurationSecRange = new Vector2(0.12f, 0.2f);//前のめり時のアニメーション時間
@@ -135,6 +510,10 @@ public class WatchUIUpdate : MonoBehaviour
         {
             actionMark.gameObject.SetActive(false);
         }
+
+        // KモードUI初期設定
+        if (kNameText != null) kNameText.gameObject.SetActive(false);
+        if (kPassivesText != null) kPassivesText.gameObject.SetActive(false);
     }
 
     RectTransform _rect;
@@ -182,6 +561,12 @@ public class WatchUIUpdate : MonoBehaviour
     /// </summary>
     private async UniTask ZoomBackgroundAndEnemies()
     {
+        // Kモード中は既存の戦闘ズームを抑制
+        if (lockBattleZoomDuringK && (_isKActive || _isKAnimating))
+        {
+            Debug.Log("[WatchUIUpdate] Kモード中のためZoomBackgroundAndEnemiesをスキップ");
+            return;
+        }
         _isZoomAnimating = true;
         var tasks = new List<UniTask>();
         
@@ -279,29 +664,7 @@ public class WatchUIUpdate : MonoBehaviour
     /// <summary>
     /// RectTransformのワールド座標を取得
     /// </summary>
-    private Vector2 GetWorldPosition(RectTransform rectTransform)
-    {
-        // rect の中心をローカル → ワールド変換
-        return rectTransform.TransformPoint(rectTransform.rect.center);
-    }
     
-    /// <summary>
-    /// RectTransformのpivotのワールド座標を取得
-    /// </summary>
-    private Vector2 GetWorldPivotPosition(RectTransform rectTransform)
-    {
-        // pivot がローカル原点なので、TransformPointで正確なワールド座標を取得
-        return rectTransform.TransformPoint(Vector3.zero);
-    }
-    
-    /// <summary>
-    /// 親レイヤー全体ズームと同じ結果になる位置を計算
-    /// 数式: targetWorld = (originalWorld - parentPivot) * scale + parentPivot + move
-    /// </summary>
-    private Vector2 CalculateParentZoomLikePosition(Vector2 originalWorldPos, Vector2 parentPivotWorld, Vector2 scale, Vector2 move)
-    {
-        return (originalWorldPos - parentPivotWorld) * scale + parentPivotWorld + move;
-    }
 
     /// <summary>
     /// ズーム前の初期状態を保存
@@ -562,6 +925,391 @@ public class WatchUIUpdate : MonoBehaviour
         }
     }
 
+    // ===== K MODE (ステータス拡大) =====
+    /// <summary>
+    /// Kモードに入れるかどうか（戦闘導入ズームや味方スライドが走っている場合は抑制可能）
+    /// </summary>
+    public bool CanEnterK => !_isKActive && !_isKAnimating && !(disableIconClickWhileBattleZoom && (_isZoomAnimating || _isAllySlideAnimating));
+
+    /// <summary>
+    /// Kモードがアクティブか
+    /// </summary>
+    public bool IsKActive => _isKActive;
+    /// <summary>
+    /// Kモードのアニメーション中か
+    /// </summary>
+    public bool IsKAnimating => _isKAnimating;
+    /// <summary>
+    /// 現在のKズーム対象UIかどうか
+    /// </summary>
+    public bool IsCurrentKTarget(UIController ui) => _isKActive && (_kExclusiveUI == ui);
+
+    /// <summary>
+    /// 指定アイコンをkTargetRectにフィットさせるように、kZoomRootをスケール・移動させてKモード突入
+    /// </summary>
+    public async UniTask EnterK(RectTransform iconRT, string title)
+    {
+        if (!CanEnterK)
+        {
+            Debug.Log("[K] CanEnterK=false のためEnterKを無視");
+            return;
+        }
+        if (iconRT == null || kZoomRoot == null || kTargetRect == null)
+        {
+            Debug.LogWarning("[K] 必要参照が不足しています(iconRT/kZoomRoot/kTargetRect)。");
+            return;
+        }
+
+        // テキスト設定（まずは非表示）
+        if (kNameText != null) { kNameText.text = title ?? string.Empty; kNameText.gameObject.SetActive(false); }
+        
+        _kCts?.Cancel();
+        _kCts?.Dispose();
+        _kCts = new CancellationTokenSource();
+
+        var ct = _kCts.Token;
+        _isKAnimating = true;
+
+        // クリック元UIの参照のみ保持（復元用）。非表示化はUIController.TriggerKModeで行う。
+        _kExclusiveUI = iconRT.GetComponentInParent<UIController>();
+
+        // 非対象キャラのUIControllerをK中は丸ごと非表示にする（元の有効状態を退避）
+        _kHiddenOtherUIs = new List<(UIController ui, bool wasActive)>();
+        var bm = Walking.Instance?.bm;
+        var allChars = bm?.AllCharacters;
+        if (allChars != null)
+        {
+            foreach (var ch in allChars)
+            {
+                var ui = ch?.UI;
+                if (ui == null || ui == _kExclusiveUI) continue;
+                bool prev = ui.gameObject.activeSelf;
+                _kHiddenOtherUIs.Add((ui, prev));
+                if (prev)
+                {
+                    ui.SetActive(false);
+                }
+            }
+        }
+
+        // ActionMarkの表示状態を退避し、K中は非表示にする
+        if (actionMark != null)
+        {
+            _actionMarkWasActiveBeforeK = actionMark.gameObject.activeSelf;
+            if (_actionMarkWasActiveBeforeK)
+            {
+                HideActionMark();
+            }
+        }
+
+        // SchizoLogの表示状態を退避し、K中は非表示にする（不要な参照を増やさずシングルトンを直接利用）
+        if (SchizoLog.Instance != null)
+        {
+            _schizoWasVisibleBeforeK = SchizoLog.Instance.IsVisible();
+            if (_schizoWasVisibleBeforeK)
+            {
+                SchizoLog.Instance.SetVisible(false);
+            }
+        }
+
+        // もとの状態を保存
+        _kOriginalPos = kZoomRoot.anchoredPosition;
+        _kOriginalScale = kZoomRoot.localScale;
+        _kSnapshotValid = true;
+
+        // フィット計算
+        ComputeKFit(iconRT, out float targetScale, out Vector2 targetAnchoredPos);
+        // Kテキスト/ボタンの再マッピング計算は廃止（レイアウトのアンカー/位置決めに任せる）
+
+        // ズームイン（位置＋スケール）
+        var rootRT = kZoomRoot;
+        var scaleTask = LMotion.Create((Vector3)_kOriginalScale, new Vector3(targetScale, targetScale, _kOriginalScale.z), kZoomDuration)
+            .WithEase(kZoomEase)
+            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+            .BindToLocalScale(rootRT)
+            .ToUniTask(ct);
+
+        var posTask = LMotion.Create(_kOriginalPos, targetAnchoredPos, kZoomDuration)
+            .WithEase(kZoomEase)
+            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+            .BindToAnchoredPosition(rootRT)
+            .ToUniTask(ct);
+
+        // Kパッシブテキストの準備（内容セット＆非表示→フェード表示準備）
+        BaseStates actorForK = FindActorByUI(_kExclusiveUI);
+        SetKPassivesText(actorForK);
+
+        // テキストのスライドインもズームと同時に開始
+        var slideTask = SlideInKTexts(title, ct);
+        var fadePassivesTask = FadeInKPassives(actorForK, ct);
+
+        try
+        {
+            await UniTask.WhenAll(scaleTask, posTask, slideTask, fadePassivesTask);
+        }
+        catch (OperationCanceledException)
+        {
+            // 即時終了などのキャンセル
+            if (_kExclusiveUI != null)
+            {
+                _kExclusiveUI.SetExclusiveIconMode(false);
+                _kExclusiveUI = null;
+            }
+            // 非対象UIを元の有効状態へ復帰
+            if (_kHiddenOtherUIs != null)
+            {
+                foreach (var pair in _kHiddenOtherUIs)
+                {
+                    if (pair.ui != null) pair.ui.SetActive(pair.wasActive);
+                }
+                _kHiddenOtherUIs = null;
+            }
+            _isKAnimating = false;
+            _kSnapshotValid = false;
+            // キャンセル時はテキストを念のため非表示へ戻す
+            if (kNameText != null) kNameText.gameObject.SetActive(false);
+            if (kPassivesText != null) kPassivesText.gameObject.SetActive(false);
+            // EnterK中断時はActionMarkを元状態に戻す
+            if (actionMark != null && _actionMarkWasActiveBeforeK)
+            {
+                ShowActionMark();
+            }
+            _actionMarkWasActiveBeforeK = false;
+            // EnterK中断時はSchizoLogも元状態に戻す
+            if (SchizoLog.Instance != null && _schizoWasVisibleBeforeK)
+            {
+                SchizoLog.Instance.SetVisible(true);
+            }
+            _schizoWasVisibleBeforeK = false;
+            return;
+        }
+
+        _isKActive = true;
+        _isKAnimating = false;
+
+        // 以降の処理（_isKActive の更新など）のみ。テキストのスライドはズームと同時に完了済み。
+    }
+
+    /// <summary>
+    /// Kモード解除（アニメーションあり）
+    /// </summary>
+    public async UniTask ExitK()
+    {
+        if (!_isKActive && !_isKAnimating)
+        {
+            return;
+        }
+
+        // テキストは即時非表示
+        if (kNameText != null) kNameText.gameObject.SetActive(false);
+        if (kPassivesText != null) kPassivesText.gameObject.SetActive(false);
+
+        _kCts?.Cancel();
+        _kCts?.Dispose();
+        _kCts = new CancellationTokenSource();
+        var ct = _kCts.Token;
+
+        _isKAnimating = true;
+
+        // ここで即時にK中に非表示にしていたUIを復帰させる（ズームアウト中に表示して良い要件）
+        // クリック元UIのIcon以外の可視状態を復元
+        if (_kExclusiveUI != null)
+        {
+            _kExclusiveUI.SetExclusiveIconMode(false);
+            _kExclusiveUI = null;
+        }
+        // 非対象UIControllerを元の有効状態へ復帰
+        if (_kHiddenOtherUIs != null)
+        {
+            foreach (var pair in _kHiddenOtherUIs)
+            {
+                if (pair.ui != null) pair.ui.SetActive(pair.wasActive);
+            }
+            _kHiddenOtherUIs = null;
+        }
+        // ActionMarkの表示状態を復帰
+        if (actionMark != null && _actionMarkWasActiveBeforeK)
+        {
+            ShowActionMark();
+            _actionMarkWasActiveBeforeK = false;
+        }
+        // SchizoLogの表示状態を復帰
+        if (SchizoLog.Instance != null && _schizoWasVisibleBeforeK)
+        {
+            SchizoLog.Instance.SetVisible(true);
+            _schizoWasVisibleBeforeK = false;
+        }
+
+        var rootRT = kZoomRoot;
+        if (rootRT == null)
+        {
+            _isKActive = false;
+            _isKAnimating = false;
+            return;
+        }
+
+        var scaleTask = LMotion.Create(rootRT.localScale, _kOriginalScale, kZoomDuration)
+            .WithEase(kZoomEase)
+            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+            .BindToLocalScale(rootRT)
+            .ToUniTask(ct);
+
+        var posTask = LMotion.Create(rootRT.anchoredPosition, _kOriginalPos, kZoomDuration)
+            .WithEase(kZoomEase)
+            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+            .BindToAnchoredPosition(rootRT)
+            .ToUniTask(ct);
+
+        try
+        {
+            await UniTask.WhenAll(scaleTask, posTask);
+        }
+        catch (OperationCanceledException)
+        {
+            // 即時終了など
+        }
+
+        _isKActive = false;
+        _isKAnimating = false;
+        _kSnapshotValid = false;
+        // 復帰処理はズームアウト開始時に実施済み
+    }
+
+    /// <summary>
+    /// Kモードを即時解除（キャンセルやNextWaitで使用）
+    /// </summary>
+    public void ForceExitKImmediate()
+    {
+        _kCts?.Cancel();
+        _kCts?.Dispose();
+        _kCts = null;
+
+        // クリック元UIのIcon以外の可視状態を即時復元
+        if (_kExclusiveUI != null)
+        {
+            _kExclusiveUI.SetExclusiveIconMode(false);
+            _kExclusiveUI = null;
+        }
+        // 非対象UIControllerを元の有効状態に即時復帰
+        if (_kHiddenOtherUIs != null)
+        {
+            foreach (var pair in _kHiddenOtherUIs)
+            {
+                if (pair.ui != null) pair.ui.SetActive(pair.wasActive);
+            }
+            _kHiddenOtherUIs = null;
+        }
+
+        if (kNameText != null) kNameText.gameObject.SetActive(false);
+
+        if (kZoomRoot != null && _kSnapshotValid)
+        {
+            kZoomRoot.anchoredPosition = _kOriginalPos;
+            kZoomRoot.localScale = _kOriginalScale;
+        }
+
+        _isKActive = false;
+        _isKAnimating = false;
+        // 即時解除時もActionMarkを元状態へ復帰
+        if (actionMark != null && _actionMarkWasActiveBeforeK)
+        {
+            ShowActionMark();
+        }
+        _actionMarkWasActiveBeforeK = false;
+        // 即時解除時もSchizoLogを元状態へ復帰
+        if (SchizoLog.Instance != null && _schizoWasVisibleBeforeK)
+        {
+            SchizoLog.Instance.SetVisible(true);
+        }
+        _schizoWasVisibleBeforeK = false;
+    }
+
+    /// <summary>
+    /// テキストの右→左スライドイン
+    /// </summary>
+    private async UniTask SlideInKTexts(string title, CancellationToken ct)
+    {
+        var tasks = new List<UniTask>(2);
+
+        if (kNameText != null)
+        {
+            var nameRT = kNameText.rectTransform;
+            // レイアウトで設定された anchoredPosition をそのまま目標とする
+            var target = nameRT.anchoredPosition;
+            var start = target + new Vector2(kTextSlideOffsetX, 0f);
+            nameRT.anchoredPosition = start;
+            kNameText.gameObject.SetActive(true);
+            // 可視化直後に背景を開始位置へ更新
+            kNameText.RefreshBackground();
+
+            var t = LMotion.Create(start, target, kTextSlideDuration)
+                .WithEase(kTextSlideEase)
+                .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+                .BindToAnchoredPosition(nameRT)
+                .ToUniTask(ct);
+            tasks.Add(t);
+        }
+
+        if (tasks.Count > 0)
+        {
+            try
+            {
+                await UniTask.WhenAll(tasks);
+                // レイアウト確定後に最終位置へ背景を更新
+                Canvas.ForceUpdateCanvases();
+                if (kNameText != null) kNameText.RefreshBackground();
+                // 念のため次フレーム終端でもう一度更新（ContentSizeFitter等の遅延対策）
+                await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);
+                Canvas.ForceUpdateCanvases();
+                if (kNameText != null) kNameText.RefreshBackground();
+            }
+            catch (OperationCanceledException)
+            {
+                // 即時解除時など
+            }
+        }
+    }
+
+    /// <summary>
+    /// Kモードのフィット計算：icon中心→target中心へ。スケールは幅/高さ比のブレンド。
+    /// </summary>
+    private void ComputeKFit(RectTransform iconRT, out float outScale, out Vector2 outAnchoredPos)
+    {
+        GetWorldRect(iconRT, out var iconCenter, out var iconSize);
+        GetWorldRect(kTargetRect, out var targetCenter, out var targetSize);
+
+        float sx = SafeDiv(targetSize.x, iconSize.x);
+        float sy = SafeDiv(targetSize.y, iconSize.y);
+        float s = Mathf.Lerp(sy, sx, Mathf.Clamp01(kFitBlend01));
+
+        var parentPivotWorld = kZoomRoot.TransformPoint(Vector3.zero);
+        // 親(kZoomRoot)を移動/拡大したときの子(icon)の新ワールド位置
+        // newIconWorld = (iconCenter - parentPivotWorld) * s + parentPivotWorld + move
+        // => move = targetCenter - ((iconCenter - parentPivotWorld) * s + parentPivotWorld)
+        Vector2 moveWorld = targetCenter - ((iconCenter - (Vector2)parentPivotWorld) * s + (Vector2)parentPivotWorld);
+
+        var parentRT = kZoomRoot.parent as RectTransform;
+        Vector2 moveLocal = parentRT != null ? (Vector2)parentRT.InverseTransformVector(moveWorld) : moveWorld;
+
+        outScale = s;
+        outAnchoredPos = _kOriginalPos + moveLocal;
+    }
+
+    private static float SafeDiv(float a, float b)
+    {
+        return Mathf.Abs(b) < 1e-5f ? 1f : a / b;
+    }
+
+    private static void GetWorldRect(RectTransform rt, out Vector2 center, out Vector2 size)
+    {
+        var corners = s_corners ??= new Vector3[4];
+        rt.GetWorldCorners(corners);
+        var min = new Vector2(corners[0].x, corners[0].y);
+        var max = new Vector2(corners[2].x, corners[2].y);
+        center = (min + max) * 0.5f;
+        size = max - min;
+    }
+
     // ActionMark の表示/非表示ファサード
     public void ShowActionMark()
     {
@@ -627,10 +1375,20 @@ public class WatchUIUpdate : MonoBehaviour
         var parent = rectTransform.parent as RectTransform;
         if (parent == null)
         {
-            // 親がRectTransformでない場合はそのままlocalへ変換
             return rectTransform.InverseTransformPoint(worldPos);
         }
-        Vector2 localPoint = parent.InverseTransformPoint(worldPos);
+        // Canvas/Camera を考慮した正確な変換
+        var canvas = rectTransform.GetComponentInParent<Canvas>();
+        Camera cam = null;
+        if (canvas != null)
+        {
+            if (canvas.renderMode == RenderMode.ScreenSpaceCamera || canvas.renderMode == RenderMode.WorldSpace)
+            {
+                cam = canvas.worldCamera;
+            }
+        }
+        Vector2 screen = RectTransformUtility.WorldToScreenPoint(cam, worldPos);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, screen, cam, out var localPoint);
         return localPoint;
     }
 
@@ -693,133 +1451,10 @@ public class WatchUIUpdate : MonoBehaviour
 
 
     
-    // エディタプレビュー設定
-    [Header("エディタプレビュー設定")]
-    [SerializeField] private bool enableEditorPreview = false;
-    [SerializeField] private Color previewBoxColor = Color.red;
-
     /// <summary>
-    /// 敵をランダムエリア内に配置（安定したローカル座標系ベース）
+    /// 敵をランダムエリア内に配置（旧ローカル/ワールド座標版）は廃止。
+    /// 現行は GetRandomPreZoomLocalPosition と WorldToPreZoomLocal の組み合わせで実装。
     /// </summary>
-    private Vector2 GetRandomEnemyPosition(Vector2 enemySize, List<Vector2> existingPositions, float marginSize)
-    {
-        if (enemySpawnArea == null)
-        {
-            Debug.LogWarning("enemySpawnAreaが設定されていません。");
-            return Vector2.zero;
-        }
-        
-        // enemySpawnAreaのローカル矩形を取得（pivot/anchor無関係）
-        var rect = enemySpawnArea.rect;
-        var halfEnemySize = enemySize / 2;
-        
-        // ローカル座標でのランダム範囲（中央pivot前提）
-        var minX = rect.xMin + halfEnemySize.x;
-        var maxX = rect.xMax - halfEnemySize.x;
-        var minY = rect.yMin + halfEnemySize.y;
-        var maxY = rect.yMax - halfEnemySize.y;
-        
-        var maxAttempts = 50;
-        Debug.Log($"ローカル座標でのスポーン範囲: Rect={rect}, Bounds=({minX},{minY})-({maxX},{maxY})");
-        
-        for (int attempt = 0; attempt < maxAttempts; attempt++)
-        {
-            // ローカル座標でランダム位置を生成
-            var randomX = UnityEngine.Random.Range(minX, maxX);
-            var randomY = UnityEngine.Random.Range(minY, maxY);
-            var localPos = new Vector2(randomX, randomY);
-            
-            // 重複チェック（ローカル座標で実施）
-            if (IsPositionValidLocal(localPos, enemySize, existingPositions, marginSize))
-            {
-                Debug.Log($"ローカル座標で生成位置決定: {localPos}");
-                return localPos;
-            }
-        }
-        
-        // フォールバック: スポーンエリア中央を使用
-        var fallbackPos = rect.center;
-        Debug.Log($"フォールバック位置（ローカル座標）: {fallbackPos}");
-        return fallbackPos;
-    }
-
-    /// <summary>
-    /// enemySpawnArea 内でランダムにワールド座標を取得（ズーム後基準）。
-    /// ズーム前にこのワールド座標を逆変換して配置することで、ズーム完了後に正しい位置へ収まる。
-    /// </summary>
-    private Vector2 GetRandomEnemyWorldPosition(Vector2 enemySize, List<Vector2> existingWorldPositions, float marginSize)
-    {
-        if (enemySpawnArea == null)
-        {
-            Debug.LogWarning("enemySpawnAreaが設定されていません。");
-            return Vector2.zero;
-        }
-
-        var rect = enemySpawnArea.rect;
-        var halfEnemySize = enemySize / 2;
-
-        var minX = rect.xMin + halfEnemySize.x;
-        var maxX = rect.xMax - halfEnemySize.x;
-        var minY = rect.yMin + halfEnemySize.y;
-        var maxY = rect.yMax - halfEnemySize.y;
-
-        const int maxAttempts = 50;
-        for (int attempt = 0; attempt < maxAttempts; attempt++)
-        {
-            var randomX = UnityEngine.Random.Range(minX, maxX);
-            var randomY = UnityEngine.Random.Range(minY, maxY);
-            var localPos = new Vector2(randomX, randomY);
-            var worldPos = enemySpawnArea.TransformPoint(localPos);
-
-            if (IsWorldPositionValid(worldPos, enemySize, existingWorldPositions, marginSize))
-            {
-                return worldPos;
-            }
-        }
-
-        // フォールバック: スポーンエリア中央
-        return enemySpawnArea.TransformPoint(rect.center);
-    }
-
-    /// <summary>
-    /// 他の敵と重複しないかワールド座標でチェック（矩形ベース）
-    /// </summary>
-    private bool IsWorldPositionValid(Vector2 candidateWorldPos, Vector2 enemySize, List<Vector2> existingWorldPositions, float marginSize)
-    {
-        // 候補の矩形を作成（中心座標 + サイズ + マージン）
-        Vector2 halfSize = enemySize / 2 + Vector2.one * marginSize;
-        Rect candidateRect = new Rect(candidateWorldPos - halfSize, enemySize + Vector2.one * marginSize * 2);
-        
-        foreach (var existingPos in existingWorldPositions)
-        {
-            // 既存の敵も同じサイズと仮定して矩形を作成
-            Rect existingRect = new Rect(existingPos - halfSize, enemySize + Vector2.one * marginSize * 2);
-            
-            if (candidateRect.Overlaps(existingRect))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /// <summary>
-    /// 位置が有効かチェック（他の敵と重複しないか）
-    /// </summary>
-    private bool IsPositionValidLocal(Vector2 candidatePos, Vector2 enemySize, List<Vector2> existingPositions, float marginSize)
-    {
-        foreach (var existingPos in existingPositions)
-        {
-            var distance = Vector2.Distance(candidatePos, existingPos);
-            var minDistance = (enemySize.magnitude + marginSize) / 2;
-            
-            if (distance < minDistance)
-            {
-                return false;
-            }
-        }
-        return true;
-    }
 
     /// <summary>
     /// ズーム後のワールド座標をズーム前のenemyBattleLayerローカル座標に変換
