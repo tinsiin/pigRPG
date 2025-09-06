@@ -80,3 +80,22 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+
+# ========== ここから追加 ==========
+
+# Package Manager関連
+# Packagesフォルダの実体は除外（manifest系は残す）
+/[Pp]ackages/*
+!/[Pp]ackages/manifest.json
+!/[Pp]ackages/manifest.lock.json
+!/[Pp]ackages/packages-lock.json
+
+# 手動インストールしたパッケージを除外
+/[Aa]ssets/Plugins/UniTask/
+/[Aa]ssets/Plugins/UniTask.meta
+/[Aa]ssets/Plugins/DOTween/
+/[Aa]ssets/Plugins/DOTween.meta
+
+# 空フォルダ保持用のファイルは除外しない
+!/**/.gitkeep
