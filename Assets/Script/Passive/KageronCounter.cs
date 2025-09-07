@@ -1,4 +1,4 @@
-using RandomExtensions;
+using NRandom;
 using System;
 using System.Collections;
 using System.Collections.Generic;

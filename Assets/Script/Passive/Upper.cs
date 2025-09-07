@@ -1,4 +1,4 @@
-using RandomExtensions;
+using NRandom;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -32,7 +32,7 @@ public class Upper : BasePassive//アッパー  精神HPの上の乖離の基本
             //ランダムな十日能力が上昇する。
             var randomTenDayAbility = _owner.GetRandomTenDayAbility();
             //3~11%上昇
-            var randomPercent = RandomEx.Shared.NextFloat(0.03f, 0.11f);
+            var randomPercent = NRandom.Shared.NextSingle(0.03f, 0.11f);
             _owner.TenDayGrowByPercentOfCurrent(randomTenDayAbility, randomPercent);
             
         }

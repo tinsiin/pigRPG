@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using RandomExtensions;
-using RandomExtensions.Linq;
+using NRandom;
+using NRandom.Linq;
 
 /// <summary>
 /// スレームII- ロゼロ
@@ -28,7 +28,7 @@ public class Slaim2 : BasePassive
             // ランダムなインデックスを生成（自分自身以外のインデックスを選ぶ）
             int targetIndex;
             do {
-                targetIndex = RandomEx.Shared.NextInt(0, underActers.charas.Count);//Countは+1されているので
+                targetIndex = NRandom.Shared.NextInt(0, underActers.charas.Count);//Countは+1されているので
             } while (targetIndex == currentIndex && underActers.charas.Count > 1); // 自分自身以外のインデックスを選ぶ
 
             // 要素を入れ替え

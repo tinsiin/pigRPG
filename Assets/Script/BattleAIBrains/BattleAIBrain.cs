@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using System;
-using RandomExtensions;
+using NRandom;
 /// <summary>
 /// EnemyClass等基礎クラスで関数を共通して扱う 付け替え可能なAI用の抽象クラス
 /// </summary>
@@ -322,7 +322,7 @@ public abstract class BattleAIBrain : ScriptableObject
             Debug.Log("消せるパッシブリストに悪いパッシブが存在しません(skillAI)");
             return null;
         }
-        return RandomEx.Shared.GetItem(badPassives.ToArray());//ランダムに一つ入手
+        return NRandom.Shared.GetItem(badPassives.ToArray());//ランダムに一つ入手
     }
 
 
@@ -376,7 +376,7 @@ public abstract class BattleAIBrain : ScriptableObject
             }
             if(_damageSimulatePolicy.hpType == TargetHPType.Random)//グループから一人をランダム
             {
-                ResultTarget = RandomEx.Shared.GetItem(potentialTargets.ToArray());
+                ResultTarget = NRandom.Shared.GetItem(potentialTargets.ToArray());
             }
             ResultSkill = SingleBestDamageAnalyzer(availableSkills, ResultTarget);
         }

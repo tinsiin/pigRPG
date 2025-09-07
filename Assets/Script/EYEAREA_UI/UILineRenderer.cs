@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using RandomExtensions;
+using NRandom;
 
 public enum SideObject_Type
 {
@@ -102,20 +102,20 @@ public class UILineRenderer : Graphic
         {
             foreach (var line in lines)//この場合は全ての線がそれぞれずれる
             {
-                line.startPoint += new Vector2(RandomEx.Shared.NextFloat(-bornPosRange.x, bornPosRange.x), RandomEx.Shared.NextFloat(-bornPosRange.y, bornPosRange.y));
-                line.endPoint += new Vector2(RandomEx.Shared.NextFloat(-bornPosRange.x, bornPosRange.x), RandomEx.Shared.NextFloat(-bornPosRange.y, bornPosRange.y));
+                line.startPoint += new Vector2(NRandom.Shared.NextSingle(-bornPosRange.x, bornPosRange.x), NRandom.Shared.NextSingle(-bornPosRange.y, bornPosRange.y));
+                line.endPoint += new Vector2(NRandom.Shared.NextSingle(-bornPosRange.x, bornPosRange.x), NRandom.Shared.NextSingle(-bornPosRange.y, bornPosRange.y));
             }
             foreach (var circle in circles)
             {
-                circle.center += new Vector2(RandomEx.Shared.NextFloat(-bornPosRange.x, bornPosRange.x), RandomEx.Shared.NextFloat(-bornPosRange.y, bornPosRange.y));
+                circle.center += new Vector2(NRandom.Shared.NextSingle(-bornPosRange.x, bornPosRange.x), NRandom.Shared.NextSingle(-bornPosRange.y, bornPosRange.y));
             }
         }
         else if(sideObject_Type == SideObject_Type.Normal)//この場合は全ての線が同じずれを持つ
         {
             // 一度だけ乱数を生成
             Vector2 randomOffset = new Vector2(
-                RandomEx.Shared.NextFloat(-bornPosRange.x, bornPosRange.x),
-                RandomEx.Shared.NextFloat(-bornPosRange.y, bornPosRange.y)
+                NRandom.Shared.NextSingle(-bornPosRange.x, bornPosRange.x),
+                NRandom.Shared.NextSingle(-bornPosRange.y, bornPosRange.y)
             );
             //Debug.Log("今回のずれ" + randomOffset);
 

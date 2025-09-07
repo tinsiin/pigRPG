@@ -1,4 +1,4 @@
-using RandomExtensions;
+using NRandom;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -23,7 +23,7 @@ public class Achilles : BasePassive//アキレスと亀-混沌時間　のアキ
             }
             else//それ以外、っていうかかすりしかないけど、その場合、自分リカバリーターンが増えていく。
             {
-                _maxRecoveryTurnModifier += RandomEx.Shared.NextInt(1, 3);//1~2個ずつ
+                _maxRecoveryTurnModifier += NRandom.Shared.NextInt(1, 3);//1~2個ずつ
             }
         }
 

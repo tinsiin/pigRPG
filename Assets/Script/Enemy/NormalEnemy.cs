@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using RandomExtensions;
-using RandomExtensions.Linq;
+using NRandom;
 using UnityEngine;
 using UnityEngine.UI;
 using static CommonCalc;
@@ -256,7 +255,7 @@ public class NormalEnemy : BaseStates
 
         //成長量
         var allGrowTenDays = growTenDays.Sum(kvp => kvp.Value);
-        var growAmount  = allGrowTenDays * RandomEx.Shared.NextFloat(1 / 5f, 3 / 5f);//成長した十日能力の総量の5分の1 ~ 5分の3
+        var growAmount  = allGrowTenDays * NRandom.Shared.NextSingle(1 / 5f, 3 / 5f);//成長した十日能力の総量の5分の1 ~ 5分の3
 
         foreach(var growSkill in growSkills)
         {
@@ -312,7 +311,7 @@ public class NormalEnemy : BaseStates
         {
             var rndList = SkillList.Select(s => s.SkillSpiritual).ToList();
             rndList.AddRange(new List<SpiritualProperty>{DefaultImpression,DefaultImpression});
-            that = RandomEx.Shared.GetItem(rndList.ToArray()); //スキルの精神属性を抽出
+            that = NRandom.Shared.GetItem(rndList.ToArray()); //スキルの精神属性を抽出
             MyImpression = that; //印象にセット
         }
         else
