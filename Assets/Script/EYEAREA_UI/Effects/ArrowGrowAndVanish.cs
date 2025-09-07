@@ -80,11 +80,13 @@ public class ArrowGrowAndVanish : MonoBehaviour
 
     public void Cancel()
     {
-        if (_cts != null)
+        // 再入安全: _cts をローカルに退避し、先にフィールドを null にしてから Cancel/Dispose
+        var cts = _cts;
+        _cts = null;
+        if (cts != null)
         {
-            _cts.Cancel();
-            _cts.Dispose();
-            _cts = null;
+            try { cts.Cancel(); }
+            finally { cts.Dispose(); }
         }
 
         if (_moveHandle.IsActive()) _moveHandle.Cancel();

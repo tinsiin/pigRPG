@@ -21284,7 +21284,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.97175264, g: 0.12068924, b: 0.9657403, a: 0.8963397}
+  m_Color: {r: 0.8876012, g: 0.4802331, b: 0.8636778, a: 0.5875267}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -39462,7 +39462,7 @@ MonoBehaviour:
   - {fileID: 738264950}
   - {fileID: 730955376}
   m_PassivesModalArea: {fileID: 1180822962}
-  m_PassivesDebugMode: 1
+  m_PassivesDebugMode: 0
   m_PassivesDebugCount: 100
   m_PassivesDebugPrefix: pas
   m_PassivesEllipsisDotCount: 4
@@ -41776,7 +41776,7 @@ MonoBehaviour:
         IsDeleteMyFreezeConsecutive: 0
         broken: 0
         _machineBrokenRate: 0.3
-        _brain: {fileID: 11400000, guid: fa03e9b4c70b45f4782dc1a672559a09, type: 2}
+        _brain: {fileID: 11400000, guid: 0197204017f7bf94090ba7d2aa57b9cf, type: 2}
         RecovelySteps: -1
         EscapeAttemptRate: 0
         EnemySkillList:
@@ -41980,7 +41980,7 @@ MonoBehaviour:
         IsDeleteMyFreezeConsecutive: 0
         broken: 0
         _machineBrokenRate: 0.3
-        _brain: {fileID: 11400000, guid: fa03e9b4c70b45f4782dc1a672559a09, type: 2}
+        _brain: {fileID: 11400000, guid: 0197204017f7bf94090ba7d2aa57b9cf, type: 2}
         RecovelySteps: -1
         EscapeAttemptRate: 0
         EnemySkillList:

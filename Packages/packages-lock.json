@@ -11,13 +11,6 @@
       },
       "hash": "b651c5866fe0e3fba065ce2e56dfdfcd59d3d109"
     },
-    "com.annulusgames.random-extensions.unity": {
-      "version": "https://github.com/AnnulusGames/RandomExtensions.git?path=src/RandomExtensions.Unity/Assets/RandomExtensions.Unity",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "b635a9ce468043ef055d76dffcc01494dba2bf24"
-    },
     "com.cysharp.r3": {
       "version": "https://github.com/Cysharp/R3.git?path=src/R3.Unity/Assets/R3.Unity",
       "depth": 0,

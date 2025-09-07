@@ -4,6 +4,7 @@ using UnityEngine;
 using System.Linq;
 using System;
 using RandomExtensions;
+using NRandom.Collections;
 /// <summary>
 /// EnemyClass等基礎クラスで関数を共通して扱う 付け替え可能なAI用の抽象クラス
 /// </summary>
@@ -32,6 +33,12 @@ public abstract class BattleAIBrain : ScriptableObject
         public bool HasTargetWill => TargetWill.HasValue;
         public bool HasTargets => Targets != null && Targets.Count > 0;
         public bool HasAny => HasSkill || HasRangeWill || HasTargetWill || HasTargets;
+    }
+
+    // Inspector 変更時にポリシーの不正値を検証・矯正
+    private void OnValidate()
+    {
+        _damageSimulatePolicy.ValidateAndClamp("BattleAIBrain.OnValidate");
     }
 
     // 共通コミット層：単体先約時はSkillのみをコミットし、範囲/対象はBMに委譲
@@ -150,6 +157,9 @@ public abstract class BattleAIBrain : ScriptableObject
             return;
         }
         user = manager.Acter;
+
+        // ポリシーの不正値を実行前に検証・矯正（0以下はエラーを出して1に補正）
+        _damageSimulatePolicy.ValidateAndClamp("BattleAIBrain.Run");
 
         // 1) 連続実行（Freeze）は最優先で処理し、通常思考へ進まない（強制力）
         if (user.IsFreeze)
@@ -408,18 +418,29 @@ public abstract class BattleAIBrain : ScriptableObject
             return null;
         }
 
-        var potential = -3f;
-        BaseSkill ResultSkill = null;
-        foreach(var skill in availableSkills)
+        // 刻み・ブレ段階が無効な場合は従来のロジック
+        if(_damageSimulatePolicy.damageStep <= 1 && _damageSimulatePolicy.variationStages <= 1)
         {
-            var damage = target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy);
-            if(damage > potential)//与えたダメージが多ければ
+            var potential = -3f;
+            BaseSkill ResultSkill = null;
+            foreach(var skill in availableSkills)
             {
-                potential = damage;//基準を更新
-                ResultSkill = skill;//結果を更新
+                var damage = target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy);
+                if(damage > potential)//与えたダメージが多ければ
+                {
+                    potential = damage;//基準を更新
+                    ResultSkill = skill;//結果を更新
+                }
             }
+            return ResultSkill;
         }
-        return ResultSkill;
+
+        // 新しいロジック：刻み・ブレ段階システムを使用
+        return DamageStepAnalysisHelper.SelectWithStepAndVariation(
+            availableSkills, 
+            skill => target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy), 
+            _damageSimulatePolicy
+        );
     }   
     /// <summary>
     /// グループに対して最大ダメージを与えるスキルとターゲットの組み合わせを分析する
@@ -440,30 +461,59 @@ public abstract class BattleAIBrain : ScriptableObject
             return null;
         }
 
-        var maxDamage = -3f;
-        BaseSkill bestSkill = null;
-        BaseStates bestTarget = null;
+        // 刻み・ブレ段階が無効な場合は従来のロジック
+        if(_damageSimulatePolicy.damageStep <= 1 && _damageSimulatePolicy.variationStages <= 1)
+        {
+            var maxDamage = -3f;
+            BaseSkill bestSkill = null;
+            BaseStates bestTarget = null;
 
-        // 全スキル × 全ターゲットの組み合わせを総当たりで分析
+            // 全スキル × 全ターゲットの組み合わせを総当たりで分析
+            foreach(var skill in availableSkills)
+            {
+                foreach(var target in potentialTargets)
+                {
+                    var damage = target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy);
+                    if(damage > maxDamage)
+                    {
+                        maxDamage = damage;
+                        bestSkill = skill;
+                        bestTarget = target;
+                    }
+                }
+            }
+
+            return new BruteForceResult
+            {
+                Skill = bestSkill,
+                Target = bestTarget
+            };
+        }
+
+        // 新しいロジック：全組み合わせを生成してから刻み・ブレ段階システムで選択
+        var combinations = new List<BruteForceResult>();
         foreach(var skill in availableSkills)
         {
             foreach(var target in potentialTargets)
             {
                 var damage = target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy);
-                if(damage > maxDamage)
+                combinations.Add(new BruteForceResult
                 {
-                    maxDamage = damage;
-                    bestSkill = skill;
-                    bestTarget = target;
-                }
+                    Skill = skill,
+                    Target = target,
+                    Damage = damage
+                });
             }
         }
 
-        return new BruteForceResult
-        {
-            Skill = bestSkill,
-            Target = bestTarget
-        };
+        // 刻み・ブレ段階システムで最適な組み合わせを選択
+        var selectedCombination = DamageStepAnalysisHelper.SelectWithStepAndVariation(
+            combinations, 
+            combination => combination.Damage, 
+            _damageSimulatePolicy
+        );
+
+        return selectedCombination ?? combinations.First();
     }
 
 }
@@ -472,6 +522,7 @@ public class BruteForceResult
 {
     public BaseSkill Skill;
     public BaseStates Target;
+    public float Damage; // 刻み・ブレ段階システム用に追加
 }
 public enum TargetGroupType
 {
@@ -495,16 +546,147 @@ public enum TargetHPType
 [Serializable]
 public struct SkillAnalysisPolicy
 {
+    [Header("基本設定")]
     public TargetGroupType groupType; // 単体 or グループ
     public TargetHPType hpType;       // HP最大/最小/任意
     public SimulateDamageType damageType;
+    [Header("ダメージシミュレーションの追加考慮要素")]
     public bool spiritualModifier;//精神補正
     public bool physicalResistance;//物理耐性
     public bool SimlateVitalLayerPenetration;//追加HP
-    public bool SimlateEnemyDEF;//敵のDEF
+    public bool SimlateEnemyDEF ;//敵のDEF
+    [Header("完全DEFシミュレーションbool SimlateNemeyDEFがオンの場合の追加オプション。falseならb_b_defと共通十日能力による防御力のみによるシミュレート")]
     public bool SimlatePerfectEnemyDEF;//完全DEFシミュレート（パッシブ・AimStyle排他含む）
+    
+    [Header("ダメージ刻み・ブレ段階設定")]
+    [Tooltip("ダメージを指定の刻み幅で下方向に丸めて評価します。\n例) step=10, 生ダメージ=237 → 230 として扱う。\n1 を指定すると刻み無し(従来通りの生ダメージ評価)。\n推奨: ダメージスケールに応じて 5〜50 程度。小さすぎると従来に近く、\n大きすぎると候補が粗くなります。")]
+    [Min(1)]
+    public int damageStep;              // ダメージ刻み（1=刻み無効、10=10刻み）
+    [Tooltip("最大の刻みダメージから何段下までを候補に含めるか(=揺らぎの幅)。\n例) max=230, step=10, stages=3 → {230,220,210} の刻み値を候補に含める。\n1 を指定すると最大段のみ(従来の最大一本釣りに近い)。\n理論上は上限なしですが、実運用では 2〜5 程度が推奨。\n大きくするほど上位以外も混ざりやすくなり、行動のバリエーションが増えます。")]
+    [Min(1)]
+    public int variationStages;         // ブレ段階（1=最大のみ、4=上位4段階など）
+    [Header("最大優先オプション ブレ段階で含まれる序列候補を重み付けして選択するか")]
+    public bool useWeightedSelection;   // 重み付き抽選を使用するか
+
+    /// <summary>
+    /// 不正な設定値（0以下）を検知してエラーログを出し、1にクランプする
+    /// </summary>
+    public void ValidateAndClamp(string context = null)
+    {
+        if (damageStep <= 0)
+        {
+            Debug.LogError($"[{context}] SkillAnalysisPolicy.damageStep は1以上が必要です (現在値={damageStep})。1に補正します。");
+            damageStep = 1;
+        }
+        if (variationStages <= 0)
+        {
+            Debug.LogError($"[{context}] SkillAnalysisPolicy.variationStages は1以上が必要です (現在値={variationStages})。1に補正します。");
+            variationStages = 1;
+        }
+    }
 }
 
 //各キャラ用AIはScriptableObejctとして扱うため、UnityのSOを継承するpublicクラスは、
 //ファイル名 = クラス名でなくてはならないというUnityの仕様により、別ファイルに分ける。
+
+/// <summary>
+/// ダメージ刻み・ブレ段階システムのヘルパークラス
+/// </summary>
+public static class DamageStepAnalysisHelper
+{
+    /// <summary>
+    /// スキル候補から刻み・ブレ段階システムに基づいて最適なスキルを選択
+    /// </summary>
+    public static T SelectWithStepAndVariation<T>(List<T> candidates, System.Func<T, float> getDamage, SkillAnalysisPolicy policy)
+    {
+        if (candidates == null || candidates.Count == 0) return default(T);
+        if (candidates.Count == 1) return candidates[0];
+
+        // 1. 各候補のダメージを刻み値でまとめる
+        var steppedCandidates = candidates.Select(candidate => new CandidateInfo<T>
+        {
+            Original = candidate,
+            Damage = getDamage(candidate),
+            SteppedDamage = StepDamage(getDamage(candidate), policy.damageStep)
+        }).ToList();
+
+        // 2. 最大刻みダメージを取得
+        float maxSteppedDamage = steppedCandidates.Max(x => x.SteppedDamage);
+
+        // 3. ブレ段階に基づいて候補範囲を決定
+        var validSteppedValues = new List<float>();
+        for (int i = 0; i < policy.variationStages; i++)
+        {
+            float targetValue = maxSteppedDamage - (i * policy.damageStep);
+            if (targetValue >= 0) // 負の値は除外
+            {
+                validSteppedValues.Add(targetValue);
+            }
+        }
+
+        // 4. 有効な刻み値に該当する候補を抽出
+        var validCandidates = steppedCandidates
+            .Where(x => validSteppedValues.Contains(x.SteppedDamage))
+            .ToList();
+
+        if (validCandidates.Count == 0) return candidates[0]; // フォールバック
+
+        // 5. 重み付き抽選または均等抽選で選択
+        if (policy.useWeightedSelection && validSteppedValues.Count > 1)
+        {
+            return SelectWithWeights(validCandidates, validSteppedValues, maxSteppedDamage, policy.damageStep);
+        }
+        else
+        {
+            // 均等抽選
+            return RandomEx.Shared.GetItem(validCandidates.ToArray()).Original;
+        }
+    }
+
+    /// <summary>
+    /// ダメージを指定の刻み値で丸める（下方向）
+    /// </summary>
+    private static float StepDamage(float damage, int step)
+    {
+        if (step <= 1) return damage; // step=1なら刻まない
+        return Mathf.Floor(damage / step) * step;
+    }
+
+    /// <summary>
+    /// 重み付き抽選による候補選択（NRandomのWeightedListを使用）
+    /// </summary>
+    private static T SelectWithWeights<T>(List<CandidateInfo<T>> candidates, List<float> validSteppedValues, float maxSteppedDamage, int step)
+    {
+        // 刻み値ごとにグループ化
+        var groups = candidates.GroupBy(x => x.SteppedDamage).ToList();
+        
+        // WeightedListを作成して各グループに重みを設定
+        var weightedGroups = new WeightedList<List<CandidateInfo<T>>>();
+        
+        foreach (var group in groups.OrderByDescending(g => g.Key)) // 降順でソート
+        {
+            int stepsFromMax = Mathf.RoundToInt((maxSteppedDamage - group.Key) / step);
+            float weight = Mathf.Max(0.1f, 1.0f - (stepsFromMax * 0.3f)); // 上位ほど高い重み
+            
+            weightedGroups.Add(group.ToList(), weight);
+        }
+        
+        // NRandomのWeightedListで重み付き抽選
+        var selectedGroup = weightedGroups.GetRandom();
+        
+        // 選択されたグループ内からランダムで1つ選択
+        return RandomEx.Shared.GetItem(selectedGroup.ToArray()).Original;
+    }
+    
+    /// <summary>
+    /// 候補情報を格納する構造体
+    /// </summary>
+    private struct CandidateInfo<T>
+    {
+        public T Original;
+        public float Damage;
+        public float SteppedDamage;
+    }
+
+}
 

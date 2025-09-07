@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "com.annulusgames.lit-motion": "https://github.com/AnnulusGames/LitMotion.git?path=src/LitMotion/Assets/LitMotion",
-    "com.annulusgames.random-extensions.unity": "https://github.com/AnnulusGames/RandomExtensions.git?path=src/RandomExtensions.Unity/Assets/RandomExtensions.Unity",
     "com.cysharp.r3": "https://github.com/Cysharp/R3.git?path=src/R3.Unity/Assets/R3.Unity",
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.github-glitchenzo.nugetforunity": "4.1.1",
@@ -11,6 +10,7 @@
     "com.unity.ide.rider": "3.0.31",
     "com.unity.ide.visualstudio": "2.0.22",
     "com.unity.ide.windsurf": "https://github.com/Asuta/com.unity.ide.windsurf.git",
+    "com.unity.inputsystem": "1.7.0",
     "com.unity.render-pipelines.universal": "14.0.10",
     "com.unity.splines": "2.5.2",
     "com.unity.test-framework": "1.1.33",
@@ -48,8 +48,7 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0",
-    "com.unity.inputsystem": "1.7.0"
+    "com.unity.modules.xr": "1.0.0"
   },
   "scopedRegistries": [
     {
