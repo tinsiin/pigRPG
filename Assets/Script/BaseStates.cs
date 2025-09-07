@@ -1858,38 +1858,6 @@ public abstract class BaseStates
         return breakdown;
     }
     /// <summary>
-    /// 指定したAimStyleでの基礎防御力を計算する
-    /// </summary>
-    private StatesPowerBreakdown CalcBaseDefenseForAimStyle(AimStyle style)
-    {
-        // StatesPowerBreakdownのインスタンスを作成
-        var breakdown = new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
-
-        // 共通係数の適用（DefensePowerConfig）
-        foreach (var kv in global::DefensePowerConfig.CommonDEF)
-        {
-            float td = TenDayValues(false).GetValueOrZero(kv.Key);
-            if (td != 0f && kv.Value != 0f)
-            {
-                breakdown.TenDayAdd(kv.Key, td * kv.Value);
-            }
-        }
-
-        // AimStyle排他係数の適用
-        var excl = global::DefensePowerConfig.GetExclusiveDEF(style);
-        foreach (var kv in excl)
-        {
-            float td = TenDayValues(false).GetValueOrZero(kv.Key);
-            if (td != 0f && kv.Value != 0f)
-            {
-                breakdown.TenDayAdd(kv.Key, td * kv.Value);
-            }
-        }
-    
-        return breakdown;
-    }
-
-    /// <summary>
     /// 戦闘規格ごとの「排他（プロトコル固有）加算」だけを返す攻撃内訳
     /// 基礎値や共通TenDay加算は含めない
     /// </summary>
@@ -1915,6 +1883,37 @@ public abstract class BaseStates
     {
         return b_ATKProtocolExclusive(protocol).Total;
     }
+    /// <summary>
+    /// 指定したAimStyleでの基礎防御力を計算する
+    /// </summary>
+    private StatesPowerBreakdown CalcBaseDefenseForAimStyle(AimStyle style)
+    {
+        // StatesPowerBreakdownのインスタンスを作成
+        var breakdown = new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
+
+        // 共通係数の適用（DefensePowerConfig）
+        foreach (var kv in DefensePowerConfig.CommonDEF)
+        {
+            float td = TenDayValues(false).GetValueOrZero(kv.Key);
+            if (td != 0f && kv.Value != 0f)
+            {
+                breakdown.TenDayAdd(kv.Key, td * kv.Value);
+            }
+        }
+
+        // AimStyle排他係数の適用
+        var excl = DefensePowerConfig.GetExclusiveDEF(style);
+        foreach (var kv in excl)
+        {
+            float td = TenDayValues(false).GetValueOrZero(kv.Key);
+            if (td != 0f && kv.Value != 0f)
+            {
+                breakdown.TenDayAdd(kv.Key, td * kv.Value);
+            }
+        }
+    
+        return breakdown;
+    }
 
     /// <summary>
     /// 防御の排他（AimStyle固有）加算のみを返す防御内訳
@@ -1934,7 +1933,9 @@ public abstract class BaseStates
         }
         return breakdown;
     }
-
+    /// <summary>
+    /// 防御の排他（AimStyle固有）加算の合計値
+    /// </summary>
     public float DEFProtocolExclusiveTotal(AimStyle style)
     {
         return b_DEFProtocolExclusive(style).Total;
@@ -2072,7 +2073,7 @@ public abstract class BaseStates
         NowUseSkill = useSkill;//使用スキルに代入する
         Debug.Log(useSkill.SkillName + "を" + CharacterName +" のNowUseSkillにボタンを押して登録しました。");
         
-        //ムーブセットをキャッシュする。
+        //ムーブセットをキャッシュする。連続攻撃でもそうでなくてもキャッシュ
         NowUseSkill.CashMoveSet();
 
         //今回選んだスキル以外のストック可能なスキル全てのストックを減らす。
@@ -7294,10 +7295,32 @@ public abstract class BaseStates
         var skillPower = skill.SkillPowerCalc(skill.IsTLOA) * modifierForSkillPower;
         var skillPowerForMental = skill.SkillPowerForMentalCalc(skill.IsTLOA) * modifierForSkillPowerForMental;
 
-        //防御力
-        var def = DEF();
-        //防御力のオプションがfalseなら防御力なし
-        if(!policy.SimlateEnemyDEF) def =  new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
+        //防御力（ポリシーに応じた簡易/完全シミュレーション）
+        StatesPowerBreakdown def;
+        if (policy.SimlatePerfectEnemyDEF)
+        {
+            // 従来通りの完全なDEF計算を使用（パッシブ補正やAimStyle排他などすべて含む）
+            def = DEF();
+        }
+        else if (policy.SimlateEnemyDEF)
+        {
+            // 基本防御力のみ：b_b_def + 共通TenDay係数（AimStyle排他・パッシブ補正などは含めない）
+            var basic = new StatesPowerBreakdown(new TenDayAbilityDictionary(), b_b_def);
+            foreach (var kv in DefensePowerConfig.CommonDEF)
+            {
+                float td = TenDayValues(false).GetValueOrZero(kv.Key);
+                if (td != 0f && kv.Value != 0f)
+                {
+                    basic.TenDayAdd(kv.Key, td * kv.Value);
+                }
+            }
+            def = basic;
+        }
+        else
+        {
+            // DEFを考慮しない
+            def = new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
+        }
 
 
         //精神攻撃ブーストはシミュレートでは考慮しない

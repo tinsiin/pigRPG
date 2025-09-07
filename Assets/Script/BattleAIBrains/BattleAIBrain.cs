@@ -9,6 +9,7 @@ using RandomExtensions;
 /// </summary>
 public abstract class BattleAIBrain : ScriptableObject
 {
+    [Header("基本の最大ダメージスキルを決めるためのシミュレーション用設定\n必ずしも最大ダメージスキルを思考しないキャラならば、設定する必要はない")]
     /// <summary>
     /// ダメージシミュレートのシミュレート内容
     /// </summary>
@@ -33,12 +34,6 @@ public abstract class BattleAIBrain : ScriptableObject
         public bool HasAny => HasSkill || HasRangeWill || HasTargetWill || HasTargets;
     }
 
-    // 新スタイル：各AIはPlanに「結果」だけを書く（NowUseSkill等へは直接書かない想定）
-    protected virtual void Plan(AIDecision decision)
-    {
-        // デフォルト実装は何もしない（後方互換：未実装ならThink()へフォールバック）
-    }
-
     // 共通コミット層：単体先約時はSkillのみをコミットし、範囲/対象はBMに委譲
     protected void CommitDecision(AIDecision decision, BaseStates reservedSingleTarget)
     {
@@ -57,14 +52,14 @@ public abstract class BattleAIBrain : ScriptableObject
                 Debug.LogError("BattleAIBrain.CommitDecision: 単体先約時ですが、\ndecision.Skill が null です");
                 return;
             }
-            user.NowUseSkill = decision.Skill;//スキルのみを反映
+            user.SKillUseCall(decision.Skill);//スキルのみを反映
             return;
         }
 
-        if (decision.HasSkill) user.NowUseSkill = decision.Skill;
+        if (decision.HasSkill) user.SKillUseCall(decision.Skill);
         if (decision.HasRangeWill) user.RangeWill = decision.RangeWill.Value;
         if (decision.HasTargetWill) manager.Acter.Target = decision.TargetWill.Value;
-        // d.Targets の具体的な積み先は既存BMフロー依存のためここでは未コミット
+        // d.Targets(直接的な対象者) の具体的な積み先は既存BMフロー依存のためここでは未コミット
     }
 
     // デフォルトのスキル選定（派生AIでoverride可）
@@ -80,6 +75,66 @@ public abstract class BattleAIBrain : ScriptableObject
 
         return candidates[0];
     }
+
+    
+    /// <summary>
+    /// 使用可能スキルの選別
+    /// 主人公キャラ(PlayersStates)でいうCanCastNow/ZoneTraitAndTypeSkillMatchesUIFilterと同じ部分
+    /// </summary>
+    /// <param name="availableSkills"></param>
+    /// <returns></returns>
+    protected List<BaseSkill> MustSkillSelect(List<BaseSkill> availableSkills)
+    {
+        // 入力が空ならエラーログを出してそのまま返す
+        if (availableSkills == null || availableSkills.Count == 0)
+        {
+            Debug.LogError("MustSkillSelect: availableSkills が null または空です");
+            return availableSkills;
+        }
+
+        // manager/Acterが未設定ならフィルタ不能のためそのまま返す
+        var acter = (manager != null) ? manager.Acter : null;
+        if (acter == null)
+        {
+            Debug.LogError("MustSkillSelect: manager または Acter が未設定のためフィルタ処理を実行できません");
+            return availableSkills;
+        }
+
+        // 刃物武器の所持判定（NowUseWeaponがnullの場合も考慮）
+        bool isBladeWielder = acter.NowUseWeapon != null && acter.NowUseWeapon.IsBlade;
+
+        // プレイヤー側と同一の条件でフィルタ
+        // 1) SkillResourceFlow.CanConsumeOnCast(acter, skill)　　ポインントによる消費可能可否判定
+        // 2) (acter.NowUseWeapon.IsBlade || !skill.IsBlade)　　刃物武器と刃物スキルの嚙み合わせ
+        // 3) Actsに単体指定がある場合は単体系ZoneTrait + 攻撃タイプに限定
+        bool hasSingleReservation = false;
+        try
+        {
+            hasSingleReservation = manager?.Acts?.GetAtSingleTarget(0) != null;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"MustSkillSelect: Acts.GetAtSingleTarget(0) 参照時に例外: {e.Message}");
+        }
+
+        var filtered = availableSkills
+            .Where(skill =>
+                skill != null &&
+                SkillResourceFlow.CanConsumeOnCast(acter, skill) &&
+                (isBladeWielder || !skill.IsBlade) &&
+                (
+                    !hasSingleReservation
+                    || (
+                        // 単体先約がある場合の範囲・タイプ制限
+                        skill.IsEligibleForSingleTargetReservation()
+                    )
+                )
+            )
+            .ToList();
+
+        return filtered;
+    }
+
     /// <summary>
     /// 非virtualの統一入口。ここで共通初期化と強制キャンセル判定を行い、
     /// 強制時はキャンセル行動のみを実行し、そうでなければ既存のThink()へ委譲する。
@@ -103,7 +158,16 @@ public abstract class BattleAIBrain : ScriptableObject
             return;
         }
 
-        // 2) 使用可能スキル選別（Freezeでない通常ターンのみ）
+        // 2) 強制キャンセル行動限定条件がtrueなら（強制力）
+        if (user.HasCanCancelCantACTPassive)
+        {
+            // キャンセル専用思考（デフォルトは当該パッシブを消して DoNothing）
+            OnCancelPassiveThink();
+            return;
+        }
+
+
+        // 3) 使用可能スキル選別（Freezeでない通常ターンのみ）
         availableSkills = MustSkillSelect(user.SkillList.ToList());
         if(availableSkills.Count == 0)
         {
@@ -112,13 +176,6 @@ public abstract class BattleAIBrain : ScriptableObject
             return;
         }
 
-        // 3) 強制キャンセル行動限定条件がtrueなら（強制力）
-        if (user.HasCanCancelCantACTPassive)
-        {
-            // キャンセル専用思考（デフォルトは当該パッシブを消して DoNothing）
-            OnCancelPassiveThink();
-            return;
-        }
 
         // 4) Plan結果のコミットは単体先約の有無で自動分岐（単体時はSkillのみコミット）
         var reserved = manager.Acts.GetAtSingleTarget(0);
@@ -176,18 +233,37 @@ public abstract class BattleAIBrain : ScriptableObject
         // 操作不可の場合は何もせずBMの後段フロー（SelectTargetFromWill→SkillACT）に委譲
     }
 
+
+    // =============================================================================
+    // コールバック　行動者の状態により取れる行動が異なる違いをコールバックで表現。
+    // 思考部品をこれらのコールバック内で組み合わせ、キャラごとのAIを作る。
+    // =============================================================================
+
+
+
+    // 新スタイル：各AIはPlanに「結果」だけを書く（NowUseSkill等へは直接書かない想定）
+    protected virtual void Plan(AIDecision decision)
+    {
+        // デフォルト実装は何もしない（後方互換：未実装ならThink()へフォールバック）
+    }
+
+
     /// <summary>
     /// 凍結中スキルが操作可能な場合に、AIが範囲/対象を決め直すためのフック。
-    /// デフォルト実装は「完全単体」のみ簡易的にランダム単体を事前予約する。
-    /// 必要に応じて各キャラAIでoverrideして、前のめり/後衛や群選択などを実装する。
+    /// デフォルト実装は存在しない  「CanOparete」な連続スキルを持っている場合、このフックが呼ばれる可能性は常にあるので、
+    /// これを実装する必要がある。
+    /// CanOprateなスキルで呼ばれるので、
+    /// 範囲選択出来たり、対象者選択だけをここでする。(Skillの選択はしない)
+    /// 主人公キャラでいうPlayersStates.DetermineNextUIStateの部分なのでこれを参考にして。
     /// </summary>
     /// <param name="skill">凍結中の再実行スキル</param>
     protected virtual void OnFreezeOperate(BaseSkill skill)
     {
-        //CanOprateなスキルで呼ばれるので、
-        //範囲選択出来たり、対象者選択だけをここでする。(Skillの選択はしない)
-        // 主人公キャラでいうPlayersStates.DetermineNextUIStateの部分なのでこれを参考にして。
+        //デフォルトでは何もしないがabstractにするとわざわざ必ず派生で実装する必要があるので、
+        //virtualにしておく。
     }
+    
+        
 
     /// <summary>
     /// 強制キャンセル行動しかとれない場合の思考、特殊な敵はここをoverrideして振る舞いを変更可能。
@@ -247,65 +323,6 @@ public abstract class BattleAIBrain : ScriptableObject
             return null;
         }
         return RandomEx.Shared.GetItem(badPassives.ToArray());//ランダムに一つ入手
-    }
-
-
-    /// <summary>
-    /// 使用可能スキルの選別
-    /// 主人公キャラ(PlayersStates)でいうCanCastNow/ZoneTraitAndTypeSkillMatchesUIFilterと同じ部分
-    /// </summary>
-    /// <param name="availableSkills"></param>
-    /// <returns></returns>
-    protected List<BaseSkill> MustSkillSelect(List<BaseSkill> availableSkills)
-    {
-        // 入力が空ならエラーログを出してそのまま返す
-        if (availableSkills == null || availableSkills.Count == 0)
-        {
-            Debug.LogError("MustSkillSelect: availableSkills が null または空です");
-            return availableSkills;
-        }
-
-        // manager/Acterが未設定ならフィルタ不能のためそのまま返す
-        var acter = (manager != null) ? manager.Acter : null;
-        if (acter == null)
-        {
-            Debug.LogError("MustSkillSelect: manager または Acter が未設定のためフィルタ処理を実行できません");
-            return availableSkills;
-        }
-
-        // 刃物武器の所持判定（NowUseWeaponがnullの場合も考慮）
-        bool isBladeWielder = acter.NowUseWeapon != null && acter.NowUseWeapon.IsBlade;
-
-        // プレイヤー側と同一の条件でフィルタ
-        // 1) SkillResourceFlow.CanConsumeOnCast(acter, skill)
-        // 2) (acter.NowUseWeapon.IsBlade || !skill.IsBlade)
-        // 3) Actsに単体指定がある場合は単体系ZoneTrait + 攻撃タイプに限定
-        bool hasSingleReservation = false;
-        try
-        {
-            hasSingleReservation = manager?.Acts?.GetAtSingleTarget(0) != null;
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"MustSkillSelect: Acts.GetAtSingleTarget(0) 参照時に例外: {e.Message}");
-        }
-
-        var filtered = availableSkills
-            .Where(skill =>
-                skill != null &&
-                SkillResourceFlow.CanConsumeOnCast(acter, skill) &&
-                (isBladeWielder || !skill.IsBlade) &&
-                (
-                    !hasSingleReservation
-                    || (
-                        // 単体先約がある場合の範囲・タイプ制限
-                        skill.IsEligibleForSingleTargetReservation()
-                    )
-                )
-            )
-            .ToList();
-
-        return filtered;
     }
 
 
@@ -485,6 +502,7 @@ public struct SkillAnalysisPolicy
     public bool physicalResistance;//物理耐性
     public bool SimlateVitalLayerPenetration;//追加HP
     public bool SimlateEnemyDEF;//敵のDEF
+    public bool SimlatePerfectEnemyDEF;//完全DEFシミュレート（パッシブ・AimStyle排他含む）
 }
 
 //各キャラ用AIはScriptableObejctとして扱うため、UnityのSOを継承するpublicクラスは、

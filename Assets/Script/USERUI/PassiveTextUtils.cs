@@ -1,4 +1,5 @@
 using System.Text;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 
@@ -27,12 +28,32 @@ public static class PassiveTextUtils
     {
         if (actor == null || actor.Passives == null || actor.Passives.Count == 0)
             return string.Empty;
+
+        // 並び替えキーを算出（優先順位：DurationTurn → DurationTurnCounter → DurationWalk → DurationWalkCounter）
+        // -1 などの負値は未使用/無期限扱いとして最後に寄せるため int.MaxValue にマップ
+        var ordered = actor.Passives
+            .Select((p, idx) => new { p, idx })
+            .Where(x => x.p != null)
+            .Select(x => new
+            {
+                x.p,
+                x.idx,
+                kTurn = x.p.DurationTurn < 0 ? int.MaxValue : x.p.DurationTurn,
+                kTurnCnt = (x.p.DurationTurn < 0 || x.p.DurationTurnCounter < 0) ? int.MaxValue : x.p.DurationTurnCounter,
+                kWalk = x.p.DurationWalk < 0 ? int.MaxValue : x.p.DurationWalk,
+                kWalkCnt = (x.p.DurationWalk < 0 || x.p.DurationWalkCounter < 0) ? int.MaxValue : x.p.DurationWalkCounter
+            })
+            .OrderBy(x => x.kTurn)
+            .ThenBy(x => x.kTurnCnt)
+            .ThenBy(x => x.kWalk)
+            .ThenBy(x => x.kWalkCnt)
+            .ThenBy(x => x.idx) // 安定化（完全同値時は元の順序）
+            .Select(x => x.p);
+
         var sb = new StringBuilder();
         bool first = true;
-        for (int i = 0; i < actor.Passives.Count; i++)
+        foreach (var p in ordered)
         {
-            var p = actor.Passives[i];
-            if (p == null) continue;
             string raw = string.IsNullOrWhiteSpace(p.SmallPassiveName) ? p.ID.ToString() : p.SmallPassiveName;
             string token = $"<{raw}>";
             if (!first) sb.Append(' ');
