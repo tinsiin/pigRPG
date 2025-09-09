@@ -3169,7 +3169,7 @@ public abstract class BaseStates
 
     /// <summary>
     /// 「標準のロジック」の割り込みカウンターが発動するかのオプション
-    /// AllyClassはUIから、EnemyはSkillAI等で継承して設定する。
+    /// AllyClassはUIから、Enemyは継承してシリアライズで設定する。
     /// とりあえずtrueで設定
     /// </summary>
     public virtual bool IsInterruptCounterActive => true;

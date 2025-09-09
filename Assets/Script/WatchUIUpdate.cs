@@ -16,16 +16,569 @@ using UnityEngine.UI;
 using UnityEditor;
 #endif
 using System.Threading;
+using Unity.Profiling;
+using System.IO;
 
 /// <summary>
 /// WatchUIUpdateクラスに戦闘画面用のレイヤー分離システムを追加しました。
 /// 背景と敵は一緒にズームし、味方アイコンは独立してスライドインします。
 /// 戦闘エリアはズーム後の座標系で直接デザイン可能です。
 /// </summary>
-public class WatchUIUpdate : MonoBehaviour
+public partial class WatchUIUpdate : MonoBehaviour
 {
     // シングルトン参照
     public static WatchUIUpdate Instance { get; private set; }
+
+    // プロファイラーマーカー（HUDでも参照できる固定名）
+    private static readonly ProfilerMarker kPrepareIntro = new ProfilerMarker("WUI.PrepareIntro");
+    private static readonly ProfilerMarker kPlayIntro    = new ProfilerMarker("WUI.PlayIntro");
+    private static readonly ProfilerMarker kPlaceEnemies = new ProfilerMarker("WUI.PlaceEnemies");
+
+    // 導入メトリクス（HUD表示用）
+    public sealed class IntroMetricsData
+    {
+        public double PlannedMs;   // 理論所要（ズーム/スライド/段差+preDelay）
+        public double ActualMs;    // 実測（Play開始〜完了）
+        public double DelayMs;     // 実測-理論（0未満は0として扱う想定）
+        public double EnemyPlacementMs; // 敵UI配置の実測（PlaceEnemiesFromBattleGroup全体）
+        public System.DateTime Timestamp; // 計測時刻
+        public int AllyCount;
+        public int EnemyCount;
+        // アニメーション滑らかさ（Play中のみのフレーム時間分布）
+        public double IntroFrameAvgMs;   // 平均フレーム時間
+        public double IntroFrameP95Ms;   // 95パーセンタイル
+        public double IntroFrameMaxMs;   // 最大フレーム時間
+    }
+
+    /// <summary>
+    /// Orchestrator 経由でズーム原状復帰を行う任意呼び出しの導線。
+    /// トグルOFF時は従来の RestoreOriginalTransforms にフォールバックします。
+    /// </summary>
+    public async UniTask RestoreZoomViaOrchestrator(bool animated = false, float duration = 0f)
+    {
+        try
+        {
+            var token = _sweepCts != null ? _sweepCts.Token : System.Threading.CancellationToken.None;
+            EnsureOrchestrator();
+            var ictx = BuildIntroContextForOrchestrator();
+            Debug.Log($"[WatchUIUpdate] RestoreZoomViaOrchestrator animated={animated} duration={duration}");
+            await _orchestrator.RestoreAsync(ictx, animated, duration, token);
+        }
+        catch (System.OperationCanceledException)
+        {
+            Debug.Log("[WatchUIUpdate] RestoreZoomViaOrchestrator canceled");
+        }
+    }
+
+    
+
+    private void EnsureOrchestrator()
+    {
+        if (_orchestrator == null)
+        {
+            // ズーム外出しは次フェーズ。配置はアダプタで既存実装へ委譲
+            var zoom = new WuiZoomControllerAdapter();
+            _orchestrator = new DefaultIntroOrchestrator(new WuiEnemyPlacerAdapter(), zoom);
+        }
+    }
+
+    private IIntroContext BuildIntroContextForOrchestrator()
+    {
+        var bc = BenchmarkContext.Current;
+        string sc = bc?.ScenarioName ?? (scenarioSelector != null ? (scenarioSelector.CreateSelectedScenario()?.Name ?? "-") : "-");
+        int pi = bc?.PresetIndex ?? -1;
+        string ps = bc?.PresetSummary ?? BuildMetricsContext()?.PresetSummary ?? "-";
+        var tags = bc?.Tags;
+        var frontRect = zoomFrontContainer as RectTransform;
+        var backRect  = zoomBackContainer  as RectTransform;
+        return new IntroContext(
+            sc,
+            pi,
+            ps,
+            tags,
+            enemySpawnArea,
+            frontRect,
+            backRect,
+            _gotoScaleXY,
+            _gotoPos,
+            _firstZoomSpeedTime,
+            _firstZoomAnimationCurve
+        );
+    }
+
+    private IEnemyPlacementContext BuildPlacementContext(BattleGroup enemyGroup)
+    {
+        int count = enemyGroup?.Ours != null ? enemyGroup.Ours.Count : 0;
+        // 既存実装はBatchActivateを内部で持つため、ここではtrueをヒントとして渡す（現状アダプタ側では未使用）
+        return new EnemyPlacementContext(enemyGroup, count, batchActivate: true, fixedSizeOverride: null);
+    }
+
+    // ===== ベンチ進捗（HUD 用） =====
+    public sealed class SweepProgressSnapshot
+    {
+        public int PresetIndex;    // 0-based（完了レポートでは presets まで到達することあり）
+        public int PresetCount;
+        public int RunIndex;       // 1-based
+        public int RunCount;       // 各プリセットの総ラン数
+        public int CompletedRuns;  // 全体で完了したラン数
+        public int TotalRuns;      // 全体の総ラン数
+        public DateTime StartedAt;
+        public double ElapsedSec;
+        public double ETASec;
+    }
+    private SweepProgressSnapshot _lastSweepProgress;
+    public SweepProgressSnapshot LastSweepProgress => _lastSweepProgress;
+
+    // スイープのキャンセル制御
+    private CancellationTokenSource _sweepCts;
+
+    // ===== SO 構成状態（UI連携用の公開プロパティ） =====
+    public bool HasPresetConfig => (presetConfig != null && presetConfig.items != null && presetConfig.items.Length > 0);
+    public bool HasOutputSettings => (outputSettings != null);
+    public bool HasMetricsSettings => (metricsSettings != null);
+
+    private IntroMetricsData _lastIntroMetrics = new IntroMetricsData();
+    public IntroMetricsData LastIntroMetrics => _lastIntroMetrics;
+
+    // Walk全体（ボタン押下→Walk完了）計測
+    public sealed class WalkMetricsData
+    {
+        public double TotalMs;             // Walk() 全体の実測
+        public DateTime Timestamp;  // 計測時刻
+    }
+    private WalkMetricsData _lastWalkMetrics = new WalkMetricsData();
+    public WalkMetricsData LastWalkMetrics => _lastWalkMetrics;
+    private System.Diagnostics.Stopwatch _walkSw;
+
+    public void BeginWalkCycleTiming()
+    {
+        if (_walkSw == null) _walkSw = new System.Diagnostics.Stopwatch();
+        _walkSw.Reset();
+        _walkSw.Start();
+    }
+
+    public void EndWalkCycleTiming()
+    {
+        if (_walkSw == null || !_walkSw.IsRunning) return;
+        _walkSw.Stop();
+        _lastWalkMetrics.TotalMs = _walkSw.Elapsed.TotalMilliseconds;
+        _lastWalkMetrics.Timestamp = System.DateTime.Now;
+        // MetricsHubへ記録（コンテキストは現在のIntro設定を要約）
+        try
+        {
+            var ctx = BuildMetricsContext();
+            global::MetricsHub.Instance.RecordWalk(new global::WalkMetricsEvent
+            {
+                TotalMs = _lastWalkMetrics.TotalMs,
+                Timestamp = _lastWalkMetrics.Timestamp,
+                Context = ctx,
+            });
+        }
+        catch { /* no-op */ }
+    }
+
+    // ===== ベンチマーク設定／結果 =====
+    [Header(
+        "ベンチマーク（単一設定×回数）\n" +
+        "・このセクションはSO非依存です（Preset/Output/Metrics のSOとは別系統）。\n" +
+        "・手早く1種類の実処理（Walk(1)）をN回回して平均を確認したいときに使用します。\n" +
+        "・プリセットスイープ（SO必須）とは出力や実行系が独立しています。")]
+    [Tooltip("1プリセットにつき何回繰り返すか（大きいほど平均が安定します）。")]
+    [SerializeField] private int benchmarkRepeatCount = 5;           // 反復回数
+    [Tooltip("各回のあいだに挟む待機時間（秒）。0で連続実行。状態詰まりの緩和に少量の待機を推奨。")]
+    [SerializeField] private float benchmarkInterRunDelaySec = 0.0f; // 反復間の待機（秒）
+    public bool IsBenchmarkRunning { get; private set; } = false;
+
+    [Header(
+        "Metrics 設定（SO 必須）\n" +
+        "・MetricsSettings を割り当ててください（未割り当て時は計測を自動で全無効）。\n" +
+        "・本番ビルド等でオーバーヘッドを避けたい場合は SO 側でOFFにできます。\n" +
+        "・個別（Span/Jitter）もSO側で切替可能です。")]
+    [Tooltip("Metrics 設定のSO。未割り当ての場合、Metricsは無効化されます。")]
+    [SerializeField] private MetricsSettings metricsSettings;
+
+    public sealed class BenchMetricsData
+    {
+        public int Requested;          // 要求反復数
+        public int SuccessCount;       // 成功数
+        public int FailCount;          // 失敗数
+        public double AvgActualMs;     // A の平均
+        public double AvgWalkTotalMs;  // W の平均
+        public double AvgJitAvgMs;     // IntroFrameAvg の平均
+        public double AvgJitP95Ms;     // IntroFrameP95 の平均
+        public double AvgJitMaxMs;     // IntroFrameMax の平均
+        public System.DateTime Timestamp; // 計測完了時刻
+        public float InterDelaySec;    // 反復待機秒
+    }
+
+    private BenchMetricsData _lastBenchMetrics = null;
+    public BenchMetricsData LastBenchMetrics => _lastBenchMetrics;
+
+    [ContextMenu("Run Benchmark Now (Walk xN)")]
+    public async void RunBenchmarkNowContext()
+    {
+        await RunBenchmarkNow();
+    }
+
+    // UIのOnClickなどから直接呼べるvoidラッパー
+    public void StartBenchmarkNow()
+    {
+        RunBenchmarkNow().Forget();
+    }
+
+    public async UniTask RunBenchmarkNow()
+    {
+        IsBenchmarkRunning = true;
+        try
+        {
+            if (!Application.isPlaying)
+            {
+                Debug.LogWarning("[Benchmark] Play Mode で実行してください（Editor停止中は実処理を回せません）");
+                return;
+            }
+            int req = Mathf.Max(1, benchmarkRepeatCount);
+            var scenario = (scenarioSelector != null ? scenarioSelector.CreateSelectedScenario() : null) ?? new global::WalkOneStepScenario();
+            var summary = await global::BenchmarkRunner.RunRepeatAsync(
+                scenario,
+                req,
+                benchmarkInterRunDelaySec,
+                0,
+                1,
+                onEachRun: null,
+                progress: null,
+                CancellationToken.None);
+
+            _lastBenchMetrics = new BenchMetricsData
+            {
+                Requested      = summary.RequestCount,
+                SuccessCount   = summary.SuccessCount,
+                FailCount      = summary.FailCount,
+                AvgActualMs    = summary.AvgActualMs,
+                AvgWalkTotalMs = summary.AvgWalkTotalMs,
+                AvgJitAvgMs    = summary.AvgIntroAvgMs,
+                AvgJitP95Ms    = summary.AvgIntroP95Ms,
+                AvgJitMaxMs    = summary.AvgIntroMaxMs,
+                Timestamp      = System.DateTime.Now,
+                InterDelaySec  = benchmarkInterRunDelaySec,
+            };
+        }
+        finally
+        {
+            IsBenchmarkRunning = false;
+        }
+    }
+
+    // ===== プリセットスイープ（配列の各設定 × 指定回数 実行し、行ごとにログ追記） =====
+    [System.Serializable]
+    public struct IntroPreset
+    {
+        public bool introYieldDuringPrepare;
+        public int introYieldEveryN;
+        public float introPreAnimationDelaySec;
+        public float introSlideStaggerInterval;
+    }
+
+    [Header(
+        "ベンチプリセットスイープ（SO 必須）\n" +
+        "・手順: 1) IntroPresetCollection を作成→ items, repeatCount, interRunDelaySec を設定\n" +
+        "          2) 本フィールドに割り当て\n" +
+        "          3) （任意）BenchmarkOutputSettings を割り当ててCSV/JSONを有効化\n" +
+        "          4) 実行（StartPresetSweep/ContextMenu）\n" +
+        "・依存: MetricsSettings が割当済みなら計測ON/OFF/種別が反映されます（任意）。\n" +
+        "・結果: 画面のTMP（任意）へ1行サマリ、（任意）CSV/JSONの生成と保存。")]
+    [Tooltip("プリセット/回数/待機のSO。未割り当ての場合は実行できません。")]
+    [SerializeField] private IntroPresetCollection presetConfig;
+
+    [Header(
+        "ベンチログ表示（任意・TMP出力）\n" +
+        "・TMP(TextMeshProUGUI) を割り当てると、プリセットごとの平均結果を1行ずつ表示します。\n" +
+        "・未割り当てなら画面表示はスキップ（Consoleには出力します）。")]
+    [Tooltip("画面上にログを出す先のTextMeshProUGUI。未指定なら画面表示はスキップ（Consoleのみ）。")]
+    [SerializeField] private TextMeshProUGUI presetLogTMP;
+    [Tooltip("画面に保持する最大行数。超過すると古い行から自動で削除します。")]
+    [SerializeField] private int presetLogMaxLines = 400;
+    private readonly List<string> _presetLogBuffer = new List<string>(512);
+
+    [Header(
+        "ベンチ出力（SO 推奨）\n" +
+        "・BenchmarkOutputSettings を割り当てると、CSV/JSONの生成やファイル保存が可能になります。\n" +
+        "・enableCsv/enableJson=true で内部バッファ生成、writeToFile=true でファイル保存。\n" +
+        "・outputFolder が空のときは Application.persistentDataPath に保存します。\n" +
+        "・未割り当ての場合は出力なし（画面のTMPのみ）。")]
+    [Tooltip("出力設定のSO。未割り当ての場合はCSV/JSON出力は行いません。")]
+    [SerializeField] private BenchmarkOutputSettings outputSettings;
+
+    [Header("シナリオ選択（任意）")]
+    [Tooltip("UIから切替できる ScenarioSelector。未割り当てなら Walk(1) を使用します。")]
+    [SerializeField] private ScenarioSelector scenarioSelector;
+
+    // Orchestrator（I/F注入）。当面は内部でデフォルト生成し、段階的に移行する
+    private global::IIntroOrchestrator _orchestrator;
+
+    
+
+    private void AppendPresetLogLine(string line)
+    {
+        _presetLogBuffer.Add(line);
+        if (presetLogMaxLines > 0 && _presetLogBuffer.Count > presetLogMaxLines)
+        {
+            int remove = _presetLogBuffer.Count - presetLogMaxLines;
+            _presetLogBuffer.RemoveRange(0, remove);
+        }
+        if (presetLogTMP != null)
+        {
+            presetLogTMP.text = string.Join("\n", _presetLogBuffer);
+        }
+    }
+
+    // ファイル名用に不正文字を '_' に置換し、空や空白のみの場合は "-" を返す
+    private static string SanitizeForFile(string s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return "-";
+        var invalid = System.IO.Path.GetInvalidFileNameChars();
+        var sb = new System.Text.StringBuilder(s.Length);
+        for (int i = 0; i < s.Length; i++)
+        {
+            char c = s[i];
+            bool bad = false;
+            for (int j = 0; j < invalid.Length; j++)
+            {
+                if (c == invalid[j]) { bad = true; break; }
+            }
+            sb.Append(bad ? '_' : c);
+        }
+        return sb.ToString();
+    }
+
+    // 出力ファイル名テンプレートを適用し、必要に応じてサブフォルダを作成したフルパスを返す
+    private string ResolveOutputPath(string dir, string baseName, string scenarioName, string presetCollectionName, string timestamp, int repeat, int presets, string ext)
+    {
+        string template = (outputSettings != null) ? outputSettings.fileNameTemplate : string.Empty;
+        bool allowSub = (outputSettings != null) ? outputSettings.createSubfolders : true;
+        string safeBase = SanitizeForFile(baseName);
+        string safeSc = SanitizeForFile(scenarioName);
+        string safePc = SanitizeForFile(presetCollectionName);
+
+        string fileName;
+        if (string.IsNullOrEmpty(template))
+        {
+            fileName = $"{safeBase}_{safeSc}_{safePc}_{timestamp}";
+        }
+        else
+        {
+            fileName = template
+                .Replace("{base}", safeBase)
+                .Replace("{scenario}", safeSc)
+                .Replace("{presetCol}", safePc)
+                .Replace("{ts}", timestamp)
+                .Replace("{repeat}", repeat.ToString())
+                .Replace("{presets}", presets.ToString());
+            if (!allowSub)
+            {
+                fileName = fileName.Replace('/', '_').Replace('\\', '_');
+            }
+        }
+        string full = System.IO.Path.Combine(dir, fileName + "." + ext);
+        string targetDir = System.IO.Path.GetDirectoryName(full);
+        if (!string.IsNullOrEmpty(targetDir)) System.IO.Directory.CreateDirectory(targetDir);
+        return full;
+    }
+
+    public struct IntroSettingsSnapshot
+    {
+        public bool introYieldDuringPrepare;
+        public int introYieldEveryN;
+        public float introPreAnimationDelaySec;
+        public float introSlideStaggerInterval;
+    }
+
+    public IntroSettingsSnapshot SaveCurrentIntroSettings()
+    {
+        return new IntroSettingsSnapshot
+        {
+            introYieldDuringPrepare = this.introYieldDuringPrepare,
+            introYieldEveryN = this.introYieldEveryN,
+            introPreAnimationDelaySec = this.introPreAnimationDelaySec,
+            introSlideStaggerInterval = this.introSlideStaggerInterval,
+        };
+    }
+
+    public void ApplyIntroPreset(IntroPreset p)
+    {
+        this.introYieldDuringPrepare = p.introYieldDuringPrepare;
+        this.introYieldEveryN = Mathf.Max(1, p.introYieldEveryN);
+        this.introPreAnimationDelaySec = Mathf.Max(0f, p.introPreAnimationDelaySec);
+        this.introSlideStaggerInterval = Mathf.Max(0f, p.introSlideStaggerInterval);
+    }
+
+    public void RestoreIntroSettings(IntroSettingsSnapshot s)
+    {
+        this.introYieldDuringPrepare = s.introYieldDuringPrepare;
+        this.introYieldEveryN = s.introYieldEveryN;
+        this.introPreAnimationDelaySec = s.introPreAnimationDelaySec;
+        this.introSlideStaggerInterval = s.introSlideStaggerInterval;
+    }
+
+    [ContextMenu("Run Preset Sweep (All)")]
+    public async void RunPresetSweepContext()
+    {
+        await RunPresetSweepBenchmark();
+    }
+
+    // UIのOnClickなどから直接呼べるvoidラッパー
+    public void StartPresetSweep()
+    {
+        RunPresetSweepBenchmark().Forget();
+    }
+
+    [ContextMenu("Cancel Preset Sweep (If Running)")]
+    public void CancelPresetSweep()
+    {
+        if (_sweepCts != null && !_sweepCts.IsCancellationRequested)
+        {
+            _sweepCts.Cancel();
+            Debug.Log("[PresetSweep] Cancel requested");
+        }
+        else
+        {
+            Debug.Log("[PresetSweep] Not running or already cancelled");
+        }
+    }
+
+    public async UniTask RunPresetSweepBenchmark()
+    {
+        // 検証
+        if (!this.ValidatePresetSweepPrerequisites(out var effPresets))
+            return;
+
+        IsBenchmarkRunning = true;
+        try
+        {
+            int repeat = Mathf.Max(1, presetConfig.repeatCount);
+            float interDelay = presetConfig.interRunDelaySec;
+            int total = effPresets.Length * repeat;
+            Debug.Log($"[PresetSweep] Start {effPresets.Length} presets x {repeat} runs (total {total})");
+
+            // フォーマッター作成
+            var formatters = this.CreateBenchmarkFormatters();
+            AppendPresetLogLine(formatters.tmpFormatter.Header(effPresets.Length, repeat));
+            // シナリオ生成 & ヘッダにシナリオ名とプリセットコレクション名を付与
+            var scenario = (scenarioSelector != null ? scenarioSelector.CreateSelectedScenario() : null) ?? new global::WalkOneStepScenario();
+            string scenarioName = scenario.Name;
+            string presetCollectionName = presetConfig != null ? presetConfig.name : "-";
+            if (formatters.useCsv)  formatters.csvSb.AppendLine(formatters.csvFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName));
+            if (formatters.useJson) formatters.jsonSb.AppendLine(formatters.jsonFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName));
+            if (formatters.usePerRunCsv)  formatters.perRunCsvSb.AppendLine(formatters.perRunCsvFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName));
+            if (formatters.usePerRunJson) formatters.perRunJsonSb.AppendLine(formatters.perRunJsonFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName));
+
+            // per-run ストリーム書き出し（任意）
+            int flushEvery = (outputSettings != null) ? outputSettings.perRunFlushEvery : 0;
+            bool perRunStream = formatters.writeToFile && flushEvery > 0 && (formatters.usePerRunCsv || formatters.usePerRunJson);
+            string dirForRuns = string.Empty, tsRuns = string.Empty, baseRunsName = string.Empty, pathRunsCsv = string.Empty, pathRunsJson = string.Empty;
+            if (perRunStream)
+            {
+                dirForRuns = string.IsNullOrEmpty(formatters.outputFolder) ? Application.persistentDataPath : formatters.outputFolder;
+                Directory.CreateDirectory(dirForRuns);
+                tsRuns = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                baseRunsName = formatters.fileBaseName + "_runs";
+                if (formatters.usePerRunCsv)
+                {
+                    pathRunsCsv = ResolveOutputPath(dirForRuns, baseRunsName, scenarioName, presetCollectionName, tsRuns, repeat, effPresets.Length, "csv");
+                    File.WriteAllText(pathRunsCsv, formatters.perRunCsvFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName) + "\n", Encoding.UTF8);
+                }
+                if (formatters.usePerRunJson)
+                {
+                    pathRunsJson = ResolveOutputPath(dirForRuns, baseRunsName, scenarioName, presetCollectionName, tsRuns, repeat, effPresets.Length, "json");
+                    File.WriteAllText(pathRunsJson, formatters.perRunJsonFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName) + "\n", Encoding.UTF8);
+                }
+            }
+
+            // 集計（フッタに総OK/総リクエスト/行数を出力するため）
+            int sinkRows = 0;
+            int sinkOkSum = 0;
+            int sinkTotalSum = 0;
+            int perRunRows = 0;
+            int perRunOk = 0;
+
+            // 実行（上で生成した scenario を使用）
+            var applier  = new global::IntroSettingsApplier(this);
+            // 進捗初期化
+            var startedAt = System.DateTime.Now;
+            // キャンセルトークン準備
+            _sweepCts?.Dispose();
+            _sweepCts = new System.Threading.CancellationTokenSource();
+            _lastSweepProgress = new SweepProgressSnapshot
+            {
+                PresetIndex = 0,
+                PresetCount = effPresets.Length,
+                RunIndex = 0,
+                RunCount = repeat,
+                CompletedRuns = 0,
+                TotalRuns = total,
+                StartedAt = startedAt,
+                ElapsedSec = 0,
+                ETASec = 0,
+            };
+            var progress = this.CreateProgressReporter(startedAt, total, effPresets.Length);
+            await global::BenchmarkRunner.RunPresetSweepAsync(
+                scenario,
+                effPresets,
+                applier,
+                repeat,
+                interDelay,
+                formatters.tmpFormatter,
+                AppendPresetLogLine,
+                (global::WatchUIUpdate.IntroPreset p, global::BenchmarkSummary s) =>
+                {
+                    if (formatters.useCsv)  formatters.csvSb.AppendLine(formatters.csvFormatter.SummaryLine(p, s));
+                    if (formatters.useJson) formatters.jsonSb.AppendLine(formatters.jsonFormatter.SummaryLine(p, s));
+                    sinkRows++;
+                    sinkOkSum   += s.SuccessCount;
+                    sinkTotalSum += s.RequestCount;
+                },
+                (int runIndex, global::WatchUIUpdate.IntroPreset p, global::BenchmarkRunResult r) =>
+                {
+                    this.ProcessPerRunResult(
+                        formatters,
+                        runIndex,
+                        p,
+                        r,
+                        scenarioName,
+                        pathRunsCsv,
+                        pathRunsJson,
+                        perRunStream,
+                        ref perRunRows,
+                        ref perRunOk);
+                },
+                progress,
+                _sweepCts.Token);
+
+            // まとめて保存
+            this.SaveBenchmarkResults(
+                formatters,
+                scenarioName,
+                presetCollectionName,
+                repeat,
+                effPresets.Length,
+                sinkRows,
+                sinkOkSum,
+                sinkTotalSum,
+                perRunRows,
+                perRunOk,
+                pathRunsCsv,
+                pathRunsJson,
+                perRunStream);
+        }
+        finally
+        {
+            IsBenchmarkRunning = false;
+            _sweepCts?.Dispose();
+            _sweepCts = null;
+            Debug.Log("[PresetSweep] Finished");
+            var formatter = new global::TmpSummaryFormatter();
+            AppendPresetLogLine(formatter.Footer());
+        }
+    }
 
     private void Awake()
     {
@@ -35,6 +588,25 @@ public class WatchUIUpdate : MonoBehaviour
             return;
         }
         Instance = this;
+        // Metrics トグルを適用
+        ApplyMetricsToggles();
+    }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        ApplyMetricsToggles();
+    }
+#endif
+
+    private void ApplyMetricsToggles()
+    {
+        bool enabled = (metricsSettings != null) ? metricsSettings.enableMetrics : false;
+        bool span    = (metricsSettings != null) ? metricsSettings.enableSpan     : false;
+        bool jitter  = (metricsSettings != null) ? metricsSettings.enableJitter   : false;
+        global::MetricsHub.Enabled = enabled;
+        global::MetricsHub.EnableSpan = span;
+        global::MetricsHub.EnableJitter = jitter;
     }
 
     // ===== Kモード: パッシブ一覧表示（フェードイン） =====
@@ -374,15 +946,9 @@ public class WatchUIUpdate : MonoBehaviour
     [SerializeField] private float _firstZoomSpeedTime;
     [SerializeField] private Vector2 _gotoPos;
     [SerializeField] private Vector2 _gotoScaleXY;
-    // ズーム前の初期状態を自動保存（実行時に設定）
-    private Vector2 _originalBackPos;
-    private Vector2 _originalBackScale;
-    private Vector2 _originalFrontPos;
-    private Vector2 _originalFrontScale;
     
     [Header("ズームアニメ有効/無効")]
     [SerializeField] private bool enableZoomAnimation = true;      // 背景/敵ズームアニメを行うか
-    [SerializeField] private bool enableRestoreAnimation = true;   // 復元時にアニメを行うか（falseなら即時復元）
 
     GameObject[] TwoObjects;//サイドオブジェクトの配列
     SideObjectMove[] SideObjectMoves = new SideObjectMove[2];//サイドオブジェクトのスクリプトの配列
@@ -392,6 +958,33 @@ public class WatchUIUpdate : MonoBehaviour
     [Header("戦闘画面レイヤー構成")]
     [SerializeField] private Transform enemyBattleLayer;     // 敵配置レイヤー（背景と一緒にズーム）
     [SerializeField] private Transform allyBattleLayer;      // 味方アイコンレイヤー（独立アニメーション）
+
+    // 導入アニメ最適化（準備→一斉起動）
+    [Header(
+        "導入アニメ最適化（準備→一斉起動）\n" +
+        "[モバイル推奨] introYieldDuringPrepare=true, introYieldEveryN=3〜6, introPreAnimationDelaySec=0.01〜0.04, introSlideStaggerInterval=0.06〜0.08\n" +
+        "[PC推奨]      introYieldDuringPrepare=false, introYieldEveryN=4, introPreAnimationDelaySec=0〜0.01, introSlideStaggerInterval=0.04〜0.06\n" +
+        "備考: 準備フェーズで計算を分散し、アニメ生成は一斉に起動してスパイクを回避します。")]
+    [SerializeField] private bool introYieldDuringPrepare = true; // 準備計算をフレーム分散（低端末はtrue推奨）
+    [Header("準備計算で何件ごとにYieldするか（3〜6 推奨：端末次第）")]
+    [SerializeField] private int  introYieldEveryN = 4;           // N件ごとにYield
+    [Header("アニメ起動直前の小休止（秒）0.01〜0.04 推奨（PCは0〜0.01）")]
+    [SerializeField] private float introPreAnimationDelaySec = 0.02f; // 一斉起動直前に待つ時間
+    [Header("味方スライドの段差（秒）0.06〜0.08 推奨（PCは0.04〜0.06）")]
+    [SerializeField] private float introSlideStaggerInterval = 0.075f; // 味方スライドの段差ディレイ
+    [Header("敵UI配置パフォーマンス/ログ設定")]
+    [Header("詳細: enableVerboseEnemyLogs\ntrue: 敵UI配置処理の詳細ログをConsoleに出力（開発/デバッグ向け）\nfalse: 最低限のみ出力\n注意: ログが多いとEditorでのフレーム落ち/GCを誘発する場合があります。ビルドではOFF推奨")]
+    [SerializeField] private bool enableVerboseEnemyLogs = false; // 敵配置周りの詳細ログを出す
+
+    [Header("詳細: throttleEnemySpawns\ntrue: 敵UI生成を複数フレームへ分散し、CPUスパイク/Canvas Rebuildの山を緩和\nfalse: 1フレームに一括生成（見た目は即時だがスパイクが出やすい）\n対象: 大量スポーン/低スペ端末ではtrue推奨")]
+    [SerializeField] private bool throttleEnemySpawns = true;     // 敵UI生成をフレームに分散する
+
+    [Header("詳細: enemySpawnBatchSize\n1フレームあたりに生成する敵UIの数\n小さいほど1フレームの負荷は下がるが、全員が出揃うまでの時間は伸びる\n目安: 1-3（モバイル/多数）、4-8（PC/少数）")]
+    [SerializeField] private int enemySpawnBatchSize = 2;         // 何体ごとに小休止するか（最小1）
+
+    [Header("詳細: enemySpawnInterBatchFrames\nバッチ間で待機するフレーム数\n0: 毎フレ連続で処理／1: 1フレ休む／2+: さらに分散（ポップインが目立つ可能性）\n目安: 0-2 推奨")]
+    [SerializeField] private int enemySpawnInterBatchFrames = 1;  // バッチ間で待機するフレーム数
+
 
     // アクションマーク（行動順マーカー）
     [Header("ActionMark 設定")]
@@ -405,21 +998,6 @@ public class WatchUIUpdate : MonoBehaviour
     // 敵UIプレハブ（UIController付き）
     [Header("敵UI Prefab")]
     [SerializeField] private UIController enemyUIPrefab;
-    
-    // パフォーマンス/ログ設定
-    [Header("パフォーマンス/ログ設定")]
-    [Header("詳細: enableVerboseEnemyLogs\ntrue: 敵UI配置処理の詳細ログをConsoleに出力（開発/デバッグ向け）\nfalse: 最低限のみ出力\n注意: ログが多いとEditorでのフレーム落ち/GCを誘発する場合があります。ビルドではOFF推奨")]
-    [SerializeField] private bool enableVerboseEnemyLogs = false; // 敵配置周りの詳細ログを出す
-
-    [Header("詳細: throttleEnemySpawns\ntrue: 敵UI生成を複数フレームへ分散し、CPUスパイク/Canvas Rebuildの山を緩和\nfalse: 1フレームに一括生成（見た目は即時だがスパイクが出やすい）\n対象: 大量スポーン/低スペ端末ではtrue推奨")]
-    [SerializeField] private bool throttleEnemySpawns = true;     // 敵UI生成をフレームに分散する
-
-    [Header("詳細: enemySpawnBatchSize\n1フレームあたりに生成する敵UIの数\n小さいほど1フレームの負荷は下がるが、全員が出揃うまでの時間は伸びる\n目安: 1-3（モバイル/多数）、4-8（PC/少数）")]
-    [SerializeField] private int enemySpawnBatchSize = 2;         // 何体ごとに小休止するか（最小1）
-
-    [Header("詳細: enemySpawnInterBatchFrames\nバッチ間で待機するフレーム数\n0: 毎フレ連続で処理／1: 1フレ休む／2+: さらに分散（ポップインが目立つ可能性）\n目安: 0-2 推奨")]
-    [SerializeField] private int enemySpawnInterBatchFrames = 1;  // バッチ間で待機するフレーム数
-
 
     // 敵ランダム配置時の余白（ピクセル）
     [Header("敵ランダム配置 余白設定")]
@@ -543,245 +1121,312 @@ public class WatchUIUpdate : MonoBehaviour
     /// </summary>
     public async UniTask FirstImpressionZoomImproved()
     {
-        // 背景+敵レイヤーのズーム、味方アイコンのスライドイン、敵UI生成を同時実行
-        var zoomTask = ZoomBackgroundAndEnemies();
-        var slideTask = SlideInAllyIcons();
-        
-        // 敵UI生成も同時に開始（ズーム開始と同タイミング）
-        // 注意: 敵UI生成は別途PlaceEnemiesFromBattleGroupで呼び出されることを前提
-        
-        // 両方のアニメーションが完了するまで待機
-        await UniTask.WhenAll(zoomTask, slideTask);
-        
-        Debug.Log("ズームアニメーション完了。敵UIが正しい位置に配置されているはずです。");
+        // 準備（計算）→ 一斉起動（アニメ）の二段階でスパイクを抑制
+        var ctx = BuildMetricsContext();
+        IntroMotionPlan plan;
+        using (global::MetricsHub.Instance.BeginSpan("Intro.Prepare", ctx))
+        {
+            // Orchestrator 事前準備（I/F先行：現状はno-op）
+            try
+            {
+                EnsureOrchestrator();
+                var ictx = BuildIntroContextForOrchestrator();
+                var token = _sweepCts != null ? _sweepCts.Token : System.Threading.CancellationToken.None;
+                await _orchestrator.PrepareAsync(ictx, token);
+            }
+            catch { /* no-op */ }
+            plan = await PrepareIntroMotions(introYieldDuringPrepare, introYieldEveryN);
+        }
+
+        // 理論所要時間（秒）を算出（ズーム/スライド段差/プリディレイを考慮）
+        double plannedSec = ComputePlannedIntroDurationSeconds(plan, introPreAnimationDelaySec);
+
+        // 実測：Playの開始から完了までを計測
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        using (global::MetricsHub.Instance.BeginSpan("Intro.Play", ctx))
+        {
+            await PlayIntroMotions(plan, introPreAnimationDelaySec);
+        }
+        sw.Stop();
+
+        // メトリクス保存
+        _lastIntroMetrics.PlannedMs = plannedSec * 1000.0;
+        _lastIntroMetrics.ActualMs  = sw.Elapsed.TotalMilliseconds;
+        _lastIntroMetrics.DelayMs   = Math.Max(0.0, _lastIntroMetrics.ActualMs - _lastIntroMetrics.PlannedMs);
+        _lastIntroMetrics.Timestamp = System.DateTime.Now;
+        _lastIntroMetrics.AllyCount = Walking.Instance?.bm?.AllyGroup?.Ours?.Count ?? (allySpawnPositions?.Length ?? 0);
+        _lastIntroMetrics.EnemyCount = Walking.Instance?.bm?.EnemyGroup?.Ours?.Count ?? 0;
+
+        Debug.Log($"[Intro] Planned={_lastIntroMetrics.PlannedMs:F2}ms, Actual={_lastIntroMetrics.ActualMs:F2}ms, Delay={_lastIntroMetrics.DelayMs:F2}ms, Allies={_lastIntroMetrics.AllyCount}, Enemies={_lastIntroMetrics.EnemyCount}");
+    }
+
+    // ===== 準備→一斉起動 フェーズ実装 =====
+    private struct ZoomPlan
+    {
+        public RectTransform target;
+        public Vector2 fromScale;
+        public Vector2 toScale;
+        public Vector2 fromPos;
+        public Vector2 toPos;
+        public float duration;
+        public AnimationCurve curve;
+    }
+
+    private struct SlidePlan
+    {
+        public RectTransform target;
+        public Vector2 fromPos;
+        public Vector2 toPos;
+        public float duration;
+        public float delay;
+        public Ease  ease;
+    }
+
+    private sealed class IntroMotionPlan
+    {
+        public List<ZoomPlan> Zooms = new List<ZoomPlan>();
+        public List<SlidePlan> Slides = new List<SlidePlan>();
+    }
+
+    private async UniTask<IntroMotionPlan> PrepareIntroMotions(bool yieldDuringPrepare, int yieldEveryN)
+    {
+        // NOTE: ProfilerMarker.Auto() は await を跨ぐとフレーム越境で警告/エラーになるため未使用
+        var plan = new IntroMotionPlan();
+        int workCount = 0;
+
+            // ZoomPlan は廃止（ズームは常に Orchestrator 経由で実行）
+
+            // Slide（味方アイコン）
+            if (allySpawnPositions != null)
+            {
+                for (int i = 0; i < allySpawnPositions.Length; i++)
+                {
+                    var rect = allySpawnPositions[i] as RectTransform;
+                    if (rect == null) continue;
+                    var fromPos = rect.anchoredPosition + allySlideStartOffset;
+                    var toPos   = rect.anchoredPosition;
+                    plan.Slides.Add(new SlidePlan
+                    {
+                        target   = rect,
+                        fromPos  = fromPos,
+                        toPos    = toPos,
+                        duration = 0.5f,
+                        delay    = i * Mathf.Max(0f, introSlideStaggerInterval),
+                        ease     = Ease.OutBack,
+                    });
+                    if (yieldDuringPrepare && (++workCount % Mathf.Max(1, yieldEveryN) == 0)) await UniTask.Yield();
+                }
+            }
+
+        return plan;
+    }
+
+    // 準備した計画から理論所要時間（秒）を算出（ズームとスライド段差、起動前ディレイを考慮）
+    private double ComputePlannedIntroDurationSeconds(IntroMotionPlan plan, float preAnimationDelaySec)
+    {
+        if (plan == null) return Mathf.Max(0f, preAnimationDelaySec);
+        // ズームは常に Orchestrator 経由で実行されるため、所要はインスペクタ設定から取得
+        float zoomMax = enableZoomAnimation ? Mathf.Max(0f, _firstZoomSpeedTime) : 0f;
+        float slideMax = 0f;
+        for (int i = 0; i < plan.Slides.Count; i++)
+        {
+            var s = plan.Slides[i];
+            float end = Mathf.Max(0f, s.delay) + Mathf.Max(0f, s.duration);
+            if (end > slideMax) slideMax = end;
+        }
+        float core = Mathf.Max(zoomMax, slideMax);
+        return Mathf.Max(0f, preAnimationDelaySec) + core;
+    }
+
+    private async UniTask PlayIntroMotions(IntroMotionPlan plan, float preAnimationDelaySec)
+    {
+        // NOTE: ProfilerMarker.Auto() は await を跨ぐとフレーム越境で警告/エラーになるため未使用
+        if (plan == null) plan = new IntroMotionPlan();
+
+            // 一斉起動直前の小休止（低端末でのスパイク緩和）
+            if (preAnimationDelaySec > 0f)
+            {
+                var token = _sweepCts != null ? _sweepCts.Token : System.Threading.CancellationToken.None;
+                await UniTask.Delay(TimeSpan.FromSeconds(preAnimationDelaySec), cancellationToken: token);
+            }
+
+            var tasks = new List<UniTask>();
+            // --- Jitter（アニメ滑らかさ）計測開始 ---
+            var jitter = global::MetricsHub.Instance.StartJitter("Intro.Jitter", BuildMetricsContext());
+
+            // 敵UI生成（従来はZoom開始時に並行起動していたものをここで起動）
+            var currentBattleManager = Walking.Instance?.bm;
+            if (currentBattleManager?.EnemyGroup != null)
+            {
+                var placeSw = System.Diagnostics.Stopwatch.StartNew();
+                var placeTask = UniTask.Create(async () =>
+                {
+                    EnsureOrchestrator();
+                    var ictx = BuildIntroContextForOrchestrator();
+                    var pctx = BuildPlacementContext(currentBattleManager.EnemyGroup);
+                    using (global::MetricsHub.Instance.BeginSpan("PlaceEnemies", BuildMetricsContext()))
+                    {
+                        var token = _sweepCts != null ? _sweepCts.Token : System.Threading.CancellationToken.None;
+                        await _orchestrator.PlaceEnemiesAsync(ictx, pctx, token);
+                    }
+                    placeSw.Stop();
+                    _lastIntroMetrics.EnemyPlacementMs = placeSw.Elapsed.TotalMilliseconds;
+                });
+                tasks.Add(placeTask);
+            }
+            else
+            {
+                _lastIntroMetrics.EnemyPlacementMs = 0;
+            }
+
+            // Zoom 同時起動（常に Orchestrator 経由）
+            if (enableZoomAnimation)
+            {
+                try
+                {
+                    EnsureOrchestrator();
+                    var ictx = BuildIntroContextForOrchestrator();
+                    var token = _sweepCts != null ? _sweepCts.Token : System.Threading.CancellationToken.None;
+                    _isZoomAnimating = true;
+                    var zoomTask = _orchestrator.PlayAsync(ictx, token);
+                    tasks.Add(zoomTask);
+                }
+                catch { /* no-op */ }
+            }
+
+            // Ally アイコンの可視化（必要分のみ）
+            if (allyBattleLayer != null)
+            {
+                allyBattleLayer.gameObject.SetActive(true);
+                try
+                {
+                    var ours = Walking.Instance?.bm?.AllyGroup?.Ours;
+                    if (ours != null)
+                    {
+                        foreach (var ch in ours)
+                        {
+                            ch?.UI?.SetActive(true);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"[Intro] Ally UI enable failed: {ex.Message}");
+                }
+            }
+
+            // Slide 同時起動（開始前にfromPosへスナップ）
+            if (plan.Slides.Count > 0)
+            {
+                _isAllySlideAnimating = true;
+                foreach (var s in plan.Slides)
+                {
+                    if (s.target == null) continue;
+                    s.target.anchoredPosition = s.fromPos; // 一瞬のチラツキ防止
+                    var token = _sweepCts != null ? _sweepCts.Token : System.Threading.CancellationToken.None;
+                    var slideTask = UniTask.Delay(TimeSpan.FromSeconds(Mathf.Max(0f, s.delay)), cancellationToken: token)
+                        .ContinueWith(() =>
+                            LMotion.Create(s.fromPos, s.toPos, s.duration)
+                                .WithEase(s.ease)
+                                .BindToAnchoredPosition(s.target)
+                                .ToUniTask()
+                        );
+                    tasks.Add(slideTask);
+                }
+            }
+
+            if (tasks.Count > 0)
+            {
+                try
+                {
+                    await UniTask.WhenAll(tasks);
+                }
+                catch (System.OperationCanceledException)
+                {
+                    _isZoomAnimating = false;
+                    _isAllySlideAnimating = false;
+                    throw;
+                }
+            }
+
+            // --- Jitter終了＆統計反映 ---
+            var stats = await jitter.EndAsync();
+            _lastIntroMetrics.IntroFrameAvgMs = stats.AvgMs;
+            _lastIntroMetrics.IntroFrameP95Ms = stats.P95Ms;
+            _lastIntroMetrics.IntroFrameMaxMs = stats.MaxMs;
+
+            _isZoomAnimating = false;
+            _isAllySlideAnimating = false;
+
+            // MetricsHubへ最終結果を記録（Planned/Actual/Delay/配置/Jitter統計を含む）
+            try
+            {
+                var ctx = BuildMetricsContext();
+                global::MetricsHub.Instance.RecordIntro(new global::IntroMetricsEvent
+                {
+                    PlannedMs = _lastIntroMetrics.PlannedMs,
+                    ActualMs = _lastIntroMetrics.ActualMs,
+                    DelayMs = _lastIntroMetrics.DelayMs,
+                    EnemyPlacementMs = _lastIntroMetrics.EnemyPlacementMs,
+                    Timestamp = _lastIntroMetrics.Timestamp,
+                    AllyCount = _lastIntroMetrics.AllyCount,
+                    EnemyCount = _lastIntroMetrics.EnemyCount,
+                    IntroFrameAvgMs = _lastIntroMetrics.IntroFrameAvgMs,
+                    IntroFrameP95Ms = _lastIntroMetrics.IntroFrameP95Ms,
+                    IntroFrameMaxMs = _lastIntroMetrics.IntroFrameMaxMs,
+                    Context = ctx,
+                });
+            }
+            catch { /* no-op */ }
+    }
+
+    // ===== MetricsHub 用コンテキスト生成 =====
+    private global::MetricsContext BuildMetricsContext()
+    {
+        // 基本は現在のIntro設定からSummaryを作る
+        string currentPresetSummary = $"{introYieldDuringPrepare.ToString().ToLower()} {introYieldEveryN} {introPreAnimationDelaySec} {introSlideStaggerInterval}";
+        var baseScenario = IsBenchmarkRunning ? "Benchmark" : "Runtime";
+
+        // BenchmarkRunner からの文脈があれば優先
+        var outer = global::BenchmarkContext.Current;
+        return new global::MetricsContext
+        {
+            ScenarioName = outer?.ScenarioName ?? baseScenario,
+            PresetSummary = outer?.PresetSummary ?? currentPresetSummary,
+            PresetIndex = outer?.PresetIndex ?? -1,
+            RunIndex = outer?.RunIndex ?? -1,
+            Tags = outer?.Tags,
+        };
     }
 
     /// <summary>
-    /// 背景と敵コンテナを同時にズーム（新方式）
+    /// Play中のみ、毎フレームのフレーム時間（unscaledDeltaTime）をmsで収集する
     /// </summary>
-    private async UniTask ZoomBackgroundAndEnemies()
+    private async UniTask SampleIntroFrameTimes(List<float> dest, System.Threading.CancellationToken token)
     {
-        // Kモード中は既存の戦闘ズームを抑制
-        if (lockBattleZoomDuringK && (_isKActive || _isKAnimating))
+        while (!token.IsCancellationRequested)
         {
-            Debug.Log("[WatchUIUpdate] Kモード中のためZoomBackgroundAndEnemiesをスキップ");
-            return;
+            dest.Add(Time.unscaledDeltaTime * 1000f);
+            await UniTask.Yield();
         }
-        _isZoomAnimating = true;
-        var tasks = new List<UniTask>();
-        
-        Debug.Log($"複数コンテナズーム開始: 目標スケール={_gotoScaleXY}, 目標位置={_gotoPos}");
-        
-        // ズーム前の初期状態を自動保存
-        SaveOriginalTransforms();
-        
-        // ★ ズームと同時に敵UIを生成（並行実行でレスポンシブに）
-        var currentBattleManager = Walking.Instance.bm;
-        if (currentBattleManager?.EnemyGroup != null)
-        {
-            Debug.Log("ズームと同時に敵UI生成を開始");
-            PlaceEnemiesFromBattleGroup(currentBattleManager.EnemyGroup).Forget();
-        }
-        
-        // インスペクタでズーム無効の場合は、ここでスキップ（敵UI生成は実行済み）
-        if (!enableZoomAnimation)
-        {
-            Debug.Log("[WatchUIUpdate] enableZoomAnimation=false のためズーム処理をスキップします。");
-            _isZoomAnimating = false;
-            return;
-        }
-        
-        // ZoomBackContainer（背景）のズーム
-        if (zoomBackContainer != null)
-        {
-            var backRect = zoomBackContainer as RectTransform;
-            if (backRect != null)
-            {
-                var nowScale = new Vector2(backRect.localScale.x, backRect.localScale.y);
-                var nowPos = new Vector2(backRect.anchoredPosition.x, backRect.anchoredPosition.y);
-                
-                Debug.Log($"ZoomBackContainer: 現在スケール={nowScale}, 現在位置={nowPos}");
-                
-                var scaleTask = LMotion.Create(nowScale, _gotoScaleXY, _firstZoomSpeedTime)
-                    .WithEase(_firstZoomAnimationCurve)
-                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-                    .BindToLocalScaleXY(backRect)
-                    .ToUniTask();
-                    
-                var posTask = LMotion.Create(nowPos, _gotoPos, _firstZoomSpeedTime)
-                    .WithEase(_firstZoomAnimationCurve)
-                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-                    .BindToAnchoredPosition(backRect)
-                    .ToUniTask();
-                    
-                tasks.Add(scaleTask);
-                tasks.Add(posTask);
-            }
-        }
-        
-        // ZoomFrontContainer（敵）のズーム（同じパラメータ）
-        if (zoomFrontContainer != null)
-        {
-            var frontRect = zoomFrontContainer as RectTransform;
-            if (frontRect != null)
-            {
-                var nowScale = new Vector2(frontRect.localScale.x, frontRect.localScale.y);
-                var nowPos = new Vector2(frontRect.anchoredPosition.x, frontRect.anchoredPosition.y);
-                
-                Debug.Log($"ZoomFrontContainer: 現在スケール={nowScale}, 現在位置={nowPos}");
-                
-                var scaleTask = LMotion.Create(nowScale, _gotoScaleXY, _firstZoomSpeedTime)
-                    .WithEase(_firstZoomAnimationCurve)
-                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-                    .BindToLocalScaleXY(frontRect)
-                    .ToUniTask();
-                    
-                var posTask = LMotion.Create(nowPos, _gotoPos, _firstZoomSpeedTime)
-                    .WithEase(_firstZoomAnimationCurve)
-                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-                    .BindToAnchoredPosition(frontRect)
-                    .ToUniTask();
-                    
-                tasks.Add(scaleTask);
-                tasks.Add(posTask);
-            }
-        }
-        
-        Debug.Log($"MiddleFixedLayer, FixedUILayer, EnemySpawnAreaはズーム対象外です。");
-        
-        if (tasks.Count > 0)
-        {
-            await UniTask.WhenAll(tasks);
-            Debug.Log("複数コンテナズーム完了");
-        }
-        else
-        {
-            Debug.LogWarning("ズーム対象コンテナが設定されていません。zoomBackContainer/zoomFrontContainerを設定してください。");
-        }
-        _isZoomAnimating = false;
     }
+
+    
+
+    
+
+    
+
+    
     
     /// <summary>
     /// RectTransformのワールド座標を取得
     /// </summary>
     
 
-    /// <summary>
-    /// ズーム前の初期状態を保存
-    /// </summary>
-    private void SaveOriginalTransforms()
-    {
-        if (zoomBackContainer != null)
-        {
-            var backRect = zoomBackContainer as RectTransform;
-            if (backRect != null)
-            {
-                _originalBackPos = backRect.anchoredPosition;
-                _originalBackScale = backRect.localScale;
-                Debug.Log($"ZoomBackContainer初期状態保存: pos={_originalBackPos}, scale={_originalBackScale}");
-            }
-        }
-        
-        if (zoomFrontContainer != null)
-        {
-            var frontRect = zoomFrontContainer as RectTransform;
-            if (frontRect != null)
-            {
-                _originalFrontPos = frontRect.anchoredPosition;
-                _originalFrontScale = frontRect.localScale;
-                Debug.Log($"ZoomFrontContainer初期状態保存: pos={_originalFrontPos}, scale={_originalFrontScale}");
-            }
-        }
-    }
     
-    /// <summary>
-    /// ズーム前の状態に戻す 引数で速度指定
-    /// </summary>
-    public async UniTask RestoreOriginalTransforms(float duration = 1.0f)
-    {
-        var tasks = new List<UniTask>();
-        
-        Debug.Log("ズーム状態を初期状態に戻します");
-
-        // インスペクタで復元アニメ無効の場合は即時復元
-        if (!enableRestoreAnimation)
-        {
-            var backRect = zoomBackContainer as RectTransform;
-            if (backRect != null)
-            {
-                backRect.anchoredPosition = _originalBackPos;
-                backRect.localScale = _originalBackScale;
-            }
-            var frontRect = zoomFrontContainer as RectTransform;
-            if (frontRect != null)
-            {
-                frontRect.anchoredPosition = _originalFrontPos;
-                frontRect.localScale = _originalFrontScale;
-            }
-            Debug.Log("[WatchUIUpdate] enableRestoreAnimation=false のため即時復元しました。");
-            return;
-        }
-        
-        if (zoomBackContainer != null)
-        {
-            var backRect = zoomBackContainer as RectTransform;
-            if (backRect != null)
-            {
-                var currentPos = backRect.anchoredPosition;
-                var currentScale = backRect.localScale;
-                
-                var posTask = LMotion.Create(currentPos, _originalBackPos, duration)
-                    .WithEase(Ease.OutQuart)
-                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-                    .BindToAnchoredPosition(backRect)
-                    .ToUniTask();
-                    
-                var scaleTask = LMotion.Create((Vector3)currentScale, (Vector3)_originalBackScale, duration)
-                    .WithEase(Ease.OutQuart)
-                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-                    .BindToLocalScale(backRect)
-                    .ToUniTask();
-                    
-                tasks.Add(posTask);
-                tasks.Add(scaleTask);
-            }
-        }
-        
-        if (zoomFrontContainer != null)
-        {
-            var frontRect = zoomFrontContainer as RectTransform;
-            if (frontRect != null)
-            {
-                var currentPos = frontRect.anchoredPosition;
-                var currentScale = frontRect.localScale;
-                
-                var posTask = LMotion.Create(currentPos, _originalFrontPos, duration)
-                    .WithEase(Ease.OutQuart)
-                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-                    .BindToAnchoredPosition(frontRect)
-                    .ToUniTask();
-                    
-                var scaleTask = LMotion.Create((Vector3)currentScale, (Vector3)_originalFrontScale, duration)
-                    .WithEase(Ease.OutQuart)
-                    .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-                    .BindToLocalScale(frontRect)
-                    .ToUniTask();
-                    
-                tasks.Add(posTask);
-                tasks.Add(scaleTask);
-            }
-        }
-        
-        if (tasks.Count > 0)
-        {
-            await UniTask.WhenAll(tasks);
-            Debug.Log("ズーム状態の復元完了");
-        }
-        else
-        {
-            Debug.LogWarning("復元対象のコンテナが見つかりません");
-        }
-    }
+    
+    
 
     public void EraceEnemyUI()
     {
@@ -1392,62 +2037,7 @@ public class WatchUIUpdate : MonoBehaviour
         return localPoint;
     }
 
-    /// <summary>
-    /// 味方アイコンを下からスライドイン
-    /// </summary>
-    private async UniTask SlideInAllyIcons()
-    {
-        _isAllySlideAnimating = true;
-        Debug.Log($"SlideInAllyIcons: allyBattleLayer={allyBattleLayer?.name}, allySpawnPositions={allySpawnPositions?.Length}");
-        
-        if (allyBattleLayer == null)
-        {
-            Debug.LogWarning("allyBattleLayerがnullです。設定してください。");
-            return;
-        }
-        
-        if (allySpawnPositions == null)
-        {
-            Debug.LogWarning("allySpawnPositionsがnullです。設定してください。");
-            return;
-        }
-        //味方アイコンレイヤーを表示する
-        allyBattleLayer.gameObject.SetActive(true);
-        
-        var tasks = new List<UniTask>();
-        
-        for (int i = 0; i < allySpawnPositions.Length; i++)
-        {
-            var allyIcon = allySpawnPositions[i];
-            if (allyIcon != null)
-            {
-                var rect = allyIcon as RectTransform;
-                if (rect != null)
-                {
-                    // 開始位置を下にオフセット
-                    var startPos = rect.anchoredPosition + allySlideStartOffset;
-                    var endPos = rect.anchoredPosition;
-                    
-                    rect.anchoredPosition = startPos;
-                    
-                    // スライドインアニメーション（少しずつ遅延）
-                    var delay = i * 0.1f;
-                    var slideTask = UniTask.Delay(TimeSpan.FromSeconds(delay))
-                        .ContinueWith(() => 
-                            LMotion.Create(startPos, endPos, 0.5f)
-                                .WithEase(Ease.OutBack)
-                                .BindToAnchoredPosition(rect)
-                                .ToUniTask()
-                        );
-                    
-                    tasks.Add(slideTask);
-                }
-            }
-        }
-        
-        await UniTask.WhenAll(tasks);
-        _isAllySlideAnimating = false;
-    }
+    
 
 
     
@@ -1566,6 +2156,7 @@ public class WatchUIUpdate : MonoBehaviour
     /// </summary>
     public async UniTask PlaceEnemiesFromBattleGroup(BattleGroup enemyGroup)
     {
+        // NOTE: ProfilerMarker.Auto() は await を跨ぐとフレーム越境で警告/エラーになるため未使用
         if (enemyGroup?.Ours == null || enemyBattleLayer == null) return;
             if (enableVerboseEnemyLogs)
             {
@@ -1608,10 +2199,13 @@ public class WatchUIUpdate : MonoBehaviour
                         {
                             batchCounter = 0;
                             // バッチ分をまとめて有効化
-                            for (int i = 0; i < batchCreated.Count; i++)
+                            using (global::MetricsHub.Instance.BeginSpan("PlaceEnemies.Activate", BuildMetricsContext()))
                             {
-                                if (batchCreated[i] != null)
-                                    batchCreated[i].gameObject.SetActive(true);
+                                for (int i = 0; i < batchCreated.Count; i++)
+                                {
+                                    if (batchCreated[i] != null)
+                                        batchCreated[i].gameObject.SetActive(true);
+                                }
                             }
                             batchCreated.Clear();
                             for (int f = 0; f < Mathf.Max(0, enemySpawnInterBatchFrames); f++)
@@ -1624,10 +2218,13 @@ public class WatchUIUpdate : MonoBehaviour
                 // 余り分を最後に有効化
                 if (batchCreated.Count > 0)
                 {
-                    for (int i = 0; i < batchCreated.Count; i++)
+                    using (global::MetricsHub.Instance.BeginSpan("PlaceEnemies.Activate", BuildMetricsContext()))
                     {
-                        if (batchCreated[i] != null)
-                            batchCreated[i].gameObject.SetActive(true);
+                        for (int i = 0; i < batchCreated.Count; i++)
+                        {
+                            if (batchCreated[i] != null)
+                                batchCreated[i].gameObject.SetActive(true);
+                        }
                     }
                 }
             }
@@ -1660,11 +2257,14 @@ public class WatchUIUpdate : MonoBehaviour
                 }
                 var results = await UniTask.WhenAll(tasks);
                 // まとめて有効化
-                foreach (var ui in results)
+                using (global::MetricsHub.Instance.BeginSpan("PlaceEnemies.Activate", BuildMetricsContext()))
                 {
-                    if (ui != null) ui.gameObject.SetActive(true);
+                    foreach (var ui in results)
+                    {
+                        if (ui != null) ui.gameObject.SetActive(true);
+                    }
                 }
-        }
+            }
     }
 
     /// <summary>
@@ -1683,6 +2283,7 @@ public class WatchUIUpdate : MonoBehaviour
             Debug.LogWarning("enemyBattleLayerが設定されていません。");
             return UniTask.FromResult<UIController>(null);
         }
+            UIController uiInstance = null;
             if (enableVerboseEnemyLogs)
             {
                 Debug.Log($"[Prefab ref] enemyUIPrefab.activeSelf={enemyUIPrefab.gameObject.activeSelf}", enemyUIPrefab);
@@ -1699,96 +2300,102 @@ public class WatchUIUpdate : MonoBehaviour
             }
 #endif
             // 敵UIプレハブを生成（enemyBattleLayer直下）
-            var uiInstance = Instantiate(enemyUIPrefab, enemyBattleLayer, false);
-            // 設定中は非アクティブにしてCanvas再構築を抑制
-            uiInstance.gameObject.SetActive(false);
+            using (global::MetricsHub.Instance.BeginSpan("PlaceEnemies.Spawn", BuildMetricsContext()))
+            {
+                var uiInstanceSpawn = Instantiate(enemyUIPrefab, enemyBattleLayer, false);
+                // 設定中は非アクティブにしてCanvas再構築を抑制
+                uiInstanceSpawn.gameObject.SetActive(false);
+                uiInstance = uiInstanceSpawn;
+            }
             if (enableVerboseEnemyLogs)
             {
                 Debug.Log($"[Instantiated] {uiInstance.name} activeSelf={uiInstance.gameObject.activeSelf}, inHierarchy={uiInstance.gameObject.activeInHierarchy}", uiInstance);
             }
             var rectTransform = (RectTransform)uiInstance.transform;
-
-            // ズーム前のローカル座標で配置（ズーム後に正しい位置に収まる）
-            rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            rectTransform.anchoredPosition = preZoomLocalPosition;
-
-            // アイコン設定（スプライトとサイズ）
-            if (uiInstance.Icon != null)
+            using (global::MetricsHub.Instance.BeginSpan("PlaceEnemies.Layout", BuildMetricsContext()))
             {
-                uiInstance.Icon.preserveAspect = true;
-                if (enemy.EnemyGraphicSprite != null)
+                // ズーム前のローカル座標で配置（ズーム後に正しい位置に収まる）
+                rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                rectTransform.anchoredPosition = preZoomLocalPosition;
+
+                // アイコン設定（スプライトとサイズ）
+                if (uiInstance.Icon != null)
                 {
-                    uiInstance.Icon.sprite = enemy.EnemyGraphicSprite;
-                    // 念のための安全初期化
-                    uiInstance.Icon.type = UnityEngine.UI.Image.Type.Simple;
-                    uiInstance.Icon.useSpriteMesh = true;
-                    uiInstance.Icon.color = Color.white;
-                    uiInstance.Icon.material = null;
+                    uiInstance.Icon.preserveAspect = true;
+                    if (enemy.EnemyGraphicSprite != null)
+                    {
+                        uiInstance.Icon.sprite = enemy.EnemyGraphicSprite;
+                        // 念のための安全初期化
+                        uiInstance.Icon.type = UnityEngine.UI.Image.Type.Simple;
+                        uiInstance.Icon.useSpriteMesh = true;
+                        uiInstance.Icon.color = Color.white;
+                        uiInstance.Icon.material = null;
+
+                        if (enableVerboseEnemyLogs)
+                        {
+                            var spr = uiInstance.Icon.sprite;
+                            Debug.Log($"Enemy Icon sprite assigned: name={spr.name}, tex={(spr.texture != null ? spr.texture.name : "<no texture>")}, rect={spr.rect}, ppu={spr.pixelsPerUnit}");
+                        }
+                    }
+                    else
+                    {
+                        // スプライトが無い場合は白矩形が出ないように一旦非表示
+                        uiInstance.Icon.enabled = false;
+                        Debug.LogWarning($"Enemy Icon sprite is NULL for enemy: {enemy.CharacterName}. Icon will be hidden to avoid white box.\nCheck: NormalEnemy.EnemyGraphicSprite assignment and Texture import type (Sprite [2D and UI]).");
+                    }
+
+                    // サイズ決定（EnemySize優先、未設定ならSpriteサイズ）
+                    var iconRT = (RectTransform)uiInstance.Icon.transform;
+                    if (uiInstance.Icon.sprite != null)
+                    {
+                        iconRT.sizeDelta = uiInstance.Icon.sprite.rect.size;
+                        uiInstance.Icon.SetNativeSize();
+                        uiInstance.Icon.enabled = true;
+                    }
+                    else
+                    {
+                        iconRT.sizeDelta = new Vector2(100f, 100f);
+                    }
+                }
+
+                // UIの初期化
+                uiInstance.Init();
+
+                // HPバー設定（プレハブ内のCombinedStatesBarを利用）
+                if (uiInstance.HPBar != null)
+                {
+                    float iconW = (uiInstance.Icon != null)
+                        ? ((RectTransform)uiInstance.Icon.transform).sizeDelta.x
+                        : rectTransform.sizeDelta.x;
+
+                    float barW = iconW * hpBarSizeRatio.x;
+                    float barH = iconW * hpBarSizeRatio.y;
+                    uiInstance.HPBar.SetSize(barW, barH);
+
+                    float verticalSpacing = iconW * hpBarSizeRatio.y * 0.5f;
+                    uiInstance.HPBar.VerticalSpacing = verticalSpacing;
+
+                    var barRT = (RectTransform)uiInstance.HPBar.transform;
+                    barRT.pivot = new Vector2(0.5f, 1f);
+                    barRT.anchorMin = barRT.anchorMax = new Vector2(0.5f, 0f);
+                    barRT.anchoredPosition = new Vector2(0f, -verticalSpacing);
+
+                    uiInstance.HPBar.SetBothBarsImmediate(
+                        enemy.HP / enemy.MaxHP,
+                        enemy.MentalHP / enemy.MaxHP,
+                        enemy.GetMentalDivergenceThreshold());
+
+                    float totalBarHeight = barH * 2f + uiInstance.HPBar.VerticalSpacing;
+                    float iconHeight = (uiInstance.Icon != null) ? ((RectTransform)uiInstance.Icon.transform).sizeDelta.y : 0f;
+                    float totalHeight = iconHeight + verticalSpacing + totalBarHeight;
+                    rectTransform.sizeDelta = new Vector2(Mathf.Max(rectTransform.sizeDelta.x, iconW), totalHeight);
 
                     if (enableVerboseEnemyLogs)
                     {
-                        var spr = uiInstance.Icon.sprite;
-                        Debug.Log($"Enemy Icon sprite assigned: name={spr.name}, tex={(spr.texture != null ? spr.texture.name : "<no texture>")}, rect={spr.rect}, ppu={spr.pixelsPerUnit}");
+                        Debug.Log($"敵UI配置完了: {enemy.GetHashCode()} at preZoomLocal={preZoomLocalPosition}, IconW: {iconW}, Bar: {barW}x{barH}");
                     }
-                }
-                else
-                {
-                    // スプライトが無い場合は白矩形が出ないように一旦非表示
-                    uiInstance.Icon.enabled = false;
-                    Debug.LogWarning($"Enemy Icon sprite is NULL for enemy: {enemy.CharacterName}. Icon will be hidden to avoid white box.\nCheck: NormalEnemy.EnemyGraphicSprite assignment and Texture import type (Sprite [2D and UI]).");
-                }
-
-                // サイズ決定（EnemySize優先、未設定ならSpriteサイズ）
-                var iconRT = (RectTransform)uiInstance.Icon.transform;
-                if (uiInstance.Icon.sprite != null)
-                {
-                    iconRT.sizeDelta = uiInstance.Icon.sprite.rect.size;
-                    uiInstance.Icon.SetNativeSize();
-                    uiInstance.Icon.enabled = true;
-                }
-                else
-                {
-                    iconRT.sizeDelta = new Vector2(100f, 100f);
-                }
-            }
-
-            // UIの初期化
-            uiInstance.Init();
-
-            // HPバー設定（プレハブ内のCombinedStatesBarを利用）
-            if (uiInstance.HPBar != null)
-            {
-                float iconW = (uiInstance.Icon != null)
-                    ? ((RectTransform)uiInstance.Icon.transform).sizeDelta.x
-                    : rectTransform.sizeDelta.x;
-
-                float barW = iconW * hpBarSizeRatio.x;
-                float barH = iconW * hpBarSizeRatio.y;
-                uiInstance.HPBar.SetSize(barW, barH);
-
-                float verticalSpacing = iconW * hpBarSizeRatio.y * 0.5f;
-                uiInstance.HPBar.VerticalSpacing = verticalSpacing;
-
-                var barRT = (RectTransform)uiInstance.HPBar.transform;
-                barRT.pivot = new Vector2(0.5f, 1f);
-                barRT.anchorMin = barRT.anchorMax = new Vector2(0.5f, 0f);
-                barRT.anchoredPosition = new Vector2(0f, -verticalSpacing);
-
-                uiInstance.HPBar.SetBothBarsImmediate(
-                    enemy.HP / enemy.MaxHP,
-                    enemy.MentalHP / enemy.MaxHP,
-                    enemy.GetMentalDivergenceThreshold());
-
-                float totalBarHeight = barH * 2f + uiInstance.HPBar.VerticalSpacing;
-                float iconHeight = (uiInstance.Icon != null) ? ((RectTransform)uiInstance.Icon.transform).sizeDelta.y : 0f;
-                float totalHeight = iconHeight + verticalSpacing + totalBarHeight;
-                rectTransform.sizeDelta = new Vector2(Mathf.Max(rectTransform.sizeDelta.x, iconW), totalHeight);
-
-                if (enableVerboseEnemyLogs)
-                {
-                    Debug.Log($"敵UI配置完了: {enemy.GetHashCode()} at preZoomLocal={preZoomLocalPosition}, IconW: {iconW}, Bar: {barW}x{barH}");
                 }
             }
 

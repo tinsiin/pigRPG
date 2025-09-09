@@ -461,7 +461,7 @@ public class PlayersStates:MonoBehaviour
 
             if (chara.UI != null)
             {
-                chara.UI.SetActive(true);
+                //chara.UI.SetActive(true);
 
                 // HPバーを初期化（存在する場合のみ）
                 var bar = chara.UI.HPBar;

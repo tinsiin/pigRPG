@@ -63,10 +63,12 @@ public class Walking : MonoBehaviour
     private List<SelectButton> buttons;
 
     private AreaDate NowAreaData;
+    [NonSerialized]
     public StageCut NowStageCut;
     private Stages stages;
 
     //現在のステージとエリアのデータを保存する関数
+    [NonSerialized]
     public StageData NowStageData;
     private PlayersStates ps;
     private  void Start()
@@ -145,7 +147,7 @@ public class Walking : MonoBehaviour
     }
 
     public  BattleManager bm;
-    private  void Encount()
+    private async  UniTask Encount()
     {
         var enemyNumber = 2;//エンカウント人数を指定できる。　-1が普通の自動調整モード
         //Debug.Log("エンカウント処理WalkingのEncountメソッド");
@@ -154,33 +156,34 @@ public class Walking : MonoBehaviour
         if ((enemyGroup = NowStageCut.EnemyCollectAI(enemyNumber)) != null) //nullでないならエンカウントし、敵グループ
         {
             //敵グループが返ってきてエンカウント
-            Debug.Log("encount");
 
 
             //enemyGroupにいる敵によってallyGroupの人選が変わる処理、
             //例　ホッチキスでサテライトの単体戦になるとか。　
-            //だから、allygroupがフルで人選されるとき以外は、他の味方アイコンがそそくさと逃げる演出をする。
+            //だから、allygroupがフルで人選されるとき以外は、他の味方アイコンがそそくさと逃げる演出をする。  ←これは味方アイコン自体が戦闘時だけスライドインする演出により、逃げるのではなく、出てこないだけ、、になる。
             //死んでる味方がいるのとはまた違う。その場合でも死亡状態で戦いの場に選出はされるからだ。
 
             allyGroup = ps.GetParty(); //何もなければフルの味方グループ
             //敵視人選の処理終わり-------------------------------------
 
-
             //BattleManagerを生成
-        bm = new BattleManager(allyGroup, enemyGroup,BattleStartSituation.Normal, MessageDropper); //バトルを管理するクラス
-        //battleTimeLineを生成
-        var TimeLine = new BattleTimeLine(new List<BattleManager>{bm}); //バトルのタイムラインを管理するクラス
+            bm = new BattleManager(allyGroup, enemyGroup,BattleStartSituation.Normal, MessageDropper); //バトルを管理するクラス
+            //battleTimeLineを生成
+            var TimeLine = new BattleTimeLine(new List<BattleManager>{bm}); //バトルのタイムラインを管理するクラス
+            PlayersStates.Instance.OnBattleStart();
 
-        // 敵UI配置システムのテスト実行（戦闘参加敵のみ）
-        TestEnemyUIPlacement(enemyGroup).Forget();
-        
-        PlayersStates.Instance.OnBattleStart();
-        USERUI_state.Value = bm.ACTPop();//一番最初のUSERUIの状態を変更させるのと戦闘ループの最初の準備処理。
-            // リスナーの重複登録を防止
-            _nextWaitBtn.onClick.RemoveAllListeners();
-            _nextWaitBtn.onClick.AddListener(()=>OnClickNextWaitBtn().Forget()); //ボタンにbmの処理を追加
-            //非同期なのでボタン処理自体は非同期で実行されるが、例えばUI側での他のボタンや、このボタン自体の処理を防ぐってのはないけど、
-            //そこは内部でのUI処理で対応してるから平気
+            // 改良版ズーム実行（敵UI生成も内部で並行実行される）
+            await wui.FirstImpressionZoomImproved();
+
+            USERUI_state.Value = bm.ACTPop();//一番最初のUSERUIの状態を変更させるのと戦闘ループの最初の準備処理。
+                // リスナーの重複登録を防止
+                _nextWaitBtn.onClick.RemoveAllListeners();
+                _nextWaitBtn.onClick.AddListener(()=>OnClickNextWaitBtn().Forget()); //ボタンにbmの処理を追加
+                //非同期なのでボタン処理自体は非同期で実行されるが、例えばUI側での他のボタンや、このボタン自体の処理を防ぐってのはないけど、
+                //そこは内部でのUI処理で対応してるから平気
+
+
+
         }
         else
         {
@@ -188,40 +191,53 @@ public class Walking : MonoBehaviour
 
             Debug.Log("No encounter");
         }
+
+        //await wui.FirstImpressionZoomDebug();//デバッグズームで負荷をたしかめる際の関数
     }
 
     //メインループ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
     //☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
     private async UniTask Walk(int footnumber) //リストの内容を反映
     {
-        //ps.AddProgress(footnumber); //進行度を増やす。
-        StageDataUpdate();
-
-        //主人公達の歩行時の処理
-        ps.PlayersOnWalks(1);//footnumber関係なしに一歩分の効果(テスト用)
-
-        //エンカウント
-        Encount();
-
-        if (NowAreaData.Rest) //休憩地点なら
-            Debug.Log("ここは休憩地点");
-
-        if (!string.IsNullOrEmpty(NowAreaData.NextID)) //次のエリア選択肢
+        WatchUIUpdate.Instance?.BeginWalkCycleTiming();
+        try
         {
-            var arr = NowAreaData.NextIDString.Split(","); //選択肢文章を小分け
-            var arr2 = NowAreaData.NextID.Split(","); //選択肢のIDを小分け
+            //ps.AddProgress(footnumber); //進行度を増やす。
+            StageDataUpdate();
 
-            ps.SetArea(await CreateAreaButton(arr, arr2));
-            ps.ProgressReset();
+            //主人公達の歩行時の処理
+            ps.PlayersOnWalks(1);//footnumber関係なしに一歩分の効果(テスト用)
+
+            //エンカウント
+            await Encount();
+
+            wui.WalkUIUpdate(NowStageData, NowStageCut, ps); //ui更新
+
+
+            /*/*if (NowAreaData.Rest) //休憩地点なら
+                Debug.Log("ここは休憩地点");
+
+            if (!string.IsNullOrEmpty(NowAreaData.NextID)) //次のエリア選択肢
+            {
+                var arr = NowAreaData.NextIDString.Split(","); //選択肢文章を小分け
+                var arr2 = NowAreaData.NextID.Split(","); //選択肢のIDを小分け
+
+                ps.SetArea(await CreateAreaButton(arr, arr2));
+                ps.ProgressReset();
+            }
+
+            if (string.IsNullOrEmpty(NowAreaData.NextStageID)) //次のステージへ(選択肢なし)
+            {
+            }*/
+
+            TestProgressUIUpdate(); //テスト用進行度ui更新
+
+            
         }
-
-        if (string.IsNullOrEmpty(NowAreaData.NextStageID)) //次のステージへ(選択肢なし)
+        finally
         {
+            WatchUIUpdate.Instance?.EndWalkCycleTiming();
         }
-
-        TestProgressUIUpdate(); //テスト用進行度ui更新
-
-        
     }
 
     /// <summary>
@@ -232,8 +248,6 @@ public class Walking : MonoBehaviour
         NowStageData = stages.RunTimeStageDates[ps.NowStageID]; //現在のステージデータ
         NowStageCut = NowStageData.CutArea[ps.NowAreaID]; //現在のエリアデータ
         NowAreaData = NowStageCut.AreaDates[ps.NowProgress]; //現在地点
-
-        wui.WalkUIUpdate(NowStageData, NowStageCut, ps); //ui更新
     }
 
     /// <summary>
@@ -267,6 +281,12 @@ public class Walking : MonoBehaviour
         return res;
     }
 
+    // ベンチマーク用: 実処理の1歩分をそのまま実行（A/W/IntroJit を更新）
+    public async UniTask RunOneWalkStepForBenchmark()
+    {
+        await Walk(1);
+    }
+
     /// <summary>
     ///     エリア選択肢ボタンを閉じる
     /// </summary>
@@ -282,28 +302,6 @@ public class Walking : MonoBehaviour
     {
         Debug.Log(returnid + "のエリアIDを記録");
         AreaResponse = returnid; //ここで0～の数字を渡されることでボタン選択処理の非同期待ちが進行
-    }
-
-
-    /// <summary>
-    /// 敵UI配置システムのテスト用メソッド（戦闘参加敵のみ）
-    /// </summary>
-    private async UniTask TestEnemyUIPlacement(BattleGroup enemyGroup)
-    {
-        try
-        {
-            Debug.Log("=== 敵UI配置システムテスト開始（戦闘参加敵のみ） ===");
-            Debug.Log($"戦闘参加敵数: {enemyGroup?.Ours?.Count ?? 0}体");
-            
-            // 改良版ズーム実行（敵UI生成も内部で並行実行される）
-            await wui.FirstImpressionZoomImproved();
-            
-            Debug.Log("=== 敵UI配置システムテスト完了 ===");
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"敵UI配置システムテストでエラーが発生: {e.Message}");
-        }
     }
 
     //最終的にeyearea側で一気にeyeareaのUIを処理するのを作って、そっちにデータを渡すようにする。

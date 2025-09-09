@@ -107,8 +107,8 @@ public class SchizoLog : MonoBehaviour
     // 末尾付近にユーティリティ
     private bool IsUIAlive()
     {
-        // Unity の “== null” は Destroy 判定込み
-        return !_isQuitting && LogText != null;
+        // Unity の “== null” は Destroy 判定込み + 非表示/無効コンポーネントも除外
+        return !_isQuitting && LogText != null && LogText.isActiveAndEnabled;
     }
     
     /// <summary>
@@ -666,16 +666,24 @@ public class SchizoLog : MonoBehaviour
     /// </summary>
     private void AppendOneCharToDisplayBuffer(char c)
     {
-        if (!IsUIAlive()) return;
+        // バッファへの追記は UI の可視/不可視に関わらず常に行う
         _displayBuffer.Append(c);
+
+        // UI が生きていない場合はここで終了（再表示時にまとめて描画される）
+        if (!IsUIAlive()) return;
+
         if (LogText != null)
         {
             LogText.SetText(_displayBuffer);
             LogText.maxVisibleCharacters = _displayBuffer.Length;
             LogText.ForceMeshUpdate();
 
-            while (IsUIAlive() && LogText.textInfo.lineCount > _maxLines)
+            // textInfo の null を考慮して安全にトリム
+            while (true)
             {
+                if (!IsUIAlive()) break;
+                var ti = LogText.textInfo;
+                if (ti == null || ti.lineCount <= _maxLines) break;
                 RemoveTopLineFromDisplayBuffer();
                 LogText.SetText(_displayBuffer);
                 LogText.maxVisibleCharacters = _displayBuffer.Length;
@@ -688,11 +696,13 @@ public class SchizoLog : MonoBehaviour
     /// </summary>
     private void AppendCharsRangeToDisplayBuffer(string source, int start, int length)
     {
-        if (!IsUIAlive()) return;
         if (string.IsNullOrEmpty(source) || length <= 0) return;
 
-        // 文字列をまとめて追加
+        // 文字列をまとめて追加（UI の可視/不可視に関わらず実施）
         _displayBuffer.Append(source, start, length);
+
+        // UI が生きていない場合はここで終了（バッファのみ更新）
+        if (!IsUIAlive()) return;
 
         if (LogText != null)
         {
@@ -701,9 +711,12 @@ public class SchizoLog : MonoBehaviour
             LogText.maxVisibleCharacters = _displayBuffer.Length;
             LogText.ForceMeshUpdate();
 
-            // 行数制限を超えていれば、上から削る（必要な分だけループ）
-            while (IsUIAlive() && LogText.textInfo.lineCount > _maxLines)
+            // 行数制限を超えていれば、上から削る（必要な分だけループ）。textInfo の null を考慮して安全に判定。
+            while (true)
             {
+                if (!IsUIAlive()) break;
+                var ti = LogText.textInfo;
+                if (ti == null || ti.lineCount <= _maxLines) break;
                 RemoveTopLineFromDisplayBuffer();
                 LogText.SetText(_displayBuffer);
                 LogText.maxVisibleCharacters = _displayBuffer.Length;

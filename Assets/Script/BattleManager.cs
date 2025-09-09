@@ -1002,7 +1002,6 @@ public class BattleManager
                     //そのまま
                     break;
                 default:
-                    //そのまま
                     Debug.LogWarning("味方のグループが三人以上_EscapeACTにて検出された");
                     break;
             }
@@ -2300,7 +2299,8 @@ public class BattleManager
         if (WatchUIUpdate.Instance != null)
         {
             WatchUIUpdate.Instance.HideActionMark();
-            WatchUIUpdate.Instance.RestoreOriginalTransforms(0.4f).Forget();//ズームの処理
+            // Orchestrator 経由の任意復元導線へ切替（トグルON時はOrchestrator、OFF時は従来復元）
+            WatchUIUpdate.Instance.RestoreZoomViaOrchestrator(animated: true, duration: 0.4f).Forget();//ズームの処理
             WatchUIUpdate.Instance.EraceEnemyUI();//敵UI削除
         }
 

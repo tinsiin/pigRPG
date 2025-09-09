@@ -252,6 +252,8 @@ public class CharaconfigController : MonoBehaviour
             {
                 if (m_PassivesTexts[i] != null) m_PassivesTexts[i].text = string.Empty;
             }
+            // パッシブボタンの有効性を更新
+            UpdatePassiveButtonInteractable();
             return;
         }
 
@@ -315,6 +317,9 @@ public class CharaconfigController : MonoBehaviour
                 break;
             }
         }
+        
+        // パッシブテキスト更新後にボタンの有効性を更新
+        UpdatePassiveButtonInteractable();
     }
 
     // パッシブ列挙（<> リテラル表示。トークン間は半角スペース1つ）
@@ -385,8 +390,67 @@ public class CharaconfigController : MonoBehaviour
             btn.transition = Selectable.Transition.ColorTint;
             btn.targetGraphic = last; // TMP自体をターゲットに
         }
+        
+        // ボタンの初期設定のみ行い、有効性チェックはUpdatePassiveButtonInteractableで実行
         btn.onClick.RemoveAllListeners();
-        btn.onClick.AddListener(OpenPassivesModalForCurrent);
+        btn.onClick.AddListener(OnPassiveButtonClicked);
+    }
+    
+    // パッシブボタンがクリックされた時の処理（実際のパッシブデータがある場合のみモーダルを開く）
+    private void OnPassiveButtonClicked()
+    {
+        // 現在のキャラクターの実際のパッシブデータをチェック
+        var actor = GetActor(m_CurrentIndex);
+        if (actor == null) return;
+        
+        // 実際のパッシブトークンを取得（デバッグモードでない場合のみ）
+        string actualPassiveTokens = m_PassivesDebugMode 
+            ? PassiveTextUtils.BuildDummyPassivesTokens(m_PassivesDebugCount, m_PassivesDebugPrefix)
+            : PassiveTextUtils.BuildPassivesTokens(actor);
+        
+        // 実際のパッシブデータが存在する場合のみモーダルを開く
+        bool hasActualPassiveData = !string.IsNullOrEmpty(actualPassiveTokens) && !string.IsNullOrWhiteSpace(actualPassiveTokens);
+        
+        UnityEngine.Debug.Log($"[OnPassiveButtonClicked] actualPassiveTokens: '{actualPassiveTokens}' hasActualPassiveData: {hasActualPassiveData}");
+        
+        if (hasActualPassiveData)
+        {
+            OpenPassivesModalForCurrent();
+        }
+        else
+        {
+            UnityEngine.Debug.Log("[OnPassiveButtonClicked] パッシブデータが存在しないためモーダルを開きませんでした");
+        }
+    }
+    
+    // パッシブボタンの有効性を更新（UI更新時に呼び出す）
+    private void UpdatePassiveButtonInteractable()
+    {
+        if (m_PassivesTexts == null || m_PassivesTexts.Length == 0) return;
+        var last = m_PassivesTexts.LastOrDefault(t => t != null);
+        if (last == null) return;
+
+        var btn = last.gameObject.GetComponent<Button>();
+        if (btn == null) return;
+
+        // 現在のキャラクターの実際のパッシブデータをチェック
+        var actor = GetActor(m_CurrentIndex);
+        if (actor == null)
+        {
+            btn.interactable = false;
+            return;
+        }
+        
+        // 実際のパッシブトークンを取得（デバッグモードでない場合のみ）
+        string actualPassiveTokens = m_PassivesDebugMode 
+            ? PassiveTextUtils.BuildDummyPassivesTokens(m_PassivesDebugCount, m_PassivesDebugPrefix)
+            : PassiveTextUtils.BuildPassivesTokens(actor);
+        
+        // 実際のパッシブデータが存在する場合のみボタンを有効化
+        bool hasActualPassiveData = !string.IsNullOrEmpty(actualPassiveTokens) && !string.IsNullOrWhiteSpace(actualPassiveTokens);
+        btn.interactable = hasActualPassiveData;
+        
+        UnityEngine.Debug.Log($"[UpdatePassiveButtonInteractable] hasActualPassiveData: {hasActualPassiveData} button.interactable: {btn.interactable}");
     }
 
     private void OpenPassivesModalForCurrent()

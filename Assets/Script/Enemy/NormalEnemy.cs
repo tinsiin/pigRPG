@@ -41,10 +41,12 @@ public class NormalEnemy : BaseStates
         get { return RecovelySteps >= 0; }//復活歩数がゼロ以上なら復活する敵　つまり-1に設定すると復活しない
     }
 
-    /// <summary>
-    /// 逃げる確率　成功率は一律50%
-    /// </summary>
-    public float EscapeAttemptRate;
+    [Header("割り込みカウンター有効/無効\n頭のいいキャラなら戦闘時AIAPIで変更する")]
+    [SerializeField]
+    private bool _interruptCounterActive = true;
+
+    public override bool IsInterruptCounterActive => _interruptCounterActive;
+
 
     
     /// <summary>
@@ -439,7 +441,7 @@ public class NormalEnemy : BaseStates
 
         // 3. NormalEnemy 独自フィールドをコピー
         clone.RecovelySteps = this.RecovelySteps;
-        clone.EscapeAttemptRate = this.EscapeAttemptRate;//逃げる確率
+        clone._interruptCounterActive = this._interruptCounterActive;//割り込みカウンターActive設定。
         foreach(var skill in this.EnemySkillList)
         {
             clone.EnemySkillList.Add(skill.InitEnemyDeepCopy());

@@ -27,6 +27,7 @@ public abstract class BattleAIBrain : ScriptableObject
         public SkillZoneTrait? RangeWill;
         public DirectedWill? TargetWill;
         public List<BaseStates> Targets;
+        public bool IsEscape;
 
         public bool HasSkill => Skill != null;
         public bool HasRangeWill => RangeWill.HasValue;
@@ -48,6 +49,12 @@ public abstract class BattleAIBrain : ScriptableObject
         {
             manager.DoNothing = true;
             Debug.LogError("BattleAIBrain.CommitDecision: decision が null です");
+            return;
+        }
+
+        if(decision.IsEscape)//逃走するならスキル使用の理由がないので
+        {
+            user.SelectedEscape = true;
             return;
         }
 
