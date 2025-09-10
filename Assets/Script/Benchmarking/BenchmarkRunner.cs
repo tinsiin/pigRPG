@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
@@ -114,6 +115,7 @@ public static class BenchmarkRunner
         Action<string> sinkAppendLine,
         Action<TPreset, BenchmarkSummary> onEachSummary,
         Action<int, TPreset, BenchmarkRunResult> onEachRun,
+        Func<TPreset, Dictionary<string, string>> buildTags,
         IProgress<BenchmarkProgress> progress,
         CancellationToken ct)
     {
@@ -132,13 +134,14 @@ public static class BenchmarkRunner
 
                     // Set base context (ScenarioName + Preset info) for this preset
                     var saved = global::BenchmarkContext.Current;
+                    var tags = buildTags != null ? buildTags(p) : null;
                     global::BenchmarkContext.Current = new MetricsContext
                     {
                         ScenarioName = scenario?.Name ?? "",
                         PresetSummary = BuildPresetSummary(p),
                         PresetIndex = pi,
                         RunIndex = 0,
-                        Tags = null,
+                        Tags = tags,
                     };
 
                     BenchmarkSummary summary;
@@ -174,6 +177,15 @@ public static class BenchmarkRunner
         if (preset is WatchUIUpdate.IntroPreset p)
         {
             return $"{p.introYieldDuringPrepare.ToString().ToLower()} {p.introYieldEveryN} {p.introPreAnimationDelaySec} {p.introSlideStaggerInterval}";
+        }
+        else if (preset is WatchUIUpdate.EnemySpawnPreset ep)
+        {
+            // 敵UI用はキー付きで表現
+            int bs = System.Math.Max(1, ep.enemySpawnBatchSize);
+            int ib = System.Math.Max(0, ep.enemySpawnInterBatchFrames);
+            string thr = ep.throttleEnemySpawns.ToString().ToLower();
+            string vlog = ep.enableVerboseEnemyLogs.ToString().ToLower();
+            return $"thr={thr} bs={bs} if={ib} vlog={vlog}";
         }
         return "-";
     }

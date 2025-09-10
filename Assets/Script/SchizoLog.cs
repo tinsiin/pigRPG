@@ -61,8 +61,6 @@ public class SchizoLog : MonoBehaviour
     [Header("表示設定")]
     [SerializeField] private int _maxLines = 8;
     [SerializeField] private float _charInterval = 0.04f;
-    [SerializeField] private bool _enableScrollAnimation = true;
-    [SerializeField] private float _scrollAnimationDuration = 0.3f;
     
     private bool _enableDebugLog = false; // これで内部Debug.Log系のオン/オフを制御
     [Tooltip("AddLog(debug:true) で追加されるデバッグ用ログを表示するか")]

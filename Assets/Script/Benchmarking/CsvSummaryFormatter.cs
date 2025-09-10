@@ -22,7 +22,8 @@ public sealed class CsvSummaryFormatter : IResultFormatter
             quality = (names != null && qi >= 0 && qi < names.Length) ? names[qi] : qi.ToString();
         }
         catch { quality = "-"; }
-        return $"# {DateTime.Now:yyyy-MM-dd HH:mm:ss},presets={presetCount},repeat={repeat},scenario={sc},preset_collection={pc},unity_version={unity},platform={plat},device_model={device},quality_level={quality}\nsetting,avg_intro_avg_ms,avg_intro_p95_ms,avg_intro_max_ms,avg_actual_ms,avg_walk_total_ms,ok,total,scenario,preset_index";
+        // Start with preset collection name instead of timestamp, and remove duplicate preset_collection field.
+        return $"# {pc},presets={presetCount},repeat={repeat},scenario={sc},unity_version={unity},platform={plat},device_model={device},quality_level={quality}\nsetting,avg_intro_avg_ms,avg_intro_p95_ms,avg_intro_max_ms,avg_actual_ms,avg_walk_total_ms,ok,total,scenario,preset_index";
     }
 
     public string SummaryLine(object preset, BenchmarkSummary s)
@@ -31,6 +32,14 @@ public sealed class CsvSummaryFormatter : IResultFormatter
         if (preset is WatchUIUpdate.IntroPreset p)
         {
             setting = $"{p.introYieldDuringPrepare.ToString().ToLower()} {p.introYieldEveryN} {p.introPreAnimationDelaySec} {p.introSlideStaggerInterval}";
+        }
+        else if (preset is WatchUIUpdate.EnemySpawnPreset ep)
+        {
+            int bs = System.Math.Max(1, ep.enemySpawnBatchSize);
+            int ib = System.Math.Max(0, ep.enemySpawnInterBatchFrames);
+            string thr = ep.throttleEnemySpawns.ToString().ToLower();
+            string vlog = ep.enableVerboseEnemyLogs.ToString().ToLower();
+            setting = $"thr={thr} bs={bs} if={ib} vlog={vlog}";
         }
         int aAvg  = (int)Math.Round(s.AvgIntroAvgMs);
         int aP95  = (int)Math.Round(s.AvgIntroP95Ms);

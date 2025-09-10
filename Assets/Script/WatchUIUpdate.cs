@@ -91,6 +91,12 @@ public partial class WatchUIUpdate : MonoBehaviour
         var tags = bc?.Tags;
         var frontRect = zoomFrontContainer as RectTransform;
         var backRect  = zoomBackContainer  as RectTransform;
+        // Diagnostics: ズームスキップの原因特定用
+        Debug.Log($"[WUI] IntroContext: front={(frontRect!=null)} back={(backRect!=null)} enableZoom={enableZoomAnimation} gotoScale={_gotoScaleXY} gotoPos={_gotoPos} dur={_firstZoomSpeedTime}");
+        if (frontRect == null && backRect == null)
+        {
+            Debug.LogWarning("[WUI] Zoom containers are both null. zoomFrontContainer/zoomBackContainer の割当を確認してください。");
+        }
         return new IntroContext(
             sc,
             pi,
@@ -207,7 +213,7 @@ public partial class WatchUIUpdate : MonoBehaviour
         public double AvgJitAvgMs;     // IntroFrameAvg の平均
         public double AvgJitP95Ms;     // IntroFrameP95 の平均
         public double AvgJitMaxMs;     // IntroFrameMax の平均
-        public System.DateTime Timestamp; // 計測完了時刻
+        public DateTime Timestamp; // 計測完了時刻
         public float InterDelaySec;    // 反復待機秒
     }
 
@@ -461,11 +467,11 @@ public partial class WatchUIUpdate : MonoBehaviour
 
             // フォーマッター作成
             var formatters = this.CreateBenchmarkFormatters();
-            AppendPresetLogLine(formatters.tmpFormatter.Header(effPresets.Length, repeat));
             // シナリオ生成 & ヘッダにシナリオ名とプリセットコレクション名を付与
             var scenario = (scenarioSelector != null ? scenarioSelector.CreateSelectedScenario() : null) ?? new global::WalkOneStepScenario();
             string scenarioName = scenario.Name;
             string presetCollectionName = presetConfig != null ? presetConfig.name : "-";
+            AppendPresetLogLine(formatters.tmpFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName));
             if (formatters.useCsv)  formatters.csvSb.AppendLine(formatters.csvFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName));
             if (formatters.useJson) formatters.jsonSb.AppendLine(formatters.jsonFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName));
             if (formatters.usePerRunCsv)  formatters.perRunCsvSb.AppendLine(formatters.perRunCsvFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName));
@@ -550,6 +556,7 @@ public partial class WatchUIUpdate : MonoBehaviour
                         ref perRunRows,
                         ref perRunOk);
                 },
+                buildTags: null,
                 progress,
                 _sweepCts.Token);
 
@@ -972,6 +979,7 @@ public partial class WatchUIUpdate : MonoBehaviour
     [SerializeField] private float introPreAnimationDelaySec = 0.02f; // 一斉起動直前に待つ時間
     [Header("味方スライドの段差（秒）0.06〜0.08 推奨（PCは0.04〜0.06）")]
     [SerializeField] private float introSlideStaggerInterval = 0.075f; // 味方スライドの段差ディレイ
+    //敵UI最適化
     [Header("敵UI配置パフォーマンス/ログ設定")]
     [Header("詳細: enableVerboseEnemyLogs\ntrue: 敵UI配置処理の詳細ログをConsoleに出力（開発/デバッグ向け）\nfalse: 最低限のみ出力\n注意: ログが多いとEditorでのフレーム落ち/GCを誘発する場合があります。ビルドではOFF推奨")]
     [SerializeField] private bool enableVerboseEnemyLogs = false; // 敵配置周りの詳細ログを出す
@@ -1038,7 +1046,6 @@ public partial class WatchUIUpdate : MonoBehaviour
     [SerializeField] private int kPassivesDebugCount = 100;       // 生成するダミーパッシブの数
     [SerializeField] private string kPassivesDebugPrefix = "pas"; // ダミートークンの接頭辞
     [Space(4)]
-    [SerializeField] private bool lockBattleZoomDuringK = true;   // K中は既存戦闘ズームを抑制
     [SerializeField] private bool disableIconClickWhileBattleZoom = true; // 既存ズーム中はアイコンクリック無効
 
     // Kモード内部状態
@@ -1109,7 +1116,7 @@ public partial class WatchUIUpdate : MonoBehaviour
     /// <summary>
     ///     歩行時のEYEAREAのUI更新
     /// </summary>
-    public void WalkUIUpdate(StageData sd, StageCut sc, PlayersStates pla)
+    public void StageDataUIUpdate(StageData sd, StageCut sc, PlayersStates pla)
     {
         StagesString.text = sd.StageName + "・\n" + sc.AreaName;
         NowImageCalc(sc, pla);
@@ -1288,6 +1295,7 @@ public partial class WatchUIUpdate : MonoBehaviour
                     var ictx = BuildIntroContextForOrchestrator();
                     var token = _sweepCts != null ? _sweepCts.Token : System.Threading.CancellationToken.None;
                     _isZoomAnimating = true;
+                    Debug.Log("[Intro] Queue Zoom task via Orchestrator.PlayAsync()");
                     var zoomTask = _orchestrator.PlayAsync(ictx, token);
                     tasks.Add(zoomTask);
                 }

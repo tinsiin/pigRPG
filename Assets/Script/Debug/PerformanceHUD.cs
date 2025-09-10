@@ -4,6 +4,7 @@ using UnityEngine;
 using Unity.Profiling;
 using TMPro;
 using UnityEngine.UI;
+using System.Text;
 
 /// <summary>
 /// 画面オーバーレイで実機のパフォーマンスを可視化するHUD。
@@ -14,6 +15,7 @@ using UnityEngine.UI;
 /// </summary>
 public partial class PerformanceHUD : MonoBehaviour
 {
+    [Header("パフォーマンスHUD  このgameObjectをfalseにすれば完全にゼロコスト\nまた、非developmentビルドではコンパイルすらされない。")]
     // ===== 定数（色／しきい値） =====
     private const string COLOR_RED    = "#FF6B6B";
     private const string COLOR_YELLOW = "#FFD95A";
@@ -47,7 +49,9 @@ public partial class PerformanceHUD : MonoBehaviour
     [SerializeField] private bool showIntroSummaryLine = true; // Planned/Actual/Delay + (A/E)
     [SerializeField] private bool showWalkLine = true;       // Walk Total
     [SerializeField] private bool showBenchSummaryLine = true; // Bench Avg 行
+#if METRICS_DISABLED
     [SerializeField] private bool showMetricsDisabledBanner = true; // METRICS_DISABLEDのときのバナー表示
+#endif
 
     [Header("Span 統計（avg/p95/max の色分け表示）")]
     [SerializeField] private bool showRunnerSpanStatsLine = true; // Runner系の統計行
@@ -66,6 +70,10 @@ public partial class PerformanceHUD : MonoBehaviour
     [Header("表示調整（省略など）")]
     [Tooltip("ContextのPresetSummary最大文字数（超過は'…'で省略）")]
     [SerializeField] private int presetSummaryMaxChars = 48;
+    
+    [Header("更新制御")]
+    [Tooltip("HUDテキストの更新間隔（秒）。0なら毎フレーム更新。")]
+    [SerializeField] private float updateIntervalSec = 0f;
 
     // 位置調整はUI上で直接RectTransformを編集してください（コード側では固定しません）
 
@@ -79,6 +87,7 @@ public partial class PerformanceHUD : MonoBehaviour
     private int _fpsCount;
     private float _fpsMin = float.MaxValue;
     private float _fpsMax = 0f;
+    private float _hudNextUpdateTime = 0f; // 更新間引きの次回更新時刻（unscaledTime基準）
 
     private void Awake()
     {
@@ -114,40 +123,25 @@ public partial class PerformanceHUD : MonoBehaviour
 
     private void Update()
     {
-        // FPS/FrameTime
-        float dt = Time.unscaledDeltaTime;
-        float fps = 1f / Mathf.Max(1e-6f, dt);
-        _fpsAcc += fps;
-        _fpsCount++;
-        _fpsMin = Mathf.Min(_fpsMin, fps);
-        _fpsMax = Mathf.Max(_fpsMax, fps);
-        if (_fpsCount > Mathf.Max(1, avgSample))
+        // 更新間引き（必要な場合のみ）
+        if (updateIntervalSec > 0f)
         {
-            _fpsAcc = fps;
-            _fpsCount = 1;
-            _fpsMin = fps;
-            _fpsMax = fps;
+            float now = Time.unscaledTime;
+            if (now < _hudNextUpdateTime) return;
+            _hudNextUpdateTime = now + updateIntervalSec;
         }
 
-        // GPU ms（環境によっては0が返る）
-        float gpuMs = 0f;
-        if (showGpuMs)
-        {
-            UnityEngine.FrameTimingManager.CaptureFrameTimings();
-            var frames = new UnityEngine.FrameTiming[1];
-            if (UnityEngine.FrameTimingManager.GetLatestTimings(1, frames) > 0)
-            {
-                gpuMs = (float)frames[0].gpuFrameTime;
-            }
-        }
-
-        // GC/frame (bytes -> KB)
-        float gcKB = _gcRecorder.Valid ? _gcRecorder.LastValue / 1024f : 0f;
+        // 収集（FPS/GPU/GC）
+        float cpuMs = Time.unscaledDeltaTime * 1000f;
+        var fpsMetrics = UpdateFpsMetrics();
+        float gpuMs = fpsMetrics.GpuMs;
+        float gcKB = fpsMetrics.GcKB;
 
         // カスタムマーカー（ns -> ms）
-        float prepMs = ToMs(_prepRecorder);
-        float playMs = ToMs(_playRecorder);
-        float placeMs = ToMs(_placeRecorder);
+        var markersTuple = GetProfilerMarkers();
+        float prepMs = markersTuple.prepMs;
+        float playMs = markersTuple.playMs;
+        float placeMs = markersTuple.placeMs;
 
         // 導入メトリクス（MetricsHub優先 → Fallback to WUI）
         var wui = WatchUIUpdate.Instance;
@@ -155,48 +149,22 @@ public partial class PerformanceHUD : MonoBehaviour
         int allyCount = 0, enemyCount = 0;
         string when = "-";
         double introAvg = 0, introP95 = 0, introMax = 0; // アニメ滑らかさ
-        var latestIntro = global::MetricsHub.Instance?.LatestIntro;
-        if (latestIntro != null)
-        {
-            planned = latestIntro.PlannedMs;
-            actual  = latestIntro.ActualMs;
-            delay   = latestIntro.DelayMs;
-            enemyMs = latestIntro.EnemyPlacementMs;
-            allyCount = latestIntro.AllyCount;
-            enemyCount = latestIntro.EnemyCount;
-            when = latestIntro.Timestamp.ToString("HH:mm:ss");
-            introAvg = latestIntro.IntroFrameAvgMs;
-            introP95 = latestIntro.IntroFrameP95Ms;
-            introMax = latestIntro.IntroFrameMaxMs;
-        }
-        else if (wui != null && wui.LastIntroMetrics != null)
-        {
-            planned = wui.LastIntroMetrics.PlannedMs;
-            actual  = wui.LastIntroMetrics.ActualMs;
-            delay   = wui.LastIntroMetrics.DelayMs;
-            enemyMs = wui.LastIntroMetrics.EnemyPlacementMs;
-            allyCount = wui.LastIntroMetrics.AllyCount;
-            enemyCount = wui.LastIntroMetrics.EnemyCount;
-            when = wui.LastIntroMetrics.Timestamp.ToString("HH:mm:ss");
-            introAvg = wui.LastIntroMetrics.IntroFrameAvgMs;
-            introP95 = wui.LastIntroMetrics.IntroFrameP95Ms;
-            introMax = wui.LastIntroMetrics.IntroFrameMaxMs;
-        }
+        var introData = GetIntroMetrics();
+        planned   = introData.PlannedMs;
+        actual    = introData.ActualMs;
+        delay     = introData.DelayMs;
+        enemyMs   = introData.EnemyPlacementMs;
+        allyCount = introData.AllyCount;
+        enemyCount= introData.EnemyCount;
+        when      = introData.Timestamp;
+        introAvg  = introData.AvgMs;
+        introP95  = introData.P95Ms;
+        introMax  = introData.MaxMs;
 
         // Walk 全体計測（MetricsHub優先 → Fallback to WUI）
-        double walkTotal = 0;
-        string whenWalk = "-";
-        var latestWalk = MetricsHub.Instance?.LatestWalk;
-        if (latestWalk != null)
-        {
-            walkTotal = latestWalk.TotalMs;
-            whenWalk = latestWalk.Timestamp.ToString("HH:mm:ss");
-        }
-        else if (wui != null && wui.LastWalkMetrics != null)
-        {
-            walkTotal = wui.LastWalkMetrics.TotalMs;
-            whenWalk = wui.LastWalkMetrics.Timestamp.ToString("HH:mm:ss");
-        }
+        var walkData = GetWalkMetrics();
+        double walkTotal = walkData.TotalMs;
+        string whenWalk = walkData.Timestamp;
 
         // ベンチマーク平均（指定回数の実処理を実行後に集計）
         double bAvgA = 0, bAvgW = 0, bAvgJitAvg = 0, bAvgJitP95 = 0, bAvgJitMax = 0;
@@ -221,19 +189,11 @@ public partial class PerformanceHUD : MonoBehaviour
         if (uiText != null)
         {
             // MetricsContext 表示（優先度: 最新Intro -> 最新Walk -> BenchmarkContext.Current）
-            string ctxScenario = "-";
-            string ctxPreset   = "-";
-            int ctxPi = -1, ctxRi = -1;
-            var ctxSrc = latestIntro?.Context
-                        ?? latestWalk?.Context
-                        ?? global::BenchmarkContext.Current;
-            if (ctxSrc != null)
-            {
-                ctxScenario = string.IsNullOrEmpty(ctxSrc.ScenarioName) ? "-" : ctxSrc.ScenarioName;
-                ctxPreset   = string.IsNullOrEmpty(ctxSrc.PresetSummary) ? "-" : ctxSrc.PresetSummary;
-                ctxPi = ctxSrc.PresetIndex;
-                ctxRi = ctxSrc.RunIndex;
-            }
+            var ctx = GetContextData();
+            string ctxScenario = ctx.ScenarioName;
+            string ctxPreset   = ctx.PresetSummary;
+            int ctxPi = ctx.PresetIndex;
+            int ctxRi = ctx.RunIndex;
 
             // Intro 1行目が枠幅を超える場合は「Delay」の直前で強制改行
             string introLeft = $"Intro Planned:{planned:F2} ms | Actual:{actual:F2} ms";
@@ -301,8 +261,8 @@ public partial class PerformanceHUD : MonoBehaviour
             string spanPlaceStatsLine = $"Place Stats {FormatSpanStats("Spawn", stSpawn, effWarn, effBad)} | {FormatSpanStats("Layout", stLayout, effWarn, effBad)} | {FormatSpanStats("Activate", stActive, effWarn, effBad)}";
 
             // 1行ごとの責務を明確化（読みやすさ優先）
-            string fpsLine = $"FPS avg:{_fpsAcc/Mathf.Max(1,_fpsCount):F1} (min:{_fpsMin:F1} max:{_fpsMax:F1})";
-            string frameLine = $"CPU frame:{dt*1000f:F2} ms | GPU:{gpuMs:F2} ms | GC/frame:{gcKB:F1} KB";
+            string fpsLine = $"FPS avg:{fpsMetrics.Average:F1} (min:{fpsMetrics.Min:F1} max:{fpsMetrics.Max:F1})";
+            string frameLine = $"CPU frame:{cpuMs:F2} ms | GPU:{gpuMs:F2} ms | GC/frame:{gcKB:F1} KB";
             string contextLine = $"Context: {ctxScenario} | Preset:{TruncateString(ctxPreset, presetSummaryMaxChars)} (idx:{ctxPi}) | Run:{ctxRi}";
             string markersLine = $"Marker Prepare:{prepMs:F2} ms | Play:{playMs:F2} ms | Enemies:{placeMs:F2} ms";
             string introJitterLine = $"Intro Jit:{introAvg:F1}/{introP95:F1}/{introMax:F1} ms (avg/p95/max)";
@@ -318,24 +278,24 @@ public partial class PerformanceHUD : MonoBehaviour
             metricsBanner = showMetricsDisabledBanner ? "[METRICS DISABLED]\n" : string.Empty;
 #endif
 
-            // 表示順を微調整：Progressを先頭へ
-            uiText.text =
-                metricsBanner +
-                (showProgressLine && !string.IsNullOrEmpty(progressLine) ? (progressLine + "\n") : string.Empty) +
-                (showFpsLine ? (fpsLine + "\n") : string.Empty) +
-                (showFrameLine ? (frameLine + "\n") : string.Empty) +
-                (showContextLine ? (contextLine + "\n") : string.Empty) +
-                (showRunnerSpanLine ? (spanRunnerLine + "\n") : string.Empty) +
-                (showRunnerSpanStatsLine ? (spanRunnerStatsLine + "\n") : string.Empty) +
-                (showIntroSpanLine ? (spanIntroLine + "\n") : string.Empty) +
-                (showPlaceSpanStatsLine ? (spanPlaceLine + "\n") : string.Empty) +
-                (showIntroSpanStatsLine ? (spanIntroStatsLine + "\n") : string.Empty) +
-                (showPlaceSpanStatsLine ? (spanPlaceStatsLine + "\n") : string.Empty) +
-                (showMarkersLine ? (markersLine + "\n") : string.Empty) +
-                (showIntroJitterLine ? (introJitterLine + "\n") : string.Empty) +
-                (showIntroSummaryLine ? (introSummaryBlock + "\n") : string.Empty) +
-                (showWalkLine ? (walkLineStr + "\n") : string.Empty) +
-                (showBenchSummaryLine && !string.IsNullOrEmpty(benchLine) ? benchLine : string.Empty);
+            // 表示順を微調整：Progressを先頭へ（StringBuilderで構築）
+            uiText.text = BuildHudText(
+                metricsBanner,
+                progressLine,
+                fpsLine,
+                frameLine,
+                contextLine,
+                spanRunnerLine,
+                spanRunnerStatsLine,
+                spanIntroLine,
+                spanPlaceLine,
+                spanIntroStatsLine,
+                spanPlaceStatsLine,
+                markersLine,
+                introJitterLine,
+                introSummaryBlock,
+                walkLineStr,
+                benchLine);
         }
         // 位置・アンカーはユーザーがRectTransformで調整する前提（ここでは触らない）
     }
@@ -420,6 +380,214 @@ public partial class PerformanceHUD : MonoBehaviour
         uiText.alignment = TextAlignmentOptions.TopLeft;
         uiText.raycastTarget = false;
         uiText.text = "HUD";
+    }
+
+    private string BuildHudText(
+        string metricsBanner,
+        string progressLine,
+        string fpsLine,
+        string frameLine,
+        string contextLine,
+        string spanRunnerLine,
+        string spanRunnerStatsLine,
+        string spanIntroLine,
+        string spanPlaceLine,
+        string spanIntroStatsLine,
+        string spanPlaceStatsLine,
+        string markersLine,
+        string introJitterLine,
+        string introSummaryBlock,
+        string walkLineStr,
+        string benchLine)
+    {
+        var sb = new StringBuilder(2048);
+        sb.Append(metricsBanner);
+        if (showProgressLine && !string.IsNullOrEmpty(progressLine)) sb.AppendLine(progressLine);
+        if (showFpsLine) sb.AppendLine(fpsLine);
+        if (showFrameLine) sb.AppendLine(frameLine);
+        if (showContextLine) sb.AppendLine(contextLine);
+        if (showRunnerSpanLine) sb.AppendLine(spanRunnerLine);
+        if (showRunnerSpanStatsLine) sb.AppendLine(spanRunnerStatsLine);
+        if (showIntroSpanLine) sb.AppendLine(spanIntroLine);
+        if (showPlaceSpanStatsLine) sb.AppendLine(spanPlaceLine);
+        if (showIntroSpanStatsLine) sb.AppendLine(spanIntroStatsLine);
+        if (showPlaceSpanStatsLine) sb.AppendLine(spanPlaceStatsLine);
+        if (showMarkersLine) sb.AppendLine(markersLine);
+        if (showIntroJitterLine) sb.AppendLine(introJitterLine);
+        if (showIntroSummaryLine) sb.AppendLine(introSummaryBlock);
+        if (showWalkLine) sb.AppendLine(walkLineStr);
+        if (showBenchSummaryLine && !string.IsNullOrEmpty(benchLine)) sb.Append(benchLine);
+        return sb.ToString();
+    }
+
+    // ===== Data structures (for refactor) =====
+    private struct FpsMetrics
+    {
+        public float Current;
+        public float Average;
+        public float Min;
+        public float Max;
+        public float GpuMs;
+        public float GcKB;
+    }
+
+    private struct IntroMetricsData
+    {
+        public double PlannedMs;
+        public double ActualMs;
+        public double DelayMs;
+        public double EnemyPlacementMs;
+        public int AllyCount;
+        public int EnemyCount;
+        public string Timestamp;
+        public double AvgMs;
+        public double P95Ms;
+        public double MaxMs;
+    }
+
+    private struct WalkMetricsData
+    {
+        public double TotalMs;
+        public string Timestamp;
+    }
+
+    private struct ContextData
+    {
+        public string ScenarioName;
+        public string PresetSummary;
+        public int PresetIndex;
+        public int RunIndex;
+    }
+
+    // ===== Collectors (for future use in Update()) =====
+    private FpsMetrics UpdateFpsMetrics()
+    {
+        FpsMetrics m = new FpsMetrics();
+        float dt = Time.unscaledDeltaTime;
+        float fps = 1f / Mathf.Max(1e-6f, dt);
+        _fpsAcc += fps;
+        _fpsCount++;
+        _fpsMin = Mathf.Min(_fpsMin, fps);
+        _fpsMax = Mathf.Max(_fpsMax, fps);
+        if (_fpsCount > Mathf.Max(1, avgSample))
+        {
+            _fpsAcc = fps;
+            _fpsCount = 1;
+            _fpsMin = fps;
+            _fpsMax = fps;
+        }
+        m.Current = fps;
+        m.Average = _fpsAcc / Mathf.Max(1, _fpsCount);
+        m.Min = _fpsMin;
+        m.Max = _fpsMax;
+        // GPU
+        if (showGpuMs)
+        {
+            UnityEngine.FrameTimingManager.CaptureFrameTimings();
+            var frames = new UnityEngine.FrameTiming[1];
+            if (UnityEngine.FrameTimingManager.GetLatestTimings(1, frames) > 0)
+            {
+                m.GpuMs = (float)frames[0].gpuFrameTime;
+            }
+        }
+        // GC KB
+        m.GcKB = _gcRecorder.Valid ? _gcRecorder.LastValue / 1024f : 0f;
+        return m;
+    }
+
+    private IntroMetricsData GetIntroMetrics()
+    {
+        var data = new IntroMetricsData();
+        var wui = WatchUIUpdate.Instance;
+        var latestIntro = global::MetricsHub.Instance?.LatestIntro;
+        if (latestIntro != null)
+        {
+            data.PlannedMs = latestIntro.PlannedMs;
+            data.ActualMs = latestIntro.ActualMs;
+            data.DelayMs = latestIntro.DelayMs;
+            data.EnemyPlacementMs = latestIntro.EnemyPlacementMs;
+            data.AllyCount = latestIntro.AllyCount;
+            data.EnemyCount = latestIntro.EnemyCount;
+            data.Timestamp = latestIntro.Timestamp.ToString("HH:mm:ss");
+            data.AvgMs = latestIntro.IntroFrameAvgMs;
+            data.P95Ms = latestIntro.IntroFrameP95Ms;
+            data.MaxMs = latestIntro.IntroFrameMaxMs;
+        }
+        else if (wui != null && wui.LastIntroMetrics != null)
+        {
+            var m = wui.LastIntroMetrics;
+            data.PlannedMs = m.PlannedMs;
+            data.ActualMs = m.ActualMs;
+            data.DelayMs = m.DelayMs;
+            data.EnemyPlacementMs = m.EnemyPlacementMs;
+            data.AllyCount = m.AllyCount;
+            data.EnemyCount = m.EnemyCount;
+            data.Timestamp = m.Timestamp.ToString("HH:mm:ss");
+            data.AvgMs = m.IntroFrameAvgMs;
+            data.P95Ms = m.IntroFrameP95Ms;
+            data.MaxMs = m.IntroFrameMaxMs;
+        }
+        else
+        {
+            data.Timestamp = "-";
+        }
+        return data;
+    }
+
+    private WalkMetricsData GetWalkMetrics()
+    {
+        var data = new WalkMetricsData();
+        var wui = WatchUIUpdate.Instance;
+        var latestWalk = global::MetricsHub.Instance?.LatestWalk;
+        if (latestWalk != null)
+        {
+            data.TotalMs = latestWalk.TotalMs;
+            data.Timestamp = latestWalk.Timestamp.ToString("HH:mm:ss");
+        }
+        else if (wui != null && wui.LastWalkMetrics != null)
+        {
+            data.TotalMs = wui.LastWalkMetrics.TotalMs;
+            data.Timestamp = wui.LastWalkMetrics.Timestamp.ToString("HH:mm:ss");
+        }
+        else
+        {
+            data.Timestamp = "-";
+        }
+        return data;
+    }
+
+    private ContextData GetContextData()
+    {
+        var data = new ContextData();
+        var latestIntro = global::MetricsHub.Instance?.LatestIntro;
+        var latestWalk  = global::MetricsHub.Instance?.LatestWalk;
+        var ctxSrc = latestIntro?.Context
+                    ?? latestWalk?.Context
+                    ?? global::BenchmarkContext.Current;
+        if (ctxSrc != null)
+        {
+            data.ScenarioName = string.IsNullOrEmpty(ctxSrc.ScenarioName) ? "-" : ctxSrc.ScenarioName;
+            data.PresetSummary = string.IsNullOrEmpty(ctxSrc.PresetSummary) ? "-" : ctxSrc.PresetSummary;
+            data.PresetIndex = ctxSrc.PresetIndex;
+            data.RunIndex = ctxSrc.RunIndex;
+        }
+        else
+        {
+            data.ScenarioName = "-";
+            data.PresetSummary = "-";
+            data.PresetIndex = -1;
+            data.RunIndex = -1;
+        }
+        return data;
+    }
+
+    private (float prepMs, float playMs, float placeMs) GetProfilerMarkers()
+    {
+        return (
+            ToMs(_prepRecorder),
+            ToMs(_playRecorder),
+            ToMs(_placeRecorder)
+        );
     }
 }
 #endif

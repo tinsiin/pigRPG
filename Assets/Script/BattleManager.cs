@@ -1105,7 +1105,7 @@ public class BattleManager
            PlayersStates.Instance.PlayersOnWin();
         }
 
-        OnBattleEnd();
+        OnBattleEnd().Forget();
         return TabState.walk;
     }
     
@@ -2280,7 +2280,7 @@ public class BattleManager
     /// <summary>
     /// battleManagerを消去するときの処理
     /// </summary>
-    private void OnBattleEnd()
+    public async UniTask OnBattleEnd()
     {
 
         //全てのキャラクターの特別な補正をリセットする
@@ -2296,17 +2296,22 @@ public class BattleManager
         }
 
         // ActionMark を表示
-        if (WatchUIUpdate.Instance != null)
+        var wui = WatchUIUpdate.Instance;
+        if(wui == null)
         {
-            WatchUIUpdate.Instance.HideActionMark();
-            // Orchestrator 経由の任意復元導線へ切替（トグルON時はOrchestrator、OFF時は従来復元）
-            WatchUIUpdate.Instance.RestoreZoomViaOrchestrator(animated: true, duration: 0.4f).Forget();//ズームの処理
-            WatchUIUpdate.Instance.EraceEnemyUI();//敵UI削除
+            Debug.LogError("OnBattleEndでWatchUIUpdateが認識されていない");
+            return;
         }
+        
+        wui.HideActionMark();
+        // Orchestrator 経由の任意復元導線へ切替（トグルON時はOrchestrator、OFF時は従来復元）
+        wui.EraceEnemyUI();//敵UI削除
 
         PlayersStates.Instance.AllyAlliesUISetActive(false);//全味方UI非表示
         BattleSystemArrowManager.Instance.ClearQueue();//矢印を消す
         schizoLog.HardStopAndClearAsync().Forget();
+        await wui.RestoreZoomViaOrchestrator(animated: true, duration: 0.4f);//ズームの処理
+
 
         //schizoLog.AddLog("戦闘を終わらせた",true);
         //schizoLog.DisplayAllAsync().Forget();//ACTPOPが呼ばれないのでここで呼ぶ

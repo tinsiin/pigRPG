@@ -77,7 +77,6 @@ public class StatesBannerController : MonoBehaviour
 
 
     [Header("Optimization Cache")]
-    [SerializeField, Tooltip("内部キャッシュの初期化確認（デバッグ用）")] private bool m_DebugShowCache = false;
     private bool _hasLast;
     private float _lastHPPercent;
     private float _lastMentalHPPercent;

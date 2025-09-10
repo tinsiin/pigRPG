@@ -22,6 +22,8 @@ public class Walking : MonoBehaviour
     private bool _isProcessingNext = false;
     // 処理中に押された NextWait を次回に繰り越すフラグ
     private bool _pendingNextClick = false;
+    // Walkボタンの再入防止フラグ（多重起動防止）
+    private bool _isWalking = false;
     private void Awake()
     {
         if (Instance == null)
@@ -103,12 +105,38 @@ public class Walking : MonoBehaviour
     /// </summary>
     public async void OnWalkBtn()
     {
-        if(stages == null)Debug.LogError("stagesが認識されていない");
-        if(ps == null)Debug.LogError("psが認識されていない");
-        if (stages && ps != null)
-        {
-            await Walk(1);
-        }
+        BusyOverlay.Instance.Show();
+            // 多重起動を無視
+            if (_isWalking) return;
+            Debug.Log("歩行ボタン押された");
+
+            // 事前検証（null時は実行しない）
+            if (stages == null) { Debug.LogError("stagesが認識されていない"); return; }
+            if (ps == null)     { Debug.LogError("psが認識されていない");     return; }
+
+            _isWalking = true;
+            bool? prevInteractable = null;
+            try
+            {
+                if (walkbtn != null)
+                {
+                    prevInteractable = walkbtn.interactable;
+                    walkbtn.interactable = false; // 実行中は押せない状態に
+                }
+                await Walk(1);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+            finally
+            {
+                if (walkbtn != null && prevInteractable.HasValue)
+                {
+                    walkbtn.interactable = prevInteractable.Value; // UIを元に戻す
+                }
+                _isWalking = false;
+            }
     }
 
     private async UniTask OnClickNextWaitBtn()
@@ -173,6 +201,7 @@ public class Walking : MonoBehaviour
             PlayersStates.Instance.OnBattleStart();
 
             // 改良版ズーム実行（敵UI生成も内部で並行実行される）
+            // 操作を一時的にブロック（布をかぶせる）
             await wui.FirstImpressionZoomImproved();
 
             USERUI_state.Value = bm.ACTPop();//一番最初のUSERUIの状態を変更させるのと戦闘ループの最初の準備処理。
@@ -192,7 +221,7 @@ public class Walking : MonoBehaviour
             Debug.Log("No encounter");
         }
 
-        //await wui.FirstImpressionZoomDebug();//デバッグズームで負荷をたしかめる際の関数
+        BusyOverlay.Instance.Hide();
     }
 
     //メインループ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
@@ -200,6 +229,7 @@ public class Walking : MonoBehaviour
     private async UniTask Walk(int footnumber) //リストの内容を反映
     {
         WatchUIUpdate.Instance?.BeginWalkCycleTiming();
+        bm = null;//歩くたびに消しとく
         try
         {
             //ps.AddProgress(footnumber); //進行度を増やす。
@@ -208,10 +238,14 @@ public class Walking : MonoBehaviour
             //主人公達の歩行時の処理
             ps.PlayersOnWalks(1);//footnumber関係なしに一歩分の効果(テスト用)
 
+            //EYEArea歩行の更新
+            wui.StageDataUIUpdate(NowStageData, NowStageCut, ps); 
+            //Encount前にサイドオブジェクト動かさないと、ズーム前のdelay処理で後から出てくる感じが気持ち悪いからここに。
+
             //エンカウント
             await Encount();
 
-            wui.WalkUIUpdate(NowStageData, NowStageCut, ps); //ui更新
+
 
 
             /*/*if (NowAreaData.Rest) //休憩地点なら
@@ -285,6 +319,7 @@ public class Walking : MonoBehaviour
     public async UniTask RunOneWalkStepForBenchmark()
     {
         await Walk(1);
+        await bm.OnBattleEnd();//後処理しないとUIが増え続けて重くなって、適切なベンチマーク測定不可能になる。
     }
 
     /// <summary>

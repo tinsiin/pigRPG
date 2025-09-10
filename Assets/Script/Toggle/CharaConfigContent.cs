@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,6 +8,8 @@ public class CharaConfigContent : TabContents
     {
         switch (state)
         {
+            default:
+                break;
         }
     }
 

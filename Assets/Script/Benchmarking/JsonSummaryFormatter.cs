@@ -11,7 +11,6 @@ public sealed class JsonSummaryFormatter : IResultFormatter
 
     public string Header(int presetCount, int repeat, string scenarioName, string presetCollectionName)
     {
-        var ts = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         string sc = string.IsNullOrEmpty(scenarioName) ? "-" : scenarioName;
         string pc = string.IsNullOrEmpty(presetCollectionName) ? "-" : presetCollectionName;
         string unity = Application.unityVersion ?? "-";
@@ -25,7 +24,7 @@ public sealed class JsonSummaryFormatter : IResultFormatter
             quality = (names != null && qi >= 0 && qi < names.Length) ? names[qi] : qi.ToString();
         }
         catch { quality = "-"; }
-        return "{\"type\":\"meta\",\"timestamp\":\"" + Esc(ts) + "\",\"presets\":" + presetCount + ",\"repeat\":" + repeat + ",\"scenario\":\"" + Esc(sc) + "\",\"preset_collection\":\"" + Esc(pc) + "\",\"unity_version\":\"" + Esc(unity) + "\",\"platform\":\"" + Esc(plat) + "\",\"device_model\":\"" + Esc(device) + "\",\"quality_level\":\"" + Esc(quality) + "\"}";
+        return "{\"type\":\"meta\",\"preset_collection\":\"" + Esc(pc) + "\",\"presets\":" + presetCount + ",\"repeat\":" + repeat + ",\"scenario\":\"" + Esc(sc) + "\",\"unity_version\":\"" + Esc(unity) + "\",\"platform\":\"" + Esc(plat) + "\",\"device_model\":\"" + Esc(device) + "\",\"quality_level\":\"" + Esc(quality) + "\"}";
     }
 
     public string SummaryLine(object preset, BenchmarkSummary s)
@@ -34,6 +33,14 @@ public sealed class JsonSummaryFormatter : IResultFormatter
         if (preset is WatchUIUpdate.IntroPreset p)
         {
             setting = $"{p.introYieldDuringPrepare.ToString().ToLower()} {p.introYieldEveryN} {p.introPreAnimationDelaySec} {p.introSlideStaggerInterval}";
+        }
+        else if (preset is WatchUIUpdate.EnemySpawnPreset ep)
+        {
+            int bs = System.Math.Max(1, ep.enemySpawnBatchSize);
+            int ib = System.Math.Max(0, ep.enemySpawnInterBatchFrames);
+            string thr = ep.throttleEnemySpawns.ToString().ToLower();
+            string vlog = ep.enableVerboseEnemyLogs.ToString().ToLower();
+            setting = $"thr={thr} bs={bs} if={ib} vlog={vlog}";
         }
         int aAvg  = (int)Math.Round(s.AvgIntroAvgMs);
         int aP95  = (int)Math.Round(s.AvgIntroP95Ms);

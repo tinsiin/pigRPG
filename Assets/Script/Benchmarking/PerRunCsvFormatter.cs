@@ -18,7 +18,8 @@ public sealed class PerRunCsvFormatter
             quality = (names != null && qi >= 0 && qi < names.Length) ? names[qi] : qi.ToString();
         }
         catch { quality = "-"; }
-        return $"# {DateTime.Now:yyyy-MM-dd HH:mm:ss},presets={presetCount},repeat={repeat},scenario={sc},preset_collection={pc},unity_version={unity},platform={plat},device_model={device},quality_level={quality}\nscenario,preset_index,preset_summary,run_index,success,intro_avg_ms,intro_p95_ms,intro_max_ms,actual_ms,walk_total_ms,loop_ms,tags,error";
+        // Put preset collection name first; remove timestamp.
+        return $"# {pc},presets={presetCount},repeat={repeat},scenario={sc},unity_version={unity},platform={plat},device_model={device},quality_level={quality}\nscenario,preset_index,preset_summary,run_index,success,intro_avg_ms,intro_p95_ms,intro_max_ms,actual_ms,walk_total_ms,loop_ms,tags,error";
     }
 
     public string RunLine(string scenario, int presetIndex, string presetSummary, int runIndex, BenchmarkRunResult r, string tags)

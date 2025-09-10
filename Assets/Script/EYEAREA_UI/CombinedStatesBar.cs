@@ -25,7 +25,6 @@ public class CombinedStatesBar : MaskableGraphic
     [SerializeField, Range(0f, 3f)] float m_MentalPercent = 1f; // 精神HP割合 (0.0～3.0)
     [SerializeField] Color m_MentalBarColor = Color.blue;   // 精神HPバーの色
     [SerializeField] float m_MentalThreshold = 1f;          // 乖離しきい値
-    [SerializeField] float m_ThresholdLineWidth = 2f;       // しきい値縦線の太さ
     [SerializeField] Color m_ThresholdLineColor = Color.white; // しきい値縦線の色
     [SerializeField] bool m_ShowMentalBackground = false;   // 精神HP背景を表示するか（デフォルト透明）
     [SerializeField] Color m_MentalBackgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.8f); // 精神HP背景色

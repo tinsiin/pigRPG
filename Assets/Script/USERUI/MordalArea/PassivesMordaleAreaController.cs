@@ -27,7 +27,6 @@ public class PassivesMordaleAreaController : MonoBehaviour, IPointerClickHandler
     [Header("Fit Settings (Height)")]
     [SerializeField] private float m_FitSafety = 1.0f;       // 高さ方向のセーフティ（px相当）
     [SerializeField] private int m_EllipsisDotCount = 4;     // 省略ドット数
-    [SerializeField] private bool m_AlwaysAppendEllipsis = true;
 
     [Header("Logs")]
     [SerializeField] private bool m_DebugLogs = true;
