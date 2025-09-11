@@ -1082,6 +1082,20 @@ public partial class WatchUIUpdate : MonoBehaviour
     /// </summary>
     public float BaVanguardDurationSec { get=> RandomEx.Shared.NextFloat(vanguardDurationSecRange.x, vanguardDurationSecRange.y); }
     
+    [Header("ウォームアップ（初回カクつき低減）")]
+    [Tooltip("起動時に各種システムの初期化を先に済ませ、初回ズーム/スライドのカクつきを抑えます。")]
+    [SerializeField] private bool warmupOnStart = true;
+    [Tooltip("UniTaskのPlayerLoop初期化など、最小限の非同期初期化を先に行います。")]
+    [SerializeField] private bool warmupUniTask = true;
+    [Tooltip("LitMotionのバインディング/拡張(AnchoredPosition等)の初期化を先に行います。")]
+    [SerializeField] private bool warmupLitMotion = false;
+    [Tooltip("TMP背景計測やテキストバウンディングの初回確定を先に行います（kPassivesTextが設定されている場合）。")]
+    [SerializeField] private bool warmupTMPBackground = true;
+    [Tooltip("Canvas/レイアウトの強制更新を行い、初回のレイアウト確定コストを分散します。")]
+    [SerializeField] private bool warmupCanvasRebuild = true;
+    [Tooltip("時間はかかりますが、必要に応じて全シェーダのウォームアップを行います（ビルド設定に依存）。")]
+    [SerializeField] private bool warmupShaders = false;
+
 
     private void Start()
     {
@@ -1099,6 +1113,94 @@ public partial class WatchUIUpdate : MonoBehaviour
         // KモードUI初期設定
         if (kNameText != null) kNameText.gameObject.SetActive(false);
         if (kPassivesText != null) kPassivesText.gameObject.SetActive(false);
+
+        // 初回カクつき低減のためのウォームアップを起動時に実行（任意）
+        if (warmupOnStart)
+        {
+            WarmupIntroSystemsAsync().Forget();
+        }
+    }
+
+    /// <summary>
+    /// 初回ズーム/スライド/配置で発生しがちな初期化コストを、起動直後に先に済ませるウォームアップ処理。
+    /// 実際のアニメーションや可視状態は変えずに、内部のJIT/初回バインド/レイアウト確定等のみを誘発します。
+    /// </summary>
+    private async UniTask WarmupIntroSystemsAsync()
+    {
+        try
+        {
+            // Orchestratorの遅延生成を事前に済ませる
+            EnsureOrchestrator();
+
+            // 1) UniTaskのPlayerLoop初期化（最小コスト）
+            if (warmupUniTask)
+            {
+                await UniTask.Yield(PlayerLoopTiming.Update);
+            }
+
+            // 2) LitMotionの初期化（AnchoredPositionバインド等）
+            if (warmupLitMotion)
+            {
+                var dummyGo = new GameObject("WUI_Warmup_DummyRT");
+                var rt = dummyGo.AddComponent<RectTransform>();
+                rt.SetParent(this.transform, false);
+                rt.anchoredPosition = Vector2.zero;
+                try
+                {
+                    // 0秒モーションを起動し、内部のディスパッチャ/バインディング初期化のみを誘発（awaitしない）
+                    LMotion.Create(Vector2.zero, new Vector2(1, 1), 0f)
+                        .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+                        .BindToAnchoredPosition(rt);
+                }
+                catch { /* no-op（起動直後で親Canvas未確定でも問題なし）*/ }
+                finally
+                {
+                    if (dummyGo != null) Destroy(dummyGo);
+                }
+            }
+
+            // 3) TMP背景（kPassives）関連のレイアウト確定と背景生成（不可視のまま）
+            if (warmupTMPBackground && kPassivesText != null)
+            {
+                var go = kPassivesText.gameObject;
+                var cg = go.GetComponent<CanvasGroup>();
+                if (cg == null) cg = go.AddComponent<CanvasGroup>();
+                float prevAlpha = cg.alpha;
+                bool prevActive = go.activeSelf;
+                try
+                {
+                    cg.alpha = 0f; // 不可視
+                    go.SetActive(true);
+                    // TMP参照の取得/生成と背景生成を先に済ませる
+                    _kPassivesTMP = GetOrSetupTMPForBackground(kPassivesText, _kPassivesTMP, kPassivesUseRectMask);
+                    kPassivesText.RefreshBackground();
+                    Canvas.ForceUpdateCanvases();
+                }
+                catch { /* no-op */ }
+                finally
+                {
+                    // 状態を元に戻す
+                    cg.alpha = prevAlpha;
+                    go.SetActive(prevActive);
+                }
+            }
+
+            // 4) Canvas/レイアウトの強制確定
+            if (warmupCanvasRebuild)
+            {
+                try { Canvas.ForceUpdateCanvases(); } catch { /* no-op */ }
+            }
+
+            // 5) シェーダウォームアップ（必要時のみ。処理時間が長い可能性あり）
+            if (warmupShaders)
+            {
+                try { Shader.WarmupAllShaders(); } catch { /* no-op */ }
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[WUI.Warmup] Failed: {ex.Message}");
+        }
     }
 
     RectTransform _rect;
@@ -1271,7 +1373,7 @@ public partial class WatchUIUpdate : MonoBehaviour
                     EnsureOrchestrator();
                     var ictx = BuildIntroContextForOrchestrator();
                     var pctx = BuildPlacementContext(currentBattleManager.EnemyGroup);
-                    using (global::MetricsHub.Instance.BeginSpan("PlaceEnemies", BuildMetricsContext()))
+                    using (MetricsHub.Instance.BeginSpan("PlaceEnemies", BuildMetricsContext()))
                     {
                         var token = _sweepCts != null ? _sweepCts.Token : System.Threading.CancellationToken.None;
                         await _orchestrator.PlaceEnemiesAsync(ictx, pctx, token);
