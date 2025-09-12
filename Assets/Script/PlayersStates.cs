@@ -600,9 +600,14 @@ public class PlayersStates:MonoBehaviour
 
     public void PlayersOnWalks(int walkCount)
     {
-        for(int i = 0; i < Allies.Length; i++)
+        // 全キャラ分、1歩単位で順次処理（OnWalkCallBack は1歩=1回の契約）
+        int steps = Mathf.Max(1, walkCount);
+        for (int s = 0; s < steps; s++)
         {
-            Allies[i].OnWalkCallBack(walkCount);
+            for (int i = 0; i < Allies.Length; i++)
+            {
+                Allies[i].OnWalkStepCallBack();
+            }
         }
     }
     [Header("モーダルエリア")]
@@ -796,7 +801,6 @@ public class AllyClass : BaseStates
         oldSkill.ApplyEmotionalAttachmentSkillQuantityChangeSkillWeakeningPassive//弱体化スキルパッシブ専用の付与関数
         (PlayersStates.Instance.EmotionalAttachmentSkillWeakeningPassive);
     }
-    
     
     /// <summary>
     /// キャラクターのデフォルト精神属性を決定する関数　十日能力が変動するたびに決まる。
@@ -1092,6 +1096,22 @@ public class AllyClass : BaseStates
         return TabState.NextWait; // デフォルトの遷移先
     }
 
+    // ================================
+    // 歩行ストリーク（1歩=+1）。OnWalkCallBackは1歩単位の契約。
+    // ================================
+    private int _walkCounter = 0;
+
+    /// <summary>
+    /// 歩行ストリークのリセット。
+    /// </summary>
+    public void ResetWalkCounter()
+    {
+        _walkCounter = 0;
+        _walkPointRecoveryCounter = 0;//歩行のポイント回復用カウンターをゼロに
+        _walkCountForTransitionToDefaultImpression = 0;//歩行の精神属性変化用カウンターをゼロに
+    }
+
+
     /// <summary>
     /// 2歩ごとに回復するポイントカウンター
     /// </summary>
@@ -1101,8 +1121,7 @@ public class AllyClass : BaseStates
     public override void OnBattleEndNoArgument()
     {
         base.OnBattleEndNoArgument();
-        _walkPointRecoveryCounter = 0;//歩行のポイント回復用カウンターをゼロに
-        _walkCountForTransitionToDefaultImpression = 0;//歩行の精神属性変化用カウンターをゼロに
+        ResetWalkCounter();
     }
     public override void OnBattleStartNoArgument()
     {
@@ -1111,6 +1130,7 @@ public class AllyClass : BaseStates
     }
      /// <summary>
     /// 歩行時にポイントを回復する処理
+    /// この回復は外でスキルを使用する際の制限を表現する物。
     /// </summary>
     void RecoverPointOnWalk()
     {
@@ -1169,20 +1189,35 @@ public class AllyClass : BaseStates
 
 
     /// <summary>
-    /// 味方キャラの歩く際に呼び出されるコールバック
+    /// 味方キャラの歩く際に呼び出されるコールバック（1歩＝1回の契約）。
+    /// 複数歩を処理したい場合は呼び出し側（PlayersOnWalks）で回数分呼ぶこと。
     /// </summary>
-    public void OnWalkCallBack(int walkCount)
+    public void OnWalkStepCallBack()
     {
+        // 常に1歩分として扱う（契約の一貫性のため）。
+        _walkCounter++;
+        Debug.Log("歩数: " + _walkCounter);
+
+        // 1. パッシブ/生存/状態遷移（逐次）
         AllPassiveWalkEffect();//全パッシブの歩行効果を呼ぶ
         UpdateWalkAllPassiveSurvival();
         UpdateAllSkillPassiveWalkSurvival();//スキルパッシブの歩行残存処理
         TransitionPowerOnWalkByCharacterImpression();
 
+        // 2. 回復・共鳴（逐次）
         RecoverMentalHPOnWalk();//歩行時精神HP回復
-        RecoverPointOnWalk();//歩行時ポイント回復　味方のみ
+        RecoverPointOnWalk();//歩行時ポイント回復　味方のみ（周期化するなら内部で閾値判定に変更）
         ResonanceHealingOnWalking();//歩行時思えの値回復
-        FadeConfidenceBoostByWalking(walkCount);//歩行によって自信ブーストがフェードアウトする
+
+        // 3. 属性ポイントの歩行減衰（確率が歩数依存のため逐次）
+        ApplyWalkingAttrPDecayStep(_walkCounter);
+
+        // 4. ブーストのフェード（増分1歩）
+        FadeConfidenceBoostByWalking();//歩行によって自信ブーストがフェードアウトする
+
+        // 5. 精神属性をデフォルトへ戻す（逐次）
         ImpressionToDefaultTransition();//歩行によって精神属性がデフォルトに戻っていく
+
     }
     public void OnAllyWinCallBack()
     {
@@ -1193,10 +1228,12 @@ public class AllyClass : BaseStates
     }
     public void OnAllyLostCallBack()
     {
+        //敗北時パワー変化
         TransitionPowerOnBattleLostByCharacterImpression();
     }
     public void OnAllyRunOutCallBack()
     {
+        //主人公達が逃げ出した時のパワー変化
         TransitionPowerOnBattleRunOutByCharacterImpression();
     }
     /// <summary>

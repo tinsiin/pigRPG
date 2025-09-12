@@ -1126,8 +1126,6 @@ MonoBehaviour:
   - {fileID: 4046172622777853089}
   - {fileID: 6129334186512888633}
   - {fileID: 7021348610528383865}
-  m_PageIndex: 0
-  m_CurrentCharacterIndex: 0
   m_BannerButton: {fileID: 3724204704988845064}
   m_HPText: {fileID: 1249474394482013489}
   m_PText: {fileID: 3168232589573631131}
@@ -1145,7 +1143,6 @@ MonoBehaviour:
   m_defRightText: {fileID: 1229877580473773776}
   m_eyeText: {fileID: 5860664450450805381}
   m_agiText: {fileID: 3717082125656993064}
-  m_DebugShowCache: 0
 --- !u!114 &3724204704988845064
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1664,7 +1661,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &5932149681262612271
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3460,7 +3457,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7321348688761886966
 RectTransform:
   m_ObjectHideFlags: 0

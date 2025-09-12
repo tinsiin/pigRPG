@@ -4325,7 +4325,7 @@ MonoBehaviour:
   enemyBattleLayer: {fileID: 879111140}
   allyBattleLayer: {fileID: 715286165}
   introYieldDuringPrepare: 1
-  introYieldEveryN: 50
+  introYieldEveryN: 700
   introPreAnimationDelaySec: 0.06
   introSlideStaggerInterval: 0.06
   enableVerboseEnemyLogs: 0
@@ -6516,7 +6516,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &227112959
 RectTransform:
   m_ObjectHideFlags: 0
@@ -22019,7 +22019,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.99101174, g: 0.038403083, b: 0.98909867, a: 0.9670155}
+  m_Color: {r: 0.8827557, g: 0.5009358, b: 0.857801, a: 0.5697451}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

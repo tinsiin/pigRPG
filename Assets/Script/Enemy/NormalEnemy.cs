@@ -330,17 +330,22 @@ public class NormalEnemy : BaseStates
     }
     public void OnWin()
     {
-        EneVictoryBoost();//勝利時ブースト
+        EneVictoryBoost();//勝利時十日能力ブースト成長
         GrowSkillsNotEnabledOnWin();//敵の非有効化スキル成長　勝利時ブーストの後に行うこと前提
         ResolveDivergentSkillOutcome();//乖離スキル過多使用による苦悩システム　十日能力低下
+        HP += MaxHP * 0.15f;//HPの自然回復
     }
     public void OnRunOut()
     {
+        //逃げ出した時のスキル成長
         GrowSkillsNotEnabledOnRunOut();
     }
     public void OnAllyRunOut()
     {
+        //主人公たちが逃げ出した時のスキル成長
         GrowSkillsNotEnabledOnAllyRunOut();
+        HP += MaxHP * 0.3f;//HPの自然回復
+
     }
     /// <summary>
     /// 再遭遇時コールバックとは違い、復活者限定の処理
@@ -358,6 +363,7 @@ public class NormalEnemy : BaseStates
     /// <summary>
     /// 再遭遇時コールバック。パッシブとか自信ブーストなどの、
     // 歩行に変化のあるものは敵グループはここら辺で一気に処理をする。
+    //敵の初回エンカウント時のコールバックでもある。
     /// </summary>
     public void ReEncountCallback()
     {
@@ -377,7 +383,8 @@ public class NormalEnemy : BaseStates
         if(!isFirstEncounter)
         {
             //自信ブーストの再遭遇減衰処理
-            FadeConfidenceBoostByWalking(distanceTraveled);
+            //FadeConfidenceBoostByWalking(distanceTraveled);
+            //AllyClassの方で整合性を取るために一歩分の関数にした　残りは後で考える。
 
             //パッシブ歩行効果
             for(var i = 0 ; i < distanceTraveled ; i++)

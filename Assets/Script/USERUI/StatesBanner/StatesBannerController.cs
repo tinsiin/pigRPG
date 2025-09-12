@@ -225,6 +225,11 @@ public class StatesBannerController : MonoBehaviour
         string agiText = $"機動:{agiInt}";
         if (m_agiText != null && m_agiText.text != agiText) m_agiText.text = agiText;
 
+        // AttrP のセグメント（下線付きカラー）も数値と同タイミングで再構築
+        // 低頻度想定だが、StatesBannerAttrPointsText 側に差分スキップがあるため安全
+        if (m_AttrPTextSegments == null) m_AttrPTextSegments = GetComponentInChildren<StatesBannerAttrPointsText>(true);
+        if (m_AttrPTextSegments != null) m_AttrPTextSegments.Bind(actor);
+
         _hasLast = true;
     }
 

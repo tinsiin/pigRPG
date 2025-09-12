@@ -35,6 +35,9 @@ public class StatesBannerAttrPointsText : MonoBehaviour
     }
     private readonly Dictionary<SpiritualProperty, string> _nameMap = new Dictionary<SpiritualProperty, string>();
     
+    [Header("Debug")] 
+    [SerializeField] private bool m_DebugLogs = false;
+    
     // 差分更新用キャッシュ
     private BaseStates _lastActor;
     private string _lastFullText;
@@ -100,6 +103,7 @@ public class StatesBannerAttrPointsText : MonoBehaviour
         underlineContainer.pivot = new Vector2(0, 1);
 
         // 並び順は固定（最近順は使わない）
+        if (m_DebugLogs) Debug.Log($"[AttrPText] Bind start actor={actor.CharacterName}", this);
         var snapshot = actor.GetAttrPSnapshot(true);
 
         // セグメント文字列を組み立て（Amount>0のみ）
@@ -121,8 +125,11 @@ public class StatesBannerAttrPointsText : MonoBehaviour
 
         // 差分スキップ: アクターが同一 かつ テキストが同一なら再構築を省く
         bool actorChanged = !ReferenceEquals(_lastActor, actor);
-        if (!actorChanged && string.Equals(_lastFullText, fullText))
+        bool textSame = string.Equals(_lastFullText, fullText);
+        if (m_DebugLogs) Debug.Log($"[AttrPText] actorChanged={actorChanged} textSame={textSame} segCount={segments.Count} fullText='{fullText}'", this);
+        if (!actorChanged && textSame)
         {
+            if (m_DebugLogs) Debug.Log("[AttrPText] Skip rebuild (cache hit)", this);
             return;
         }
 
@@ -155,6 +162,7 @@ public class StatesBannerAttrPointsText : MonoBehaviour
             // 次セグメントの開始X
             x += segW + sepW;
         }
+        if (m_DebugLogs) Debug.Log($"[AttrPText] Rebuilt underlines count={segments.Count}", this);
 
         // キャッシュ更新
         _lastFullText = fullText;
