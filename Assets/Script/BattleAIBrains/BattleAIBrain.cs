@@ -150,11 +150,12 @@ public abstract class BattleAIBrain : ScriptableObject
     }
 
     /// <summary>
+    /// スキル思考部分
     /// 非virtualの統一入口。ここで共通初期化と強制キャンセル判定を行い、
     /// 強制時はキャンセル行動のみを実行し、そうでなければ既存のThink()へ委譲する。
     /// 呼び出し側は今後 Run() を利用すること。
     /// </summary>
-    public void Run()
+    public void SkillActRun()
     {
         // 共通初期化
         manager = Walking.Instance?.bm;
@@ -258,7 +259,7 @@ public abstract class BattleAIBrain : ScriptableObject
 
 
 
-    // 新スタイル：各AIはPlanに「結果」だけを書く（NowUseSkill等へは直接書かない想定）
+    // 各AIはPlanに「結果」だけを書く（NowUseSkill等へは直接書かない想定）
     protected virtual void Plan(AIDecision decision)
     {
         // デフォルト実装は何もしない（後方互換：未実装ならThink()へフォールバック）

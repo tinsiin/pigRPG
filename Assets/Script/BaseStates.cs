@@ -8369,7 +8369,7 @@ private int CalcTransformCountIncrement(int tightenStage)
     /// </summary>
     /// <param name="skill"></param>
     /// <param name="UnderIndex">攻撃される人の順番　スキルのPowerSpreadの順番に同期している</param>
-    public virtual async UniTask<string> ReactionSkill(BaseStates attacker, float spread)
+    public virtual async UniTask<string> ReactionSkillOnBattle(BaseStates attacker, float spread)
     {
         // ポイント精算用: 最も強いヒット結果を保持
         HitResult bestHitOutcome = HitResult.none;
@@ -8816,7 +8816,7 @@ private int CalcTransformCountIncrement(int tightenStage)
             var ene = Unders.GetAtCharacter(i);
             ApplyCharaConditionalToSpecial(ene);//キャラ限定補正を通常の特別補正リストに追加　キャラが合ってればね
             schizoLog.AddLog($"{ene.CharacterName}のReactionSkillが始まった-Undersのカウント数:{Unders.Count}",true);
-            txt += await ene.ReactionSkill(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
+            txt += await ene.ReactionSkillOnBattle(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
         }
         // 対象処理が完了したのでキャスト単位でポイント精算
         var overallHit = EndSkillHitAggregation();

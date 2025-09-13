@@ -143,7 +143,7 @@ public class NormalEnemy : BaseStates
     /// </summary>
     public virtual void SkillAI()
     {
-        _brain.Run();
+        _brain.SkillActRun();
     }
 
     //スキル成長の処理など------------------------------------------------------------------------------------------------------スキル成長の処理などーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
