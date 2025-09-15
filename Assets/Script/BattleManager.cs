@@ -1061,7 +1061,7 @@ public class BattleManager
         var damage = new StatesPowerBreakdown(new TenDayAbilityDictionary(), RatherDamageAmount);
         foreach(var target in RatherTargetList)//レイザー攻撃者のリストに入れる
         {
-            target.RatherDamage(Acter,damage,false,1);
+            target.RatherDamage(damage,false,1);
         }
         RatherDamageAmount = 0;//レイザー系初期化
         RatherTargetList.Clear();

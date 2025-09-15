@@ -14,7 +14,7 @@ using static TenDayAbilityPosition;
 ///     基礎ステータスのクラス　　クラスそのものは使用しないので抽象クラス
 /// </summary>
 [Serializable]
-public abstract class BaseStates
+public abstract partial class BaseStates
 {
     //UI
     WatchUIUpdate wui => WatchUIUpdate.Instance;
@@ -41,6 +41,213 @@ public abstract class BaseStates
             }
             ring.Initialize(this, UI.Icon.rectTransform);
         }
+    }
+/*/*
+    // =====================
+    // 戦闘外適用/ダメージ用ポリシー
+    // =====================
+    public class DamageOptions
+    {
+        public bool AimStyleClamp = false;
+        public bool BaseRandomVariance = false; // 基礎山形補正
+        public bool Frenzy = false;
+        public bool Adaptation = false;
+        public bool BladeInstantDeath = false;
+        public bool Resonance = false;
+        public bool PhysicalResistance = true;
+        // 戦闘外Damage()でダメージ直前のパッシブ適用を行うか（BM依存パッシブの抑止用）
+        public bool BeforeDamagePassives = true;
+        public bool PassivesReduction = true; // パッシブによる減衰率
+        public bool TLOReduction = true;
+        public bool BarrierLayers = true;
+        public bool CantKillClamp = true;
+        public bool DontDamageClamp = true;
+        public bool MentalDamage = true;
+        public bool UseHitMultiplier = true; // 命中段階による補正
+
+        public DamageOptions Clone()
+        {
+            return (DamageOptions)MemberwiseClone();
+        }
+    }
+
+    public class SkillApplyPolicy
+    {
+        // 戦闘外で命中/回避を使うか
+        public bool UseHitEvade = false;
+        public bool UseAllyEvade = false;
+        // 友好系も命中でゲートするか
+        public bool GateFriendlyByHit = false;
+        // バッファ即時コミット
+        public bool CommitBuffersImmediately = true;
+        // 復活時のパーティ連鎖を使うか
+        public bool UsePartyAngelChain = false;
+        // ダメージ詳細
+        public DamageOptions Damage = new DamageOptions();
+
+        public SkillApplyPolicy Clone()
+        {
+            return new SkillApplyPolicy
+            {
+                UseHitEvade = UseHitEvade,
+                UseAllyEvade = UseAllyEvade,
+                GateFriendlyByHit = GateFriendlyByHit,
+                CommitBuffersImmediately = CommitBuffersImmediately,
+                UsePartyAngelChain = UsePartyAngelChain,
+                Damage = Damage?.Clone() ?? new DamageOptions()
+            };
+        }
+
+        // プリセット
+        static SkillApplyPolicy _outOfBattleDefault;
+        public static SkillApplyPolicy OutOfBattleDefault
+        {
+            get
+            {
+                if (_outOfBattleDefault == null)
+                {
+                    _outOfBattleDefault = new SkillApplyPolicy
+                    {
+                        UseHitEvade = false,
+                        UseAllyEvade = false,
+                        GateFriendlyByHit = false,
+                        CommitBuffersImmediately = true,
+                        UsePartyAngelChain = false,
+                        Damage = new DamageOptions
+                        {
+                            AimStyleClamp = false,
+                            BaseRandomVariance = false,
+                            Frenzy = false,
+                            Adaptation = false,
+                            BladeInstantDeath = false,
+                            Resonance = false,
+                            PhysicalResistance = true,
+                            BeforeDamagePassives = false,
+                            PassivesReduction = true,
+                            TLOReduction = true,
+                            BarrierLayers = true,
+                            CantKillClamp = true,
+                            DontDamageClamp = true,
+                            MentalDamage = true,
+                            UseHitMultiplier = true,
+                        }
+                    };
+                }
+                return _outOfBattleDefault.Clone();
+            }
+        }
+
+        static SkillApplyPolicy _battleLike;
+        public static SkillApplyPolicy BattleLike
+        {
+            get
+            {
+                if (_battleLike == null)
+                {
+                    _battleLike = new SkillApplyPolicy
+                    {
+                        UseHitEvade = true,
+                        UseAllyEvade = true,
+                        GateFriendlyByHit = true,
+                        CommitBuffersImmediately = true, // 戦闘外なので即コミット
+                        UsePartyAngelChain = true,
+                        Damage = new DamageOptions
+                        {
+                            AimStyleClamp = true,
+                            BaseRandomVariance = true,
+                            Frenzy = true,
+                            Adaptation = true,
+                            BladeInstantDeath = true,
+                            Resonance = true,
+                            PhysicalResistance = true,
+                            BeforeDamagePassives = true,
+                            PassivesReduction = true,
+                            TLOReduction = true,
+                            BarrierLayers = true,
+                            CantKillClamp = true,
+                            DontDamageClamp = true,
+                            MentalDamage = true,
+                            UseHitMultiplier = true,
+                        }
+                    };
+                }
+                return _battleLike.Clone();
+            }
+        }
+    }
+*/
+    /// <summary>
+    /// 友好系: 良いパッシブ付与のコア（命中結果に従って適用）
+    /// </summary>
+    bool ExecuteAddPassiveFriendlyCore(BaseStates attacker, BaseSkill skill, HitResult hitResult)
+    {
+        if (hitResult != HitResult.Hit) return false;
+        return this.GoodPassiveHit(skill, attacker);
+    }
+    /// <summary>
+    /// 友好系: 良い追加HP付与のコア（命中結果に従って適用）
+    /// </summary>
+    bool ExecuteAddVitalLayerFriendlyCore(BaseStates attacker, BaseSkill skill, HitResult hitResult)
+    {
+        if (hitResult != HitResult.Hit) return false;
+        this.GoodVitalLayerHit(skill);
+        return true;
+    }
+    /// <summary>
+    /// 友好系: 良いスキルパッシブ付与のコア（命中結果に従って適用）
+    /// </summary>
+    async UniTask<bool> ExecuteAddSkillPassiveFriendlyCore(BaseStates attacker, BaseSkill skill, HitResult hitResult)
+    {
+        if (hitResult != HitResult.Hit) return false;
+        return await this.GoodSkillPassiveHit(skill);
+    }
+    /// <summary>
+    /// 友好系: 良いパッシブ除去のコア（命中結果に従って適用）
+    /// </summary>
+    bool ExecuteRemovePassiveFriendlyCore(BaseStates attacker, BaseSkill skill, HitResult hitResult)
+    {
+        if (hitResult != HitResult.Hit) return false;
+        // 既存実装にならい良いパッシブ除去は BadPassiveRemove() を使用
+        return this.BadPassiveRemove(skill);
+    }
+    /// <summary>
+    /// 友好系: 良い追加HP除去のコア（命中結果に従って適用）
+    /// </summary>
+    bool ExecuteRemoveVitalLayerFriendlyCore(BaseStates attacker, BaseSkill skill, HitResult hitResult)
+    {
+        if (hitResult != HitResult.Hit) return false;
+        // 既存実装にならい良い追加HP除去は BadVitalLayerRemove() を使用
+        return this.BadVitalLayerRemove(skill);
+    }
+
+    /// <summary>
+    /// 友好系: 復活（DeathHeal）のコア（OnBattle版：相性連鎖含む）
+    /// </summary>
+    void ExecuteDeathHealFriendlyOnBattle(BaseStates attacker, HitResult hitResult, ref bool isHeal)
+    {
+        if (hitResult != HitResult.Hit) return;
+        Angel();
+        isHeal = true;
+        manager.MyGroup(this).PartyApplyConditionChangeOnCloseAllyAngel(this);
+    }
+    /// <summary>
+    /// 友好系: ヒールのコア（命中結果に従って適用）
+    /// 適用量を返す
+    /// </summary>
+    float ExecuteHealFriendlyCore(float skillPower, HitResult hitResult, ref bool isHeal)
+    {
+        if (hitResult != HitResult.Hit) return 0f;
+        isHeal = true;
+        return Heal(skillPower);
+    }
+    /// <summary>
+    /// 友好系: 精神ヒールのコア（命中結果に従って適用）
+    /// </summary>
+    void ExecuteMentalHealFriendlyCore(float skillPowerForMental, HitResult hitResult, ref bool isHeal)
+    {
+        if (hitResult != HitResult.Hit) return;
+        isHeal = true;
+        MentalHeal(skillPowerForMental);
     }
 
     // 属性ポイントモジュール（遅延初期化）。BaseStates の公開APIから内部的に委譲する。
@@ -88,7 +295,7 @@ public abstract class BaseStates
     /// <summary>
     /// キャラクターの被害記録
     /// </summary>
-    public List<DamageData> damageDatas;
+    /*public List<DamageData> damageDatas;
     /// <summary>
     /// キャラクターの対ひとりごとの行動記録
     /// </summary>
@@ -216,7 +423,7 @@ public abstract class BaseStates
     /// 直近の被害記録
     /// </summary>
     public DamageData RecentDamageData => damageDatas[damageDatas.Count - 1];
-
+    */
 
     /// <summary>
     /// インスペクタからいじれないように、パッシブのmanagerから来たものがbaseStatesに保存されるpassive保存用
@@ -1502,7 +1709,7 @@ public abstract class BaseStates
     /// <summary>
     /// そのキャラクターを殺すまでに与えたダメージ
     /// </summary>
-    Dictionary<BaseStates, float> DamageDealtToEnemyUntilKill = new Dictionary<BaseStates, float>();
+    /*/*Dictionary<BaseStates, float> DamageDealtToEnemyUntilKill = new Dictionary<BaseStates, float>();
     /// <summary>
     /// キャラクターを殺すまでに与えるダメージを記録する辞書に記録する
     /// </summary>
@@ -1518,7 +1725,7 @@ public abstract class BaseStates
         {
             DamageDealtToEnemyUntilKill[target] = dmg;
         }
-    }
+    }*/
 
     /// <summary>
     /// 十日能力の総量
@@ -5517,138 +5724,6 @@ public abstract class BaseStates
         }
     }
         
-    //特別補正------------------------------------------------------------------------------------------------特別補正----------------------------------------------------------------------------------------------
-    /// <summary>
-    /// 特別補正用保持リスト
-    /// </summary>
-    private List<ModifierPart> _specialModifiers = new();
-    /// <summary>
-    /// 特別補正をセットする。
-    /// オプション変数部分が固定値
-    /// </summary>
-    public void SetSpecialModifier(string memo,whatModify whatstate,float value = 1, StatesPowerBreakdown fixedModifier = null, bool isFixed = false)
-    {
-        if (_specialModifiers == null) _specialModifiers = new List<ModifierPart>();//nullチェック、処理
-        _specialModifiers.Add(new ModifierPart(memo, whatstate, value, fixedModifier, isFixed));
-    }
-    /// <summary>
-    /// 既にある特別補正をコピーする。
-    /// </summary>
-    public void CopySpecialModifier(ModifierPart mod)
-    {
-        if (_specialModifiers == null) _specialModifiers = new List<ModifierPart>();//nullチェック、処理
-        _specialModifiers.Add(mod);
-    }
-    /// <summary>
-    /// 特別な補正を利用  パーセンテージ補正用  戦闘の状況で要所要所で傾くイメージなので平均化　
-    /// パッシブの乗算補正の積とブレンドとは違う(CalculateBlendedPercentageModifier)
-    /// </summary>
-    public float GetSpecialPercentModifier(whatModify mod)
-    {
-        return _specialModifiers.Where(m => m.IsFixedOrPercent == false && m.whatStates == mod)
-            .Aggregate(1.0f, (total, m) => total * m.Modifier);//指定したステータスとパーセンテージ補正のリスト内全ての値を乗算
-    }
-    /// <summary>
-    /// 特別な補正を利用  固定値補正用
-    /// </summary>
-    public StatesPowerBreakdown GetSpecialFixedModifier(whatModify mod)
-    {
-        var calculateList =_specialModifiers.Where(m => m.IsFixedOrPercent == true && m.whatStates == mod).ToList();
-        return CalculateFixedModifierTotal(calculateList);
-            
-    }
-
-    /// <summary>
-    /// 特別補正の内訳リストを集約した一つの内訳にして返す処理
-    /// 特別補正リストの固定値集約用
-    /// </summary>
-    private StatesPowerBreakdown CalculateFixedModifierTotal(List<ModifierPart> modifiers)
-    {
-        if (modifiers == null || modifiers.Count == 0)
-        {
-            return new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
-        }
-        
-        StatesPowerBreakdown result = new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
-        
-        for (int i = 0; i < modifiers.Count; i++)
-        {
-            result = result + modifiers[i].FixedModifier;
-        }
-        
-        return result;
-    }
-
-    /// <summary>
-    /// 特別な補正の保持リストをただ返す。　主にフレーバー要素用。_conditionalMods;
-    /// </summary>
-    public List<ModifierPart> UseSpecialModifiers
-    {
-        get => _specialModifiers;
-    }
-
-    /// <summary>
-    /// カウンター用の一時的な防御無視率 )特別補正_
-    /// 比較する際にこちらの方が本来の無視率より多ければ、こちらの値が使用される。
-    /// -1は使用されていない。というか直接比較されるから-以下の数字にしとけば絶対参照されない。
-    /// </summary>
-    float _exCounterDEFATK =-1;
-    /// <summary>
-    /// カウンター用防御無視率をセット
-    /// </summary>
-    public void SetExCounterDEFATK(float value)
-    {
-        _exCounterDEFATK = value;
-    }
-
-    //////------------------------キャラクター限定の特別補正----------------------------------------------------------------------------------------
-    public List<CharacterConditionalModifier> _charaConditionalMods;
-    /// <summary>
-    /// キャラ限定補正を追加
-    /// </summary>
-    public void SetCharaConditionalModifierList(BaseStates target, string memo, 
-    whatModify whatstate,float value, StatesPowerBreakdown fixedModifier = null, bool isFixed = false)
-    {
-        if (_charaConditionalMods == null)
-            _charaConditionalMods = new List<CharacterConditionalModifier>();
-
-        // ModifierPart を生成して CharacterConditionalModifier に渡す
-        var part = new ModifierPart(memo, whatstate, value, fixedModifier, isFixed);
-        _charaConditionalMods.Add(new CharacterConditionalModifier(target, part));
-    }
-   /// <summary>
-    /// キャラ限定補正を、その敵と一致しているものだけ通常の特別補正リストに追加する
-    /// </summary>
-    public void ApplyCharaConditionalToSpecial(BaseStates target)
-    {
-        if (_charaConditionalMods == null || _charaConditionalMods.Count < 1) return;
-        foreach (var cond in _charaConditionalMods.Where(x => x.Target == target))
-        {
-            // SetSpecialModifier(memo, whatstate, value, fixedModifier, isFixed)
-            SetSpecialModifier(
-                cond.Part.memo,
-                cond.Part.whatStates,
-                cond.Part.Modifier,
-                cond.Part.FixedModifier,
-                cond.Part.IsFixedOrPercent
-            );
-        }
-    }
-    //////　　　　　　　　　　キャラクター限定の特別補正----------------------------------------------------------------------------------------
-    
-    /// <summary>
-    /// 特別補正などをすべて消す
-    /// </summary>
-    public void RemoveUseThings()
-    {
-        _exCounterDEFATK = -1;
-        _specialModifiers = new List<ModifierPart>();
-        _charaConditionalMods = new List<CharacterConditionalModifier>();
-    }
-
-    //特別補正------------------------------------------------------------------------------------------------特別補正-----------------------------------------------------------------------------------------------
-
-    //実体リストやその他有効化管理などの関数は、各派生立場のクラスで実装する
     
 
 
@@ -5846,618 +5921,6 @@ public abstract class BaseStates
         };
     }
 
-    //互角一撃の生存処理--------------------------------------------------------------------------互角一撃の生存処理------------------------------ーーーーーーーーーーー
-
-    /// <summary>
-    /// 互角一撃の状況で「即死しかけたが奇跡的に生き残る」確率(%)を返す。
-    ///
-    /// ◆大まかな流れ：
-    ///  1) 精神属性 × パワー条件 を満たしているかどうか
-    ///      - 満たしていなければ 0%
-    ///  2) 人間状況ごとの基本値をベースにする
-    ///      - 怒り/高揚/辛い/混乱 → 0%
-    ///      - 覚悟 → 7%
-    ///      - 楽観的 → 2%
-    ///      - 普調 → 4%
-    ///      - 疑念 → 1%
-    ///  3) 特定の「精神属性 × 人間状況」組み合わせでさらに上書き
-    ///      - 例: ゴッドティア × 楽観的 = 12% など
-    /// </summary>
-    public int GetMutualKillSurvivalChance()
-    {
-        var property = MyImpression;
-        var power = NowPower;
-        var condition = NowCondition;
-        // (A) まず "パワー条件" をチェックして、
-        //     クリアしていなければ0%を返す
-        //     （属性ごとに分岐。ゴッドティアなど「パワー条件なし」はスルー）
-        if (!CheckPowerCondition(property, power))
-        {
-            return 0; 
-        }
-
-        // (B) 次に "人間状況" ごとの基本値を設定
-        int baseChance = GetBaseChanceByCondition(condition);
-
-        // (C) 最後に「特定の属性×状況」で上書き（例: デビル×楽観的=0% など）
-        baseChance = OverrideByPropertyAndCondition(property, condition, baseChance);
-
-        // 返却値を 0～100 にクランプ（負になったり100超えたりしないように）
-        if (baseChance < 0) baseChance = 0;
-        if (baseChance > 100) baseChance = 100;
-
-        return baseChance;
-    }
-
-
-    /// <summary>
-    /// 属性ごとの「パワー条件」をチェックし、満たしていればtrue、ダメならfalseを返す。
-    /// </summary>
-    private bool CheckPowerCondition(SpiritualProperty property, ThePower power)
-    {
-        switch (property)
-        {
-            case SpiritualProperty.liminalwhitetile:
-                // パワーが普通以上 (>= medium)
-                return (power >= ThePower.medium);
-
-            case SpiritualProperty.kindergarden:
-                // パワーが高い (== high)
-                return (power == ThePower.high);
-
-            case SpiritualProperty.sacrifaith:
-                // パワーが普通以上 (>= medium)
-                return (power >= ThePower.medium);
-
-            case SpiritualProperty.cquiest:
-                // 「低い以上」と書かれていたため (>= low)
-                // 低い(low), 普通(medium), 高い(high) はOK。 たるい(lowlow)はNG
-                return (power >= ThePower.low);
-
-            case SpiritualProperty.devil:
-                // 本文に「パワーが高いと」としか書かれていない→ここでは「高いでないとダメ」と仮定
-                return (power == ThePower.high);
-
-            case SpiritualProperty.doremis:
-                // パワーが普通以上
-                return (power >= ThePower.medium);
-
-            case SpiritualProperty.pillar:
-                // パワーが普通以上
-                return (power >= ThePower.medium);
-
-            case SpiritualProperty.godtier:
-                // 「パワー条件なし」
-                return true;
-
-            case SpiritualProperty.baledrival:
-                // 「パワーが低い以上」→ ここでは (power >= ThePower.low) と解釈
-                return (power >= ThePower.low);
-
-            case SpiritualProperty.pysco:
-                // パワーが普通以上
-                return (power >= ThePower.medium);
-
-            default:
-                // それ以外( none など) は特に定義されていない場合、0%扱い
-                return false;
-        }
-    }
-
-
-    /// <summary>
-    /// 人間状況ごとの「基本値」を返す。
-    /// </summary>
-    private int GetBaseChanceByCondition(HumanConditionCircumstances condition)
-    {
-        switch (condition)
-        {
-            case HumanConditionCircumstances.Angry:
-            case HumanConditionCircumstances.Elated:
-            case HumanConditionCircumstances.Painful:
-            case HumanConditionCircumstances.Confused:
-                return 0;
-
-            case HumanConditionCircumstances.Resolved:
-                return 7;
-            case HumanConditionCircumstances.Optimistic:
-                return 2;
-            case HumanConditionCircumstances.Normal:
-                return 4;
-            case HumanConditionCircumstances.Doubtful:
-                return 1;
-
-            default:
-                // ここに来ることはあまり想定外だが、念のため0%
-                return 0;
-        }
-    }
-
-    /// <summary>
-    /// 属性 × 状況 の特別な組み合わせで「上書き」する。
-    /// 例：ゴッドティア × 楽観的 => 12% など
-    /// </summary>
-    private int OverrideByPropertyAndCondition(
-        SpiritualProperty property,
-        HumanConditionCircumstances condition,
-        int baseChance
-    )
-    {
-        switch (property)
-        {
-            //=======================================
-            // ■ゴッドティア (godtier)
-            //=======================================
-            case SpiritualProperty.godtier:
-                // 楽観的なら 12% (通常2%を上書き)
-                if (condition == HumanConditionCircumstances.Optimistic)
-                {
-                    return 12;
-                }
-                break;
-
-            //=======================================
-            // ■デビル (devil)
-            //=======================================
-            case SpiritualProperty.devil:
-                // 楽観的なら 0% (通常2% => 0% 上書き)
-                if (condition == HumanConditionCircumstances.Optimistic)
-                {
-                    return 0;
-                }
-                break;
-
-            //=======================================
-            // ■自己犠牲 (sacrifaith)
-            //=======================================
-            case SpiritualProperty.sacrifaith:
-                // 怒り => 6% (通常 怒りは0% => 6%で上書き)
-                if (condition == HumanConditionCircumstances.Angry)
-                {
-                    return 6;
-                }
-                break;
-
-            //=======================================
-            // ■ドレミス (doremis)
-            //=======================================
-            case SpiritualProperty.doremis:
-                // 疑念 => 14% (通常1% => 14%)
-                if (condition == HumanConditionCircumstances.Doubtful)
-                {
-                    return 14;
-                }
-                break;
-
-            //=======================================
-            // ■支柱 (pillar)
-            //=======================================
-            case SpiritualProperty.pillar:
-                // 辛い => 6% (通常0% => 6%)
-                if (condition == HumanConditionCircumstances.Painful)
-                {
-                    return 6;
-                }
-                break;
-
-            //=======================================
-            // ■ベールドライヴァル (baledrival)
-            //=======================================
-            case SpiritualProperty.baledrival:
-                // 高揚 => 11% (通常0% => 11%)
-                if (condition == HumanConditionCircumstances.Elated)
-                {
-                    return 11;
-                }
-                break;
-
-            //=======================================
-            // ■その他のケース
-            //   (サイコパスやキンダーガーデン、リーミナルホワイトタイルなど)
-            //   特に指定がなければ、 baseChance のまま
-            //=======================================
-            default:
-                break;
-        }
-
-        // 上記で特に上書きされなければ baseChance のまま
-        return baseChance;
-    }
-    //互角一撃の生存処理--------------------------------------------------------------------------互角一撃の生存処理------------------------------ーーーーーーーーーーー
-
-    /// <summary>
-    /// 基礎山型分布によるダメージ補正
-    /// 返り値で攻撃が乱れたかどうか -15%以下なら乱れたのでTrueが返ります。
-    /// </summary>
-    bool GetBaseCalcDamageWithPlusMinus22Percent(ref StatesPowerBreakdown baseDamage)
-    {
-        // 1) 8d5501 を振る（8回ランダム）
-        int diceSum = 0;
-        for (int i = 0; i < 8; i++)
-        {
-            // Range(1, 5502) => [1..5501] の整数
-            diceSum += RandomEx.Shared.NextInt(1, 5502);
-        }
-
-        // 2) 平均(22008)を引いて、0.00001f を掛ける
-        //    → -0.22 ～ +0.22 (±22%)
-        float offset = (diceSum - 22008) * 0.00001f;
-
-        // 3) baseDamage に対して (1 + offset) 倍する
-        //    → (1 - 0.22)～(1 + 0.22) = 0.78～1.22 倍
-        StatesPowerBreakdown finalDamage = baseDamage * (1f + offset);
-
-        // 5) float で返す（丸めたくないのでそのまま）
-        baseDamage = finalDamage;//ダメージに代入。
-
-        return offset <= -0.15f;//-15%以下なら乱れた
-    }
-    /// <summary>
-    /// 防ぎ方(AimStyle)の不一致がある場合、クランプする
-    /// </summary>
-    private StatesPowerBreakdown ClampDefenseByAimStyle(BaseSkill skill,StatesPowerBreakdown def)
-    {
-        if(skill.NowAimStyle() != NowDeffenceStyle)
-        {
-            var MatchedMaxClampDef = DEF(skill.DEFATK, skill.NowAimStyle())*0.7f;//適切な防御力の0.7倍がクランプ最大値
-
-            if(NowPower>ThePower.medium)//パワーが高い場合は 「適切な防御力をこしてた場合のみ」適切防御力の0.7倍にクランプ
-            {
-                //まず比較する、超していた場合にクランプ
-                if(DEF()>DEF(0,skill.NowAimStyle()))//今回の防御力が適切な防御力を超してた場合、
-                {
-                    return MatchedMaxClampDef;//クランプされる。
-                }
-            }else//そうでない場合は、「適切な防御力を超してる越してない関係なく」適切防御力の0.7倍にクランプ(その最大値を絶対に超えない。)
-            {
-                
-                if(def > MatchedMaxClampDef)
-                {
-                    return MatchedMaxClampDef;//最大値を超えたら最大値にクランプ
-                }
-            }
-        }
-        return def;//そのまま返す。
-    }
-    /// <summary>
-    /// ダメージを渡し、がむしゃらの補正をかけて返す
-    /// </summary>
-    StatesPowerBreakdown GetFrenzyBoost(BaseStates atker,StatesPowerBreakdown dmg)
-    {
-        var boost =1.0f;
-        var skill = atker.NowUseSkill;
-        if(skill.NowConsecutiveATKFromTheSecondTimeOnward())//2回目以降の連続攻撃なら
-        {
-            var StrongFootEye = (EYE() + AGI()) /2f;
-            var WeekEye = atker.EYE();
-            var boostCoef = 0f;//ブースト係数
-
-            if(StrongFootEye > WeekEye)//ちゃんと被害者側の命中回避平均値が攻撃者の命中より高い場合に限定する
-            {
-                boostCoef = Mathf.Floor((StrongFootEye.Total - WeekEye.Total) / 5);//十日能力の記録の必要がないので、totalを使う。
-                boost += boostCoef * 0.01f;
-                for(int i =0;i<skill.ATKCountUP-1;i++)//初回=単回攻撃の恐れがある場合は、がむしゃらは発動しないので、二回目から一回ずつ乗算されるようにしたいから-1
-                {
-                    dmg *= boost;
-                }
-            }
-        }
-        return dmg;//連続攻撃でないなら、そのまま返す
-    }
-    /// <summary>
-    /// 互角一撃の生存判定
-    /// </summary>
-    void CalculateMutualKillSurvivalChance(float LiveHP,float dmg,BaseStates atker)
-    {
-        //deathの判定が入る前に、互角一撃の生存判定を行い、HP再代入
-        //ダメージの大きさからして絶対に死んでるからDeath判定は要らず、だからDeath辺りでの判定がいらない。(DeathCallBackが起こらない)
-        if(LiveHP >= _maxhp*0.2f)//HPが二割以上の時に、
-        {
-            if(atker.TenDayValuesSum(true) <= TenDayValuesSum(false) * 1.6f)//自分の十日能力の総量の1.6倍以下なら
-            {
-                if (dmg >= _maxhp * 0.34f && dmg <= _maxhp * 0.66f )//大体半分くらいの攻撃なら  
-                {
-                    //生存判定が入る
-                    if(rollper(GetMutualKillSurvivalChance()))
-                    {
-                        HP = _maxhp * 0.07f;
-                    }
-                }
-            }
-        }
-    }
-    
-    /// <summary>
-    /// 呼び出し側の攻撃時の最大余剰ダメージを取得する
-    /// </summary>
-    float GetOverkillOverflowMax()
-    {
-        var flowmax = 0f;
-
-        //基本値
-        flowmax = TenDayValues(true).GetValueOrZero(TenDayAbility.HumanKiller) * 2 + TenDayValues(true).GetValueOrZero(TenDayAbility.dokumamusi) * 0.4f;
-
-        switch(MyImpression)//精神属性で分岐　
-        {
-            case SpiritualProperty.liminalwhitetile:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.8f;
-                break;
-            case SpiritualProperty.kindergarden:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) * 2;
-                break;
-                
-            case SpiritualProperty.sacrifaith:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) * 0.5f + TenDayValues(true).GetValueOrZero(TenDayAbility.NightInkKnight);
-                break;
-                
-            case SpiritualProperty.pysco:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.Raincoat) * 6 * TenDayValues(true).GetValueOrZero(TenDayAbility.UnextinguishedPath);
-                break;
-                
-            case SpiritualProperty.baledrival:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure) * 3;
-                break;
-                
-            case SpiritualProperty.devil:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.NightDarkness) + TenDayValues(true).GetValueOrZero(TenDayAbility.ColdHeartedCalm);
-                break;
-                
-            case SpiritualProperty.cquiest:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.JoeTeeth) * 1.7f - TenDayValues(true).GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.11f;
-                break;
-                
-            case SpiritualProperty.godtier:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.CryoniteQuality);
-                break;
-                
-            case SpiritualProperty.pillar:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.PersonaDivergence) - TenDayValues(true).GetValueOrZero(TenDayAbility.Pilmagreatifull);
-                break;
-                
-            case SpiritualProperty.doremis:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.SpringNap) - TenDayValues(true).GetValueOrZero(TenDayAbility.ElementFaithPower); 
-                break;
-            case SpiritualProperty.none:
-                //noneならそもそも最大余剰ダメージ発生せず
-                break;
-            default:
-                //他の未実装の精神属性を追加し忘れた場合に気づける
-                throw new NotImplementedException($"SpiritualProperty {MyImpression} is not handled.");
-        }
-
-        return flowmax;//これ自体がクランプ要素だから0クランプいらん
-    }
-    /// <summary>
-    /// 呼び出し側の攻撃時の余剰ダメージの通過率
-    /// </summary>
-    /// <returns></returns>
-    float GetOverkillOverflowPassRate()
-    {
-        var passRate = 0f;
-        switch(NowCondition)
-        {
-            case HumanConditionCircumstances.Painful:
-                if(MyImpression == SpiritualProperty.devil)
-                {
-                    passRate = 2;
-                }else{
-                    passRate = 0.43f;
-                }
-                break;
-            case HumanConditionCircumstances.Optimistic:
-                if(MyImpression == SpiritualProperty.cquiest)
-                {
-                    passRate = 1.1f;
-                }else{
-                    passRate = 1.01f;
-                }
-                break;
-            case HumanConditionCircumstances.Elated:
-                passRate = 1.2f;
-                break;
-            case HumanConditionCircumstances.Resolved:
-                passRate = 1.0f;
-                break;
-            case HumanConditionCircumstances.Angry:
-                if(MyImpression == SpiritualProperty.sacrifaith)
-                {
-                    passRate = 1.5f;
-                }else if(MyImpression == SpiritualProperty.devil)
-                {
-                    passRate = 1.0f;
-                }else
-                {
-                    passRate = 1.3f;
-                }
-                break;
-            case HumanConditionCircumstances.Doubtful:
-                if(MyImpression == SpiritualProperty.doremis)
-                {
-                    passRate = 0.93f;
-                }else{
-                    passRate = 0.77f;
-                }
-                break;
-            case HumanConditionCircumstances.Confused:
-                passRate = 0.7f;
-                break;
-            case HumanConditionCircumstances.Normal:
-                passRate = 0.8f;
-                break;
-                
-        }
-
-        //+-20%入れ替わる
-        passRate += RandomEx.Shared.NextFloat(-0.2f,0.2f);
-
-        return passRate;
-    }
-    
-    const float FINAL_BROKEN_RATE_MACHINE = 33;//機械がオーバーキルされてbrokenする最終判定率
-    const float FINAL_BROKEN_RATE_LIFE = 93;//生物がオーバーキルされてbrokenする最終判定率
-    /// <summary>
-    /// オーバーキルされてbrokenするからの判断
-    /// 殺された側がbrokenがtrueになるかの判断です。(だから殺された奴から呼び出そうよ)
-    /// </summary>
-    void OverKilledBrokenCalc(BaseStates Atker,float OverkillOverflow)
-    {
-        if(OverkillOverflow <= 0)return;//余剰ダメージが0以下なら終わり
-
-        if(!(MyType == CharacterType.Machine || MyType == CharacterType.Life))
-        {
-            //被害者の自分が機械でも生物でもないなら発生せずに終わり
-            return;
-        }
-        var OverkillOverflowMax = Atker.GetOverkillOverflowMax();//余剰ダメージの最大値を取得
-        var OverkillOverflowPassRate = Atker.GetOverkillOverflowPassRate();//余剰ダメージの通過率を取得
-
-        
-
-        //通過した余剰ダメージ(最大値クランプ
-        var OverkillOverflowPass = Mathf.Min(OverkillOverflow * OverkillOverflowPassRate,OverkillOverflowMax);
-        var overkillBreakThreshold = _maxhp * OverKillBrokenRate;//オーバーキルされてbrokenする閾値
-
-        if(OverkillOverflowPass <= overkillBreakThreshold) return;//通過した余剰ダメージが閾値を超えなかったら終わり
-
-        //ここまで到達したら発生したが　被害者の種別による判定の発生の計算と　生命なら攻撃者の性質による発生の判定
-
-        //機械なら　33%で完全破壊
-        if(MyType == CharacterType.Machine)
-        {
-            if(rollper(FINAL_BROKEN_RATE_MACHINE))
-            {
-                broken = true;
-            }
-        }
-
-        //人間なら攻撃者の性質による発生の判定
-        if(MyType == CharacterType.Life)
-        {
-            //まず攻撃者の種別と、分岐では彼らの性質によりそもそも発生するかの判定
-
-            if(Atker.MyType == CharacterType.Life)//攻撃者が生命なら
-            {
-                if(Atker.MyImpression != SpiritualProperty.pysco) return;//サイコパスでないなら終わり
-            }
-            if(Atker.MyType == CharacterType.Machine)//攻撃者が機械なら
-            {
-                var im = Atker.MyImpression;
-                var hc = Atker.NowCondition;
-                // サイコパスならOK
-                bool isPsyco = im == SpiritualProperty.pysco;
-
-                // ベイルの怒り ⇒ baledrival + Angry 状態
-                bool isBaleRivalAngry = im == SpiritualProperty.baledrival && hc == HumanConditionCircumstances.Angry;
-
-                // キンダーの高揚 ⇒ kindergarden + Elated 状態
-                bool isKindergardenElated = im == SpiritualProperty.kindergarden && hc == HumanConditionCircumstances.Elated;
-
-                // 上記3パターンのいずれにも当てはまらない場合は発生しない
-                if (!(isPsyco || isBaleRivalAngry || isKindergardenElated))
-                {
-                    return; 
-                }
-            }
-            //それ以外の種別なら生命に対して
-
-            if(rollper(FINAL_BROKEN_RATE_LIFE))
-            {
-                broken = true;
-            }
-        }
-    }
-    /// <summary>
-    /// 即死刃物クリティカル
-    /// </summary>
-    bool BladeCriticalCalculation(ref StatesPowerBreakdown dmg, ref StatesPowerBreakdown resonanceDmg, BaseStates Atker, BaseSkill skill)
-    {
-        var LiveHP = HP - dmg.Total;//もし即死が発生したときに、ダメージに加算される即死に足りないfloat
-        var atkerBlade = Atker.TenDayValues(true).GetValueOrZero(TenDayAbility.Blades);
-        var UnderBlade = TenDayValues(false).GetValueOrZero(TenDayAbility.Blades);
-        var UnderPower = TenDayValuesSum(false);
-
-        //まずしきい値発生から
-        var CriticalHPThreshold = Mathf.Min(atkerBlade/150f,1f) * (5/12) *100;
-        if(rollper(CriticalHPThreshold))
-        {
-            //攻撃者と被害者の刃物能力を比較してクリティカル発生率の計算
-            var threshold = atkerBlade / UnderPower * 100;
-            if(rollper(threshold))
-            {
-                //クリティカル発生
-                dmg.TenDayAdd(TenDayAbility.Blades,LiveHP);//刃物に差分ダメージを追加 = 即死
-                resonanceDmg.TenDayAdd(TenDayAbility.Blades, LiveHP);//思えダメージ用にも
-                return true;
-            }
-        }
-
-        return false;
-    }
-    /// <summary>
-    /// 刃物即死クリティカルで生存するチャンス
-    /// </summary>
-    void CalculateBladeDeathCriticalSurvivalChance(BaseStates Atker)
-    {
-        if(NowPower < ThePower.high)return;//パワーが高くないなら発生しないって感じに
-
-        var underBlade = TenDayValues(false).GetValueOrZero(TenDayAbility.Blades);
-        var AtkerBlade = Atker.TenDayValues(true).GetValueOrZero(TenDayAbility.Blades);
-
-        //刃物能力を乱数比較して被害者の方のが出たなら、
-        if(rollComparison(underBlade,AtkerBlade))
-        {   
-            var AtkerBladeRate = AtkerBlade;
-            if(Atker.NowPower == ThePower.high) AtkerBladeRate *= 1.5f;
-            //生き残りHP
-            var survivalHP = RandomEx.Shared.NextFloat(1,2.8f) + Mathf.Max(0,underBlade - AtkerBladeRate) * RandomEx.Shared.NextFloat(4,5);
-
-            HP = survivalHP;//HPに生き残ったHP分を代入
-        }
-    }
-    /// <summary>
-    /// ダメージを物理耐性で減衰
-    /// </summary>
-    StatesPowerBreakdown ApplyPhysicalResistance(StatesPowerBreakdown dmg, BaseSkill skill)
-    {
-        switch(skill.SkillPhysical)
-        {
-            case PhysicalProperty.dishSmack:
-                dmg *= DishSmackRsistance;
-                break;
-            case PhysicalProperty.heavy:
-                dmg *= HeavyResistance;
-                break;
-            case PhysicalProperty.volten:
-                dmg *= voltenResistance;
-                break;
-            //noneは物理耐性の計算無し
-        }        
-        return dmg;
-    }
-    /// <summary>
-    /// 殺せないスキルの場合のクランプ
-    /// </summary>
-    void CantKillSkillClamp(BaseStates Atker, BaseSkill skill)
-    {
-        //もし攻撃者がTLOAスキルなら
-        if(skill.IsTLOA)
-        {
-            if(Atker.HasPassive(5))//攻撃者が「TLOAではとどめがさせない」パッシブを持ってたら1割まで
-            {
-                HP = Mathf.Max(HP,MaxHP * 0.1f);//10%までしか減らせない
-            }
-            else//それ以外は3.4%まで
-            {
-                HP = Mathf.Max(HP,MaxHP * 0.034f);//3.4%までしか減らせない
-            }
-        }
-
-        //もし攻撃者が殺せないスキルなら
-        if(skill.Cantkill)
-        {
-            HP = Mathf.Max(HP,1);//1までしか減らせない
-        }
-    }
     /// <summary>
     /// かすりのダメージ倍率計算　基本値からステータス計算で減らす形
     /// 攻撃を受ける側で呼び出す
@@ -6505,249 +5968,6 @@ public abstract class BaseStates
         }
     }
     /// <summary>
-    /// 魔法スキルの計算式は、基本の-計算と÷計算がブレンドするからそれ用の関数
-    /// -計算から÷計算へtの値を元にシフトしていく(÷計算の最低保証性が攻撃力が防御力に負けるにつれて高まるって感じ)
-    /// </summary>
-    /// <param name="atkPoint"></param>
-    /// <param name="defPoint"></param>
-    /// <returns></returns>
-    public StatesPowerBreakdown MagicBlendVSCalc(StatesPowerBreakdown atkPoint, StatesPowerBreakdown defPoint)
-    {
-        float k = 0.02f;      // 調整可能な傾きパラメータ
-        float t = 140f;      // 調整可能な閾値シフト
-        float epsilon = 0.0001f;
-
-        // ロジスティック関数を用いて重みを計算
-        // atk - def が大きければ weight は 1 に近づき、差分計算（通常スキル的な挙動）をして、
-        // atk - def が小さい（またはマイナス）なら weight は 0 に近づき、比率計算（最低ダメージ保証的な挙動）の比率が高まる
-        float weight = 1.0f / (1.0f + Mathf.Exp(-k * (atkPoint.Total - defPoint.Total - t)));//重みなのでtotal
-
-        // 差分に基づくダメージ（通常スキルの挙動に近い）       
-        StatesPowerBreakdown damage_diff = atkPoint - defPoint;
-        
-        
-        // 除算に基づくダメージ（魔法特有の挙動、最低ダメージ保証の要素を持たせる）  （思った以上に効果ないから+10とかしとくわ）
-        StatesPowerBreakdown damage_ratio = atkPoint / (defPoint + epsilon) + 8 + damage_diff / 1.6f;
-
-
-        if(damage_diff.Total <= 0)//攻撃と防御の差が0以下なら　除算計算オンリー
-        {
-            return damage_ratio;
-        }
-        // 両者をブレンドする
-        // weight が 1 に近いときは damage_diff が支配的（通常スキル的挙動）、
-        // weight が 0 に近いときは damage_ratio が支配的に
-        StatesPowerBreakdown baseDamage = (weight * damage_diff) + ((1.0f - weight) * damage_ratio);
-        return baseDamage;
-    }
-    /// <summary>
-    /// TLOAスキルの威力減衰
-    /// 呼び出し側のダメージを受ける自分のHPの割合が条件　詳しくはTLOAスキル　を参照
-    /// </summary>
-    public void ApplyTLOADamageReduction(ref StatesPowerBreakdown damage,ref StatesPowerBreakdown resDamage)
-    {
-        //HPが38%以下ならTLOAは0.7倍まで減衰する。
-        if(this.HP / this.MaxHP < 0.38f)
-        {
-            damage *= 0.7f;
-            resDamage *= 0.7f;
-        }
-
-        return;
-    }
-    /// <summary>
-    /// 魔法スキルのダメージ計算
-    /// </summary>
-    public StatesPowerBreakdown MagicDamageCalculation(BaseStates Atker, float SkillPower,StatesPowerBreakdown def)
-    {
-        return (MagicBlendVSCalc(Atker.ATK(Atker.SkillAttackModifier),def) * (SkillPower * 0.5f)) + SkillPower * Atker.ATK() * 0.09f;//(攻撃-対象者の防御) にスキルパワー加算と乗算
-    }
-    /// <summary>
-    /// 魔法スキルの精神ダメージ計算
-    /// </summary>
-    public StatesPowerBreakdown MagicMentalDamageCalculation(BaseStates Atker,float mentalATKBoost,float SkillPowerForMental)
-    {
-        return  (Atker.ATK() * mentalATKBoost / MentalDEF() * (SkillPowerForMental * 0.6f)) + SkillPowerForMental * 0.7f ;//精神攻撃
-    }
-    /// <summary>
-    /// 魔法スキル以外のダメージ計算
-    /// </summary>
-    public StatesPowerBreakdown NonMagicDamageCalculation(BaseStates Atker, float SkillPower,StatesPowerBreakdown def)
-    {
-        return ((Atker.ATK(Atker.SkillAttackModifier) - def) * SkillPower) + SkillPower;//(攻撃-対象者の防御) にスキルパワー加算と乗算
-    }
-    /// <summary>
-    /// 魔法スキル以外の精神ダメージ計算
-    /// </summary>
-    public StatesPowerBreakdown NonMagicMentalDamageCalculation(BaseStates Atker,float mentalATKBoost,float SkillPowerForMental)
-    {
-        return  ((Atker.ATK() * mentalATKBoost - MentalDEF()) * SkillPowerForMental) + SkillPowerForMental ;//精神攻撃
-    }
-    
-    /// <summary>
-    ///オーバライド可能なダメージ関数
-    /// </summary>
-    /// <param name="atkPoint"></param>
-    public virtual StatesPowerBreakdown Damage(BaseStates Atker, float SkillPower,float SkillPowerForMental,HitResult hitResult,ref bool isdisturbed)
-    {
-        var skill = Atker.NowUseSkill;
-
-        //ダメージ直前のパッシブ効果
-        PassivesOnBeforeDamage(Atker);
-
-
-        //もしカウンター用の防御無視率が攻撃者が持ってたら(本来の防御無視率より多ければ)
-        var defatk = skill.DEFATK;
-        if (Atker._exCounterDEFATK > defatk) defatk = Atker._exCounterDEFATK;
-
-        var def = DEF(defatk);//防御力
-
-        def = ClampDefenseByAimStyle(skill,def);//防ぎ方(AimStyle)の不一致がある場合、クランプする
-
-        StatesPowerBreakdown dmg, mentalDmg;
-        var mentalATKBoost = Mathf.Max(Atker.TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure) - TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure),0)
-        * Atker.MentalHP * 0.2f;//相手との余裕の差と精神HPの0.2倍を掛ける 
-
-        //下の魔法スキル以外の計算式を基本計算式と考えましょう
-        if(skill.IsMagic)//魔法スキルのダメージ計算
-        {
-            dmg = MagicDamageCalculation(Atker, SkillPower, def);
-            mentalDmg = MagicMentalDamageCalculation(Atker, mentalATKBoost, SkillPowerForMental);
-        }
-        else//それ以外のスキルのダメージ計算
-        {
-            dmg = NonMagicDamageCalculation(Atker, SkillPower, def);
-            mentalDmg = NonMagicMentalDamageCalculation(Atker, mentalATKBoost, SkillPowerForMental);
-        }
-        
-        isdisturbed = false;//攻撃が乱れたかどうか　　受けた攻撃としての視点から乱れていたかどうか
-        if(NowPower > ThePower.lowlow)//たるくなければ基礎山形補正がある。
-        {
-            isdisturbed = GetBaseCalcDamageWithPlusMinus22Percent(ref dmg);//基礎山型補正
-        }
-
-        //物理耐性による減衰
-        dmg = ApplyPhysicalResistance(dmg,skill);
-
-        //パッシブによるダメージの減衰率による絶対削減
-        PassivesDamageReductionEffect(ref dmg);
-        //がむしゃらな補正
-        dmg = GetFrenzyBoost(Atker,dmg);
-
-        //慣れ補正
-        dmg *= AdaptToSkill(Atker, skill, dmg);
-
-        //ここまでで被害者に向かう純正ダメージです。
-
-        //思えのダメージ保存　追加HPは通らない
-        //ただクリティカルで増幅してほしいので、各クリティカル処理で本来のdmg同様にダメージを計算するべく引数に加える必要がある。
-        var ResonanceDmg = dmg;
-
-        //vitalLayerを通る処理
-        BarrierLayers(ref dmg,ref mentalDmg, Atker);
-
-        //刃物スキルであり、ダメージがまだ残っていて、自分の体力がダメージより多いのなら、刃物即死クリティカル
-        bool BladeCriticalDeath = false;
-        if(skill.IsBlade && dmg.Total > 0 && HP > dmg.Total)BladeCriticalDeath = BladeCriticalCalculation(ref dmg,ref ResonanceDmg,Atker,skill);
-
-        //命中段階による最終ダメージ計算
-        HitDmgCalculation(ref dmg,ref ResonanceDmg, hitResult,Atker);
-
-        //TLOAスキルの威力減衰 本体HPの割合に対するダメージの削り切れる限界というもの。
-        ApplyTLOADamageReduction(ref dmg,ref ResonanceDmg);
-
-        if(isdisturbed)
-        {//もし乱れ攻撃なら、味方(自分も含む)のスレームパッシブのイースターノジール効果を発動を判定
-            manager.MyGroup(this).PartySlaimsEasterNoshiirEffectOnEnemyDisturbedAttack(Atker,ref dmg,ref ResonanceDmg);
-        }
-        
-        //思えのダメージ発生  各クリティカルのダメージを考慮するためクリティカル後に
-        ResonanceDamage(ResonanceDmg, skill, Atker);
-
-        var totalDmg = dmg.Total;//直接引くように変数に代入
-        if(totalDmg < 0)totalDmg = 0;//0未満は0にする　逆に回復してしまうのを防止
-        var tempHP = HP;//計算用にダメージ受ける前のHPを記録
-
-        
-        HP -= totalDmg;
-        CantKillSkillClamp(Atker,skill);//殺せない系再代入クランプ処理
-        Debug.Log("攻撃が実行された");
-        schizoLog.AddLog(Atker.CharacterName + "が" + this.CharacterName + "を攻撃した-「" + totalDmg + "」ダメージを与えた");
-
-        //攻撃者がダメージを殺すまでに与えたダメージ辞書に記録する
-        Atker.RecordDamageDealtToEnemyUntilKill(dmg.Total,this);
-
-        var totalMentalDmg = mentalDmg.Total;//直接引くように変数に代入
-        if(totalMentalDmg < 0)totalMentalDmg = 0;//0未満は0にする
-        //パッシブによる絶対的なダメージ食らわないクランプ処理  下回ると代入するダメージの防ぎ
-        DontDamagePassiveEffect(Atker);
-
-        MentalHP -= totalMentalDmg;//実ダメージで精神HPの最大値がクランプされた後に、精神攻撃が行われる。
-
-        
-
-        if(!skill.IsBlade)//刃物スキルでなければ発生
-        {
-            CalculateMutualKillSurvivalChance(tempHP,totalDmg,Atker);//互角一撃の生存によるHP再代入の可能性
-        }
-        if(BladeCriticalDeath)//刃物即死発生したのなら
-        {
-           CalculateBladeDeathCriticalSurvivalChance(Atker);//生存チャンス
-        }
-        
-
-        //余剰ダメージを計算
-        var OverKillOverFlow = totalDmg - tempHP;//余剰ダメージ
-
-        //死んだら攻撃者のOnKillを発生
-        if(Death())
-        {
-            Atker.OnKill(this);//攻撃者のOnkill発生
-
-            //overKillの処理
-            OverKilledBrokenCalc(Atker,OverKillOverFlow);//攻撃者、引かれる前のHP,ダメージを渡す。
-        }
-
-        //もし"攻撃者が"割り込みカウンターパッシブだったら
-        var CounterPower = Atker.GetPassiveByID(1) as InterruptCounterPassive;
-        if (CounterPower != null)
-        {
-            //攻撃者の割り込みカウンターパッシブの威力が下がる
-            ///とりあえずOnAfterAttackに入れた
-
-            //割り込みカウンターをされた = さっき「自分は連続攻撃」をしていた
-            //その連続攻撃の追加硬直値分だけ、「食らわせ」というパッシブを食らう。
-
-            //ただし範囲攻撃で巻き添えの場合もあるから追加で判定　
-            if(!RecentACTSkillData.IsDone && RecentACTSkillData.Target == Atker)//直近の攻撃行動で割り込みされてたか And 割り込みしてきた(攻撃対象)のが今の割り込みパッシブ攻撃者か
-            {
-                var DurationTurn = RecentACTSkillData.Skill.SKillDidWaitCount;//食らうターン
-                if(DurationTurn > 0)//持続ターンが存在すれば、
-                {
-                    ApplyPassiveBufferInBattleByID(2,Atker);//パッシブ、食らわせを入手する。
-                    var hurt = GetBufferPassiveByID(2);
-                    if(CanApplyPassive(hurt))//適合したなら(適合条件がある)
-                    {
-                        hurt.DurationTurn = DurationTurn;//持続ターンを入れる
-                    }
-                }
-            }
-
-
-
-            
-
-        }
-
-        //攻撃者のキャラ単位への攻撃後のパッシブ効果
-        Atker.PassivesOnAfterAttackToTargetWithHitresult(this,hitResult);
-        //攻撃者の完全単体選択なら。
-        if(Atker.Target == DirectedWill.One)
-        Atker.PassivesOnAfterPerfectSingleAttack(this);//攻撃者のパッシブの完全単体選択発動効果
-
-        return dmg;
-    }
-    /// <summary>
     /// AIのブルートフォースダメージシミュレイト用関数
     /// </summary>
     public float SimulateDamage(BaseStates attacker, BaseSkill skill, SkillAnalysisPolicy policy)
@@ -6757,26 +5977,14 @@ public abstract class BaseStates
         var simulateHP = HP;//計算用HP
         var simulateMentalHP = MentalHP;//計算用精神HP
 
-        //スキルパワーの精神属性による計算
-        var modifier = GetSkillVsCharaSpiritualModifier(skill.SkillSpiritual, attacker);
-        var SpiritualModifierPercentage = 0.2f;//IsTLOAスキル以外は20%の精神補正
-        if(skill.IsTLOA) SpiritualModifierPercentage = 0.4f;//IsTLOAなら40%の精神補正
-
-
-        var modifierForSkillPower = modifier.GetValue(SpiritualModifierPercentage);//精神補正値
-        var modifierForSkillPowerForMental = modifier.GetValue();//精神補正値100%
-        if(attacker.NowUseWeapon.IsBlade) modifierForSkillPower = 1.0f;//刃物武器なら精神補正なし
-        
-        //精神補正のオプションがfalseなら精神補正なし
+        // 統一: 戦闘内外の威力計算規則に揃える（spread=1.0固定）
+        ComputeSkillPowers(attacker, skill, 1.0f, out var skillPower, out var skillPowerForMental);
+        // AIポリシーで精神補正を無効化したい場合は、素の威力へリセット（完全に精神補正を排除）
         if(!policy.spiritualModifier)
         {
-            modifierForSkillPower = 1.0f;
-            modifierForSkillPowerForMental = 1.0f;
+            skillPower = skill.SkillPowerCalc(skill.IsTLOA);
+            skillPowerForMental = skill.SkillPowerForMentalCalc(skill.IsTLOA);
         }
-        
-        //TLOAスキルならゆりかごされたスキルレベルを参照する(IsTLOAを渡して判断)
-        var skillPower = skill.SkillPowerCalc(skill.IsTLOA) * modifierForSkillPower;
-        var skillPowerForMental = skill.SkillPowerForMentalCalc(skill.IsTLOA) * modifierForSkillPowerForMental;
 
         //防御力（ポリシーに応じた簡易/完全シミュレーション）
         StatesPowerBreakdown def;
@@ -6979,209 +6187,6 @@ public abstract class BaseStates
         // デフォルト（通常ここには来ない）
         return (dmg, mentalDmg, layerHP, false);
     }
-    /// <summary>
-    /// パッシブの毒ダメや、パッシブリンク等の単純なfloatダメージ用
-    /// TLOAスキルなどの殺せない系のクランプ処理だけ入る感じ
-    /// </summary>
-    /// <param name="Atker">攻撃者</param>
-    /// <param name="damage">ダメージ</param>
-    /// <param name="LayerDamage">VitalLayerを通すかどうか</param>
-    public void RatherDamage(BaseStates Atker,StatesPowerBreakdown damage,bool LayerDamage,float DamageRatio)
-    {
-        StatesPowerBreakdown notUseDamage = damage;//使わないが、引数に渡す必要がある
-        damage *= DamageRatio;//ダメージの倍率を掛ける
-
-        //vitalLayerを通る処理
-        if(LayerDamage)
-        {
-            BarrierLayers(ref damage,ref notUseDamage, Atker);
-        }
-
-        HP -= damage.Total;
-        CantKillSkillClamp(Atker,Atker.NowUseSkill);//殺せない系再代入クランプ処理
-    }
-    /// <summary>
-    /// 思えダメージの精神属性合致補正
-    /// </summary>
-    const float SPIRITUAL_MODIFIER = 1.29f;
-    /// <summary>
-    /// 思えダメージが発生する強さの比率のしきい値
-    /// </summary>
-    const float RESONANCE_POWER_THRESHOLD = 1.4f;
-    /// <summary>
-    /// 思えのダメージの基礎値
-    /// </summary>
-    const float BASEDAMGE_TENDAYS = 0.06f;
-    /// <summary>
-    /// 思えダメージの精神属性の種類数、精神ポテンシャルによる除算DEFの数に掛ける係数
-    /// </summary>
-    const float SPRITUAL_POTENTIAL_DEF_COED =  0.06f;
-    /// <summary>
-    /// 思えダメージをランダマイズ出来るスキル数のしきい値
-    /// </summary>
-    const int SKILL_COUNT_THRESHOLD_DAMAGE_RANDOMIZE = 6;
-    /// <summary>
-    /// 思えダメージをスキルの数でランダマイズする
-    /// </summary>
-    float ResonanceDamageRandomizeBySkillCount(float dmg)
-    {
-        //スキル数がしきい値以下ならランダマイズしない
-        if(SkillList.Count <= SKILL_COUNT_THRESHOLD_DAMAGE_RANDOMIZE) return dmg;
-        //ランダマイズする数
-        var RandomizeCalcCount = SkillList.Count - SKILL_COUNT_THRESHOLD_DAMAGE_RANDOMIZE;
-        
-        var maxFactor = 1.0f;
-        var minFactor = 1.0f;
-        for(int i = 0; i < RandomizeCalcCount; i++)
-        {
-            var RandomizeUpper = RandomEx.Shared.NextFloat(0.01f,0.015f);//ランダマイズの上振れ
-            var RandomizeLower = RandomEx.Shared.NextFloat(0.01f,0.03f);//ランダマイズの下振れ
-
-            maxFactor += RandomizeUpper;
-            minFactor -= RandomizeLower;
-        }
-        if(minFactor < 0) minFactor = 0;
-        if(minFactor > maxFactor) minFactor = maxFactor;//念のため
-        return dmg * RandomEx.Shared.NextFloat(minFactor,maxFactor);
-    }
-    /// <summary>
-    /// 思えのダメージ処理
-    /// ダメージと精神ダメージを食らう前に判定され、追加HPで防がれない
-    /// </summary>
-    public void ResonanceDamage(StatesPowerBreakdown dmg, BaseSkill skill, BaseStates Atker)
-    {   
-        //攻撃者がこちらに対してどれだけ強いか
-        var powerRatio = Atker.TenDayValuesSum(false) / TenDayValuesSum(false);//思えダメージはスキルの十日能力補正なし
-        //相手が自分より定数倍強いとダメージが発生する
-        if(powerRatio < RESONANCE_POWER_THRESHOLD) return;
-
-        //被害者の精神HP現在値とHPの平均値と最大HPの割合
-        var myBodyAndMentalAverageRatio = (HP + MentalHP) / 2 / MaxHP;
-        //思えの食らう割合。
-        var ResonanceDangerRatio = 1.0f - myBodyAndMentalAverageRatio;
-        //最大0.8　8割分食らってる所までダメージが伸びきることを想定する
-        ResonanceDangerRatio = Mathf.Min(0.8f,ResonanceDangerRatio);
-
-        //攻撃者と攻撃スキルの精神属性が一致してた場合にかかる補正は各case文で計算
-        
-        //十日能力による基礎思えダメージ
-        var BaseDmg =dmg.TenDayValuesSum * BASEDAMGE_TENDAYS;//十日能力のダメージ分定数分
-
-        //相手がどのくらい強いかの倍率
-        var DamageMultipilerByPowerRatio = powerRatio - (RESONANCE_POWER_THRESHOLD - 1.0f);
-        
-        //人間状況による分岐
-        switch(NowCondition)
-        {
-            case HumanConditionCircumstances.Painful:
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.UnextinguishedPath);
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.FlameBreathingWife);
-
-                if(skill.SkillSpiritual == SpiritualProperty.devil || skill.SkillSpiritual == SpiritualProperty.liminalwhitetile)
-                {
-                    BaseDmg *= SPIRITUAL_MODIFIER;
-                }
-                if(Atker.MyImpression == SpiritualProperty.devil || Atker.MyImpression == SpiritualProperty.liminalwhitetile)
-                {
-                    BaseDmg *= SPIRITUAL_MODIFIER;
-                }
-                break;
-            case HumanConditionCircumstances.Optimistic:
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.NightDarkness);
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.StarTersi);
-
-                if(skill.SkillSpiritual == SpiritualProperty.doremis)
-                {
-                    BaseDmg *= SPIRITUAL_MODIFIER;
-                }
-                if(Atker.MyImpression == SpiritualProperty.doremis)
-                {
-                    BaseDmg *= SPIRITUAL_MODIFIER;
-                }
-                break;
-            case HumanConditionCircumstances.Elated:
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.dokumamusi);
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.SpringWater);
-                //どの精神属性も効かない
-                break;
-            case HumanConditionCircumstances.Resolved:
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.TentVoid);
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.Vond);
-                if(skill.SkillSpiritual == SpiritualProperty.pysco)
-                {
-                    BaseDmg *= SPIRITUAL_MODIFIER;
-                }
-                if(Atker.MyImpression == SpiritualProperty.pysco)
-                {
-                    BaseDmg *= SPIRITUAL_MODIFIER;
-                }
-                break;
-            case HumanConditionCircumstances.Angry:
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.HeatHaze);
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.Rain);
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.ColdHeartedCalm);
-                if(skill.SkillSpiritual == SpiritualProperty.liminalwhitetile)
-                {
-                    BaseDmg *= SPIRITUAL_MODIFIER;
-                }
-                if(Atker.MyImpression == SpiritualProperty.liminalwhitetile)
-                {
-                    BaseDmg *= SPIRITUAL_MODIFIER;
-                }
-                break;
-            case HumanConditionCircumstances.Doubtful:
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.HumanKiller);
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.PersonaDivergence);
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.Enokunagi);
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.Blades);
-                if(skill.SkillSpiritual == SpiritualProperty.doremis || skill.SkillSpiritual == SpiritualProperty.pysco)
-                {
-                    BaseDmg *= SPIRITUAL_MODIFIER;
-                }
-                if(Atker.MyImpression == SpiritualProperty.doremis || Atker.MyImpression == SpiritualProperty.pysco)
-                {
-                    BaseDmg *= SPIRITUAL_MODIFIER;
-                }
-                break;
-            case HumanConditionCircumstances.Confused:
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.SilentTraining);
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.Miza);
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.Raincoat);
-                if(skill.SkillSpiritual == SpiritualProperty.doremis || skill.SkillSpiritual == SpiritualProperty.sacrifaith)
-                {
-                    BaseDmg *= SPIRITUAL_MODIFIER;
-                }
-                if(Atker.MyImpression == SpiritualProperty.doremis || Atker.MyImpression == SpiritualProperty.sacrifaith)
-                {
-                    BaseDmg *= SPIRITUAL_MODIFIER;
-                }
-                break;
-        }
-
-        var finalDamage = BaseDmg * ResonanceDangerRatio * DamageMultipilerByPowerRatio;
-
-        //被害者側の精神属性の種類　= 精神ポテンシャルで除算をする。
-        var potential = GetMySpiritualPotential();
-        finalDamage *= 1 - (potential * SPRITUAL_POTENTIAL_DEF_COED);
-
-        //スキルの数による除算
-        finalDamage = ResonanceDamageRandomizeBySkillCount(finalDamage);
-        //ダメージを反映
-        NowResonanceValue -= finalDamage;
-    }
-    /// <summary>
-    /// 人間状況が普調なら　行動を起こすたびに思えの値が回復する。
-    /// AttackCharaで
-    /// </summary>
-    public void ResonanceHealingOnBattle()
-    {
-        if(NowCondition == HumanConditionCircumstances.Normal)
-        {
-            //とりあえず最大値 3~11%ランダム回復ってことで。
-            var HealAmount = ResonanceValue * RandomEx.Shared.NextFloat(0.03f,0.11f);
-            ResonanceHeal(HealAmount);
-        }
-    }
     
     /// <summary>
     /// ヒール
@@ -7210,472 +6215,7 @@ public abstract class BaseStates
             Debug.Log("精神ヒールが実行された");
         }
     }
-    /// <summary>
-    /// 命中凌駕の判定関数　引数倍命中が回避を凌駕してるのなら、スキル命中率に影響を与える
-    /// </summary>
-    private float AccuracySupremacy(float atkerEye, float undAtkerAgi, float multiplierThreshold = 2.5f)
-    {
-        var supremacyMargin = 0f;
-        var modifyAgi = undAtkerAgi * multiplierThreshold;//補正されたagi
-        if (atkerEye >= modifyAgi)//攻撃者のEYEが特定の倍被害者のAGIを上回っているならば、
-        {
-            supremacyMargin = (atkerEye - modifyAgi) / 2;//命中が引数倍された回避を超した分　÷　2
-        }
-        return supremacyMargin;
-    }
-    
-    /// <summary>
-    /// スキルにより影響された回避補正率
-    /// </summary>
-    float _skillEvasionModifier = 1f;
-    /// <summary>
-    /// スキルにより影響された攻撃補正率
-    /// </summary>
-    float _skillAttackModifier = 1f;
-    
-    /// <summary>
-    /// 平準化する回避補正率
-    /// </summary>
-    float _BaseEvasionModifier = 1f;
-    /// <summary>
-    /// 平準化する攻撃補正率
-    /// </summary>
-    float _BaseAttackModifier = 1f;
-    /// <summary>
-    /// 回避率でAGIに掛けるスキルにより影響された回避補正率　
-    /// 落ち着きターン経過により減衰する。
-    /// 回避率の計算の際に最終回避率としてAGIと掛ける
-    /// </summary>
-    float SkillEvasionModifier
-    {
-        get
-        {
-            var calmDownModifier = CalmDownCount;//落ち着きカウントによる補正
-            var calmDownModifierMax = CalmDownCountMax;
-            if (calmDownModifier < 0)calmDownModifier = 0;//落ち着きカウントがマイナスにならないようにする
 
-            // カウントダウンの進行度に応じて線形補間
-            // カウントが減るほど _BaseEvasionModifier に近づく
-            float progress = 1.0f - (calmDownModifier / calmDownModifierMax);
-            
-            // 線形補間: _skillEvasionModifier から _BaseEvasionModifier へ徐々に変化
-            return _skillEvasionModifier + (_BaseEvasionModifier - _skillEvasionModifier) * progress;
-        }
-    }
-    /// <summary>
-    /// 攻撃力でATKに掛けるスキルにより影響された攻撃補正率
-    /// 落ち着きターン経過により減衰する。
-    /// 実際の敵HPに対する減算処理のみに参照し、尚且つなるべく素に近いATK()の補正積み重ねの初期に掛けられる。
-    /// </summary>
-    float SkillAttackModifier
-    {
-        get
-        {
-            var calmDownModifier = CalmDownCount;//落ち着きカウントによる補正
-            var calmDownModifierMax = CalmDownCountMax;
-            if (calmDownModifier < 0)calmDownModifier = 0;//落ち着きカウントがマイナスにならないようにする
-
-            // カウントダウンの進行度に応じて線形補間
-            // カウントが減るほど _BaseAttackModifier に近づく
-            float progress = 1.0f - (calmDownModifier / calmDownModifierMax);
-            
-            // 線形補間: _skillAttackModifier から _BaseAttackModifier へ徐々に変化
-            return _skillAttackModifier + (_BaseAttackModifier - _skillAttackModifier) * progress;
-        }
-    }
-    /// <summary>
-    /// 落ち着きカウント
-    /// 回避率や次攻撃者率　の平準化に用いられる
-    /// </summary>
-    int CalmDownCount = 0;
-    /// <summary>
-    /// 落ち着きカウントの最大値
-    /// 影響された補正率がどの程度平準化されているかの計算に用いるために保存する。
-    /// </summary>
-    int CalmDownCountMax;
-    /// <summary>
-    /// 落ち着きカウントの最大値算出
-    /// </summary>
-    int CalmDownCountMaxRnd => RandomEx.Shared.NextInt(4, 8);
-    /// <summary>
-    /// 落ち着きカウントのカウント開始準備
-    /// スキル回避率もセット
-    /// </summary>
-    public void CalmDownSet(float EvasionModifier = 1f, float AttackModifier = 1f)
-    {
-        CalmDownCountMax = CalmDownCountMaxRnd;//乱数から設定して、カウントダウンの最大値を設定
-        CalmDownCount = CalmDownCountMax;//カウントダウンを最大値に設定
-        CalmDownCount++;//NextTurnで即引かれるので調整　　落ち着き#カウント対処を参照して
-        _skillEvasionModifier = EvasionModifier;//スキルにより影響された回避補正率をセット
-        _skillAttackModifier = AttackModifier;//スキルにより影響された攻撃補正率をセット
-    }
-    /// <summary>
-    /// 落ち着きカウントダウン
-    /// </summary>
-    void CalmDownCountDec()
-    {
-        CalmDownCount--;
-    }
-    /// <summary>
-    /// 意図的に落ち着きカウントをゼロにすることにより、落ち着いた判定にする。
-    /// </summary>
-    void CalmDown()
-    {
-        CalmDownCount = 0;
-    }
-    /// <summary>
-    /// 命中回避計算で使用する回避率
-    /// </summary>
-    float EvasionRate(float baseAgi,BaseStates Attacker)
-    {
-        float evasionRate;
-
-        evasionRate = baseAgi * SkillEvasionModifier;
-
-        if(Attacker.BattleFirstSurpriseAttacker)//bm最初のターンで先手攻撃を受ける場合
-        evasionRate  = baseAgi * 0.7f;//0.7倍で固定
-
-        //パッシブ由来のキャラクタ限定回避補正
-        evasionRate *= PassivesEvasionPercentageModifierByAttacker();
-
-        return evasionRate;
-    }
-    /// <summary>
-    /// ミニマムヒットチャンスの発生確率を計算。
-    /// </summary>
-    float CalcMinimumHitChancePer(BaseStates Attacker,BaseStates Defender)
-    {
-        const float synergy_threshold = 7f;//高め合いボーナスの発生しきい値　　0~100で
-        const float  synergy_bonus_per = 0.2f;//高め合いボーナスの係数　ボーナスの大小を調整するのならここで。
-        const float KereKereModifier_per = 0.09f;//ケレケレによる追加補正時にケレケレに掛ける係数
-
-        var AtkerKerenRate = Attacker.PassivesAttackACTKerenACTRate();//攻撃側のケレン行動パーセント
-        var DefenderKerenRate = Defender.PassivesDefenceACTKerenACTRate();//防御側のケレン行動パーセント
-
-        //基本、攻撃側か防御側のどちらか大きい方が使われます
-        var MinimumHitChanceRate = Math.Max(AtkerKerenRate, DefenderKerenRate);
-
-        //もし両方とも高め合いボーナスの発生しきい値を上回っていたら発生
-        if(AtkerKerenRate > synergy_threshold && DefenderKerenRate > synergy_threshold)
-        {
-            //どちらもデフォ値を引いて、加算する。
-            var synergyPotential = AtkerKerenRate - KerenACTRateDefault + (DefenderKerenRate - KerenACTRateDefault);
-            //調整用の係数を掛ける
-            synergyPotential *= synergy_bonus_per;
-            //基本確立に加算
-            MinimumHitChanceRate += synergyPotential;
-        }
-
-        //大きい方の値が偶然の定数を上回っていた場合、その大きい方の十日能力ケレケレにより加算される。(高め合いボーナス計算後に)
-        if(AtkerKerenRate>=DefenderKerenRate)//攻撃者側が大きいなら  攻撃者側のがバトルの主導は握りがちだと思うので、同値の場合も含める。
-        {
-            if(AtkerKerenRate > KerenACTRateDefault)//偶然の定数を上回っていたら
-            {
-                var AtkerKereKere = Attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.KereKere);
-                MinimumHitChanceRate += AtkerKereKere * KereKereModifier_per;
-            }
-        }
-        else
-        {
-            if(DefenderKerenRate > KerenACTRateDefault)//偶然の定数を上回っていたら
-            {
-                var DefenderKereKere = Defender.TenDayValues(true).GetValueOrZero(TenDayAbility.KereKere);
-                MinimumHitChanceRate += DefenderKereKere * KereKereModifier_per;
-            }
-        }
-        
-        
-        return MinimumHitChanceRate;
-    }
-    /// <summary>
-    /// 攻撃者と防御者とスキルを利用してヒットするかの計算
-    /// </summary>
-    private HitResult IsReactHIT(BaseStates Attacker)
-    {
-        schizoLog.AddLog("IsReactHITが呼ばれた",true);
-        var skill = Attacker.NowUseSkill;
-        var minusMyChance = 0f;
-        var minimumHitChancePer = CalcMinimumHitChancePer(Attacker,this);//ミニマムヒットチャンスの発生確率
-        if(skill.IsMagic)minimumHitChancePer = 2f;
-
-        //vanguardじゃなければ攻撃者の命中減少
-        if (!manager.IsVanguard(Attacker))
-        {
-            //スキルのその場DontMove性の担保のため、前のめりの選択がないスキルは後衛でも命中低下しない
-            if(skill.CanSelectAggressiveCommit)
-            {//だから前のめり選べるスキルの場合のみ命中低下する。
-                minusMyChance += AGI().Total * 0.2f;//チャンス計算だけだからTotal    
-            }
-        }
-
-        if (minusMyChance > Attacker.EYE().Total)//マイナス対策
-        {
-            minusMyChance = Attacker.EYE().Total;
-        }
-
-        var minimumHitChanceResult= HitResult.CompleteEvade;//命中回避計算外のミニマムヒットチャンス
-        if(rollper(minimumHitChancePer))//ミニマムヒットチャンス  ケレン行動パーセントの確率でかすりとクリティカルの計算
-        {
-            //三分の一で二分の一計算、三分の二ならステータス計算に入ります
-            //三分の1でかすりとクリティカルは完全二分の一計算
-            if(RandomEx.Shared.NextFloat(3) < 1)
-            {
-                if(RandomEx.Shared.NextFloat(2) < 1)
-                {
-                    minimumHitChanceResult = HitResult.Critical;
-                    schizoLog.AddLog("ミニマムヒットチャンスの確率計算-クリティカル",true);
-                }
-                else
-                {
-                    minimumHitChanceResult = HitResult.Graze;
-                    schizoLog.AddLog("ミニマムヒットチャンスの確率計算-かすり",true);
-                }
-            }else
-            {//残り三分の二で、ステータス比較の計算
-                var atkerCalcEYEAGI = Attacker.EYE().Total + Attacker.AGI().Total *0.6f;//minusMychanceは瀬戸際の攻防計算なので使用しない
-                var defCalcEYEAGI = EYE().Total * 0.8f + AGI().Total;
-
-                // 確率計算に使用する実効値を準備       多い方の値を1.7倍することで、より強さの絶対性を高める。
-                float effectiveAtkerCalc = atkerCalcEYEAGI;
-                float effectiveDefCalc = defCalcEYEAGI;
-                // 多い方の値を1.7倍する
-                if (atkerCalcEYEAGI > defCalcEYEAGI)
-                {
-                    effectiveAtkerCalc = atkerCalcEYEAGI * 1.7f;
-                }
-                else if (defCalcEYEAGI > atkerCalcEYEAGI)
-                {
-                    effectiveDefCalc = defCalcEYEAGI * 1.7f;
-                }
-                // atkerCalcEYEAGI == defCalcEYEAGI の場合は、どちらも変更しない（元の確率計算と同じ）
-
-                
-                if(RandomEx.Shared.NextFloat(effectiveAtkerCalc + effectiveDefCalc) < effectiveAtkerCalc)
-                {
-                    minimumHitChanceResult = HitResult.Critical;//攻撃者側のステータスが乱数で出たなら、クリティカル
-                    schizoLog.AddLog("ミニマムヒットチャンスのステータス比較計算-クリティカル",true);
-                }
-                else
-                {
-                    minimumHitChanceResult = HitResult.Graze;//そうでなければかすり
-                    schizoLog.AddLog("ミニマムヒットチャンスのステータス比較計算-かすり",true);
-                }
-            }
-        }
-
-        //術者の命中+被害者の自分の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
-        schizoLog.AddLog(Attacker.CharacterName + "の命中率:" + Attacker.EYE().Total +CharacterName + "の回避率:" + EvasionRate(AGI().Total,Attacker),true);
-        if (RandomEx.Shared.NextFloat(Attacker.EYE().Total + EvasionRate(AGI().Total,Attacker)) < Attacker.EYE().Total - minusMyChance || minimumHitChanceResult != HitResult.CompleteEvade)
-        {
-            var hitResult = minimumHitChanceResult;//ミニマムヒット前提でヒット結果変数に代入
-            //ミニマムヒットがなく、かつ、通常の命中率が満たされた場合
-            if(minimumHitChanceResult == HitResult.CompleteEvade)
-            {
-                hitResult = HitResult.Hit;//スキル命中に渡すヒット結果に通常のHitを代入
-                schizoLog.AddLog("IsReactHit-Hit",true);
-            }
-            schizoLog.AddLog($"通常Hitにより更なるスキル命中計算を実行",true);
-            //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
-            return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult);
-        }
-        //回避されたので、まずは魔法スキルなら魔法かすりする　三分の一で
-        //事前魔法かすり判定である。(攻撃性質スキル以外はスキル命中のみで魔法かすり判定をするという違いがある為。)
-        if(skill.IsMagic && RandomEx.Shared.NextFloat(3) < 1)
-        {
-            //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
-            return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), HitResult.Graze, true);
-        }
-
-
-        //スキルが爆破型で、なおかつ被害者の自分が前のめりなら完全回避のはずがかすりになる
-        if(skill.DistributionType == AttackDistributionType.Explosion && manager.IsVanguard(this))
-        {
-            var hitResult = HitResult.Graze;
-            //が、AGI比較て勝ってたらそれを免除し本来の完全回避へ
-
-            //三倍以上越してると84%で避けられる
-            if(Attacker.AGI().Total * 3 < AGI().Total)
-            {
-                if(rollper(84))
-                {
-                    hitResult = HitResult.CompleteEvade;
-                }
-            }else
-            {
-                //攻撃者のAGIを1.6倍以上越していると、二分の一で避けられる。
-                if(Attacker.AGI().Total * 1.6 < AGI().Total)
-                {
-                    if(RandomEx.Shared.NextFloat(2) < 1)
-                    {
-                        hitResult = HitResult.CompleteEvade;
-                    }
-                }
-            }
-
-            //爆破型なのでかすりだが、そもそものスキル命中の計算をする介する
-            return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult);
-        }
-
-
-        return HitResult.CompleteEvade;
-    }
-
-/// <summary>
-/// nightinknightの値に応じて現在の「引き締める」補正段階を返す関数 </summary>
-/// <returns>補正段階 は増えていく。/returns>
-int GetTightenMindCorrectionStage()
-{
-    float nightinknightValue = TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight);
-
-    nightinknightValue /= 10;
-    nightinknightValue = Mathf.Floor(nightinknightValue);
-    if(NowPower == ThePower.high && RandomEx.Shared.NextFloat(1) < 0.5f)  nightinknightValue += 1;//パワーが高く、二分の一の確率を当てると、補正段階が1増える
-
-    return (int)nightinknightValue;
-}
-
-/// <summary>
-/// 今回攻撃された際のAimStyle で短期記憶(TransformCount など)を更新する
-/// </summary>
-private bool UpdateAimStyleMemory(AimStyle newAimStyle, int tightenStage)
-{
-    // 現在の短期記憶
-    var mem = _aimStyleMemory;
-
-    // 1) まだ何も対応していない or 前回の TargetAimStyle と違う ならリセット
-    if (mem.TargetAimStyle == null || mem.TargetAimStyle.Value != newAimStyle)
-    {
-        // 新しく対応を始める
-        mem.TargetAimStyle      = newAimStyle;
-        mem.TransformCount      = 0;
-
-        // TightenStage を加味して「対応に必要なカウントMax」を求める
-        mem.TransformCountMax   = CalcTransformCountMax(tightenStage, newAimStyle);
-
-    }
-    
-        // 変革カウントを進める
-        int increment = CalcTransformCountIncrement(tightenStage);
-
-        mem.TransformCount += increment;
-
-        // 更新を反映
-        _aimStyleMemory = mem;
-
-        if(mem.TransformCount >= mem.TransformCountMax)//カウント上限を超えたらリセットし変更成功の項を返す
-        {
-            mem.TransformCount = 0;
-            mem.TargetAimStyle = null;
-            mem.TransformCountMax = 0;
-            // 更新を反映
-            _aimStyleMemory = mem;
-           return true;
-        }
-    return false;
-    
-}
-/// <summary>
-/// AimStyleを食らった時、何カウント増やすかを決める
-/// ※ tightenStageが高いほど変革スピードが速い、など
-/// </summary>
-private int CalcTransformCountIncrement(int tightenStage)
-{
-    var rndmin = 0;
-    var rndmax = tightenStage;
-    if(NowPower< ThePower.medium)rndmax -= 1;
-    if(tightenStage <2)return 1;//1以下なら基本値のみ
-    if(tightenStage>5) rndmin = tightenStage/6;//6以上なら、補正段階の1/6が最小値
-    return 1 + RandomEx.Shared.NextInt(rndmin, rndmax);//2以降なら補正段階分乱数の最大値が増える
-}
-/// <summary>
-/// 引き締め段階(tightenStage)と、新AimStyle に応じて必要な最大カウントを算出
-/// </summary>
-    private int CalcTransformCountMax(int tightenStage, AimStyle AttackerStyle)
-    {
-        //AIMSTYLEの組み合わせ辞書により、必要な最大カウントを計算する
-        var count = DefenseTransformationThresholds[(AttackerStyle, NowDeffenceStyle)];
-        if(tightenStage>=2)
-        {
-            if(RandomEx.Shared.NextFloat(1)<0.31f + TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight)*0.01f)
-        {
-                count -= 1;
-
-        }
-        }
-        
-        if(tightenStage >= 5){
-            if(RandomEx.Shared.NextFloat(1)<0.8f)
-                {
-                    count-=1;
-                }
-        }
-
-    return  count;
-    }
-
-    /// <summary>防ぎ方の切り替え </summary>
-    private void SwitchDefenceStyle(BaseStates atker)
-    {
-        if(atker.NowBattleProtocol == BattleProtocol.none)
-        {
-            NowDeffenceStyle = AimStyle.none;//戦闘規格がない(フリーハンドスキル)なら、防ぎ方もnone(防御排他ステがない)
-            return;
-        } 
-        var skill = atker.NowUseSkill;
-        var pattern = DefaultDefensePatternPerProtocol[atker.NowBattleProtocol];
-
-        if(!skill.NowConsecutiveATKFromTheSecondTimeOnward()){//単回攻撃または初回攻撃なら  (戦闘規格noneが入ることを想定)
-
-            var per = 1f;
-            if(GetTightenMindCorrectionStage()>=2)per=0.75f;//補正段階が2以上になるまで75%の確率で切り替えます、それ以降は100%で完全対応
-
-           if(RandomEx.Shared.NextFloat(1) < pattern.a)//パターンAなら 
-           {
-            skill.DecideNowMoveSet_A0_B1(0);
-            skill.SetSingleAimStyle(pattern.aStyle);//攻撃者側スキルにデフォルトの狙い流れを設定
-
-            if(RandomEx.Shared.NextFloat(1)<per){
-                NowDeffenceStyle =  pattern.aStyle;
-                //攻撃者のAimStyle = 被害者のAimStyle　となるので狙い流れを対応できている。
-            }else{
-                NowDeffenceStyle = GetRandomAimStyleExcept(pattern.aStyle);//aStyle以外のAimStyleをランダムに選びます
-            }
-           }
-           else                                         //パターンBなら
-           {
-            skill.DecideNowMoveSet_A0_B1(1);
-            skill.SetSingleAimStyle(pattern.bStyle);//攻撃者側スキルにデフォルトの狙い流れを設定
-
-            if(RandomEx.Shared.NextFloat(1)<per){
-                NowDeffenceStyle =  pattern.bStyle;
-                
-            }else{
-                NowDeffenceStyle = GetRandomAimStyleExcept(pattern.bStyle);//bStyle以外のAimStyleをランダムに選びます
-            }
-           }
-
-           
-        }else{                                              //連続攻撃中なら　　(戦闘規格noneを連続攻撃のmovesetに入れないこと前提)
-            var AtkAimStyle = skill.NowAimStyle();//攻撃者の現在のAimStyleを取得
-            
-            if (AtkAimStyle == NowDeffenceStyle) return;// 既に同じAimStyleなら何もしない
-
-            var TightenMind = GetTightenMindCorrectionStage();//現在の自分の引き締め値を入手
-
-            if(UpdateAimStyleMemory(AtkAimStyle, TightenMind))//まず短期記憶を更新または新生する処理
-            {
-                if(atker.NowUseSkill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive))
-                {
-                    if(RandomEx.Shared.NextFloat(1)<0.3f)return;
-                }
-                NowDeffenceStyle = AtkAimStyle;
-            }//カウントアップ完了したなら、nowDeffenceStyleに記録されたAimStyleを適用するだけ
-            
-        }
-
-
-
-    }
     /// <summary>
     /// 連続攻撃時、狙い流れの物理属性適正とスキルの物理属性の一致による1.1倍ブーストがあるかどうかを判定し行使する関数です
     /// </summary>
@@ -7693,82 +6233,6 @@ private int CalcTransformCountIncrement(int tightenStage)
             }
     }
 
-    /// <summary>
-    /// 連続攻撃中の割り込みカウンターが可能かどうかを判定する
-    /// </summary>
-    private bool TryInterruptCounter(BaseStates attacker)//attacker = 割り込みカウンターの被害者ね
-    {
-        if(!IsInterruptCounterActive)return false;//割り込みカウンターActiveがfalseなら発動しない
-
-        var skill = attacker.NowUseSkill;
-        if(NowPower >= ThePower.medium)//普通のパワー以上で
-        {//割り込みカウンターは
-            var eneVond = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.Vond);
-            var myVond =  TenDayValues(false).GetValueOrZero(TenDayAbility.Vond);
-            var plusAtkChance = myVond> eneVond ? myVond - eneVond : 0f;//ヴォンドの差による微加算値
-            if(RandomEx.Shared.NextFloat(1) < skill.DEFATK/3 + plusAtkChance*0.01f)
-            {
-                var mypersonDiver = TenDayValues(false).GetValueOrZero(TenDayAbility.PersonaDivergence);
-                var myTentvoid = TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid);
-                var eneSort = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.Sort);
-                var eneRain = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.Rain);
-                var eneCold = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.ColdHeartedCalm);
-                var ExVoid = PlayersStates.Instance.ExplosionVoid;
-                var counterValue = (myVond + mypersonDiver/(myTentvoid-ExVoid)) * 0.9f;//カウンターする側の特定能力値
-                var attackerValue = Mathf.Max(eneSort - eneRain/3,0)+eneCold;//攻撃者の特定能力値
-
-
-                if(RandomEx.Shared.NextFloat(counterValue+attackerValue) < counterValue &&
-                 RandomEx.Shared.NextFloat(1)<0.5f)
-                {
-                    //まず連続攻撃の無効化
-                    attacker.DeleteConsecutiveATK();
-                    attacker.IsActiveCancelInSkillACT = true;//スキルの行動を無効化された。
-                    
-                    //無効化のみ、次のターンで攻撃可能、それに加えて割り込みカウンターのパッシブが加わる。
-                    //その三パターンで分かれる。　　最後のパッシブ条件のみ直接割り込みカウンターPassiveの方で設定している。
-
-                    //割り込みカウンターのパッシブ付与しますが、適合するかどうかはそのpassiveの条件次第です。
-                    var counterID = 1;
-                    ApplyPassiveBufferInBattleByID(counterID);
-                    var CounterPower = GetBufferPassiveByID(counterID);
-                    if (CanApplyPassive(CounterPower))//適合したら
-                    {
-                        var attackerCounterPower = attacker.GetPassiveByID(counterID);
-                        if(attackerCounterPower != null) //もし攻撃者が割り込みカウンターパッシブなら、
-                        {
-                            //攻撃者の割り込みカウンターパッシブのパワー+1で生成
-                            CounterPower.SetPassivePower(attackerCounterPower.PassivePower +1);
-                        }
-                    }
-
-                    //次のターンで攻撃、つまり先約リストの予約を判定する。　
-                    if(HasCharacterType(CharacterType.Life))
-                    {//生命なら、必ず反撃可能
-                        
-                        //割り込みカウンターの反撃は割り込んだ際の、敵の攻撃の防御無視率の方が、反撃スキルの防御無視率より多ければ、
-                        // 食らいそうになった敵スキルの防御無視率をそのまま利用する。
-                        var CounterDEFATK = skill.DEFATK;
-                        
-
-                        //攻撃を食らった際、中断不可能なカウンターまたはfreezeConecutiveの場合、武器スキルでしか返せない。
-                        var isfreeze = false;
-                        if(NowUseSkill.NowConsecutiveATKFromTheSecondTimeOnward() && NowUseSkill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive) ||
-                        NowUseSkill.IsTriggering) 
-                        {
-                            NowUseSkill = NowUseWeapon.WeaponSkill;
-                            isfreeze = true;
-                        }
-                        manager.Acts.Add(this,manager.GetCharacterFaction(this),"割り込みカウンター",null,isfreeze,null,CounterDEFATK);//通常の行動予約 
-                    }
-
-                    //無効化は誰でも可能です　以下のtrueを返して、呼び出し側で今回の攻撃の無効化は行います。
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
     /// <summary>
     /// 悪いパッシブ付与処理
     /// </summary>
@@ -8140,175 +6604,6 @@ private int CalcTransformCountIncrement(int tightenStage)
         return resultModifier;
     }
     /// <summary>
-    /// 直接攻撃スキルのを「食らう側のヒット判定のラッパー
-    /// 命中回避を用いるかどうかなどをここで計算する。
-    /// </summary>
-    /// <returns></returns>
-    HitResult ATKTypeSkillReactHitCalc(BaseStates attacker,BaseSkill atkSkill)
-    {
-        HitResult hitResult = HitResult.CompleteEvade;//念のため初期値を
-        var HitResultSet = false;
-
-        //善意攻撃であるのなら、スキル命中率のみ
-
-        //攻撃者と被害者(自分)が味方同士で、かつ、
-        if(manager.IsFriend(attacker, this))
-        {
-            //自分の持ってるパッシブに一つでも「行動不能」と「現存してる追加HPが生存条件である」プロパティの二つが同時に含まれていれば
-            //または、「行動不能」と「RemoveOnDamage」の二つが同時に含まれていれば
-            foreach (var pas in _passiveList)//自分の持ってるパッシブで回す
-            {
-                if(pas.IsCantACT)//行動不能のパッシブなら
-                {
-                    if(pas.RemoveOnDamage)//RemoveOnDamageが有効なら
-                    {
-                        hitResult = atkSkill.SkillHitCalc(this);//一個でも条件を満たせば善意攻撃なのでループを抜けていい
-                        HitResultSet = true;
-                        break;
-                    }
-                    if(pas.VitalLayers == null) continue;//パッシブに追加HPが無ければ飛ばす
-
-                    if(pas.HasRemainingSurvivalVitalLayer(this))//生存条件としてのVitalLayerを今持っているかどうか
-                    {
-                        hitResult = atkSkill.SkillHitCalc(this);//一個でも条件を満たせば善意攻撃なのでループを抜けていい
-                        HitResultSet = true;
-                        break;
-                    }
-                }
-            }
-        }
-        if(!HitResultSet)
-        {
-            schizoLog.AddLog($"攻撃スキルヒット判定でisreactHitが呼ばれた。",true);
-            hitResult = IsReactHIT(attacker);//善意ヒット判定が未代入なら通常のヒット判定
-        }
-
-        Debug.Log($"攻撃スキルヒット判定結果 : {hitResult}({attacker.CharacterName}の{atkSkill.SkillName}の{CharacterName}に対する判定)");
-        return hitResult;
-    }
-    /// <summary>
-    /// AllyEvade 計算  ➜  既存 HitResult と合成して返すショートハンド
-    /// 味方別口回避
-    /// </summary>
-    HitResult MixAllyEvade(HitResult existingHit, BaseStates attacker)
-    {
-        var allyEvade = AllyEvadeCalculation(attacker);
-        var hitresult = AllyEvade_HitMixDown(existingHit, allyEvade);
-        Debug.Log($"味方別口回避結果 : {existingHit} → {hitresult}");
-        return hitresult;
-    }
-    /// <summary>
-    /// 命中結果の合算
-    /// 主に味方別口回避と既存の計算結果を混ぜるため
-    /// MIXテーブルの通りにAIに実装してもらたｗ
-    /// </summary>
-    HitResult AllyEvade_HitMixDown(HitResult existingHit, HitResult allyEvadeHit)
-    {
-        if(allyEvadeHit == HitResult.none)
-        {//味方別口回避がなければ、既存のをそのまま返す
-            return existingHit;
-        }
-
-        // 完全回避 + 完全回避 または かすり + 完全回避
-        if ((existingHit == HitResult.CompleteEvade && allyEvadeHit == HitResult.CompleteEvade) ||
-            (existingHit == HitResult.CompleteEvade && allyEvadeHit == HitResult.Graze) ||
-            (existingHit == HitResult.Graze && allyEvadeHit == HitResult.CompleteEvade))
-        {
-            return HitResult.CompleteEvade;
-        }
-        
-        // HIT + 完全回避 = かすり
-        if ((existingHit == HitResult.Hit && allyEvadeHit == HitResult.CompleteEvade) ||
-            (existingHit == HitResult.CompleteEvade && allyEvadeHit == HitResult.Hit))
-        {
-            return HitResult.Graze;
-        }
-        
-        // クリティカル + 完全回避 = HITまたは1/2の確率でかすり
-        if ((existingHit == HitResult.Critical && allyEvadeHit == HitResult.CompleteEvade) ||
-            (existingHit == HitResult.CompleteEvade && allyEvadeHit == HitResult.Critical))
-        {
-            // 50%の確率でかすり、それ以外はHIT
-            return rollper(50) ? HitResult.Graze : HitResult.Hit;
-        }
-        
-        // かすり + HIT = かすり
-        if ((existingHit == HitResult.Graze && allyEvadeHit == HitResult.Hit) ||
-            (existingHit == HitResult.Hit && allyEvadeHit == HitResult.Graze))
-        {
-            return HitResult.Graze;
-        }
-        
-        // クリティカル + HIT = HIT
-        if ((existingHit == HitResult.Critical && allyEvadeHit == HitResult.Hit) ||
-            (existingHit == HitResult.Hit && allyEvadeHit == HitResult.Critical))
-        {
-            return HitResult.Hit;
-        }
-        
-        // クリティカル + かすり = HIT
-        if ((existingHit == HitResult.Critical && allyEvadeHit == HitResult.Graze) ||
-            (existingHit == HitResult.Graze && allyEvadeHit == HitResult.Critical))
-        {
-            return HitResult.Hit;
-        }
-        
-        // それ以外の場合は、同じ値ならそのまま返す
-        if (existingHit == allyEvadeHit)
-        {
-            return existingHit;
-        }
-        
-        // 上記以外のケースは、ここには来ないはずだが、安全のため
-        // 値が小さい方（より回避側）を選択
-        return ((int)existingHit < (int)allyEvadeHit) ? existingHit : allyEvadeHit;
-
-
-    }
-
-    /// <summary>
-    /// パーティー属性という雰囲気における味方同士の攻撃の別口回避
-    /// 既存の計算とは独立している
-    /// </summary>
-    HitResult AllyEvadeCalculation(BaseStates attacker)
-    {
-        if(manager.IsFriend(attacker, this))//まず味方同士かどうかを判断
-        {
-            float evasionRate;//回避弱体補正
-            var mygroup = manager.MyGroup(this);
-            //パーティー属性により発生判定と、回避倍率を決める
-            switch(mygroup.OurImpression)
-            {
-                case PartyProperty.Odradeks:
-                evasionRate = 0.25f;
-                break;
-                case PartyProperty.TrashGroup:
-                evasionRate = 0.5f;
-                break;
-                default:
-                return HitResult.none;//発生しなかった。
-            }
-
-            //相性値による回避率のすげ替え
-            var agi = AGI().Total;
-            if(mygroup.CharaCompatibility[(attacker,this)] >= 88)//攻撃者から自分への味方同士の相性値が特定以上なら
-            {
-                //また、攻撃者のAGIが自分より大きければ、計算に使うAGIをすげ替える
-                agi = Mathf.Max(agi,attacker.AGI().Total);
-            }
-
-            if (RandomEx.Shared.NextFloat(attacker.EYE().Total + agi * evasionRate) < attacker.EYE().Total)
-            {
-                //三分の一でかすり
-                if(rollper(33))return HitResult.Graze;
-
-                return HitResult.CompleteEvade;
-            }
-        
-        }
-        return HitResult.none;//発生せず
-    }
-    /// <summary>
     /// 現在のNowUseSkillにパッシブ由来の追加パッシブを`適用する
     /// </summary>
     void ApplyExtraPassivesToSkill(BaseStates ene)
@@ -8344,541 +6639,6 @@ private int CalcTransformCountIncrement(int tightenStage)
             NowUseSkill.EraseBufferSubEffects();
             // SkillType バッファはこの時点では付与していないため基本不要だが、保全で未使用時は触らない
         }
-    }
-    /// <summary>
-    /// 一人に対するスキル実行が終わった時のコールバック
-    /// </summary>
-    void OnAttackerOneSkillActEnd()
-    {
-        //バッファをクリア
-        NowUseSkill.EraseBufferSkillType();//攻撃性質のバッファ
-        NowUseSkill.EraseBufferSubEffects();//スキルの追加パッシブ付与リスト
-        
-    }
-    /// <summary>
-    /// 一人に対するスキル実行が始まった時のコールバック
-    /// </summary>
-    void OnAttackerOneSkillActStart(BaseStates UnderAtker)
-    {
-        ApplyExtraPassivesToSkill(UnderAtker);//攻撃者にスキルの追加パッシブ性質を適用
-        NowUseSkill.CalcCradleSkillLevel(UnderAtker);//「攻撃者の」スキルのゆりかご計算
-        NowUseSkill.RefilCanEraceCount();//除去スキル用の消せるカウント回数の補充
-    }
-    /// <summary>
-    /// スキルに対するリアクション ここでスキルの解釈をする。
-    /// </summary>
-    /// <param name="skill"></param>
-    /// <param name="UnderIndex">攻撃される人の順番　スキルのPowerSpreadの順番に同期している</param>
-    public virtual async UniTask<string> ReactionSkillOnBattle(BaseStates attacker, float spread)
-    {
-        // ポイント精算用: 最も強いヒット結果を保持
-        HitResult bestHitOutcome = HitResult.none;
-        int Rank(HitResult hr)
-        {
-            switch (hr)
-            {
-                case HitResult.Critical: return 4;
-                case HitResult.Hit: return 3;
-                case HitResult.Graze: return 2;
-                case HitResult.CompleteEvade: return 1;
-                default: return 0;
-            }
-        }
-        void AccumulateHitResult(HitResult hr)
-        {
-            if (Rank(hr) > Rank(bestHitOutcome)) bestHitOutcome = hr;
-        }
-        
-        schizoLog.AddLog($"-ReactionSkill",true);
-        Debug.Log($"{attacker.CharacterName}の{attacker.NowUseSkill.SkillName}に対する{CharacterName}のReactionSkillが始まった");
-        Debug.Log($"スキルを受ける{CharacterName}の精神属性 = {MyImpression}:(ReactionSkill)");
-        attacker.OnAttackerOneSkillActStart(this);//攻撃者の一人へのスキル実行開始時のコールバック
-
-        var skill = attacker.NowUseSkill;
-
-        //スキルパワーの精神属性による計算
-        var modifier = GetSkillVsCharaSpiritualModifier(skill.SkillSpiritual, attacker);
-        var SpiritualModifierPercentage = 0.2f;//IsTLOAスキル以外は20%の精神補正
-        if(skill.IsTLOA) SpiritualModifierPercentage = 0.4f;//IsTLOAなら40%の精神補正
-
-        var modifierForSkillPower = modifier.GetValue(SpiritualModifierPercentage);//精神補正値
-        if(attacker.NowUseWeapon.IsBlade) modifierForSkillPower = 1.0f;//刃物武器なら精神補正なし
-        Debug.Log($"{attacker.CharacterName}の{skill.SkillName}の精神補正率 = {SpiritualModifierPercentage}と精神補正値 = {modifier.GetValue(SpiritualModifierPercentage)}\n-精神補正値の準備終了(ReactionSkill)");
-        
-        //TLOAスキルならゆりかごされたスキルレベルを参照する(IsTLOAを渡して判断)
-        var skillPower = skill.SkillPowerCalc(skill.IsTLOA) * modifierForSkillPower * spread;
-        var skillPowerForMental = skill.SkillPowerForMentalCalc(skill.IsTLOA) * modifier.GetValue() * spread;//精神HPへのパワーは精神補正100%
-
-        Debug.Log($"{attacker.CharacterName}の{skill.SkillName}のスキルパワー = {skillPower} ,精神用スキルパワー = {skillPowerForMental}\n-スキルパワーの準備終了(ReactionSkill)");
-
-        //メッセージテキスト用
-        var txt = "";
-
-        //発動するかどうか
-        var thisAtkTurn = true;
-        //攻撃が乱れたかどうか
-        var isdisturbed = false;
-
-        //被害記録用の一時保存boolなど
-        var BadPassiveHit = false;
-        var BadPassiveRemove = false;
-        var GoodPassiveRemove = false;
-        var GoodPassiveHit = false;
-        var BadVitalLayerHit = false;
-        var BadVitalLayerRemove = false;
-        var GoodVitalLayerHit = false;
-        var GoodVitalLayerRemove = false;
-        var BadSkillPassiveHit = false;
-        var GoodSkillPassiveHit = false;
-        var BadSkillPassiveRemove = false;
-        var GoodSkillPassiveRemove = false;
-        var isHeal = false;
-        var isAtkHit = false;
-        var healAmount = 0f;
-        var damageAmount = new StatesPowerBreakdown(new TenDayAbilityDictionary(), 0);
-
-        
-
-        //スキルの持ってる性質を全て処理として実行
-        Debug.Log($"{attacker.CharacterName}の{skill.SkillName}のスキル性質 = {skill.SkillType}(ReactionSkill)");
-
-        //Manual1
-        if(skill.HasType(SkillType.Manual1_GoodHitCalc))//良い攻撃
-        {
-            var hitResult = skill.SkillHitCalc(this);//良い攻撃なのでスキル命中のみ
-            hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
-            AccumulateHitResult(hitResult);
-
-            skill.ManualSkillEffect(this,hitResult);//効果
-        }
-        if(skill.HasType(SkillType.Manual1_BadHitCalc))//悪い攻撃
-        {
-            var hitResult = IsReactHIT(attacker);//攻撃タイプでないので直接IsReactHitね
-            hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
-            AccumulateHitResult(hitResult);
-
-            skill.ManualSkillEffect(this,hitResult);//効果
-        }
-
-        if (skill.HasType(SkillType.Attack))
-        {
-            Debug.Log($"{attacker.CharacterName}の{skill.SkillName}は攻撃タイプスキルで{CharacterName}はそれに対する個別反応を開始(ReactionSkill)");
-            var hitResult = ATKTypeSkillReactHitCalc(attacker, skill);
-            //味方別口回避の発生と回避判定
-            hitResult = MixAllyEvade(hitResult,attacker);
-            AccumulateHitResult(hitResult);
-            if (hitResult != HitResult.CompleteEvade)//完全回避以外なら = HITしてるなら
-            {
-                Debug.Log($"HITした{attacker.CharacterName}の{CharacterName}に対して{skill.SkillName}がかすり以上");
-                //割り込みカウンターの判定
-                if (skill.NowConsecutiveATKFromTheSecondTimeOnward())//連続攻撃されてる途中なら
-                {
-                    if(!skill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive))//ターンをまたいだ物じゃないなら
-                    {
-                        Debug.Log($"割り込みカウンターの判定{attacker.CharacterName}の{skill.SkillName}に対するもので");
-                        thisAtkTurn = !TryInterruptCounter(attacker);//割り込みカウンターの判定
-                        if(!thisAtkTurn)
-                        {
-                            PassivesOnInterruptCounter();//割り込みカウンター発生時の効果
-                        }
-                    }
-                }
-
-                //攻撃される側からのパッシブ由来のスキル発動の可否を判定
-                thisAtkTurn = PassivesOnBeforeDamageActivate(attacker);
-
-                if(thisAtkTurn)
-                {
-                    Debug.Log($"{attacker.CharacterName}の{skill.SkillName}が{CharacterName}を攻撃した(発動成功)");
-                    //防ぎ方の切り替え
-                    SwitchDefenceStyle(attacker);
-                    //連続攻撃の物理属性ブースト判定
-                    CheckPhysicsConsecutiveAimBoost(attacker);
-                    
-                    //成功されるとダメージを受ける
-                    damageAmount = Damage(attacker, skillPower,skillPowerForMental,hitResult,ref isdisturbed);
-                    isAtkHit = true;//攻撃をしたからtrue
-
-                    var result = await ApplyNonDamageHostileEffects(attacker,skill,hitResult);
-                    BadPassiveHit = result.BadPassiveHit;
-                    BadVitalLayerHit = result.BadVitalLayerHit;
-                    GoodPassiveRemove = result.GoodPassiveRemove;
-                    GoodVitalLayerRemove = result.GoodVitalLayerRemove;
-                    BadSkillPassiveHit = result.BadSkillPassiveHit;
-                    GoodSkillPassiveRemove = result.GoodSkillPassiveRemove;
-                }
-                else
-                {
-                    Debug.Log($"命中はしたが発動しなかった。{attacker.CharacterName}の{CharacterName}に対して{skill.SkillName}が");
-                }
-            }else   
-            {
-                schizoLog.AddLog(attacker.CharacterName + "は外した");
-            }
-        }
-        else//atktypeがないと各自で判定
-        {
-            //schizoLog.AddLog($"攻撃以外のスキルヒット判定の為にでisreactHitが呼ばれた。",true);
-            var hitResult = IsReactHIT(attacker);
-            //味方別口回避の発生と回避判定
-            hitResult = MixAllyEvade(hitResult,attacker);
-            AccumulateHitResult(hitResult);
-            if (hitResult != HitResult.CompleteEvade)
-            {
-                var result = await ApplyNonDamageHostileEffects(attacker,skill,hitResult);     
-                BadPassiveHit = result.BadPassiveHit;
-                BadVitalLayerHit = result.BadVitalLayerHit;
-                GoodPassiveRemove = result.GoodPassiveRemove;
-                GoodVitalLayerRemove = result.GoodVitalLayerRemove;
-                BadSkillPassiveHit = result.BadSkillPassiveHit;
-                GoodSkillPassiveRemove = result.GoodSkillPassiveRemove;   
-            }
-        }
-
-        //回復系は常に独立
-        if(skill.HasType(SkillType.DeathHeal))
-        {
-            //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
-            hitResult = MixAllyEvade(hitResult,attacker);
-            AccumulateHitResult(hitResult);
-            if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
-            {
-                Angel();//降臨　アイコンがノイズで満たされるようなエフェクト
-                isHeal = true;
-                manager.MyGroup(this).PartyApplyConditionChangeOnCloseAllyAngel(this);//所属してるグループが自分の復活により相性値の高い味方の人間状況の変化
-            }
-        }
-
-        if (skill.HasType(SkillType.Heal))
-        {
-            
-            var hitResult = skill.SkillHitCalc(this);
-            hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
-            AccumulateHitResult(hitResult);
-            if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
-            {
-                healAmount= Heal(skillPower);
-                isHeal = true;
-            }
-        }
-
-        if (skill.HasType(SkillType.MentalHeal))
-        {
-            //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
-            hitResult = MixAllyEvade(hitResult,attacker);
-            AccumulateHitResult(hitResult);
-            if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
-            {
-                MentalHeal(skillPower);
-                isHeal = true;
-            }
-        }
-
-        //付与や除去系の友好的スキル(敵対的な物はApplyNonDamageHostileEffectsで処理)
-        //攻撃要素あるにかかわらず、回復系と同じで独立している。
-
-        if (skill.HasType(SkillType.addPassive))
-        {
-            //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
-            hitResult = MixAllyEvade(hitResult,attacker);
-            AccumulateHitResult(hitResult);
-            if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
-            {
-                //良いパッシブを付与しようとしてるのなら、スキル命中計算のみ
-                GoodPassiveHit = this.GoodPassiveHit(skill, attacker);
-            }
-        }
-        if (skill.HasType(SkillType.AddVitalLayer))
-        {
-            //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
-            hitResult = MixAllyEvade(hitResult,attacker);
-            AccumulateHitResult(hitResult);
-            if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
-            {
-                //良い追加HPを付与しようとしてるのなら、スキル命中のみ
-               this.GoodVitalLayerHit(skill);
-                GoodVitalLayerHit = true;
-            }
-        }
-        if (skill.HasType(SkillType.addSkillPassive))
-        {
-            //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
-            hitResult = MixAllyEvade(hitResult,attacker);
-            AccumulateHitResult(hitResult);
-            if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
-            {
-                //良いパッシブを付与しようとしてるのなら、スキル命中計算のみ
-                GoodSkillPassiveHit = await this.GoodSkillPassiveHit(skill);
-            }
-        }
-        if (skill.HasType(SkillType.removeBadSkillPassive))
-        {
-            //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
-            hitResult = MixAllyEvade(hitResult,attacker);
-            AccumulateHitResult(hitResult);
-            if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
-            {
-                //悪いパッシブを取り除くのなら、スキル命中のみ
-                BadSkillPassiveRemove = SkillPassiveRemove(skill);
-            }
-        }
-
-
-        if(skill.HasType(SkillType.RemovePassive))
-        {
-            //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
-            hitResult = MixAllyEvade(hitResult,attacker);
-            AccumulateHitResult(hitResult);
-            if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
-            {
-                //悪いパッシブを取り除くのなら、スキル命中のみ
-                BadPassiveRemove = this.BadPassiveRemove(skill);
-            }
-        }
-        if (skill.HasType(SkillType.RemoveVitalLayer))
-        {
-            //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
-            hitResult = MixAllyEvade(hitResult,attacker);
-            AccumulateHitResult(hitResult);
-            if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
-            {
-                //悪い追加HPを取り除こうとしてるのなら、スキル命中のみ
-                BadVitalLayerRemove = this.BadVitalLayerRemove(skill);
-            }
-        }
-
-        
-        var arrowThicknessDamagePercent = 0.05f;//ダメージを表す矢印の太さ用　デフォは10%
-        
-
-
-
-        Debug.Log("ReactionSkillの反応部分終了、最後の処理の記録を開始");
-        //攻撃者がヒットしたかどうかをタイプにより記録
-        bool isAttackerHit;
-        if (skill.HasType(SkillType.Attack))
-        {
-            isAttackerHit = thisAtkTurn;
-        }else{
-                isAttackerHit = BadPassiveHit || BadPassiveRemove || GoodPassiveHit || GoodPassiveRemove || 
-                GoodVitalLayerHit || GoodVitalLayerRemove || BadVitalLayerHit || BadVitalLayerRemove ||
-                BadSkillPassiveHit || GoodSkillPassiveHit || BadSkillPassiveRemove || GoodSkillPassiveRemove || isHeal;
-        }
-        //攻撃がいわゆるヒットをしたならば、
-        if (isAttackerHit)
-        {
-            ImposedImpressionFromSkill(skill.SkillSpiritual,attacker);//特殊なスキル属性に影響されるか
-            RivahalDream(attacker,skill);//ライバハルの上昇
-
-            //攻撃者の成長処理 HIT分のスキルの印象構造の十日能力が上昇する。
-            float growRate;
-            if (skill.HasType(SkillType.Attack))
-            {
-                growRate = 0.7f;
-            }
-            else
-            {
-                growRate = 0.9f;
-            }
-            // 攻撃者とと攻撃相手の総量の比率を使用して比率を計算
-            float clampedRatio = attacker.CalculateClampedStrengthRatio(TenDayValuesSum(false));
-
-            //攻撃者のHIT分の成長を記録
-            attacker.TenDayGrowthListByHIT.Add((growRate * clampedRatio, skill.TenDayValues(skill.IsTLOA)));//成長量にTLOAならゆりかごを考慮
-
-            arrowThicknessDamagePercent = 0.2f;//ヒットしたら矢印の太さちょっと増やしとく
-
-        }
-
-
-        //ここで攻撃者の攻撃記録を記録する
-        attacker.ActDoOneSkillDatas.Add(new ACTSkillDataForOneTarget(thisAtkTurn,isdisturbed,skill,this,isAttackerHit));//発動したのか、何のスキルなのかを記録
-        attacker.OnAttackerOneSkillActEnd();//攻撃者の一人へのスキル実行終了時のコールバック
-        //被害の記録
-        damageDatas.Add(new DamageData//クソ長い
-        (isAtkHit,BadPassiveHit,BadPassiveRemove,GoodPassiveHit,GoodPassiveRemove,GoodVitalLayerHit,GoodVitalLayerRemove,
-        BadVitalLayerHit,BadVitalLayerRemove,GoodSkillPassiveHit,GoodSkillPassiveRemove,BadSkillPassiveHit,BadSkillPassiveRemove,
-        isHeal,skill,damageAmount.Total,healAmount,attacker));
-
-        if(isAtkHit)//このboolは「攻撃性質」のスキルを食らったかどうかの判定になる。
-        {
-            //グループ全員分の「味方と自分」がダメージを食らった際のコールバックを呼び出す
-            manager.MyGroup(this).PartyPassivesOnAfterAlliesDamage(attacker);
-            //パッシブのダメージ食らった後のコールバックを呼び出す
-            PassivesOnAfterDamage(attacker,damageAmount);
-            //自分のグループの全体現在HPに対してくらったダメージの割合が線の太さに反映される
-            var totalHP = manager.MyGroup(this).OurNowHP;
-            var groupeHP = totalHP > 0f ? damageAmount.Total / totalHP : 1f;//もしグループHPが0以下なら　1fで100%の太さを指定(死体蹴りだから)
-            arrowThicknessDamagePercent = groupeHP;
-        }
-
-        // 集約: 攻撃者へ最強ヒット結果を渡してキャスト単位で後で精算
-        attacker.AggregateSkillHit(bestHitOutcome);
-
-        //今回の攻撃結果を矢印の描画キューに
-        BattleSystemArrowManager.Instance.Enqueue(attacker,this,arrowThicknessDamagePercent);
-
-        return txt;
-    }
-    /// <summary>
-    ///スキルの精神属性が特殊な場合、自分の精神属性が変化をしてしまう。
-    /// </summary>
-    void ImposedImpressionFromSkill(SpiritualProperty skillImp,BaseStates attacker)
-    {
-        switch(skillImp)
-        {
-            case SpiritualProperty.mvoid:
-                MyImpression = attacker.MyImpression;
-                break;
-            case SpiritualProperty.Galvanize:
-                MyImpression = attacker.MyImpression;
-                break;
-            case SpiritualProperty.air:
-                //noneでも変化なし
-                break;
-            case SpiritualProperty.memento:
-                //被害者には変化なし
-                break;
-            default:
-                if(MyImpression == SpiritualProperty.none)
-                {
-                    MyImpression = skillImp;
-                }
-                break;
-        }
-    }
-    /// <summary>
-    /// クラスを通じて相手を攻撃する
-    /// </summary>
-    public virtual async UniTask<string> AttackChara(UnderActersEntryList Unders)
-    {
-        TenDayGrowthListByHIT = new();//ヒット分成長リストを初期化する。
-
-        //素振り分のスキルの印象構造の十日能力が上昇する。
-        if(NowUseSkill.HasType(SkillType.Attack))
-        {
-            GrowTenDayAbilityBySkill(0.3f,NowUseSkill.TenDayValues());
-        }else{
-            GrowTenDayAbilityBySkill(0.1f,NowUseSkill.TenDayValues());
-        }
-
-        SkillUseConsecutiveCountUp(NowUseSkill);//連続カウントアップ
-        string txt = "";
-
-       
-
-        //対象者ボーナスの適用
-        //if(Unders.Count == 1)//結果として一人だけを選び、
-        //{
-            //範囲意志で判定。
-            var randomRangeSpecialBool //RandomRangeなら範囲意志が書き変わるので、RandomRangeがあるならば、Skill.HasZoneTraitで単体スキルかどうかの判定をする
-            = SkillCalculatedRandomRange && NowUseSkill.HasAnySingleTargetTrait();
-            if(HasAnySingleRangeWillTrait()|| randomRangeSpecialBool)//単体スキルの範囲意志を持ってるのなら
-            {
-                int index = -1;//判定関数でのFindIndexは見つからなかった場合-1を返す
-                if((index = TargetBonusDatas.DoIHaveTargetBonusAny_ReturnListIndex(Unders.GetCharacterList())) != -1)//対象者ボーナスを持っていれば = 選んだ敵が対象者ボーナスならば。
-                {
-                    //適用
-                    SetSpecialModifier("対象者ボーナス", whatModify.atk,TargetBonusDatas.GetAtPowerBonusPercentage(index));
-
-                    //適用した対象者ボーナスの削除　該当インデックスのclear関数の制作
-                    TargetBonusDatas.BonusClear(index);
-                }
-            }
-        //}
-
-        //「全体攻撃時」、被害者側全員の、「自分陣営が全体攻撃食らった時の自分のパッシブコールバック」
-        if(HasRangeWill(SkillZoneTrait.AllTarget))
-        {
-            //undersに含まれる陣営を全て抽出し、その陣営グループのコールバックを呼び出す
-            var EneFaction = Unders.charas.Any(x=>manager.GetCharacterFaction(x) == allyOrEnemy.Enemyiy);
-            var AllyFaction = Unders.charas.Any(x=>manager.GetCharacterFaction(x) == allyOrEnemy.alliy);
-
-            //それぞれの陣営のコールバック
-            if(EneFaction)
-            manager.FactionToGroup(allyOrEnemy.Enemyiy).PartyPassivesOnBeforeAllAlliesDamage(this,ref Unders);
-            if(AllyFaction)
-            manager.FactionToGroup(allyOrEnemy.alliy).PartyPassivesOnBeforeAllAlliesDamage(this,ref Unders);
-        }
-
-        //キャラクターに対して実行
-        BeginSkillHitAggregation();
-        for (var i = 0; i < Unders.Count; i++)
-        {
-            var ene = Unders.GetAtCharacter(i);
-            ApplyCharaConditionalToSpecial(ene);//キャラ限定補正を通常の特別補正リストに追加　キャラが合ってればね
-            schizoLog.AddLog($"{ene.CharacterName}のReactionSkillが始まった-Undersのカウント数:{Unders.Count}",true);
-            txt += await ene.ReactionSkillOnBattle(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
-        }
-        // 対象処理が完了したのでキャスト単位でポイント精算
-        var overallHit = EndSkillHitAggregation();
-        SettlePointsAfterSkillOutcome(NowUseSkill, overallHit);
-
-        NowUseSkill.ConsecutiveFixedATKCountUP();//使用したスキルの攻撃回数をカウントアップ
-        NowUseSkill.DoSkillCountUp();//使用したスキルの使用回数をカウントアップ
-        RemoveUseThings();//特別な補正を消去
-        PassivesOnAfterAttack();//攻撃後のパッシブ効果
-        Debug.Log("AttackChara- 攻撃した人数:" + Unders.Count);
-
-        //今回の攻撃で一回でもヒットしていれば  「攻撃者側の攻撃の単位 = 範囲攻撃でも一回だけ = 攻撃者の為の処理」で実行されてほしい
-        if (IsAnyHitInRecentSkillData(NowUseSkill, Unders.Count))
-        {
-            //当たったので精神回復　行動が一応成功したからメンタルが安心する。
-            MentalHealOnAttack();
-            CalmDownSet(NowUseSkill.EvasionModifier,NowUseSkill.AttackModifier);//スキル回避率と落ち着きカウントをセット
-        }
-        //HIT分の十日能力の成長
-        foreach(var growData in TenDayGrowthListByHIT)
-        {
-            GrowTenDayAbilityBySkill(growData.Factor,growData.growTenDay);
-        }
-
-        _tempUseSkill = NowUseSkill;//使ったスキルを一時保存
-
-        //スキルの精神属性に染まる
-        PullImpressionFromSkill();
-        //思えの値を回復する
-        ResonanceHealingOnBattle();
-        //アクション単位での行動記録
-        var isdivergence = GetIsSkillDivergence();
-        DidActionSkillDatas.Add(new ActionSkillData(isdivergence, NowUseSkill));
-        return txt;
-    }
-    /// <summary>
-    /// スキルを実行した結果として精神属性に染まる
-    /// </summary>
-    void PullImpressionFromSkill()
-    {
-        var NextImpression =  NowUseSkill.SkillSpiritual;
-        
-
-        switch(NextImpression)//スキルの精神属性で特殊な分岐かそうでないかで
-        {
-            case SpiritualProperty.mvoid:
-                MyImpression = SpiritualProperty.none;
-                break;
-            case SpiritualProperty.Galvanize:
-                //変化なし
-                break;
-            case SpiritualProperty.air:
-                //変化なし
-                break;
-            case SpiritualProperty.memento:
-                MyImpression = DefaultImpression;
-                break;
-            default:
-                 MyImpression = NextImpression;//基本的に実行した精神属性にそまる
-                break;
-        }
-       
     }
     /// <summary>
     /// 現在のスキルが乖離してるかどうかを返す
