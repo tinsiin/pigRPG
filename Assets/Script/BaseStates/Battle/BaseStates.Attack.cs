@@ -109,6 +109,81 @@ public abstract partial class BaseStates
         DidActionSkillDatas.Add(new ActionSkillData(isdivergence, NowUseSkill));
         return txt;
     }
+    //  ==============================================================================================================================
+    //                                              行動記録
+    //  ==============================================================================================================================
+
+    /// <summary>
+    /// キャラクターの対ひとりごとの行動記録
+    /// </summary>
+    public List<ACTSkillDataForOneTarget> ActDoOneSkillDatas;
+    /// <summary>
+    /// 直近の行動記録
+    /// </summary>
+    public ACTSkillDataForOneTarget RecentACTSkillData => ActDoOneSkillDatas[ActDoOneSkillDatas.Count - 1];
+    /// <summary>
+    /// アクション事のスキルデータ AttackChara単位で記録　= スキル一回に対して
+    /// </summary>
+    public List<ActionSkillData> DidActionSkillDatas = new();
+    /// <summary>
+    /// bm内にスキル実行した回数。
+    /// </summary>
+    protected int AllSkillDoCountInBattle => DidActionSkillDatas.Count;
+
+    /// <summary>
+    /// 直近の行動記録
+    /// </summary>
+    public ACTSkillDataForOneTarget RecentSkillData => ActDoOneSkillDatas[ActDoOneSkillDatas.Count - 1];
+    /// <summary>
+    /// 指定したスキルが最近のスキルデータでヒットしたかどうかを調べる
+    /// </summary>
+    private bool IsAnyHitInRecentSkillData(BaseSkill skill, int targetCount)
+    {
+        // 最新のtargetCount分のスキルデータを取得
+        var recentSkillDatas = ActDoOneSkillDatas.Count >= targetCount 
+            ? ActDoOneSkillDatas.GetRange(ActDoOneSkillDatas.Count - targetCount, targetCount) 
+            : ActDoOneSkillDatas;
+
+        // 最新のスキルデータでIsHitがtrueのものがあるか確認
+        foreach (var data in recentSkillDatas)
+        {
+            if (data.IsHit && data.Skill == skill)
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    /// <summary>
+    /// そのキャラクターを殺すまでに与えたダメージ
+    /// </summary>
+    Dictionary<BaseStates, float> DamageDealtToEnemyUntilKill = new Dictionary<BaseStates, float>();
+    /// <summary>
+    /// キャラクターを殺すまでに与えるダメージを記録する辞書に記録する
+    /// </summary>
+    /// <param name="dmg"></param>
+    /// <param name="target"></param>
+    void RecordDamageDealtToEnemyUntilKill(float dmg,BaseStates target)//戦闘開始時にそのキャラクターを殺すまでに与えたダメージを記録する辞書に記録する
+    {
+        if (DamageDealtToEnemyUntilKill.ContainsKey(target))
+        {
+            DamageDealtToEnemyUntilKill[target] += dmg;
+        }
+        else
+        {
+            DamageDealtToEnemyUntilKill[target] = dmg;
+        }
+    }
+    //  ==============================================================================================================================
+    //                                             対象者ボーナス
+    //  ==============================================================================================================================
+
+    /// <summary>
+    /// 現在持ってる対象者のボーナスデータ
+    /// </summary>
+    public TargetBonusDatas TargetBonusDatas = new();
+
 
 
     //  ==============================================================================================================================
@@ -145,4 +220,186 @@ public abstract partial class BaseStates
 
 
     
+}
+/// <summary>
+/// 対象者ボーナスのデータ
+/// 相性値用の仕組みで汎用性は低い　　威力の1.〇倍ボーナス　を対象者限定で、尚且つ持続ターンありきのもの。
+/// 割り込みカウンターのシングル単体攻撃とも違うぞ！
+/// </summary>
+public class TargetBonusDatas
+{
+    /// <summary>
+    /// 持続ターン
+    /// </summary>
+    List<int> DurationTurns { get; set; }
+    /// <summary>
+    /// スキルのパワーボーナス倍率
+    /// </summary>
+    List<float> PowerBonusPercentages { get; set; }
+    /// <summary>
+    /// 対象者
+    /// </summary>
+    List<BaseStates> Targets { get; set; }
+    /// <summary>
+    /// 対象者がボーナスに含まれているか
+    /// </summary>
+    public bool DoIHaveTargetBonus(BaseStates target)
+    {
+        return Targets.Contains(target);
+    }
+    /// <summary>
+    /// 渡されたリストの中に対象者が含まれているかどうか。
+    /// 含まれていたらその対象者のリストのインデックスを返す。
+    /// </summary>
+    public int DoIHaveTargetBonusAny_ReturnListIndex(List<BaseStates> targets)
+    {
+        return Targets.FindIndex(x => targets.Contains(x));
+    }
+    
+    /// <summary>
+    /// 対象者のインデックスを取得
+    /// </summary>
+    public int GetTargetIndex(BaseStates target)
+    {
+        return Targets.FindIndex(x => x == target);
+    }
+    /// <summary>
+    /// 対象者ボーナスが発動しているか
+    /// </summary>
+    //public List<bool> IsTriggered { get; set; }     ーーーーーーーーーーーー一回自動で発動するようにするから消す、明確に対象者ボーナスの適用を手動にするなら解除
+    /// <summary>
+    /// 発動してるかどうかを取得
+    /// </summary>
+    /*public bool GetAtIsTriggered(int index)
+    {
+        return IsTriggered[index];
+    }*/
+    /// <summary>
+    /// 対象者ボーナスの持続ターンを取得
+    /// </summary>
+    public int GetAtDurationTurns(int index)
+    {
+        return DurationTurns[index];
+    }
+    /// <summary>
+    /// 全てのボーナスをデクリメントと自動削除の処理
+    /// </summary>
+    public void AllDecrementDurationTurn()
+    {
+        for (int i = 0; i < DurationTurns.Count; i++)
+        {
+            DecrementDurationTurn(i);
+        }
+    }
+    /// <summary>
+    /// 持続ターンをデクリメントし、0以下になったら削除する。全ての対象者ボーナスを削除する。
+    /// </summary>
+    void DecrementDurationTurn(int index)
+    {
+        DurationTurns[index]--;
+        if (DurationTurns[index] <= 0)
+        {
+            DurationTurns.RemoveAt(index);
+            PowerBonusPercentages.RemoveAt(index);
+            Targets.RemoveAt(index);
+        }
+    }
+    /// <summary>
+    /// 対象者ボーナスのパワーボーナス倍率を取得
+    /// </summary>
+    public float GetAtPowerBonusPercentage(int index)
+    {
+        return PowerBonusPercentages[index];
+    }
+    /// <summary>
+    /// 対象者ボーナスの対象者を取得
+    /// </summary>
+    public BaseStates GetAtTargets(int index)
+    {
+        return Targets[index];
+    }
+
+    public TargetBonusDatas()
+    {
+        DurationTurns =  new();
+        PowerBonusPercentages = new();
+        Targets = new();
+        //IsTriggered = new();
+    }
+
+    public void Add(int duration, float powerBonusPercentage, BaseStates target)
+    {
+        //targetの重複確認
+        if (Targets.Contains(target))
+        {
+            int index = Targets.IndexOf(target);//同じインデックスの物をすべて消す
+            DurationTurns.RemoveAt(index);
+            PowerBonusPercentages.RemoveAt(index);
+            Targets.RemoveAt(index);
+            //IsTriggered.RemoveAt(index);
+            return;
+        }
+
+        //追加
+        DurationTurns.Add(duration);
+        PowerBonusPercentages.Add(powerBonusPercentage);
+        Targets.Add(target);
+        //IsTriggered.Add(false);
+    }
+    /// <summary>
+    /// 全削除
+    /// </summary>
+    public void AllClear()
+    {
+        DurationTurns.Clear();
+        PowerBonusPercentages.Clear();
+        Targets.Clear();
+        //IsTriggered.Clear();
+    }
+    /// <summary>
+    /// 該当のインデックスのボーナスを削除
+    /// </summary>
+    public void BonusClear(int index)
+    {
+        DurationTurns.RemoveAt(index);
+        PowerBonusPercentages.RemoveAt(index);
+        Targets.RemoveAt(index);
+        //IsTriggered.RemoveAt(index);
+    }
+}
+/// <summary>
+/// スキルの行動記録　リストで記録する
+/// 一人一人に対するものってニュアンス
+/// </summary>
+public class ACTSkillDataForOneTarget
+{
+    public bool IsDone;
+    /// <summary>
+    /// 攻撃が乱れたかどうか
+    /// </summary>
+    public bool IsDisturbed;
+    public bool IsHit;
+    public BaseSkill Skill;
+    public BaseStates Target;   
+    public ACTSkillDataForOneTarget(bool isdone, bool isdisturbed, BaseSkill skill, BaseStates target, bool ishit)
+    {
+        IsDone = isdone;
+        Skill = skill;
+        Target = target;
+        IsHit = ishit;
+        IsDisturbed = isdisturbed;
+    }
+}
+public class ActionSkillData
+{
+    /// <summary>
+    /// 実行したスキルが乖離しているかどうか
+    /// </summary>
+    public bool IsDivergence;
+    public BaseSkill Skill;
+    public ActionSkillData(bool isdivergence, BaseSkill skill)
+    {
+        IsDivergence = isdivergence;
+        Skill = skill;
+    }
 }

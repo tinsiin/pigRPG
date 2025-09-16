@@ -4,6 +4,8 @@ using UnityEngine;
 using static CommonCalc;
 using NRandom;
 using Cysharp.Threading.Tasks;
+using System.Linq;
+using static TenDayAbilityPosition;
 
 public abstract partial class BaseStates    
 {
@@ -225,7 +227,454 @@ public abstract partial class BaseStates
         return MinimumHitChanceRate;
     }
 
+    //  ==============================================================================================================================
+    //                                              SkillTypeの処理関数群
+    //  ==============================================================================================================================
 
+    /// <summary>
+    /// 復活する際の関数
+    /// </summary>
+    public virtual void Angel()
+    {
+        if(!broken)//brokenしてないなら
+        {
+            hasDied =false;
+            HP = float.Epsilon;//生きてるか生きてないか=Angel
+            if(NowPower == ThePower.high)
+            {
+                HP = 30;//気力が高いと多少回復
+            }
+        }
+    }
+    /// <summary>
+    /// ヒール
+    /// </summary>
+    /// <param name="HealPoint"></param>
+    public virtual float Heal(float HealPoint)
+    {
+        if(!Death())
+        {
+            HP += HealPoint * (PassivesHealEffectRate() / 100f);//パッシブ由来の補正がかかる
+            Debug.Log("ヒールが実行された");
+            return HealPoint;
+        }
+
+        return 0f;
+    }
+    /// <summary>
+    /// 精神HPのヒール処理
+    /// </summary>
+    /// <param name="HealPoint"></param>
+    public virtual void MentalHeal(float HealPoint)
+    {
+        if(!Death())
+        {
+            MentalHP += HealPoint;
+            Debug.Log("精神ヒールが実行された");
+        }
+    }
+
+
+    /// <summary>
+    /// 悪いパッシブ付与処理
+    /// </summary>
+    bool BadPassiveHit(BaseSkill skill,BaseStates grantor)
+    {
+        var hit = false;
+        foreach (var id in skill.SubEffects.Where(id => PassiveManager.Instance.GetAtID(id).IsBad))
+        {//付与する瞬間はインスタンス作成のディープコピーがまだないので、passivemanagerで調査する
+            ApplyPassiveBufferInBattleByID(id,grantor);
+            hit = true;//goodpassiveHitに説明
+        }
+        return hit;
+    }
+    /// <summary>
+    /// 悪いパッシブ解除処理
+    /// </summary>
+    bool BadPassiveRemove(BaseSkill skill)
+    {
+        var done = false;
+
+        // skill.canEraceEffectIDs のIDを順にチェックして、
+        // _passiveList の中で同じIDを持つパッシブを検索
+        // そのパッシブが IsBad == true なら Remove する
+        var rndList = skill.canEraceEffectIDs.ToArray();
+        RandomEx.Shared.Shuffle(rndList);
+        var decrement = 0;
+        for(var i = 0; i < skill.Now_CanEraceEffectCount; i++)
+        {
+            // ID が一致するパッシブを検索 (存在しない場合は null)
+            var found = _passiveList.FirstOrDefault(p => p.ID == rndList[i]);//解除するときはちゃんとインスタンスがあるので、passiveList内のインスタンスを調査する
+            if (found != null && found.IsBad)
+            {
+                RemovePassiveByID(rndList[i]);
+                done = true;
+                decrement++;
+            }
+        }
+        skill.Now_CanEraceEffectCount -= decrement;//使った分現在の消せる数を減らす
+        return done;
+    }
+    /// <summary>
+    /// 悪い追加HP付与処理
+    /// </summary>
+    bool BadVitalLayerHit(BaseSkill skill)
+    {
+        var done = false;
+        foreach (var id in skill.subVitalLayers.Where(id => VitalLayerManager.Instance.GetAtID(id).IsBad))
+        {
+            ApplyVitalLayer(id);
+            done = true;
+        }
+        return done;
+    }
+    /// <summary>
+    /// 悪い追加HP解除処理
+    /// </summary>
+    bool BadVitalLayerRemove(BaseSkill skill)
+    {
+        var done = false;
+        var rndList = skill.canEraceVitalLayerIDs.ToArray();
+        RandomEx.Shared.Shuffle(rndList);
+        var decrement = 0;
+        for(var i=0; i<skill.Now_CanEraceVitalLayerCount; i++)
+        {
+            var found = _vitalLayerList.FirstOrDefault(v => v.id == rndList[i]);
+            if (found != null && found.IsBad)
+            {
+                RemoveVitalLayerByID(rndList[i]);
+                done = true;
+                decrement++;
+            }
+        }
+        skill.Now_CanEraceVitalLayerCount -= decrement;//使った分現在の消せる数を減らす
+        return done;
+    }
+    /// <summary>
+    /// 良いパッシブ付与処理
+    /// </summary>
+    bool GoodPassiveHit(BaseSkill skill,BaseStates grantor)
+    {
+        var hit = false;
+        foreach (var id in skill.SubEffects.Where(id => !PassiveManager.Instance.GetAtID(id).IsBad))
+        {
+            ApplyPassiveBufferInBattleByID(id,grantor);
+            hit = true;//スキル命中率を介してるのだから、適合したかどうかはヒットしたかしないかに関係ない。 = ApplyPassiveで元々適合したかどうかをhitに代入してた
+            //。。。バッファーリストの関係で一々シミュレイト用関数作るのがめんどくさかったけど、この考えが割と合理的だったからそうしたけどね。
+            //それに、このhitしたのに敵になかったら、プレイヤーはこのパッシブの適合条件で適合しなかったことを察せれるし。
+
+        }
+        return hit;
+    }
+    /// <summary>
+    /// 良いパッシブ解除処理
+    /// </summary>
+    bool GoodPassiveRemove(BaseSkill skill)
+    {
+        var done = false;
+        var rndList = skill.canEraceEffectIDs.ToArray();
+        RandomEx.Shared.Shuffle(rndList);
+        var decrement = 0;
+        for(var i=0; i<skill.Now_CanEraceEffectCount; i++)
+        {
+            var found = _passiveList.FirstOrDefault(p => p.ID == rndList[i]);
+            if(found != null && !found.IsBad)
+            {
+                RemovePassiveByID(rndList[i]);
+                done = true;
+                decrement++;
+            }
+        }
+        skill.Now_CanEraceEffectCount -= decrement;//使った分現在の消せる数を減らす
+        return done;
+    }
+    /// <summary>
+    /// 良いスキルパッシブ付与処理
+    /// </summary>
+    async UniTask<bool> GoodSkillPassiveHit(BaseSkill skill)
+    {
+        var hit = false;
+        foreach (var pas in skill.AggressiveSkillPassiveList.Where(pas => !pas.IsBad))//スキルパッシブスキルに装弾されたスキルパッシブ
+        {
+            //スキルパッシブ付与対象のスキル
+            var targetedSkill =  await skill.SelectSkillPassiveAddTarget(this);
+            if(targetedSkill == null)continue;//付与対象のスキルがなかったら、次のループへ
+            //付与対象のスキルで回す
+            foreach(var targetSkill in targetedSkill)
+            {
+                targetSkill.ApplySkillPassiveBufferInBattle(pas);//スキルパッシブ追加用バッファに追加
+            }
+
+            //ヒットしたことを返すフラグ
+            hit = true;//スキル命中率を介してるのだから。。。。[適合条件はスキルパッシブにはない]
+        }
+        return hit;
+    }
+    /// <summary>
+    /// 悪いスキルパッシブ付与処理
+    /// </summary>
+    async UniTask<bool> BadSkillPassiveHit(BaseSkill skill)
+    {
+        var hit = false;
+        foreach (var pas in skill.AggressiveSkillPassiveList.Where(pas => pas.IsBad))//スキルパッシブスキルに装弾されたスキルパッシブ
+        {
+            //スキルパッシブ付与対象のスキル
+            var targetedSkill = await skill.SelectSkillPassiveAddTarget(this);
+            if(targetedSkill == null)continue;//付与対象のスキルがなかったら、次のループへ
+            //付与対象のスキルで回す
+            foreach(var targetSkill in targetedSkill)
+            {
+                targetSkill.ApplySkillPassiveBufferInBattle(pas);//追加用バッファに追加
+            }
+
+            //ヒットしたことを返すフラグ
+            hit = true;//スキル命中率を介してるのだから。。。。[適合条件はスキルパッシブにはない]
+        }
+        return hit;
+    }
+    /// <summary>
+    /// 良いスキルパッシブ解除処理
+    /// 各スキルパッシブのisbadで場合分けせずに、スキルそのもので場合分けするため、
+    /// スキル攻撃性質でgoodかbad指定での友好的、敵対的の命中計算の場合分けをしているため、
+    /// ここでgoodかbadを区別して処理する必要はないのでパッシブ除去と違いgood,badの冠詞は付かない
+    /// </summary>
+    bool SkillPassiveRemove(BaseSkill skill)
+    {
+        var done = false;
+        //個別指定の反応式
+        foreach(var hold in skill.ReactionCharaAndSkillList)//反応するキャラとスキルのリスト
+        {
+            //そもそもキャラ名が違っていたら、飛ばす
+            if(CharacterName != hold.CharaName) continue;
+
+            foreach(var targetSkill in SkillList)//対象者である自分の有効スキルすべてで回す。
+            {
+                if(targetSkill.SkillName == hold.SkillName)//スキル名まで一致したら
+                {
+                    targetSkill.SkillRemoveSkillPassive();//スキル効果ですべて抹消
+                    done = true;
+                    break;//スキルが一致して、他のスキルネームで検証する必要がなくなったので、次の対象スキルへ
+                }
+            }
+        }
+
+        return done;
+    }
+    /// <summary>
+    /// 良い追加HP付与処理
+    /// </summary>
+    /// <param name="skill"></param>
+    bool GoodVitalLayerHit(BaseSkill skill)
+    {
+        var done = false;
+        foreach (var id in skill.subVitalLayers.Where(id => !VitalLayerManager.Instance.GetAtID(id).IsBad))
+        {
+            ApplyVitalLayer(id);
+            done = true;
+        }
+        return done;
+    }
+    /// <summary>
+    /// 良い追加HP解除処理
+    /// </summary>
+    /// <param name="skill"></param>
+    bool GoodVitalLayerRemove(BaseSkill skill)
+    {
+        var done = false;
+        var rndList = skill.canEraceVitalLayerIDs.ToArray();
+        RandomEx.Shared.Shuffle(rndList);
+        var decrement = 0;
+        for(var i=0; i<skill.Now_CanEraceVitalLayerCount; i++)
+        {
+            var found = _vitalLayerList.FirstOrDefault(v => v.id == rndList[i]);
+            if (found != null && !found.IsBad)
+            {
+                RemoveVitalLayerByID(rndList[i]);
+                done = true;
+                decrement++;
+            }
+        }
+        skill.Now_CanEraceVitalLayerCount -= decrement;//使った分現在の消せる数を減らす
+        return done;
+    }
+    /* ---------------------------------
+     * 友好系処理
+     * --------------------------------- 
+     */
+    
+    /// <summary>
+    /// 友好系: 良いパッシブ付与のコア（命中結果に従って適用）
+    /// </summary>
+    bool ExecuteAddPassiveFriendlyCore(BaseStates attacker, BaseSkill skill, HitResult hitResult)
+    {
+        if (hitResult != HitResult.Hit) return false;
+        return this.GoodPassiveHit(skill, attacker);
+    }
+    /// <summary>
+    /// 友好系: 良い追加HP付与のコア（命中結果に従って適用）
+    /// </summary>
+    bool ExecuteAddVitalLayerFriendlyCore(BaseStates attacker, BaseSkill skill, HitResult hitResult)
+    {
+        if (hitResult != HitResult.Hit) return false;
+        this.GoodVitalLayerHit(skill);
+        return true;
+    }
+    /// <summary>
+    /// 友好系: 良いスキルパッシブ付与のコア（命中結果に従って適用）
+    /// </summary>
+    async UniTask<bool> ExecuteAddSkillPassiveFriendlyCore(BaseStates attacker, BaseSkill skill, HitResult hitResult)
+    {
+        if (hitResult != HitResult.Hit) return false;
+        return await this.GoodSkillPassiveHit(skill);
+    }
+    /// <summary>
+    /// 友好系: 良いパッシブ除去のコア（命中結果に従って適用）
+    /// </summary>
+    bool ExecuteRemovePassiveFriendlyCore(BaseStates attacker, BaseSkill skill, HitResult hitResult)
+    {
+        if (hitResult != HitResult.Hit) return false;
+        // 既存実装にならい良いパッシブ除去は BadPassiveRemove() を使用
+        return this.BadPassiveRemove(skill);
+    }
+    /// <summary>
+    /// 友好系: 良い追加HP除去のコア（命中結果に従って適用）
+    /// </summary>
+    bool ExecuteRemoveVitalLayerFriendlyCore(BaseStates attacker, BaseSkill skill, HitResult hitResult)
+    {
+        if (hitResult != HitResult.Hit) return false;
+        // 既存実装にならい良い追加HP除去は BadVitalLayerRemove() を使用
+        return this.BadVitalLayerRemove(skill);
+    }
+
+    /// <summary>
+    /// 友好系: 復活（DeathHeal）のコア（OnBattle版：相性連鎖含む）
+    /// </summary>
+    void ExecuteDeathHealFriendlyOnBattle(BaseStates attacker, HitResult hitResult, ref bool isHeal)
+    {
+        if (hitResult != HitResult.Hit) return;
+        Angel();
+        isHeal = true;
+        manager.MyGroup(this).PartyApplyConditionChangeOnCloseAllyAngel(this);
+    }
+    /// <summary>
+    /// 友好系: ヒールのコア（命中結果に従って適用）
+    /// 適用量を返す
+    /// </summary>
+    float ExecuteHealFriendlyCore(float skillPower, HitResult hitResult, ref bool isHeal)
+    {
+        if (hitResult != HitResult.Hit) return 0f;
+        isHeal = true;
+        return Heal(skillPower);
+    }
+    /// <summary>
+    /// 友好系: 精神ヒールのコア（命中結果に従って適用）
+    /// </summary>
+    void ExecuteMentalHealFriendlyCore(float skillPowerForMental, HitResult hitResult, ref bool isHeal)
+    {
+        if (hitResult != HitResult.Hit) return;
+        isHeal = true;
+        MentalHeal(skillPowerForMental);
+    }
+
+    /* ---------------------------------
+     * 処理まとめ系
+     * --------------------------------- 
+     */
+
+    /// <summary>
+    /// 直接攻撃じゃない敵対行動系
+    /// </summary>
+    async UniTask<HostileEffectResult>
+    ApplyNonDamageHostileEffects(BaseStates Atker,BaseSkill skill,HitResult hitResult)
+    {
+        var badPassiveHit = false;
+        var badVitalLayerHit = false;
+        var goodPassiveRemove = false;
+        var goodVitalLayerRemove = false;
+        var badSkillPassiveHit = false;
+        var goodSkillPassiveRemove = false;
+
+        var rndFrequency = 90;//ランダム発動率　基本的に100%発動する　　　　　　　　　　　　　　　　　　　　　　　　　　　微妙に攻撃タイプ以外の敵対行動を発動しにくくして、攻撃することの優位性を高める　ドキュメント記述なし
+        if(hitResult == HitResult.Graze)
+        {
+            rndFrequency = 50;//かすりHitなので、二分の一で発動
+        }        
+
+        if (skill.HasType(SkillType.addPassive))
+        {
+            if (rollper(rndFrequency))
+            {
+                //悪いパッシブを付与しようとしてるのなら、命中回避計算
+                badPassiveHit = BadPassiveHit(skill,Atker);
+            }else
+            {
+                Debug.Log("悪いパッシブを付与が上手く発動しなかった。");
+            }
+        }
+
+        if (skill.HasType(SkillType.AddVitalLayer))
+        {
+            if (rollper(rndFrequency))
+            {
+                //悪い追加HPを付与しようとしてるのなら、命中回避計算
+                badVitalLayerHit = BadVitalLayerHit(skill);
+            }else
+            {
+                Debug.Log("悪い追加HPを付与が上手く発動しなかった。");
+            }
+        }
+        if(skill.HasType(SkillType.RemovePassive))
+        {
+            if (rollper(rndFrequency))
+            {
+                //良いパッシブを取り除こうとしてるのなら、命中回避計算
+                goodPassiveRemove = GoodPassiveRemove(skill);
+            }else
+            {
+                Debug.Log("良いパッシブを取り除くのが上手く発動しなかった。");
+            }
+        }
+        if (skill.HasType(SkillType.RemoveVitalLayer))
+        {
+            if (rollper(rndFrequency))
+            {
+                //良い追加HPを取り除こうとしてるのなら、命中回避計算
+                goodVitalLayerRemove = GoodVitalLayerRemove(skill);
+            }else
+            {
+                Debug.Log("良い追加HPを取り除くのが上手く発動しなかった。");
+            }
+        }
+        if(skill.HasType(SkillType.removeGoodSkillPassive))
+        {
+            if (rollper(rndFrequency))
+            {
+                //良いスキルパッシブを取り除こうとしてるのなら、命中回避計算
+                goodSkillPassiveRemove = SkillPassiveRemove(skill);
+            }else
+            {
+                Debug.Log("良い「スキル」パッシブを取り除くのが上手く発動しなかった。");
+            }
+        }
+        if(skill.HasType(SkillType.addSkillPassive))
+        {
+            if (rollper(rndFrequency))
+            {
+                //悪いスキルパッシブを付与しようとしてるのなら、命中回避計算
+                badSkillPassiveHit = await BadSkillPassiveHit(skill);
+            }else
+            {
+                Debug.Log("悪い「スキル」パッシブを付与が上手く発動しなかった。");
+            }
+        }
+
+        return new HostileEffectResult(badPassiveHit,
+            badVitalLayerHit,
+            goodPassiveRemove,
+            goodVitalLayerRemove,
+            badSkillPassiveHit,
+            goodSkillPassiveRemove);
+    }//async化すると非同期処理ではoutで引数渡す形にするとfalseで返ってだめらしいから戻り値構造体で返す
 
 
     //  ==============================================================================================================================
@@ -258,16 +707,15 @@ public abstract partial class BaseStates
             if (Rank(hr) > Rank(bestHitOutcome)) bestHitOutcome = hr;
         }
         
-        schizoLog.AddLog($"-ReactionSkill",true);
-        Debug.Log($"{attacker.CharacterName}の{attacker.NowUseSkill.SkillName}に対する{CharacterName}のReactionSkillが始まった");
-        Debug.Log($"スキルを受ける{CharacterName}の精神属性 = {MyImpression}:(ReactionSkill)");
+        //Debug.Log($"{attacker.CharacterName}の{attacker.NowUseSkill.SkillName}に対する{CharacterName}のReactionSkillが始まった");
+        //Debug.Log($"スキルを受ける{CharacterName}の精神属性 = {MyImpression}:(ReactionSkill)");
         attacker.OnAttackerOneSkillActStart(this);//攻撃者の一人へのスキル実行開始時のコールバック
 
         var skill = attacker.NowUseSkill;
 
         // スキルパワーの精神属性による計算（共通ヘルパ使用で戦闘内外の整合を担保）
         ComputeSkillPowers(attacker, skill, spread, out var skillPower, out var skillPowerForMental);
-        Debug.Log($"{attacker.CharacterName}の{skill.SkillName}のスキルパワー = {skillPower} ,精神用スキルパワー = {skillPowerForMental} (ComputeSkillPowers)\n-スキルパワーの準備終了(ReactionSkill)");
+        //Debug.Log($"{attacker.CharacterName}の{skill.SkillName}のスキルパワー = {skillPower} ,精神用スキルパワー = {skillPowerForMental} (ComputeSkillPowers)\n-スキルパワーの準備終了(ReactionSkill)");
 
         //メッセージテキスト用
         var txt = "";
@@ -348,10 +796,6 @@ public abstract partial class BaseStates
                 if(thisAtkTurn)
                 {
                     Debug.Log($"{attacker.CharacterName}の{skill.SkillName}が{CharacterName}を攻撃した(発動成功)");
-                    //防ぎ方の切り替え
-                    SwitchDefenceStyle(attacker);
-                    //連続攻撃の物理属性ブースト判定
-                    CheckPhysicsConsecutiveAimBoost(attacker);
                     
                     //成功されるとダメージを受ける（戦闘版）
                     damageAmount = DamageOnBattle(attacker, skillPower,skillPowerForMental,hitResult,ref isdisturbed);
@@ -376,7 +820,6 @@ public abstract partial class BaseStates
         }
         else//atktypeがないと各自で判定
         {
-            //schizoLog.AddLog($"攻撃以外のスキルヒット判定の為にでisreactHitが呼ばれた。",true);
             var hitResult = IsReactHIT(attacker);
             //味方別口回避の発生と回避判定
             hitResult = MixAllyEvade(hitResult,attacker);
@@ -551,11 +994,9 @@ public abstract partial class BaseStates
 
         return txt;
     }
-
     //  ==============================================================================================================================
-    //                                              スキルの影響など
+    //                                              バトル用処理関数
     //  ==============================================================================================================================
-
 
     /// <summary>
     ///スキルの精神属性が特殊な場合、自分の精神属性が変化をしてしまう。
@@ -583,6 +1024,72 @@ public abstract partial class BaseStates
                 }
                 break;
         }
+    }
+
+    /// <summary>
+    /// 精神補正用にスキルの属性を精神属性用に特殊分岐した後に渡す関数
+    /// </summary>
+    SpiritualProperty GetCastImpressionToModifier(SpiritualProperty skillSpiritual,BaseStates attacker)
+    {
+        SpiritualProperty imp;
+        switch (skillSpiritual)
+        {
+            case SpiritualProperty.mvoid:
+            case SpiritualProperty.air:
+                //精神補正無し
+                imp = SpiritualProperty.none;//noneなら補正無しなので
+                break;
+            case SpiritualProperty.Galvanize:
+                imp = attacker.MyImpression;
+                break;
+            case SpiritualProperty.memento:
+                imp = attacker.DefaultImpression;
+                break;
+            default://基本的に精神属性をそのまま補正に渡す
+                imp = skillSpiritual;
+                break;
+        }
+        Debug.Log($"スキルの属性解釈 : {skillSpiritual},キャラ:{attacker.CharacterName}");
+        return imp;
+    }
+    /// <summary>
+    /// スキル攻撃とその被害者の場合の精神属性の補正を取り出す。
+    /// 被害者側から呼び出す。 引数に攻撃スキルと攻撃者を
+    /// </summary>
+    FixedOrRandomValue GetSkillVsCharaSpiritualModifier(SpiritualProperty skillImp,BaseStates attacker)
+    {
+        var castSkillImp = GetCastImpressionToModifier(skillImp,attacker);//補正に投げる特殊スキル属性を純正な精神属性に変換
+
+        if(castSkillImp == SpiritualProperty.none) return new FixedOrRandomValue(100);//noneなら補正なし(100%なので無変動)
+
+        var key = (castSkillImp, MyImpression);
+        if (!SpiritualModifier.ContainsKey(key))
+        {
+            Debug.LogWarning($"SpiritualModifier辞書にキー {key} が存在しません。攻撃スキルcastSkillImp={castSkillImp}({(int)castSkillImp}), スキルを受ける側MyImpression={MyImpression}。"
+            +"デフォルト値100%を返します。\n(ReactionSkillの攻撃スキルと被害者の精神補正計算中)");
+            return new FixedOrRandomValue(100);
+        }
+
+        var resultModifier = SpiritualModifier[key];//スキルの精神属性と自分の精神属性による補正
+        
+        if(attacker.DefaultImpression == skillImp)
+        {
+            resultModifier.RandomMaxPlus(12);//一致してたら12%程乱数上昇
+        }
+        Debug.Log($"スキルの精神属性補正 : {resultModifier}({skillImp}, {CharacterName})");
+        return resultModifier;
+    }
+
+    /// <summary>
+    /// 攻撃対象の十日能力総量と被害者の十日能力総量の比率を計算し返す
+    /// 攻撃者から呼び出す
+    /// </summary>
+    private float CalculateClampedStrengthRatio(float targetSum)
+        {
+        // 自分のTenDayValuesSumとの比率を計算（自分の値が0の場合は1とする）
+        float strengthRatio = TenDayValuesSum(true) > 0 ? targetSum / TenDayValuesSum(true) : 1f;
+        
+        return strengthRatio;
     }
 
     //  ==============================================================================================================================
@@ -921,4 +1428,51 @@ public abstract partial class BaseStates
 
 
 
+}
+/// <summary>
+/// 命中結果の種類を表す列挙型
+/// </summary>
+public enum HitResult
+{
+    /// <summary>完全回避（ノーダメージ）</summary>
+    CompleteEvade,
+    
+    /// <summary>かすり（割合少ないダメージ）</summary>
+    Graze,
+    
+    /// <summary>通常ヒット</summary>
+    Hit,
+    
+    /// <summary>クリティカルヒット（大ダメージ）</summary>
+    Critical,
+    /// <summary>結果ナシ</summary>
+    none
+}
+/// <summary>
+/// 敵対的行動のヒット結果を返す構造体
+/// </summary>
+public struct HostileEffectResult
+{
+    public bool BadPassiveHit;
+    public bool BadVitalLayerHit;
+    public bool GoodPassiveRemove;
+    public bool GoodVitalLayerRemove;
+    public bool BadSkillPassiveHit;
+    public bool GoodSkillPassiveRemove;
+
+    public HostileEffectResult(
+        bool badPassiveHit,
+        bool badVitalLayerHit,
+        bool goodPassiveRemove,
+        bool goodVitalLayerRemove,
+        bool badSkillPassiveHit,
+        bool goodSkillPassiveRemove)
+    {
+        BadPassiveHit        = badPassiveHit;
+        BadVitalLayerHit     = badVitalLayerHit;
+        GoodPassiveRemove    = goodPassiveRemove;
+        GoodVitalLayerRemove = goodVitalLayerRemove;
+        BadSkillPassiveHit   = badSkillPassiveHit;
+        GoodSkillPassiveRemove = goodSkillPassiveRemove;
+    }
 }

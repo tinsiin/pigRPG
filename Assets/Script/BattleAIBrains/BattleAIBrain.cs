@@ -323,7 +323,7 @@ public abstract class BattleAIBrain : ScriptableObject
     protected List<BasePassive> SelectCancelableCantActPassives()
     {
         // 同居パッシブの候補を抽出
-        return user.PassiveList.Where(p => p != null && p.IsCantACT && p.CanCancel).ToList();
+        return user.Passives.Where(p => p != null && p.IsCantACT && p.CanCancel).ToList();
     }
 
 

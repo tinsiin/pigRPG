@@ -141,3 +141,54 @@ public abstract partial class BaseStates
     }
     
 }
+/// <summary>
+/// あるキャラクターにのみ効く一時補正
+/// </summary>
+public class CharacterConditionalModifier
+{
+    public BaseStates Target { get; }
+    public ModifierPart Part  { get; }
+
+    public CharacterConditionalModifier(BaseStates target, ModifierPart part)
+    {
+        Target = target;
+        Part   = part;
+    }
+}
+/// <summary>
+/// 命中率、攻撃力、回避力、防御力への補正
+/// </summary>
+public class ModifierPart
+{
+    /// <summary>
+    /// どういう補正かを保存する　攻撃時にunderに出てくる
+    /// </summary>
+    public string memo;
+
+    public whatModify whatStates;
+
+    /// <summary>
+    /// trueならfixed、falseならpercent
+    /// </summary>
+    public bool IsFixedOrPercent;
+
+    /// <summary>
+    /// 補正率 
+    /// </summary>
+    public float Modifier;
+
+    /// <summary>
+    /// 固定値補正値　十日能力の内訳を含む
+    /// </summary>
+    public StatesPowerBreakdown FixedModifier;
+
+
+    public ModifierPart(string memo, whatModify whatStates, float value, StatesPowerBreakdown fixedModifier = null, bool isFixedOrPercent = false)
+    {
+        this.memo = memo;
+        Modifier = value;
+        this.whatStates = whatStates;
+        IsFixedOrPercent = isFixedOrPercent;
+        FixedModifier = fixedModifier;
+    }
+}

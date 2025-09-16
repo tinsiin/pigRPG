@@ -10,138 +10,6 @@ public abstract partial class BaseStates
 
 
     
-    // =====================
-    // 戦闘外適用/ダメージ用ポリシー
-    // =====================
-    public class DamageOptions
-    {
-        public bool AimStyleClamp = false;
-        public bool BaseRandomVariance = false; // 基礎山形補正
-        public bool Frenzy = false;
-        public bool Adaptation = false;
-        public bool BladeInstantDeath = false;
-        public bool Resonance = false;
-        public bool PhysicalResistance = true;
-        // 戦闘外Damage()でダメージ直前のパッシブ適用を行うか（BM依存パッシブの抑止用）
-        public bool BeforeDamagePassives = true;
-        public bool PassivesReduction = true; // パッシブによる減衰率
-        public bool TLOReduction = true;
-        public bool BarrierLayers = true;
-        public bool CantKillClamp = true;
-        public bool DontDamageClamp = true;
-        public bool MentalDamage = true;
-        public bool UseHitMultiplier = true; // 命中段階による補正
-
-        public DamageOptions Clone()
-        {
-            return (DamageOptions)MemberwiseClone();
-        }
-    }
-
-    public class SkillApplyPolicy
-    {
-        // 戦闘外で命中/回避を使うか
-        public bool UseHitEvade = false;
-        public bool UseAllyEvade = false;
-        // 友好系も命中でゲートするか
-        public bool GateFriendlyByHit = false;
-        // バッファ即時コミット
-        public bool CommitBuffersImmediately = true;
-        // 復活時のパーティ連鎖を使うか
-        public bool UsePartyAngelChain = false;
-        // ダメージ詳細
-        public DamageOptions Damage = new DamageOptions();
-
-        public SkillApplyPolicy Clone()
-        {
-            return new SkillApplyPolicy
-            {
-                UseHitEvade = UseHitEvade,
-                UseAllyEvade = UseAllyEvade,
-                GateFriendlyByHit = GateFriendlyByHit,
-                CommitBuffersImmediately = CommitBuffersImmediately,
-                UsePartyAngelChain = UsePartyAngelChain,
-                Damage = Damage?.Clone() ?? new DamageOptions()
-            };
-        }
-
-        // プリセット
-        static SkillApplyPolicy _outOfBattleDefault;
-        public static SkillApplyPolicy OutOfBattleDefault
-        {
-            get
-            {
-                if (_outOfBattleDefault == null)
-                {
-                    _outOfBattleDefault = new SkillApplyPolicy
-                    {
-                        UseHitEvade = false,
-                        UseAllyEvade = false,
-                        GateFriendlyByHit = false,
-                        CommitBuffersImmediately = true,
-                        UsePartyAngelChain = false,
-                        Damage = new DamageOptions
-                        {
-                            AimStyleClamp = false,
-                            BaseRandomVariance = false,
-                            Frenzy = false,
-                            Adaptation = false,
-                            BladeInstantDeath = false,
-                            Resonance = false,
-                            PhysicalResistance = true,
-                            BeforeDamagePassives = false,
-                            PassivesReduction = true,
-                            TLOReduction = true,
-                            BarrierLayers = true,
-                            CantKillClamp = true,
-                            DontDamageClamp = true,
-                            MentalDamage = true,
-                            UseHitMultiplier = true,
-                        }
-                    };
-                }
-                return _outOfBattleDefault.Clone();
-            }
-        }
-
-        static SkillApplyPolicy _battleLike;
-        public static SkillApplyPolicy BattleLike
-        {
-            get
-            {
-                if (_battleLike == null)
-                {
-                    _battleLike = new SkillApplyPolicy
-                    {
-                        UseHitEvade = true,
-                        UseAllyEvade = true,
-                        GateFriendlyByHit = true,
-                        CommitBuffersImmediately = true, // 戦闘外なので即コミット
-                        UsePartyAngelChain = true,
-                        Damage = new DamageOptions
-                        {
-                            AimStyleClamp = true,
-                            BaseRandomVariance = true,
-                            Frenzy = true,
-                            Adaptation = true,
-                            BladeInstantDeath = true,
-                            Resonance = true,
-                            PhysicalResistance = true,
-                            BeforeDamagePassives = true,
-                            PassivesReduction = true,
-                            TLOReduction = true,
-                            BarrierLayers = true,
-                            CantKillClamp = true,
-                            DontDamageClamp = true,
-                            MentalDamage = true,
-                            UseHitMultiplier = true,
-                        }
-                    };
-                }
-                return _battleLike.Clone();
-            }
-        }
-    }
 
 
     //  ==============================================================================================================================
@@ -155,153 +23,9 @@ public abstract partial class BaseStates
     /// </summary>
     public List<DamageData> damageDatas;
     /// <summary>
-    /// キャラクターの対ひとりごとの行動記録
-    /// </summary>
-    public List<ACTSkillDataForOneTarget> ActDoOneSkillDatas;
-    /// <summary>
-    /// 直近の行動記録
-    /// </summary>
-    public ACTSkillDataForOneTarget RecentACTSkillData => ActDoOneSkillDatas[ActDoOneSkillDatas.Count - 1];
-    /// <summary>
-    /// アクション事のスキルデータ AttackChara単位で記録　= スキル一回に対して
-    /// </summary>
-    public List<ActionSkillData> DidActionSkillDatas = new();
-    /// <summary>
-    /// bm内にスキル実行した回数。
-    /// </summary>
-    protected int AllSkillDoCountInBattle => DidActionSkillDatas.Count;
-
-    /// <summary>
-    /// 乖離したスキルを利用したことによる苦悩での十日能力値下降処理
-    /// </summary>
-    protected void ResolveDivergentSkillOutcome()
-    {
-        //まずバトル内でのスキル実行回数が一定以上で発生
-        if(AllSkillDoCountInBattle < 7) return;
-
-        //終了時の精神属性による発生確率の分岐
-        switch(MyImpression)
-        {
-            case SpiritualProperty.liminalwhitetile:
-                // リーミナルホワイトタイル 0%
-                return; // 常に発生しない
-                
-            case SpiritualProperty.kindergarden:
-                // キンダーガーデン 95%
-                if(!rollper(95f)) return;
-                break;
-                
-            case SpiritualProperty.sacrifaith:
-            case SpiritualProperty.cquiest:
-            case SpiritualProperty.devil:
-            case SpiritualProperty.doremis:
-            case SpiritualProperty.pillar:
-                // 自己犠牲・シークイエスト・デビル・ドレミス・支柱は全て100%
-                // 100%発生するので何もしない（returnしない）
-                break;
-                
-            case SpiritualProperty.godtier:
-                // ゴッドティア 50%
-                if(!rollper(50f)) return;
-                break;
-                
-            case SpiritualProperty.baledrival:
-                // ベールドライヴァル 70%
-                if(!rollper(70f)) return;
-                break;
-                
-            case SpiritualProperty.pysco:
-                // サイコパス 20%
-                if(!rollper(20f)) return;
-                break;
-                
-            default:
-                // その他の精神属性の場合はデフォルト処理
-                break;
-        }
-    
-        //乖離したスキルが一定％以上全体実行に対して使用されていたら
-        var DivergenceCount = 0;
-        foreach(var skill in DidActionSkillDatas)
-        {
-            if(skill.IsDivergence)
-            {
-                DivergenceCount++;
-            }
-        }
-        //特定％以上乖離スキルがあったら発生する。
-        if(AllSkillDoCountInBattle * 0.71 > DivergenceCount) return;
-
-        //減少する十日能力値の計算☆☆☆
-
-        //最後に使った乖離スキル
-        BaseSkill lastDivergenceSkill = null;
-        for(var i = DidActionSkillDatas.Count - 1; i >= 0; i--)//最後に使った乖離スキルに辿り着くまでループ
-        {
-            if(DidActionSkillDatas[i].IsDivergence)
-            {
-                lastDivergenceSkill = DidActionSkillDatas[i].Skill;
-                break;
-            }
-        }
-
-        //乖離スキルの全種類の印象構造の平均
-        
-        //まず全乖離スキルを取得する　同じのは重複しないようにhashset
-        var DivergenceSkills = new HashSet<BaseSkill>();
-        foreach(var skill in DidActionSkillDatas)
-        {
-            if(skill.IsDivergence)
-            {
-                DivergenceSkills.Add(skill.Skill);
-            }
-        }
-        //全乖離スキルの印象構造の平均値
-        var averageImpression = TenDayAbilityDictionary.CalculateAverageTenDayValues(DivergenceSkills);
-
-        //「最後に使った乖離スキル」と「乖離スキル全体の平均値」の平均値を求める
-        var DecreaseTenDayValue = TenDayAbilityDictionary.CalculateAverageTenDayDictionary(new[] { lastDivergenceSkill.TenDayValues(), averageImpression });
-        DecreaseTenDayValue *= 1.2f;//定数で微増
-
-        //自分の十日能力から減らす
-        _baseTenDayValues -= DecreaseTenDayValue;
-        Debug.Log($"乖離スキルの影響で、{CharacterName}の十日能力が減少しました。- {DecreaseTenDayValue}:現在値は{_baseTenDayValues}");
-    }
-
-    /// <summary>
-    /// 現在持ってる対象者のボーナスデータ
-    /// </summary>
-    public TargetBonusDatas TargetBonusDatas = new();
-
-    /// <summary>
-    /// 直近の行動記録
-    /// </summary>
-    public ACTSkillDataForOneTarget RecentSkillData => ActDoOneSkillDatas[ActDoOneSkillDatas.Count - 1];
-    /// <summary>
     /// 直近の被害記録
     /// </summary>
     public DamageData RecentDamageData => damageDatas[damageDatas.Count - 1];
-
-    /// <summary>
-    /// そのキャラクターを殺すまでに与えたダメージ
-    /// </summary>
-    Dictionary<BaseStates, float> DamageDealtToEnemyUntilKill = new Dictionary<BaseStates, float>();
-    /// <summary>
-    /// キャラクターを殺すまでに与えるダメージを記録する辞書に記録する
-    /// </summary>
-    /// <param name="dmg"></param>
-    /// <param name="target"></param>
-    void RecordDamageDealtToEnemyUntilKill(float dmg,BaseStates target)//戦闘開始時にそのキャラクターを殺すまでに与えたダメージを記録する辞書に記録する
-    {
-        if (DamageDealtToEnemyUntilKill.ContainsKey(target))
-        {
-            DamageDealtToEnemyUntilKill[target] += dmg;
-        }
-        else
-        {
-            DamageDealtToEnemyUntilKill[target] = dmg;
-        }
-    }
 
     //  ==============================================================================================================================
     //                                              ダメージ計算-補正関数群
@@ -450,51 +174,40 @@ public abstract partial class BaseStates
 
         return;
     }
+    /// <summary>
+    /// 連続攻撃時、狙い流れの物理属性適正とスキルの物理属性の一致による1.1倍ブーストがあるかどうかを判定し行使する関数です
+    /// </summary>
+    void CheckPhysicsConsecutiveAimBoost(BaseStates attacker)
+    {
+        var skill = attacker.NowUseSkill;
+        if(!skill.NowConsecutiveATKFromTheSecondTimeOnward())return;//連続攻撃でないなら何もしない
+
+        if((skill.NowAimStyle() ==AimStyle.Doublet && skill.SkillPhysical == PhysicalProperty.volten) ||
+            ( skill.NowAimStyle() ==AimStyle.PotanuVolf && skill.SkillPhysical == PhysicalProperty.volten) ||
+            (skill.NowAimStyle() ==AimStyle.Duster) && skill.SkillPhysical == PhysicalProperty.dishSmack)
+            {
+                attacker.SetSpecialModifier("連続攻撃時、狙い流れの物理属性適正とスキルの物理属性の一致による1.1倍ブースト",
+                whatModify.atk, 1.1f);
+            }
+    }
+
 
     //  ==============================================================================================================================
     //                                              防ぎ方、狙い流れ　AImStyle
     //
     //
     //  ==============================================================================================================================
-
-    /* ---------------------------------
-     * 不一致によるクランプ処理
-     * --------------------------------- 
-     */
+    /// <summary>
+    /// 狙い流れに対する防ぎ方プロパティ
+    /// </summary>
+    [NonSerialized]
+    public AimStyle NowDeffenceStyle;
 
     /// <summary>
-    /// 防ぎ方(AimStyle)の不一致がある場合、クランプする
+    /// 狙い流れ(AimStyle)に対する短期記憶
     /// </summary>
-    private StatesPowerBreakdown ClampDefenseByAimStyle(BaseSkill skill,StatesPowerBreakdown def)
-    {
-        if(skill.NowAimStyle() != NowDeffenceStyle)
-        {
-            var MatchedMaxClampDef = DEF(skill.DEFATK, skill.NowAimStyle())*0.7f;//適切な防御力の0.7倍がクランプ最大値
-
-            if(NowPower>ThePower.medium)//パワーが高い場合は 「適切な防御力をこしてた場合のみ」適切防御力の0.7倍にクランプ
-            {
-                //まず比較する、超していた場合にクランプ
-                if(DEF()>DEF(0,skill.NowAimStyle()))//今回の防御力が適切な防御力を超してた場合、
-                {
-                    return MatchedMaxClampDef;//クランプされる。
-                }
-            }else//そうでない場合は、「適切な防御力を超してる越してない関係なく」適切防御力の0.7倍にクランプ(その最大値を絶対に超えない。)
-            {
-                
-                if(def > MatchedMaxClampDef)
-                {
-                    return MatchedMaxClampDef;//最大値を超えたら最大値にクランプ
-                }
-            }
-        }
-        return def;//そのまま返す。
-    }
-
-    /* ---------------------------------
-     * 防ぎ方の切り替え
-     * --------------------------------- 
-     */
-
+    private AimStyleMemory _aimStyleMemory;
+    
     /// <summary>防ぎ方の切り替え </summary>
     private void SwitchDefenceStyle(BaseStates atker)
     {
@@ -557,6 +270,39 @@ public abstract partial class BaseStates
 
 
 
+    }
+
+    /* ---------------------------------
+     * 不一致によるクランプ処理
+     * --------------------------------- 
+     */
+
+    /// <summary>
+    /// 防ぎ方(AimStyle)の不一致がある場合、クランプする
+    /// </summary>
+    private StatesPowerBreakdown ClampDefenseByAimStyle(BaseSkill skill,StatesPowerBreakdown def)
+    {
+        if(skill.NowAimStyle() != NowDeffenceStyle)
+        {
+            var MatchedMaxClampDef = DEF(skill.DEFATK, skill.NowAimStyle())*0.7f;//適切な防御力の0.7倍がクランプ最大値
+
+            if(NowPower>ThePower.medium)//パワーが高い場合は 「適切な防御力をこしてた場合のみ」適切防御力の0.7倍にクランプ
+            {
+                //まず比較する、超していた場合にクランプ
+                if(DEF()>DEF(0,skill.NowAimStyle()))//今回の防御力が適切な防御力を超してた場合、
+                {
+                    return MatchedMaxClampDef;//クランプされる。
+                }
+            }else//そうでない場合は、「適切な防御力を超してる越してない関係なく」適切防御力の0.7倍にクランプ(その最大値を絶対に超えない。)
+            {
+                
+                if(def > MatchedMaxClampDef)
+                {
+                    return MatchedMaxClampDef;//最大値を超えたら最大値にクランプ
+                }
+            }
+        }
+        return def;//そのまま返す。
     }
     /* ---------------------------------
      * 関連関数群
@@ -674,6 +420,11 @@ public abstract partial class BaseStates
     /// <param name="atkPoint"></param>
     public virtual StatesPowerBreakdown DamageOnBattle(BaseStates Atker, float SkillPower,float SkillPowerForMental,HitResult hitResult,ref bool isdisturbed)
     {
+        //防ぎ方の切り替え
+        SwitchDefenceStyle(Atker);
+        //連続攻撃の物理属性ブースト判定
+        CheckPhysicsConsecutiveAimBoost(Atker);
+
         var skill = Atker.NowUseSkill;
 
         //ダメージ直前のパッシブ効果
@@ -845,6 +596,10 @@ public abstract partial class BaseStates
     {
         var o = opts ?? SkillApplyPolicy.OutOfBattleDefault.Damage;
         var skill = Atker.NowUseSkill;
+
+        // 防ぎ方の切り替え（ポリシーで制御）
+        if (o.SwitchDefenceStyle)
+            SwitchDefenceStyle(Atker);
 
         // ダメージ直前のパッシブ効果
         // 戦闘外でBM依存のパッシブが混ざるのを避けるため、ポリシーから切替可能
@@ -1326,10 +1081,318 @@ public abstract partial class BaseStates
             }
         }
     }
+    /* ------------------------------------------------------------------------------------------------------------------------------------------
+     * 命中段階によるダメージ処理
+     * ------------------------------------------------------------------------------------------------------------------------------------------
+     */
+
+
+    /// <summary>
+    /// 命中段階で分かれるダメージ分岐
+    /// ダメージを受ける側で呼び出す
+    /// </summary>
+    void HitDmgCalculation(ref StatesPowerBreakdown dmg,ref StatesPowerBreakdown ResonanceDmg,HitResult hitResult,BaseStates Attacker)
+    {
+        var criticalRate = 1.5f;
+        var GrazeRate = GetGrazeRate(Attacker);
+        switch(hitResult)
+        {
+            case HitResult.CompleteEvade://完全回避
+                Debug.LogError("完全回避したはずなのにDamageメゾットが呼び出されています。");
+                return;
+            case HitResult.Graze://かすり
+                dmg *= GrazeRate;
+                ResonanceDmg *= GrazeRate;
+                return;
+            case HitResult.Hit://ヒット
+                return;//そのまま
+            case HitResult.Critical://クリティカル
+                dmg *=criticalRate;
+                ResonanceDmg *= criticalRate;
+                return;
+        }
+    }
+
+    /// <summary>
+    /// かすりのダメージ倍率計算　基本値からステータス計算で減らす形
+    /// 攻撃を受ける側で呼び出す
+    /// </summary>
+    float GetGrazeRate(BaseStates Attacker)
+    {
+        var baseRate = 0.35f;
+        // EYEの差による減衰量を計算 (防御者EYEが攻撃者EYEに対する超過分) * 0.7%
+        var atkEye = Attacker.EYE().Total;
+        var defEye = EYE().Total;
+        var eyeDifference = defEye - atkEye;
+        //もし攻撃者のEYEが防御者のEYEより大きいなら基本値に対する現象が発生しないので、
+        if(eyeDifference < 0)eyeDifference = 0;//-にならないようにゼロに
+        var reduction = eyeDifference * 0.007f;//0.7%のレートを掛ける
+
+        // 最終的なかすりダメージ倍率を計算
+        var finalRate = baseRate - reduction;
+        finalRate = Mathf.Max(0.02f, finalRate);//2％
+
+        return finalRate; // 最終的なレートは 0.02f ～ 0.35f の範囲になる
+    }
 
 
 
+}
+/// <summary>
+/// 防ぎ方 狙い流れとも言う　戦闘規格とスキルにセットアップされる順番や、b_defの対応に使用される。
+/// </summary>
+public enum AimStyle
+{
 
+     /// <summary>
+    /// アクロバマイナ体術1 - Acrobat Minor Technique 1
+    /// </summary>
+    AcrobatMinor,       // アクロバマイナ体術1
+
+    /// <summary>
+    /// ダブレット - Doublet
+    /// </summary>
+    Doublet,            // ダブレット
+
+    /// <summary>
+    /// 四弾差し込み - Quad Strike Insertion
+    /// </summary>
+    QuadStrike,         // 四弾差し込み
+
+    /// <summary>
+    /// ダスター - Duster
+    /// </summary>
+    Duster,             // ダスター
+
+    /// <summary>
+    /// ポタヌヴォルフのほうき術系 - Potanu Volf's Broom Technique
+    /// </summary>
+    PotanuVolf,         // ポタヌヴォルフのほうき術系
+
+    /// <summary>
+    /// 中天一弾 - Central Heaven Strike
+    /// </summary>
+    CentralHeavenStrike, // 中天一弾
+
+    /// <summary>
+    /// 戦闘規格のnoneに対して変化する防ぎ方
+    /// </summary>
+    none
+}
+    // =====================
+    // 戦闘外適用/ダメージ用ポリシー
+    // =====================
+    public class DamageOptions
+    {
+        public bool AimStyleClamp = false;
+        public bool BaseRandomVariance = false; // 基礎山形補正
+        public bool SwitchDefenceStyle = false; // 防ぎ方の切り替えを行うか
+        public bool Frenzy = false;
+        public bool Adaptation = false;
+        public bool BladeInstantDeath = false;
+        public bool Resonance = false;
+        public bool PhysicalResistance = true;
+        // 戦闘外Damage()でダメージ直前のパッシブ適用を行うか（BM依存パッシブの抑止用）
+        public bool BeforeDamagePassives = true;
+        public bool PassivesReduction = true; // パッシブによる減衰率
+        public bool TLOReduction = true;
+        public bool BarrierLayers = true;
+        public bool CantKillClamp = true;
+        public bool DontDamageClamp = true;
+        public bool MentalDamage = true;
+        public bool UseHitMultiplier = true; // 命中段階による補正
+
+        public DamageOptions Clone()
+        {
+            return (DamageOptions)MemberwiseClone();
+        }
+    }
+
+    public class SkillApplyPolicy
+    {
+        // 戦闘外で命中/回避を使うか
+        public bool UseHitEvade = false;
+        public bool UseAllyEvade = false;
+        // 友好系も命中でゲートするか
+        public bool GateFriendlyByHit = false;
+        // バッファ即時コミット
+        public bool CommitBuffersImmediately = true;
+        // 復活時のパーティ連鎖を使うか
+        public bool UsePartyAngelChain = false;
+        // ダメージ詳細
+        public DamageOptions Damage = new DamageOptions();
+
+        public SkillApplyPolicy Clone()
+        {
+            return new SkillApplyPolicy
+            {
+                UseHitEvade = UseHitEvade,
+                UseAllyEvade = UseAllyEvade,
+                GateFriendlyByHit = GateFriendlyByHit,
+                CommitBuffersImmediately = CommitBuffersImmediately,
+                UsePartyAngelChain = UsePartyAngelChain,
+                Damage = Damage?.Clone() ?? new DamageOptions()
+            };
+        }
+
+        // プリセット
+        static SkillApplyPolicy _outOfBattleDefault;
+        public static SkillApplyPolicy OutOfBattleDefault
+        {
+            get
+            {
+                if (_outOfBattleDefault == null)
+                {
+                    _outOfBattleDefault = new SkillApplyPolicy
+                    {
+                        UseHitEvade = false,
+                        UseAllyEvade = false,
+                        GateFriendlyByHit = false,
+                        CommitBuffersImmediately = true,
+                        UsePartyAngelChain = false,
+                        Damage = new DamageOptions
+                        {
+                            AimStyleClamp = false,
+                            SwitchDefenceStyle = false,
+                            BaseRandomVariance = false,
+                            Frenzy = false,
+                            Adaptation = false,
+                            BladeInstantDeath = false,
+                            Resonance = false,
+                            PhysicalResistance = true,
+                            BeforeDamagePassives = false,
+                            PassivesReduction = true,
+                            TLOReduction = true,
+                            BarrierLayers = true,
+                            CantKillClamp = true,
+                            DontDamageClamp = true,
+                            MentalDamage = true,
+                            UseHitMultiplier = true,
+                        }
+                    };
+                }
+                return _outOfBattleDefault.Clone();
+            }
+        }
+
+        static SkillApplyPolicy _battleLike;
+        public static SkillApplyPolicy BattleLike
+        {
+            get
+            {
+                if (_battleLike == null)
+                {
+                    _battleLike = new SkillApplyPolicy
+                    {
+                        UseHitEvade = true,
+                        UseAllyEvade = true,
+                        GateFriendlyByHit = true,
+                        CommitBuffersImmediately = true, // 戦闘外なので即コミット
+                        UsePartyAngelChain = true,
+                        Damage = new DamageOptions
+                        {
+                            AimStyleClamp = true,
+                            SwitchDefenceStyle = true,
+                            BaseRandomVariance = true,
+                            Frenzy = true,
+                            Adaptation = true,
+                            BladeInstantDeath = true,
+                            Resonance = true,
+                            PhysicalResistance = true,
+                            BeforeDamagePassives = true,
+                            PassivesReduction = true,
+                            TLOReduction = true,
+                            BarrierLayers = true,
+                            CantKillClamp = true,
+                            DontDamageClamp = true,
+                            MentalDamage = true,
+                            UseHitMultiplier = true,
+                        }
+                    };
+                }
+                return _battleLike.Clone();
+            }
+        }
+    }
+/// <summary>
+/// 被害記録
+/// </summary>
+public class DamageData
+{
+    public BaseStates Attacker;
+    /// <summary>
+    /// 攻撃自体がヒットしたかどうかで、atktypeなら攻撃で全部ひっくるめてあたるから
+    /// atktypeじゃないなら、falseで
+    /// </summary>
+    public bool IsAtkHit;
+    public bool IsBadPassiveHit;
+    public bool IsBadPassiveRemove;
+    public bool IsGoodPassiveHit;
+    public bool IsGoodPassiveRemove;
+
+
+    public bool IsGoodVitalLayerHit;
+    public bool IsGoodVitalLayerRemove;
+    public bool IsBadVitalLayerHit;
+    public bool IsBadVitalLayerRemove;
+
+    public bool IsGoodSkillPassiveHit;
+    public bool IsGoodSkillPassiveRemove;
+    public bool IsBadSkillPassiveHit;
+    public bool IsBadSkillPassiveRemove;
+
+
+    /// <summary>
+    /// 死回復も含める
+    /// </summary>
+    public bool IsHeal;
+    //public bool IsConsecutive;　これは必要なし、なぜなら相性値の判断は毎ターン行われるから、連続ならちゃんと連続毎ターンで結果的に多く相性値関連の処理は加算される。
+    public float Damage;
+    public float Heal;
+    //public BasePassive whatPassive;  多いしまだ必要ないから一旦コメントアウト
+    //public int DamagePercent　最大HPはBaseStates側にあるからそっちから取得する
+    public BaseSkill Skill;
+    public DamageData(bool isAtkHit,bool isBadPassiveHit,bool isBadPassiveRemove,bool isGoodPassiveHit,bool isGoodPassiveRemove,
+    bool isGoodVitalLayerHit,bool isGoodVitalLayerRemove,bool isBadVitalLayerHit,bool isBadVitalLayerRemove,
+    bool isGoodSkillPassiveHit,bool isGoodSkillPassiveRemove,bool isBadSkillPassiveHit,bool isBadSkillPassiveRemove,
+    bool isHeal,BaseSkill skill,float damage,float heal,BaseStates attacker)
+    {
+        IsAtkHit = isAtkHit;
+        IsBadPassiveHit = isBadPassiveHit;
+        IsBadPassiveRemove = isBadPassiveRemove;
+        IsGoodPassiveHit = isGoodPassiveHit;
+        IsGoodPassiveRemove = isGoodPassiveRemove;
+        IsGoodVitalLayerHit = isGoodVitalLayerHit;
+        IsGoodVitalLayerRemove = isGoodVitalLayerRemove;
+        IsBadVitalLayerHit = isBadVitalLayerHit;
+        IsBadVitalLayerRemove = isBadVitalLayerRemove;
+        IsGoodSkillPassiveHit = isGoodSkillPassiveHit;
+        IsGoodSkillPassiveRemove = isGoodSkillPassiveRemove;
+        IsBadSkillPassiveHit = isBadSkillPassiveHit;
+        IsBadSkillPassiveRemove = isBadSkillPassiveRemove;
+        IsHeal = isHeal;
+
+        Skill = skill;
+        Damage = damage;
+        Heal = heal;
+        Attacker = attacker;
+    }
+}
+/// <summary>
+/// 狙い流れ(AimStyle)に対する短期記憶・対応進行度をまとめた構造体
+/// </summary>
+public struct AimStyleMemory
+{
+    /// <summary>いま対応しようとしている相手の AimStyle==そのまま自分のNowDeffenceStyleに代入されます。</summary>
+    public AimStyle? TargetAimStyle;
+
+    /// <summary>現在の変革カウント(対応がどこまで進んでいるか)</summary>
+    public int TransformCount;
+
+    /// <summary>変革カウントの最大値。ここに達したら対応完了</summary>
+    public int TransformCountMax;
+
+    
 
 
 }

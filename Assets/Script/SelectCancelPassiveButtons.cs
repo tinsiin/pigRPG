@@ -70,7 +70,7 @@ public class SelectCancelPassiveButtons : MonoBehaviour
         
         // キャラクターのパッシブリストを取得
         // キャンセル可能なパッシブのみをフィルタリング
-        foreach (var passive in chara.PassiveList)
+        foreach (var passive in chara.Passives)
         {
             //CantACTのパッシブのみならば
             if(chara.HasCanCancelCantACTPassive)

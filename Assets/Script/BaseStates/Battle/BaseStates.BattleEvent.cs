@@ -3,10 +3,306 @@ using System.Collections.Generic;
 using UnityEngine;
 using static CommonCalc;
 using NRandom;
-
+using static TenDayAbilityPosition;
+using System.Linq;
 //戦闘のイベント系統
 public abstract partial class BaseStates
 {
+    //  ==============================================================================================================================
+    //                                             乖離スキル使用による十日能力値減少
+    //                                      スキルの印象構造(精神属性)　と　キャラクターのデフォルト精神属性が一定以上離れている場合　
+    //                      　　　　　　　キャラクターの十日能力が下がる可能性のある処理。　　　　Attack.cs
+    //  ==============================================================================================================================
+
+    /// <summary>
+    /// 乖離したスキルを利用したことによる苦悩での十日能力値下降処理
+    /// </summary>
+    protected void ResolveDivergentSkillOutcome()
+    {
+        //まずバトル内でのスキル実行回数が一定以上で発生
+        if(AllSkillDoCountInBattle < 7) return;
+
+        //終了時の精神属性による発生確率の分岐
+        switch(MyImpression)
+        {
+            case SpiritualProperty.liminalwhitetile:
+                // リーミナルホワイトタイル 0%
+                return; // 常に発生しない
+                
+            case SpiritualProperty.kindergarden:
+                // キンダーガーデン 95%
+                if(!rollper(95f)) return;
+                break;
+                
+            case SpiritualProperty.sacrifaith:
+            case SpiritualProperty.cquiest:
+            case SpiritualProperty.devil:
+            case SpiritualProperty.doremis:
+            case SpiritualProperty.pillar:
+                // 自己犠牲・シークイエスト・デビル・ドレミス・支柱は全て100%
+                // 100%発生するので何もしない（returnしない）
+                break;
+                
+            case SpiritualProperty.godtier:
+                // ゴッドティア 50%
+                if(!rollper(50f)) return;
+                break;
+                
+            case SpiritualProperty.baledrival:
+                // ベールドライヴァル 70%
+                if(!rollper(70f)) return;
+                break;
+                
+            case SpiritualProperty.pysco:
+                // サイコパス 20%
+                if(!rollper(20f)) return;
+                break;
+                
+            default:
+                // その他の精神属性の場合はデフォルト処理
+                break;
+        }
+    
+        //乖離したスキルが一定％以上全体実行に対して使用されていたら
+        var DivergenceCount = 0;
+        foreach(var skill in DidActionSkillDatas)
+        {
+            if(skill.IsDivergence)
+            {
+                DivergenceCount++;
+            }
+        }
+        //特定％以上乖離スキルがあったら発生する。
+        if(AllSkillDoCountInBattle * 0.71 > DivergenceCount) return;
+
+        //減少する十日能力値の計算☆☆☆
+
+        //最後に使った乖離スキル
+        BaseSkill lastDivergenceSkill = null;
+        for(var i = DidActionSkillDatas.Count - 1; i >= 0; i--)//最後に使った乖離スキルに辿り着くまでループ
+        {
+            if(DidActionSkillDatas[i].IsDivergence)
+            {
+                lastDivergenceSkill = DidActionSkillDatas[i].Skill;
+                break;
+            }
+        }
+
+        //乖離スキルの全種類の印象構造の平均
+        
+        //まず全乖離スキルを取得する　同じのは重複しないようにhashset
+        var DivergenceSkills = new HashSet<BaseSkill>();
+        foreach(var skill in DidActionSkillDatas)
+        {
+            if(skill.IsDivergence)
+            {
+                DivergenceSkills.Add(skill.Skill);
+            }
+        }
+        //全乖離スキルの印象構造の平均値
+        var averageImpression = TenDayAbilityDictionary.CalculateAverageTenDayValues(DivergenceSkills);
+
+        //「最後に使った乖離スキル」と「乖離スキル全体の平均値」の平均値を求める
+        var DecreaseTenDayValue = TenDayAbilityDictionary.CalculateAverageTenDayDictionary(new[] { lastDivergenceSkill.TenDayValues(), averageImpression });
+        DecreaseTenDayValue *= 1.2f;//定数で微増
+
+        //自分の十日能力から減らす
+        _baseTenDayValues -= DecreaseTenDayValue;
+        Debug.Log($"乖離スキルの影響で、{CharacterName}の十日能力が減少しました。- {DecreaseTenDayValue}:現在値は{_baseTenDayValues}");
+    }
+    /// <summary>
+    /// 現在のスキルが乖離してるかどうかを返す
+    /// </summary>
+    public bool GetIsSkillDivergence()
+    {
+        if(DefaultImpression == SpiritualProperty.none) 
+        {
+            Debug.Log($"{CharacterName}の{NowUseSkill.SkillName}-"
+            +"「DefaultImpressionがnoneなら乖離判定は行われません。」none精神属性互換の十日能力とかないからね");
+            return false;
+        }
+
+        //判定するスキル印象構造の種類数を取得  1クランプする。
+        var NeedJudgementSkillTenDayCount = Mathf.Max(1, (int)(NowUseSkill.TenDayValues().Count * 0.8 -1));
+
+        //判定するスキル印象構造を取得して
+        var SuggestionJudgementSkillTenDay =new TenDayAbilityDictionary(NowUseSkill.TenDayValues());
+        //キーリストを取得
+        var SuggestionJudgementSkillTenDayKeys = SuggestionJudgementSkillTenDay.Keys.ToArray();
+        Debug.Log($"(使用スキルの乖離判定)判定するスキル印象構造の種類数 : {SuggestionJudgementSkillTenDayKeys.Length}");    
+        if(SuggestionJudgementSkillTenDayKeys.Length <= 0)
+        {
+            Debug.Log("(使用スキルの乖離判定)判定するスキル印象構造の種類数が0以下、つまりスキルに印象構造がセットされてないので、GetIsSkillDivergenceはfalseを返し終了します。");
+            return false;
+        }
+        //キーリストをシャッフルする
+        RandomEx.Shared.Shuffle(SuggestionJudgementSkillTenDayKeys);
+
+        //判定する種類分判定リストに代入
+        var JudgementSkillTenDays =new HashSet<TenDayAbility>();
+        for(var i = 0; i < NeedJudgementSkillTenDayCount; i++)
+        {
+            Debug.Log($"{i} : {SuggestionJudgementSkillTenDayKeys[i]} スキルが乖離してるかどうかを判定するリストに代入");
+            var key = SuggestionJudgementSkillTenDayKeys[i];
+            JudgementSkillTenDays.Add(key);
+        }
+
+        //判定印象構造とデフォルト精神属性互換の精神属性全て同士の距離の平均を出す。
+        var AllAverageBetweenSkillTenAndDefaultImpressionDistance = 0f;//判定印象構造とデフォルト精神属性互換の精神属性全て同士の距離の平均の印象構造分全て
+        foreach(var skillTen in JudgementSkillTenDays)//スキルの判定印象構造で回す
+        {
+            var AllBetweenSkillTenAndDefaultImpressionDistance = 0f;
+            foreach(var defaultImpTen in SpritualTenDayAbilitysMap[DefaultImpression])//デフォルト精神属性互換の精神属性全てで回す
+            {
+                //距離を足す
+                AllBetweenSkillTenAndDefaultImpressionDistance += GetDistance(skillTen, defaultImpTen);
+            }
+            //デフォルト精神属性互換の十日能力の数で割って、平均を出す
+            AllAverageBetweenSkillTenAndDefaultImpressionDistance//その平均距離を総距離として加算する
+             += AllBetweenSkillTenAndDefaultImpressionDistance / SpritualTenDayAbilitysMap[DefaultImpression].Count;
+        }
+        //平均の平均を出す　判定印象構造とデフォルト精神属性互換の精神属性全て同士の距離の平均の平均
+        var AvarageAllAverageBetweenSkillTenAndDefaultImpressionDistance 
+        = AllAverageBetweenSkillTenAndDefaultImpressionDistance / JudgementSkillTenDays.Count;
+
+        //この平均の平均が特定の定数より多い、　離れているのなら、乖離したスキルとみなす。
+        return AvarageAllAverageBetweenSkillTenAndDefaultImpressionDistance >= 8;
+    }
+
+    //  ==============================================================================================================================
+    //                                             精神乖離
+    //                                      精神HPがHPと乖離した場合　パッシブやHP変化などが起こる
+    //
+    //  ==============================================================================================================================
+
+    /// <summary>
+    /// 実HPに比べて何倍離れているのだろうか。
+    /// </summary>
+    /// <returns></returns>
+    public float GetMentalDivergenceThreshold()
+    {
+        var ExtraValue = (TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) -
+         TenDayValues(false).GetValueOrZero(TenDayAbility.KereKere)) * 0.01f;//0クランプいらない
+        var EnokunagiValue = TenDayValues(false).GetValueOrZero(TenDayAbility.Enokunagi) * 0.005f;
+        switch (NowCondition)
+        {
+            case HumanConditionCircumstances.Angry:
+                return 0.47f + ExtraValue;
+            case HumanConditionCircumstances.Elated:
+                return 2.6f+ ExtraValue;
+            case HumanConditionCircumstances.Painful:
+                return 0.6f+ ExtraValue;
+            case HumanConditionCircumstances.Confused:
+                return 0.3f+ ExtraValue;
+            case HumanConditionCircumstances.Resolved:
+                return 1.2f+ ExtraValue;
+            case HumanConditionCircumstances.Optimistic:
+                return 1.4f+ ExtraValue;
+            case HumanConditionCircumstances.Normal:
+                return 0.9f+ ExtraValue;
+            case HumanConditionCircumstances.Doubtful:
+                return 0.7f+ ExtraValue - EnokunagiValue;//疑念だとエノクナギの影響で乖離しやすくなっちゃうよ
+            default:
+                return 0f;
+        }
+    }
+    /// <summary>
+    /// 精神HPの乖離が起こるまでの発動持続ターン最大値を取得
+    /// </summary>
+    int GetMentalDivergenceMaxCount()
+    {
+        if(TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness)> 0)//ゼロ除算対策
+        {
+            var maxCount = (int)((TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap) - TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid ) / 2) / TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness));
+            if(maxCount > 0)return maxCount;//0より大きければ返す
+        }
+        return 0 ;
+
+    }
+    /// <summary>
+    /// 精神HPと実HPの乖離発生処理全般
+    /// </summary>
+    void MentalDiverGence()
+    {
+        // 乖離率は 実HPに対する精神HPの割合で決まる。
+        float divergenceRatio = Mathf.Abs(MentalHP - HP) / HP;
+
+        if(divergenceRatio > GetMentalDivergenceThreshold())//乖離してるなら
+        {
+            if(_mentalDivergenceCount >= GetMentalDivergenceMaxCount())//カウントが最大値を超えたら
+            {
+                _mentalDivergenceRefilCount = GetMentalDivergenceRefulMaxCount();//再度行われないようにカウント開始
+                //精神HPが現在HPより上に乖離してるなら アッパー系の乖離メゾット
+                if(MentalHP > HP)
+                {
+                    MentalUpperDiverGenceEffect();
+                }else
+                {//精神HPが現在HPより下に乖離してるなら ダウナ系の乖離メゾット
+                    MentalDownerDiverGenceEffect();
+                }
+            }
+
+            if(_mentalDivergenceRefilCount <= 0)//再充填カウントがセットされてないので、乖離が発生していないなら持続カウントをプラス
+            {
+                _mentalDivergenceCount++;//持続カウントをプラス
+            }
+        }else
+        {
+            _mentalDivergenceCount = 0;//乖離から外れたらカウントをリセット
+        }
+
+    }
+    /// <summary>
+    /// 精神HPの乖離の再充填までのターン数を取得
+    /// </summary>
+    int GetMentalDivergenceRefulMaxCount()
+    {
+        var refil = TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid) * 3 - TenDayValues(false).GetValueOrZero(TenDayAbility.Miza) / 4 * TenDayValues(false).GetValueOrZero(TenDayAbility.Smiler);
+        if(refil < 0)return 0;
+        return (int)refil;
+    }
+    /// <summary>
+    /// 再充填カウントがゼロより多いならばカウントダウンし、そうでなければtrue、つまり再充填されている。
+    /// </summary>
+    /// <returns></returns>
+    bool IsMentalDiverGenceRefilCountDown()
+    {
+        if(_mentalDivergenceRefilCount > 0)
+        {
+            _mentalDivergenceRefilCount--;
+            return true;
+        }
+        return false;//カウントは終わっている。
+    }
+    int _mentalDivergenceRefilCount = 0;
+    int _mentalDivergenceCount = 0;
+
+    /// <summary>
+    /// 精神HPのアッパー乖離で起こる変化
+    /// </summary>
+    protected virtual void MentalUpperDiverGenceEffect()
+    {//ここに書かれるのは基本効果
+        ApplyPassiveBufferInBattleByID(4);//アッパーのパッシブを付与
+    }
+    /// <summary>
+    /// 精神HPのダウナー乖離で起こる変化
+    /// </summary>
+    protected virtual void MentalDownerDiverGenceEffect()
+    {//ここに書かれるのは基本効果
+        
+        if(MyType == CharacterType.TLOA)
+        {
+            HP = _hp * 0.76f;
+        }else
+        {//TLOA以外の種別なら
+            ApplyPassiveBufferInBattleByID(3);//強制ダウナーのパッシブを付与
+            if(rollper(50))
+            {
+                Power1Down();//二分の一でパワーが下がる。
+            }
+        }
+    }
+    
     
     //  ==============================================================================================================================
     //                                              互角一撃
