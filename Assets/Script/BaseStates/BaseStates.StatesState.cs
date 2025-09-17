@@ -126,6 +126,9 @@ public abstract partial class BaseStates
     void CalmDown()
     {
         CalmDownCount = 0;
+        _skillEvasionModifier = _BaseEvasionModifier;//補正率を無しに。
+        _skillAttackModifier = _BaseAttackModifier;
+
     }
     //  ==============================================================================================================================
     //                                              パワー

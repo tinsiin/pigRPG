@@ -476,6 +476,7 @@ public class BattleManager
     }
     /// <summary>
     /// キャラクター行動リストに先手分のリストを入れる。
+    /// 先手後手システムのobsidianを参照
     /// </summary>
     void AddFirstBattleGroupTurn(BattleGroup _group, BattleGroup _counterGroup)
     {

@@ -962,6 +962,9 @@ public abstract partial class BaseStates
 
             arrowThicknessDamagePercent = 0.2f;//ヒットしたら矢印の太さちょっと増やしとく
 
+            // 薄い拡張フック（将来の拡張用）
+            OnBattleAnyEffectHit(attacker, skill, skill.HasType(SkillType.Attack), bestHitOutcome);
+
         }
 
 
@@ -1249,37 +1252,32 @@ public abstract partial class BaseStates
         bool any = false;
         bool isdisturbed = false;
 
-        // Damage() 内で Atker.NowUseSkill を参照するため、一時的に設定して処理後に戻す
-        var prevSkill = attacker.NowUseSkill;
-        attacker.NowUseSkill = skill;
-        try
+        // 戦闘外でも最小限の事前準備（戦闘時の OnAttackerOneSkillActStart 相当の一部）
+        // ・除去回数の補充（Remove/Erase 系の動作を有効化）
+        // ・ゆりかご計算（威力計算の整合）
+        skill.RefilCanEraceCount();
+        skill.CalcCradleSkillLevel(attacker);
+
+        // 攻撃
+        if (skill.HasType(SkillType.Attack))
         {
-            // 戦闘外でも最小限の事前準備（戦闘時の OnAttackerOneSkillActStart 相当の一部）
-            // ・除去回数の補充（Remove/Erase 系の動作を有効化）
-            // ・ゆりかご計算（威力計算の整合）
-            skill.RefilCanEraceCount();
-            skill.CalcCradleSkillLevel(attacker);
-
-            // 攻撃
-            if (skill.HasType(SkillType.Attack))
+            var hr = HitResult.Hit;
+            if (policy.UseHitEvade)
             {
-                var hr = HitResult.Hit;
-                if (policy.UseHitEvade)
+                hr = ATKTypeSkillReactHitCalc(attacker, skill);
+                if (policy.UseAllyEvade)
                 {
-                    hr = ATKTypeSkillReactHitCalc(attacker, skill);
-                    if (policy.UseAllyEvade)
-                    {
-                        hr = MixAllyEvade(hr, attacker);
-                    }
-                }
-
-                if (hr != HitResult.CompleteEvade)
-                {
-                    var dmg = Damage(attacker, skillPower, skillPowerForMental, hr, ref isdisturbed, policy.Damage);
-                    outcome.DamageDealt = dmg.Total;
-                    any = any || dmg.Total > 0f;
+                    hr = MixAllyEvade(hr, attacker);
                 }
             }
+
+            if (hr != HitResult.CompleteEvade)
+            {
+                var dmg = Damage(attacker, skill, skillPower, skillPowerForMental, hr, ref isdisturbed, policy.Damage);
+                outcome.DamageDealt = dmg.Total;
+                any = any || dmg.Total > 0f;
+            }
+        }
 
             // 回復
             if (skill.HasType(SkillType.Heal))
@@ -1376,16 +1374,15 @@ public abstract partial class BaseStates
                 ApplySkillsBufferApplyingSkillPassive();
             }
 
+            // 戦闘内と同じロジック：何らかの効果がヒットした場合、スキルの特殊属性による精神変化を適用
+            if (policy.ApplyImposedImpression && any)
+            {
+                ImposedImpressionFromSkill(skill.SkillSpiritual, attacker);
+            }
+
             outcome.AnyEffect = any;
             return outcome;
         }
-        finally
-        {
-            attacker.NowUseSkill = prevSkill;
-        }
-    }
-
-
 
     /* ---------------------------------
      * 関連関数

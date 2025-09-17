@@ -22019,7 +22019,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.8827557, g: 0.5009358, b: 0.857801, a: 0.5697451}
+  m_Color: {r: 0.95046157, g: 0.21165693, b: 0.9399176, a: 0.8182074}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -40547,10 +40547,16 @@ MonoBehaviour:
   EyeArea: {fileID: 132546428}
   ActionMar: {fileID: 686993905}
   Init_geino:
-    InitpassiveIDList: 
-    InitVitalLaerIDList: 
-    NowPower: 1
-    Rivahal: 0
+    CharacterName: "\u30B8\u30FC\u30CE"
+    Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
+    ImpressionStringName: 
+    _p: 0
+    _hp: 60
+    _maxhp: 60
+    _mentalHP: 0.34
+    HeavyResistance: 2.91
+    voltenResistance: 4.91
+    DishSmackRsistance: 6.28
     b_b_atk: 4
     b_b_def: 4
     b_b_eye: 4
@@ -40561,36 +40567,21 @@ MonoBehaviour:
         value: 45
       - key: 17
         value: 3
-    CharacterName: "\u30B8\u30FC\u30CE"
-    Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
-    ImpressionStringName: 
-    InitWeaponID: 0
-    NowBattleProtocol: 0
-    NowDeffenceStyle: 0
-    SelectedEscape: 0
-    SkillCalculatedRandomRange: 0
-    _p: 0
-    _tempVanguard: 0
-    _tempLive: 0
-    BattleFirstSurpriseAttacker: 0
-    maxRecoveryTurn: 0
-    _hp: 60
-    _maxhp: 60
-    _mentalHP: 0.34
+    Rivahal: 0
     _thinkingFactor: 17.2
+    _myImpression: 2
+    DefaultImpression: 256
+    MyType: 0
+    NowPower: 1
+    _machineBrokenRate: 0.3
+    InitVitalLaerIDList: 
+    InitWeaponID: 0
+    maxRecoveryTurn: 0
     Target: 0
     RangeWill: 0
     FreezeRangeWill: 0
-    IsActiveCancelInSkillACT: 0
-    MyType: 0
-    _myImpression: 2
-    DefaultImpression: 256
-    HeavyResistance: 2.91
-    voltenResistance: 4.91
-    DishSmackRsistance: 6.28
     IsDeleteMyFreezeConsecutive: 0
-    broken: 0
-    _machineBrokenRate: 0.3
+    InitpassiveIDList: 
     _uic: {fileID: 1393269996}
     _skillALLList:
     - rid: 2127851150886043649
@@ -40601,91 +40592,73 @@ MonoBehaviour:
     ValidSkillIDList: 0000000001000000020000000300000004000000
     EmotionalAttachmentSkillID: 0
   Init_noramlia:
-    InitpassiveIDList: 
-    InitVitalLaerIDList: 
-    NowPower: 2
-    Rivahal: 0
+    CharacterName: "\u30D0\u30B9\u30B8\u30E3\u30C3\u30AF"
+    Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
+    ImpressionStringName: 
+    _p: 0
+    _hp: 0
+    _maxhp: 0
+    _mentalHP: 0
+    HeavyResistance: 1
+    voltenResistance: 1
+    DishSmackRsistance: 1
     b_b_atk: 4
     b_b_def: 4
     b_b_eye: 4
     b_b_agi: 4
     _tenDayTemplate:
       _list: []
-    CharacterName: "\u30D0\u30B9\u30B8\u30E3\u30C3\u30AF"
-    Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
-    ImpressionStringName: 
-    InitWeaponID: 0
-    NowBattleProtocol: 0
-    NowDeffenceStyle: 0
-    SelectedEscape: 0
-    SkillCalculatedRandomRange: 0
-    _p: 0
-    _tempVanguard: 0
-    _tempLive: 0
-    BattleFirstSurpriseAttacker: 0
-    maxRecoveryTurn: 0
-    _hp: 0
-    _maxhp: 0
-    _mentalHP: 0
+    Rivahal: 0
     _thinkingFactor: 0
+    _myImpression: 0
+    DefaultImpression: 1
+    MyType: 0
+    NowPower: 2
+    _machineBrokenRate: 0.3
+    InitVitalLaerIDList: 
+    InitWeaponID: 0
+    maxRecoveryTurn: 0
     Target: 0
     RangeWill: 0
     FreezeRangeWill: 0
-    IsActiveCancelInSkillACT: 0
-    MyType: 0
-    _myImpression: 0
-    DefaultImpression: 1
-    HeavyResistance: 1
-    voltenResistance: 1
-    DishSmackRsistance: 1
     IsDeleteMyFreezeConsecutive: 0
-    broken: 0
-    _machineBrokenRate: 0.3
+    InitpassiveIDList: 
     _uic: {fileID: 340528245}
     _skillALLList: []
     ValidSkillIDList: 
     EmotionalAttachmentSkillID: 0
   Init_sites:
-    InitpassiveIDList: 
-    InitVitalLaerIDList: 
-    NowPower: 2
-    Rivahal: 0
+    CharacterName: "\u885B\u2606"
+    Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
+    ImpressionStringName: 
+    _p: 0
+    _hp: 0
+    _maxhp: 0
+    _mentalHP: 0
+    HeavyResistance: 1
+    voltenResistance: 1
+    DishSmackRsistance: 1
     b_b_atk: 4
     b_b_def: 4
     b_b_eye: 4
     b_b_agi: 4
     _tenDayTemplate:
       _list: []
-    CharacterName: "\u885B\u2606"
-    Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
-    ImpressionStringName: 
-    InitWeaponID: 0
-    NowBattleProtocol: 0
-    NowDeffenceStyle: 0
-    SelectedEscape: 0
-    SkillCalculatedRandomRange: 0
-    _p: 0
-    _tempVanguard: 0
-    _tempLive: 0
-    BattleFirstSurpriseAttacker: 0
-    maxRecoveryTurn: 0
-    _hp: 0
-    _maxhp: 0
-    _mentalHP: 0
+    Rivahal: 0
     _thinkingFactor: 0
+    _myImpression: 0
+    DefaultImpression: 8
+    MyType: 0
+    NowPower: 2
+    _machineBrokenRate: 0.3
+    InitVitalLaerIDList: 
+    InitWeaponID: 0
+    maxRecoveryTurn: 0
     Target: 0
     RangeWill: 0
     FreezeRangeWill: 0
-    IsActiveCancelInSkillACT: 0
-    MyType: 0
-    _myImpression: 0
-    DefaultImpression: 8
-    HeavyResistance: 1
-    voltenResistance: 1
-    DishSmackRsistance: 1
     IsDeleteMyFreezeConsecutive: 0
-    broken: 0
-    _machineBrokenRate: 0.3
+    InitpassiveIDList: 
     _uic: {fileID: 1845692092}
     _skillALLList: []
     ValidSkillIDList: 
@@ -42596,10 +42569,16 @@ MonoBehaviour:
     - rid: 720943376607215620
       type: {class: butterfly, ns: , asm: Assembly-CSharp}
       data:
-        InitpassiveIDList: 
-        InitVitalLaerIDList: 
-        NowPower: 0
-        Rivahal: 0
+        CharacterName: test1
+        Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
+        ImpressionStringName: 
+        _p: 0
+        _hp: 44
+        _maxhp: 44
+        _mentalHP: 44
+        HeavyResistance: 1
+        voltenResistance: 1
+        DishSmackRsistance: 1
         b_b_atk: 4
         b_b_def: 4
         b_b_eye: 4
@@ -42612,36 +42591,21 @@ MonoBehaviour:
             value: 13.8
           - key: 12
             value: 3.13
-        CharacterName: test1
-        Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
-        ImpressionStringName: 
-        InitWeaponID: 0
-        NowBattleProtocol: 0
-        NowDeffenceStyle: 0
-        SelectedEscape: 0
-        SkillCalculatedRandomRange: 0
-        _p: 0
-        _tempVanguard: 0
-        _tempLive: 0
-        BattleFirstSurpriseAttacker: 0
-        maxRecoveryTurn: 0
-        _hp: 44
-        _maxhp: 44
-        _mentalHP: 44
+        Rivahal: 0
         _thinkingFactor: 0
+        _myImpression: 256
+        DefaultImpression: 256
+        MyType: 4
+        NowPower: 0
+        _machineBrokenRate: 0.3
+        InitVitalLaerIDList: 
+        InitWeaponID: 0
+        maxRecoveryTurn: 0
         Target: 0
         RangeWill: 0
         FreezeRangeWill: 0
-        IsActiveCancelInSkillACT: 0
-        MyType: 4
-        _myImpression: 256
-        DefaultImpression: 256
-        HeavyResistance: 1
-        voltenResistance: 1
-        DishSmackRsistance: 1
         IsDeleteMyFreezeConsecutive: 0
-        broken: 0
-        _machineBrokenRate: 0.3
+        InitpassiveIDList: 
         _brain: {fileID: 11400000, guid: 0197204017f7bf94090ba7d2aa57b9cf, type: 2}
         RecovelySteps: -1
         _interruptCounterActive: 1
@@ -42806,46 +42770,37 @@ MonoBehaviour:
     - rid: 6711005805807403016
       type: {class: butterfly, ns: , asm: Assembly-CSharp}
       data:
-        InitpassiveIDList: 
-        InitVitalLaerIDList: 
-        NowPower: 2
-        Rivahal: 0
+        CharacterName: test2
+        Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
+        ImpressionStringName: 
+        _p: 0
+        _hp: 33
+        _maxhp: 34
+        _mentalHP: 20
+        HeavyResistance: 1
+        voltenResistance: 1
+        DishSmackRsistance: 1
         b_b_atk: 4
         b_b_def: 4
         b_b_eye: 4
         b_b_agi: 4
         _tenDayTemplate:
           _list: []
-        CharacterName: test2
-        Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
-        ImpressionStringName: 
-        InitWeaponID: 0
-        NowBattleProtocol: 0
-        NowDeffenceStyle: 0
-        SelectedEscape: 0
-        SkillCalculatedRandomRange: 0
-        _p: 0
-        _tempVanguard: 0
-        _tempLive: 0
-        BattleFirstSurpriseAttacker: 0
-        maxRecoveryTurn: 0
-        _hp: 33
-        _maxhp: 34
-        _mentalHP: 20
+        Rivahal: 0
         _thinkingFactor: 0
+        _myImpression: 128
+        DefaultImpression: 2
+        MyType: 4
+        NowPower: 2
+        _machineBrokenRate: 0.3
+        InitVitalLaerIDList: 
+        InitWeaponID: 0
+        maxRecoveryTurn: 0
         Target: 0
         RangeWill: 0
         FreezeRangeWill: 0
-        IsActiveCancelInSkillACT: 0
-        MyType: 4
-        _myImpression: 128
-        DefaultImpression: 2
-        HeavyResistance: 1
-        voltenResistance: 1
-        DishSmackRsistance: 1
         IsDeleteMyFreezeConsecutive: 0
-        broken: 0
-        _machineBrokenRate: 0.3
+        InitpassiveIDList: 
         _brain: {fileID: 11400000, guid: 0197204017f7bf94090ba7d2aa57b9cf, type: 2}
         RecovelySteps: -1
         _interruptCounterActive: 1
@@ -46473,7 +46428,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1312455994
 RectTransform:
   m_ObjectHideFlags: 0

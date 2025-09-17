@@ -91,10 +91,9 @@ public abstract partial class BaseStates
     /// <summary>
     /// ダメージを渡し、がむしゃらの補正をかけて返す
     /// </summary>
-    StatesPowerBreakdown GetFrenzyBoost(BaseStates atker,StatesPowerBreakdown dmg)
+    StatesPowerBreakdown GetFrenzyBoost(BaseStates atker, BaseSkill skill, StatesPowerBreakdown dmg)
     {
         var boost =1.0f;
-        var skill = atker.NowUseSkill;
         if(skill.NowConsecutiveATKFromTheSecondTimeOnward())//2回目以降の連続攻撃なら
         {
             var StrongFootEye = (EYE() + AGI()) /2f;
@@ -177,9 +176,8 @@ public abstract partial class BaseStates
     /// <summary>
     /// 連続攻撃時、狙い流れの物理属性適正とスキルの物理属性の一致による1.1倍ブーストがあるかどうかを判定し行使する関数です
     /// </summary>
-    void CheckPhysicsConsecutiveAimBoost(BaseStates attacker)
+    void CheckPhysicsConsecutiveAimBoost(BaseStates attacker, BaseSkill skill)
     {
-        var skill = attacker.NowUseSkill;
         if(!skill.NowConsecutiveATKFromTheSecondTimeOnward())return;//連続攻撃でないなら何もしない
 
         if((skill.NowAimStyle() ==AimStyle.Doublet && skill.SkillPhysical == PhysicalProperty.volten) ||
@@ -422,10 +420,11 @@ public abstract partial class BaseStates
     {
         //防ぎ方の切り替え
         SwitchDefenceStyle(Atker);
-        //連続攻撃の物理属性ブースト判定
-        CheckPhysicsConsecutiveAimBoost(Atker);
 
         var skill = Atker.NowUseSkill;
+        
+        //連続攻撃の物理属性ブースト判定
+        CheckPhysicsConsecutiveAimBoost(Atker, skill);
 
         //ダメージ直前のパッシブ効果
         PassivesOnBeforeDamage(Atker);
@@ -467,7 +466,7 @@ public abstract partial class BaseStates
         //パッシブによるダメージの減衰率による絶対削減
         PassivesDamageReductionEffect(ref dmg);
         //がむしゃらな補正
-        dmg = GetFrenzyBoost(Atker,dmg);
+        dmg = GetFrenzyBoost(Atker,skill,dmg);
 
         //慣れ補正
         dmg *= AdaptToSkill(Atker, skill, dmg);
@@ -584,22 +583,26 @@ public abstract partial class BaseStates
     }
     /// <summary>
     /// 戦闘外やシンプル用途向けのダメージ適用（戦闘専用の連鎖・記録・割込み・ログ等は行わない）
-    /// イベント用
+    /// イベント用（スキルを明示的に渡す版）
     /// </summary>
-    /// <param name="Atker"></param>
-    /// <param name="SkillPower"></param>
-    /// <param name="SkillPowerForMental"></param>
-    /// <param name="hitResult"></param>
-    /// <param name="isdisturbed"></param>
+    /// <param name="Atker">攻撃者</param>
+    /// <param name="skill">使用スキル（NowUseSkill 非依存）</param>
+    /// <param name="SkillPower">本体威力</param>
+    /// <param name="SkillPowerForMental">精神威力</param>
+    /// <param name="hitResult">命中結果</param>
+    /// <param name="isdisturbed">山型分布による乱れ出力</param>
+    /// <param name="opts">適用オプション</param>
     /// <returns>最終的に本体HPへ適用されたダメージ内訳（VitalLayer通過後）</returns>
-    public virtual StatesPowerBreakdown Damage(BaseStates Atker, float SkillPower,float SkillPowerForMental,HitResult hitResult,ref bool isdisturbed, DamageOptions opts = null)
+    public virtual StatesPowerBreakdown Damage(BaseStates Atker, BaseSkill skill, float SkillPower,float SkillPowerForMental,HitResult hitResult,ref bool isdisturbed, DamageOptions opts = null)
     {
         var o = opts ?? SkillApplyPolicy.OutOfBattleDefault.Damage;
-        var skill = Atker.NowUseSkill;
 
         // 防ぎ方の切り替え（ポリシーで制御）
         if (o.SwitchDefenceStyle)
             SwitchDefenceStyle(Atker);
+
+        // 連続攻撃の物理属性ブースト判定（戦闘外でも適用可能）
+        CheckPhysicsConsecutiveAimBoost(Atker, skill);
 
         // ダメージ直前のパッシブ効果
         // 戦闘外でBM依存のパッシブが混ざるのを避けるため、ポリシーから切替可能
@@ -647,7 +650,7 @@ public abstract partial class BaseStates
             PassivesDamageReductionEffect(ref dmg);
         // がむしゃらな補正
         if(o.Frenzy)
-            dmg = GetFrenzyBoost(Atker,dmg);
+            dmg = GetFrenzyBoost(Atker,skill,dmg);
 
         // 慣れ補正
         if(o.Adaptation)
@@ -700,6 +703,7 @@ public abstract partial class BaseStates
 
         return dmg;
     }
+
     /// <summary>
     /// パッシブの毒ダメや、リンク等の「数値を渡すだけ」の単純ダメージ用
     /// - スキルに依存しない（NowUseSkill 参照なし）
@@ -746,14 +750,14 @@ public abstract partial class BaseStates
     /// </summary>
     public StatesPowerBreakdown NonMagicDamageCalculation(BaseStates Atker, float SkillPower,StatesPowerBreakdown def)
     {
-        return ((Atker.ATK(Atker.SkillAttackModifier) - def) * SkillPower) + SkillPower;//(攻撃-対象者の防御) にスキルパワー加算と乗算
+        return ((Atker.ATK(SkillAttackModifier) - def) * SkillPower) + SkillPower;//(攻撃-対象者の防御) にスキルパワー加算と乗算
     }
     /// <summary>
     /// 魔法スキルのダメージ計算
     /// </summary>
     public StatesPowerBreakdown MagicDamageCalculation(BaseStates Atker, float SkillPower,StatesPowerBreakdown def)
     {
-        return (MagicBlendVSCalc(Atker.ATK(Atker.SkillAttackModifier),def) * (SkillPower * 0.5f)) + SkillPower * Atker.ATK() * 0.09f;//(攻撃-対象者の防御) にスキルパワー加算と乗算
+        return (MagicBlendVSCalc(Atker.ATK(SkillAttackModifier),def) * (SkillPower * 0.5f)) + SkillPower * Atker.ATK() * 0.09f;//(攻撃-対象者の防御) にスキルパワー加算と乗算
     }
 
     //                 [[[[[[[[[[[[[[[                            ーーーー
@@ -1219,6 +1223,8 @@ public enum AimStyle
         public bool CommitBuffersImmediately = true;
         // 復活時のパーティ連鎖を使うか
         public bool UsePartyAngelChain = false;
+        // スキルの特殊属性による精神変化を適用するか
+        public bool ApplyImposedImpression = true;
         // ダメージ詳細
         public DamageOptions Damage = new DamageOptions();
 
@@ -1231,6 +1237,7 @@ public enum AimStyle
                 GateFriendlyByHit = GateFriendlyByHit,
                 CommitBuffersImmediately = CommitBuffersImmediately,
                 UsePartyAngelChain = UsePartyAngelChain,
+                ApplyImposedImpression = ApplyImposedImpression,
                 Damage = Damage?.Clone() ?? new DamageOptions()
             };
         }
@@ -1250,6 +1257,7 @@ public enum AimStyle
                         GateFriendlyByHit = false,
                         CommitBuffersImmediately = true,
                         UsePartyAngelChain = false,
+                        ApplyImposedImpression = true,
                         Damage = new DamageOptions
                         {
                             AimStyleClamp = false,
@@ -1289,6 +1297,7 @@ public enum AimStyle
                         GateFriendlyByHit = true,
                         CommitBuffersImmediately = true, // 戦闘外なので即コミット
                         UsePartyAngelChain = true,
+                        ApplyImposedImpression = true,
                         Damage = new DamageOptions
                         {
                             AimStyleClamp = true,

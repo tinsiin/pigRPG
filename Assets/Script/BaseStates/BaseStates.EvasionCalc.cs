@@ -33,12 +33,12 @@ public abstract partial class BaseStates
     /// <summary>
     /// スキルにより影響された回避補正率
     /// </summary>
-    float _skillEvasionModifier = 1f;
+    float _skillEvasionModifier =  _BaseEvasionModifier;
 
     /// <summary>
     /// 平準化する回避補正率
     /// </summary>
-    float _BaseEvasionModifier = 1f;
+    const float _BaseEvasionModifier = 1f;
 
     /// <summary>
     /// 回避率でAGIに掛けるスキルにより影響された回避補正率　

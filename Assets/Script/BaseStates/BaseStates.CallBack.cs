@@ -33,6 +33,14 @@ public abstract partial class BaseStates
         NowUseSkill.CalcCradleSkillLevel(UnderAtker);//「攻撃者の」スキルのゆりかご計算
         NowUseSkill.RefilCanEraceCount();//除去スキル用の消せるカウント回数の補充
     }
+
+    /// <summary>
+    /// 攻撃や友好効果など「何らかがヒットした後」の薄い拡張フック
+    /// 既定では何もしません。必要に応じて派生クラスでオーバーライドしてください。
+    /// </summary>
+    protected virtual void OnBattleAnyEffectHit(BaseStates attacker, BaseSkill skill, bool isAttack, HitResult bestHitOutcome)
+    {
+    }
     /// <summary>
     /// 戦闘中に次のターンに進む際のコールバック
     /// </summary>
@@ -143,6 +151,11 @@ public abstract partial class BaseStates
     
         //スキルの戦闘終了時コールバック
         OnBattleEndSkills();
+
+        CalmDown();//落ち着きカウント無くす
+        BattleFirstSurpriseAttacker = false;//bm初回先手攻撃フラグ
+        Rivahal = 0;//ライバハル値を初期化
+
     }
 
     /// <summary>

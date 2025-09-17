@@ -17,12 +17,12 @@ public abstract partial class BaseStates
     /// <summary>
     /// スキルにより影響された攻撃補正率
     /// </summary>
-    float _skillAttackModifier = 1f;
+    float _skillAttackModifier = _BaseAttackModifier;
     
     /// <summary>
     /// 平準化する攻撃補正率
     /// </summary>
-    float _BaseAttackModifier = 1f;
+    const float _BaseAttackModifier = 1f;
     /// <summary>
     /// 攻撃力でATKに掛けるスキルにより影響された攻撃補正率
     /// 落ち着きターン経過により減衰する。
