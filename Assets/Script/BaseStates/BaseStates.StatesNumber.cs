@@ -16,6 +16,8 @@ public abstract partial class BaseStates
     //                                              HP
     //  ==============================================================================================================================
     CombinedStatesBar HPBar => UI?.HPBar;//UI
+    [Header("HP")]
+    [Tooltip("現在のHP（実数）。MaxHPを超えないようにクランプされる")]
     [SerializeField]
     private float _hp;
     public float HP
@@ -41,12 +43,16 @@ public abstract partial class BaseStates
             }
         }
     }
+    [Tooltip("最大HP（実数）。HPはこの値でクランプされる")]
     [SerializeField]
     private float _maxhp;
     public float MaxHP => _maxhp;
     //  ==============================================================================================================================
     //                                              精神HP
     //  ==============================================================================================================================
+    [Space]
+    [Header("精神HP")]
+    [Tooltip("現在の精神HP。最大値は動的に計算される(MentalMaxHP)")]
     [SerializeField]
     float _mentalHP;
     /// <summary>
@@ -179,18 +185,22 @@ public abstract partial class BaseStates
     //  ==============================================================================================================================
     //                                              物理耐性
     //  ==============================================================================================================================
-
+    [Space]
+    [Header("物理耐性")]
     /// <summary>
     /// 暴断耐性
     /// </summary>
+    [Tooltip("暴断(heavy)に対するダメージ倍率。1.0=基準(無補正)")]
     public float HeavyResistance = 1.0f;
     /// <summary>
     /// ヴォル転耐性
     /// </summary>
+    [Tooltip("ヴォル転(volten)に対するダメージ倍率。1.0=基準(無補正)")]
     public float voltenResistance = 1.0f;
     /// <summary>
     /// 床ずれ耐性
     /// </summary>
+    [Tooltip("床ずれ(dish smack)に対するダメージ倍率。1.0=基準(無補正)")]
     public float DishSmackRsistance = 1.0f;
     //  ==============================================================================================================================
     //                                              4大ステータス
@@ -1109,6 +1119,35 @@ public abstract partial class BaseStates
         return rows;
     }
 
+    //  ==============================================================================================================================
+    //                                              OverKillでのbroken確率
+    //  ==============================================================================================================================
+    [Header("OverKillでのbroken確率(このキャラが機械なら)")]
+    [SerializeField]
+    float _machineBrokenRate = 0.3f;//インスペクタで設定する際の初期デフォルト値
+    const float _lifeBrokenRate = 0.1f;//生命の壊れる確率は共通の定数
+    /// <summary>
+    /// OverKillが発生した場合、壊れる確率
+    /// </summary>
+    float OverKillBrokenRate
+    {
+        get
+        {
+            if(MyType == CharacterType.Machine)
+            {
+                return _machineBrokenRate;
+            }
+            if(MyType == CharacterType.Life)
+            {
+                return _lifeBrokenRate;
+            }
+            // そのほかのタイプに対応していない場合は例外をスロー
+            throw new NotImplementedException(
+            $"OverKillBrokenRate is not implemented for CharacterType: {MyType}"
+        );
+        }
+    }
+
 
 
     //  ==============================================================================================================================
@@ -1118,6 +1157,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// ライバハル値
     /// </summary>
+    [NonSerialized]
     public float Rivahal;
     /// <summary>
     /// TLOAスキルからのダメージ時、ライバハルの増える処理
@@ -1171,6 +1211,7 @@ public abstract partial class BaseStates
     /// 思えの値用の各キャラクターに設定するユニークな思慮係数(知能？)
     /// 1~100でキャラの思慮深さを定義
     /// </summary>
+    [Header("思念係数\n 1~100でキャラの思慮深さを定義")]
     [SerializeField][Range(1,100)] float _thinkingFactor;
     /// <summary>
     /// 思えの値の現在の値

@@ -107,6 +107,7 @@ public abstract partial class BaseStates
     //
     //
     //  ==============================================================================================================================
+    [NonSerialized]
     public List<CharacterConditionalModifier> _charaConditionalMods;
     /// <summary>
     /// キャラ限定補正を追加

@@ -15,6 +15,9 @@ public abstract partial class BaseStates
     //                                              キャラクター属性(精神属性)
     //  ==============================================================================================================================
     
+    [Space]
+    [Header("精神属性")]
+    [Tooltip("このキャラクターの現在の精神属性（ビットフラグ）")]
     [SerializeField] //フィールドをシリアライズ
     private SpiritualProperty _myImpression;
     /// <summary>
@@ -31,6 +34,7 @@ public abstract partial class BaseStates
     ///     一定数歩行するとMyImpressionがこれに戻る
     ///     当然この属性自体もゲーム中で変化する可能性はある。
     /// </summary>
+    [Tooltip("デフォルト精神属性。一定歩数の歩行で MyImpression がこの属性に戻る")]
     public SpiritualProperty DefaultImpression;
    
     /// <summary>
@@ -71,6 +75,9 @@ public abstract partial class BaseStates
     /// <summary>
     ///     このキャラクターの種別
     /// </summary>
+    [Space]
+    [Header("種別")]
+    [Tooltip("キャラクターの種別（ビットフラグ）")]
     public CharacterType MyType;
 
     /// <summary>
@@ -135,6 +142,9 @@ public abstract partial class BaseStates
     //  ==============================================================================================================================
 
 
+    [Space]
+    [Header("パワー")]
+    [Tooltip("キャラクターの現在のパワー段階（初期値: medium）")]
     public ThePower NowPower = ThePower.medium;//初期値は中
 
     /// <summary>
@@ -2855,31 +2865,6 @@ public abstract partial class BaseStates
     /// </summary>
     [NonSerialized]
     public bool broken = false;
-    [SerializeField]
-    float _machineBrokenRate = 0.3f;//インスペクタで設定する際の初期デフォルト値
-    const float _lifeBrokenRate = 0.1f;//生命の壊れる確率は共通の定数
-    /// <summary>
-    /// OverKillが発生した場合、壊れる確率
-    /// </summary>
-    float OverKillBrokenRate
-    {
-        get
-        {
-            if(MyType == CharacterType.Machine)
-            {
-                return _machineBrokenRate;
-            }
-            if(MyType == CharacterType.Life)
-            {
-                return _lifeBrokenRate;
-            }
-            // そのほかのタイプに対応していない場合は例外をスロー
-            throw new NotImplementedException(
-            $"OverKillBrokenRate is not implemented for CharacterType: {MyType}"
-        );
-        }
-    }
-
 
     //  ==============================================================================================================================
     //                                              その他

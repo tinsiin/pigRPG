@@ -64,15 +64,18 @@ public abstract partial class BaseStates
     /// <summary>
     ///     このキャラクターの名前
     /// </summary>
+    [Tooltip("インゲームおよびログ表示で使用するキャラクター名")]
     public string CharacterName;
     /// <summary>
     ///     このキャラクターの説明
     /// </summary>
+    [Tooltip("キャラクターの説明文（UI/ツールチップ用途）")]
     public string Description = "入力されていません";
 
     /// <summary>
     /// 裏に出す種別も考慮した彼のことの名前
     /// </summary>
+    [Tooltip("表示用の別名/印象名（必要に応じて表示に使用）")]
     public string ImpressionStringName;
 
 

@@ -18,6 +18,9 @@ public abstract partial class BaseStates
     /// <summary>
     /// 初期所持してる武器のID
     /// </summary>
+    [Space]
+    [Header("武器/戦闘規格")]
+    [Tooltip("初期所持している武器のID（シーン開始時に適用）")]
     public int InitWeaponID;
     /// <summary>
     /// 武器装備、武器から移る戦闘規格の変化

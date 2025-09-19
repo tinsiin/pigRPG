@@ -18,6 +18,8 @@ public abstract partial class BaseStates
     /// <summary>
     /// このキャラがどの辺りを狙っているか
     /// </summary>
+    [Header("選別シチュエーション")]
+    [Tooltip("このキャラがどの辺りを狙っているか（ターゲット意志）")]
     public DirectedWill Target = 0;
 
     //  ==============================================================================================================================
@@ -27,6 +29,9 @@ public abstract partial class BaseStates
     /// このキャラの現在の範囲の意思　　複数持てる
     /// スキルの範囲性質にcanSelectRangeがある場合のみ、ない場合はskillのzoneTraitをそのまま代入される。
     /// </summary>
+    [Space]
+    [Header("範囲意志")]
+    [Tooltip("現在のスキル範囲の意思（複数可）。範囲選択性質がある場合のみ反映。無い場合はスキルのzoneTraitを代入")]
     public SkillZoneTrait RangeWill = 0;
 
     /// <summary>
@@ -116,6 +121,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// 強制続行中のスキルの範囲性質
     /// </summary>
+    [NonSerialized]
     public SkillZoneTrait FreezeRangeWill;
     /// <summary>
     /// 強制続行中のスキルの範囲性質を設定する
@@ -155,6 +161,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// 現在の自分自身の実行中のFreezeConsecutiveを削除するかどうかのフラグ
     /// </summary>
+    [NonSerialized]
     public bool IsDeleteMyFreezeConsecutive = false;
 
     /// <summary>

@@ -16,7 +16,9 @@ public abstract partial class BaseStates
     /// </summary>
     public int MAXP => (int)_maxhp / PlayersStates.Instance.HP_TO_MaxP_CONVERSION_FACTOR;
 
+    [Header("ポイント(P)")]
     [SerializeField]
+    [Tooltip("現在のポイント(P)の実体。プロパティPで0〜MAXPにクランプされる")] 
     int _p;//バッキングフィールド
     /// <summary>
     /// ポイント

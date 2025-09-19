@@ -20,6 +20,7 @@ public abstract partial class BaseStates
     /// </summary>
     List<BasePassive> _passiveList = new();
     public List<BasePassive> Passives => _passiveList;
+    [Header("初期所持のパッシブのIDリスト")]
     /// <summary>
     /// 初期所持のパッシブのIDリスト
     /// </summary>

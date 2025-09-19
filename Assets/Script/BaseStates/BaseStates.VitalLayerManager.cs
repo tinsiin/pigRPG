@@ -13,6 +13,9 @@ public abstract partial class BaseStates
     /// <summary>
     /// 初期所持のVitalLayerのIDリスト
     /// </summary>
+    [Space]
+    [Header("追加HP(バリア層) 初期設定")]
+    [Tooltip("初期所持するVitalLayerのIDリスト（初期化時に適用）")]
     [SerializeField] List<int> InitVitalLaerIDList = new();
     public IReadOnlyList<BaseVitalLayer> VitalLayers => _vitalLayerList;
     /// <summary>

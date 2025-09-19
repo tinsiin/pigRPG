@@ -116,6 +116,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// キャラクターの対ひとりごとの行動記録
     /// </summary>
+    [NonSerialized]
     public List<ACTSkillDataForOneTarget> ActDoOneSkillDatas;
     /// <summary>
     /// 直近の行動記録
@@ -124,6 +125,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// アクション事のスキルデータ AttackChara単位で記録　= スキル一回に対して
     /// </summary>
+    [NonSerialized]
     public List<ActionSkillData> DidActionSkillDatas = new();
     /// <summary>
     /// bm内にスキル実行した回数。
@@ -182,6 +184,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// 現在持ってる対象者のボーナスデータ
     /// </summary>
+    [NonSerialized]
     public TargetBonusDatas TargetBonusDatas = new();
 
 

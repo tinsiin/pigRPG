@@ -21,6 +21,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// キャラクターの被害記録
     /// </summary>
+    [NonSerialized]
     public List<DamageData> damageDatas;
     /// <summary>
     /// 直近の被害記録
