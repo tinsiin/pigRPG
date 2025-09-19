@@ -11,6 +11,62 @@ using System.Linq;
 public abstract partial class BaseStates    
 {
     //  ==============================================================================================================================
+    //                                              死亡処理（戦闘/非戦闘）
+    //  ==============================================================================================================================
+
+    /// <summary>
+    /// 今バトルで死亡処理（OnBattleDeathCallBack）を既に実行済みか。
+    /// 従来の hasDied の代替。Angel() で復活したら false に戻す。
+    /// </summary>
+    private bool m_BattleDeathProcessed = false;
+
+    /// <summary>
+    /// 戦闘時に一度だけ死亡処理を実行する。HP<=0 かつ 未処理のときに OnBattleDeathCallBack を呼ぶ。
+    /// </summary>
+    public bool ProcessBattleDeathIfNeeded()
+    {
+        if (Death() && !m_BattleDeathProcessed)
+        {
+            m_BattleDeathProcessed = true;
+            OnBattleDeathCallBack();
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// 戦闘時の死亡時コールバック。既定では共通 DeathCallBack を呼ぶ。
+    /// 必要に応じて派生クラスで上書き可能。
+    /// </summary>
+    protected virtual void OnBattleDeathCallBack()
+    {
+        DeleteConsecutiveATK();//連続攻撃の消去
+        ApplyConditionChangeOnDeath();//人間状況の変化
+
+        //あるかわからないが続行中のスキルを消し、
+        //以外のそれ以外のスキルの連続攻撃回数消去(基本的に一個しか増えないはずだが)は以下のforeachループで行う
+        foreach (var skill in SkillList)
+        {
+            skill.OnDeath();
+        }
+
+        //対象者ボーナス全削除
+        TargetBonusDatas.AllClear();
+
+        //パッシブの死亡時処理
+        UpdateDeathAllPassiveSurvival();
+
+        //思えの値リセット
+        ResetResonanceValue();
+
+        //精神HPの死亡時分岐
+        MentalHPOnDeath();
+
+        //落ち着きをリセット　死んだらスキルの持続力無くなるしね
+        CalmDown();
+
+    }
+    //  ==============================================================================================================================
     //                                              ReactionSkill用
     //  ==============================================================================================================================
 
@@ -46,10 +102,16 @@ public abstract partial class BaseStates
     /// </summary>
     public void OnNextTurnNoArgument()
     {
+        ProcessBattleDeathIfNeeded();//バトル内での死亡コールバック実装
+
         UpdateTurnAllPassiveSurvival();
         UpdateAllSkillPassiveSurvival();
         UpdateNotVanguardAllPassiveSurvival();
         PassivesOnNextTurn();//パッシブのターン進効果
+
+        //パッシブで死亡した時のため
+        ProcessBattleDeathIfNeeded();//バトル内での死亡コールバック実装
+
 
         //生きている場合にのみする処理
         if(!Death())
@@ -90,6 +152,7 @@ public abstract partial class BaseStates
     /// </summary>
     public virtual void OnBattleStartNoArgument()
     {
+        m_BattleDeathProcessed = false; // バトル開始時に未処理へ
         TempDamageTurn = 0;
         SelectedEscape = false;//選択を解除
         SkillCalculatedRandomRange = false;//ランダム範囲計算フラグを解除
@@ -128,6 +191,7 @@ public abstract partial class BaseStates
     }
     public virtual void OnBattleEndNoArgument()
     {
+        m_BattleDeathProcessed = false; // 終了時にクリア（保険）
         DeleteConsecutiveATK();//連続攻撃を消す
         NowUseSkill = null;//現在何のスキルも使っていない。
         TempDamageTurn = 0;
@@ -203,37 +267,6 @@ public abstract partial class BaseStates
     /// 立場により持ってる実体スキルの扱い方が異なるので各派生クラスで実装する。
     /// </summary>
     public abstract void OnInitializeSkillsAndChara();
-    /// <summary>
-    /// 死亡時のコールバック　SkillsTmpResetでスキルの方からリセットできるような簡単じゃない奴をここで処理する。
-    /// </summary>
-    public virtual void DeathCallBack()
-    {
-        DeleteConsecutiveATK();//連続攻撃の消去
-        ApplyConditionChangeOnDeath();//人間状況の変化
-
-        //あるかわからないが続行中のスキルを消し、
-        //以外のそれ以外のスキルの連続攻撃回数消去(基本的に一個しか増えないはずだが)は以下のforeachループで行う
-        foreach (var skill in SkillList)
-        {
-            skill.OnDeath();
-        }
-
-        //対象者ボーナス全削除
-        TargetBonusDatas.AllClear();
-
-        //パッシブの死亡時処理
-        UpdateDeathAllPassiveSurvival();
-
-        //思えの値リセット
-        ResetResonanceValue();
-
-        //精神HPの死亡時分岐
-        MentalHPOnDeath();
-
-        //落ち着きをリセット　死んだらスキルの持続力無くなるしね
-        CalmDown();
-
-    }
 
 
 

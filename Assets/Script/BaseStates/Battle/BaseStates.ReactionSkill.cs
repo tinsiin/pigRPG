@@ -238,7 +238,7 @@ public abstract partial class BaseStates
     {
         if(!broken)//brokenしてないなら
         {
-            hasDied =false;
+            m_BattleDeathProcessed = false;
             HP = float.Epsilon;//生きてるか生きてないか=Angel
             if(NowPower == ThePower.high)
             {

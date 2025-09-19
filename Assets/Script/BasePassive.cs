@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using System;
 using System.Linq;
@@ -422,6 +422,31 @@ public class BasePassive
     public virtual void OnNextTurn()
     {
     }
+
+    /// <summary>
+    /// BattleManager上で「単純な毒というよりは見た目とたとえるならRPGだとしたらわざわざエフェクトが出るような派手なパッシブダメージ」を
+    /// 対象リストを直接指定して予約するラッパー。
+    /// manager などが不正ならエラーを出して終了します。
+    /// </summary>
+    /// <param name="targets">ダメージ対象（null/死者は内部で除外）</param>
+    /// <param name="message">行動ログ用メッセージ</param>
+    /// <param name="power">与えるダメージ量（基礎倍率）</param>
+    protected void EnqueueFlashyPassiveDamage(List<BaseStates> targets, string message, float power)
+    {
+        if (manager == null)
+        {
+            Debug.LogError("BasePassive.EnqueueFlashyPassiveDamage: BattleManager is null. この状況は不正です。");
+            return;
+        }
+        if (targets == null)
+        {
+            Debug.LogError($"BasePassive.EnqueueFlashyPassiveDamage: targets is null for passive '{PassiveName}'.");
+            return;
+        }
+
+        manager.Acts.RatherAdd(message, targets, power);
+    }
+
 
     public virtual float OnDamageReductionEffect()
     {

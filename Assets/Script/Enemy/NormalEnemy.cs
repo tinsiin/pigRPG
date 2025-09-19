@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using static CommonCalc;
 using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
 
 /// <summary>
 /// 敵UI配置タイプ
@@ -144,6 +145,10 @@ public class NormalEnemy : BaseStates
     public virtual void SkillAI()
     {
         _brain.SkillActRun();
+    }
+    public virtual async void BattleEndSkillAI()
+    {
+        await _brain.PostBattleActRun(this);
     }
 
     //スキル成長の処理など------------------------------------------------------------------------------------------------------スキル成長の処理などーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー

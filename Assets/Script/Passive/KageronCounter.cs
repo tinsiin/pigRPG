@@ -33,13 +33,13 @@ public class KageronCounter : BasePassive//カゲロンカウンター
             //基礎威力に強くする威力をパッシブ要素からカウントを増やす　数を掛けてね
             var LastPower = BasePower + PowerCount * 0.14f;
 
+
             //攻撃してきた陣営全員をレイザーアクト対象者リストとして記録
             var Targets = RemoveDeathCharacters(manager.MyGroup(attacker).Ours);//生きてる人限定でね
 
-            //戦闘マネージャーに全体攻撃のレイザーアクトを予約  （前半二ついらんから適当に登録）
-            manager.Acts.RatherAdd("カゲロンカウンター全体攻撃(レイザー)", Targets, LastPower);
+            //BattleManager上で「単純な毒というよりは見た目とたとえるならRPGだとしたらわざわざエフェクトが出るような派手なパッシブダメージ」を予約
+            EnqueueFlashyPassiveDamage(Targets, "カゲロンカウンター全体攻撃(レイザー)", LastPower);
             
-
             //攻撃(ダメージ)を無効化。
             return false;
         }

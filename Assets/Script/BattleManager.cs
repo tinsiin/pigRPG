@@ -2267,6 +2267,7 @@ public class BattleManager
             AllyGroup.OnPartyNextTurnNoArgument();//次のターンへ行く引数なしコールバック
             EnemyGroup.OnPartyNextTurnNoArgument();
 
+
         }
         
 
@@ -2290,6 +2291,9 @@ public class BattleManager
 
         //敵キャラは死んだりした該当者のみ選んで復活準備
         EnemyGroup.RecovelyStart(PlayersStates.Instance.NowProgress);
+
+        //敵グループの終了時のスキルAI
+        EnemyGroup.EnemiesBattleEndSkillAI();
 
         foreach (var one in AllCharacters)//全てのキャラの引数なし終わりのコールバック
         {

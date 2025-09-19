@@ -2844,21 +2844,8 @@ public abstract partial class BaseStates
     /// <returns></returns>
     public virtual bool Death()
     {
-        if (HP <= 0) 
-        {
-            if(!hasDied)
-            {
-            hasDied =true;
-            DeathCallBack();
-            }
-            return true;
-        }
-        return false;
+        return HP <= 0;
     }
-    /// <summary>
-    /// 死んだ瞬間を判断するためのフラグ
-    /// </summary>
-    bool hasDied =false;
     /* ---------------------------------
      * broken
      * --------------------------------- 

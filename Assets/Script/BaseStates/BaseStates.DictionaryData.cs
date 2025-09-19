@@ -33,6 +33,7 @@ public abstract partial class BaseStates
         {SpiritualProperty.devil, new List<TenDayAbility>(){TenDayAbility.CryoniteQuality, TenDayAbility.HumanKiller, TenDayAbility.HeatHaze, TenDayAbility.FaceToHand}},
     };
 
+
     /// <summary>
     /// 戦闘規格ごとのデフォルトa,bの狙い流れ
     /// </summary>

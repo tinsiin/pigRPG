@@ -393,7 +393,12 @@ public class BattleGroup
         return Ours.Where(one => impressions.Contains(one.MyImpression)).ToList();
     }
 
-    //敵グループ専用関数----------------------------------------------------------------------------------------------------------------------------
+
+    //  ==============================================================================================================================
+    //                                              敵グループ専用関数
+    //  ==============================================================================================================================
+
+    //----------------------------------------------------------------------------------------------------------------------------
     /// <summary>
     /// 敵グループの勝利時のコールバック
     /// </summary>
@@ -422,6 +427,19 @@ public class BattleGroup
         foreach(var enemy in Ours.OfType<NormalEnemy>())
         {
             enemy.OnAllyRunOut();
+        }
+    }
+
+    /// <summary>
+    /// 敵グループの終了時のスキルAI
+    /// 生存者のみ
+    /// </summary>
+    public void EnemiesBattleEndSkillAI()
+    {
+        var enemies = RemoveDeathCharacters(Ours).OfType<NormalEnemy>().ToList();
+        foreach(var enemy in enemies)
+        {
+            enemy.BattleEndSkillAI();
         }
     }
     
