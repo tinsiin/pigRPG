@@ -43,8 +43,8 @@ public partial class BaseSkill
         }
     }
 
-
-    [Header("ムーブセットの数そのものが二回目以降の連続攻撃となる\naとbは必ず同じ数分設定しなければいけない\nAimStyleとDEFATKを連続攻撃の手数分設定する感じ")]
+    [Header("ムーブセットの数そのものが二回目以降の連続攻撃となる\naとbは必ず同じ数分設定しなければいけない\nAimStyleとDEFATKを連続攻撃の手数分設定する感じ\n外側のインデックス = ランダム候補、内側のインデックス = 連続攻撃のindexに対応")]
+    [Header("ムーブセット設定ガイド\n【外側 List<MoveSet>】= 候補パターン群（A/Bは同数に）\n- 1回の発動ごとに1つ選択（DecideNowMoveSet_A0_B1 → NowMoveSetState）\n- CashMoveSet() がスキルレベルで A/B の候補群を差し替え\n【内側 MoveSet】= 2発目以降の手順\n- States[i] は (i+2)発目の AimStyle\n- DEFATKList[i] は (i+2)発目の防御係数（両リストは同じ長さ）\n【初回(1発目)】MoveSetは使わず SetSingleAimStyle() で設定した値を使用\n【総ヒット数】= 1(初回) + States.Count\n【注意】A/Bでパターン数と手数(States.Count)を揃えること")]
     /// <summary>
     /// 設定用 スキルごとのムーブセット 戦闘規格ごとのaに対応するもの。
     /// </summary>

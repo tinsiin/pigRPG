@@ -52,6 +52,7 @@ public partial class BaseSkill
     /// </summary>
     [Header("固定されたスキルレベルデータ部分は必ず一つのデータを設定する必要があります。\n(スキルはレベルが上がるのが普通なのでそういう設計にしてるから、デバックでも必ず一つは必要)")]
     public List<SkillLevelData> FixedSkillLevelData = new();
+    [Header("レベルに対応する必須プロパティは、レベルデータに明示的に登録する以外で、単純にレベルに応じて伸びる無限単位が設定できます。\nこれは有限レベル設定の限界以降、ずっと用いられます。")]
     /// <summary>
     /// 無限に伸びる部分のスキルパワーの単位。
     /// </summary>
@@ -236,7 +237,7 @@ public class SkillLevelData
     public TenDayAbilityDictionary TenDayValues;
     public float SkillPower;
 
-    [Header("オプションの値")]
+    [Header("オプションの値 それぞれnull,-1なら 通常の設定値が用いられる。\nこれらの値を「レベル」の構造に合わせて変動するようにしたい場合、設定すると通常の設定値を上書きする形で\nこれらのプロパティがレベルに対応し変動する値になる。\nレベルオプションは基本的に通常の設定値と同じ設定方法です。")]
     /// <summary>
     /// スキルレベルによる精神攻撃率 (オプション)
     /// -1なら参照されない
@@ -254,7 +255,7 @@ public class SkillLevelData
     /// -1なら参照されない
     /// </summary>
     public int OptionSkillHitPer = -1;
-
+    [Header("nullなら通常の設定値が用いられる。オプションムーブセット設定")]
     public List<MoveSet> OptionA_MoveSet = null;
     public List<MoveSet> OptionB_MoveSet = null;
 
