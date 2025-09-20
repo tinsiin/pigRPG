@@ -47,7 +47,7 @@ public abstract partial class BaseStates
         //以外のそれ以外のスキルの連続攻撃回数消去(基本的に一個しか増えないはずだが)は以下のforeachループで行う
         foreach (var skill in SkillList)
         {
-            skill.OnDeath();
+            skill.OnBattleDeath();
         }
 
         //対象者ボーナス全削除
