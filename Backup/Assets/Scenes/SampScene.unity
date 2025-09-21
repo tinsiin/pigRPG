@@ -22019,7 +22019,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.95046157, g: 0.21165693, b: 0.9399176, a: 0.8182074}
+  m_Color: {r: 0.8963824, g: 0.44271475, b: 0.874328, a: 0.6197513}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -40567,20 +40567,17 @@ MonoBehaviour:
         value: 45
       - key: 17
         value: 3
-    Rivahal: 0
+    _machineBrokenRate: 0.3
     _thinkingFactor: 17.2
     _myImpression: 2
     DefaultImpression: 256
     MyType: 0
     NowPower: 1
-    _machineBrokenRate: 0.3
     InitVitalLaerIDList: 
     InitWeaponID: 0
     maxRecoveryTurn: 0
     Target: 0
     RangeWill: 0
-    FreezeRangeWill: 0
-    IsDeleteMyFreezeConsecutive: 0
     InitpassiveIDList: 
     _uic: {fileID: 1393269996}
     _skillALLList:
@@ -40608,20 +40605,17 @@ MonoBehaviour:
     b_b_agi: 4
     _tenDayTemplate:
       _list: []
-    Rivahal: 0
+    _machineBrokenRate: 0.3
     _thinkingFactor: 0
     _myImpression: 0
     DefaultImpression: 1
     MyType: 0
     NowPower: 2
-    _machineBrokenRate: 0.3
     InitVitalLaerIDList: 
     InitWeaponID: 0
     maxRecoveryTurn: 0
     Target: 0
     RangeWill: 0
-    FreezeRangeWill: 0
-    IsDeleteMyFreezeConsecutive: 0
     InitpassiveIDList: 
     _uic: {fileID: 340528245}
     _skillALLList: []
@@ -40644,20 +40638,17 @@ MonoBehaviour:
     b_b_agi: 4
     _tenDayTemplate:
       _list: []
-    Rivahal: 0
+    _machineBrokenRate: 0.3
     _thinkingFactor: 0
     _myImpression: 0
     DefaultImpression: 8
     MyType: 0
     NowPower: 2
-    _machineBrokenRate: 0.3
     InitVitalLaerIDList: 
     InitWeaponID: 0
     maxRecoveryTurn: 0
     Target: 0
     RangeWill: 0
-    FreezeRangeWill: 0
-    IsDeleteMyFreezeConsecutive: 0
     InitpassiveIDList: 
     _uic: {fileID: 1845692092}
     _skillALLList: []
@@ -40718,53 +40709,50 @@ MonoBehaviour:
     - rid: 2127851150886043649
       type: {class: AllySkill, ns: , asm: Assembly-CSharp}
       data:
+        IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
+        CanSelectAggressiveCommit: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        SkillName: "\u30E9\u30D3\u30C3\u30C8\u30AD\u30E3\u30C3\u30C8"
         SkillSpiritual: 1
         Impression: 2
         MotionFlavor: {fileID: 0}
         SkillPhysical: 3
         SpecialFlags: 0
+        _baseSkillType: 512
+        ConsecutiveType: 0
+        ZoneTrait: 1
         RequiredNormalP: 0
         RequiredAttrP:
           _list: []
         Cantkill: 0
+        SKillDidWaitCount: 0
         EvasionModifier: 1
         AttackModifier: 1.6
-        FixedSkillLevelData: []
-        _infiniteSkillPowerUnit: 0
-        _infiniteSkillTenDaysUnit: 0
-        _mentalDamageRatio: 0
-        _powerSpread: []
-        _skillHitPer: 68
-        _a_moveset: []
-        _b_moveset: []
-        _triggerCountMax: 0
-        CanCancelTrigger: 1
-        _triggerRollBackCount: 0
-        _RandomConsecutivePer: 0
-        _defaultStockCount: 1
-        _stockPower: 1
-        _stockForgetPower: 1
-        IsAggressiveCommit: 1
-        IsReadyTriggerAgressiveCommit: 0
-        IsStockAgressiveCommit: 0
-        CanSelectAggressiveCommit: 0
-        SKillDidWaitCount: 0
-        SkillName: "\u30E9\u30D3\u30C3\u30C8\u30AD\u30E3\u30C3\u30C8"
-        subEffects: 
-        subVitalLayers: 
-        canEraceEffectIDs: 
-        canEraceVitalLayerIDs: 
-        CanEraceEffectCount: 0
-        CanEraceVitalLayerCount: 0
         _defAtk: 0
-        _baseSkillType: 512
-        ConsecutiveType: 0
-        ZoneTrait: 1
         DistributionType: 0
         PowerRangePercentageDictionary:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+        subEffects: 
+        subVitalLayers: 
+        canEraceEffectIDs: 
+        CanEraceEffectCount: 0
+        canEraceVitalLayerIDs: 
+        CanEraceVitalLayerCount: 0
+        _mentalDamageRatio: 0
+        _a_moveset: []
+        _b_moveset: []
+        _powerSpread: []
+        _skillHitPer: 68
+        FixedSkillLevelData: []
+        _infiniteSkillPowerUnit: 0
+        _infiniteSkillTenDaysUnit: 0
         ReactiveSkillPassiveList: []
         AggressiveSkillPassiveList: []
         TargetSelection: 0
@@ -40781,22 +40769,55 @@ MonoBehaviour:
           SkillTypeMode: 0
           SpecialFlags: 
           SpecialFlagMode: 0
+        _triggerCountMax: 0
+        CanCancelTrigger: 1
+        _triggerRollBackCount: 0
         _iD: 0
         Proficiency: 0
     - rid: 5115255248247586911
       type: {class: AllySkill, ns: , asm: Assembly-CSharp}
       data:
+        IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
+        CanSelectAggressiveCommit: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        SkillName: "\u30C6\u30B9\u30C8\u30B7\u30F3\u30D7\u30EB\u653B\u6483\u30B9\u30AD\u30EB"
         SkillSpiritual: 8
         Impression: 0
         MotionFlavor: {fileID: 0}
         SkillPhysical: 0
         SpecialFlags: 0
+        _baseSkillType: 1
+        ConsecutiveType: 0
+        ZoneTrait: 16416
         RequiredNormalP: 2
         RequiredAttrP:
           _list: []
         Cantkill: 0
+        SKillDidWaitCount: 0
         EvasionModifier: 1
         AttackModifier: 1
+        _defAtk: 0
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
+        subEffects: 
+        subVitalLayers: 
+        canEraceEffectIDs: 
+        CanEraceEffectCount: 0
+        canEraceVitalLayerIDs: 
+        CanEraceVitalLayerCount: 0
+        _mentalDamageRatio: 0
+        _a_moveset: []
+        _b_moveset: []
+        _powerSpread: []
+        _skillHitPer: 100
         FixedSkillLevelData:
         - TenDayValues:
             _list: []
@@ -40808,39 +40829,6 @@ MonoBehaviour:
           OptionB_MoveSet: []
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
-        _mentalDamageRatio: 0
-        _powerSpread: []
-        _skillHitPer: 100
-        _a_moveset: []
-        _b_moveset: []
-        _triggerCountMax: 0
-        CanCancelTrigger: 1
-        _triggerRollBackCount: 0
-        _RandomConsecutivePer: 0
-        _defaultStockCount: 1
-        _stockPower: 1
-        _stockForgetPower: 1
-        IsAggressiveCommit: 1
-        IsReadyTriggerAgressiveCommit: 0
-        IsStockAgressiveCommit: 0
-        CanSelectAggressiveCommit: 0
-        SKillDidWaitCount: 0
-        SkillName: "\u30C6\u30B9\u30C8\u30B7\u30F3\u30D7\u30EB\u653B\u6483\u30B9\u30AD\u30EB"
-        subEffects: 
-        subVitalLayers: 
-        canEraceEffectIDs: 
-        canEraceVitalLayerIDs: 
-        CanEraceEffectCount: 0
-        CanEraceVitalLayerCount: 0
-        _defAtk: 0
-        _baseSkillType: 1
-        ConsecutiveType: 0
-        ZoneTrait: 16416
-        DistributionType: 0
-        PowerRangePercentageDictionary:
-          _list: []
-        HitRangePercentageDictionary:
-          _list: []
         ReactiveSkillPassiveList: []
         AggressiveSkillPassiveList: []
         TargetSelection: 0
@@ -40857,22 +40845,55 @@ MonoBehaviour:
           SkillTypeMode: 0
           SpecialFlags: 
           SpecialFlagMode: 0
+        _triggerCountMax: 0
+        CanCancelTrigger: 1
+        _triggerRollBackCount: 0
         _iD: 2
         Proficiency: 0
     - rid: 5115255248247586912
       type: {class: AllySkill, ns: , asm: Assembly-CSharp}
       data:
+        IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
+        CanSelectAggressiveCommit: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        SkillName: "\u30C6\u30B9\u30C8\u5B8C\u5168\u5358\u4F53\u9078\u629E\u30B9\u30AD\u30EB"
         SkillSpiritual: 1
         Impression: 0
         MotionFlavor: {fileID: 0}
         SkillPhysical: 0
         SpecialFlags: 0
+        _baseSkillType: 1
+        ConsecutiveType: 0
+        ZoneTrait: 1
         RequiredNormalP: 1
         RequiredAttrP:
           _list: []
         Cantkill: 0
+        SKillDidWaitCount: 0
         EvasionModifier: 1
         AttackModifier: 1
+        _defAtk: 0
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
+        subEffects: 
+        subVitalLayers: 
+        canEraceEffectIDs: 
+        CanEraceEffectCount: 0
+        canEraceVitalLayerIDs: 
+        CanEraceVitalLayerCount: 0
+        _mentalDamageRatio: 22
+        _a_moveset: []
+        _b_moveset: []
+        _powerSpread: []
+        _skillHitPer: 99
         FixedSkillLevelData:
         - TenDayValues:
             _list: []
@@ -40884,39 +40905,6 @@ MonoBehaviour:
           OptionB_MoveSet: []
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
-        _mentalDamageRatio: 22
-        _powerSpread: []
-        _skillHitPer: 99
-        _a_moveset: []
-        _b_moveset: []
-        _triggerCountMax: 0
-        CanCancelTrigger: 1
-        _triggerRollBackCount: 0
-        _RandomConsecutivePer: 0
-        _defaultStockCount: 1
-        _stockPower: 1
-        _stockForgetPower: 1
-        IsAggressiveCommit: 1
-        IsReadyTriggerAgressiveCommit: 0
-        IsStockAgressiveCommit: 0
-        CanSelectAggressiveCommit: 0
-        SKillDidWaitCount: 0
-        SkillName: "\u30C6\u30B9\u30C8\u5B8C\u5168\u5358\u4F53\u9078\u629E\u30B9\u30AD\u30EB"
-        subEffects: 
-        subVitalLayers: 
-        canEraceEffectIDs: 
-        canEraceVitalLayerIDs: 
-        CanEraceEffectCount: 0
-        CanEraceVitalLayerCount: 0
-        _defAtk: 0
-        _baseSkillType: 1
-        ConsecutiveType: 0
-        ZoneTrait: 1
-        DistributionType: 0
-        PowerRangePercentageDictionary:
-          _list: []
-        HitRangePercentageDictionary:
-          _list: []
         ReactiveSkillPassiveList: []
         AggressiveSkillPassiveList: []
         TargetSelection: 0
@@ -40933,22 +40921,55 @@ MonoBehaviour:
           SkillTypeMode: 0
           SpecialFlags: 
           SpecialFlagMode: 0
+        _triggerCountMax: 0
+        CanCancelTrigger: 1
+        _triggerRollBackCount: 0
         _iD: 3
         Proficiency: 0
     - rid: 5115255248247586913
       type: {class: AllySkill, ns: , asm: Assembly-CSharp}
       data:
+        IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
+        CanSelectAggressiveCommit: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        SkillName: "\u30C6\u30B9\u30C8\u30B7\u30F3\u30D7\u30EB\u653B\u6483\u30B9\u30AD\u30EB"
         SkillSpiritual: 16
         Impression: 0
         MotionFlavor: {fileID: 0}
         SkillPhysical: 0
         SpecialFlags: 0
+        _baseSkillType: 1
+        ConsecutiveType: 0
+        ZoneTrait: 16416
         RequiredNormalP: 2
         RequiredAttrP:
           _list: []
         Cantkill: 0
+        SKillDidWaitCount: 0
         EvasionModifier: 1
         AttackModifier: 1
+        _defAtk: 0
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
+        subEffects: 
+        subVitalLayers: 
+        canEraceEffectIDs: 
+        CanEraceEffectCount: 0
+        canEraceVitalLayerIDs: 
+        CanEraceVitalLayerCount: 0
+        _mentalDamageRatio: 0
+        _a_moveset: []
+        _b_moveset: []
+        _powerSpread: []
+        _skillHitPer: 100
         FixedSkillLevelData:
         - TenDayValues:
             _list: []
@@ -40960,39 +40981,6 @@ MonoBehaviour:
           OptionB_MoveSet: []
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
-        _mentalDamageRatio: 0
-        _powerSpread: []
-        _skillHitPer: 100
-        _a_moveset: []
-        _b_moveset: []
-        _triggerCountMax: 0
-        CanCancelTrigger: 1
-        _triggerRollBackCount: 0
-        _RandomConsecutivePer: 0
-        _defaultStockCount: 1
-        _stockPower: 1
-        _stockForgetPower: 1
-        IsAggressiveCommit: 1
-        IsReadyTriggerAgressiveCommit: 0
-        IsStockAgressiveCommit: 0
-        CanSelectAggressiveCommit: 0
-        SKillDidWaitCount: 0
-        SkillName: "\u30C6\u30B9\u30C8\u30B7\u30F3\u30D7\u30EB\u653B\u6483\u30B9\u30AD\u30EB"
-        subEffects: 
-        subVitalLayers: 
-        canEraceEffectIDs: 
-        canEraceVitalLayerIDs: 
-        CanEraceEffectCount: 0
-        CanEraceVitalLayerCount: 0
-        _defAtk: 0
-        _baseSkillType: 1
-        ConsecutiveType: 0
-        ZoneTrait: 16416
-        DistributionType: 0
-        PowerRangePercentageDictionary:
-          _list: []
-        HitRangePercentageDictionary:
-          _list: []
         ReactiveSkillPassiveList: []
         AggressiveSkillPassiveList: []
         TargetSelection: 0
@@ -41009,58 +40997,58 @@ MonoBehaviour:
           SkillTypeMode: 0
           SpecialFlags: 
           SpecialFlagMode: 0
+        _triggerCountMax: 0
+        CanCancelTrigger: 1
+        _triggerRollBackCount: 0
         _iD: 4
         Proficiency: 0
     - rid: 9189338325697429504
       type: {class: AllySkill, ns: , asm: Assembly-CSharp}
       data:
+        IsAggressiveCommit: 0
+        IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
+        CanSelectAggressiveCommit: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        SkillName: "\u30A2\u30AD\u30EC\u30B9\u3068\u4E80-\u6DF7\u6C8C\u6642\u9593"
         SkillSpiritual: 8
         Impression: 2
         MotionFlavor: {fileID: 0}
         SkillPhysical: 3
         SpecialFlags: 0
+        _baseSkillType: 512
+        ConsecutiveType: 0
+        ZoneTrait: 1
         RequiredNormalP: 0
         RequiredAttrP:
           _list: []
         Cantkill: 0
+        SKillDidWaitCount: 2
         EvasionModifier: 1.1
         AttackModifier: 1
-        FixedSkillLevelData: []
-        _infiniteSkillPowerUnit: 0
-        _infiniteSkillTenDaysUnit: 0
-        _mentalDamageRatio: 0
-        _powerSpread: []
-        _skillHitPer: 0
-        _a_moveset: []
-        _b_moveset: []
-        _triggerCountMax: 0
-        CanCancelTrigger: 1
-        _triggerRollBackCount: 0
-        _RandomConsecutivePer: 0
-        _defaultStockCount: 1
-        _stockPower: 1
-        _stockForgetPower: 1
-        IsAggressiveCommit: 0
-        IsReadyTriggerAgressiveCommit: 0
-        IsStockAgressiveCommit: 0
-        CanSelectAggressiveCommit: 0
-        SKillDidWaitCount: 2
-        SkillName: "\u30A2\u30AD\u30EC\u30B9\u3068\u4E80-\u6DF7\u6C8C\u6642\u9593"
-        subEffects: 
-        subVitalLayers: 
-        canEraceEffectIDs: 
-        canEraceVitalLayerIDs: 
-        CanEraceEffectCount: 0
-        CanEraceVitalLayerCount: 0
         _defAtk: 0
-        _baseSkillType: 512
-        ConsecutiveType: 0
-        ZoneTrait: 1
         DistributionType: 0
         PowerRangePercentageDictionary:
           _list: []
         HitRangePercentageDictionary:
           _list: []
+        subEffects: 
+        subVitalLayers: 
+        canEraceEffectIDs: 
+        CanEraceEffectCount: 0
+        canEraceVitalLayerIDs: 
+        CanEraceVitalLayerCount: 0
+        _mentalDamageRatio: 0
+        _a_moveset: []
+        _b_moveset: []
+        _powerSpread: []
+        _skillHitPer: 0
+        FixedSkillLevelData: []
+        _infiniteSkillPowerUnit: 0
+        _infiniteSkillTenDaysUnit: 0
         ReactiveSkillPassiveList: []
         AggressiveSkillPassiveList: []
         TargetSelection: 0
@@ -41077,6 +41065,9 @@ MonoBehaviour:
           SkillTypeMode: 0
           SpecialFlags: 
           SpecialFlagMode: 0
+        _triggerCountMax: 0
+        CanCancelTrigger: 1
+        _triggerRollBackCount: 0
         _iD: 1
         Proficiency: 0
 --- !u!114 &1195921977
@@ -41115,53 +41106,50 @@ MonoBehaviour:
         name: "\u30D5\u30EA\u30FC\u30CF\u30F3\u30C9"
         protocol: 3
         WeaponSkill:
+          IsAggressiveCommit: 1
+          IsReadyTriggerAgressiveCommit: 0
+          IsStockAgressiveCommit: 0
+          CanSelectAggressiveCommit: 0
+          _RandomConsecutivePer: 0
+          _defaultStockCount: 1
+          _stockPower: 1
+          _stockForgetPower: 1
+          SkillName: 
           SkillSpiritual: 0
           Impression: 0
           MotionFlavor: {fileID: 0}
           SkillPhysical: 0
           SpecialFlags: 0
+          _baseSkillType: 0
+          ConsecutiveType: 0
+          ZoneTrait: 0
           RequiredNormalP: 0
           RequiredAttrP:
             _list: []
           Cantkill: 0
+          SKillDidWaitCount: 0
           EvasionModifier: 1
           AttackModifier: 1
-          FixedSkillLevelData: []
-          _infiniteSkillPowerUnit: 0
-          _infiniteSkillTenDaysUnit: 0
-          _mentalDamageRatio: 0
-          _powerSpread: []
-          _skillHitPer: 0
-          _a_moveset: []
-          _b_moveset: []
-          _triggerCountMax: 0
-          CanCancelTrigger: 1
-          _triggerRollBackCount: 0
-          _RandomConsecutivePer: 0
-          _defaultStockCount: 1
-          _stockPower: 1
-          _stockForgetPower: 1
-          IsAggressiveCommit: 1
-          IsReadyTriggerAgressiveCommit: 0
-          IsStockAgressiveCommit: 0
-          CanSelectAggressiveCommit: 0
-          SKillDidWaitCount: 0
-          SkillName: 
-          subEffects: 
-          subVitalLayers: 
-          canEraceEffectIDs: 
-          canEraceVitalLayerIDs: 
-          CanEraceEffectCount: 0
-          CanEraceVitalLayerCount: 0
           _defAtk: 0
-          _baseSkillType: 0
-          ConsecutiveType: 0
-          ZoneTrait: 0
           DistributionType: 0
           PowerRangePercentageDictionary:
             _list: []
           HitRangePercentageDictionary:
             _list: []
+          subEffects: 
+          subVitalLayers: 
+          canEraceEffectIDs: 
+          CanEraceEffectCount: 0
+          canEraceVitalLayerIDs: 
+          CanEraceVitalLayerCount: 0
+          _mentalDamageRatio: 0
+          _a_moveset: []
+          _b_moveset: []
+          _powerSpread: []
+          _skillHitPer: 0
+          FixedSkillLevelData: []
+          _infiniteSkillPowerUnit: 0
+          _infiniteSkillTenDaysUnit: 0
           ReactiveSkillPassiveList: []
           AggressiveSkillPassiveList: []
           TargetSelection: 0
@@ -41178,6 +41166,9 @@ MonoBehaviour:
             SkillTypeMode: 0
             SpecialFlags: 
             SpecialFlagMode: 0
+          _triggerCountMax: 0
+          CanCancelTrigger: 1
+          _triggerRollBackCount: 0
         TenDayBonusData:
           TLOAData:
             _list: []
@@ -42591,20 +42582,17 @@ MonoBehaviour:
             value: 13.8
           - key: 12
             value: 3.13
-        Rivahal: 0
+        _machineBrokenRate: 0.3
         _thinkingFactor: 0
         _myImpression: 256
         DefaultImpression: 256
         MyType: 4
         NowPower: 0
-        _machineBrokenRate: 0.3
         InitVitalLaerIDList: 
         InitWeaponID: 0
         maxRecoveryTurn: 0
         Target: 0
         RangeWill: 0
-        FreezeRangeWill: 0
-        IsDeleteMyFreezeConsecutive: 0
         InitpassiveIDList: 
         _brain: {fileID: 11400000, guid: 0197204017f7bf94090ba7d2aa57b9cf, type: 2}
         RecovelySteps: -1
@@ -42616,17 +42604,47 @@ MonoBehaviour:
     - rid: 5115254770960171008
       type: {class: EnemySkill, ns: , asm: Assembly-CSharp}
       data:
+        IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
+        CanSelectAggressiveCommit: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        SkillName: test1
         SkillSpiritual: 1
         Impression: 2
         MotionFlavor: {fileID: 0}
         SkillPhysical: 0
         SpecialFlags: 4
+        _baseSkillType: 1
+        ConsecutiveType: 0
+        ZoneTrait: 16384
         RequiredNormalP: 0
         RequiredAttrP:
           _list: []
         Cantkill: 0
+        SKillDidWaitCount: 0
         EvasionModifier: 1
         AttackModifier: 1
+        _defAtk: 0
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
+        subEffects: 
+        subVitalLayers: 
+        canEraceEffectIDs: 
+        CanEraceEffectCount: 0
+        canEraceVitalLayerIDs: 
+        CanEraceVitalLayerCount: 0
+        _mentalDamageRatio: 0
+        _a_moveset: []
+        _b_moveset: []
+        _powerSpread: []
+        _skillHitPer: 50
         FixedSkillLevelData:
         - TenDayValues:
             _list: []
@@ -42638,39 +42656,6 @@ MonoBehaviour:
           OptionB_MoveSet: []
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
-        _mentalDamageRatio: 0
-        _powerSpread: []
-        _skillHitPer: 50
-        _a_moveset: []
-        _b_moveset: []
-        _triggerCountMax: 0
-        CanCancelTrigger: 1
-        _triggerRollBackCount: 0
-        _RandomConsecutivePer: 0
-        _defaultStockCount: 1
-        _stockPower: 1
-        _stockForgetPower: 1
-        IsAggressiveCommit: 1
-        IsReadyTriggerAgressiveCommit: 0
-        IsStockAgressiveCommit: 0
-        CanSelectAggressiveCommit: 0
-        SKillDidWaitCount: 0
-        SkillName: test1
-        subEffects: 
-        subVitalLayers: 
-        canEraceEffectIDs: 
-        canEraceVitalLayerIDs: 
-        CanEraceEffectCount: 0
-        CanEraceVitalLayerCount: 0
-        _defAtk: 0
-        _baseSkillType: 1
-        ConsecutiveType: 0
-        ZoneTrait: 16384
-        DistributionType: 0
-        PowerRangePercentageDictionary:
-          _list: []
-        HitRangePercentageDictionary:
-          _list: []
         ReactiveSkillPassiveList: []
         AggressiveSkillPassiveList: []
         TargetSelection: 0
@@ -42687,22 +42672,55 @@ MonoBehaviour:
           SkillTypeMode: 0
           SpecialFlags: 
           SpecialFlagMode: 0
+        _triggerCountMax: 0
+        CanCancelTrigger: 1
+        _triggerRollBackCount: 0
         growthPoint: -1
         _initSkillLevel: 0
     - rid: 5115254770960171009
       type: {class: EnemySkill, ns: , asm: Assembly-CSharp}
       data:
+        IsAggressiveCommit: 1
+        IsReadyTriggerAgressiveCommit: 0
+        IsStockAgressiveCommit: 0
+        CanSelectAggressiveCommit: 0
+        _RandomConsecutivePer: 0
+        _defaultStockCount: 1
+        _stockPower: 1
+        _stockForgetPower: 1
+        SkillName: "\u3053\u3053\u306B\u540D\u524D\u3092\u5165\u308C\u3066\u304F\u3060\u3055\u3044"
         SkillSpiritual: 16
         Impression: 0
         MotionFlavor: {fileID: 0}
         SkillPhysical: 1
         SpecialFlags: 0
+        _baseSkillType: 1
+        ConsecutiveType: 0
+        ZoneTrait: 16384
         RequiredNormalP: 0
         RequiredAttrP:
           _list: []
         Cantkill: 0
+        SKillDidWaitCount: 0
         EvasionModifier: 1
         AttackModifier: 1
+        _defAtk: 0
+        DistributionType: 0
+        PowerRangePercentageDictionary:
+          _list: []
+        HitRangePercentageDictionary:
+          _list: []
+        subEffects: 
+        subVitalLayers: 
+        canEraceEffectIDs: 
+        CanEraceEffectCount: 0
+        canEraceVitalLayerIDs: 
+        CanEraceVitalLayerCount: 0
+        _mentalDamageRatio: 0
+        _a_moveset: []
+        _b_moveset: []
+        _powerSpread: []
+        _skillHitPer: 60
         FixedSkillLevelData:
         - TenDayValues:
             _list:
@@ -42716,39 +42734,6 @@ MonoBehaviour:
           OptionB_MoveSet: []
         _infiniteSkillPowerUnit: 0
         _infiniteSkillTenDaysUnit: 0
-        _mentalDamageRatio: 0
-        _powerSpread: []
-        _skillHitPer: 60
-        _a_moveset: []
-        _b_moveset: []
-        _triggerCountMax: 0
-        CanCancelTrigger: 1
-        _triggerRollBackCount: 0
-        _RandomConsecutivePer: 0
-        _defaultStockCount: 1
-        _stockPower: 1
-        _stockForgetPower: 1
-        IsAggressiveCommit: 1
-        IsReadyTriggerAgressiveCommit: 0
-        IsStockAgressiveCommit: 0
-        CanSelectAggressiveCommit: 0
-        SKillDidWaitCount: 0
-        SkillName: "\u3053\u3053\u306B\u540D\u524D\u3092\u5165\u308C\u3066\u304F\u3060\u3055\u3044"
-        subEffects: 
-        subVitalLayers: 
-        canEraceEffectIDs: 
-        canEraceVitalLayerIDs: 
-        CanEraceEffectCount: 0
-        CanEraceVitalLayerCount: 0
-        _defAtk: 0
-        _baseSkillType: 1
-        ConsecutiveType: 0
-        ZoneTrait: 16384
-        DistributionType: 0
-        PowerRangePercentageDictionary:
-          _list: []
-        HitRangePercentageDictionary:
-          _list: []
         ReactiveSkillPassiveList: []
         AggressiveSkillPassiveList: []
         TargetSelection: 0
@@ -42765,6 +42750,9 @@ MonoBehaviour:
           SkillTypeMode: 0
           SpecialFlags: 
           SpecialFlagMode: 0
+        _triggerCountMax: 0
+        CanCancelTrigger: 1
+        _triggerRollBackCount: 0
         growthPoint: -1
         _initSkillLevel: 0
     - rid: 6711005805807403016
@@ -42786,20 +42774,17 @@ MonoBehaviour:
         b_b_agi: 4
         _tenDayTemplate:
           _list: []
-        Rivahal: 0
+        _machineBrokenRate: 0.3
         _thinkingFactor: 0
         _myImpression: 128
         DefaultImpression: 2
         MyType: 4
         NowPower: 2
-        _machineBrokenRate: 0.3
         InitVitalLaerIDList: 
         InitWeaponID: 0
         maxRecoveryTurn: 0
         Target: 0
         RangeWill: 0
-        FreezeRangeWill: 0
-        IsDeleteMyFreezeConsecutive: 0
         InitpassiveIDList: 
         _brain: {fileID: 11400000, guid: 0197204017f7bf94090ba7d2aa57b9cf, type: 2}
         RecovelySteps: -1

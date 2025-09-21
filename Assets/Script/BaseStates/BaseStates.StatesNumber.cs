@@ -26,20 +26,28 @@ public abstract partial class BaseStates
         set
         {
             Debug.Log($"HP:{value}");
+            // HP をクランプ
             if (value > MaxHP)//最大値を超えないようにする
             {
                 _hp = MaxHP;
             }
             else _hp = value;
-            if(HPBar != null)
-            {
-                HPBar.HPPercent = value / MaxHP;
-            }
 
-            //精神HPのチェック
-            if(_mentalHP > MentalMaxHP)//最大値超えてたらカットする。
+            // 精神HPのチェック（HP変化で最大値が下がる可能性があるためクランプ）
+            if (_mentalHP > MentalMaxHP)//最大値超えてたらカットする。
             {
                 _mentalHP = MentalMaxHP;
+            }
+
+            // UI 更新（クランプ後の値で反映）
+            if (HPBar != null)
+            {
+                float denom = MaxHP;
+                float hpPercent = denom > 0f ? (_hp / denom) : 0f;
+                float mentalRatio = denom > 0f ? (_mentalHP / denom) : 0f;
+                HPBar.HPPercent = hpPercent;
+                HPBar.MentalRatio = mentalRatio; // 精神HPも最新のクランプ値で同期
+                HPBar.DivergenceMultiplier = GetMentalDivergenceThreshold(); // 乖離指標の更新
             }
         }
     }
@@ -77,7 +85,8 @@ public abstract partial class BaseStates
             else _mentalHP = value;
             if(HPBar != null)
             {
-                HPBar.MentalRatio = value / MaxHP;//精神HPを設定
+                // クランプ後の実値で UI を更新する（未クランプの value を使うと過大表示になる）
+                HPBar.MentalRatio = MaxHP > 0f ? (_mentalHP / MaxHP) : 0f;//精神HPを設定
                 HPBar.DivergenceMultiplier = GetMentalDivergenceThreshold();//UIの乖離指標の幅を設定
             }
         }
