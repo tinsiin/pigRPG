@@ -317,10 +317,7 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     private bool CanCastNow(BaseStates actor, BaseSkill skill)
     {
-        if (actor == null || skill == null) return false;
-        bool canConsume = SkillResourceFlow.CanConsumeOnCast(actor, skill);
-        bool weaponOK = (actor.NowUseWeapon != null && actor.NowUseWeapon.IsBlade) || !skill.IsBlade;
-        return canConsume && weaponOK;
+        return SkillResourceFlow.CanCastSkill(actor, skill);
     }
     /// <summary>
     /// スキルボタンの使いを有効化する処理　可視化

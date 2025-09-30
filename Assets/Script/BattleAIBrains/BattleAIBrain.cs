@@ -183,8 +183,7 @@ public abstract class BattleAIBrain : ScriptableObject
         var filtered = availableSkills
             .Where(skill =>
                 skill != null &&
-                SkillResourceFlow.CanConsumeOnCast(acter, skill) &&
-                (isBladeWielder || !skill.IsBlade) &&
+                SkillResourceFlow.CanCastSkill(acter, skill) &&
                 (
                     !hasSingleReservation
                     || (

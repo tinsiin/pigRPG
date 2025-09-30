@@ -103,6 +103,10 @@ public partial class BaseSkill
     /// 空なら属性P消費なし。
     /// </summary>
     public SerializableDictionary<SpiritualProperty, int> RequiredAttrP = new SerializableDictionary<SpiritualProperty, int>();
+    [Header("スキル実行に必要な残りHP割合（0〜100）。0で制限なし。")]
+    [Tooltip("行使者の現在HPが最大HPに対してこの割合未満の場合は使用不可。")]
+    [Range(0f, 100f)]
+    public float RequiredRemainingHPPercent = 0f;
     /// <summary>
     /// 殺せないスキルかどうか
     /// 1残る

@@ -47,6 +47,41 @@ public static class SkillResourceFlow
     }
 
     /// <summary>
+    /// スキルに必要なリソースと武器適合の両方を満たしているかの基本判定。
+    /// </summary>
+    public static bool CanCastSkill(BaseStates actor, BaseSkill skill)
+    {
+        if (actor == null || skill == null)
+        {
+            return false;
+        }
+
+        if (!CanConsumeOnCast(actor, skill))
+        {
+            return false;
+        }
+
+        float requiredHpPercent = Mathf.Clamp(skill.RequiredRemainingHPPercent, 0f, 100f);
+        if (requiredHpPercent > 0f)
+        {
+            float maxHP = actor.MaxHP;
+            if (maxHP <= 0f)
+            {
+                return false;
+            }
+
+            float currentHpPercent = actor.HP / maxHP * 100f;
+            if (currentHpPercent + 0.0001f < requiredHpPercent)
+            {
+                return false;
+            }
+        }
+
+        bool hasBladeWeapon = actor.NowUseWeapon != null && actor.NowUseWeapon.IsBlade;
+        return hasBladeWeapon || !skill.IsBlade;
+    }
+
+    /// <summary>
     /// 可否判定の詳細（不足内訳）を返す。副作用なし。
     /// </summary>
     public static AffordanceResult GetAffordanceOnCast(BaseStates doer, BaseSkill skill)
