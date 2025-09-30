@@ -126,6 +126,8 @@ public partial class BaseSkill
     /// 一番最初の素の攻撃力に掛けられる。
     /// </summary>
     public float AttackModifier = 1f;
+    [Tooltip("攻撃時に精神HPを回復させる百分率。80なら攻撃力の80%分回復、負値で減少。")]
+    public float AttackMentalHealPercent = 80f;
 
     //  ==============================================================================================================================
     //                                              ディープコピー
@@ -209,6 +211,8 @@ public partial class BaseSkill
                 dst.RequiredAttrP.Add(kv.Key, kv.Value);
             }
         }
+
+        dst.AttackMentalHealPercent = AttackMentalHealPercent;
 
     }
 

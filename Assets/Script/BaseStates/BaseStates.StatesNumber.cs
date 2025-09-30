@@ -114,11 +114,20 @@ public abstract partial class BaseStates
      * ------------------------------------------------------------------------------------------------------------------------------------------
      */
     /// <summary>
-    /// 精神HPは攻撃時にb_atk分だけ回復する
+    /// 精神HPは攻撃時にスキル設定の百分率分だけ変動する
     /// </summary>
-    void MentalHealOnAttack()
+    /// <param name="percentOverride">任意指定の百分率。指定しない場合は使用スキルを参照</param>
+    void MentalHealOnAttack(float percentOverride = float.NaN)
     {
-        MentalHP += b_ATK.Total;
+        float percent = percentOverride;
+
+        if (float.IsNaN(percent))
+        {
+            percent = NowUseSkill != null ? NowUseSkill.AttackMentalHealPercent : 80f;
+        }
+
+        var healAmount = b_ATK.Total * (percent / 100f);
+        MentalHP += healAmount;
     }
     void MentalHPHealOnTurn()
     {

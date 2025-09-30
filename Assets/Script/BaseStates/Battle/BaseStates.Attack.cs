@@ -89,7 +89,7 @@ public abstract partial class BaseStates
         if (IsAnyHitInRecentSkillData(NowUseSkill, Unders.Count))
         {
             //当たったので精神回復　行動が一応成功したからメンタルが安心する。
-            MentalHealOnAttack();
+            MentalHealOnAttack(NowUseSkill.AttackMentalHealPercent);
             CalmDownSet(NowUseSkill.EvasionModifier,NowUseSkill.AttackModifier);//スキル回避率と落ち着きカウントをセット
         }
         //HIT分の十日能力の成長
