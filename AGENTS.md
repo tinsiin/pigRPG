@@ -1,6 +1,7 @@
 # AGENTS.md
 
 **Rule:** In each command, **define → use**. Do **not** escape `$`. Use generic `'path/to/file.ext'`.
+skills認識はプロジェクト単位を優先し、その後にグローバル単位のskillsを参照する。
 
 ---
 
