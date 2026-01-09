@@ -60,7 +60,13 @@ public class ACTList
     /// </summary>
     public void RatherAdd(string mes,List<BaseStates> raterTargets = null, float raterDamage = 0f)
     {
+        CharactorACTList.Add(null);
+        FactionList.Add(allyOrEnemy.alliy);
         TopMessage.Add(mes);
+        reservationStatesModifies.Add(null);
+        IsFreezeList.Add(false);
+        SingleTargetList.Add(null);
+        ExCounterDEFATKList.Add(-1f);
         RaterTargetList.Add(raterTargets);
         RaterDamageList.Add(raterDamage);
     }
@@ -75,6 +81,8 @@ public class ACTList
         IsFreezeList.Add(isfreeze);
         SingleTargetList.Add(SingleTarget);
         ExCounterDEFATKList.Add(ExCounterDEFATK);
+        RaterTargetList.Add(null);
+        RaterDamageList.Add(0f);
     }
 
     public ACTList()
@@ -96,7 +104,7 @@ public class ACTList
     {
          // 生存しているキャラクターのインデックスを取得
         var aliveIndices = Enumerable.Range(0, CharactorACTList.Count)
-            .Where(i => !CharactorACTList[i].Death())
+            .Where(i => CharactorACTList[i] == null || !CharactorACTList[i].Death())
             .ToList();
 
         // 各リストをフィルタリングして再構築
@@ -254,46 +262,68 @@ public class ACTList
                 {
                     if (Manager.IsVanguard(chara))
                     {
-                        item = CashSpread[0];//前のめりなら前の"0"の分散値
+                        if (CashSpread.Count > 0)
+                        {
+                            item = CashSpread[0];//前のめりなら前の"0"の分散値
+                        }
                     }
                     else
                     {
-                        item = CashSpread[1];//後衛なら後ろの"1"の分散値
+                        if (CashSpread.Count > 1)
+                        {
+                            item = CashSpread[1];//後衛なら後ろの"1"の分散値
+                        }
+                        else if (CashSpread.Count > 0)
+                        {
+                            item = CashSpread[0];
+                        }
                     }
                 }
                 //放射型、ビーム型
                 if (skill.DistributionType == AttackDistributionType.Beam)
                 {
-                    if (Manager.IsVanguard(chara))
+                    if (CashSpread.Count > 0)
                     {
-                        item = CashSpread[0];//最初のを抽出
-                        CashSpread.RemoveAt(0);
-                    }
-                    else
-                    {
-                        item = CashSpread[CashSpread.Count - 1];//末尾から抽出
-                        CashSpread.RemoveAt(CashSpread.Count - 1);
+                        if (Manager.IsVanguard(chara))
+                        {
+                            item = CashSpread[0];//最初のを抽出
+                            CashSpread.RemoveAt(0);
+                        }
+                        else
+                        {
+                            var lastIndex = CashSpread.Count - 1;
+                            item = CashSpread[lastIndex];//末尾から抽出
+                            CashSpread.RemoveAt(lastIndex);
+                        }
                     }
                 }
                 //投げる型
                 if (skill.DistributionType == AttackDistributionType.Throw)
                 {
-                    if (Manager.IsVanguard(chara))
+                    if (CashSpread.Count > 0)
                     {
-                        item = CashSpread[CashSpread.Count - 1];//末尾から抽出
-                        CashSpread.RemoveAt(CashSpread.Count - 1);
-                    }
-                    else
-                    {
-                        item = CashSpread[0];//最初のを抽出
-                        CashSpread.RemoveAt(0);
+                        if (Manager.IsVanguard(chara))
+                        {
+                            var lastIndex = CashSpread.Count - 1;
+                            item = CashSpread[lastIndex];//末尾から抽出
+                            CashSpread.RemoveAt(lastIndex);
+                        }
+                        else
+                        {
+                            item = CashSpread[0];//最初のを抽出
+                            CashSpread.RemoveAt(0);
+                        }
                     }
                 }
                 //ランダムの場合
                 if (skill.DistributionType == AttackDistributionType.Random)
                 {
-                    item = CashSpread[CashSpread.Count - 1];//末尾から抽出
-                    CashSpread.RemoveAt(CashSpread.Count - 1);
+                    if (CashSpread.Count > 0)
+                    {
+                        var lastIndex = CashSpread.Count - 1;
+                        item = CashSpread[lastIndex];//末尾から抽出
+                        CashSpread.RemoveAt(lastIndex);
+                    }
                 }
 
             }
@@ -514,24 +544,42 @@ public class BattleManager
         BaseStates Chara;//選出される人
 
         List<BaseStates> Charas;//キャラリスト
+        List<BaseStates> Primary;
+        List<BaseStates> Secondary;
+        allyOrEnemy PrimaryFaction;
+        allyOrEnemy SecondaryFaction;
 
         if (RandomEx.Shared.NextBool())//キャラリストから選ぶの決める
         {
-            Charas = AllyGroup.Ours;
-            ActerFaction = allyOrEnemy.alliy;
+            Primary = AllyGroup.Ours;
+            PrimaryFaction = allyOrEnemy.alliy;
+            Secondary = EnemyGroup.Ours;
+            SecondaryFaction = allyOrEnemy.Enemyiy;
         }
         else
         {
-            Charas = EnemyGroup.Ours;
-            ActerFaction = allyOrEnemy.Enemyiy;
+            Primary = EnemyGroup.Ours;
+            PrimaryFaction = allyOrEnemy.Enemyiy;
+            Secondary = AllyGroup.Ours;
+            SecondaryFaction = allyOrEnemy.alliy;
         }
 
-        Charas = RemoveDeathCharacters(Charas);//死者を取り除く
-        Charas = RetainActionableCharacters(Charas);//再行動をとれる人間のみに絞る
-
-        if (Charas.Count == 0)
+        var primaryCandidates = RetainActionableCharacters(RemoveDeathCharacters(Primary));
+        if (primaryCandidates.Count > 0)
         {
-            return null;
+            Charas = primaryCandidates;
+            ActerFaction = PrimaryFaction;
+        }
+        else
+        {
+            // 片側が行動不可なだけでターンが止まる問題の回避
+            var secondaryCandidates = RetainActionableCharacters(RemoveDeathCharacters(Secondary));
+            if (secondaryCandidates.Count == 0)
+            {
+                return null;
+            }
+            Charas = secondaryCandidates;
+            ActerFaction = SecondaryFaction;
         }
         
         Chara = RandomEx.Shared.GetItem(Charas.ToArray<BaseStates>());//キャラリストからランダムで選ぶ
@@ -812,6 +860,11 @@ public class BattleManager
     {
         Debug.Log("俳優の行動の分岐-NextWaitボタンが押されました。");
         BattleSystemArrowManager.Instance.Next();//システム矢印を進める
+        if (IsRater)
+        {        //パッシブ等のレイザーダメージアクト acter=nullに弾かれるのでここに移動
+            IsRater = false;
+            return RatherACT();
+        }
         if(Acter == null)
         {
             Debug.LogError("俳優が認識されていない-エンカウントロジックなどに問題あり");
@@ -873,12 +926,6 @@ public class BattleManager
             return ACTPop();
         }
 
-        //パッシブ等のレイザーダメージアクト
-        if(IsRater)
-        {
-            IsRater = false;
-            return RatherACT();
-        }
 
         int count;//メッセージテキスト用のカウント数字
         if ((count = skill.TrigerCount()) >= 0)//発動カウントが0以上ならまだカウント中
