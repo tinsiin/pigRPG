@@ -119,7 +119,7 @@ public class PassiveVitalLayerBinding
 [Serializable]
 public class BasePassive
 {
-    protected BattleManager manager => Walking.Instance.bm;
+    protected IBattleContext manager => BattleContextHub.Current;
     /// <summary>
     /// 適合するキャラ属性(精神属性)　
     /// </summary>

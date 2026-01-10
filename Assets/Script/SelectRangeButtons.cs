@@ -48,14 +48,21 @@ public class SelectRangeButtons : MonoBehaviour
     float optionStartX;
     float optionStartY;
 
-    BattleManager bm => Walking.Instance.bm;
+    BattleUIBridge uiBridge => BattleUIBridge.Active;
+    IBattleContext battle => uiBridge?.BattleContext;
     List<Button> buttonList;
     /// <summary>
     /// 生成用コールバック
     /// </summary>
     public void OnCreated()
     {
-        var acter = bm.Acter;
+        var battleContext = battle;
+        if (battleContext == null)
+        {
+            Debug.LogError("SelectRangeButtons.OnCreated: BattleContext が null です");
+            return;
+        }
+        var acter = battleContext.Acter;
         var skill = acter.NowUseSkill;
 
         // 現在の位置を初期化
@@ -467,7 +474,7 @@ public class SelectRangeButtons : MonoBehaviour
     /// </summary>
     public void OnClickOptionRangeBtn(Button thisbtn, SkillZoneTrait option)
     {
-        bm.Acter.RangeWill |= option;
+        battle.Acter.RangeWill |= option;
         Destroy(thisbtn);//ボタンは消える
 
         //オプションなのでこれ選んだだけでは次へ進まない。
@@ -475,7 +482,7 @@ public class SelectRangeButtons : MonoBehaviour
 
     public void OnClickRangeBtn(Button thisbtn, SkillZoneTrait range)
     {
-        bm.Acter.RangeWill |= range;
+        battle.Acter.RangeWill |= range;
         foreach (var button in buttonList)
         {
             Destroy(button);//ボタン全部削除
@@ -489,7 +496,7 @@ public class SelectRangeButtons : MonoBehaviour
     /// </summary>
     private string AddPercentageTextOnButton(SkillZoneTrait zone)
     {
-        var skill = bm.Acter.NowUseSkill;
+        var skill = battle.Acter.NowUseSkill;
         var txt = "割合差分なし";//何もなければ空文字が返るのみ
         if (skill.PowerRangePercentageDictionary.ContainsKey(zone))//その範囲性質の割合差分があるならば
         {
@@ -505,13 +512,27 @@ public class SelectRangeButtons : MonoBehaviour
     private void NextTab()
     {
         //全範囲ならそのままnextWait　　対象を選ぶ必要がないからね
-        if (bm.Acter.HasRangeWill(SkillZoneTrait.AllTarget))
+        if (battle.Acter.HasRangeWill(SkillZoneTrait.AllTarget))
         {
-            Walking.Instance.USERUI_state.Value = TabState.NextWait;
+            if (uiBridge != null)
+            {
+                uiBridge.SetUserUiState(TabState.NextWait);
+            }
+            else
+            {
+                Debug.LogError("SelectRangeButtons.OnClickRangeBtn: BattleUIBridge が null です");
+            }
         }
         else
         {
-            Walking.Instance.USERUI_state.Value = TabState.SelectTarget;//そうでないなら選択画面へ。
+            if (uiBridge != null)
+            {
+                uiBridge.SetUserUiState(TabState.SelectTarget);//そうでないなら選択画面へ。
+            }
+            else
+            {
+                Debug.LogError("SelectRangeButtons.OnClickRangeBtn: BattleUIBridge が null です");
+            }
 
         }
 

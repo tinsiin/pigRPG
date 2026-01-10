@@ -19,7 +19,9 @@ public abstract partial class BaseStates
     protected void MentalNaturalRecovelyPont()
     {
          // 精神HPを定数で割り回復量に変換する
-        var baseRecovelyP = (int)MentalHP / PlayersStates.Instance.MentalHP_TO_P_Recovely_CONVERSION_FACTOR;
+        var factor = PlayersStatesHub.Tuning?.MentalHpToPRecoveryConversionFactor ?? 120;
+        if (factor <= 0) factor = 120;
+        var baseRecovelyP = (int)MentalHP / factor;
         
         // 精神HPと実HP最大値との割合
         var mentalToMaxHPRatio = MentalHP / MaxHP;

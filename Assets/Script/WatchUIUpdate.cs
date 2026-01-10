@@ -619,8 +619,8 @@ public partial class WatchUIUpdate : MonoBehaviour
     // ===== Kモード: パッシブ一覧表示（フェードイン） =====
     private BaseStates FindActorByUI(UIController ui)
     {
-        var bm = Walking.Instance?.bm;
-        var all = bm?.AllCharacters;
+        var battle = BattleUIBridge.Active?.BattleContext;
+        var all = battle?.AllCharacters;
         if (ui == null || all == null) return null;
         foreach (var ch in all)
         {
@@ -1218,7 +1218,7 @@ public partial class WatchUIUpdate : MonoBehaviour
     /// <summary>
     ///     歩行時のEYEAREAのUI更新
     /// </summary>
-    public void StageDataUIUpdate(StageData sd, StageCut sc, PlayersStates pla)
+    public void StageDataUIUpdate(StageData sd, StageCut sc, IPlayersProgress pla)
     {
         StagesString.text = sd.StageName + "・\n" + sc.AreaName;
         NowImageCalc(sc, pla);
@@ -1263,8 +1263,8 @@ public partial class WatchUIUpdate : MonoBehaviour
         _lastIntroMetrics.ActualMs  = sw.Elapsed.TotalMilliseconds;
         _lastIntroMetrics.DelayMs   = Math.Max(0.0, _lastIntroMetrics.ActualMs - _lastIntroMetrics.PlannedMs);
         _lastIntroMetrics.Timestamp = System.DateTime.Now;
-        _lastIntroMetrics.AllyCount = Walking.Instance?.bm?.AllyGroup?.Ours?.Count ?? (allySpawnPositions?.Length ?? 0);
-        _lastIntroMetrics.EnemyCount = Walking.Instance?.bm?.EnemyGroup?.Ours?.Count ?? 0;
+        _lastIntroMetrics.AllyCount = BattleUIBridge.Active?.BattleContext?.AllyGroup?.Ours?.Count ?? (allySpawnPositions?.Length ?? 0);
+        _lastIntroMetrics.EnemyCount = BattleUIBridge.Active?.BattleContext?.EnemyGroup?.Ours?.Count ?? 0;
 
         Debug.Log($"[Intro] Planned={_lastIntroMetrics.PlannedMs:F2}ms, Actual={_lastIntroMetrics.ActualMs:F2}ms, Delay={_lastIntroMetrics.DelayMs:F2}ms, Allies={_lastIntroMetrics.AllyCount}, Enemies={_lastIntroMetrics.EnemyCount}");
     }
@@ -1364,15 +1364,15 @@ public partial class WatchUIUpdate : MonoBehaviour
             var jitter = global::MetricsHub.Instance.StartJitter("Intro.Jitter", BuildMetricsContext());
 
             // 敵UI生成（従来はZoom開始時に並行起動していたものをここで起動）
-            var currentBattleManager = Walking.Instance?.bm;
-            if (currentBattleManager?.EnemyGroup != null)
+            var currentBattle = BattleUIBridge.Active?.BattleContext;
+            if (currentBattle?.EnemyGroup != null)
             {
                 var placeSw = System.Diagnostics.Stopwatch.StartNew();
                 var placeTask = UniTask.Create(async () =>
                 {
                     EnsureOrchestrator();
                     var ictx = BuildIntroContextForOrchestrator();
-                    var pctx = BuildPlacementContext(currentBattleManager.EnemyGroup);
+                    var pctx = BuildPlacementContext(currentBattle.EnemyGroup);
                     using (MetricsHub.Instance.BeginSpan("PlaceEnemies", BuildMetricsContext()))
                     {
                         var token = _sweepCts != null ? _sweepCts.Token : System.Threading.CancellationToken.None;
@@ -1410,7 +1410,7 @@ public partial class WatchUIUpdate : MonoBehaviour
                 allyBattleLayer.gameObject.SetActive(true);
                 try
                 {
-                    var ours = Walking.Instance?.bm?.AllyGroup?.Ours;
+                    var ours = BattleUIBridge.Active?.BattleContext?.AllyGroup?.Ours;
                     if (ours != null)
                     {
                         foreach (var ch in ours)
@@ -1730,8 +1730,8 @@ public partial class WatchUIUpdate : MonoBehaviour
 
         // 非対象キャラのUIControllerをK中は丸ごと非表示にする（元の有効状態を退避）
         _kHiddenOtherUIs = new List<(UIController ui, bool wasActive)>();
-        var bm = Walking.Instance?.bm;
-        var allChars = bm?.AllCharacters;
+        var battle = BattleUIBridge.Active?.BattleContext;
+        var allChars = battle?.AllCharacters;
         if (allChars != null)
         {
             foreach (var ch in allChars)
@@ -2560,7 +2560,7 @@ public partial class WatchUIUpdate : MonoBehaviour
     /// <summary>
     ///     簡易マップ現在地のUI更新とその処理
     /// </summary>
-    private void NowImageCalc(StageCut sc, PlayersStates player)
+    private void NowImageCalc(StageCut sc, IPlayersProgress player)
     {
         //進行度自体の割合を計算
         var Ratio = (float)player.NowProgress / (sc.AreaDates.Count - 1);

@@ -146,9 +146,21 @@ public class SelectCancelPassiveButtons : MonoBehaviour
         // パッシブのキャンセル処理
         owner.RemovePassive(passive);
         
-        Walking.Instance.bm.PassiveCancel = true;//ACTBranchingでpassiveCancelするboolをtrueに。
+        var uiBridge = BattleUIBridge.Active;
+        var battle = uiBridge?.BattleContext;
+        if (battle != null)
+        {
+            battle.PassiveCancel = true;//ACTBranchingでpassiveCancelするboolをtrueに。
+        }
 
-        Walking.Instance.USERUI_state.Value = TabState.NextWait;//CharacterACTBranchingへ
+        if (uiBridge != null)
+        {
+            uiBridge.SetUserUiState(TabState.NextWait);//CharacterACTBranchingへ
+        }
+        else
+        {
+            Debug.LogError("SelectCancelPassiveButtons.OnPassiveButtonClick: BattleUIBridge が null です");
+        }
         
         
         // ボタンをクリア

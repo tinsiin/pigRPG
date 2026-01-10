@@ -381,7 +381,15 @@ public class NormalEnemy : BaseStates
             isFirstEncounter = true;
         }else{
             //二回目以降の遭遇なら移動距離を取得
-            distanceTraveled = Math.Abs(PlayersStates.Instance.NowProgress - _lastEncounterProgress);//移動距離取得
+            var progress = PlayersStatesHub.Progress;
+            if (progress != null)
+            {
+                distanceTraveled = Math.Abs(progress.NowProgress - _lastEncounterProgress);//移動距離取得
+            }
+            else
+            {
+                Debug.LogWarning("PlayersStatesHub.Progress が null です。移動距離は0として扱います。");
+            }
         }
 
         //二回目以降の遭遇の処理
@@ -412,13 +420,14 @@ public class NormalEnemy : BaseStates
         TransitionPowerOnWalkByCharacterImpression();//パワー変化　精神属性で変化するがその精神属性は既に決まっているので
 
         //遭遇地点を記録する。
-        if (PlayersStates.Instance != null)
+        var progressForRecord = PlayersStatesHub.Progress;
+        if (progressForRecord != null)
         {
-            _lastEncounterProgress = PlayersStates.Instance.NowProgress;
+            _lastEncounterProgress = progressForRecord.NowProgress;
         }
         else
         {
-            Debug.LogWarning("PlayersStates.Instance が null です。遭遇地点の記録をスキップします。");
+            Debug.LogWarning("PlayersStatesHub.Progress が null です。遭遇地点の記録をスキップします。");
         }
 
         //死亡判定
@@ -426,13 +435,14 @@ public class NormalEnemy : BaseStates
             {
                 if(Reborn && !broken)//復活するタイプであり、壊れてないものだけ
                 {
-                    if (PlayersStates.Instance != null)
+                    var progressForRevive = PlayersStatesHub.Progress;
+                    if (progressForRevive != null)
                     {
-                        ReadyRecovelyStep(PlayersStates.Instance.NowProgress);//復活歩数準備
+                        ReadyRecovelyStep(progressForRevive.NowProgress);//復活歩数準備
                     }
                     else
                     {
-                        Debug.LogWarning("PlayersStates.Instance が null です。復活歩数準備をスキップします。");
+                        Debug.LogWarning("PlayersStatesHub.Progress が null です。復活歩数準備をスキップします。");
                     }
                 }
             }

@@ -14,7 +14,15 @@ public abstract partial class BaseStates
     /// <summary>
     /// 最大ポイントは実HPの最大値を定数で割ったもの。　この定数はHPのスケールの変更などに応じて、適宜調整する
     /// </summary>
-    public int MAXP => (int)_maxhp / PlayersStates.Instance.HP_TO_MaxP_CONVERSION_FACTOR;
+    public int MAXP
+    {
+        get
+        {
+            var factor = PlayersStatesHub.Tuning?.HpToMaxPConversionFactor ?? 80;
+            if (factor <= 0) factor = 80;
+            return (int)_maxhp / factor;
+        }
+    }
 
     [Header("ポイント(P)")]
     [SerializeField]

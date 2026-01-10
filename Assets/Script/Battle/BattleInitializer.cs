@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -18,14 +17,22 @@ public class BattleInitializer
     }
     
     /// <summary>
-    /// 戦闘を初期化し、BattleManagerを生成
+    /// 戦闘を初期化し、BattleOrchestratorを生成
     /// </summary>
     public async UniTask<BattleSetupResult> InitializeBattle(
         StageCut nowStageCut,
-        PlayersStates playersStates,
+        IPlayersParty playersParty,
+        IPlayersProgress playersProgress,
+        IPlayersUIControl playersUIControl,
         int enemyNumber = 2)
     {
         var result = new BattleSetupResult();
+        if (playersParty == null)
+        {
+            Debug.LogError("BattleInitializer.InitializeBattle: playersParty が null です");
+            result.EncounterOccurred = false;
+            return result;
+        }
         
         // 敵グループ生成
         result.EnemyGroup = nowStageCut.EnemyCollectAI(enemyNumber);
@@ -38,21 +45,30 @@ public class BattleInitializer
         result.EncounterOccurred = true;
         
         // 味方グループ選出
-        result.AllyGroup = DetermineAllyGroup(result.EnemyGroup, playersStates);
+        result.AllyGroup = DetermineAllyGroup(result.EnemyGroup, playersParty);
         
-        // BattleManager生成
-        result.BattleManager = new BattleManager(
-            result.AllyGroup, 
+        // BattleOrchestrator生成
+        var metaProvider = new PlayersStatesBattleMetaProvider(playersProgress, playersParty, playersUIControl);
+        result.Orchestrator = new BattleOrchestrator(
+            result.AllyGroup,
             result.EnemyGroup,
-            BattleStartSituation.Normal, 
-            _messageDropper
+            BattleStartSituation.Normal,
+            _messageDropper,
+            nowStageCut.EscapeRate,
+            metaProvider
         );
-        
-        // BattleTimeLine生成
-        result.TimeLine = new BattleTimeLine(new List<BattleManager> { result.BattleManager });
+        result.BattleContext = result.Orchestrator.Manager;
         
         // プレイヤー状態を戦闘開始に更新
-        PlayersStates.Instance.OnBattleStart();
+        var skillUi = PlayersStatesHub.SkillUI;
+        if (skillUi != null)
+        {
+            skillUi.OnBattleStart();
+        }
+        else
+        {
+            Debug.LogError("BattleInitializer: PlayersStatesHub.SkillUI が null です");
+        }
         
         // ズーム演出実行
         if (_watchUIUpdate != null)
@@ -66,25 +82,25 @@ public class BattleInitializer
     /// <summary>
     /// 敵グループに応じた味方グループを決定
     /// </summary>
-    private BattleGroup DetermineAllyGroup(BattleGroup enemyGroup, PlayersStates playersStates)
+    private BattleGroup DetermineAllyGroup(BattleGroup enemyGroup, IPlayersParty playersParty)
     {
         // 将来的な拡張ポイント：
         // 敵グループの構成によって味方の人選を変更する処理
         // 例：特定の敵には特定のキャラクターのみで戦う
         
         // 現在はフルパーティを返す
-        return playersStates.GetParty();
+        return playersParty.GetParty();
     }
     
     /// <summary>
     /// 戦闘UI の初期状態を設定
     /// </summary>
-    public TabState SetupInitialBattleUI(BattleManager battleManager)
+    public TabState SetupInitialBattleUI(BattleOrchestrator orchestrator)
     {
-        if (battleManager == null)
+        if (orchestrator == null)
             return TabState.walk;
         
-        return battleManager.ACTPop();
+        return orchestrator.StartBattle();
     }
 }
 
@@ -96,6 +112,6 @@ public class BattleSetupResult
     public bool EncounterOccurred { get; set; }
     public BattleGroup EnemyGroup { get; set; }
     public BattleGroup AllyGroup { get; set; }
-    public BattleManager BattleManager { get; set; }
-    public BattleTimeLine TimeLine { get; set; }
+    public BattleOrchestrator Orchestrator { get; set; }
+    public IBattleContext BattleContext { get; set; }
 }

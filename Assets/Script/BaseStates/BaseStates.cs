@@ -25,7 +25,7 @@ public abstract partial class BaseStates
 
 
     WatchUIUpdate wui => WatchUIUpdate.Instance;
-    protected BattleManager manager => Walking.Instance.bm;
+    protected IBattleContext manager => BattleContextHub.Current;
     protected SchizoLog schizoLog => SchizoLog.Instance;
 
     //  ==============================================================================================================================

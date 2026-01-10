@@ -79,10 +79,21 @@ using Cysharp.Threading.Tasks;   // UniTask
 ///セーブでセーブされるような事柄とかメインループで操作するためのステータス太刀　シングルトン
 /// </summary>
 [DefaultExecutionOrder(-800)]
-public class PlayersStates:MonoBehaviour 
+public class PlayersStates : MonoBehaviour
 {
     //staticなインスタンス
     public static PlayersStates Instance { get; private set; }
+
+    private readonly PlayersProgressTracker progress = new PlayersProgressTracker();
+    private readonly PlayersTuningConfig tuningConfig = new PlayersTuningConfig();
+    private readonly PlayersRoster roster = new PlayersRoster();
+    private PlayersUIService uiService;
+    private PartyBuilder partyBuilder;
+    private WalkLoopService walkLoopService;
+    private PlayersBattleCallbacks battleCallbacks;
+    private PlayersPartyService partyService;
+    private SkillPassiveSelectionUI skillPassiveSelectionUI;
+    private EmotionalAttachmentUI emotionalAttachmentUI;
 
     public GameObject EyeArea;
     public ActionMarkUI ActionMar;
@@ -92,6 +103,22 @@ public class PlayersStates:MonoBehaviour
         if (Instance == null)//シングルトン
         {
             Instance = this;
+            skillPassiveSelectionUI = new SkillPassiveSelectionUI(SelectSkillPassiveTargetHandle);
+            emotionalAttachmentUI = new EmotionalAttachmentUI(roster, EmotionalAttachmentSkillSelectUIArea);
+            uiService = new PlayersUIService(
+                roster,
+                skillUILists,
+                DefaultButtonArea,
+                DoNothingButton,
+                CancelPassiveButtonField,
+                skillPassiveSelectionUI,
+                emotionalAttachmentUI);
+            partyBuilder = new PartyBuilder(roster, uiService);
+            walkLoopService = new WalkLoopService(roster);
+            battleCallbacks = new PlayersBattleCallbacks(roster);
+            partyService = new PlayersPartyService(roster, partyBuilder, battleCallbacks, walkLoopService);
+            PlayersStatesHub.Bind(progress, partyService, uiService, uiService, tuningConfig, roster);
+            RefreshTuningConfig();
             DontDestroyOnLoad(gameObject);
         }
         else
@@ -106,6 +133,14 @@ public class PlayersStates:MonoBehaviour
     {
         // Awake で全シングルトンの初期化が完了した後に初期化処理を行う
         Init();
+    }
+
+    private void OnDestroy()
+    {
+        if (ReferenceEquals(Instance, this))
+        {
+            PlayersStatesHub.ClearAll();
+        }
     }
     /// <summary>
     /// ゲームの値や、主人公達のステータスの初期化
@@ -155,36 +190,24 @@ public class PlayersStates:MonoBehaviour
     /// 0=Geino, 1=Noramlia, 2=Sites
     /// 味方ランタイムデータの配列　処理のループ化のための
     /// </summary>
-    private AllyClass[] Allies; // ランタイムで生成（Inspectorでの多態シリアライズは捨てる）
-    public int AllyCount => Allies?.Length ?? 0;
+    private AllyClass[] Allies
+    {
+        get => roster.Allies;
+        set => roster.SetAllies(value);
+    }
+    public int AllyCount => roster.AllyCount;
 
     // Inspector 表示用ヘッダ文言（コンパイル時定数）
     public const string AllyIndexHeader = "0: Geino, 1: Noramlia, 2: Sites (PlayersStates.AllyId 準拠)";
 
     public bool TryGetAllyIndex(BaseStates actor, out int index)
     {
-        index = -1;
-        if (actor == null || Allies == null) return false;
-        for (int i = 0; i < Allies.Length; i++)
-        {
-            if (ReferenceEquals(Allies[i], actor))
-            {
-                index = i;
-                return true;
-            }
-        }
-        return false;
+        return roster.TryGetAllyIndex(actor, out index);
     }
 
     public bool TryGetAllyId(BaseStates actor, out AllyId id)
     {
-        id = default;
-        if (TryGetAllyIndex(actor, out var idx) && Enum.IsDefined(typeof(AllyId), idx))
-        {
-            id = (AllyId)idx;
-            return true;
-        }
-        return false;
+        return roster.TryGetAllyId(actor, out id);
     }
 
     /// <summary>
@@ -192,51 +215,7 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     void ApplySkillButtons()
     {
-            Debug.Log("ApplySkillButtons");
-
-            // Allies と各UI配列を添え字で対応させて一括で結び付け
-            for (int i = 0; i < Allies.Length; i++)
-            {
-                var actor = Allies[i];
-
-                // スキルボタン
-                if (skillUILists != null && i < skillUILists.Length && skillUILists[i] != null)
-                {
-                    foreach (var button in skillUILists[i].skillButtons)
-                    {
-                        button.AddButtonFunc(actor.OnSkillBtnCallBack);
-                    }
-                }
-
-                // ストックボタン
-                if (skillUILists != null && i < skillUILists.Length && skillUILists[i] != null)
-                {
-                    foreach (var button in skillUILists[i].stockButtons)
-                    {
-                        button.AddButtonFunc(actor.OnSkillStockBtnCallBack);
-                    }
-                }
-
-                // 前のめり選択ラジオ
-                if (skillUILists != null && i < skillUILists.Length && skillUILists[i] != null)
-                {
-                    foreach (var radio in skillUILists[i].aggressiveCommitRadios)
-                    {
-                        radio.AddRadioFunc(actor.OnSkillSelectAgressiveCommitBtnCallBack);
-                    }
-                }
-
-                // 割り込みカウンターActive（単独UIのため、ここではバインドしない）
-                // CharaconfigController 側の m_InterruptCounterRadio で、選択中キャラに応じて動的にバインドします。
-
-                // 何もしないボタン
-                if (DoNothingButton != null && i < DoNothingButton.Length && DoNothingButton[i] != null)
-                {
-                    DoNothingButton[i].onClick.AddListener(actor.OnSkillDoNothingBtnCallBack);
-                }
-            }
-
-            Debug.Log("ボタンとコールバックを結び付けました - ApplySkillButtons");
+        uiService.BindSkillButtons();
     }
     [Header(AllyIndexHeader)]
     [SerializeField]
@@ -249,16 +228,7 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     public void OnSkillSelectionScreenTransition(int index) 
     {
-        //「有効化されてるスキル達のみ」の前のめり選択状態を　ラジオボタンに反映する処理   
-        foreach(var radio in skillUILists[index].aggressiveCommitRadios.Where(rad => Allies[index].ValidSkillIDList.Contains(rad.skillID)))
-        {
-            BaseSkill skill = Allies[index].SkillList[radio.skillID];
-            if(skill == null) Debug.LogError("スキルがありません");
-            //前のめり = 0 そうでないなら　1 なので　IsAgressiveCommitの三項演算子
-            radio.Controller.SetOnWithoutNotify(skill.IsAggressiveCommit ? 0 : 1);
-        }
-
-
+        uiService.OnSkillSelectionScreenTransition(index);
     }
 
     
@@ -274,50 +244,7 @@ public class PlayersStates:MonoBehaviour
     /// <param name="index">キャラクターのインデックス</param>
     public void OnlySelectActs(SkillZoneTrait trait,SkillType type,int index)
     {
-        foreach(var skill in Allies[index].SkillList.Cast<AllySkill>())
-        {
-            //有効なスキルのidとボタンのスキルidが一致したらそれがそのスキルのボタン
-            var hold = skillUILists[index].skillButtons.Find(hold => hold.skillID == skill.ID);
-            if(Allies[index].HasCanCancelCantACTPassive)//キャンセル可能な行動可能パッシブを消せるなら(パッシブキャンセルの行動しか取れないのならば)
-            {
-                //一つでも持ってればOK
-                if (hold != null)
-                {
-                    hold.button.interactable = false;//有効なスキルは全て無効
-                }
-            }else//それ以外は
-            {
-                Debug.Log("スキルのボタンを有効化します" + skill.ID);
-                //一つでも持ってればOK
-                if (hold != null)
-                {
-                    hold.button.interactable =
-                        ZoneTraitAndTypeSkillMatchesUIFilter(skill, trait, type) // 表示条件（範囲/タイプ）
-                        && CanCastNow(Allies[index], skill); // 実行可否（リソース/武器）
-                        Debug.Log(ZoneTraitAndTypeSkillMatchesUIFilter(skill, trait, type) + " |"+hold.skillID+"| " + CanCastNow(Allies[index], skill));
-                }
-            }
-        }
-        //キャンセル可能な行動可能パッシブを作成する。
-        if(CancelPassiveButtonField[index] == null) Debug.LogError("CancelPassiveButtonFieldがnullです");
-        CancelPassiveButtonField[index].ShowPassiveButtons(Allies[index]);
-    }
-
-    /// <summary>
-    /// ボタン表示のためのUIフィルタ条件（範囲/タイプ）。
-    /// </summary>
-    private bool ZoneTraitAndTypeSkillMatchesUIFilter(BaseSkill skill, SkillZoneTrait traitMask, SkillType typeMask)
-    {
-        if (skill == null) return false;
-        return skill.HasZoneTraitAny(traitMask) && skill.HasTypeAny(typeMask);
-    }
-
-    /// <summary>
-    /// スキルにある様々な制約を考慮して直ちに実行可能か（リソース/武器適合）。
-    /// </summary>
-    private bool CanCastNow(BaseStates actor, BaseSkill skill)
-    {
-        return SkillResourceFlow.CanCastSkill(actor, skill);
+        uiService.OnlySelectActs(trait, type, index);
     }
     /// <summary>
     /// スキルボタンの使いを有効化する処理　可視化
@@ -325,25 +252,7 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     void UpdateSkillButtonVisibility()
     {
-        //三キャラ全員分ループ
-        for(int i = 0; i < Allies.Length; i++)
-        {
-            // 有効なスキルのIDを抽出（キャストが必要ならキャストも実施）
-            var activeSkillIds = new HashSet<int>(Allies[i].SkillList.Cast<AllySkill>().Select(skill => skill.ID));
-                    // 各ボタンについて、対応スキルが有効かどうか判定
-            foreach (var hold in skillUILists[i].skillButtons)//スキルボタン
-            {
-                hold.button.interactable = activeSkillIds.Contains(hold.skillID);
-            }
-            foreach (var hold in skillUILists[i].stockButtons)//ストックボタン
-            {
-                hold.button.interactable = activeSkillIds.Contains(hold.skillID);
-            }
-            foreach(var hold in skillUILists[i].aggressiveCommitRadios)//前のめり選択ラジオボタンの設定
-            {
-                hold.Interactable(activeSkillIds.Contains(hold.skillID));
-            }
-        }
+        uiService.UpdateSkillButtonVisibility();
     }
 
 
@@ -355,12 +264,7 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     public void RequestStopFreezeConsecutive(int index)
     {
-        if (index < 0 || Allies == null || index >= Allies.Length)
-        {
-            Debug.LogWarning($"RequestStopFreezeConsecutive: index {index} が不正です。");
-            return;
-        }
-        Allies[index].TurnOnDeleteMyFreezeConsecutiveFlag();
+        partyService.RequestStopFreezeConsecutive(index);
     }
     [Header("スキル選択画面のデフォルトのエリア")]
     /// <summary>
@@ -393,8 +297,7 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     public void GoToCancelPassiveField(int index)
     {
-        DefaultButtonArea[index].gameObject.SetActive(false);
-        CancelPassiveButtonField[index].gameObject.SetActive(true);
+        uiService.GoToCancelPassiveField(index);
     }
     /// <summary>
     /// キャンセルパッシブのエリアからデフォルトのスキル選択のエリアまで戻る
@@ -402,8 +305,7 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     public void ReturnCancelPassiveToDefaultArea(int index)
     {
-        CancelPassiveButtonField[index].gameObject.SetActive(false);
-        DefaultButtonArea[index].gameObject.SetActive(true);
+        uiService.ReturnCancelPassiveToDefaultArea(index);
     }
 
 
@@ -411,129 +313,40 @@ public class PlayersStates:MonoBehaviour
     /// <summary>
     ///     現在進行度
     /// </summary>
-    public int NowProgress { get; private set; }
+    public int NowProgress
+    {
+        get => progress.NowProgress;
+        private set => progress.SetProgress(value);
+    }
 
     /// <summary>
     ///     現在のステージ
     /// </summary>
-    public int NowStageID { get; private set; }
+    public int NowStageID
+    {
+        get => progress.NowStageID;
+        private set => progress.SetStage(value);
+    }
 
     /// <summary>
     ///     現在のステージ内のエリア
     /// </summary>
-    public int NowAreaID { get; private set; }
+    public int NowAreaID
+    {
+        get => progress.NowAreaID;
+        private set => progress.SetArea(value);
+    }
     /// <summary>
     ///     味方のキャラクター全員分のUIを表示するか非表示する
     /// </summary>
     public void AllyAlliesUISetActive(bool isActive)
     {
-        for(int i = 0; i < Allies.Length; i++)
-        {
-            if (Allies[i]?.UI != null) Allies[i].UI.SetActive(isActive);
-        }
+        uiService.AllyAlliesUISetActive(isActive);
     }
 
     public BattleGroup GetParty()
     {
-        //var playerGroup = new List<BaseStates> { geino, sites, noramlia }; //キャラ
-        var playerGroup = new List<BaseStates> {geino}; //テストプレイはジーノのみ
-        var nowOurImpression = GetPartyImpression(); //パーティー属性を彼らのHPから決定
-        var CompatibilityData = new Dictionary<(BaseStates,BaseStates),int>();//相性値のデータ保存用
-
-        // 複数キャラがいる場合のみ、各キャラペアの相性値を計算して格納する
-        if (playerGroup.Count >= 2)
-        {
-            //ストーリー依存
-        }
-        
-        //UI表示いるキャラだけ
-        AllyAlliesUISetActive(false);
-        foreach(var chara in playerGroup)
-        {
-            if (chara == null)
-            {
-                Debug.LogWarning("GetParty: playerGroup に null キャラが含まれています。");
-                continue;
-            }
-
-            if (chara.UI != null)
-            {
-                //chara.UI.SetActive(true);
-
-                // HPバーを初期化（存在する場合のみ）
-                var bar = chara.UI.HPBar;
-                if (bar != null)
-                {
-                    bar.SetBothBarsImmediate(
-                        chara.HP / chara.MaxHP,
-                        chara.MentalHP / chara.MaxHP,
-                        chara.GetMentalDivergenceThreshold());
-                }
-                else
-                {
-                    Debug.LogWarning($"GetParty: {chara.CharacterName} の UI.HPBar が未割り当てです。");
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"GetParty: {chara.CharacterName} の UI が未割り当てです。");
-            }
-        }
-
-        return new BattleGroup(playerGroup, nowOurImpression,allyOrEnemy.alliy,CompatibilityData); //パーティー属性を返す
-    }
-
-    /// <summary>
-    /// 味方のパーティー属性を取得する 現在のHPによって決まる。
-    /// </summary>
-    /// <returns></returns>
-    private PartyProperty GetPartyImpression()
-    {
-        //それぞれの最大HP５％以内の差は許容し、それを前提に三人が同じHPだった場合
-        float toleranceStair = geino.MaxHP * 0.05f;
-        float toleranceSateliteProcess = sites.MaxHP * 0.05f;
-        float toleranceBassJack = noramlia.MaxHP * 0.05f;
-        if (Mathf.Abs(geino.HP - sites.HP) <= toleranceStair && 
-            Mathf.Abs(sites.HP - noramlia.HP) <= toleranceSateliteProcess &&
-            Mathf.Abs(noramlia.HP - geino.HP) <= toleranceBassJack)
-        {
-            return PartyProperty.MelaneGroup;//三人のHPはほぼ同じ
-        }
-        
-        
-        //HPの差による場合分け
-        if (geino.HP >= sites.HP && sites.HP >= noramlia.HP)
-        {
-            // geino >= sites >= noramlia ステアが一番HPが多い　サテライトプロセスが二番目　バスジャックが三番目
-            return PartyProperty.MelaneGroup;
-        }
-        else if (geino.HP >= noramlia.HP && noramlia.HP >= sites.HP)
-        {
-            // geino >= noramlia >= sites　ステアが一番HPが多い　ステアが二番目　バスジャックが三番目
-            return PartyProperty.Odradeks;
-        }
-        else if (sites.HP >= geino.HP && geino.HP >= noramlia.HP)
-        {
-            // sites >= geino >= noramlia　サテライトプロセスが一番HPが多い　ステアが二番目　バスジャックが三番目
-            return PartyProperty.MelaneGroup;
-        }
-        else if (sites.HP >= noramlia.HP && noramlia.HP >= geino.HP)
-        {
-            // sites >= noramlia >= geino　サテライトプロセスが一番HPが多い　バスジャックが二番目　ステアが三番目
-            return PartyProperty.HolyGroup;
-        }
-        else if (noramlia.HP >= geino.HP && geino.HP >= sites.HP)
-        {
-            // noramlia >= geino >= sites　バスジャックが一番HPが多い　ステアが二番目　サテライトプロセスが三番目
-            return PartyProperty.TrashGroup;
-        }
-        else if (noramlia.HP >= sites.HP && sites.HP >= geino.HP)
-        {
-            // noramlia >= sites >= geino　バスジャックが一番HPが多い　サテライトプロセスが二番目　ステアが三番目
-            return PartyProperty.Flowerees;
-        }
-
-        return PartyProperty.MelaneGroup;//基本的にif文で全てのパターンを網羅しているので、ここには来ない
+        return partyService.GetParty();
     }
 
 
@@ -545,7 +358,7 @@ public class PlayersStates:MonoBehaviour
     /// <param name="addPoint"></param>
     public void AddProgress(int addPoint)
     {
-        NowProgress += addPoint;
+        progress.AddProgress(addPoint);
     }
 
     /// <summary>
@@ -553,7 +366,7 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     public void ProgressReset()
     {
-        NowProgress = 0;
+        progress.ResetProgress();
     }
 
     /// <summary>
@@ -561,7 +374,7 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     public void SetArea(int id)
     {
-        NowAreaID = id;
+        progress.SetArea(id);
         Debug.Log(id + "をPlayerStatesに記録");
     }
     /// <summary>
@@ -569,43 +382,26 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     public void PlayersOnWin()
     {
-        for(int i = 0; i < Allies.Length; i++)
-        {
-            Allies[i].OnAllyWinCallBack();
-        }
+        partyService.PlayersOnWin();
     }
     /// <summary>
     /// 主人公達の負けたときのコールバック
     /// </summary>
     public void PlayersOnLost()
     {
-        for(int i = 0; i < Allies.Length; i++)
-        {
-            Allies[i].OnAllyLostCallBack();
-        }
+        partyService.PlayersOnLost();
     }
     /// <summary>
     /// 主人公達の逃げ出した時のコールバック
     /// </summary>
     public void PlayersOnRunOut()
     {
-        for(int i = 0; i < Allies.Length; i++)
-        {
-            Allies[i].OnAllyRunOutCallBack();
-        }
+        partyService.PlayersOnRunOut();
     }
 
     public void PlayersOnWalks(int walkCount)
     {
-        // 全キャラ分、1歩単位で順次処理（OnWalkCallBack は1歩=1回の契約）
-        int steps = Mathf.Max(1, walkCount);
-        for (int s = 0; s < steps; s++)
-        {
-            for (int i = 0; i < Allies.Length; i++)
-            {
-                Allies[i].OnWalkStepCallBack();
-            }
-        }
+        partyService.PlayersOnWalks(walkCount);
     }
     [Header("モーダルエリア")]
     /// <summary>
@@ -624,15 +420,14 @@ public class PlayersStates:MonoBehaviour
     public async UniTask<List<BaseSkill>> GoToSelectSkillPassiveTargetSkillButtonsArea
     (List<BaseSkill> skills, int selectCount)
     {
-        ModalAreaController.Instance?.ShowSingle(SelectSkillPassiveTargetHandle.gameObject);//モーダルエリアの表示 + パネル単独表示
-        return await SelectSkillPassiveTargetHandle.ShowSkillsButtons(skills, selectCount);//スキル選択ボタンの生成
+        return await uiService.GoToSelectSkillPassiveTargetSkillButtonsArea(skills, selectCount);
     }
     /// <summary>
     /// スキルパッシブ対象スキル選択画面から戻る
     /// </summary>
     public void ReturnSelectSkillPassiveTargetSkillButtonsArea()
     {
-        ModalAreaController.Instance?.CloseFor(SelectSkillPassiveTargetHandle.gameObject);//ボタンエリアのクローズ（モーダルも必要なら閉じる）
+        uiService.ReturnSelectSkillPassiveTargetSkillButtonsArea();
     }
     [Header("思い入れスキル選択UI")]
     /// <summary>
@@ -650,11 +445,7 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     public void OpenEmotionalAttachmentSkillSelectUIArea(int index)
     {
-        EmotionalAttachmentSkillSelectUIArea.OpenEmotionalAttachmentSkillSelectUIArea();
-        EmotionalAttachmentSkillSelectUIArea.ShowSkillsButtons
-        (Allies[index].SkillList.Cast<AllySkill>().Where(skill => skill.IsTLOA).ToList(),//TLOAスキルのみ
-         Allies[index].EmotionalAttachmentSkillID, Allies[index].OnEmotionalAttachmentSkillIDChange);
-        //キャラのスキルリストと、現在の思い入れスキルIDを渡す
+        uiService.OpenEmotionalAttachmentSkillSelectUIArea(index);
     }
     
 
@@ -663,7 +454,7 @@ public class PlayersStates:MonoBehaviour
     /// </summary>
     public void OnBattleStart()
     {
-        EmotionalAttachmentSkillSelectUIArea.CloseEmotionalAttachmentSkillSelectUIArea();//思い入れスキル選択UIが開きっぱなしなら閉じる
+        uiService.OnBattleStart();
     }
 
 
@@ -671,13 +462,32 @@ public class PlayersStates:MonoBehaviour
     /// <summary>
     /// 中央決定値　空洞爆発の値　割り込みカウンター用
     /// </summary>
-    public float ExplosionVoid;
     void CreateDecideValues()
     {
-        ExplosionVoid = RandomEx.Shared.NextFloat(10,61);
+        RefreshTuningConfig();
+        tuningConfig.SetExplosionVoid(RandomEx.Shared.NextFloat(10,61));
     }
     public int HP_TO_MaxP_CONVERSION_FACTOR = 80;
     public int MentalHP_TO_P_Recovely_CONVERSION_FACTOR = 120;
+
+    private void RefreshTuningConfig()
+    {
+        tuningConfig.Initialize(
+            HP_TO_MaxP_CONVERSION_FACTOR,
+            MentalHP_TO_P_Recovely_CONVERSION_FACTOR,
+            EmotionalAttachmentSkillWeakeningPassive
+        );
+    }
+
+    public float ExplosionVoidValue => tuningConfig.ExplosionVoid;
+    public int HpToMaxPConversionFactor => tuningConfig.HpToMaxPConversionFactor;
+    public int MentalHpToPRecoveryConversionFactor => tuningConfig.MentalHpToPRecoveryConversionFactor;
+    public BaseSkillPassive EmotionalAttachmentSkillWeakeningPassiveRef => tuningConfig.EmotionalAttachmentSkillWeakeningPassive;
+
+    public BaseStates GetAllyByIndex(int index)
+    {
+        return roster.GetAllyByIndex(index);
+    }
 
 }
 [Serializable]
@@ -795,8 +605,14 @@ public class AllyClass : BaseStates
     /// </summary>
     void EmotionalAttachmentSkillQuantityChangeSkillWeakening(AllySkill oldSkill)
     {
+        var tuning = PlayersStatesHub.Tuning;
+        if (tuning == null || tuning.EmotionalAttachmentSkillWeakeningPassiveRef == null)
+        {
+            Debug.LogError("EmotionalAttachmentSkillQuantityChangeSkillWeakening: Tuning が未設定です");
+            return;
+        }
         oldSkill.ApplyEmotionalAttachmentSkillQuantityChangeSkillWeakeningPassive//弱体化スキルパッシブ専用の付与関数
-        (PlayersStates.Instance.EmotionalAttachmentSkillWeakeningPassive);
+        (tuning.EmotionalAttachmentSkillWeakeningPassiveRef);
     }
     
     /// <summary>
@@ -965,13 +781,19 @@ public class AllyClass : BaseStates
         SKillUseCall(SkillList[skillListIndex]);//スキル使用
 
         //もし先約リストによる単体指定ならば、範囲や対象者選択画面にはいかず、直接actbranchiへ移行
-        if(manager.Acts.GetAtSingleTarget(0)!= null)
+        //スキルの性質によるボタンの行く先の分岐
+        var nextState = manager.Acts.GetAtSingleTarget(0) != null
+            ? TabState.NextWait
+            : DetermineNextUIState(NowUseSkill);
+
+        var uiBridge = BattleUIBridge.Active;
+        if (uiBridge != null)
         {
-            Walking.Instance.USERUI_state.Value = TabState.NextWait;
-        }else
+            uiBridge.SetUserUiState(nextState);
+        }
+        else
         {
-                    //スキルの性質によるボタンの行く先の分岐
-            Walking.Instance.USERUI_state.Value = DetermineNextUIState(NowUseSkill);
+            Debug.LogError("PlayersStates.OnSkillBtnCallBack: BattleUIBridge が null です");
         }
 
         
@@ -1000,9 +822,21 @@ public class AllyClass : BaseStates
             stockSkill.ForgetStock();
         }
 
-        Walking.Instance.bm.SkillStock = true;//ACTBranchingでストックboolをtrueに。
+        var uiBridge = BattleUIBridge.Active;
+        var battle = uiBridge?.BattleContext;
+        if (battle != null)
+        {
+            battle.SkillStock = true;//ACTBranchingでストックboolをtrueに。
+        }
 
-        Walking.Instance.USERUI_state.Value = TabState.NextWait;//CharacterACTBranchingへ
+        if (uiBridge != null)
+        {
+            uiBridge.SetUserUiState(TabState.NextWait);//CharacterACTBranchingへ
+        }
+        else
+        {
+            Debug.LogError("PlayersStates.OnSkillStockBtnCallBack: BattleUIBridge が null です");
+        }
         
     }
 
@@ -1057,9 +891,21 @@ public class AllyClass : BaseStates
     public void OnSkillDoNothingBtnCallBack()
     {
         Debug.Log("何もしない");
-        Walking.Instance.bm.DoNothing = true;//ACTBranchingで何もしないようにするboolをtrueに。
+        var uiBridge = BattleUIBridge.Active;
+        var battle = uiBridge?.BattleContext;
+        if (battle != null)
+        {
+            battle.DoNothing = true;//ACTBranchingで何もしないようにするboolをtrueに。
+        }
 
-        Walking.Instance.USERUI_state.Value = TabState.NextWait;//CharacterACTBranchingへ
+        if (uiBridge != null)
+        {
+            uiBridge.SetUserUiState(TabState.NextWait);//CharacterACTBranchingへ
+        }
+        else
+        {
+            Debug.LogError("PlayersStates.OnSkillDoNothingBtnCallBack: BattleUIBridge が null です");
+        }
     }
     /// <summary>
     /// スキルの性質に基づいて、次に遷移すべき画面状態を判定する
@@ -1068,7 +914,7 @@ public class AllyClass : BaseStates
     /// <returns>遷移先のTabState</returns>
     public static TabState DetermineNextUIState(BaseSkill skill)
     {
-        //var acter = Walking.bm.Acter;
+        //var acter = Walking.Instance.BattleContext?.Acter;
 
         //範囲を選べるのなら　　 (自分だけのスキルなら範囲選択の性質があってもできない、本来できないもの)
         if (skill.HasZoneTrait(SkillZoneTrait.CanSelectRange) && !skill.HasZoneTrait(SkillZoneTrait.SelfSkill))
@@ -1239,7 +1085,9 @@ public class AllyClass : BaseStates
     public void AllyVictoryBoost()
     {
         //まず主人公グループと敵グループの強さの倍率
-        var ratio = Walking.Instance.bm.EnemyGroup.OurTenDayPowerSum(false) / Walking.Instance.bm.AllyGroup.OurTenDayPowerSum(false);
+        var battle = BattleUIBridge.Active?.BattleContext;
+        if (battle == null) return;
+        var ratio = battle.EnemyGroup.OurTenDayPowerSum(false) / battle.AllyGroup.OurTenDayPowerSum(false);
         VictoryBoost(ratio);
 
     }
@@ -1588,7 +1436,14 @@ public class AllySkill : BaseSkill
     /// <param name="passive">ここに渡すのは弱体化スキルパッシブ(スキルの思い入れ由来)専用</param>
     public void ApplyEmotionalAttachmentSkillQuantityChangeSkillWeakeningPassive(BaseSkillPassive passive)
     {
-        if(passive.Name == PlayersStates.Instance.EmotionalAttachmentSkillWeakeningPassive.Name)
+        var tuning = PlayersStatesHub.Tuning;
+        var weakeningPassive = tuning?.EmotionalAttachmentSkillWeakeningPassiveRef;
+        if (weakeningPassive == null)
+        {
+            Debug.LogError("ApplyEmotionalAttachmentSkillQuantityChangeSkillWeakeningPassive: Tuning が未設定です");
+            return;
+        }
+        if(passive.Name == weakeningPassive.Name)
         {
             //弱体化スキルパッシブに該当するものが一つでもあったら、それを消す
             for (int i = ReactiveSkillPassiveList.Count - 1; i >= 0; i--)//回してるリストから削除するのでfor文で逆順に回すと安心

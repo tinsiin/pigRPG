@@ -49,7 +49,8 @@ public class SelectTargetButtons : MonoBehaviour
     float startX;
     float startY;
 
-    BattleManager bm => Walking.Instance.bm;
+    BattleUIBridge uiBridge => BattleUIBridge.Active;
+    IBattleContext battle => uiBridge?.BattleContext;
     int NeedSelectCountAlly;//このneedcountは基本的には対象選択のみ
     int NeedSelectCountEnemy;
     List<Button> AllybuttonList = new List<Button>();
@@ -61,7 +62,13 @@ public class SelectTargetButtons : MonoBehaviour
     /// </summary>
     public void OnCreated()
     {
-        var acter = bm.Acter;
+        var battleContext = battle;
+        if (battleContext == null)
+        {
+            Debug.LogError("SelectTargetButtons.OnCreated: BattleContext が null です");
+            return;
+        }
+        var acter = battleContext.Acter;
         var skill = acter.NowUseSkill;
         CashUnders = new List<BaseStates>();
         // 前回の参照が残ると誤判定や二重Destroyの原因になるため、生成前に必ずクリア
@@ -152,8 +159,8 @@ public class SelectTargetButtons : MonoBehaviour
             //前のめりが存在するかしないか、そもそも一人かどうかだと強制的にBackOrAnyにDirectedWillになって対象選択画面を飛ばす。
             //つまりボタンを作らずそのままNextWaitへ
 
-            var enemyLives = RemoveDeathCharacters(bm.EnemyGroup.Ours);//生きてる敵だけ
-            if(bm.EnemyGroup.InstantVanguard == null || enemyLives.Count < 2) //前のめりがいないか　敵の生きてる人数が二人未満
+            var enemyLives = RemoveDeathCharacters(battleContext.EnemyGroup.Ours);//生きてる敵だけ
+            if(battleContext.EnemyGroup.InstantVanguard == null || enemyLives.Count < 2) //前のめりがいないか　敵の生きてる人数が二人未満
             {
                 if (!AllyTargeting && !MySelfTargeting)//味方選択がないなら
                 {
@@ -207,7 +214,7 @@ public class SelectTargetButtons : MonoBehaviour
             else//前のめりがいて二人以上いるなら
             {
                 //前のめりのキャラクターが対象者ボーナスに含まれているか調査
-                var vanguard = bm.EnemyGroup.InstantVanguard;
+                var vanguard = battleContext.EnemyGroup.InstantVanguard;
                 var data = acter.TargetBonusDatas;
                 var txt = "前のめり-1";
                 if(data.DoIHaveTargetBonus(vanguard))//対象者ボーナスに含まれてるのなら
@@ -258,7 +265,7 @@ public class SelectTargetButtons : MonoBehaviour
 
         if (EnemyTargeting)//敵全員を入れる
         {
-            var selects = bm.EnemyGroup.Ours;
+            var selects = battleContext.EnemyGroup.Ours;
 
             if (!acter.HasRangeWill(SkillZoneTrait.CanSelectDeath))//死亡者選択不可能なら
             {
@@ -328,7 +335,7 @@ public class SelectTargetButtons : MonoBehaviour
             List<BaseStates> selects;
             if(AllyTargeting)//味方選択可能なら
             {
-                selects = bm.AllyGroup.Ours;
+                selects = battleContext.AllyGroup.Ours;
                 if(!MySelfTargeting)//自分自身が選ばれないのなら　自分自身を省く
                 {
                     selects.Remove(acter);
@@ -428,7 +435,7 @@ public class SelectTargetButtons : MonoBehaviour
     /// </summary>
     void OnClickSelectVanguardOrBacklines(Button thisBtn,DirectedWill will)
     {
-        bm.Acter.Target = will;//渡された前のめりか後衛かの意思を入れる。
+        battle.Acter.Target = will;//渡された前のめりか後衛かの意思を入れる。
 
         ReturnNextWaitView();
     }
@@ -491,7 +498,7 @@ public class SelectTargetButtons : MonoBehaviour
 
             //このキャラクターがターゲット率がある =　隙だらけなら　その補正をキャラ限定特別補正に入れる
             //隙だらけ補正　は　命中パーセンテージ補正です
-            var allyActer = bm.Acter as AllyClass;
+            var allyActer = battle.Acter as AllyClass;
             var ExposureModifier = allyActer.GetExposureAccuracyPercentageBonus(target.PassivesTargetProbability());
             if(ExposureModifier > 0)//隙だらけ補正のパーセンテージがあるなら
             {
@@ -501,7 +508,7 @@ public class SelectTargetButtons : MonoBehaviour
 
 
 
-            bm.Acter.Target = will;//選択意思を入れる
+            battle.Acter.Target = will;//選択意思を入れる
             Destroy(thisBtn);//このボタンは破棄
         }
     }
@@ -510,13 +517,20 @@ public class SelectTargetButtons : MonoBehaviour
     /// </summary>
     private void ReturnNextWaitView()
     {
-        Walking.Instance.USERUI_state.Value = TabState.NextWait;
+        if (uiBridge != null)
+        {
+            uiBridge.SetUserUiState(TabState.NextWait);
+        }
+        else
+        {
+            Debug.LogError("SelectTargetButtons.ReturnNextWaitView: BattleUIBridge が null です");
+        }
 
         //bmの対象者リストにキャッシュリストを入れる
         CashUnders.Shuffle();//分散値のランダム性のためシャッフル
         foreach(var cash in CashUnders)
         {
-            bm.unders.CharaAdd(cash);
+            battle.unders.CharaAdd(cash);
         }
 
         foreach (var button in AllybuttonList)
@@ -528,7 +542,7 @@ public class SelectTargetButtons : MonoBehaviour
             Destroy(button);//ボタン全部削除
         }
 
-        foreach(var one in bm.AllCharacters)
+        foreach(var one in battle.AllCharacters)
         {
             one.UI.SetActiveSetNumber_NumberEffect(false);//全キャラの数字を非表示
         }

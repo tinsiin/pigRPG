@@ -31,160 +31,6 @@ public enum whatModify
 {
     eye, atk, def, agi
 }
-/// <summary>
-/// 行動リスト
-/// </summary>
-public class ACTList
-{
-
-    List<BaseStates> CharactorACTList;
-    List<string> TopMessage;
-    List<allyOrEnemy> FactionList;//陣営
-    /// <summary>
-    /// 予約式補正リスト
-    /// </summary>
-    List<List<ModifierPart>> reservationStatesModifies;
-    List<bool> IsFreezeList;//スキルをフリーズ、つまり前のスキルを持続させるかどうか。
-    List<BaseStates> SingleTargetList;//単体で狙うのを確定するリスト
-    List<float> ExCounterDEFATKList;//割り込みカウンターの防御無視率を保持するリスト
-    List<List<BaseStates>> RaterTargetList;//レイザーダメージの対象者リスト
-    List<float> RaterDamageList;//レイザーダメージのダメージを保持するリスト
-
-
-    public int Count
-    {
-        get => CharactorACTList.Count;
-    }
-    /// <summary>
-    /// レイザーアクト用の先約リスト追加関数
-    /// </summary>
-    public void RatherAdd(string mes,List<BaseStates> raterTargets = null, float raterDamage = 0f)
-    {
-        CharactorACTList.Add(null);
-        FactionList.Add(allyOrEnemy.alliy);
-        TopMessage.Add(mes);
-        reservationStatesModifies.Add(null);
-        IsFreezeList.Add(false);
-        SingleTargetList.Add(null);
-        ExCounterDEFATKList.Add(-1f);
-        RaterTargetList.Add(raterTargets);
-        RaterDamageList.Add(raterDamage);
-    }
-
-    public void Add(BaseStates chara, allyOrEnemy charasFac, string mes = "", List<ModifierPart> modifys = null, 
-    bool isfreeze = false,BaseStates SingleTarget = null,float ExCounterDEFATK = -1)
-    {
-        CharactorACTList.Add(chara);
-        FactionList.Add(charasFac);
-        TopMessage.Add(mes);
-        reservationStatesModifies.Add(modifys);
-        IsFreezeList.Add(isfreeze);
-        SingleTargetList.Add(SingleTarget);
-        ExCounterDEFATKList.Add(ExCounterDEFATK);
-        RaterTargetList.Add(null);
-        RaterDamageList.Add(0f);
-    }
-
-    public ACTList()
-    {
-        CharactorACTList = new List<BaseStates>();
-        TopMessage = new List<string>();
-        FactionList = new List<allyOrEnemy>();
-        reservationStatesModifies = new List<List<ModifierPart>>();
-        IsFreezeList = new();
-        SingleTargetList = new();
-        ExCounterDEFATKList = new();
-        RaterTargetList = new();  
-        RaterDamageList = new(); 
-    }
-    /// <summary>
-    /// 先約リスト内から死者を取り除く
-    /// </summary>
-    public void RemoveDeathCharacters()
-    {
-         // 生存しているキャラクターのインデックスを取得
-        var aliveIndices = Enumerable.Range(0, CharactorACTList.Count)
-            .Where(i => CharactorACTList[i] == null || !CharactorACTList[i].Death())
-            .ToList();
-
-        // 各リストをフィルタリングして再構築
-        CharactorACTList = aliveIndices.Select(i => CharactorACTList[i]).ToList();
-        TopMessage = aliveIndices.Select(i => TopMessage[i]).ToList();
-        FactionList = aliveIndices.Select(i => FactionList[i]).ToList();
-        reservationStatesModifies = aliveIndices.Select(i => reservationStatesModifies[i]).ToList();
-        IsFreezeList = aliveIndices.Select(i => IsFreezeList[i]).ToList();
-        SingleTargetList = aliveIndices.Select(i => SingleTargetList[i]).ToList();
-        ExCounterDEFATKList = aliveIndices.Select(i => ExCounterDEFATKList[i]).ToList();
-        RaterTargetList = aliveIndices.Select(i => RaterTargetList[i]).ToList();
-        RaterDamageList = aliveIndices.Select(i => RaterDamageList[i]).ToList();
-    }
-
-    /// <summary>
-    /// インデックスで消す。
-    /// </summary>
-    /// <param name="index"></param>
-    public void RemoveAt(int index)
-    {
-        CharactorACTList.RemoveAt(index);
-        TopMessage.RemoveAt(index);
-        FactionList.RemoveAt(index);
-        reservationStatesModifies.RemoveAt(index);
-        IsFreezeList.RemoveAt(index);
-        SingleTargetList.RemoveAt(index);
-        ExCounterDEFATKList.RemoveAt(index);
-        RaterTargetList.RemoveAt(index);
-        RaterDamageList.RemoveAt(index);
-    }
-
-    public string GetAtTopMessage(int index)
-    {
-        if (index < 0 || index >= TopMessage.Count) return "";
-        return TopMessage[index];
-    }
-    public BaseStates GetAtCharacter(int index)
-    {
-        if (index < 0 || index >= CharactorACTList.Count) return null;
-        return CharactorACTList[index];
-    }
-    public allyOrEnemy GetAtFaction(int index)
-    {
-        if (index < 0 || index >= FactionList.Count) return allyOrEnemy.alliy; // デフォルト値
-        return FactionList[index];
-    }
-    public List<ModifierPart> GetAtModifyList(int index)
-    {
-        if (index < 0 || index >= reservationStatesModifies.Count) return null;
-        return reservationStatesModifies[index];
-    }
-    public bool GetAtIsFreezeBool(int index)
-    {
-        if (index < 0 || index >= IsFreezeList.Count) return false;
-        return IsFreezeList[index];
-    }
-    public BaseStates GetAtSingleTarget(int index)
-    {
-        if (index < 0 || index >= SingleTargetList.Count) return null;
-        return SingleTargetList[index];
-    }
-    public float GetAtExCounterDEFATK(int index)
-    {
-        if (index < 0 || index >= ExCounterDEFATKList.Count) return -1f;
-        return ExCounterDEFATKList[index];
-    }
-    public List<BaseStates> GetAtRaterTargets(int index)
-    {
-        if (index < 0 || index >= RaterTargetList.Count) return null;
-        return RaterTargetList[index];
-    }
-
-    public float GetAtRaterDamage(int index)
-    {
-        if (index < 0 || index >= RaterDamageList.Count) return 0f;
-        return RaterDamageList[index];
-    }
-
-
-}
     /// <summary>
     /// 攻撃対象者の一時処方に耐えうる保持リスト
     /// </summary>
@@ -341,19 +187,18 @@ public class ACTList
 /// <summary>
 ///     バトルを、管理するクラス
 /// </summary>
-public class BattleManager
+public class BattleManager : IBattleContext
 {
 
-    SchizoLog schizoLog => SchizoLog.Instance;
     /// <summary>
     ///     プレイヤー側のバトルグループ　ここに味方のバトルグループオブジェクトをリンクする？
     /// </summary>
-    public BattleGroup AllyGroup;
+    public BattleGroup AllyGroup { get; set; }
 
     /// <summary>
     ///     敵側のバトルグループ　ここに敵グループのバトルグループオブジェクトをリンクする？
     /// </summary>
-    public BattleGroup EnemyGroup;
+    public BattleGroup EnemyGroup { get; set; }
     /// <summary>
     ///全キャラクターのリスト
     /// </summary>
@@ -420,48 +265,64 @@ public class BattleManager
 
 
     string UniqueTopMessage;//通常メッセージの冠詞？
-    public BaseStates Acter;//今回の俳優
+    public BaseStates Acter { get; set; }//今回の俳優
     /// <summary>
     /// 行動を受ける人 
     /// </summary>
-    public UnderActersEntryList unders;
+    public UnderActersEntryList unders { get; private set; }
     List<BaseStates> RatherTargetList;//レイザーアクトの対象リスト
     float RatherDamageAmount;
     
     allyOrEnemy ActerFaction;//陣営
-    bool Wipeout = false;//全滅したかどうか
+    private readonly BattleState battleState = new BattleState();
+    private readonly TurnScheduler turnScheduler;
+    private readonly TargetingService targetingService = new TargetingService();
+    private readonly EffectResolver effectResolver = new EffectResolver();
+    private readonly BattleUIBridge uiBridge;
+    private readonly IBattleMetaProvider metaProvider;
+    bool Wipeout { get => battleState.Wipeout; set => battleState.Wipeout = value; }//全滅したかどうか
     bool IsRater = false;//レイザーダメージのターンかどうか
-    bool EnemyGroupEmpty = false;//敵グループが空っぽ
-    bool AlliesRunOut = false;//味方全員逃走
-    NormalEnemy VoluntaryRunOutEnemy = null;//敵一人の逃走
+    bool EnemyGroupEmpty { get => battleState.EnemyGroupEmpty; set => battleState.EnemyGroupEmpty = value; }//敵グループが空っぽ
+    bool AlliesRunOut { get => battleState.AlliesRunOut; set => battleState.AlliesRunOut = value; }//味方全員逃走
+    NormalEnemy VoluntaryRunOutEnemy { get => battleState.VoluntaryRunOutEnemy; set => battleState.VoluntaryRunOutEnemy = value; }//敵一人の逃走
     /// <summary>
     /// 連鎖逃走する敵リスト
     /// </summary>
-    List<NormalEnemy> DominoRunOutEnemies = new List<NormalEnemy>();
-    public bool DoNothing = false;//何もしない
-    public bool PassiveCancel = false;//パッシブキャンセル
-    public bool SkillStock = false;//スキルストック
+    List<NormalEnemy> DominoRunOutEnemies => battleState.DominoRunOutEnemies;
+    public bool DoNothing { get; set; } = false;//何もしない
+    public bool PassiveCancel { get; set; } = false;//パッシブキャンセル
+    public bool SkillStock { get; set; } = false;//スキルストック
     public bool VoidTurn = false;//そのターンは無かったことに
+    private readonly float stageEscapeRate;
 
     /// <summary>
     /// 行動リスト　ここではrecovelyTurnの制約などは存在しません
     /// </summary>
-    public ACTList Acts;//行動先約リスト？
+    public ActionQueue Acts { get; private set; }//行動先約リスト？
 
-    public int BattleTurnCount;//バトルの経過ターン
+    public int BattleTurnCount
+    {
+        get => battleState.TurnCount;
+        private set => battleState.TurnCount = value;
+    }//バトルの経過ターン
 
-    private MessageDropper MessageDropper;
     /// <summary>
     ///コンストラクタ
     /// </summary>
-    public BattleManager(BattleGroup allyGroup, BattleGroup enemyGroup, BattleStartSituation first, MessageDropper messageDropper)
+    public BattleManager(BattleGroup allyGroup, BattleGroup enemyGroup, BattleStartSituation first, MessageDropper messageDropper, float escapeRate, IBattleMetaProvider metaProvider)
     {
         AllyGroup = allyGroup;
         EnemyGroup = enemyGroup;
         firstSituation = first;
-        Acts = new ACTList();
+        Acts = new ActionQueue();
+        turnScheduler = new TurnScheduler(AllyGroup, EnemyGroup, Acts, battleState);
         unders = new UnderActersEntryList(this);
-        MessageDropper = messageDropper;
+        uiBridge = new BattleUIBridge(messageDropper);
+        uiBridge.BindBattleContext(this);
+        BattleUIBridge.SetActive(uiBridge);
+        stageEscapeRate = escapeRate;
+        BattleContextHub.Set(this);
+        this.metaProvider = metaProvider;
 
         
 
@@ -497,14 +358,6 @@ public class BattleManager
     
 
     /// <summary>
-    /// BaseStatesを継承したキャラクターのListからrecovelyTurnのカウントアップして行動状態に回復出来る奴だけを選別する
-    /// </summary>
-    private List<BaseStates> RetainActionableCharacters(List<BaseStates> Charas)
-    {
-        var ActionableCharacters =  Charas.Where(chara => chara.RecovelyBattleField(BattleTurnCount)).ToList();
-        return ActionableCharacters;
-    }
-    /// <summary>
     /// キャラクター行動リストに先手分のリストを入れる。
     /// 先手後手システムのobsidianを参照
     /// </summary>
@@ -537,62 +390,16 @@ public class BattleManager
     }
 
     /// <summary>
-    /// ランダムに次の人のターンを選出する。
-    /// </summary>
-    private BaseStates RandomTurn()
-    {
-        BaseStates Chara;//選出される人
-
-        List<BaseStates> Charas;//キャラリスト
-        List<BaseStates> Primary;
-        List<BaseStates> Secondary;
-        allyOrEnemy PrimaryFaction;
-        allyOrEnemy SecondaryFaction;
-
-        if (RandomEx.Shared.NextBool())//キャラリストから選ぶの決める
-        {
-            Primary = AllyGroup.Ours;
-            PrimaryFaction = allyOrEnemy.alliy;
-            Secondary = EnemyGroup.Ours;
-            SecondaryFaction = allyOrEnemy.Enemyiy;
-        }
-        else
-        {
-            Primary = EnemyGroup.Ours;
-            PrimaryFaction = allyOrEnemy.Enemyiy;
-            Secondary = AllyGroup.Ours;
-            SecondaryFaction = allyOrEnemy.alliy;
-        }
-
-        var primaryCandidates = RetainActionableCharacters(RemoveDeathCharacters(Primary));
-        if (primaryCandidates.Count > 0)
-        {
-            Charas = primaryCandidates;
-            ActerFaction = PrimaryFaction;
-        }
-        else
-        {
-            // 片側が行動不可なだけでターンが止まる問題の回避
-            var secondaryCandidates = RetainActionableCharacters(RemoveDeathCharacters(Secondary));
-            if (secondaryCandidates.Count == 0)
-            {
-                return null;
-            }
-            Charas = secondaryCandidates;
-            ActerFaction = SecondaryFaction;
-        }
-        
-        Chara = RandomEx.Shared.GetItem(Charas.ToArray<BaseStates>());//キャラリストからランダムで選ぶ
-        Chara.RecovelyWaitStart();//選ばれたので次に行動できるまでまた再カウント開始
-
-        return Chara;
-    }
-    /// <summary>
     /// BattleManager内の一時保存要素のリセット？
     /// </summary>
     private void ResetManagerTemp()
     {
         UniqueTopMessage = "";
+    }
+    private void AppendUniqueTopMessage(string message)
+    {
+        if (string.IsNullOrEmpty(message)) return;
+        UniqueTopMessage += message;
     }
     /// <summary>
     /// ランダムターンかまたは先約リストからActerを取得する
@@ -656,7 +463,7 @@ public class BattleManager
         else
         {
             //居なかったらランダムに選ぶ
-            Acter = RandomTurn();
+            Acter = turnScheduler.SelectRandomActer(out ActerFaction);
             Debug.Log("俳優はランダムに選ばれました");
         }
 
@@ -666,9 +473,9 @@ public class BattleManager
     /// </summary>
     public TabState ACTPop()
     {
-        schizoLog.DisplayAllAsync().Forget();//ログの更新
+        uiBridge.DisplayLogs();//ログの更新
         ResetManagerTemp();//一時保存要素をリセット
-        Acts.RemoveDeathCharacters();//先約リストから死者を取り除く
+        turnScheduler.RemoveDeadReservations();//先約リストから死者を取り除く
 
         //パーティーの死亡判定
         if (AllyGroup.PartyDeathOnBattle())
@@ -712,14 +519,7 @@ public class BattleManager
         
         // 俳優が確定したので、アクションマークをそのアイコンへ移動させる（サイズはActionMarkUI側で自動）
         // VoidTurnでスキップされるケースを除外した直後に実行
-        {
-            var ui = WatchUIUpdate.Instance;
-            if (ui != null && Acter != null)
-            {
-                // 導入ズーム/スライド完了を待ってから、見かけスケールに合わせて移動
-                ui.MoveActionMarkToActorScaled(Acter, false, true).Forget();
-            }
-        }
+        uiBridge.MoveActionMarkToActorScaled(Acter, false, true);
         //レイザーダメージアクトにはこの後のスキルの選択がいらないので
         if(IsRater)
         {// => CharacterActBranching
@@ -741,7 +541,7 @@ public class BattleManager
         {//味方が行動するならば
             Debug.Log(Acter.CharacterName + "(主人公キャラ)は行動する");
             // Characonfig の選択キャラを現在の主人公アクターに同期
-            CharaconfigController.Instance?.SetSelectedByActor(Acter);
+            uiBridge.SetSelectedActor(Acter);
             
             if (!Acter.IsFreeze)//強制続行中のスキルがなければ
             {
@@ -750,7 +550,7 @@ public class BattleManager
                 {
                     // パッシブによる行動不能でない、または
                     // キャンセル可能なパッシブを持っている場合
-                    SwitchAllySkillUiState();
+                    uiBridge.SwitchAllySkillUiState(Acter, Acts.GetAtSingleTarget(0) != null);
                     Debug.Log(Acter.CharacterName + "(主人公キャラ)はスキル選択");
                     return TabState.Skill;
                 }else//パッシブ由来で行動不能ならば
@@ -807,59 +607,12 @@ public class BattleManager
     }
 
     /// <summary>
-    /// 味方のスキル選択UI状態を、現在の俳優のクラスに応じて切り替える。
-    /// ここでスキルボタンの活性条件（単体先約フィルタ）も一括適用する。
-    /// </summary>
-    private void SwitchAllySkillUiState()
-    {
-        // 単体先約の統一フィルタ（中央集約）
-        //もしActs,先約リストで単体指定SingleTargetがあるならば、
-        var singleTarget = Acts.GetAtSingleTarget(0);
-        var OnlyRemainButtonByType = Enum.GetValues(typeof(SkillType))
-                                    .Cast<SkillType>()
-                                    .Aggregate((current, next) => current | next);
-        var OnlyRemainButtonByZoneTrait = Enum.GetValues(typeof(SkillZoneTrait))
-                                    .Cast<SkillZoneTrait>()
-                                    .Aggregate((SkillZoneTrait)0, (cur, next) => cur | next);
-        if (singleTarget != null)
-        {
-            OnlyRemainButtonByZoneTrait = 0;//まず空にする
-            OnlyRemainButtonByType =0;
-            OnlyRemainButtonByZoneTrait =SkillFilterPresets.SingleTargetZoneTraitMask;
-            OnlyRemainButtonByType =  SkillFilterPresets.SingleTargetTypeMask;
-        }
-
-
-        switch (Acter)
-        {
-            case StairStates ps:
-                // ここでスキルを指定した範囲性質を持つもののみ interactable=true になるようにする
-                PlayersStates.Instance.OnlySelectActs(OnlyRemainButtonByZoneTrait, OnlyRemainButtonByType, 0);
-                PlayersStates.Instance.OnSkillSelectionScreenTransition(0);
-                Walking.Instance.SKILLUI_state.Value = SkillUICharaState.geino;
-                break;
-
-            case BassJackStates ps:
-                PlayersStates.Instance.OnlySelectActs(OnlyRemainButtonByZoneTrait, OnlyRemainButtonByType, 1);
-                PlayersStates.Instance.OnSkillSelectionScreenTransition(1);
-                Walking.Instance.SKILLUI_state.Value = SkillUICharaState.normalia;
-                break;
-
-            case SateliteProcessStates ps:
-                PlayersStates.Instance.OnlySelectActs(OnlyRemainButtonByZoneTrait, OnlyRemainButtonByType, 2);
-                PlayersStates.Instance.OnSkillSelectionScreenTransition(2);
-                Walking.Instance.SKILLUI_state.Value = SkillUICharaState.sites;
-                break;
-        }
-    }
-
-    /// <summary>
     /// 俳優の行動の分岐
     /// </summary>
     public async UniTask<TabState> CharacterActBranching()
     {
         Debug.Log("俳優の行動の分岐-NextWaitボタンが押されました。");
-        BattleSystemArrowManager.Instance.Next();//システム矢印を進める
+        uiBridge.NextArrow();//システム矢印を進める
         if (IsRater)
         {        //パッシブ等のレイザーダメージアクト acter=nullに弾かれるのでここに移動
             IsRater = false;
@@ -880,7 +633,7 @@ public class BattleManager
 
         if (Wipeout || AlliesRunOut || EnemyGroupEmpty) //全滅か主人公達逃走かでダイアログ終了アクトへ
         {
-            schizoLog.AddLog("全滅か主人公達逃走かでダイアログ終了アクトへ",true);
+            uiBridge.AddLog("全滅か主人公達逃走かでダイアログ終了アクトへ",true);
             //Bmは終了へ向かうので、RunOutもWipeOutもfalseにする必要はない。
             return DialogEndACT();
         }
@@ -1036,7 +789,7 @@ public class BattleManager
         //味方の場合はエリアの逃走率判定
         if(ActerFaction == allyOrEnemy.alliy)
         {
-            var Rate = Walking.Instance.NowStageCut.EscapeRate;
+            var Rate = stageEscapeRate;
             //人数により逃走率の分岐
             switch(AllyGroup.Ours.Count)
             {
@@ -1106,11 +859,7 @@ public class BattleManager
     public TabState RatherACT()
     {
         //レイザーダメージの処理
-        var damage = new StatesPowerBreakdown(new TenDayAbilityDictionary(), RatherDamageAmount);
-        foreach(var target in RatherTargetList)//レイザー攻撃者のリストに入れる
-        {
-            target.RatherDamage(damage,false,1);
-        }
+        effectResolver.ApplyRatherDamage(RatherTargetList, RatherDamageAmount);
         RatherDamageAmount = 0;//レイザー系初期化
         RatherTargetList.Clear();
         NextTurn(true);
@@ -1126,31 +875,31 @@ public class BattleManager
         {
             if (ActerFaction == allyOrEnemy.alliy)
             {
-                MessageDropper.CreateMessage("死んだ");
-                PlayersStates.Instance.PlayersOnLost();
+                uiBridge.PushMessage("死んだ");
+                metaProvider?.OnPlayersLost();
 
                 //敵たちの勝利時コールバック。
                 EnemyGroup.EnemyiesOnWin();
             }
             else
             {
-                MessageDropper.CreateMessage("勝ち抜いた");
-                PlayersStates.Instance.PlayersOnWin();
+                uiBridge.PushMessage("勝ち抜いた");
+                metaProvider?.OnPlayersWin();
             }
         }
         if (AlliesRunOut) 
         {
-            MessageDropper.CreateMessage("我々は逃げた");
-            PlayersStates.Instance.PlayersOnRunOut();
+            uiBridge.PushMessage("我々は逃げた");
+            metaProvider?.OnPlayersRunOut();
             EnemyGroup.EnemiesOnAllyRunOut();//敵の主人公達が逃げ出した時のコールバック
         }
         if (EnemyGroupEmpty)
         {
-            MessageDropper.CreateMessage("敵はいなくなった");
+            uiBridge.PushMessage("敵はいなくなった");
            //敵が逃げたときのはそれぞれコールバックしたのでここで敵のコールバックは行わない。
 
            //一応主人公達は勝った扱い
-           PlayersStates.Instance.PlayersOnWin();
+           metaProvider?.OnPlayersWin();
         }
 
         OnBattleEnd().Forget();
@@ -1163,7 +912,7 @@ public class BattleManager
     /// <param name="txt"></param>
     private void CreateBattleMessage(string txt)
     {
-        MessageDropper.CreateMessage(UniqueTopMessage + txt);
+        uiBridge.PushMessage(UniqueTopMessage + txt);
     }
     /// <summary>
     /// 発動カウント時にTriggerACTでカウントされるスキル以外のスキルの発動カウントが巻き戻る
@@ -1201,97 +950,6 @@ public class BattleManager
         return ACTPop();
     }
     /// <summary>
-    /// 慣れフラットロゼの泉水由来の発生確率
-    /// </summary>
-    /// <returns></returns>
-    float GetCoolnessFlatRozeChance()
-    {
-        var coolPower = Acter.TenDayValues(false).GetValueOrZero(TenDayAbility.SpringWater);//泉水取得
-
-        return Mathf.Floor(coolPower / 16.7f) * 0.01f;
-    }
-    /// <summary>
-    /// 慣れフラットロゼの泉水由来の命中補正
-    /// </summary>
-    /// <returns></returns>
-    float GetCoolnesFlatRozePower()
-    {
-        var coolPower = Acter.TenDayValues(true).GetValueOrZero(TenDayAbility.SpringWater);//泉水取得
-
-        return coolPower * 0.005f;
-    }
-    /// <summary>
-    /// 慣れフラットロゼ用の発生確率の計算　引数にスキル命中率
-    /// x in [0..100]。xが50または60に近いほど、イージング曲線で 4.44%→27%
-    /// ただし距離>12 なら上限4.44%(さらに bc 超えれば 0%)。
-    /// alpha パラメータで曲線の急/緩を調整できる。
-    /// </summary>
-    /// <param name="x">スキルHitPerなど(0～100)</param>
-    /// <param name="alpha">曲線形状(1=線形, >1=徐々に上昇, <1=最初に急上昇)</param>
-    /// <returns>最終パーセント(0～27)</returns>
-    float Ideal50or60Easing(float x, float alpha = 4.3f)
-    {
-        float CoolChance = GetCoolnessFlatRozeChance();//泉水による補正
-        // 1) 0～100 にクランプ
-        x = Mathf.Clamp(x, 0f, 100f);
-
-        // 2) 50,60 の近い方との距離 d
-        float dist50 = Mathf.Abs(x - 50f);
-        float dist60 = Mathf.Abs(x - 60f);
-        float d = Mathf.Min(dist50, dist60);
-
-        // 3) パラメータ設定
-        float ab = 12f;   // 距離が [0..12) => イージング(4.44→27)
-        float bc = 25f;   // 距離が [12..25) => 4.44→0 (線形)
-                          // その先(d>=25) => 0%
-
-        // 4) 区間判定
-
-        if (d >= bc)
-        {
-            // (C) d >= 25 => 0%
-            return 0f + CoolChance;
-        }
-        else if (d >= ab)
-        {
-            // (B) d in [12..25)
-            //   12 => 4.44
-            //   25 => 0
-            float t = (d - ab) / (bc - ab); // 0～1
-            return Mathf.Lerp(4.44f, 0f, t)+CoolChance;
-        }
-        else
-        {
-            // (A) d < 12
-            //   12 => 4.44
-            //   0  => 27
-            // イージング
-            //
-            // t = (12 - d)/12 => 0～1
-            //   d=12 => t=0
-            //   d=0 => t=1
-            //
-            // ease = t^alpha
-            //   alpha=1 => 線形
-            //   alpha>1 => "ゆっくり始まる" (ease-in)
-            //   alpha<1 => "最初に急上昇" (ease-out)
-            //
-
-            float baseline = 4.44f;
-            float peak = 27f;
-
-            float t = (ab - d) / ab; // 0～1
-            float easePortion = Mathf.Pow(t, alpha);
-
-            float val = baseline + (peak - baseline) * easePortion;
-
-            // 必要に応じて clamp
-            // val = Mathf.Clamp(val, 0f, 27f);
-
-            return val+CoolChance;
-        }
-    }
-    /// <summary>
     /// 前のめりになるかどうか
     /// </summary>
     /// <param name="newVanguard"></param>
@@ -1303,11 +961,7 @@ public class BattleManager
             //もし前の前のめりと異なるなら　新しいキャラに前のめりエフェクト
             if(oldVanguard!= newVanguard)
             {
-                newVanguard.UI.BeVanguardEffect();//新しい方が前のめりになるエフェクト
-                if(oldVanguard!=null)
-                {
-                    oldVanguard.UI.LostVanguardEffect();//古い方が前のめりを失うエフェクト
-                }
+                uiBridge.ApplyVanguardEffect(newVanguard, oldVanguard);
             }
             MyGroup(newVanguard).InstantVanguard = newVanguard;
         }
@@ -1395,155 +1049,6 @@ public class BattleManager
         return RandomEx.Shared.NextFloat(NowVanguardScore + WantBeVanguardScore) <= NowVanguardScore;
     }
     /// <summary>
-    /// 相性値由来の被害者への仲間の救済意図での再行動短縮処理
-    /// </summary>
-    void TryHelpMinusRecovelyTurnByCompatibility()
-    {
-        for (var i = 0; i < unders.Count; i++)//被害者全員分ループ
-        {
-            var chara = unders.GetAtCharacter(i);
-            var HelpGroup = MyGroup(chara);//所属するBattleGroupを取得
-            var LiveAllyGroupList = GetOtherAlliesAlive(chara);//被害者の生きている味方
-            if(LiveAllyGroupList.Count < 1)continue;//味方がいなければスキップ
-
-            //60%以上の相性値が被害者に対してある味方のみに絞る　味方→被害者　への相性値
-            LiveAllyGroupList = LiveAllyGroupList.Where(ally => 
-            HelpGroup.CharaCompatibility.ContainsKey((ally, chara)) && HelpGroup.CharaCompatibility[(ally, chara)] >= 60).ToList();
-            if(LiveAllyGroupList.Count < 1)continue;//60以上の相性値を持ってる味方がいなければスキップ
-            var data = chara.RecentDamageData;//被害者のダメージ記録
-            var DamageRate = data.Damage/chara.MaxHP;//被害者のダメージ率
-            foreach(var ally in LiveAllyGroupList)//60%以上の相性値を持ってる味方全員分ループ
-            {
-                var Compatibility = HelpGroup.CharaCompatibility[(ally, chara)];//味方→被害者への相性値
-                var occurrenceProbability = 0f;//発生確率
-                var baseChance = 0f;//基本発生確率
-
-                if (Compatibility > 130)
-                {
-                    baseChance = 0.47f;
-                }
-                else if (Compatibility < 60)
-                {
-                    baseChance = 0f;
-                }
-                else
-                {
-                    //60以上130以下なら計算
-
-                    // 60 で 0、130 で 70 となる変換
-                    float compOffset = Compatibility - 60f;  // 0～70 の範囲
-                    // x = A*(compOffset) - C
-                    // sigmoid(u)=1/(1+ e^-u)
-                    // scale (0.34f) を掛けて 0..0.34 を出力
-                    float x = 0.2f * compOffset - 4.0f;   
-                    float sig = 1f/(1f+ Mathf.Exp(-x));
-                    baseChance = 0.34f * sig;       // 0..0.34
-                }
-                    var HelpRate = DamageRate;
-                    //非攻撃の敵対的行動を取っていた場合、計算用のダメージ割合に加算
-                    if(data.IsBadPassiveHit || data.IsBadVitalLayerHit || data.IsGoodPassiveRemove || data.IsGoodVitalLayerRemove) 
-                    {
-                        HelpRate += RandomEx.Shared.NextFloat(0.07f,0.15f);//7%~15%加算
-                    }
-                    HelpRate = Mathf.Clamp01(HelpRate);//0~1にクランプ
-                    
-                    //複合方式　加算と乗算のいいとこどりでダメージ割合と掛け合わせる。
-                    float k = 2f;
-                    occurrenceProbability = baseChance * (1f + k * HelpRate);
-                    occurrenceProbability = Mathf.Min(occurrenceProbability, 1f);//最大値1にクランプ
-
-                //救済意図での再行動短縮を判定    
-                if(rollper(occurrenceProbability * 100))
-                {
-                     //短縮ターンの計算
-                    float expectedShorten= occurrenceProbability * 4f; // 最大短縮ターン=4
-                    var baseShorten = Mathf.Floor(expectedShorten);//基本短縮ターン
-                    var ratio = expectedShorten - baseShorten;//小数点以下の端数
-                    var upChance = ratio / 3;//上昇確率
-                    float finalShorten = baseShorten;
-                    if(RandomEx.Shared.NextFloat(1) < upChance)
-                    {
-                        finalShorten = baseShorten + 1;
-                    }
-
-
-                    //finalshortenを利用してこのループの仲間キャラのrecovelyturnを短縮する処理。
-                    ally.RecovelyTurnTmpMinus((int)finalShorten);
-                }
-            }
-        }
-    }
-    /// <summary>
-    /// 被害者との相性値の高いキャラが攻撃者に対して対象者ボーナスを得るかどうか　復讐ボーナス
-    /// </summary>
-    void TryAddRevengeBonus()
-    {
-        for (var i = 0; i < unders.Count; i++)//被害者全員分ループ
-        {
-            var chara = unders.GetAtCharacter(i);
-            var HelpGroup = MyGroup(chara);//所属するBattleGroupを取得
-            var LiveAllyGroupList = GetOtherAlliesAlive(chara);//被害者の生きている味方
-            if(LiveAllyGroupList.Count < 1)continue;//味方がいなければスキップ
-
-            //特定の相性値%以上の相性値が被害者に対してある味方のみに絞る　味方→被害者　への相性値
-            LiveAllyGroupList = LiveAllyGroupList.Where(ally => 
-            HelpGroup.CharaCompatibility.ContainsKey((ally, chara)) && HelpGroup.CharaCompatibility[(ally, chara)] >= 86).ToList();
-            if(LiveAllyGroupList.Count < 1)continue;//60以上の相性値を持ってる味方がいなければスキップ
-            var data = chara.RecentDamageData;//被害者のダメージ記録
-            var DamageRate = data.Damage/chara.MaxHP;//被害者のダメージ率
-
-            foreach(var ally in LiveAllyGroupList)//特定の相性値以上の相性値を持ってる味方全員分ループ
-            {
-                if(ally.NowPower < ThePower.medium)continue;//パワーが普通未満ならスキップ
-
-                // 1. 相性値取得（味方→被害者）
-                float compatibility = HelpGroup.CharaCompatibility[(ally, chara)];
-                // 有効な相性値は86以上。相性値が高いほど効果が大きくなるよう、線形補正
-                // ここでは86で0%、130で1.0とする（130未満は0～1のグラデーション）
-                float compatibilityFactor = Mathf.Clamp01((compatibility - 86f) / (130f - 86f));
-                // 3. 最大を0.7に制限
-                compatibilityFactor = Mathf.Clamp01(compatibilityFactor) * 0.7f; // 0～0.7
-
-                // 2. 気力パワー補正（実行者の気力パワー）
-                float powerFactor = 0.5f;//普通なら半分
-                if(ally.NowPower > ThePower.medium)powerFactor = 1f;//高いならそのまま
-
-                // 3. 発生確率の算出（複合方式：）
-                // 複合係数 k を導入（ダメージ割合の影響度）
-                float k = 1.5f; // 大きいほど DamageRate の影響が強くなる
-
-                // 複合方式
-                float occurrenceProbability = compatibilityFactor * (1f + k * DamageRate) * powerFactor;
-                occurrenceProbability = Mathf.Clamp01(occurrenceProbability);// 0~1 に収める
-
-                // 発生判定：発生確率が一定値以上なら復讐ボーナス発動
-                if (rollper(occurrenceProbability * 100)) // rollperは%で判定
-                {
-                    // 4. 持続ターンの計算（最大12ターン）
-                    // ここでは、発生確率に応じて期待値として計算し、離散化
-                    float expectedDuration = occurrenceProbability * 12f;
-                    int baseDuration = Mathf.FloorToInt(expectedDuration);
-                    float extraChance = expectedDuration - baseDuration;
-                    int duration = baseDuration;
-                    if (RandomEx.Shared.NextFloat(1f) < extraChance/2.3f)//離散化の上振れを2.3で割って半減している
-                    {
-                        duration++;
-                    }
-
-                    // 5. ボーナス倍率の計算
-                    // 例として、1.0倍からスタートし、発生確率に応じて上乗せする
-                    // ここでは、発生確率が1.0でつまり一番大きいと、右の倍率がフルで上乗せ
-                    float bonusMultiplier = 1f + occurrenceProbability * 0.4f;
-
-                    // 6. 敵（攻撃者）に対して復讐ボーナスを適用する
-                    ally.TargetBonusDatas.Add(duration+1, bonusMultiplier,data.Attacker);
-                    //ほとんどターンの最後の方で指定されるため、持続ターン+1にして入れておく、
-
-                }
-            }
-        }
-    }
-    /// <summary>
     /// スキルアクトを実行
     /// </summary>
     /// <returns></returns>
@@ -1575,7 +1080,7 @@ public class BattleManager
         }
 
         //人数やスキルの攻撃傾向によって、被攻撃者の選別をする
-        SelectTargetFromWill();
+        targetingService.SelectTargets(Acter, ActerFaction, AllyGroup, EnemyGroup, unders, AppendUniqueTopMessage);
 
         //前のめりになるスキルなら前のめりになる。
         BeVanguard_SkillACT();
@@ -1585,21 +1090,15 @@ public class BattleManager
             Debug.LogError("AttackChara寸前なのに、対象者(ACに渡すunders)がいません、いないということわあり得るのかな？");
         }
 
-        //実行処理
-        skill.SetDeltaTurn(BattleTurnCount);//スキルのdeltaTurnをセット
-        var message = await Acter.AttackChara(unders);//非同期で取得
-        CreateBattleMessage(message);//攻撃の処理からメッセージが返る。
-
-        
-
-        //慣れフラットロゼが起こるかどうかの判定　
-        TryAddFlatRoze();
-
-        //相性値による被害者への救済意図での再行動ターン
-        TryHelpMinusRecovelyTurnByCompatibility();
-
-        //被害者と相性値の高いキャラが攻撃者に対して対象者ボーナスを得るかどうか 復讐ボーナス的な
-        TryAddRevengeBonus();
+        await effectResolver.ResolveSkillEffectsAsync(
+            Acter,
+            ActerFaction,
+            unders,
+            AllyGroup,
+            EnemyGroup,
+            Acts,
+            BattleTurnCount,
+            CreateBattleMessage);
         
 
 
@@ -1644,63 +1143,6 @@ public class BattleManager
 
         return ACTPop();
 
-    }
-    /// <summary>
-    /// 慣れフラットロゼの発生判定と処理を行う
-    /// 条件：
-    /// 1. パッシブ0を持っている
-    /// 2. 攻撃タイプのスキル
-    /// 3. 前回前のめりでない
-    /// 4. 前のめりになったら(今回のisagressivecommitスキルで後衛から前のめりに転じたなら)
-    /// 5. スキル使用回数が20回以上
-    /// 6. 単回攻撃である
-    /// 7. 命中率が50か60に近いほど発生しやすい
-    /// </summary>
-    /// <returns>フラットロゼが発生したかどうか</returns>
-    private bool TryAddFlatRoze()
-    {
-        if (!Acter.HasPassive(0)) return false;
-        if (!Acter.NowUseSkill.HasType(SkillType.Attack)) return false;
-        if (Acter._tempVanguard) return false;
-        if (!IsVanguard(Acter)) return false;
-        if (Acter.NowUseSkill.RecordDoCount <= 20) return false;
-        if (Acter.NowUseSkill.NowConsecutiveATKFromTheSecondTimeOnward()) return false;
-        
-        // 命中率による発生判定
-        if (RandomEx.Shared.NextInt(100) >= Ideal50or60Easing(Acter.NowUseSkill.SkillHitPer)) return false;
-
-        // フラットロゼの効果を付与
-        Acts.Add(Acter, ActerFaction, "淡々としたロゼ", new List<ModifierPart>()
-        {
-            new(
-                "ロゼ瞳",
-                whatModify.atk,
-                1.6f + GetCoolnesFlatRozePower(),
-                null,
-                false
-            ),
-            new(
-                "ロゼ威力半減",
-                whatModify.atk,
-                0.5f,
-                null,
-                false
-            )
-        }, true);
-
-        return true;
-    }
-    /// <summary>
-    /// テラーズヒット　後衛を狙っても前のめりがいた場合そいつのプレッシャーによってつい攻撃してしまう
-    /// </summary>
-    /// <returns></returns>
-    private bool ComparePressureAndRedirect(BaseStates Attacker,BaseStates Vanguard)
-    {
-        var VanguardPressure = Vanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.Glory);
-        var AttackerResilience = Attacker.TenDayValues(false).GetValueOrZero(TenDayAbility.JoeTeeth) + Attacker.TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.5f;
-
-        // 前のめり防衛側のプレッシャー値未満の合計値の乱数が出た場合、テラーズヒット,庇いが発生する
-        return VanguardPressure > RandomEx.Shared.NextFloat(VanguardPressure + AttackerResilience);
     }
     /// <summary>
     /// スキルの性質が範囲ランダムだった場合、
@@ -1859,436 +1301,6 @@ public class BattleManager
         return false;
     }
     
-    // デバッグログON/OFF切り替え（必要に応じてInspectorに出したい場合は[SerializeField]を付与）
-    private bool m_DebugSelectLog = false;
-    /// <summary>
-    /// パッシブのターゲット率を利用した敵選別を追加した対象者選別関数
-    /// 対象者のリストを返す。
-    /// デフォルトの選別で次へ行く確率をNextChancePercentで制御出来る。
-    /// </summary>
-    List<BaseStates> SelectByPassiveAndRandom(
-        IEnumerable<BaseStates> candidates,
-        int want,
-        int NextChancePercent = 100)
-    {
-        // 仕様: positiveSelect -> NegativeAntiSelect -> 完全ランダム
-        var pool = candidates.ToList();
-        var winners = new List<BaseStates>();
-        if (want <= 0 || pool.Count == 0)
-        {
-            if (m_DebugSelectLog)
-                Debug.Log($"[SelectByPassiveAndRandom] 早期終了: 要求数={want}, 候補数={pool.Count}, 当選数={winners.Count}（選出不要または候補なし）");
-            return winners;
-        }
-
-        // 1) positiveSelect: >0 を降順に判定
-        var positives = pool
-            .Where(u => u.PassivesTargetProbability() > 0)
-            .OrderByDescending(u => u.PassivesTargetProbability())
-            .ToList();
-        foreach (var u in positives)
-        {
-            if (winners.Count >= want) break;
-            if (rollper(u.PassivesTargetProbability()))
-                winners.Add(u);
-        }
-        if (winners.Count >= want)
-        {
-            if (m_DebugSelectLog)
-                Debug.Log($"[SelectByPassiveAndRandom] Positive選抜で終了: 要求数={want}, 当選数={winners.Count}/{pool.Count}");
-            return winners;
-        }
-
-        // 2) NegativeAntiSelect: <0 は除外ロール
-        var negatives = pool.Where(u => u.PassivesTargetProbability() < 0).ToList();
-        var excludedByNegative = new HashSet<BaseStates>();
-        foreach (var u in negatives)
-        {
-            if (rollper(-u.PassivesTargetProbability()))
-                excludedByNegative.Add(u);
-        }
-        if (m_DebugSelectLog)
-            Debug.Log($"[SelectByPassiveAndRandom] Negative除外結果: ネガ対象数={negatives.Count}, 除外確定数={excludedByNegative.Count}");
-
-        // 3) 完全ランダム: 未当選かつネガ除外されていない者を重み付き抽選
-        var others = pool
-            .Except(winners)
-            .Where(u => !excludedByNegative.Contains(u))
-            .ToList();
-        if (others.Count == 0 && winners.Count < want)
-        {
-            if (m_DebugSelectLog)
-                Debug.Log($"[SelectByPassiveAndRandom] ランダム抽選スキップ: 候補0, 当選数={winners.Count}, 要求数={want}");
-        }
-        if (others.Count > 0 && winners.Count < want)
-        {
-            var weighted = new WeightedList<BaseStates>();
-            foreach (var u in others)
-            {
-                var w = u.PassivesTargetProbability();
-                if (w <= 0) w = 1; // パッシブ無し(0)は基礎重み1に補正
-                weighted.Add(u, w);
-            }
-            if (m_DebugSelectLog)
-                Debug.Log($"[SelectByPassiveAndRandom] ランダム抽選開始: 候補={others.Count}, 重み数={weighted.Count}, 当選数={winners.Count}, 要求数={want}, 継続率={NextChancePercent}%");
-            do
-            {
-                if (weighted.Count == 0) break;
-                weighted.RemoveRandom(out var item);
-                winners.Add(item);
-            } while (weighted.Count > 0 && winners.Count < want && RandomEx.Shared.NextInt(100) <= NextChancePercent);
-            if (m_DebugSelectLog)
-                Debug.Log($"[SelectByPassiveAndRandom] ランダム抽選終了: 当選数={winners.Count}, 残り重み={weighted.Count}");
-        }
-
-        // 4) 不足し、NextChancePercent==100 のときのみ、ネガ当選者から補充
-        if (winners.Count < want && NextChancePercent == 100)
-        {
-            var negPicked = negatives.Where(excludedByNegative.Contains).ToList();
-            negPicked.Shuffle();
-            var before = winners.Count;
-            foreach (var u in negPicked)
-            {
-                if (winners.Count >= want) break;
-                winners.Add(u);
-            }
-            if (m_DebugSelectLog)
-                Debug.Log($"[SelectByPassiveAndRandom] ネガ補充: 追加数={winners.Count - before}, 当選数={winners.Count}, 要求数={want}");
-        }
-        if (m_DebugSelectLog)
-            Debug.Log($"[SelectByPassiveAndRandom] 最終返却: 要求数={want}, 当選数={winners.Count}/{pool.Count}, 継続率={NextChancePercent}%");
-        return winners;
-    }
-
-    /// <summary>
-    /// スキルの実行者をunderActerに入れる処理　意思が実際の選別に状況を伴って変換される処理
-    /// </summary>
-    private void SelectTargetFromWill()
-    {
-        if (Acter.HasRangeWill(SkillZoneTrait.SelfSkill))//セルフスキルなら
-        {
-            unders.CharaAdd(Acter);//自分を対象者に入れてさっさと終わり
-            return;
-        }
-        
-        BattleGroup SelectGroup;//我々から見た敵陣
-        BattleGroup OurGroup = null;//我々自陣          nullの場合はスキルの範囲性質に味方選択がないということ
-        var skill = Acter.NowUseSkill;
-        List<BaseStates> UA = new();
-
-        //選抜グループ決定する処理☆☆☆☆☆☆☆☆☆☆☆
-        if (ActerFaction == allyOrEnemy.alliy)
-        {//味方なら敵グループから、
-            if(Acter.HasRangeWill(SkillZoneTrait.SelectOnlyAlly))//味方だけを選べるのなら
-            {
-                SelectGroup = new BattleGroup(AllyGroup.Ours, AllyGroup.OurImpression, AllyGroup.which);
-                if(!Acter.HasRangeWill(SkillZoneTrait.CanSelectMyself))//自分自身を対象にする性質がないなら
-                {
-                    SelectGroup.Ours.Remove(Acter);//自分自身を対象から除く
-                }
-            }
-            else//それ以外の敵を主軸と選択する範囲性質なら
-            {
-                SelectGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);
-
-                if (Acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//自陣も対象に選べるなら
-                {
-                    OurGroup = new BattleGroup(AllyGroup.Ours, AllyGroup.OurImpression, AllyGroup.which);//自陣
-                    if(!Acter.HasRangeWill(SkillZoneTrait.CanSelectMyself))//自分自身を対象にする性質がないなら
-                    {
-                        OurGroup.Ours.Remove(Acter);//自分自身を対象から除く
-                    }
-                }else if(Acter.HasRangeWill(SkillZoneTrait.CanSelectMyself))//自分自身だけを対象にできるなら、
-                {
-                    //自分自身だけを対象にする
-                    OurGroup = new BattleGroup(new List<BaseStates>{Acter}, AllyGroup.OurImpression, AllyGroup.which);//自陣
-                }
-            }
-            
-        }
-        else
-        {//敵なら味方グループから選別する ディープコピー。
-
-            if(Acter.HasRangeWill(SkillZoneTrait.SelectOnlyAlly))//味方だけを選べるのなら
-            {
-                SelectGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);
-                if(!Acter.HasRangeWill(SkillZoneTrait.CanSelectMyself))//自分自身を対象にする性質がないなら
-                {
-                    SelectGroup.Ours.Remove(Acter);//自分自身を対象から除く
-                }
-            }
-            else//それ以外の敵を主軸と選択する範囲性質なら
-            {
-                SelectGroup = new BattleGroup(AllyGroup.Ours, AllyGroup.OurImpression, AllyGroup.which);
-                if (Acter.HasRangeWill(SkillZoneTrait.CanSelectAlly))//自陣も対象に選べるなら
-                {
-                    OurGroup = new BattleGroup(EnemyGroup.Ours, EnemyGroup.OurImpression, EnemyGroup.which);//自陣
-                    if(!Acter.HasRangeWill(SkillZoneTrait.CanSelectMyself))//自分自身を対象にする性質がないなら
-                    {
-                        OurGroup.Ours.Remove(Acter);//自分自身を対象から除く
-                    }
-                }else if(Acter.HasRangeWill(SkillZoneTrait.CanSelectMyself))//自分自身だけを対象にできるなら、
-                {
-                    OurGroup = new BattleGroup(new List<BaseStates>{Acter}, EnemyGroup.OurImpression, EnemyGroup.which);//自陣
-                }
-            }
-
-        }
-
-        //死者は省く
-        if (!Acter.HasRangeWill(SkillZoneTrait.CanSelectDeath))//死を選べないのなら　死を省く
-        {
-            SelectGroup.SetCharactersList(RemoveDeathCharacters(SelectGroup.Ours));
-            if (OurGroup != null)
-            {
-                OurGroup.SetCharactersList(RemoveDeathCharacters(OurGroup.Ours));//自陣もあったら省く
-            }
-        }
-
-        
-
-        //行動者決定☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
-
-        if (Acter.Target == DirectedWill.One)//単体指定をしているのなら
-        {
-            //対象者選択でUnderActerに入ってるから何もしない(今の所
-        }
-        else
-        {
-            //選ばれる対立関係のグループに一人しかいない場合
-            if (SelectGroup.Ours.Count < 2)
-            {
-                Debug.Log("敵に一人しかいません");
-                UA.Add(SelectGroup.Ours[0]);//普通にグループの一人だけを狙う
-            }
-            else//二人以上いたら前のめりかそうでないかでの分岐処理
-            {
-                if (Acter.HasRangeWill(SkillZoneTrait.CanSelectSingleTarget))//前のめりか後衛(内ランダム単体)で選択する
-                {
-                    if (SelectGroup.InstantVanguard == null)//対象者グループに前のめりがいない場合。
-                    {
-                        //一人か二人に当たる
-                        // 最大２人、２人目は 23% の確率でチャレンジ
-                        UA.AddRange(SelectByPassiveAndRandom(SelectGroup.Ours, 2, 23 ) );                        
-                    }
-                    else//前のめりがいるなら
-                    {
-                        if (Acter.Target == DirectedWill.InstantVanguard)//前のめりしてる奴を狙うなら
-                        {
-                            UA.Add(SelectGroup.InstantVanguard);
-                            Debug.Log(Acter.CharacterName + "は前のめりしてる奴を狙った");
-                        }
-                        else if (Acter.Target == DirectedWill.BacklineOrAny)
-                        {//後衛を狙おうとしたなら 後衛への命中率は7割補正され　テラーズヒットが発生した場合前のめりしてる奴にあたる
-
-                            if (ComparePressureAndRedirect(Acter,SelectGroup.InstantVanguard))//前衛のかばいに引っかかったら
-                            {
-                                UniqueTopMessage += "テラーズヒット";//かばうテキストを追加？
-                                UA.Add(SelectGroup.InstantVanguard);
-                                Debug.Log(Acter.CharacterName + "は後衛を狙ったが前のめりしてる奴に阻まれた");
-                            }
-                            else//引っかかんなかったら前衛を抜いたメンバーから選ぶ
-                            {
-                                List<BaseStates> BackLines;//後衛リスト
-
-                                //前衛を抜いてディープコピーする
-                                BackLines = new List<BaseStates>(SelectGroup.Ours.Where(member => member != SelectGroup.InstantVanguard));
-
-                                UA.AddRange(SelectByPassiveAndRandom(BackLines, 1));
-                                Acter.SetSpecialModifier("少し遠いよ",whatModify.eye,0.7f);//後衛への命中率補正70%を追加。
-                                Debug.Log(Acter.CharacterName + "は後衛を狙った");
-                            }
-                        }
-                        else Debug.LogError("CanSelectSingleTargetの処理では前のめりか後衛以外の意志を受け付けていません。");
-                    }
-
-                }
-                else if (Acter.HasRangeWill(SkillZoneTrait.RandomSingleTarget))//完全にランダムの単体対象
-                {
-                    BaseStates[] selects = SelectGroup.Ours.ToArray();
-                    if (OurGroup != null)//自陣グループも選択可能なら
-                        selects.AddRange(OurGroup.Ours);
-
-                    UA.Add(RandomEx.Shared.GetItem(selects));//s選別リストからランダムで選択
-                }
-                else //他メイン分岐とは違い、意志ではないので、スキルの範囲性質で指定する。
-                if (Acter.HasRangeWill(SkillZoneTrait.ControlByThisSituation))//状況のみに縛られる。(前のめりにしか当たらないなら
-                {
-                    Debug.Log("ControlByThisSituationのスキル分岐(SelectTargetFromWill)");
-                    if (SelectGroup.InstantVanguard == null)//対象者グループに前のめりがいない場合。事故が起きる
-                    {
-                        Debug.Log("ControlByThisSituationのスキル分岐(SelectTargetFromWill)で前のめりがいない");
-                        //前のめりしか選べなくても、もし前のめりがいなかったら、その**平坦なグループ**にスキル性質による攻撃が当たる。
-                        //平坦 = 前のめり、後衛の区別がないまっさらということか？
-
-
-                        //前のめりいないことによる事故☆☆☆☆☆☆☆☆☆☆
-                        bool isAccident = false;
-
-                        //シングルにあたるなら
-                        if (Acter.HasRangeWill(SkillZoneTrait.RandomSingleTarget))
-                        {
-                            Debug.Log("ランダムシングル事故");
-                            BaseStates[] selects = SelectGroup.Ours.ToArray();
-                            if (OurGroup != null)//自陣グループも選択可能なら
-                                selects.AddRange(OurGroup.Ours);
-                            
-                            // 単体ランダム（want=1）
-                            UA.AddRange(SelectByPassiveAndRandom(selects, 1));
-                            isAccident = true;
-                        }
-                        //前のめりがいないんだから、　前のめりか後衛単位での　集団事故は起こらないため　RandomSelectMultiTargetによる場合分けはない。
-
-                        //全範囲事故なら
-                        if (Acter.HasRangeWill(SkillZoneTrait.AllTarget))
-                        {
-                            Debug.Log("全範囲事故");
-                            BaseStates[] selects = SelectGroup.Ours.ToArray();
-                            if (OurGroup != null)//自陣グループも選択可能なら
-                                selects.AddRange(OurGroup.Ours);
-
-                            UA.AddRange(selects);//対象範囲を全て加える
-                            isAccident = true;
-                        }
-                        //ランダム範囲事故なら
-                        if (Acter.HasRangeWill(SkillZoneTrait.RandomMultiTarget))
-                        {
-                            Debug.Log("ランダム範囲事故");
-                            BaseStates[] selects = SelectGroup.Ours.ToArray();
-                            if (OurGroup != null)//自陣グループも選択可能なら
-                                selects.AddRange(OurGroup.Ours);
-
-                            // グループ乱数分（want＝1〜Count）
-                            int want = RandomEx.Shared.NextInt(1, selects.Length + 1);
-                            Debug.Log($"ランダム範囲事故対象者数(パッシブ判定前) : {want}");
-                            var charas = SelectByPassiveAndRandom(selects, want);
-                            UA.AddRange(charas);
-                            isAccident = true;
-                            Debug.Log($"ランダム範囲事故対象者数(パッシブ判定後) : {charas.Count}");
-                        }
-
-                        if(!isAccident)
-                        {
-                            Debug.LogAssertion("ControlByThisSituationによるNon前のめり事故が起きなかった\n事故用に範囲意志をスキルに設定する必要があります。");
-                        }
-                    }
-                    else
-                    {
-                        UA.Add(SelectGroup.InstantVanguard);//前のめりしか狙えない
-                    }
-
-                }
-                else if (Acter.HasRangeWill(SkillZoneTrait.CanSelectMultiTarget))//前衛、後衛単位の範囲でランダムに狙うなら
-                {
-                    if (SelectGroup.InstantVanguard == null)//対象者グループに前のめりがいない場合。最大二人範囲で攻撃
-                    {   
-                        UA.AddRange(SelectByPassiveAndRandom(SelectGroup.Ours, 2));
-                    }
-                    else//前のめり居たら
-                    {
-                        if (Acter.Target == DirectedWill.InstantVanguard)//前のめりしてる奴を狙うなら
-                        {
-                            UA.Add(SelectGroup.InstantVanguard);
-                            Debug.Log(Acter.CharacterName + "は前のめりしてる奴を狙った");
-                        }
-                        else if (Acter.Target == DirectedWill.BacklineOrAny)
-                        {//後衛を狙おうとしたなら 後衛への命中率は9割補正され　テラーズヒットが発生した場合前のめりしてる奴にあたる
-
-                            if (ComparePressureAndRedirect(Acter,SelectGroup.InstantVanguard))//前衛のかばいに引っかかったら
-                            {
-                                UniqueTopMessage += "テラーズヒット";//かばうテキストを追加？
-                                UA.Add(SelectGroup.InstantVanguard);
-                                Debug.Log(Acter.CharacterName + "は後衛を狙ったが前のめりしてる奴に阻まれた");
-                            }
-                            else//引っかかんなかったら後衛を丸々攻撃
-                            {
-                                List<BaseStates> BackLines;//後衛リスト
-
-                                //前衛を抜いてディープコピーする
-                                BackLines = new List<BaseStates>(SelectGroup.Ours.Where(member => member != SelectGroup.InstantVanguard));
-
-                                UA.AddRange(BackLines);//後衛をそのまま入れる
-                                Acter.SetSpecialModifier("ほんの少し狙いにくい",whatModify.eye,0.9f);//後衛への命中率補正を追加。
-                                Debug.Log(Acter.CharacterName + "は後衛を狙った");
-                            }
-                        }
-                        else Debug.LogError("CanSelectMultiTargetの処理では前のめりか後衛以外の意志を受け付けていません。");
-
-                    }
-                }
-                else if (Acter.HasRangeWill(SkillZoneTrait.RandomSelectMultiTarget))//前衛または後衛単位をランダムに狙う
-                {
-                    var selectVanguard = RandomEx.Shared.NextBool();//前衛を選ぶかどうか
-
-                    //前のめりがいなかったら
-                    if (SelectGroup.InstantVanguard == null)//対象者グループに前のめりがいない場合。最大二人範囲で攻撃
-                    {
-                        //グループ全員のリストで回すが、もし三人目に行きそうになったら、止める
-                        var counter = 0;
-                        SelectGroup.Ours.Shuffle();//リスト内でシャッフル
-                        foreach (var one in SelectGroup.Ours)
-                        {
-                            UA.Add(one);
-                            counter++;
-                            if (counter >= 2) break;//二人目を入れたらbreak　二人目まで行かなくてもforEachで勝手に終わる
-                        }
-                    }
-                    else//前のめりいたら
-                    {
-                        if (selectVanguard) //前のめりを選ぶなら
-                        {
-                            UA.Add(SelectGroup.InstantVanguard);
-                            Debug.Log(Acter.CharacterName + "の技は前のめりしてる奴に向いた");
-                        }
-                        else//後衛単位を狙うなら
-                        {
-                            List<BaseStates> BackLines;//後衛リスト
-
-                            //前衛を抜いてディープコピーする
-                            BackLines = new List<BaseStates>(SelectGroup.Ours.Where(member => member != SelectGroup.InstantVanguard));
-
-                            UA.AddRange(BackLines);//後衛をそのまま入れる
-                            Debug.Log(Acter.CharacterName + "の技は後衛に向いた");
-
-                        }
-                    }
-                }
-                else if (Acter.HasRangeWill(SkillZoneTrait.RandomMultiTarget))//ランダムな範囲攻撃の場合
-                {
-                    List<BaseStates> selects = SelectGroup.Ours;
-                    if (OurGroup != null)//自陣グループも選択可能なら
-                        selects.AddRange(OurGroup.Ours);
-
-                    var count = selects.Count;//群体の数を取得
-                    count = RandomEx.Shared.NextInt(1, count + 1);//取得する数もランダム
-
-                    for (int i = 0; i < count; i++) //ランダムな数分引き抜く
-                    {
-                        var item = RandomEx.Shared.GetItem(selects.ToArray());
-                        UA.Add(item);//選別リストからランダムで選択
-                        selects.Remove(item);//選択したから除去
-                    }
-                }
-                else if (Acter.HasRangeWill(SkillZoneTrait.AllTarget))//全範囲
-                {
-                    BaseStates[] selects = SelectGroup.Ours.ToArray();
-                    if (OurGroup != null)//自陣グループも選択可能なら
-                        selects.AddRange(OurGroup.Ours);
-
-                    UA.AddRange(selects);//対象範囲を全て加える
-
-                }
-            }
-
-            //underActerがゼロ個でないと、つまりここの意志選択関数以外で直接指定してるなら、入れない。
-            if (unders.Count < 1)
-            {
-                UA.Shuffle();
-                unders.SetList(UA);
-            }
-        }
-    }
-    
     private void NextTurn(bool Next)
     {
         if (Acts.Count > 0)//先約リストでの実行なら削除
@@ -2337,7 +1349,8 @@ public class BattleManager
         AllyGroup.ResetCharactersUseThinges();        
 
         //敵キャラは死んだりした該当者のみ選んで復活準備
-        EnemyGroup.RecovelyStart(PlayersStates.Instance.NowProgress);
+        var progress = metaProvider != null ? metaProvider.NowProgress : 0;
+        EnemyGroup.RecovelyStart(progress);
 
         //敵グループの終了時のスキルAI
         EnemyGroup.EnemiesBattleEndSkillAI();
@@ -2348,26 +1361,25 @@ public class BattleManager
         }
 
         // ActionMark を表示
-        var wui = WatchUIUpdate.Instance;
-        if(wui == null)
+        if (!uiBridge.PrepareBattleEnd())
         {
-            Debug.LogError("OnBattleEndでWatchUIUpdateが認識されていない");
             return;
         }
-        
-        wui.HideActionMark();
-        // Orchestrator 経由の任意復元導線へ切替（トグルON時はOrchestrator、OFF時は従来復元）
-        wui.EraceEnemyUI();//敵UI削除
 
-        PlayersStates.Instance.AllyAlliesUISetActive(false);//全味方UI非表示
-        BattleSystemArrowManager.Instance.ClearQueue();//矢印を消す
-        schizoLog.HardStopAndClearAsync().Forget();
-        await wui.RestoreZoomViaOrchestrator(animated: true, duration: 0.4f);//ズームの処理
+        if (metaProvider != null)
+        {
+            metaProvider.SetAlliesUIActive(false);//全味方UI非表示
+        }
+        uiBridge.ClearArrows();//矢印を消す
+        uiBridge.HardStopAndClearLogs();
+        await uiBridge.RestoreZoomViaOrchestrator(animated: true, duration: 0.4f);//ズームの処理
 
 
         //schizoLog.AddLog("戦闘を終わらせた",true);
         //schizoLog.DisplayAllAsync().Forget();//ACTPOPが呼ばれないのでここで呼ぶ
         //そもそも戦闘終わりはschizologではなくMessageDropperで行われるのが前提だけど、デバック用にね
+
+        BattleContextHub.Clear(this);
     }
 
     private void OnBattleStart()
@@ -2387,12 +1399,8 @@ public class BattleManager
         }
 
         // ActionMark を表示
-        if (WatchUIUpdate.Instance != null)
-        {
-            WatchUIUpdate.Instance.ShowActionMarkFromSpawn();
-        }
-        var sd = Walking.Instance.NowStageData;//矢印にステージテーマ色を適用
-        BattleSystemArrowManager.Instance.SetColorsForAll(sd.StageThemeColorUI.FrameArtColor,sd.StageThemeColorUI.TwoColor);
+        uiBridge.ShowActionMarkFromSpawn();
+        uiBridge.SetArrowColorsFromStage();//矢印にステージテーマ色を適用
     }
 
 }

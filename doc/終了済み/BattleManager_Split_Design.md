@@ -474,6 +474,17 @@ Assets/Script/Battle/
 - Phase 5: ダメージ結果/ログ出力が一致する
 - Phase 6: 画面遷移と演出のタイミングが変わらない
 
+## 進捗メモ
+- 2025-03-08 時点
+  - Phase 1〜6: 実装済み（ActionQueue/BattleState/TurnScheduler/TargetingService/EffectResolver/BattleUIBridge/Orchestrator）
+  - Phase 7: 途中
+    - 完了: `Walking.Instance.bm` 参照を削除し `IBattleContext` へ移行
+    - 完了: BattleContextHub を導入し、`Walking.Instance.BattleContext` 依存を主要ロジックから撤去
+    - 完了: UIStateHub を導入し、SKILLUI/USERUI の購読・更新を Hub 経由に統一
+    - 完了: BattleTimeLine の生成/保持を削除
+    - 完了: PlayersStates 依存を `IBattleMetaProvider` 注入へ置換
+    - 進行中: `Walking.Instance` へのUI依存（ステージ色/個別UI）整理
+
 ## 具体的な移行ステップ（小さく進める）
 1) **ActionEntry 化**
    - ACTList を `List<ActionEntry>` に置換
@@ -484,6 +495,25 @@ Assets/Script/Battle/
    - 既存の対象選定ロジックを移動し、BattleCore からは結果だけ受け取る
 4) **BattleManager の軽量化**
    - BattleManager = Orchestrator へ縮小（Input/画面遷移の管理だけ）
+
+## 追加計画: PlayersStates 依存の整理（グローバル依存の解消）
+歩行システムと無関係に残るグローバル依存として `PlayersStates.Instance` があるため、
+必要なら BattleManager からの直接参照を段階的に排除する。
+
+### 方針（どれか1つを選ぶ）
+1) **注入（推奨）**: 必要なデータ/操作だけを `IBattleMetaProvider` などの小さなインターフェースで渡す  
+2) **DTO で受け渡し**: 戦闘開始時に必要な値を `BattleStartContext` に詰めて注入する  
+3) **現状維持**: バトル単体テストをしない前提なら `PlayersStates.Instance` 依存を残す
+
+### 影響範囲（現状）
+- `BattleManager.OnBattleEnd()` の `PlayersStates.Instance.NowProgress` 参照（敵復帰の進行度）
+- `PlayersStates.Instance.AllyAlliesUISetActive(false)`（戦闘終了時のUI制御）
+
+### 進め方（最小）
+1) `IBattleMetaProvider` を追加（進行度、味方UIのON/OFFなど最小機能）
+2) `BattleOrchestrator` 生成時に実装を注入
+3) `BattleManager` から `PlayersStates.Instance` の直接参照を削除
+4) 動作確認（戦闘終了の復帰/UI非表示が同じ）
 
 ## インターフェース例（最小）
 ```csharp
@@ -515,6 +545,26 @@ public sealed class ActionEntry
 - `TabState` と UI の状態遷移は Orchestrator が一括管理する
 - 戦闘終了時の `OnBattleEnd` 系コールバック順序は維持する
 - AI の「単体先約時の制限」は TargetingService 側で保持する
+- 歩行システム設計で後から変更予定の事項（例: ステージ遷移/歩行フロー/出口条件など）は本設計書では扱わない
+- 本設計書は BattleManager 単独の責務分離に集中し、歩行システム側の仕様変更は別ドキュメントで追う
+- ステージ配色（矢印色など）は歩行システム設計のノード側で設定する想定のため、BattleUIBridge からの参照整理は保留
+
+## 実装済み責務分離一覧
+- 状態管理: `BattleState`
+- 行動エントリ/先約: `ActionEntry` + `ActionQueue`
+- ターン選出: `TurnScheduler`
+- 対象選定: `TargetingService`
+- 効果解決: `EffectResolver`
+- UI/演出仲介: `BattleUIBridge`
+- 進行制御: `BattleOrchestrator`
+- コンテキスト集約: `IBattleContext` + `BattleContextHub`
+- メタ情報注入: `IBattleMetaProvider` + `PlayersStatesBattleMetaProvider`
+- 初期化: `BattleInitializer`
+- UI状態の購読/配信: `UIStateHub`
+
+## クローズ
+- Status: Completed
+- Closed: 2026-01-11
 
 ## 期待効果
 - バグ調査の範囲が狭まり、仕様変更に強くなる

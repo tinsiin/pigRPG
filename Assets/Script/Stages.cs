@@ -329,7 +329,7 @@ public class Stages : MonoBehaviour
                 if(ene.broken) continue;//死んでてなおかつ壊れてもいたら復活不可能なのでスキップ
 
                 if(ene.Reborn)//敵が復活可能タイプなら
-                if(ene.CanRebornWhatHeWill(PlayersStates.Instance.NowProgress))//復活判定をして復活可能なら
+                if(ene.CanRebornWhatHeWill(PlayersStatesHub.Progress?.NowProgress ?? 0))//復活判定をして復活可能なら
                 {
                     Debug.Log($"敵キャラが復活可能だから追加(enemyColllecAI){ene.CharacterName}");
                     validEnemies.Add(ene);//追加

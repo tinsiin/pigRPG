@@ -17,7 +17,7 @@ public abstract class BattleAIBrain : ScriptableObject
     /// </summary>
     [SerializeField]SkillAnalysisPolicy _damageSimulatePolicy;
 
-    protected BattleManager manager;
+    protected IBattleContext manager;
     protected BaseStates user;
     protected List<BaseSkill> availableSkills;
 
@@ -206,7 +206,7 @@ public abstract class BattleAIBrain : ScriptableObject
     public void SkillActRun()
     {
         // 共通初期化
-        manager = Walking.Instance?.bm;
+        manager = BattleContextHub.Current;
         if (manager == null || manager.Acter == null)
         {
             Debug.LogError("BattleAIBrain.Run: manager または Acter が未設定のため実行を中断します。");
@@ -663,7 +663,7 @@ public abstract class BattleAIBrain : ScriptableObject
         // 実行主体を AI 側にも保持（必要に応じて派生で参照）
         user = self;
         // BM は原則取得可能想定。取得失敗時はログのみ（利他部品側で自分のみへフォールバック）
-        manager = Walking.Instance?.bm;
+        manager = BattleContextHub.Current;
 
         // デフォルトは空プラン。派生で PostBattlePlan(self, decision) を実装して Actions を詰める。
         var decision = new PostBattleDecision();

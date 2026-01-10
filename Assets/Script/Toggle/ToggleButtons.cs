@@ -36,23 +36,37 @@ public class ToggleButtons : MonoBehaviour //カスタマイズしやすいTabCo
                 }).AddTo(this);
         //_tabContentsChanger.Select(0);//選んだ状態に予めする奴だから消しとく。
 
-        Walking.Instance.SKILLUI_state.Subscribe(
-            state =>
-            {
-                //今の所メイン画面のみがキャラ状態によって変わる
-                _tabContentsChanger.GetViewFromKind(TabContentsKind.Players).CharaStateSwitch(state);
+        var skillState = UIStateHub.SkillState;
+        if (skillState != null)
+        {
+            skillState.Subscribe(
+                state =>
+                {
+                    //今の所メイン画面のみがキャラ状態によって変わる
+                    _tabContentsChanger.GetViewFromKind(TabContentsKind.Players).CharaStateSwitch(state);
+                }).AddTo(this);
+            skillState.Value = SkillUICharaState.geino;//とりあえず親父が選ばれてる
+        }
+        else
+        {
+            Debug.LogError("ToggleButtons.Start: UIStateHub.SkillState が null です");
+        }
 
-
-            }).AddTo(this);
-        Walking.Instance.SKILLUI_state.Value = SkillUICharaState.geino;//とりあえず親父が選ばれてる
-
-        Walking.Instance.USERUI_state.Subscribe(
-            state =>
-            {
-                //mainとキャラコンフィグのタブだけ、USERUIの状態によって変化する。
-                _tabContentsChanger.GetViewFromKind(TabContentsKind.Players).SwitchContent(state);
-                _tabContentsChanger.GetViewFromKind(TabContentsKind.CharactorConfig).SwitchContent(state);
-            }).AddTo(this);
+        var userState = UIStateHub.UserState;
+        if (userState != null)
+        {
+            userState.Subscribe(
+                state =>
+                {
+                    //mainとキャラコンフィグのタブだけ、USERUIの状態によって変化する。
+                    _tabContentsChanger.GetViewFromKind(TabContentsKind.Players).SwitchContent(state);
+                    _tabContentsChanger.GetViewFromKind(TabContentsKind.CharactorConfig).SwitchContent(state);
+                }).AddTo(this);
+        }
+        else
+        {
+            Debug.LogError("ToggleButtons.Start: UIStateHub.UserState が null です");
+        }
     }
 
     [Serializable]

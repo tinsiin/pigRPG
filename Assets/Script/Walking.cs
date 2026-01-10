@@ -29,6 +29,7 @@ public class Walking : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            UIStateHub.Bind(USERUI_state, SKILLUI_state);
         }
         else
         {
@@ -72,10 +73,17 @@ public class Walking : MonoBehaviour
     //現在のステージとエリアのデータを保存する関数
     [NonSerialized]
     public StageData NowStageData;
-    private PlayersStates ps;
+    private IPlayersProgress playersProgress;
+    private IPlayersParty playersParty;
+    private IPlayersUIControl playersUIControl;
     private  void Start()
     {
-        ps = PlayersStates.Instance;//変数にキャッシュして使用
+        playersProgress = PlayersStatesHub.Progress;
+        playersParty = PlayersStatesHub.Party;
+        playersUIControl = PlayersStatesHub.UIControl;
+        if (playersProgress == null) Debug.LogError("PlayersStatesHub.Progress が null です");
+        if (playersParty == null) Debug.LogError("PlayersStatesHub.Party が null です");
+        if (playersUIControl == null) Debug.LogError("PlayersStatesHub.UIControl が null です");
         stages = Stages.Instance;
         wui = WatchUIUpdate.Instance;
         BaseStates.CsvLoad();
@@ -112,7 +120,8 @@ public class Walking : MonoBehaviour
 
             // 事前検証（null時は実行しない）
             if (stages == null) { Debug.LogError("stagesが認識されていない"); return; }
-            if (ps == null)     { Debug.LogError("psが認識されていない");     return; }
+            if (playersProgress == null) { Debug.LogError("playersProgress が認識されていない"); return; }
+            if (playersParty == null)    { Debug.LogError("playersParty が認識されていない");    return; }
 
             _isWalking = true;
             bool? prevInteractable = null;
@@ -143,7 +152,7 @@ public class Walking : MonoBehaviour
     {
         // Kモードがアクティブなら即時解除（アニメなし）
         WatchUIUpdate.Instance?.ForceExitKImmediate();
-        //USERUI_state.Value = await bm.CharacterActBranching();
+        //USERUI_state.Value = await orchestrator.Step();
         if (_isProcessingNext)
         {
             // 処理中に押された場合は次回繰り越し
@@ -155,7 +164,7 @@ public class Walking : MonoBehaviour
 
         try
         {
-            var next = await bm.CharacterActBranching();
+            var next = await orchestrator.Step();
             USERUI_state.Value = next;
         }
         finally
@@ -174,52 +183,28 @@ public class Walking : MonoBehaviour
         }
     }
 
-    public  BattleManager bm;
-    private async  UniTask Encount()
+    public BattleOrchestrator orchestrator;
+    public IBattleContext BattleContext => orchestrator?.Manager;
+    private async UniTask Encount()
     {
         var enemyNumber = 2;//エンカウント人数を指定できる。　-1が普通の自動調整モード
-        //Debug.Log("エンカウント処理WalkingのEncountメソッド");
-        BattleGroup enemyGroup = null; //敵グループ
-        BattleGroup allyGroup = null; //味方グループ
-        if ((enemyGroup = NowStageCut.EnemyCollectAI(enemyNumber)) != null) //nullでないならエンカウントし、敵グループ
+        var initializer = new BattleInitializer(MessageDropper);
+        var result = await initializer.InitializeBattle(NowStageCut, playersParty, playersProgress, playersUIControl, enemyNumber);
+        if (!result.EncounterOccurred)
         {
-            //敵グループが返ってきてエンカウント
-
-
-            //enemyGroupにいる敵によってallyGroupの人選が変わる処理、
-            //例　ホッチキスでサテライトの単体戦になるとか。　
-            //だから、allygroupがフルで人選されるとき以外は、他の味方アイコンがそそくさと逃げる演出をする。  ←これは味方アイコン自体が戦闘時だけスライドインする演出により、逃げるのではなく、出てこないだけ、、になる。
-            //死んでる味方がいるのとはまた違う。その場合でも死亡状態で戦いの場に選出はされるからだ。
-
-            allyGroup = ps.GetParty(); //何もなければフルの味方グループ
-            //敵視人選の処理終わり-------------------------------------
-
-            //BattleManagerを生成
-            bm = new BattleManager(allyGroup, enemyGroup,BattleStartSituation.Normal, MessageDropper); //バトルを管理するクラス
-            //battleTimeLineを生成
-            var TimeLine = new BattleTimeLine(new List<BattleManager>{bm}); //バトルのタイムラインを管理するクラス
-            PlayersStates.Instance.OnBattleStart();
-
-            // 改良版ズーム実行（敵UI生成も内部で並行実行される）
-            // 操作を一時的にブロック（布をかぶせる）
-            await wui.FirstImpressionZoomImproved();
-
-            USERUI_state.Value = bm.ACTPop();//一番最初のUSERUIの状態を変更させるのと戦闘ループの最初の準備処理。
-                // リスナーの重複登録を防止
-                _nextWaitBtn.onClick.RemoveAllListeners();
-                _nextWaitBtn.onClick.AddListener(()=>OnClickNextWaitBtn().Forget()); //ボタンにbmの処理を追加
-                //非同期なのでボタン処理自体は非同期で実行されるが、例えばUI側での他のボタンや、このボタン自体の処理を防ぐってのはないけど、
-                //そこは内部でのUI処理で対応してるから平気
-
-
-
-        }
-        else
-        {
-            //エンカウントしなかった場合の処理
-
             Debug.Log("No encounter");
+            BusyOverlay.Instance.Hide();
+            return;
         }
+
+        orchestrator = result.Orchestrator;
+
+        USERUI_state.Value = initializer.SetupInitialBattleUI(orchestrator);//一番最初のUSERUIの状態を変更させるのと戦闘ループの最初の準備処理。
+        // リスナーの重複登録を防止
+        _nextWaitBtn.onClick.RemoveAllListeners();
+        _nextWaitBtn.onClick.AddListener(() => OnClickNextWaitBtn().Forget()); //ボタンにbmの処理を追加
+        //非同期なのでボタン処理自体は非同期で実行されるが、例えばUI側での他のボタンや、このボタン自体の処理を防ぐってのはないけど、
+        //そこは内部でのUI処理で対応してるから平気
 
         BusyOverlay.Instance.Hide();
     }
@@ -229,17 +214,17 @@ public class Walking : MonoBehaviour
     private async UniTask Walk(int footnumber) //リストの内容を反映
     {
         WatchUIUpdate.Instance?.BeginWalkCycleTiming();
-        bm = null;//歩くたびに消しとく
+        orchestrator = null;//歩くたびに消しとく
         try
         {
             //ps.AddProgress(footnumber); //進行度を増やす。
             StageDataUpdate();
 
             //主人公達の歩行時の処理
-            ps.PlayersOnWalks(1);//footnumber関係なしに一歩分の効果(テスト用)
+            playersParty.PlayersOnWalks(1);//footnumber関係なしに一歩分の効果(テスト用)
 
             //EYEArea歩行の更新
-            wui.StageDataUIUpdate(NowStageData, NowStageCut, ps); 
+            wui.StageDataUIUpdate(NowStageData, NowStageCut, playersProgress); 
             //Encount前にサイドオブジェクト動かさないと、ズーム前のdelay処理で後から出てくる感じが気持ち悪いからここに。
 
             //エンカウント
@@ -256,8 +241,8 @@ public class Walking : MonoBehaviour
                 var arr = NowAreaData.NextIDString.Split(","); //選択肢文章を小分け
                 var arr2 = NowAreaData.NextID.Split(","); //選択肢のIDを小分け
 
-                ps.SetArea(await CreateAreaButton(arr, arr2));
-                ps.ProgressReset();
+                playersProgress.SetArea(await CreateAreaButton(arr, arr2));
+                playersProgress.ProgressReset();
             }
 
             if (string.IsNullOrEmpty(NowAreaData.NextStageID)) //次のステージへ(選択肢なし)
@@ -279,9 +264,9 @@ public class Walking : MonoBehaviour
     /// </summary>
     private void StageDataUpdate()
     {
-        NowStageData = stages.RunTimeStageDates[ps.NowStageID]; //現在のステージデータ
-        NowStageCut = NowStageData.CutArea[ps.NowAreaID]; //現在のエリアデータ
-        NowAreaData = NowStageCut.AreaDates[ps.NowProgress]; //現在地点
+        NowStageData = stages.RunTimeStageDates[playersProgress.NowStageID]; //現在のステージデータ
+        NowStageCut = NowStageData.CutArea[playersProgress.NowAreaID]; //現在のエリアデータ
+        NowAreaData = NowStageCut.AreaDates[playersProgress.NowProgress]; //現在地点
     }
 
     /// <summary>
@@ -319,7 +304,7 @@ public class Walking : MonoBehaviour
     public async UniTask RunOneWalkStepForBenchmark()
     {
         await Walk(1);
-        await bm.OnBattleEnd();//後処理しないとUIが増え続けて重くなって、適切なベンチマーク測定不可能になる。
+        await orchestrator.EndBattle();//後処理しないとUIが増え続けて重くなって、適切なベンチマーク測定不可能になる。
     }
 
     /// <summary>
@@ -342,6 +327,6 @@ public class Walking : MonoBehaviour
     //最終的にeyearea側で一気にeyeareaのUIを処理するのを作って、そっちにデータを渡すようにする。
     private void TestProgressUIUpdate() //テスト用
     {
-        tmp.text = "" + ps.NowProgress;
+        tmp.text = "" + playersProgress.NowProgress;
     }
 }

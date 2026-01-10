@@ -16,7 +16,7 @@ public partial class BaseSkill
     //  ==============================================================================================================================
 
     protected SchizoLog schizoLog => SchizoLog.Instance;
-    protected BattleManager manager => Walking.Instance.bm;
+    protected IBattleContext manager => BattleContextHub.Current;
     [NonSerialized]
     public BaseStates Doer;//行使者
 

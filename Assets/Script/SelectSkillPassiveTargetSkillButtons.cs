@@ -130,7 +130,15 @@ public class SelectSkillPassiveTargetSkillButtons : MonoBehaviour
         if(SelectCount == 0)
         {
             ClearButtons();//ボタンを消す
-            PlayersStates.Instance.ReturnSelectSkillPassiveTargetSkillButtonsArea();//ボタンモーダルエリアから退出
+            var skillUi = PlayersStatesHub.SkillUI;
+            if (skillUi != null)
+            {
+                skillUi.ReturnSelectSkillPassiveTargetSkillButtonsArea();//ボタンモーダルエリアから退出
+            }
+            else
+            {
+                Debug.LogError("SelectSkillPassiveTargetSkillButtons: PlayersStatesHub.SkillUI が null です");
+            }
             // 完了通知
             tcs.TrySetResult(selected);
         }

@@ -24,15 +24,19 @@ public class Slaim : BasePassive
         //自分に雲隠れを付与
         _owner.ApplyPassiveBufferInBattleByID(14,_owner);
         //雲隠れの2ターンと十日能力の比較分のリーディングステップを味方に付与
-        foreach(var live in Walking.Instance.bm.GetOtherAlliesAlive(_owner))
+        var battle = BattleContextHub.Current;
+        if (battle != null)
         {
-            live.ApplyPassiveBufferInBattleByID(13,_owner);
-            var pas = live.GetBufferPassiveByID(13);
-            pas.SetPercentageModifier(whatModify.agi, 1.04f);//4%上げる
-            pas.SetFixedValue(whatModify.agi,_owner.TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton)/3 *
-            live.TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining));//支援対象の味方のサイレント練度　×　付与者の盥豚÷3
+            foreach (var live in battle.GetOtherAlliesAlive(_owner))
+            {
+                live.ApplyPassiveBufferInBattleByID(13,_owner);
+                var pas = live.GetBufferPassiveByID(13);
+                pas.SetPercentageModifier(whatModify.agi, 1.04f);//4%上げる
+                pas.SetFixedValue(whatModify.agi,_owner.TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton)/3 *
+                live.TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining));//支援対象の味方のサイレント練度　×　付与者の盥豚÷3
 
-            ApplyTaktbruch(Atker);//タクトブルフの攻撃者への付与
+                ApplyTaktbruch(Atker);//タクトブルフの攻撃者への付与
+            }
         }
         
         //派生元の処理を最後に呼び出す。
