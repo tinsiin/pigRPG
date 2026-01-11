@@ -9,6 +9,7 @@ public sealed class BattleUIBridge
 
     private IBattleContext battleContext;
     private readonly MessageDropper messageDropper;
+    private readonly BattleEventHistory eventHistory = new BattleEventHistory();
 
     public BattleUIBridge(MessageDropper messageDropper)
     {
@@ -26,13 +27,19 @@ public sealed class BattleUIBridge
     }
 
     public IBattleContext BattleContext => battleContext;
+    public BattleEventHistory EventHistory => eventHistory;
 
-    public void SetUserUiState(TabState state)
+    public void SetUserUiState(TabState state, bool syncOrchestrator = true)
     {
+        var orchestrator = BattleOrchestratorHub.Current;
+        if (syncOrchestrator && orchestrator != null)
+        {
+            orchestrator.SyncFromUiState(state);
+        }
         var userState = UIStateHub.UserState;
         if (userState != null)
         {
-            userState.Value = state;
+            userState.Value = orchestrator?.CurrentUiState ?? state;
         }
         else
         {
@@ -60,7 +67,14 @@ public sealed class BattleUIBridge
 
     public void DisplayLogs()
     {
-        SchizoLog.Instance.DisplayAllAsync().Forget();
+        var log = SchizoLog.Instance;
+        if (log == null) return;
+        log.ClearLogs();
+        foreach (var entry in eventHistory.Entries)
+        {
+            log.AddLog(entry.Message, entry.Important);
+        }
+        log.DisplayAllAsync().Forget();
     }
 
     public void SetSelectedActor(BaseStates acter)
@@ -114,11 +128,13 @@ public sealed class BattleUIBridge
 
     public void AddLog(string message, bool important)
     {
+        eventHistory.Add(message, important);
         SchizoLog.Instance.AddLog(message, important);
     }
 
     public void HardStopAndClearLogs()
     {
+        eventHistory.Clear();
         SchizoLog.Instance.HardStopAndClearAsync().Forget();
     }
 

@@ -27,6 +27,16 @@ public abstract partial class BaseStates
     WatchUIUpdate wui => WatchUIUpdate.Instance;
     protected IBattleContext manager => BattleContextHub.Current;
     protected SchizoLog schizoLog => SchizoLog.Instance;
+    protected void AddBattleLog(string message, bool important = false)
+    {
+        var bridge = BattleUIBridge.Active;
+        if (bridge != null)
+        {
+            bridge.AddLog(message, important);
+            return;
+        }
+        schizoLog?.AddLog(message, important);
+    }
 
     //  ==============================================================================================================================
     //                                              UI

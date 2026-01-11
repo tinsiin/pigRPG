@@ -777,8 +777,31 @@ public class AllyClass : BaseStates
     /// <param name="skillListIndex"></param>
     public void OnSkillBtnCallBack(int skillListIndex)
     {
+        var skill = SkillList[skillListIndex];
+        var orchestrator = BattleOrchestratorHub.Current;
+        if (orchestrator != null)
+        {
+            var input = new ActionInput
+            {
+                Kind = ActionInputKind.SkillSelect,
+                RequestId = orchestrator.CurrentChoiceRequest.RequestId,
+                Actor = this,
+                Skill = skill
+            };
+            var state = orchestrator.ApplyInput(input);
+            var uiBridge = BattleUIBridge.Active;
+            if (uiBridge != null)
+            {
+                uiBridge.SetUserUiState(state, false);
+            }
+            else
+            {
+                Debug.LogError("PlayersStates.OnSkillBtnCallBack: BattleUIBridge が null です");
+            }
+            return;
+        }
 
-        SKillUseCall(SkillList[skillListIndex]);//スキル使用
+        SKillUseCall(skill);//スキル使用
 
         //もし先約リストによる単体指定ならば、範囲や対象者選択画面にはいかず、直接actbranchiへ移行
         //スキルの性質によるボタンの行く先の分岐
@@ -786,17 +809,15 @@ public class AllyClass : BaseStates
             ? TabState.NextWait
             : DetermineNextUIState(NowUseSkill);
 
-        var uiBridge = BattleUIBridge.Active;
-        if (uiBridge != null)
+        var fallbackBridge = BattleUIBridge.Active;
+        if (fallbackBridge != null)
         {
-            uiBridge.SetUserUiState(nextState);
+            fallbackBridge.SetUserUiState(nextState);
         }
         else
         {
             Debug.LogError("PlayersStates.OnSkillBtnCallBack: BattleUIBridge が null です");
         }
-
-        
     }
     /// <summary>
     /// スキル攻撃回数ストックボタンからはそのまま次のターンへ移行する(対象者選択や範囲選択などはない。)
@@ -805,6 +826,28 @@ public class AllyClass : BaseStates
     public void OnSkillStockBtnCallBack(int skillListIndex)
     {
         var skill = SkillList[skillListIndex];
+        var orchestrator = BattleOrchestratorHub.Current;
+        if (orchestrator != null)
+        {
+            var input = new ActionInput
+            {
+                Kind = ActionInputKind.StockSkill,
+                RequestId = orchestrator.CurrentChoiceRequest.RequestId,
+                Actor = this,
+                Skill = skill
+            };
+            var state = orchestrator.ApplyInput(input);
+            var inputBridge = BattleUIBridge.Active;
+            if (inputBridge != null)
+            {
+                inputBridge.SetUserUiState(state, false);
+            }
+            else
+            {
+                Debug.LogError("PlayersStates.OnSkillStockBtnCallBack: BattleUIBridge が null です");
+            }
+            return;
+        }
         if(skill.IsFullStock())
         {
             Debug.Log(skill.SkillName + "をストックが満杯。");
@@ -891,6 +934,27 @@ public class AllyClass : BaseStates
     public void OnSkillDoNothingBtnCallBack()
     {
         Debug.Log("何もしない");
+        var orchestrator = BattleOrchestratorHub.Current;
+        if (orchestrator != null)
+        {
+            var input = new ActionInput
+            {
+                Kind = ActionInputKind.DoNothing,
+                RequestId = orchestrator.CurrentChoiceRequest.RequestId,
+                Actor = this
+            };
+            var state = orchestrator.ApplyInput(input);
+            var inputBridge = BattleUIBridge.Active;
+            if (inputBridge != null)
+            {
+                inputBridge.SetUserUiState(state, false);
+            }
+            else
+            {
+                Debug.LogError("PlayersStates.OnSkillDoNothingBtnCallBack: BattleUIBridge が null です");
+            }
+            return;
+        }
         var uiBridge = BattleUIBridge.Active;
         var battle = uiBridge?.BattleContext;
         if (battle != null)

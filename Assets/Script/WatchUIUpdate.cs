@@ -1148,7 +1148,7 @@ public partial class WatchUIUpdate : MonoBehaviour
                 try
                 {
                     // 0秒モーションを起動し、内部のディスパッチャ/バインディング初期化のみを誘発（awaitしない）
-                    LMotion.Create(Vector2.zero, new Vector2(1, 1), 0f)
+                    _ = LMotion.Create(Vector2.zero, new Vector2(1, 1), 0f)
                         .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                         .BindToAnchoredPosition(rt);
                 }

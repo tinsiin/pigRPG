@@ -57,6 +57,7 @@ public class BattleInitializer
             nowStageCut.EscapeRate,
             metaProvider
         );
+        BattleOrchestratorHub.Set(result.Orchestrator);
         result.BattleContext = result.Orchestrator.Manager;
         
         // プレイヤー状態を戦闘開始に更新
@@ -99,8 +100,9 @@ public class BattleInitializer
     {
         if (orchestrator == null)
             return TabState.walk;
-        
-        return orchestrator.StartBattle();
+
+        orchestrator.StartBattle();
+        return orchestrator.CurrentUiState;
     }
 }
 

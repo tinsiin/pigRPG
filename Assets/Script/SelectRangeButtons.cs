@@ -474,6 +474,30 @@ public class SelectRangeButtons : MonoBehaviour
     /// </summary>
     public void OnClickOptionRangeBtn(Button thisbtn, SkillZoneTrait option)
     {
+        var orchestrator = BattleOrchestratorHub.Current;
+        if (orchestrator != null)
+        {
+            var input = new ActionInput
+            {
+                Kind = ActionInputKind.RangeSelect,
+                RequestId = orchestrator.CurrentChoiceRequest.RequestId,
+                Actor = battle?.Acter,
+                RangeWill = option,
+                IsOption = true
+            };
+            var state = orchestrator.ApplyInput(input);
+            Destroy(thisbtn);//ボタンは消える
+            if (uiBridge != null)
+            {
+                uiBridge.SetUserUiState(state, false);
+            }
+            else
+            {
+                Debug.LogError("SelectRangeButtons.OnClickOptionRangeBtn: BattleUIBridge が null です");
+            }
+            return;
+        }
+
         battle.Acter.RangeWill |= option;
         Destroy(thisbtn);//ボタンは消える
 
@@ -482,6 +506,32 @@ public class SelectRangeButtons : MonoBehaviour
 
     public void OnClickRangeBtn(Button thisbtn, SkillZoneTrait range)
     {
+        var orchestrator = BattleOrchestratorHub.Current;
+        if (orchestrator != null)
+        {
+            var input = new ActionInput
+            {
+                Kind = ActionInputKind.RangeSelect,
+                RequestId = orchestrator.CurrentChoiceRequest.RequestId,
+                Actor = battle?.Acter,
+                RangeWill = range
+            };
+            var state = orchestrator.ApplyInput(input);
+            foreach (var button in buttonList)
+            {
+                Destroy(button);//ボタン全部削除
+            }
+            if (uiBridge != null)
+            {
+                uiBridge.SetUserUiState(state, false);
+            }
+            else
+            {
+                Debug.LogError("SelectRangeButtons.OnClickRangeBtn: BattleUIBridge が null です");
+            }
+            return;
+        }
+
         battle.Acter.RangeWill |= range;
         foreach (var button in buttonList)
         {

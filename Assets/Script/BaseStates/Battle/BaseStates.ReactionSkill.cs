@@ -46,7 +46,7 @@ public abstract partial class BaseStates
     /// </summary>
     private HitResult IsReactHIT(BaseStates Attacker)
     {
-        schizoLog.AddLog("IsReactHITが呼ばれた",true);
+        AddBattleLog("IsReactHITが呼ばれた", true);
         var skill = Attacker.NowUseSkill;
         var minusMyChance = 0f;
         var minimumHitChancePer = CalcMinimumHitChancePer(Attacker,this);//ミニマムヒットチャンスの発生確率
@@ -77,12 +77,12 @@ public abstract partial class BaseStates
                 if(RandomEx.Shared.NextFloat(2) < 1)
                 {
                     minimumHitChanceResult = HitResult.Critical;
-                    schizoLog.AddLog("ミニマムヒットチャンスの確率計算-クリティカル",true);
+                    AddBattleLog("ミニマムヒットチャンスの確率計算-クリティカル", true);
                 }
                 else
                 {
                     minimumHitChanceResult = HitResult.Graze;
-                    schizoLog.AddLog("ミニマムヒットチャンスの確率計算-かすり",true);
+                    AddBattleLog("ミニマムヒットチャンスの確率計算-かすり", true);
                 }
             }else
             {//残り三分の二で、ステータス比較の計算
@@ -107,18 +107,18 @@ public abstract partial class BaseStates
                 if(RandomEx.Shared.NextFloat(effectiveAtkerCalc + effectiveDefCalc) < effectiveAtkerCalc)
                 {
                     minimumHitChanceResult = HitResult.Critical;//攻撃者側のステータスが乱数で出たなら、クリティカル
-                    schizoLog.AddLog("ミニマムヒットチャンスのステータス比較計算-クリティカル",true);
+                    AddBattleLog("ミニマムヒットチャンスのステータス比較計算-クリティカル", true);
                 }
                 else
                 {
                     minimumHitChanceResult = HitResult.Graze;//そうでなければかすり
-                    schizoLog.AddLog("ミニマムヒットチャンスのステータス比較計算-かすり",true);
+                    AddBattleLog("ミニマムヒットチャンスのステータス比較計算-かすり", true);
                 }
             }
         }
 
         //術者の命中+被害者の自分の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
-        schizoLog.AddLog(Attacker.CharacterName + "の命中率:" + Attacker.EYE().Total +CharacterName + "の回避率:" + EvasionRate(AGI().Total,Attacker),true);
+        AddBattleLog(Attacker.CharacterName + "の命中率:" + Attacker.EYE().Total + CharacterName + "の回避率:" + EvasionRate(AGI().Total,Attacker), true);
         if (RandomEx.Shared.NextFloat(Attacker.EYE().Total + EvasionRate(AGI().Total,Attacker)) < Attacker.EYE().Total - minusMyChance || minimumHitChanceResult != HitResult.CompleteEvade)
         {
             var hitResult = minimumHitChanceResult;//ミニマムヒット前提でヒット結果変数に代入
@@ -126,9 +126,9 @@ public abstract partial class BaseStates
             if(minimumHitChanceResult == HitResult.CompleteEvade)
             {
                 hitResult = HitResult.Hit;//スキル命中に渡すヒット結果に通常のHitを代入
-                schizoLog.AddLog("IsReactHit-Hit",true);
+                AddBattleLog("IsReactHit-Hit", true);
             }
-            schizoLog.AddLog($"通常Hitにより更なるスキル命中計算を実行",true);
+            AddBattleLog("通常Hitにより更なるスキル命中計算を実行", true);
             //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
             return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult);
         }
@@ -815,7 +815,7 @@ public abstract partial class BaseStates
                 }
             }else   
             {
-                schizoLog.AddLog(attacker.CharacterName + "は外した");
+                AddBattleLog(attacker.CharacterName + "は外した");
             }
         }
         else//atktypeがないと各自で判定
@@ -1139,7 +1139,7 @@ public abstract partial class BaseStates
         }
         if(!HitResultSet)
         {
-            schizoLog.AddLog($"攻撃スキルヒット判定でisreactHitが呼ばれた。",true);
+            AddBattleLog("攻撃スキルヒット判定でisreactHitが呼ばれた。", true);
             hitResult = IsReactHIT(attacker);//善意ヒット判定が未代入なら通常のヒット判定
         }
 

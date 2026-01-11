@@ -72,7 +72,7 @@ public abstract partial class BaseStates
         {
             var ene = Unders.GetAtCharacter(i);
             ApplyCharaConditionalToSpecial(ene);//キャラ限定補正を通常の特別補正リストに追加　キャラが合ってればね
-            schizoLog.AddLog($"{ene.CharacterName}のReactionSkillが始まった-Undersのカウント数:{Unders.Count}",true);
+            AddBattleLog($"{ene.CharacterName}のReactionSkillが始まった-Undersのカウント数:{Unders.Count}", true);
             txt += await ene.ReactionSkillOnBattle(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
         }
         // 対象処理が完了したのでキャスト単位でポイント精算

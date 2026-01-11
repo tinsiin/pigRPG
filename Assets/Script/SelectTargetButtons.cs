@@ -57,6 +57,7 @@ public class SelectTargetButtons : MonoBehaviour
     List<Button> EnemybuttonList = new List<Button>();
 
     List<BaseStates> CashUnders;//分散値に対するランダム性を担保するための対象者キャッシュ
+    DirectedWill selectedTargetWill = DirectedWill.One;
     /// <summary>
     /// 生成用コールバック
     /// </summary>
@@ -71,13 +72,14 @@ public class SelectTargetButtons : MonoBehaviour
         var acter = battleContext.Acter;
         var skill = acter.NowUseSkill;
         CashUnders = new List<BaseStates>();
+        selectedTargetWill = acter.Target;
         // 前回の参照が残ると誤判定や二重Destroyの原因になるため、生成前に必ずクリア
         AllybuttonList.Clear();
         EnemybuttonList.Clear();
 
         //もしスキルの範囲性質にcanSelectRangeがない場合 (=範囲選択の必要がないスキルなので範囲選択が発生せず代入されないのでここで入れる)
         //範囲選択されたこと前提でこの後分岐するので。
-        if (!skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))
+        if (BattleOrchestratorHub.Current == null && !skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))
         {
             acter.RangeWill |= skill.ZoneTrait;//実行者の範囲意志にそのままスキルの範囲性質を入れる。
         }
@@ -435,8 +437,7 @@ public class SelectTargetButtons : MonoBehaviour
     /// </summary>
     void OnClickSelectVanguardOrBacklines(Button thisBtn,DirectedWill will)
     {
-        battle.Acter.Target = will;//渡された前のめりか後衛かの意思を入れる。
-
+        selectedTargetWill = will;
         ReturnNextWaitView();
     }
 
@@ -446,6 +447,7 @@ public class SelectTargetButtons : MonoBehaviour
     void OnClickSelectTarget(BaseStates target, Button thisBtn, allyOrEnemy faction,DirectedWill will)
     {
         CashUnders.Add(target);
+        selectedTargetWill = will;
 
         if (AllybuttonList.Count > 0 && faction == allyOrEnemy.Enemyiy)///敵のボタンで主人公達のボタンが一つ以上あったら
         {
@@ -494,21 +496,6 @@ public class SelectTargetButtons : MonoBehaviour
                 //まだ選べるのなら、途中で選択を止められるボタンを表示する。
                 SelectEndBtn.gameObject.SetActive(true);
             }
-
-
-            //このキャラクターがターゲット率がある =　隙だらけなら　その補正をキャラ限定特別補正に入れる
-            //隙だらけ補正　は　命中パーセンテージ補正です
-            var allyActer = battle.Acter as AllyClass;
-            var ExposureModifier = allyActer.GetExposureAccuracyPercentageBonus(target.PassivesTargetProbability());
-            if(ExposureModifier > 0)//隙だらけ補正のパーセンテージがあるなら
-            {
-                //隙だらけ補正をキャラ限定特別補正に入れる  命中パーセンテージ補正　1.〇倍の形で
-                allyActer.SetCharaConditionalModifierList(target,"隙だらけ", whatModify.eye, ExposureModifier);
-            }
-
-
-
-            battle.Acter.Target = will;//選択意思を入れる
             Destroy(thisBtn);//このボタンは破棄
         }
     }
@@ -517,20 +504,58 @@ public class SelectTargetButtons : MonoBehaviour
     /// </summary>
     private void ReturnNextWaitView()
     {
-        if (uiBridge != null)
+        var orchestrator = BattleOrchestratorHub.Current;
+        if (orchestrator != null)
         {
-            uiBridge.SetUserUiState(TabState.NextWait);
+            var input = new ActionInput
+            {
+                Kind = ActionInputKind.TargetSelect,
+                RequestId = orchestrator.CurrentChoiceRequest.RequestId,
+                Actor = battle?.Acter,
+                TargetWill = selectedTargetWill,
+                Targets = new List<BaseStates>(CashUnders)
+            };
+            var state = orchestrator.ApplyInput(input);
+            if (uiBridge != null)
+            {
+                uiBridge.SetUserUiState(state, false);
+            }
+            else
+            {
+                Debug.LogError("SelectTargetButtons.ReturnNextWaitView: BattleUIBridge が null です");
+            }
         }
         else
         {
-            Debug.LogError("SelectTargetButtons.ReturnNextWaitView: BattleUIBridge が null です");
-        }
+            if (uiBridge != null)
+            {
+                uiBridge.SetUserUiState(TabState.NextWait);
+            }
+            else
+            {
+                Debug.LogError("SelectTargetButtons.ReturnNextWaitView: BattleUIBridge が null です");
+            }
 
-        //bmの対象者リストにキャッシュリストを入れる
-        CashUnders.Shuffle();//分散値のランダム性のためシャッフル
-        foreach(var cash in CashUnders)
-        {
-            battle.unders.CharaAdd(cash);
+            if (battle != null)
+            {
+                battle.Acter.Target = selectedTargetWill;
+
+                //bmの対象者リストにキャッシュリストを入れる
+                CashUnders.Shuffle();//分散値のランダム性のためシャッフル
+                var allyActer = battle.Acter as AllyClass;
+                foreach(var cash in CashUnders)
+                {
+                    if (allyActer != null && !battle.IsFriend(battle.Acter, cash))
+                    {
+                        var exposureModifier = allyActer.GetExposureAccuracyPercentageBonus(cash.PassivesTargetProbability());
+                        if (exposureModifier > 0)
+                        {
+                            allyActer.SetCharaConditionalModifierList(cash, "隙だらけ", whatModify.eye, exposureModifier);
+                        }
+                    }
+                    battle.unders.CharaAdd(cash);
+                }
+            }
         }
 
         foreach (var button in AllybuttonList)
@@ -542,9 +567,12 @@ public class SelectTargetButtons : MonoBehaviour
             Destroy(button);//ボタン全部削除
         }
 
-        foreach(var one in battle.AllCharacters)
+        if (battle != null)
         {
-            one.UI.SetActiveSetNumber_NumberEffect(false);//全キャラの数字を非表示
+            foreach(var one in battle.AllCharacters)
+            {
+                one.UI.SetActiveSetNumber_NumberEffect(false);//全キャラの数字を非表示
+            }
         }
     }
 }

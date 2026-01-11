@@ -18,10 +18,6 @@ public class Walking : MonoBehaviour
     [SerializeField] private int SelectBtnSize;
     [SerializeField] private MessageDropper MessageDropper;
     public static Walking Instance;
-    // NextWaitボタンの再入防止フラグ
-    private bool _isProcessingNext = false;
-    // 処理中に押された NextWait を次回に繰り越すフラグ
-    private bool _pendingNextClick = false;
     // Walkボタンの再入防止フラグ（多重起動防止）
     private bool _isWalking = false;
     private void Awake()
@@ -153,34 +149,12 @@ public class Walking : MonoBehaviour
         // Kモードがアクティブなら即時解除（アニメなし）
         WatchUIUpdate.Instance?.ForceExitKImmediate();
         //USERUI_state.Value = await orchestrator.Step();
-        if (_isProcessingNext)
+        if (orchestrator == null || orchestrator.Phase == BattlePhase.Completed)
         {
-            // 処理中に押された場合は次回繰り越し
-            _pendingNextClick = true;
-            return; // 再入防止
+            return;
         }
-        _isProcessingNext = true;
-        // UIの有効/無効はここでは切り替えない（ガードで防止）
-
-        try
-        {
-            var next = await orchestrator.Step();
-            USERUI_state.Value = next;
-        }
-        finally
-        {
-            _isProcessingNext = false;
-            // 処理中にクリックがあった場合、NextWait 画面なら自動的に次を進める
-            if (_pendingNextClick && USERUI_state.Value == TabState.NextWait)
-            {
-                _pendingNextClick = false;
-                OnClickNextWaitBtn().Forget();
-            }
-            else
-            {
-                _pendingNextClick = false; // いずれにせよクリア
-            }
-        }
+        await orchestrator.RequestAdvance();
+        USERUI_state.Value = orchestrator.CurrentUiState;
     }
 
     public BattleOrchestrator orchestrator;

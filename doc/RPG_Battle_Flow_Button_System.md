@@ -8,7 +8,7 @@ BattleManagerにおけるボタン操作のフローを、他のAIが読んで�
 ```mermaid
 [戦闘開始]
     ↓
-[Encount] → ACTPop() → USERUI_state設定
+[Encount] → StartBattle() → CurrentUiState設定
     ↓
 [NextWaitボタン登録]
     ↓
@@ -29,35 +29,26 @@ BattleManagerにおけるボタン操作のフローを、他のAIが読んで�
 
 ## 🔴 NextWaitボタン - 戦闘進行の心臓部
 
-### 1️⃣ 初期登録 (Walking.cs:178-181)
+### 1️⃣ 初期登録 (Walking.cs:200付近)
 ```csharp
 // エンカウント時の初期設定
-USERUI_state.Value = bm.ACTPop();  // 最初のTabState決定
+orchestrator = result.Orchestrator;
+USERUI_state.Value = initializer.SetupInitialBattleUI(orchestrator); // StartBattle内包
 _nextWaitBtn.onClick.RemoveAllListeners();
-_nextWaitBtn.onClick.AddListener(()=>OnClickNextWaitBtn().Forget());
+_nextWaitBtn.onClick.AddListener(() => OnClickNextWaitBtn().Forget());
 ```
 
-### 2️⃣ ボタンクリック処理 (Walking.cs:113-146)
+### 2️⃣ ボタンクリック処理 (Walking.cs:150付近)
 ```csharp
 private async UniTask OnClickNextWaitBtn()
 {
-    // 1. 再入防止チェック
-    if (_isProcessingNext) {
-        _pendingNextClick = true;  // 次回処理予約
+    WatchUIUpdate.Instance?.ForceExitKImmediate();
+    if (orchestrator == null || orchestrator.Phase == BattlePhase.Completed)
+    {
         return;
     }
-    
-    // 2. 処理開始
-    _isProcessingNext = true;
-    
-    // 3. 行動分岐処理実行
-    var next = await bm.CharacterActBranching();
-    USERUI_state.Value = next;  // 次の画面へ遷移
-    
-    // 4. ペンディング処理
-    if (_pendingNextClick && USERUI_state.Value == TabState.NextWait) {
-        OnClickNextWaitBtn().Forget();  // 自動進行
-    }
+    await orchestrator.RequestAdvance();
+    USERUI_state.Value = orchestrator.CurrentUiState;
 }
 ```
 
@@ -81,25 +72,24 @@ ACTPop()が返すTabState
 
 ## 🟡 スキル選択ボタン
 
-### 1️⃣ スキルボタンのコールバック (PlayersStates.cs:960-976)
+### 1️⃣ スキルボタンのコールバック (PlayersStates.cs:780付近)
 ```csharp
 public void OnSkillBtnCallBack(int skillListIndex)
 {
-    // 1. スキル使用
-    SKillUseCall(SkillList[skillListIndex]);
-    
-    // 2. 次の画面決定
-    if(Acts.GetAtSingleTarget(0) != null) {
-        // 先約単体指定あり → 即実行
-        USERUI_state.Value = TabState.NextWait;
-    } else {
-        // スキル性質で分岐
-        USERUI_state.Value = DetermineNextUIState(NowUseSkill);
-    }
+    var orchestrator = BattleOrchestratorHub.Current;
+    var input = new ActionInput
+    {
+        Kind = ActionInputKind.SkillSelect,
+        RequestId = orchestrator.CurrentChoiceRequest.RequestId,
+        Actor = this,
+        Skill = SkillList[skillListIndex]
+    };
+    var state = orchestrator.ApplyInput(input);
+    BattleUIBridge.Active?.SetUserUiState(state, false);
 }
 ```
 
-### 2️⃣ UI状態の分岐決定 (PlayersStates.cs:1067-1092)
+### 2️⃣ UI状態の分岐決定（Orchestrator内で利用）
 ```csharp
 public static TabState DetermineNextUIState(BaseSkill skill)
 {
@@ -123,34 +113,25 @@ public static TabState DetermineNextUIState(BaseSkill skill)
 button.onClick.AddListener(() => OnClickRangeBtn(button, SkillZoneTrait.CanSelectSingleTarget));
 ```
 
-### 2️⃣ 範囲選択処理 (SelectRangeButtons.cs:475-484)
+### 2️⃣ 範囲選択処理 (SelectRangeButtons.cs:507付近)
 ```csharp
 public void OnClickRangeBtn(Button thisbtn, SkillZoneTrait range)
 {
-    // 1. 範囲意志を設定
-    bm.Acter.RangeWill |= range;
-    
-    // 2. ボタン削除
-    foreach (var button in buttonList)
-        Destroy(button);
-    
-    // 3. 次へ
-    NextTab();
+    var input = new ActionInput
+    {
+        Kind = ActionInputKind.RangeSelect,
+        RequestId = orchestrator.CurrentChoiceRequest.RequestId,
+        Actor = battle?.Acter,
+        RangeWill = range
+    };
+    var state = orchestrator.ApplyInput(input);
+    BattleUIBridge.Active?.SetUserUiState(state, false);
 }
 ```
 
-### 3️⃣ 次画面決定 (SelectRangeButtons.cs:504-517)
+### 3️⃣ 次画面決定（Orchestrator内で自動判定）
 ```csharp
-private void NextTab()
-{
-    if (bm.Acter.HasRangeWill(SkillZoneTrait.AllTarget)) {
-        // 全範囲なら対象選択不要
-        USERUI_state.Value = TabState.NextWait;
-    } else {
-        // 対象選択へ
-        USERUI_state.Value = TabState.SelectTarget;
-    }
-}
+// AllTarget なら NextWait、そうでなければ SelectTarget へ
 ```
 
 ## 🔵 ターゲット選択ボタン
@@ -164,44 +145,34 @@ button.onClick.AddListener(() => OnClickSelectTarget(chara, button, allyOrEnemy.
 button.onClick.AddListener(() => OnClickSelectTarget(chara, button, allyOrEnemy.alliy, DirectedWill.One));
 ```
 
-### 2️⃣ ターゲット選択処理 (SelectTargetButtons.cs:438-506)
+### 2️⃣ ターゲット選択処理 (SelectTargetButtons.cs:446付近)
 ```csharp
 void OnClickSelectTarget(BaseStates target, Button thisBtn, allyOrEnemy faction, DirectedWill will)
 {
     // 1. キャッシュに追加
     CashUnders.Add(target);
+    selectedTargetWill = will;
     
-    // 2. 陣営違いのボタン削除
-    if (faction == allyOrEnemy.Enemyiy)
-        // 味方ボタン全削除
-    
-    // 3. カウントダウン
-    if (faction == allyOrEnemy.alliy)
-        NeedSelectCountAlly--;
-    
-    // 4. 終了判定
-    if (残りボタンなし || カウント0以下) {
-        ReturnNextWaitView();
-    }
-    
-    // 5. ボタン削除
+    // 2. 陣営違いのボタン削除・カウントダウン
+    // 3. 終了判定で ReturnNextWaitView()
     Destroy(thisBtn);
 }
 ```
 
-### 3️⃣ 戦闘続行 (SelectTargetButtons.cs:510-534)
+### 3️⃣ 戦闘続行 (SelectTargetButtons.cs:505付近)
 ```csharp
 private void ReturnNextWaitView()
 {
-    // 1. NextWaitへ戻る
-    Walking.Instance.USERUI_state.Value = TabState.NextWait;
-    
-    // 2. 選択結果を反映
-    foreach(var cash in CashUnders)
-        bm.unders.CharaAdd(cash);
-    
-    // 3. ボタン全削除
-    // 4. UI非表示
+    var input = new ActionInput
+    {
+        Kind = ActionInputKind.TargetSelect,
+        RequestId = orchestrator.CurrentChoiceRequest.RequestId,
+        Actor = battle?.Acter,
+        TargetWill = selectedTargetWill,
+        Targets = new List<BaseStates>(CashUnders)
+    };
+    var state = orchestrator.ApplyInput(input);
+    BattleUIBridge.Active?.SetUserUiState(state, false);
 }
 ```
 
@@ -210,34 +181,31 @@ private void ReturnNextWaitView()
 ```
 1. [戦闘開始]
    Walking.Encount()
-   ├─ BattleManager生成
-   ├─ ACTPop()実行 → TabState取得
-   ├─ USERUI_state.Value = TabState設定
+   ├─ BattleOrchestrator生成
+   ├─ StartBattle() → ChoiceRequest生成
+   ├─ USERUI_state.Value = CurrentUiState設定
    └─ NextWaitBtn.onClick.AddListener(OnClickNextWaitBtn)
 
 2. [NextWaitボタンクリック]
    OnClickNextWaitBtn()
-   ├─ CharacterActBranching()実行
-   ├─ 行動内容に応じた処理
-   └─ 次のTabState返却 → USERUI_state更新
+   ├─ Orchestrator.RequestAdvance() 実行
+   ├─ StepInternal() で分岐処理
+   └─ CurrentUiState 反映
 
 3. [TabState.Skill時]
    スキルボタン表示
-   ├─ OnSkillBtnCallBack(skillID)
-   ├─ DetermineNextUIState()で次画面決定
-   └─ TabState.SelectRange or SelectTarget or NextWait
+   ├─ ActionInput(SkillSelect/Stock/DoNothing)
+   └─ Orchestrator.ApplyInput → CurrentUiState
 
 4. [TabState.SelectRange時]
    範囲選択ボタン表示
-   ├─ OnClickRangeBtn()
-   ├─ RangeWill設定
-   └─ TabState.SelectTarget or NextWait
+   ├─ ActionInput(RangeSelect)
+   └─ Orchestrator.ApplyInput → CurrentUiState
 
 5. [TabState.SelectTarget時]
    ターゲット選択ボタン表示
-   ├─ OnClickSelectTarget()
-   ├─ ターゲットリスト構築
-   └─ TabState.NextWait (必ず戻る)
+   ├─ ActionInput(TargetSelect)
+   └─ Orchestrator.ApplyInput → CurrentUiState
 
 6. [ループ]
    TabState.NextWait → 2へ戻る
@@ -247,9 +215,11 @@ private void ReturnNextWaitView()
 
 ### 再入防止機構
 ```csharp
-_isProcessingNext    // 処理中フラグ
-_pendingNextClick    // 保留クリック
+BattleOrchestrator.RequestAdvance()
+// _isAdvancing / _pendingAdvance で多重入力を吸収
 ```
+### 入力ガード
+- フェーズ/選択種別/RequestId/Actor 不一致は Orchestrator が拒否
 
 ### TabState遷移ルール
 - **NextWait** → すべての画面へ遷移可能
@@ -262,6 +232,11 @@ _pendingNextClick    // 保留クリック
 2. **範囲ボタン**: 選択後即削除
 3. **ターゲットボタン**: 選択後即削除
 
+### ログ履歴（BattleEventHistory）
+- `BattleUIBridge.AddLog` が履歴に蓄積
+- `DisplayLogs` は履歴から再生成して表示
+- `HardStopAndClearLogs` で履歴もクリア
+
 ## 📝 まとめ
 
 このシステムの核心は：
@@ -271,3 +246,44 @@ _pendingNextClick    // 保留クリック
 4. 最終的に必ず**NextWait**に戻る循環構造
 
 この循環により、ボタンクリックだけで複雑な戦闘フローを実現している。
+
+---
+
+## ✅ 改善計画（ボタン中心設計の強化）
+
+### 目的
+- ボタン操作の体験は維持したまま、ロジック主導に寄せる
+- UI/ロジックの結合を減らし、拡張・自動化を容易にする
+
+### 改善方針
+1) **ChoiceRequest → ActionInput の流れに統一**
+- ロジック側（Orchestrator）が「選択要求」を出す
+- UIは「入力を返すだけ」に徹する
+
+2) **入力経路の一元化**
+- ボタン/ショートカット/自動行動を同じ ActionInput へ統合
+
+3) **入力ガードの追加**
+- 期待フェーズ外の入力や対象不正はロジック側で弾く
+
+4) **フェーズ管理の明確化**
+- `TabState` だけに頼らず、戦闘フェーズ（選択中/演出中/待機）を分離
+
+5) **ログ/タイムラインの分離**
+- 戦闘ログは `BattleEventHistory` に蓄積し、UIは参照のみ
+
+### 作業ステップ（完了）
+1. ✅ ChoiceRequest / ActionInput の共通型を定義
+2. ✅ ボタン処理は ActionInput 生成だけを行う（UIは Orchestrator を直接動かさない）
+3. ✅ Orchestrator に入力検証とフェーズ判定を集約
+4. ✅ NextWait の自動進行条件を Orchestrator 側に移す
+5. ✅ BattleEventHistory を追加し、ログ表示を履歴参照型にする
+
+### 期待効果
+- UI表示のズレや多重入力の事故が減る
+- 自動戦闘/リプレイ/テストの導入が容易になる
+- ボタン中心の操作感は維持したまま拡張性が上がる
+
+### 注意点
+- UXは現行と同じ操作感を維持する
+- 既存 `TabState` は段階的に置き換え（急に削除しない）
