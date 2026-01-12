@@ -131,3 +131,8 @@ public class AllyUISet {
 ## 決定事項（次のアクション）
 - 本設計に沿って、Phase 1〜3までを先行で実施する
 - Phase 4以降は実装の様子を見て調整
+
+## クローズ
+- Phase 1〜5 を完了。
+- 追加のリファクタリング計画は `doc/PlayersStates_Refactor_MasterPlan.md` に移行。
+- 本ドキュメントは完了扱い。

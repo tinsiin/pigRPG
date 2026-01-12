@@ -22019,7 +22019,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.8963824, g: 0.44271475, b: 0.874328, a: 0.6197513}
+  m_Color: {r: 0.9870571, g: 0.055299725, b: 0.9843022, a: 0.95250297}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -40487,6 +40487,7 @@ GameObject:
   - component: {fileID: 1195921980}
   - component: {fileID: 1195921981}
   - component: {fileID: 1195921982}
+  - component: {fileID: 1195921983}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -40544,8 +40545,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 440ef6f28be5c104cbb968a1e4febc22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  EyeArea: {fileID: 132546428}
-  ActionMar: {fileID: 686993905}
   Init_geino:
     CharacterName: "\u30B8\u30FC\u30CE"
     Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
@@ -40654,45 +40653,6 @@ MonoBehaviour:
     _skillALLList: []
     ValidSkillIDList: 
     EmotionalAttachmentSkillID: 0
-  skillUILists:
-  - skillButtons:
-    - button: {fileID: 602005237}
-      skillID: 2
-    - button: {fileID: 85669209}
-      skillID: 3
-    - button: {fileID: 1852605335}
-      skillID: 4
-    stockButtons: []
-    aggressiveCommitRadios: []
-  - skillButtons: []
-    stockButtons: []
-    aggressiveCommitRadios: []
-  - skillButtons: []
-    stockButtons: []
-    aggressiveCommitRadios: []
-  DefaultButtonArea:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  DoNothingButton:
-  - {fileID: 1568280088}
-  - {fileID: 0}
-  - {fileID: 0}
-  CancelPassiveButtonField:
-  - {fileID: 1400616400}
-  - {fileID: 0}
-  - {fileID: 0}
-  GoToCancelPassiveFieldButton:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  ReturnCancelPassiveToDefaultAreaButton:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  ModalArea: {fileID: 2061243746}
-  SelectSkillPassiveTargetHandle: {fileID: 348096248}
-  EmotionalAttachmentSkillSelectUIArea: {fileID: 965992562}
   EmotionalAttachmentSkillWeakeningPassive:
     Name: "\u601D\u3044\u5165\u308C\u5F31\u4F53\u5316\u30B9\u30AD\u30EB\u30D1\u30C3\u30B7\u30D6"
     DurationTurn: 99
@@ -40700,7 +40660,6 @@ MonoBehaviour:
     SkillPowerRate: 0.72
     IsLock: 0
     IsBad: 0
-  ExplosionVoid: 0
   HP_TO_MaxP_CONVERSION_FACTOR: 1
   MentalHP_TO_P_Recovely_CONVERSION_FACTOR: 2
   references:
@@ -40729,10 +40688,12 @@ MonoBehaviour:
         RequiredNormalP: 0
         RequiredAttrP:
           _list: []
+        RequiredRemainingHPPercent: 0
         Cantkill: 0
         SKillDidWaitCount: 0
         EvasionModifier: 1
         AttackModifier: 1.6
+        AttackMentalHealPercent: 80
         _defAtk: 0
         DistributionType: 0
         PowerRangePercentageDictionary:
@@ -40797,10 +40758,12 @@ MonoBehaviour:
         RequiredNormalP: 2
         RequiredAttrP:
           _list: []
+        RequiredRemainingHPPercent: 0
         Cantkill: 0
         SKillDidWaitCount: 0
         EvasionModifier: 1
         AttackModifier: 1
+        AttackMentalHealPercent: 80
         _defAtk: 0
         DistributionType: 0
         PowerRangePercentageDictionary:
@@ -40873,10 +40836,12 @@ MonoBehaviour:
         RequiredNormalP: 1
         RequiredAttrP:
           _list: []
+        RequiredRemainingHPPercent: 0
         Cantkill: 0
         SKillDidWaitCount: 0
         EvasionModifier: 1
         AttackModifier: 1
+        AttackMentalHealPercent: 80
         _defAtk: 0
         DistributionType: 0
         PowerRangePercentageDictionary:
@@ -40949,10 +40914,12 @@ MonoBehaviour:
         RequiredNormalP: 2
         RequiredAttrP:
           _list: []
+        RequiredRemainingHPPercent: 0
         Cantkill: 0
         SKillDidWaitCount: 0
         EvasionModifier: 1
         AttackModifier: 1
+        AttackMentalHealPercent: 80
         _defAtk: 0
         DistributionType: 0
         PowerRangePercentageDictionary:
@@ -41025,10 +40992,12 @@ MonoBehaviour:
         RequiredNormalP: 0
         RequiredAttrP:
           _list: []
+        RequiredRemainingHPPercent: 0
         Cantkill: 0
         SKillDidWaitCount: 2
         EvasionModifier: 1.1
         AttackModifier: 1
+        AttackMentalHealPercent: 80
         _defAtk: 0
         DistributionType: 0
         PowerRangePercentageDictionary:
@@ -41126,10 +41095,12 @@ MonoBehaviour:
           RequiredNormalP: 0
           RequiredAttrP:
             _list: []
+          RequiredRemainingHPPercent: 0
           Cantkill: 0
           SKillDidWaitCount: 0
           EvasionModifier: 1
           AttackModifier: 1
+          AttackMentalHealPercent: 80
           _defAtk: 0
           DistributionType: 0
           PowerRangePercentageDictionary:
@@ -42624,10 +42595,12 @@ MonoBehaviour:
         RequiredNormalP: 0
         RequiredAttrP:
           _list: []
+        RequiredRemainingHPPercent: 0
         Cantkill: 0
         SKillDidWaitCount: 0
         EvasionModifier: 1
         AttackModifier: 1
+        AttackMentalHealPercent: 80
         _defAtk: 0
         DistributionType: 0
         PowerRangePercentageDictionary:
@@ -42700,10 +42673,12 @@ MonoBehaviour:
         RequiredNormalP: 0
         RequiredAttrP:
           _list: []
+        RequiredRemainingHPPercent: 0
         Cantkill: 0
         SKillDidWaitCount: 0
         EvasionModifier: 1
         AttackModifier: 1
+        AttackMentalHealPercent: 80
         _defAtk: 0
         DistributionType: 0
         PowerRangePercentageDictionary:
@@ -42812,6 +42787,57 @@ MonoBehaviour:
   - {fileID: 1180822960}
   m_EnableEscClose: 0
   m_DebugLogs: 0
+--- !u!114 &1195921983
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1195921973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 128600c183022b0419f86baf88bb218a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AllyUISets:
+  - SkillUILists:
+      skillButtons:
+      - button: {fileID: 602005237}
+        skillID: 2
+      - button: {fileID: 85669209}
+        skillID: 3
+      - button: {fileID: 1852605335}
+        skillID: 4
+      stockButtons: []
+      aggressiveCommitRadios: []
+    DefaultButtonArea: {fileID: 0}
+    DoNothingButton: {fileID: 1568280088}
+    CancelPassiveButtonField: {fileID: 1400616400}
+    GoToCancelPassiveFieldButton: {fileID: 0}
+    ReturnCancelPassiveToDefaultAreaButton: {fileID: 0}
+  - SkillUILists:
+      skillButtons: []
+      stockButtons: []
+      aggressiveCommitRadios: []
+    DefaultButtonArea: {fileID: 0}
+    DoNothingButton: {fileID: 0}
+    CancelPassiveButtonField: {fileID: 0}
+    GoToCancelPassiveFieldButton: {fileID: 0}
+    ReturnCancelPassiveToDefaultAreaButton: {fileID: 0}
+  - SkillUILists:
+      skillButtons: []
+      stockButtons: []
+      aggressiveCommitRadios: []
+    DefaultButtonArea: {fileID: 0}
+    DoNothingButton: {fileID: 0}
+    CancelPassiveButtonField: {fileID: 0}
+    GoToCancelPassiveFieldButton: {fileID: 0}
+    ReturnCancelPassiveToDefaultAreaButton: {fileID: 0}
+  ModalArea: {fileID: 2061243746}
+  SelectSkillPassiveTargetHandle: {fileID: 348096248}
+  EmotionalAttachmentSkillSelectUIArea: {fileID: 965992562}
+  EyeArea: {fileID: 132546428}
+  ActionMar: {fileID: 686993905}
 --- !u!1 &1197626739
 GameObject:
   m_ObjectHideFlags: 0

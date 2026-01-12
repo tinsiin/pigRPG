@@ -4,30 +4,21 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class PlayersUIService : IPlayersUIControl, IPlayersSkillUI
+public sealed class PlayersUIService
 {
     private readonly PlayersRoster roster;
-    private readonly AllySkillUILists[] skillUILists;
-    private readonly GameObject[] defaultButtonArea;
-    private readonly Button[] doNothingButton;
-    private readonly SelectCancelPassiveButtons[] cancelPassiveButtonField;
+    private readonly AllyUISet[] allyUISets;
     private readonly SkillPassiveSelectionUI skillPassiveSelectionUI;
     private readonly EmotionalAttachmentUI emotionalAttachmentUI;
 
     public PlayersUIService(
         PlayersRoster roster,
-        AllySkillUILists[] skillUILists,
-        GameObject[] defaultButtonArea,
-        Button[] doNothingButton,
-        SelectCancelPassiveButtons[] cancelPassiveButtonField,
+        AllyUISet[] allyUISets,
         SkillPassiveSelectionUI skillPassiveSelectionUI,
         EmotionalAttachmentUI emotionalAttachmentUI)
     {
         this.roster = roster;
-        this.skillUILists = skillUILists;
-        this.defaultButtonArea = defaultButtonArea;
-        this.doNothingButton = doNothingButton;
-        this.cancelPassiveButtonField = cancelPassiveButtonField;
+        this.allyUISets = allyUISets;
         this.skillPassiveSelectionUI = skillPassiveSelectionUI;
         this.emotionalAttachmentUI = emotionalAttachmentUI;
     }
@@ -40,34 +31,35 @@ public sealed class PlayersUIService : IPlayersUIControl, IPlayersSkillUI
         for (int i = 0; i < allies.Length; i++)
         {
             var actor = allies[i];
+            var uiSet = GetUISet(i);
 
-            if (skillUILists != null && i < skillUILists.Length && skillUILists[i] != null)
+            if (uiSet?.SkillUILists != null)
             {
-                foreach (var button in skillUILists[i].skillButtons)
+                foreach (var button in uiSet.SkillUILists.skillButtons)
                 {
                     button.AddButtonFunc(actor.OnSkillBtnCallBack);
                 }
             }
 
-            if (skillUILists != null && i < skillUILists.Length && skillUILists[i] != null)
+            if (uiSet?.SkillUILists != null)
             {
-                foreach (var button in skillUILists[i].stockButtons)
+                foreach (var button in uiSet.SkillUILists.stockButtons)
                 {
                     button.AddButtonFunc(actor.OnSkillStockBtnCallBack);
                 }
             }
 
-            if (skillUILists != null && i < skillUILists.Length && skillUILists[i] != null)
+            if (uiSet?.SkillUILists != null)
             {
-                foreach (var radio in skillUILists[i].aggressiveCommitRadios)
+                foreach (var radio in uiSet.SkillUILists.aggressiveCommitRadios)
                 {
                     radio.AddRadioFunc(actor.OnSkillSelectAgressiveCommitBtnCallBack);
                 }
             }
 
-            if (doNothingButton != null && i < doNothingButton.Length && doNothingButton[i] != null)
+            if (uiSet?.DoNothingButton != null)
             {
-                doNothingButton[i].onClick.AddListener(actor.OnSkillDoNothingBtnCallBack);
+                uiSet.DoNothingButton.onClick.AddListener(actor.OnSkillDoNothingBtnCallBack);
             }
         }
 
@@ -79,16 +71,18 @@ public sealed class PlayersUIService : IPlayersUIControl, IPlayersSkillUI
         var allies = roster.Allies;
         for (int i = 0; i < allies.Length; i++)
         {
+            var uiSet = GetUISet(i);
+            if (uiSet?.SkillUILists == null) continue;
             var activeSkillIds = new HashSet<int>(allies[i].SkillList.Cast<AllySkill>().Select(skill => skill.ID));
-            foreach (var hold in skillUILists[i].skillButtons)
+            foreach (var hold in uiSet.SkillUILists.skillButtons)
             {
                 hold.button.interactable = activeSkillIds.Contains(hold.skillID);
             }
-            foreach (var hold in skillUILists[i].stockButtons)
+            foreach (var hold in uiSet.SkillUILists.stockButtons)
             {
                 hold.button.interactable = activeSkillIds.Contains(hold.skillID);
             }
-            foreach (var hold in skillUILists[i].aggressiveCommitRadios)
+            foreach (var hold in uiSet.SkillUILists.aggressiveCommitRadios)
             {
                 hold.Interactable(activeSkillIds.Contains(hold.skillID));
             }
@@ -97,8 +91,10 @@ public sealed class PlayersUIService : IPlayersUIControl, IPlayersSkillUI
 
     public void OnSkillSelectionScreenTransition(int index)
     {
+        var uiSet = GetUISet(index);
+        if (uiSet?.SkillUILists == null) return;
         var allies = roster.Allies;
-        foreach (var radio in skillUILists[index].aggressiveCommitRadios.Where(rad => allies[index].ValidSkillIDList.Contains(rad.skillID)))
+        foreach (var radio in uiSet.SkillUILists.aggressiveCommitRadios.Where(rad => allies[index].ValidSkillIDList.Contains(rad.skillID)))
         {
             BaseSkill skill = allies[index].SkillList[radio.skillID];
             if (skill == null) Debug.LogError("スキルがありません");
@@ -108,10 +104,12 @@ public sealed class PlayersUIService : IPlayersUIControl, IPlayersSkillUI
 
     public void OnlySelectActs(SkillZoneTrait trait, SkillType type, int index)
     {
+        var uiSet = GetUISet(index);
+        if (uiSet?.SkillUILists == null) return;
         var allies = roster.Allies;
         foreach (var skill in allies[index].SkillList.Cast<AllySkill>())
         {
-            var hold = skillUILists[index].skillButtons.Find(hold => hold.skillID == skill.ID);
+            var hold = uiSet.SkillUILists.skillButtons.Find(hold => hold.skillID == skill.ID);
             if (allies[index].HasCanCancelCantACTPassive)
             {
                 if (hold != null)
@@ -131,20 +129,24 @@ public sealed class PlayersUIService : IPlayersUIControl, IPlayersSkillUI
                 }
             }
         }
-        if (cancelPassiveButtonField[index] == null) Debug.LogError("CancelPassiveButtonFieldがnullです");
-        cancelPassiveButtonField[index].ShowPassiveButtons(allies[index]);
+        if (uiSet.CancelPassiveButtonField == null) Debug.LogError("CancelPassiveButtonFieldがnullです");
+        uiSet.CancelPassiveButtonField?.ShowPassiveButtons(allies[index]);
     }
 
     public void GoToCancelPassiveField(int index)
     {
-        defaultButtonArea[index].gameObject.SetActive(false);
-        cancelPassiveButtonField[index].gameObject.SetActive(true);
+        var uiSet = GetUISet(index);
+        if (uiSet?.DefaultButtonArea == null || uiSet.CancelPassiveButtonField == null) return;
+        uiSet.DefaultButtonArea.gameObject.SetActive(false);
+        uiSet.CancelPassiveButtonField.gameObject.SetActive(true);
     }
 
     public void ReturnCancelPassiveToDefaultArea(int index)
     {
-        cancelPassiveButtonField[index].gameObject.SetActive(false);
-        defaultButtonArea[index].gameObject.SetActive(true);
+        var uiSet = GetUISet(index);
+        if (uiSet?.DefaultButtonArea == null || uiSet.CancelPassiveButtonField == null) return;
+        uiSet.CancelPassiveButtonField.gameObject.SetActive(false);
+        uiSet.DefaultButtonArea.gameObject.SetActive(true);
     }
 
     public void AllyAlliesUISetActive(bool isActive)
@@ -185,5 +187,11 @@ public sealed class PlayersUIService : IPlayersUIControl, IPlayersSkillUI
     private bool CanCastNow(BaseStates actor, BaseSkill skill)
     {
         return SkillResourceFlow.CanCastSkill(actor, skill);
+    }
+
+    private AllyUISet GetUISet(int index)
+    {
+        if (allyUISets == null || index < 0 || index >= allyUISets.Length) return null;
+        return allyUISets[index];
     }
 }
