@@ -11,6 +11,15 @@
       },
       "hash": "b651c5866fe0e3fba065ce2e56dfdfcd59d3d109"
     },
+    "com.coplaydev.unity-mcp": {
+      "version": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.0.2"
+      },
+      "hash": "f4a8b05094a9572fce26bad4348879d4ba15e429"
+    },
     "com.cysharp.r3": {
       "version": "https://github.com/Cysharp/R3.git?path=src/R3.Unity/Assets/R3.Unity",
       "depth": 0,
@@ -238,6 +247,13 @@
     "com.unity.nuget.mono-cecil": {
       "version": "1.11.4",
       "depth": 2,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.nuget.newtonsoft-json": {
+      "version": "3.2.1",
+      "depth": 0,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
