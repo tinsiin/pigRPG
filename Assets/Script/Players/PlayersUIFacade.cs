@@ -6,28 +6,28 @@ using UnityEngine;
 public sealed class PlayersUIFacade : IPlayersUIControl, IPlayersSkillUI
 {
     public event Action<bool> AllyAlliesUISetActiveRequested;
-    public event Action<SkillZoneTrait, SkillType, int> OnlySelectActsRequested;
-    public event Action<int> OnSkillSelectionScreenTransitionRequested;
+    public event Action<SkillZoneTrait, SkillType, AllyId> OnlySelectActsRequested;
+    public event Action<AllyId> OnSkillSelectionScreenTransitionRequested;
     public event Func<List<BaseSkill>, int, UniTask<List<BaseSkill>>> SelectSkillPassiveTargetRequested;
     public event Action ReturnSelectSkillPassiveTargetRequested;
-    public event Action<int> OpenEmotionalAttachmentSkillSelectUIAreaRequested;
+    public event Action<AllyId> OpenEmotionalAttachmentSkillSelectUIAreaRequested;
     public event Action OnBattleStartRequested;
-    public event Action<int> GoToCancelPassiveFieldRequested;
-    public event Action<int> ReturnCancelPassiveToDefaultAreaRequested;
+    public event Action<AllyId> GoToCancelPassiveFieldRequested;
+    public event Action<AllyId> ReturnCancelPassiveToDefaultAreaRequested;
 
     public void AllyAlliesUISetActive(bool isActive)
     {
         AllyAlliesUISetActiveRequested?.Invoke(isActive);
     }
 
-    public void OnlySelectActs(SkillZoneTrait trait, SkillType type, int index)
+    public void OnlySelectActs(SkillZoneTrait trait, SkillType type, AllyId allyId)
     {
-        OnlySelectActsRequested?.Invoke(trait, type, index);
+        OnlySelectActsRequested?.Invoke(trait, type, allyId);
     }
 
-    public void OnSkillSelectionScreenTransition(int index)
+    public void OnSkillSelectionScreenTransition(AllyId allyId)
     {
-        OnSkillSelectionScreenTransitionRequested?.Invoke(index);
+        OnSkillSelectionScreenTransitionRequested?.Invoke(allyId);
     }
 
     public UniTask<List<BaseSkill>> GoToSelectSkillPassiveTargetSkillButtonsArea(List<BaseSkill> skills, int selectCount)
@@ -46,9 +46,9 @@ public sealed class PlayersUIFacade : IPlayersUIControl, IPlayersSkillUI
         ReturnSelectSkillPassiveTargetRequested?.Invoke();
     }
 
-    public void OpenEmotionalAttachmentSkillSelectUIArea(int index)
+    public void OpenEmotionalAttachmentSkillSelectUIArea(AllyId allyId)
     {
-        OpenEmotionalAttachmentSkillSelectUIAreaRequested?.Invoke(index);
+        OpenEmotionalAttachmentSkillSelectUIAreaRequested?.Invoke(allyId);
     }
 
     public void OnBattleStart()
@@ -56,13 +56,13 @@ public sealed class PlayersUIFacade : IPlayersUIControl, IPlayersSkillUI
         OnBattleStartRequested?.Invoke();
     }
 
-    public void GoToCancelPassiveField(int index)
+    public void GoToCancelPassiveField(AllyId allyId)
     {
-        GoToCancelPassiveFieldRequested?.Invoke(index);
+        GoToCancelPassiveFieldRequested?.Invoke(allyId);
     }
 
-    public void ReturnCancelPassiveToDefaultArea(int index)
+    public void ReturnCancelPassiveToDefaultArea(AllyId allyId)
     {
-        ReturnCancelPassiveToDefaultAreaRequested?.Invoke(index);
+        ReturnCancelPassiveToDefaultAreaRequested?.Invoke(allyId);
     }
 }

@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Unity.Profiling;
 
-public class Walking : MonoBehaviour
+public class Walking : MonoBehaviour, IPlayersContextConsumer
 {
     WatchUIUpdate wui;
     [SerializeField] private TextMeshProUGUI tmp;
@@ -31,6 +31,16 @@ public class Walking : MonoBehaviour
         {
             Destroy(this);
         }
+    }
+
+    private void OnEnable()
+    {
+        PlayersContextRegistry.Register(this);
+    }
+
+    private void OnDisable()
+    {
+        PlayersContextRegistry.Unregister(this);
     }
 
 
@@ -72,14 +82,15 @@ public class Walking : MonoBehaviour
     private IPlayersProgress playersProgress;
     private IPlayersParty playersParty;
     private IPlayersUIControl playersUIControl;
+    private IPlayersSkillUI playersSkillUI;
+    private IPlayersRoster playersRoster;
+    private IPlayersTuning playersTuning;
     private  void Start()
     {
-        playersProgress = PlayersStatesHub.Progress;
-        playersParty = PlayersStatesHub.Party;
-        playersUIControl = PlayersStatesHub.UIControl;
-        if (playersProgress == null) Debug.LogError("PlayersStatesHub.Progress が null です");
-        if (playersParty == null) Debug.LogError("PlayersStatesHub.Party が null です");
-        if (playersUIControl == null) Debug.LogError("PlayersStatesHub.UIControl が null です");
+        if (playersProgress == null) Debug.LogError("playersProgress が null です");
+        if (playersParty == null) Debug.LogError("playersParty が null です");
+        if (playersUIControl == null) Debug.LogError("playersUIControl が null です");
+        if (playersSkillUI == null) Debug.LogError("playersSkillUI が null です");
         stages = Stages.Instance;
         wui = WatchUIUpdate.Instance;
         BaseStates.CsvLoad();
@@ -102,6 +113,16 @@ public class Walking : MonoBehaviour
 
         //USERUIの初期状態
         //USERUI_state.Value = TabState.walk;
+    }
+
+    public void InjectPlayersContext(PlayersContext context)
+    {
+        playersProgress = context?.Progress;
+        playersParty = context?.Party;
+        playersUIControl = context?.UIControl;
+        playersSkillUI = context?.SkillUI;
+        playersRoster = context?.Roster;
+        playersTuning = context?.Tuning;
     }
 
     /// <summary>
@@ -163,7 +184,7 @@ public class Walking : MonoBehaviour
     {
         var enemyNumber = 2;//エンカウント人数を指定できる。　-1が普通の自動調整モード
         var initializer = new BattleInitializer(MessageDropper);
-        var result = await initializer.InitializeBattle(NowStageCut, playersParty, playersProgress, playersUIControl, enemyNumber);
+        var result = await initializer.InitializeBattle(NowStageCut, playersParty, playersProgress, playersUIControl, playersSkillUI, playersRoster, playersTuning, enemyNumber);
         if (!result.EncounterOccurred)
         {
             Debug.Log("No encounter");

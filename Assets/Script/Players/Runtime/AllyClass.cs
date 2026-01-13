@@ -34,6 +34,7 @@ public class AllyClass : BaseStates
     /// </summary>
     public List<int> ValidSkillIDList = new();
     public override IReadOnlyList<BaseSkill> SkillList => _skillALLList.Where(skill => ValidSkillIDList.Contains(skill.ID)).ToList();
+    public IReadOnlyList<AllySkill> AllSkills => _skillALLList;
 
     public override void OnInitializeSkillsAndChara()
     {
@@ -122,7 +123,7 @@ public class AllyClass : BaseStates
     /// </summary>
     void EmotionalAttachmentSkillQuantityChangeSkillWeakening(AllySkill oldSkill)
     {
-        var tuning = PlayersStatesHub.Tuning;
+        var tuning = Tuning;
         if (tuning == null || tuning.EmotionalAttachmentSkillWeakeningPassiveRef == null)
         {
             Debug.LogError("EmotionalAttachmentSkillQuantityChangeSkillWeakening: Tuning が未設定です");

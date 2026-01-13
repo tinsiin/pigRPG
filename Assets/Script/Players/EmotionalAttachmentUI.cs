@@ -13,13 +13,15 @@ public sealed class EmotionalAttachmentUI
         this.emotionalAttachmentSkillSelectUIArea = emotionalAttachmentSkillSelectUIArea;
     }
 
-    public void OpenEmotionalAttachmentSkillSelectUIArea(int index)
+    public void OpenEmotionalAttachmentSkillSelectUIArea(AllyId allyId)
     {
+        var actor = roster.GetAllyById(allyId) as AllyClass;
+        if (actor == null) return;
         emotionalAttachmentSkillSelectUIArea.OpenEmotionalAttachmentSkillSelectUIArea();
         emotionalAttachmentSkillSelectUIArea.ShowSkillsButtons(
-            roster.Allies[index].SkillList.Cast<AllySkill>().Where(skill => skill.IsTLOA).ToList(),
-            roster.Allies[index].EmotionalAttachmentSkillID,
-            roster.Allies[index].OnEmotionalAttachmentSkillIDChange);
+            actor.SkillList.Cast<AllySkill>().Where(skill => skill.IsTLOA).ToList(),
+            actor.EmotionalAttachmentSkillID,
+            actor.OnEmotionalAttachmentSkillIDChange);
     }
 
     public void OnBattleStart()

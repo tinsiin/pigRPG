@@ -8,10 +8,10 @@ public static class PlayersUIRefsMigration
     [MenuItem("Tools/Players/Migrate UI Refs")]
     public static void Migrate()
     {
-        var playersStatesList = Object.FindObjectsOfType<PlayersStates>(true);
+        var playersStatesList = Object.FindObjectsOfType<PlayersBootstrapper>(true);
         if (playersStatesList == null || playersStatesList.Length == 0)
         {
-            Debug.LogWarning("PlayersStates not found.");
+            Debug.LogWarning("PlayersBootstrapper not found.");
             return;
         }
 

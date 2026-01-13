@@ -309,7 +309,7 @@ public class BattleManager : IBattleContext
     /// <summary>
     ///コンストラクタ
     /// </summary>
-    public BattleManager(BattleGroup allyGroup, BattleGroup enemyGroup, BattleStartSituation first, MessageDropper messageDropper, float escapeRate, IBattleMetaProvider metaProvider)
+    public BattleManager(BattleGroup allyGroup, BattleGroup enemyGroup, BattleStartSituation first, MessageDropper messageDropper, float escapeRate, IBattleMetaProvider metaProvider, IPlayersSkillUI skillUi, IPlayersRoster roster)
     {
         AllyGroup = allyGroup;
         EnemyGroup = enemyGroup;
@@ -317,7 +317,7 @@ public class BattleManager : IBattleContext
         Acts = new ActionQueue();
         turnScheduler = new TurnScheduler(AllyGroup, EnemyGroup, Acts, battleState);
         unders = new UnderActersEntryList(this);
-        uiBridge = new BattleUIBridge(messageDropper);
+        uiBridge = new BattleUIBridge(messageDropper, skillUi, roster);
         uiBridge.BindBattleContext(this);
         BattleUIBridge.SetActive(uiBridge);
         stageEscapeRate = escapeRate;

@@ -94,3 +94,24 @@
 ## 次のアクション
 - この計画に沿って、Phase 1 から順に実施する。
 - Phase 2 で外部依存の注入方式を決める（Battle/Walking/Stage へどう渡すか）。
+## 依存監査（Hub/Instanceの置換を確実にするための明文化）
+- **目的**: `PlayersStatesHub` / `PlayersStates.Instance` の依存箇所を全て洗い出し、置換方針を決める。
+- **検索ルール**:
+  - `rg "PlayersStatesHub" Assets/Script`
+  - `rg "PlayersStates\.Instance" Assets/Script`
+- **出力物**: 依存一覧表（ファイル/行/用途/置換先）。
+
+例（表）:
+```
+| 依存箇所 | 理由 | 置換先 |
+| Walking.cs | UI制御 | IPlayersUIControl注入 |
+| BattleInitializer.cs | パーティ取得 | IPlayersParty注入 |
+```
+
+- **完了条件**: 依存一覧に載った全箇所の置換先が決まり、実装タスク化できている。
+## クローズ更新 (2026-01-13)
+- Phase 1-6 は実施済み（Bootstrapper/Runtime分離、Hub/Instance撤廃、UI分離、Context注入、AllyId完全化）。
+- Phase 4 の Save/Load も実装済み（プレイヤー状態のみ。戦闘内の一時情報は除外）。
+- 注入方式は PlayersContextRegistry による明示登録/解除に統一。
+- UnityEvent は PlayersBootstrapper 経由の明示メソッドに更新済み。
+- 以降は必須のリファクタリングは無し。必要なら任意改善で対応する。

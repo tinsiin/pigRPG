@@ -7763,7 +7763,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: PlayersStates, Assembly-CSharp
+        m_TargetAssemblyTypeName: PlayersBootstrapper, Assembly-CSharp
         m_MethodName: GoToCancelPassiveField_geino
         m_Mode: 1
         m_Arguments:
@@ -22019,7 +22019,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.89355224, g: 0.45480663, b: 0.87089556, a: 0.6093656}
+  m_Color: {r: 0.9870571, g: 0.055299725, b: 0.9843022, a: 0.95250297}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -35106,7 +35106,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: PlayersStates, Assembly-CSharp
+        m_TargetAssemblyTypeName: PlayersBootstrapper, Assembly-CSharp
         m_MethodName: Geino_OpenEmotionalAttachmentSkillSelectUIArea
         m_Mode: 1
         m_Arguments:
@@ -39401,9 +39401,9 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1195921976}
-        m_TargetAssemblyTypeName: PlayersStates, Assembly-CSharp
-        m_MethodName: ReturnCancelPassiveToDefaultArea
-        m_Mode: 3
+        m_TargetAssemblyTypeName: PlayersBootstrapper, Assembly-CSharp
+        m_MethodName: ReturnCancelPassiveToDefaultArea_geino
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -40545,8 +40545,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 440ef6f28be5c104cbb968a1e4febc22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  EyeArea: {fileID: 132546428}
-  ActionMar: {fileID: 686993905}
   Init_geino:
     CharacterName: "\u30B8\u30FC\u30CE"
     Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
@@ -40655,45 +40653,6 @@ MonoBehaviour:
     _skillALLList: []
     ValidSkillIDList: 
     EmotionalAttachmentSkillID: 0
-  skillUILists:
-  - skillButtons:
-    - button: {fileID: 602005237}
-      skillID: 2
-    - button: {fileID: 85669209}
-      skillID: 3
-    - button: {fileID: 1852605335}
-      skillID: 4
-    stockButtons: []
-    aggressiveCommitRadios: []
-  - skillButtons: []
-    stockButtons: []
-    aggressiveCommitRadios: []
-  - skillButtons: []
-    stockButtons: []
-    aggressiveCommitRadios: []
-  DefaultButtonArea:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  DoNothingButton:
-  - {fileID: 1568280088}
-  - {fileID: 0}
-  - {fileID: 0}
-  CancelPassiveButtonField:
-  - {fileID: 1400616400}
-  - {fileID: 0}
-  - {fileID: 0}
-  GoToCancelPassiveFieldButton:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  ReturnCancelPassiveToDefaultAreaButton:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  ModalArea: {fileID: 2061243746}
-  SelectSkillPassiveTargetHandle: {fileID: 348096248}
-  EmotionalAttachmentSkillSelectUIArea: {fileID: 965992562}
   EmotionalAttachmentSkillWeakeningPassive:
     Name: "\u601D\u3044\u5165\u308C\u5F31\u4F53\u5316\u30B9\u30AD\u30EB\u30D1\u30C3\u30B7\u30D6"
     DurationTurn: 99
@@ -42840,42 +42799,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 128600c183022b0419f86baf88bb218a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skillUILists:
-  - skillButtons:
-    - button: {fileID: 602005237}
-      skillID: 2
-    - button: {fileID: 85669209}
-      skillID: 3
-    - button: {fileID: 1852605335}
-      skillID: 4
-    stockButtons: []
-    aggressiveCommitRadios: []
-  - skillButtons: []
-    stockButtons: []
-    aggressiveCommitRadios: []
-  - skillButtons: []
-    stockButtons: []
-    aggressiveCommitRadios: []
-  DefaultButtonArea:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  DoNothingButton:
-  - {fileID: 1568280088}
-  - {fileID: 0}
-  - {fileID: 0}
-  CancelPassiveButtonField:
-  - {fileID: 1400616400}
-  - {fileID: 0}
-  - {fileID: 0}
-  GoToCancelPassiveFieldButton:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  ReturnCancelPassiveToDefaultAreaButton:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  AllyUISets:
+  - SkillUILists:
+      skillButtons:
+      - button: {fileID: 602005237}
+        skillID: 2
+      - button: {fileID: 85669209}
+        skillID: 3
+      - button: {fileID: 1852605335}
+        skillID: 4
+      stockButtons: []
+      aggressiveCommitRadios: []
+    DefaultButtonArea: {fileID: 0}
+    DoNothingButton: {fileID: 1568280088}
+    CancelPassiveButtonField: {fileID: 1400616400}
+    GoToCancelPassiveFieldButton: {fileID: 0}
+    ReturnCancelPassiveToDefaultAreaButton: {fileID: 0}
+  - SkillUILists:
+      skillButtons: []
+      stockButtons: []
+      aggressiveCommitRadios: []
+    DefaultButtonArea: {fileID: 0}
+    DoNothingButton: {fileID: 0}
+    CancelPassiveButtonField: {fileID: 0}
+    GoToCancelPassiveFieldButton: {fileID: 0}
+    ReturnCancelPassiveToDefaultAreaButton: {fileID: 0}
+  - SkillUILists:
+      skillButtons: []
+      stockButtons: []
+      aggressiveCommitRadios: []
+    DefaultButtonArea: {fileID: 0}
+    DoNothingButton: {fileID: 0}
+    CancelPassiveButtonField: {fileID: 0}
+    GoToCancelPassiveFieldButton: {fileID: 0}
+    ReturnCancelPassiveToDefaultAreaButton: {fileID: 0}
   ModalArea: {fileID: 2061243746}
   SelectSkillPassiveTargetHandle: {fileID: 348096248}
   EmotionalAttachmentSkillSelectUIArea: {fileID: 965992562}
@@ -56759,7 +56716,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: PlayersStates, Assembly-CSharp
+        m_TargetAssemblyTypeName: PlayersBootstrapper, Assembly-CSharp
         m_MethodName: CheckGeinoTenDayValuesCallBack
         m_Mode: 1
         m_Arguments:

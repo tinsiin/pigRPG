@@ -94,7 +94,7 @@ public class AllySkill : BaseSkill
     /// <param name="passive">ここに渡すのは弱体化スキルパッシブ(スキルの思い入れ由来)専用</param>
     public void ApplyEmotionalAttachmentSkillQuantityChangeSkillWeakeningPassive(BaseSkillPassive passive)
     {
-        var tuning = PlayersStatesHub.Tuning;
+        var tuning = Doer?.Tuning;
         var weakeningPassive = tuning?.EmotionalAttachmentSkillWeakeningPassiveRef;
         if (weakeningPassive == null)
         {

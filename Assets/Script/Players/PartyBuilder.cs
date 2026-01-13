@@ -12,9 +12,9 @@ public sealed class PartyBuilder
         this.uiControl = uiControl;
     }
 
-    private StairStates Geino => roster.GetAllyByIndex((int)PlayersStates.AllyId.Geino) as StairStates;
-    private BassJackStates Noramlia => roster.GetAllyByIndex((int)PlayersStates.AllyId.Noramlia) as BassJackStates;
-    private SateliteProcessStates Sites => roster.GetAllyByIndex((int)PlayersStates.AllyId.Sites) as SateliteProcessStates;
+    private StairStates Geino => roster.GetAllyById(AllyId.Geino) as StairStates;
+    private BassJackStates Noramlia => roster.GetAllyById(AllyId.Noramlia) as BassJackStates;
+    private SateliteProcessStates Sites => roster.GetAllyById(AllyId.Sites) as SateliteProcessStates;
 
     public BattleGroup BuildParty()
     {

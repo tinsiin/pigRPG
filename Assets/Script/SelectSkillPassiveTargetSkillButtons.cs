@@ -6,7 +6,7 @@ using UnityEngine.Events;
 using TMPro;
 using Cysharp.Threading.Tasks;   
 
-public class SelectSkillPassiveTargetSkillButtons : MonoBehaviour
+public class SelectSkillPassiveTargetSkillButtons : MonoBehaviour, IPlayersContextConsumer
 {
     [SerializeField] GameObject ButtonPrefab;
     [SerializeField] Transform bascketField;
@@ -35,6 +35,7 @@ public class SelectSkillPassiveTargetSkillButtons : MonoBehaviour
     List<GameObject> buttons = new List<GameObject>();
     
     public static SelectSkillPassiveTargetSkillButtons Instance { get; private set; }
+    private IPlayersSkillUI skillUi;
     
     private void Awake()
     {
@@ -65,6 +66,21 @@ public class SelectSkillPassiveTargetSkillButtons : MonoBehaviour
             startX = -parentSize.x / 2 + buttonSize.x / 2 + horizontalPadding;  // 水平パディングを追加
             startY = parentSize.y / 2 - buttonSize.y / 2 - verticalPadding;     // 垂直パディングを追加
         }
+    }
+
+    private void OnEnable()
+    {
+        PlayersContextRegistry.Register(this);
+    }
+
+    private void OnDisable()
+    {
+        PlayersContextRegistry.Unregister(this);
+    }
+
+    public void InjectPlayersContext(PlayersContext context)
+    {
+        skillUi = context?.SkillUI;
     }
     /// <summary>
     /// 渡された情報を元に複数のスキルボタンの生成
@@ -130,14 +146,13 @@ public class SelectSkillPassiveTargetSkillButtons : MonoBehaviour
         if(SelectCount == 0)
         {
             ClearButtons();//ボタンを消す
-            var skillUi = PlayersStatesHub.SkillUI;
             if (skillUi != null)
             {
                 skillUi.ReturnSelectSkillPassiveTargetSkillButtonsArea();//ボタンモーダルエリアから退出
             }
             else
             {
-                Debug.LogError("SelectSkillPassiveTargetSkillButtons: PlayersStatesHub.SkillUI が null です");
+                Debug.LogError("SelectSkillPassiveTargetSkillButtons: SkillUI が null です");
             }
             // 完了通知
             tcs.TrySetResult(selected);

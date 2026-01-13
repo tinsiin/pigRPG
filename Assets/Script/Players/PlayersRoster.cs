@@ -1,5 +1,3 @@
-using System;
-
 public sealed class PlayersRoster : IPlayersRoster
 {
     private AllyClass[] allies;
@@ -34,14 +32,19 @@ public sealed class PlayersRoster : IPlayersRoster
         return allies[index];
     }
 
-    public bool TryGetAllyId(BaseStates actor, out PlayersStates.AllyId id)
+    public bool TryGetAllyId(BaseStates actor, out AllyId id)
     {
         id = default;
-        if (TryGetAllyIndex(actor, out var idx) && Enum.IsDefined(typeof(PlayersStates.AllyId), idx))
+        if (TryGetAllyIndex(actor, out var idx) && System.Enum.IsDefined(typeof(AllyId), idx))
         {
-            id = (PlayersStates.AllyId)idx;
+            id = (AllyId)idx;
             return true;
         }
         return false;
+    }
+
+    public BaseStates GetAllyById(AllyId id)
+    {
+        return GetAllyByIndex((int)id);
     }
 }

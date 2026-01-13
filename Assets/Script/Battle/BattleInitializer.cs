@@ -24,6 +24,9 @@ public class BattleInitializer
         IPlayersParty playersParty,
         IPlayersProgress playersProgress,
         IPlayersUIControl playersUIControl,
+        IPlayersSkillUI playersSkillUI,
+        IPlayersRoster playersRoster,
+        IPlayersTuning playersTuning,
         int enemyNumber = 2)
     {
         var result = new BattleSetupResult();
@@ -35,7 +38,8 @@ public class BattleInitializer
         }
         
         // 敵グループ生成
-        result.EnemyGroup = nowStageCut.EnemyCollectAI(enemyNumber);
+        var nowProgress = playersProgress != null ? playersProgress.NowProgress : 0;
+        result.EnemyGroup = nowStageCut.EnemyCollectAI(nowProgress, enemyNumber);
         if (result.EnemyGroup == null)
         {
             result.EncounterOccurred = false;
@@ -46,6 +50,10 @@ public class BattleInitializer
         
         // 味方グループ選出
         result.AllyGroup = DetermineAllyGroup(result.EnemyGroup, playersParty);
+
+        BindTuning(result.AllyGroup, playersTuning);
+        BindTuning(result.EnemyGroup, playersTuning);
+        BindSkillUi(result.AllyGroup, playersSkillUI);
         
         // BattleOrchestrator生成
         var metaProvider = new PlayersStatesBattleMetaProvider(playersProgress, playersParty, playersUIControl);
@@ -55,20 +63,21 @@ public class BattleInitializer
             BattleStartSituation.Normal,
             _messageDropper,
             nowStageCut.EscapeRate,
-            metaProvider
+            metaProvider,
+            playersSkillUI,
+            playersRoster
         );
         BattleOrchestratorHub.Set(result.Orchestrator);
         result.BattleContext = result.Orchestrator.Manager;
         
         // プレイヤー状態を戦闘開始に更新
-        var skillUi = PlayersStatesHub.SkillUI;
-        if (skillUi != null)
+        if (playersSkillUI != null)
         {
-            skillUi.OnBattleStart();
+            playersSkillUI.OnBattleStart();
         }
         else
         {
-            Debug.LogError("BattleInitializer: PlayersStatesHub.SkillUI が null です");
+            Debug.LogError("BattleInitializer: SkillUI が null です");
         }
         
         // ズーム演出実行
@@ -91,6 +100,24 @@ public class BattleInitializer
         
         // 現在はフルパーティを返す
         return playersParty.GetParty();
+    }
+
+    private void BindTuning(BattleGroup group, IPlayersTuning tuning)
+    {
+        if (group == null || tuning == null) return;
+        foreach (var actor in group.Ours)
+        {
+            actor?.BindTuning(tuning);
+        }
+    }
+
+    private void BindSkillUi(BattleGroup group, IPlayersSkillUI skillUi)
+    {
+        if (group == null || skillUi == null) return;
+        foreach (var actor in group.Ours)
+        {
+            actor?.BindSkillUI(skillUi);
+        }
     }
     
     /// <summary>

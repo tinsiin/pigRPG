@@ -304,7 +304,7 @@ public class Stages : MonoBehaviour
         ///     数を指定すると指定された分だけ返るが、自動モード同様に三人まで。
         /// </summary>
         /// <param name="number">敵の数を指定する。-1を指定すると指定されない</param>
-        public BattleGroup EnemyCollectAI(int number = -1)
+        public BattleGroup EnemyCollectAI(int nowProgress, int number = -1)
         {
             var CompatibilityData = new Dictionary<(BaseStates,BaseStates),int>();//相性値のデータ保存用
             
@@ -329,7 +329,7 @@ public class Stages : MonoBehaviour
                 if(ene.broken) continue;//死んでてなおかつ壊れてもいたら復活不可能なのでスキップ
 
                 if(ene.Reborn)//敵が復活可能タイプなら
-                if(ene.CanRebornWhatHeWill(PlayersStatesHub.Progress?.NowProgress ?? 0))//復活判定をして復活可能なら
+                if(ene.CanRebornWhatHeWill(nowProgress))//復活判定をして復活可能なら
                 {
                     Debug.Log($"敵キャラが復活可能だから追加(enemyColllecAI){ene.CharacterName}");
                     validEnemies.Add(ene);//追加
@@ -339,7 +339,7 @@ public class Stages : MonoBehaviour
             //有効な敵のリスト全員に再遭遇時コールバックを実施
             foreach(var ene in validEnemies)
             {
-                ene.ReEncountCallback();
+                ene.ReEncountCallback(nowProgress);
             }
             //有効リストが空だった場合
             if (!validEnemies.Any())

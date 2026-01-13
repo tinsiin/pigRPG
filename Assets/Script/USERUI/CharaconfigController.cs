@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
 
-public class CharaconfigController : MonoBehaviour
+public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
 {
     public static CharaconfigController Instance { get; private set; }
     [Header("Navigation")]
@@ -47,6 +47,9 @@ public class CharaconfigController : MonoBehaviour
     /// 現在選択中のキャラクターのインデックス
     /// </summary>
     private int m_CurrentIndex = 0;
+    private IPlayersSkillUI skillUi;
+    private IPlayersParty playersParty;
+    private IPlayersRoster playersRoster;
 
     // 選択変更イベント（indexを流す）
     private readonly Subject<int> _onSelectionChanged = new();
@@ -69,14 +72,13 @@ public class CharaconfigController : MonoBehaviour
         {
             BindSharedButtonWithIndex(m_OpenEmotionalAttachmentButton, i =>
             {
-                var skillUi = PlayersStatesHub.SkillUI;
                 if (skillUi != null)
                 {
-                    skillUi.OpenEmotionalAttachmentSkillSelectUIArea(i);
+                    skillUi.OpenEmotionalAttachmentSkillSelectUIArea((AllyId)i);
                 }
                 else
                 {
-                    Debug.LogError("CharaconfigController: PlayersStatesHub.SkillUI が null です");
+                    Debug.LogError("CharaconfigController: SkillUI が null です");
                 }
             });
         }
@@ -84,14 +86,13 @@ public class CharaconfigController : MonoBehaviour
         {
             BindSharedButtonWithIndex(m_StopFreezeConsecutiveButton, i =>
             {
-                var party = PlayersStatesHub.Party;
-                if (party != null)
+                if (playersParty != null)
                 {
-                    party.RequestStopFreezeConsecutive(i);
+                    playersParty.RequestStopFreezeConsecutive((AllyId)i);
                 }
                 else
                 {
-                    Debug.LogError("CharaconfigController: PlayersStatesHub.Party が null です");
+                    Debug.LogError("CharaconfigController: Party が null です");
                 }
                 // 状態変更後にUIを再同期
                 RefreshUI();
@@ -102,12 +103,29 @@ public class CharaconfigController : MonoBehaviour
         BindPassivesModalOpenButton();
     }
 
+    private void OnEnable()
+    {
+        PlayersContextRegistry.Register(this);
+    }
+
+    private void OnDisable()
+    {
+        PlayersContextRegistry.Unregister(this);
+    }
+
 
     private void Start()
     {
         // Awake/OnEnable 時点で PlayersStates.Instance が未初期化のケースに備え、
         // Start タイミングでもう一度同期して初期表示を正す
         RefreshUI();
+    }
+
+    public void InjectPlayersContext(PlayersContext context)
+    {
+        skillUi = context?.SkillUI;
+        playersParty = context?.Party;
+        playersRoster = context?.Roster;
     }
 
     // 外部API: 次へ
@@ -161,8 +179,8 @@ public class CharaconfigController : MonoBehaviour
         _onSelectionChanged.OnNext(m_CurrentIndex);
     }
 
-    // 外部API: enum指定（PlayersStates.AllyId）
-    public void SetSelectedAllyByEnum(PlayersStates.AllyId id)
+    // 外部API: enum指定
+    public void SetSelectedAllyByEnum(AllyId id)
     {
         SetSelectedIndex((int)id);
     }
@@ -170,11 +188,10 @@ public class CharaconfigController : MonoBehaviour
     // 外部API: アクターからインデックスへ変換して選択同期
     public void SetSelectedByActor(BaseStates actor)
     {
-        var roster = PlayersStatesHub.Roster;
-        if (actor == null || roster == null) return;
-        if (roster.TryGetAllyIndex(actor, out var idx))
+        if (actor == null || playersRoster == null) return;
+        if (playersRoster.TryGetAllyId(actor, out var id))
         {
-            SetSelectedIndex(idx);
+            SetSelectedIndex((int)id);
         }
     }
 
@@ -355,25 +372,27 @@ public class CharaconfigController : MonoBehaviour
 
     private int GetAllyCount()
     {
-        var roster = PlayersStatesHub.Roster;
-        return roster?.AllyCount ?? 0;
+        return playersRoster?.AllyCount ?? 0;
     }
 
     private AllyClass GetActor(int index)
     {
-        var roster = PlayersStatesHub.Roster;
-        if (roster == null)
+        if (playersRoster == null)
         {
-            Debug.LogWarning("PlayersStatesHub.Roster が null です。");
+            Debug.LogWarning("PlayersRoster が null です。");
             return null;
         }
-        int count = roster.AllyCount;
+        int count = playersRoster.AllyCount;
         if (count <= 0) 
         {
             Debug.LogWarning("Alliesがない。");
             return null;
         }
-        return roster.GetAllyByIndex(index) as AllyClass;
+        if (index < 0 || index >= count)
+        {
+            return null;
+        }
+        return playersRoster.GetAllyById((AllyId)index) as AllyClass;
     }
 
     // 共有ボタンに「現在のindexで」コールバックを流したい場合のユーティリティ

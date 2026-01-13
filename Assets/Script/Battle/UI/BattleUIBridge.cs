@@ -9,11 +9,15 @@ public sealed class BattleUIBridge
 
     private IBattleContext battleContext;
     private readonly MessageDropper messageDropper;
+    private readonly IPlayersSkillUI skillUi;
+    private readonly IPlayersRoster roster;
     private readonly BattleEventHistory eventHistory = new BattleEventHistory();
 
-    public BattleUIBridge(MessageDropper messageDropper)
+    public BattleUIBridge(MessageDropper messageDropper, IPlayersSkillUI skillUi, IPlayersRoster roster)
     {
         this.messageDropper = messageDropper;
+        this.skillUi = skillUi;
+        this.roster = roster;
     }
 
     public static void SetActive(BattleUIBridge bridge)
@@ -86,10 +90,9 @@ public sealed class BattleUIBridge
     {
         if (acter == null) return;
 
-        var skillUi = PlayersStatesHub.SkillUI;
         if (skillUi == null)
         {
-            Debug.LogError("BattleUIBridge.SwitchAllySkillUiState: PlayersStatesHub.SkillUI が null です");
+            Debug.LogError("BattleUIBridge.SwitchAllySkillUiState: SkillUI が null です");
             return;
         }
 
@@ -106,24 +109,48 @@ public sealed class BattleUIBridge
             onlyRemainButtonByType = SkillFilterPresets.SingleTargetTypeMask;
         }
 
-        switch (acter)
+        if (!TryGetAllyId(acter, out var allyId))
+        {
+            Debug.LogWarning("BattleUIBridge.SwitchAllySkillUiState: AllyId が特定できません。");
+            return;
+        }
+
+        skillUi.OnlySelectActs(onlyRemainButtonByZoneTrait, onlyRemainButtonByType, allyId);
+        skillUi.OnSkillSelectionScreenTransition(allyId);
+        SetSkillUiState(ToSkillUiState(allyId));
+    }
+
+    private bool TryGetAllyId(BaseStates actor, out AllyId id)
+    {
+        id = default;
+        if (actor == null) return false;
+        if (roster != null && roster.TryGetAllyId(actor, out id)) return true;
+
+        switch (actor)
         {
             case StairStates:
-                skillUi.OnlySelectActs(onlyRemainButtonByZoneTrait, onlyRemainButtonByType, 0);
-                skillUi.OnSkillSelectionScreenTransition(0);
-                SetSkillUiState(SkillUICharaState.geino);
-                break;
+                id = AllyId.Geino;
+                return true;
             case BassJackStates:
-                skillUi.OnlySelectActs(onlyRemainButtonByZoneTrait, onlyRemainButtonByType, 1);
-                skillUi.OnSkillSelectionScreenTransition(1);
-                SetSkillUiState(SkillUICharaState.normalia);
-                break;
+                id = AllyId.Noramlia;
+                return true;
             case SateliteProcessStates:
-                skillUi.OnlySelectActs(onlyRemainButtonByZoneTrait, onlyRemainButtonByType, 2);
-                skillUi.OnSkillSelectionScreenTransition(2);
-                SetSkillUiState(SkillUICharaState.sites);
-                break;
+                id = AllyId.Sites;
+                return true;
+            default:
+                return false;
         }
+    }
+
+    private SkillUICharaState ToSkillUiState(AllyId allyId)
+    {
+        return allyId switch
+        {
+            AllyId.Geino => SkillUICharaState.geino,
+            AllyId.Noramlia => SkillUICharaState.normalia,
+            AllyId.Sites => SkillUICharaState.sites,
+            _ => SkillUICharaState.geino
+        };
     }
 
     public void AddLog(string message, bool important)

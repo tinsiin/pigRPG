@@ -38,6 +38,19 @@ public abstract partial class BaseStates
         schizoLog?.AddLog(message, important);
     }
 
+    public IPlayersTuning Tuning { get; private set; }
+    public IPlayersSkillUI SkillUI { get; private set; }
+
+    public void BindTuning(IPlayersTuning tuning)
+    {
+        Tuning = tuning;
+    }
+
+    public void BindSkillUI(IPlayersSkillUI skillUi)
+    {
+        SkillUI = skillUi;
+    }
+
     //  ==============================================================================================================================
     //                                              UI
     //  ==============================================================================================================================
@@ -98,6 +111,9 @@ public abstract partial class BaseStates
     /// </summary>
     protected void InitBaseStatesDeepCopy(BaseStates dst)
     {
+        dst.BindTuning(Tuning);
+        dst.BindSkillUI(SkillUI);
+
         //_passiveListは戦闘されないと入らない
         //初期所持パッシブがあるのなら、_passiveListに入れて渡す
         if(InitpassiveIDList.Count > 0)

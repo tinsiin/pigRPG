@@ -3,8 +3,8 @@ using UnityEngine.UI;
 
 public class PlayersUIRefs : MonoBehaviour
 {
-    [Header(PlayersStates.AllyIndexHeader)]
-    public AllyUISet[] AllyUISets = new AllyUISet[3];
+    [Header(PlayersConstants.AllyIndexHeader)]
+    public AllyUISet[] AllyUISets = new AllyUISet[PlayersConstants.AllyCount];
 
     [Header("モーダルエリア")]
     public GameObject ModalArea;
@@ -22,7 +22,7 @@ public class PlayersUIRefs : MonoBehaviour
     public void EnsureAllyUISets()
     {
         var count = AllyUISets != null ? AllyUISets.Length : 0;
-        if (count <= 0) count = 3;
+        if (count <= 0) count = PlayersConstants.AllyCount;
 
         if (AllyUISets == null || AllyUISets.Length != count)
         {

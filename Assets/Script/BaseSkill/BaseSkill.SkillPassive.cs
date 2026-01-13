@@ -125,10 +125,10 @@ public partial class BaseSkill
                 }
 
                 //選択ボタンエリア生成と受け取り
-                var skillUi = PlayersStatesHub.SkillUI;
+                var skillUi = Doer?.SkillUI;
                 if (skillUi == null)
                 {
-                    Debug.LogError("BaseSkill.SkillPassive: PlayersStatesHub.SkillUI が null です");
+                    Debug.LogError("BaseSkill.SkillPassive: SkillUI が null です");
                     return null;
                 }
                 var result = await skillUi.GoToSelectSkillPassiveTargetSkillButtonsArea(targetSkills, SkillPassiveEffectCount);

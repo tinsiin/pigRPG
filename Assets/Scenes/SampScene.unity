@@ -7763,7 +7763,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: PlayersStates, Assembly-CSharp
+        m_TargetAssemblyTypeName: PlayersBootstrapper, Assembly-CSharp
         m_MethodName: GoToCancelPassiveField_geino
         m_Mode: 1
         m_Arguments:
@@ -35106,7 +35106,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: PlayersStates, Assembly-CSharp
+        m_TargetAssemblyTypeName: PlayersBootstrapper, Assembly-CSharp
         m_MethodName: Geino_OpenEmotionalAttachmentSkillSelectUIArea
         m_Mode: 1
         m_Arguments:
@@ -39401,9 +39401,9 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1195921976}
-        m_TargetAssemblyTypeName: PlayersStates, Assembly-CSharp
-        m_MethodName: ReturnCancelPassiveToDefaultArea
-        m_Mode: 3
+        m_TargetAssemblyTypeName: PlayersBootstrapper, Assembly-CSharp
+        m_MethodName: ReturnCancelPassiveToDefaultArea_geino
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -56716,7 +56716,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: PlayersStates, Assembly-CSharp
+        m_TargetAssemblyTypeName: PlayersBootstrapper, Assembly-CSharp
         m_MethodName: CheckGeinoTenDayValuesCallBack
         m_Mode: 1
         m_Arguments:

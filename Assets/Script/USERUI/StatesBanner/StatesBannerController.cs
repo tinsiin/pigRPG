@@ -11,7 +11,7 @@ using UnityEngine.UI;
 public class StatesBannerController : MonoBehaviour
 {
     [Header("General Components")]
-    [Header(PlayersStates.AllyIndexHeader)]
+    [Header(PlayersConstants.AllyIndexHeader)]
     [SerializeField] private Sprite[] m_BackGroungSprites;
     [SerializeField] private Image m_InkBackGround;
     [Header("0Page Components")]

@@ -44,14 +44,14 @@ public sealed class PlayersPartyService : IPlayersParty
         walkLoopService.PlayersOnWalks(walkCount);
     }
 
-    public void RequestStopFreezeConsecutive(int index)
+    public void RequestStopFreezeConsecutive(AllyId allyId)
     {
-        var allies = roster.Allies;
-        if (index < 0 || allies == null || index >= allies.Length)
+        var actor = roster.GetAllyById(allyId);
+        if (actor == null)
         {
-            Debug.LogWarning($"RequestStopFreezeConsecutive: index {index} が不正です。");
+            Debug.LogWarning($"RequestStopFreezeConsecutive: allyId {allyId} が不正です。");
             return;
         }
-        allies[index].TurnOnDeleteMyFreezeConsecutiveFlag();
+        actor.TurnOnDeleteMyFreezeConsecutiveFlag();
     }
 }

@@ -21,9 +21,11 @@ public sealed class BattleOrchestrator
         BattleStartSituation first,
         MessageDropper messageDropper,
         float escapeRate,
-        IBattleMetaProvider metaProvider)
+        IBattleMetaProvider metaProvider,
+        IPlayersSkillUI skillUi,
+        IPlayersRoster roster)
     {
-        Manager = new BattleManager(allyGroup, enemyGroup, first, messageDropper, escapeRate, metaProvider);
+        Manager = new BattleManager(allyGroup, enemyGroup, first, messageDropper, escapeRate, metaProvider, skillUi, roster);
     }
 
     public TabState StartBattle()

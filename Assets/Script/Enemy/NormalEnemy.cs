@@ -370,7 +370,7 @@ public class NormalEnemy : BaseStates
     // 歩行に変化のあるものは敵グループはここら辺で一気に処理をする。
     //敵の初回エンカウント時のコールバックでもある。
     /// </summary>
-    public void ReEncountCallback()
+    public void ReEncountCallback(int nowProgress)
     {
         bool isFirstEncounter = false;
         var distanceTraveled = 0;//距離差分
@@ -381,15 +381,7 @@ public class NormalEnemy : BaseStates
             isFirstEncounter = true;
         }else{
             //二回目以降の遭遇なら移動距離を取得
-            var progress = PlayersStatesHub.Progress;
-            if (progress != null)
-            {
-                distanceTraveled = Math.Abs(progress.NowProgress - _lastEncounterProgress);//移動距離取得
-            }
-            else
-            {
-                Debug.LogWarning("PlayersStatesHub.Progress が null です。移動距離は0として扱います。");
-            }
+            distanceTraveled = Math.Abs(nowProgress - _lastEncounterProgress);//移動距離取得
         }
 
         //二回目以降の遭遇の処理
@@ -420,30 +412,14 @@ public class NormalEnemy : BaseStates
         TransitionPowerOnWalkByCharacterImpression();//パワー変化　精神属性で変化するがその精神属性は既に決まっているので
 
         //遭遇地点を記録する。
-        var progressForRecord = PlayersStatesHub.Progress;
-        if (progressForRecord != null)
-        {
-            _lastEncounterProgress = progressForRecord.NowProgress;
-        }
-        else
-        {
-            Debug.LogWarning("PlayersStatesHub.Progress が null です。遭遇地点の記録をスキップします。");
-        }
+        _lastEncounterProgress = nowProgress;
 
         //死亡判定
             if (Death())//死亡時コールバックも呼ばれる
             {
                 if(Reborn && !broken)//復活するタイプであり、壊れてないものだけ
                 {
-                    var progressForRevive = PlayersStatesHub.Progress;
-                    if (progressForRevive != null)
-                    {
-                        ReadyRecovelyStep(progressForRevive.NowProgress);//復活歩数準備
-                    }
-                    else
-                    {
-                        Debug.LogWarning("PlayersStatesHub.Progress が null です。復活歩数準備をスキップします。");
-                    }
+                    ReadyRecovelyStep(nowProgress);//復活歩数準備
                 }
             }
     }

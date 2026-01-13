@@ -19,7 +19,7 @@ public abstract partial class BaseStates
     protected void MentalNaturalRecovelyPont()
     {
          // 精神HPを定数で割り回復量に変換する
-        var factor = PlayersStatesHub.Tuning?.MentalHpToPRecoveryConversionFactor ?? 120;
+        var factor = Tuning?.MentalHpToPRecoveryConversionFactor ?? 120;
         if (factor <= 0) factor = 120;
         var baseRecovelyP = (int)MentalHP / factor;
         

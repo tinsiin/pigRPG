@@ -18,7 +18,7 @@ public interface IPlayersParty
     void PlayersOnLost();
     void PlayersOnRunOut();
     void PlayersOnWalks(int walkCount);
-    void RequestStopFreezeConsecutive(int index);
+    void RequestStopFreezeConsecutive(AllyId allyId);
 }
 
 public interface IPlayersUIControl
@@ -28,11 +28,11 @@ public interface IPlayersUIControl
 
 public interface IPlayersSkillUI
 {
-    void OnlySelectActs(SkillZoneTrait trait, SkillType type, int index);
-    void OnSkillSelectionScreenTransition(int index);
+    void OnlySelectActs(SkillZoneTrait trait, SkillType type, AllyId allyId);
+    void OnSkillSelectionScreenTransition(AllyId allyId);
     UniTask<List<BaseSkill>> GoToSelectSkillPassiveTargetSkillButtonsArea(List<BaseSkill> skills, int selectCount);
     void ReturnSelectSkillPassiveTargetSkillButtonsArea();
-    void OpenEmotionalAttachmentSkillSelectUIArea(int index);
+    void OpenEmotionalAttachmentSkillSelectUIArea(AllyId allyId);
     void OnBattleStart();
 }
 
@@ -47,6 +47,6 @@ public interface IPlayersTuning
 public interface IPlayersRoster
 {
     int AllyCount { get; }
-    bool TryGetAllyIndex(BaseStates actor, out int index);
-    BaseStates GetAllyByIndex(int index);
+    bool TryGetAllyId(BaseStates actor, out AllyId id);
+    BaseStates GetAllyById(AllyId id);
 }

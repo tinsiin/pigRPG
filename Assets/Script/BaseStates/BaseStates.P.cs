@@ -18,7 +18,7 @@ public abstract partial class BaseStates
     {
         get
         {
-            var factor = PlayersStatesHub.Tuning?.HpToMaxPConversionFactor ?? 80;
+            var factor = Tuning?.HpToMaxPConversionFactor ?? 80;
             if (factor <= 0) factor = 80;
             return (int)_maxhp / factor;
         }

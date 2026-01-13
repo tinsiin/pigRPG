@@ -31,7 +31,7 @@ public sealed class PlayersUIService
         for (int i = 0; i < allies.Length; i++)
         {
             var actor = allies[i];
-            var uiSet = GetUISet(i);
+            var uiSet = GetUISet((AllyId)i);
 
             if (uiSet?.SkillUILists != null)
             {
@@ -71,7 +71,7 @@ public sealed class PlayersUIService
         var allies = roster.Allies;
         for (int i = 0; i < allies.Length; i++)
         {
-            var uiSet = GetUISet(i);
+            var uiSet = GetUISet((AllyId)i);
             if (uiSet?.SkillUILists == null) continue;
             var activeSkillIds = new HashSet<int>(allies[i].SkillList.Cast<AllySkill>().Select(skill => skill.ID));
             foreach (var hold in uiSet.SkillUILists.skillButtons)
@@ -89,9 +89,10 @@ public sealed class PlayersUIService
         }
     }
 
-    public void OnSkillSelectionScreenTransition(int index)
+    public void OnSkillSelectionScreenTransition(AllyId allyId)
     {
-        var uiSet = GetUISet(index);
+        var index = (int)allyId;
+        var uiSet = GetUISet(allyId);
         if (uiSet?.SkillUILists == null) return;
         var allies = roster.Allies;
         foreach (var radio in uiSet.SkillUILists.aggressiveCommitRadios.Where(rad => allies[index].ValidSkillIDList.Contains(rad.skillID)))
@@ -102,9 +103,10 @@ public sealed class PlayersUIService
         }
     }
 
-    public void OnlySelectActs(SkillZoneTrait trait, SkillType type, int index)
+    public void OnlySelectActs(SkillZoneTrait trait, SkillType type, AllyId allyId)
     {
-        var uiSet = GetUISet(index);
+        var index = (int)allyId;
+        var uiSet = GetUISet(allyId);
         if (uiSet?.SkillUILists == null) return;
         var allies = roster.Allies;
         foreach (var skill in allies[index].SkillList.Cast<AllySkill>())
@@ -133,17 +135,17 @@ public sealed class PlayersUIService
         uiSet.CancelPassiveButtonField?.ShowPassiveButtons(allies[index]);
     }
 
-    public void GoToCancelPassiveField(int index)
+    public void GoToCancelPassiveField(AllyId allyId)
     {
-        var uiSet = GetUISet(index);
+        var uiSet = GetUISet(allyId);
         if (uiSet?.DefaultButtonArea == null || uiSet.CancelPassiveButtonField == null) return;
         uiSet.DefaultButtonArea.gameObject.SetActive(false);
         uiSet.CancelPassiveButtonField.gameObject.SetActive(true);
     }
 
-    public void ReturnCancelPassiveToDefaultArea(int index)
+    public void ReturnCancelPassiveToDefaultArea(AllyId allyId)
     {
-        var uiSet = GetUISet(index);
+        var uiSet = GetUISet(allyId);
         if (uiSet?.DefaultButtonArea == null || uiSet.CancelPassiveButtonField == null) return;
         uiSet.CancelPassiveButtonField.gameObject.SetActive(false);
         uiSet.DefaultButtonArea.gameObject.SetActive(true);
@@ -168,9 +170,9 @@ public sealed class PlayersUIService
         skillPassiveSelectionUI.Close();
     }
 
-    public void OpenEmotionalAttachmentSkillSelectUIArea(int index)
+    public void OpenEmotionalAttachmentSkillSelectUIArea(AllyId allyId)
     {
-        emotionalAttachmentUI.OpenEmotionalAttachmentSkillSelectUIArea(index);
+        emotionalAttachmentUI.OpenEmotionalAttachmentSkillSelectUIArea(allyId);
     }
 
     public void OnBattleStart()
@@ -189,8 +191,9 @@ public sealed class PlayersUIService
         return SkillResourceFlow.CanCastSkill(actor, skill);
     }
 
-    private AllyUISet GetUISet(int index)
+    private AllyUISet GetUISet(AllyId allyId)
     {
+        var index = (int)allyId;
         if (allyUISets == null || index < 0 || index >= allyUISets.Length) return null;
         return allyUISets[index];
     }

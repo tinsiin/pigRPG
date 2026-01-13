@@ -826,7 +826,7 @@ public abstract partial class BaseStates
                 var eneSort = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.Sort);
                 var eneRain = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.Rain);
                 var eneCold = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.ColdHeartedCalm);
-                var ExVoid = PlayersStatesHub.Tuning?.ExplosionVoidValue ?? 10f;
+                var ExVoid = Tuning?.ExplosionVoidValue ?? 10f;
                 var counterValue = (myVond + mypersonDiver/(myTentvoid-ExVoid)) * 0.9f;//カウンターする側の特定能力値
                 var attackerValue = Mathf.Max(eneSort - eneRain/3,0)+eneCold;//攻撃者の特定能力値
 
