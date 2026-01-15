@@ -5,18 +5,21 @@ public sealed class PlayersStatesBattleMetaProvider : IBattleMetaProvider
     private readonly IPlayersProgress progress;
     private readonly IPlayersParty party;
     private readonly IPlayersUIControl uiControl;
+    private readonly int? nowProgressOverride;
 
     public PlayersStatesBattleMetaProvider(
         IPlayersProgress progress,
         IPlayersParty party,
-        IPlayersUIControl uiControl)
+        IPlayersUIControl uiControl,
+        int? nowProgressOverride = null)
     {
         this.progress = progress;
         this.party = party;
         this.uiControl = uiControl;
+        this.nowProgressOverride = nowProgressOverride;
     }
 
-    public int NowProgress => progress != null ? progress.NowProgress : 0;
+    public int NowProgress => nowProgressOverride ?? (progress != null ? progress.NowProgress : 0);
 
     public void OnPlayersWin()
     {

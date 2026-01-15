@@ -230,15 +230,7 @@ public class ActionMarkUI : MaskableGraphic
         {
             StartAnimation();
         }
-        // エディタ起動直後（プレイ前）は依存先が未初期化の可能性があるためガード
-        if (Application.isPlaying)
-        {
-            var walking = Walking.Instance;
-            if (walking != null && walking.NowStageData != null && walking.NowStageData.StageThemeColorUI != null)
-            {
-                SetStageThemeColor(walking.NowStageData.StageThemeColorUI.ActionMarkColor); // ゲーム起動時のステージの色を保持
-            }
-        }
+        // ステージ色はWalkingSystemManager/WatchUIUpdateから適用される想定
     }
 
     protected override void OnEnable()

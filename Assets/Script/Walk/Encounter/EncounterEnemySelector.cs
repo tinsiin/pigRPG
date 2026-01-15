@@ -1,0 +1,203 @@
+using System.Collections.Generic;
+using System.Linq;
+using RandomExtensions;
+using UnityEngine;
+using static CommonCalc;
+
+public static class EncounterEnemySelector
+{
+    public static BattleGroup SelectGroup(IReadOnlyList<NormalEnemy> enemies, int nowProgress, int number = -1)
+    {
+        if (enemies == null || enemies.Count == 0) return null;
+
+        var resultList = new List<NormalEnemy>();
+        var targetList = new List<NormalEnemy>(enemies);
+        var validEnemies = new List<NormalEnemy>();
+        PartyProperty ourImpression;
+
+        foreach (var ene in targetList)
+        {
+            if (ene == null) continue;
+            if (!ene.Death())
+            {
+                validEnemies.Add(ene);
+                continue;
+            }
+            if (ene.broken) continue;
+
+            if (ene.Reborn && ene.CanRebornWhatHeWill(nowProgress))
+            {
+                validEnemies.Add(ene);
+            }
+        }
+
+        foreach (var ene in validEnemies)
+        {
+            EnsureInitialized(ene);
+            ene.ReEncountCallback(nowProgress);
+        }
+
+        if (!validEnemies.Any())
+        {
+            return null;
+        }
+
+        var rndIndex = RandomEx.Shared.NextInt(0, validEnemies.Count);
+        var referenceOne = validEnemies[rndIndex];
+        referenceOne.InitializeMyImpression();
+        validEnemies.RemoveAt(rndIndex);
+        resultList.Add(referenceOne);
+
+        var manualCount = number >= 1;
+        var targetCount = manualCount ? Mathf.Clamp(number, 1, 3) : -1;
+
+        if (manualCount && targetCount == 1)
+        {
+            ourImpression = EnemyCollectManager.Instance.EnemyLonelyPartyImpression[resultList[0].MyImpression];
+            return CreateBattleGroup(resultList, ourImpression);
+        }
+
+        if (!manualCount &&
+            (EnemyCollectManager.Instance.LonelyMatchUp(resultList[0].MyImpression) || validEnemies.Count <= 0))
+        {
+            ourImpression = EnemyCollectManager.Instance.EnemyLonelyPartyImpression[resultList[0].MyImpression];
+            return CreateBattleGroup(resultList, ourImpression);
+        }
+
+        while (true)
+        {
+            if (manualCount && resultList.Count >= targetCount)
+            {
+                ourImpression = (resultList.Count == 1)
+                    ? EnemyCollectManager.Instance.EnemyLonelyPartyImpression[resultList[0].MyImpression]
+                    : EnemyCollectManager.Instance.calculatePartyProperty(resultList);
+                break;
+            }
+
+            if (manualCount && validEnemies.Count < 1)
+            {
+                ourImpression = (resultList.Count == 1)
+                    ? EnemyCollectManager.Instance.EnemyLonelyPartyImpression[resultList[0].MyImpression]
+                    : EnemyCollectManager.Instance.calculatePartyProperty(resultList);
+                break;
+            }
+
+            var targetIndex = RandomEx.Shared.NextInt(0, validEnemies.Count);
+            var target = validEnemies[targetIndex];
+            var okCount = 0;
+            var sympathy = false;
+
+            foreach (var ene in resultList)
+            {
+                if (ene.HP <= ene.MaxHP / 2) sympathy = true;
+            }
+            if (target.HP <= target.MaxHP / 2) sympathy = true;
+
+            for (var i = 0; i < resultList.Count; i++)
+            {
+                if (EnemyCollectManager.Instance.TypeMatchUp(resultList[i].MyType, target.MyType))
+                {
+                    if (EnemyCollectManager.Instance.ImpressionMatchUp(resultList[i].MyImpression, target.MyImpression, sympathy))
+                    {
+                        okCount++;
+                    }
+                }
+            }
+
+            if (okCount == resultList.Count)
+            {
+                target.InitializeMyImpression();
+                resultList.Add(target);
+                validEnemies.Remove(target);
+            }
+
+            if (!manualCount)
+            {
+                if (resultList.Count == 1)
+                {
+                    if (RandomEx.Shared.NextInt(100) < 88)
+                    {
+                        if (EnemyCollectManager.Instance.LonelyMatchUp(resultList[0].MyImpression))
+                        {
+                            ourImpression = EnemyCollectManager.Instance.EnemyLonelyPartyImpression[resultList[0].MyImpression];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!manualCount && resultList.Count == 2)
+            {
+                if (RandomEx.Shared.NextInt(100) < 65)
+                {
+                    ourImpression = EnemyCollectManager.Instance.calculatePartyProperty(resultList);
+                    break;
+                }
+            }
+
+            if (resultList.Count >= 3)
+            {
+                ourImpression = EnemyCollectManager.Instance.calculatePartyProperty(resultList);
+                break;
+            }
+
+            if (validEnemies.Count < 1)
+            {
+                ourImpression = EnemyCollectManager.Instance.calculatePartyProperty(resultList);
+                break;
+            }
+        }
+
+        return CreateBattleGroup(resultList, ourImpression);
+    }
+
+    private static void EnsureInitialized(NormalEnemy enemy)
+    {
+        if (enemy == null) return;
+        if (enemy.NowUseWeapon == null)
+        {
+            enemy.OnInitializeSkillsAndChara();
+            return;
+        }
+        var skills = enemy.SkillList;
+        if (skills == null) return;
+        for (var i = 0; i < skills.Count; i++)
+        {
+            var skill = skills[i];
+            if (skill == null) continue;
+            if (skill.Doer == null)
+            {
+                enemy.OnInitializeSkillsAndChara();
+                return;
+            }
+        }
+    }
+
+    private static BattleGroup CreateBattleGroup(List<NormalEnemy> resultList, PartyProperty ourImpression)
+    {
+        var compatibilityData = BuildCompatibilityData(resultList);
+        return new BattleGroup(resultList.Cast<BaseStates>().ToList(), ourImpression, allyOrEnemy.Enemyiy, compatibilityData);
+    }
+
+    private static Dictionary<(BaseStates, BaseStates), int> BuildCompatibilityData(List<NormalEnemy> resultList)
+    {
+        var compatibilityData = new Dictionary<(BaseStates, BaseStates), int>();
+        if (resultList == null || resultList.Count < 2) return compatibilityData;
+
+        for (var i = 0; i < resultList.Count; i++)
+        {
+            for (var j = i + 1; j < resultList.Count; j++)
+            {
+                var first = resultList[i];
+                var second = resultList[j];
+                if (first == null || second == null) continue;
+                var compatibilityValue = EnemyCollectManager.Instance.GetImpressionMatchPercent(first.MyImpression, second.MyImpression);
+                compatibilityData[(first, second)] = compatibilityValue;
+                compatibilityValue = EnemyCollectManager.Instance.GetImpressionMatchPercent(second.MyImpression, first.MyImpression);
+                compatibilityData[(second, first)] = compatibilityValue;
+            }
+        }
+
+        return compatibilityData;
+    }
+}

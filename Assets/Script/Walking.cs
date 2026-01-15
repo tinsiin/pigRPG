@@ -10,16 +10,18 @@ using Unity.Profiling;
 
 public class Walking : MonoBehaviour, IPlayersContextConsumer
 {
-    WatchUIUpdate wui;
     [SerializeField] private TextMeshProUGUI tmp;
     [SerializeField] private Button walkbtn;
     [SerializeField] private Button _nextWaitBtn;
     [SerializeField] private SelectButton SelectButtonPrefab;
     [SerializeField] private int SelectBtnSize;
-    [SerializeField] private MessageDropper MessageDropper;
+    [SerializeField] private WalkingSystemManager walkingSystemManager;
     public static Walking Instance;
+    private int _queuedWalks = 0;
     // Walkボタンの再入防止フラグ（多重起動防止）
     private bool _isWalking = false;
+    private bool _isExitSelectionActive = false;
+    private bool _allowExitSkip = false;
     private void Awake()
     {
         if (Instance == null)
@@ -71,14 +73,6 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
     /// </summary>
     private List<SelectButton> buttons;
 
-    private AreaDate NowAreaData;
-    [NonSerialized]
-    public StageCut NowStageCut;
-    private Stages stages;
-
-    //現在のステージとエリアのデータを保存する関数
-    [NonSerialized]
-    public StageData NowStageData;
     private IPlayersProgress playersProgress;
     private IPlayersParty playersParty;
     private IPlayersUIControl playersUIControl;
@@ -91,8 +85,6 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
         if (playersParty == null) Debug.LogError("playersParty が null です");
         if (playersUIControl == null) Debug.LogError("playersUIControl が null です");
         if (playersSkillUI == null) Debug.LogError("playersSkillUI が null です");
-        stages = Stages.Instance;
-        wui = WatchUIUpdate.Instance;
         BaseStates.CsvLoad();
         
         //初期UI更新　最適化のため最終開発の段階で初期UIの更新だけをするようにする。
@@ -130,26 +122,53 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
     /// </summary>
     public async void OnWalkBtn()
     {
-        BusyOverlay.Instance.Show();
+            if (walkingSystemManager == null)
+            {
+                walkingSystemManager = ResolveWalkingSystemManager();
+            }
+            if (walkingSystemManager == null)
+            {
+                Debug.LogError("WalkingSystemManager が見つかりません。");
+                return;
+            }
+
+            bool exitSkipRequested = TrySkipExitSelection();
+            if (exitSkipRequested)
+            {
+                if (_queuedWalks < 1)
+                {
+                    _queuedWalks = 1;
+                }
+                if (_isWalking)
+                {
+                    return;
+                }
+            }
+            bool skipRequested = walkingSystemManager.TrySkipApproach();
+            if (skipRequested)
+            {
+                if (_queuedWalks < 1)
+                {
+                    _queuedWalks = 1;
+                }
+                if (_isWalking)
+                {
+                    return;
+                }
+            }
+
             // 多重起動を無視
             if (_isWalking) return;
             Debug.Log("歩行ボタン押された");
 
-            // 事前検証（null時は実行しない）
-            if (stages == null) { Debug.LogError("stagesが認識されていない"); return; }
-            if (playersProgress == null) { Debug.LogError("playersProgress が認識されていない"); return; }
-            if (playersParty == null)    { Debug.LogError("playersParty が認識されていない");    return; }
-
+            if (_queuedWalks < 1)
+            {
+                _queuedWalks = 1;
+            }
             _isWalking = true;
-            bool? prevInteractable = null;
             try
             {
-                if (walkbtn != null)
-                {
-                    prevInteractable = walkbtn.interactable;
-                    walkbtn.interactable = false; // 実行中は押せない状態に
-                }
-                await Walk(1);
+                await RunQueuedWalksAsync();
             }
             catch (Exception ex)
             {
@@ -157,12 +176,69 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
             }
             finally
             {
-                if (walkbtn != null && prevInteractable.HasValue)
-                {
-                    walkbtn.interactable = prevInteractable.Value; // UIを元に戻す
-                }
                 _isWalking = false;
+        }
+    }
+
+    public void BeginExitSelection(bool allowWalkSkip)
+    {
+        _isExitSelectionActive = true;
+        _allowExitSkip = allowWalkSkip;
+    }
+
+    public void EndExitSelection()
+    {
+        _isExitSelectionActive = false;
+        _allowExitSkip = false;
+    }
+
+    private bool TrySkipExitSelection()
+    {
+        if (!_isExitSelectionActive || !_allowExitSkip) return false;
+        if (AreaResponse != -1) return false;
+        AreaResponse = -2;
+        return true;
+    }
+
+    private WalkingSystemManager ResolveWalkingSystemManager()
+    {
+        var found = FindObjectOfType<WalkingSystemManager>();
+        if (found != null && found.HasRootGraph) return found;
+        if (found != null) return found;
+
+        var all = Resources.FindObjectsOfTypeAll<WalkingSystemManager>();
+        if (all == null || all.Length == 0) return null;
+
+        WalkingSystemManager fallbackWithGraph = null;
+        for (var i = 0; i < all.Length; i++)
+        {
+            var candidate = all[i];
+            if (candidate == null) continue;
+            if (candidate.HasRootGraph)
+            {
+                if (candidate.gameObject.activeInHierarchy) return candidate;
+                if (fallbackWithGraph == null) fallbackWithGraph = candidate;
             }
+        }
+
+        if (fallbackWithGraph != null) return fallbackWithGraph;
+        for (var i = 0; i < all.Length; i++)
+        {
+            var candidate = all[i];
+            if (candidate == null) continue;
+            if (candidate.gameObject.activeInHierarchy) return candidate;
+        }
+
+        return all[0];
+    }
+
+    private async UniTask RunQueuedWalksAsync()
+    {
+        while (_queuedWalks > 0)
+        {
+            _queuedWalks--;
+            await walkingSystemManager.RunOneStepAsync();
+        }
     }
 
     private async UniTask OnClickNextWaitBtn()
@@ -178,99 +254,40 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
         USERUI_state.Value = orchestrator.CurrentUiState;
     }
 
-    public BattleOrchestrator orchestrator;
-    public IBattleContext BattleContext => orchestrator?.Manager;
-    private async UniTask Encount()
+    public void BeginBattle(BattleOrchestrator nextOrchestrator, TabState initialState)
     {
-        var enemyNumber = 2;//エンカウント人数を指定できる。　-1が普通の自動調整モード
-        var initializer = new BattleInitializer(MessageDropper);
-        var result = await initializer.InitializeBattle(NowStageCut, playersParty, playersProgress, playersUIControl, playersSkillUI, playersRoster, playersTuning, enemyNumber);
-        if (!result.EncounterOccurred)
+        if (nextOrchestrator == null)
         {
-            Debug.Log("No encounter");
-            BusyOverlay.Instance.Hide();
+            Debug.LogWarning("Walking.BeginBattle: orchestrator is null.");
             return;
         }
 
-        orchestrator = result.Orchestrator;
+        orchestrator = nextOrchestrator;
+        USERUI_state.Value = initialState;
 
-        USERUI_state.Value = initializer.SetupInitialBattleUI(orchestrator);//一番最初のUSERUIの状態を変更させるのと戦闘ループの最初の準備処理。
-        // リスナーの重複登録を防止
+        if (_nextWaitBtn == null)
+        {
+            Debug.LogWarning("Walking.BeginBattle: NextWait button is null.");
+            return;
+        }
+
         _nextWaitBtn.onClick.RemoveAllListeners();
-        _nextWaitBtn.onClick.AddListener(() => OnClickNextWaitBtn().Forget()); //ボタンにbmの処理を追加
-        //非同期なのでボタン処理自体は非同期で実行されるが、例えばUI側での他のボタンや、このボタン自体の処理を防ぐってのはないけど、
-        //そこは内部でのUI処理で対応してるから平気
-
-        BusyOverlay.Instance.Hide();
+        _nextWaitBtn.onClick.AddListener(() => OnClickNextWaitBtn().Forget());
     }
 
-    //メインループ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
-    //☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
-    private async UniTask Walk(int footnumber) //リストの内容を反映
-    {
-        WatchUIUpdate.Instance?.BeginWalkCycleTiming();
-        orchestrator = null;//歩くたびに消しとく
-        try
-        {
-            //ps.AddProgress(footnumber); //進行度を増やす。
-            StageDataUpdate();
-
-            //主人公達の歩行時の処理
-            playersParty.PlayersOnWalks(1);//footnumber関係なしに一歩分の効果(テスト用)
-
-            //EYEArea歩行の更新
-            wui.StageDataUIUpdate(NowStageData, NowStageCut, playersProgress); 
-            //Encount前にサイドオブジェクト動かさないと、ズーム前のdelay処理で後から出てくる感じが気持ち悪いからここに。
-
-            //エンカウント
-            await Encount();
-
-
-
-
-            /*/*if (NowAreaData.Rest) //休憩地点なら
-                Debug.Log("ここは休憩地点");
-
-            if (!string.IsNullOrEmpty(NowAreaData.NextID)) //次のエリア選択肢
-            {
-                var arr = NowAreaData.NextIDString.Split(","); //選択肢文章を小分け
-                var arr2 = NowAreaData.NextID.Split(","); //選択肢のIDを小分け
-
-                playersProgress.SetArea(await CreateAreaButton(arr, arr2));
-                playersProgress.ProgressReset();
-            }
-
-            if (string.IsNullOrEmpty(NowAreaData.NextStageID)) //次のステージへ(選択肢なし)
-            {
-            }*/
-
-            TestProgressUIUpdate(); //テスト用進行度ui更新
-
-            
-        }
-        finally
-        {
-            WatchUIUpdate.Instance?.EndWalkCycleTiming();
-        }
-    }
-
-    /// <summary>
-    ///     ステージデータの更新　uiの更新も行う
-    /// </summary>
-    private void StageDataUpdate()
-    {
-        NowStageData = stages.RunTimeStageDates[playersProgress.NowStageID]; //現在のステージデータ
-        NowStageCut = NowStageData.CutArea[playersProgress.NowAreaID]; //現在のエリアデータ
-        NowAreaData = NowStageCut.AreaDates[playersProgress.NowProgress]; //現在地点
-    }
-
+    public BattleOrchestrator orchestrator;
+    public IBattleContext BattleContext => orchestrator?.Manager;
     /// <summary>
     ///     次のエリア選択肢のボタンを生成。
     /// </summary>
     /// <param name="selectparams"></param>
     public async UniTask<int> CreateAreaButton(string[] stringParams, string[] idParams)
     {
-        walkbtn.enabled = false;
+        var prevWalkEnabled = walkbtn != null && walkbtn.enabled;
+        if (walkbtn != null && !_allowExitSkip)
+        {
+            walkbtn.enabled = false;
+        }
         AreaResponse = -1; //ボタン解答が進まないよう無効化
         var index = 0;
         //var tasks = new List<UniTask>();
@@ -288,7 +305,10 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
         await UniTask.WaitUntil(() => AreaResponse != -1, cancellationToken: this.GetCancellationTokenOnDestroy());
 
         AreaButtonClose();
-        walkbtn.enabled = true;
+        if (walkbtn != null)
+        {
+            walkbtn.enabled = prevWalkEnabled;
+        }
 
         var res = AreaResponse;
 
@@ -298,8 +318,20 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
     // ベンチマーク用: 実処理の1歩分をそのまま実行（A/W/IntroJit を更新）
     public async UniTask RunOneWalkStepForBenchmark()
     {
-        await Walk(1);
-        await orchestrator.EndBattle();//後処理しないとUIが増え続けて重くなって、適切なベンチマーク測定不可能になる。
+        if (walkingSystemManager == null)
+        {
+            walkingSystemManager = ResolveWalkingSystemManager();
+        }
+        if (walkingSystemManager == null)
+        {
+            Debug.LogError("WalkingSystemManager が見つかりません。");
+            return;
+        }
+        await walkingSystemManager.RunOneStepAsync();
+        if (orchestrator != null)
+        {
+            await orchestrator.EndBattle();
+        }
     }
 
     /// <summary>

@@ -243,6 +243,9 @@ public class Stages : MonoBehaviour
         ///     敵のリスト
         /// </summary>
         public IReadOnlyList<NormalEnemy> EnemyList => _enemyList;
+        public int EncounterRateValue => EncounterRate;
+        public GameObject[] SideObjectLefts => _sideObject_Lefts;
+        public GameObject[] SideObjectRights => _sideObject_Rights;
 
         public StageCut DeepCopy()
         {

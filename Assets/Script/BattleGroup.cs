@@ -39,7 +39,7 @@ public class BattleGroup
         Ours = ours;
         OurImpression = ourImpression;
         which = _which;
-        CharaCompatibility = CompatibilityData;
+        CharaCompatibility = CompatibilityData ?? new Dictionary<(BaseStates, BaseStates), int>();
     }
     /// <summary>
     /// グループ全員の現在HP

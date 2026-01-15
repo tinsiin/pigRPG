@@ -126,6 +126,11 @@ public class NormalEnemy : BaseStates
     /// </summary>
     public override void OnInitializeSkillsAndChara()
     {
+        EnsureBaseTenDayValues();
+        if (NowUseWeapon == null && WeaponManager.Instance != null)
+        {
+            ApplyWeapon(InitWeaponID);
+        }
         foreach (var skill in EnemySkillList)
         {
             skill.OnInitialize(this);

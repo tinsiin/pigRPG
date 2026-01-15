@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -16,61 +17,80 @@ public class BattleInitializer
         _watchUIUpdate = WatchUIUpdate.Instance;
     }
     
-    /// <summary>
-    /// 戦闘を初期化し、BattleOrchestratorを生成
-    /// </summary>
-    public async UniTask<BattleSetupResult> InitializeBattle(
-        StageCut nowStageCut,
+    public UniTask<BattleSetupResult> InitializeBattle(
+        IReadOnlyList<NormalEnemy> enemies,
+        int nowProgress,
         IPlayersParty playersParty,
         IPlayersProgress playersProgress,
         IPlayersUIControl playersUIControl,
         IPlayersSkillUI playersSkillUI,
         IPlayersRoster playersRoster,
         IPlayersTuning playersTuning,
-        int enemyNumber = 2)
+        float escapeRate,
+        int enemyNumber = 2,
+        IBattleMetaProvider metaProviderOverride = null)
+    {
+        var enemyGroup = EncounterEnemySelector.SelectGroup(enemies, nowProgress, enemyNumber);
+        return InitializeBattleFromGroup(
+            enemyGroup,
+            playersParty,
+            playersProgress,
+            playersUIControl,
+            playersSkillUI,
+            playersRoster,
+            playersTuning,
+            escapeRate,
+            metaProviderOverride);
+    }
+
+    private async UniTask<BattleSetupResult> InitializeBattleFromGroup(
+        BattleGroup enemyGroup,
+        IPlayersParty playersParty,
+        IPlayersProgress playersProgress,
+        IPlayersUIControl playersUIControl,
+        IPlayersSkillUI playersSkillUI,
+        IPlayersRoster playersRoster,
+        IPlayersTuning playersTuning,
+        float escapeRate,
+        IBattleMetaProvider metaProviderOverride)
     {
         var result = new BattleSetupResult();
         if (playersParty == null)
         {
-            Debug.LogError("BattleInitializer.InitializeBattle: playersParty が null です");
+            Debug.LogError("BattleInitializer.InitializeBattleFromGroup: playersParty が null です");
             result.EncounterOccurred = false;
             return result;
         }
-        
-        // 敵グループ生成
-        var nowProgress = playersProgress != null ? playersProgress.NowProgress : 0;
-        result.EnemyGroup = nowStageCut.EnemyCollectAI(nowProgress, enemyNumber);
-        if (result.EnemyGroup == null)
+
+        if (enemyGroup == null)
         {
             result.EncounterOccurred = false;
             return result;
         }
-        
+
         result.EncounterOccurred = true;
-        
-        // 味方グループ選出
+        result.EnemyGroup = enemyGroup;
+
         result.AllyGroup = DetermineAllyGroup(result.EnemyGroup, playersParty);
 
         BindTuning(result.AllyGroup, playersTuning);
         BindTuning(result.EnemyGroup, playersTuning);
         BindSkillUi(result.AllyGroup, playersSkillUI);
-        
-        // BattleOrchestrator生成
-        var metaProvider = new PlayersStatesBattleMetaProvider(playersProgress, playersParty, playersUIControl);
+
+        var metaProvider = metaProviderOverride ?? new PlayersStatesBattleMetaProvider(playersProgress, playersParty, playersUIControl);
         result.Orchestrator = new BattleOrchestrator(
             result.AllyGroup,
             result.EnemyGroup,
             BattleStartSituation.Normal,
             _messageDropper,
-            nowStageCut.EscapeRate,
+            escapeRate,
             metaProvider,
             playersSkillUI,
             playersRoster
         );
         BattleOrchestratorHub.Set(result.Orchestrator);
         result.BattleContext = result.Orchestrator.Manager;
-        
-        // プレイヤー状態を戦闘開始に更新
+
         if (playersSkillUI != null)
         {
             playersSkillUI.OnBattleStart();
@@ -79,13 +99,12 @@ public class BattleInitializer
         {
             Debug.LogError("BattleInitializer: SkillUI が null です");
         }
-        
-        // ズーム演出実行
+
         if (_watchUIUpdate != null)
         {
             await _watchUIUpdate.FirstImpressionZoomImproved();
         }
-        
+
         return result;
     }
     

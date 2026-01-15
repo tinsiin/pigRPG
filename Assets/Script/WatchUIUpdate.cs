@@ -947,6 +947,7 @@ public partial class WatchUIUpdate : MonoBehaviour
     [SerializeField] private TextMeshProUGUI StagesString; //ステージとエリア名のテキスト
     [SerializeField] private TenmetuNowImage MapImg; //直接で現在位置表示する簡易マップ
     [SerializeField] private RectTransform bgRect; //背景のRectTransform
+    public RectTransform SideObjectRoot => bgRect;
 
     //ズーム用変数
     [SerializeField] private AnimationCurve _firstZoomAnimationCurve;
@@ -1216,13 +1217,19 @@ public partial class WatchUIUpdate : MonoBehaviour
     }
 
     /// <summary>
-    ///     歩行時のEYEAREAのUI更新
+    ///     新歩行システム向けのUI更新
     /// </summary>
-    public void StageDataUIUpdate(StageData sd, StageCut sc, IPlayersProgress pla)
+    public void ApplyNodeUI(string displayName, NodeUIHints hints)
     {
-        StagesString.text = sd.StageName + "・\n" + sc.AreaName;
-        NowImageCalc(sc, pla);
-        SideObjectManage(sc, SideObject_Type.Normal, sd.StageThemeColorUI.FrameArtColor,sd.StageThemeColorUI.TwoColor);//サイドオブジェクト（ステージ色適用）
+        if (StagesString != null && !string.IsNullOrEmpty(displayName))
+        {
+            StagesString.text = displayName;
+        }
+
+        if (hints.UseActionMarkColor && actionMark != null)
+        {
+            actionMark.SetStageThemeColor(hints.ActionMarkColor);
+        }
     }
 
     /// <summary>
@@ -2514,61 +2521,6 @@ public partial class WatchUIUpdate : MonoBehaviour
             
             // ここでは有効化せず、呼び出し側でバッチ一括有効化する
             return UniTask.FromResult(uiInstance);
-    }
-
-    
-/// <summary>
-    /// 歩行の度に更新されるSideObjectの管理
-    /// </summary>
-    private void SideObjectManage(StageCut nowStageCut, SideObject_Type type, Color themeColor,Color twoColor)
-    {
-
-        var GetObjects = nowStageCut.GetRandomSideObject();//サイドオブジェクトLEFTとRIGHTを取得
-
-        //サイドオブジェクト二つ分の生成
-        for(int i =0; i < 2; i++)
-        {
-            if (TwoObjects[i] != null)
-            {
-                SideObjectMoves[i].FadeOut().Forget();//フェードアウトは待たずに処理をする。
-            }
-
-            TwoObjects[i] = Instantiate(GetObjects[i], bgRect);//サイドオブジェクトを生成、配列に代入
-            var LineObject = TwoObjects[i].GetComponent<UILineRenderer>();
-            LineObject.sideObject_Type = type;//引数のタイプを渡す。
-            // ステージテーマ色を適用（フェードイン初期値に反映されるようStart前にセット）
-            if (LineObject != null)
-            {
-                LineObject.lineColor = themeColor;
-                LineObject.two = twoColor;
-                LineObject.SetVerticesDirty();
-            }
-            SideObjectMoves[i] = TwoObjects[i].GetComponent<SideObjectMove>();//スクリプトを取得
-            SideObjectMoves[i].boostSpeed=3.0f;//スピードを初期化
-            LiveSideObjects[i].Add(SideObjectMoves[i]);//生きているリスト(左右どちらか)に追加
-            //Debug.Log("サイドオブジェクト生成[" + i +"]");
-
-            //数が多くなりだしたら
-            /*if (LiveSideObjects[i].Count > 2) {
-                SideObjectMoves[i].boostSpeed = 3.0f;//スピードをブースト
-
-            }*/
-
-        }
-    }
-
-    /// <summary>
-    ///     簡易マップ現在地のUI更新とその処理
-    /// </summary>
-    private void NowImageCalc(StageCut sc, IPlayersProgress player)
-    {
-        //進行度自体の割合を計算
-        var Ratio = (float)player.NowProgress / (sc.AreaDates.Count - 1);
-        //進行度÷エリア数(countだから-1) 片方キャストしないと整数同士として小数点以下切り捨てられる。
-        //Debug.Log("現在進行度のエリア数に対する割合"+Ratio);
-
-        //lerpがベクトルを設定してくれる、調整された位置を渡す
-        MapImg.LocationSet(Vector2.Lerp(sc.MapLineS, sc.MapLineE, Ratio));
     }
 
     private bool _isZoomAnimating;

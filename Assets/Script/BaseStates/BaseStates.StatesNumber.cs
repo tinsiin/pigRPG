@@ -660,6 +660,21 @@ public abstract partial class BaseStates
     {
         get { return _baseTenDayValues; }
     }
+
+    protected void EnsureBaseTenDayValues()
+    {
+        if (_baseTenDayValues == null)
+        {
+            _baseTenDayValues = new TenDayAbilityDictionary();
+        }
+        if (_baseTenDayValues.Count > 0) return;
+        if (_tenDayTemplate == null) return;
+
+        foreach (var entry in _tenDayTemplate)
+        {
+            _baseTenDayValues[entry.Key] = entry.Value;
+        }
+    }
     /// <summary>
     /// 読み取り専用の十日能力値、直接代入しないで
     /// スキル専属十日値を参照するかは引数で指定する

@@ -217,11 +217,21 @@ public sealed class BattleUIBridge
 
     public void SetArrowColorsFromStage()
     {
-        var walking = Walking.Instance;
-        if (walking == null) return;
-        var stage = walking.NowStageData;
-        if (stage == null) return;
-        SetArrowColors(stage.StageThemeColorUI.FrameArtColor, stage.StageThemeColorUI.TwoColor);
+        WalkingSystemManager manager = UnityEngine.Object.FindObjectOfType<WalkingSystemManager>();
+        if (manager == null)
+        {
+            var all = Resources.FindObjectsOfTypeAll<WalkingSystemManager>();
+            for (var i = 0; i < all.Length; i++)
+            {
+                var candidate = all[i];
+                if (candidate == null) continue;
+                if (!candidate.gameObject.scene.IsValid()) continue;
+                manager = candidate;
+                break;
+            }
+        }
+        if (manager == null) return;
+        manager.ApplyCurrentNodeUI();
     }
 
     public void ApplyVanguardEffect(BaseStates newVanguard, BaseStates oldVanguard)
