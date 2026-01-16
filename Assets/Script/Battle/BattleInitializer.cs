@@ -19,7 +19,7 @@ public class BattleInitializer
     
     public UniTask<BattleSetupResult> InitializeBattle(
         IReadOnlyList<NormalEnemy> enemies,
-        int nowProgress,
+        int globalSteps,
         IPlayersParty playersParty,
         IPlayersUIControl playersUIControl,
         IPlayersSkillUI playersSkillUI,
@@ -29,7 +29,7 @@ public class BattleInitializer
         int enemyNumber = 2,
         IBattleMetaProvider metaProviderOverride = null)
     {
-        var enemyGroup = EncounterEnemySelector.SelectGroup(enemies, nowProgress, enemyNumber);
+        var enemyGroup = EncounterEnemySelector.SelectGroup(enemies, globalSteps, enemyNumber);
         return InitializeBattleFromGroup(
             enemyGroup,
             playersParty,

@@ -62,26 +62,26 @@ public class NormalEnemy : BaseStates
     /// </summary>
     private int _lastEncountProgressForReborn = -1;
     /// <summary>
-    /// 復活歩数をカウント変数にセットする。　
+    /// 復活歩数をカウント変数にセットする。
     /// </summary>
-    public void ReadyRecovelyStep(int nowProgress)
+    public void ReadyRecovelyStep(int globalSteps)
     {
-        _lastEncountProgressForReborn = nowProgress;//今回の進行度を保存する。
+        _lastEncountProgressForReborn = globalSteps;//今回の進行度を保存する。
         _recovelyStepCount = RecovelySteps;
     }
 
     /// <summary>
     /// "一回死んだ復活可能者"が復活するかどうか　要は今回復活するかまたはそもそも生きてるかどうか
     /// </summary>
-    public bool CanRebornWhatHeWill(int nowProgress)
+    public bool CanRebornWhatHeWill(int globalSteps)
     {
         if (_recovelyStepCount <= 0)
         {
             Debug.Log($"{CharacterName}はrecovelyStepCountがゼロなので復活可能です。");
             return true;//既にカウントがゼロなら生きてるってこと。　復活カウントもせずに返す
-        } 
+        }
 
-        var distanceTraveled = Math.Abs(nowProgress - _lastEncountProgressForReborn);//差の絶対値 = 移動距離 を取得
+        var distanceTraveled = Math.Abs(globalSteps - _lastEncountProgressForReborn);//差の絶対値 = 移動距離 を取得
 
         if((_recovelyStepCount -= distanceTraveled) <= 0)//復活までのカウントから(前エリアと今の進行度の差)を引いて0以下になったら
         {
@@ -90,7 +90,7 @@ public class NormalEnemy : BaseStates
             return true;//復活する。
         }
 
-        _lastEncountProgressForReborn = nowProgress;//もしカウントが終わってなかったら今回の進行度を保存する
+        _lastEncountProgressForReborn = globalSteps;//もしカウントが終わってなかったら今回の進行度を保存する
 
         return false;
     }
@@ -375,7 +375,7 @@ public class NormalEnemy : BaseStates
     // 歩行に変化のあるものは敵グループはここら辺で一気に処理をする。
     //敵の初回エンカウント時のコールバックでもある。
     /// </summary>
-    public void ReEncountCallback(int nowProgress)
+    public void ReEncountCallback(int globalSteps)
     {
         bool isFirstEncounter = false;
         var distanceTraveled = 0;//距離差分
@@ -386,7 +386,7 @@ public class NormalEnemy : BaseStates
             isFirstEncounter = true;
         }else{
             //二回目以降の遭遇なら移動距離を取得
-            distanceTraveled = Math.Abs(nowProgress - _lastEncounterProgress);//移動距離取得
+            distanceTraveled = Math.Abs(globalSteps - _lastEncounterProgress);//移動距離取得
         }
 
         //二回目以降の遭遇の処理
@@ -405,7 +405,7 @@ public class NormalEnemy : BaseStates
                 ResonanceHealingOnWalking();//歩行時思えの値回復
                 //RecoverMentalHPOnWalk();//歩行時精神HP回復 基本的に歩行時の精神hp回復はポイント用だし、それ抜きにしたら戦闘開始時に精神HPはmaxになるし。
                 //RecoverPointOnWalk();//歩行時ポイント回復 敵には外でスキル使うとかないから、戦闘時のポイント初期化で十分なので歩行回復なし
-            }          
+            }
 
             //歩行時の有効化されてないスキルの成長処理
             GrowSkillsNotEnabledOnReEncount(distanceTraveled);
@@ -417,14 +417,14 @@ public class NormalEnemy : BaseStates
         TransitionPowerOnWalkByCharacterImpression();//パワー変化　精神属性で変化するがその精神属性は既に決まっているので
 
         //遭遇地点を記録する。
-        _lastEncounterProgress = nowProgress;
+        _lastEncounterProgress = globalSteps;
 
         //死亡判定
             if (Death())//死亡時コールバックも呼ばれる
             {
                 if(Reborn && !broken)//復活するタイプであり、壊れてないものだけ
                 {
-                    ReadyRecovelyStep(nowProgress);//復活歩数準備
+                    ReadyRecovelyStep(globalSteps);//復活歩数準備
                 }
             }
     }

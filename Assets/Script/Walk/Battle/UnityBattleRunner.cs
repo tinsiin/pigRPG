@@ -34,7 +34,7 @@ public sealed class UnityBattleRunner : IBattleRunner
 
         var setup = await initializer.InitializeBattle(
             enemies,
-            context.NowProgress,
+            context.GlobalSteps,
             players.Party,
             players.UIControl,
             players.SkillUI,

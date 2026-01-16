@@ -9,7 +9,7 @@ public sealed class BattleOutcomeTracker : IBattleMetaProvider
         this.inner = inner;
     }
 
-    public int NowProgress => inner != null ? inner.NowProgress : 0;
+    public int GlobalSteps => inner != null ? inner.GlobalSteps : 0;
 
     public void OnPlayersWin()
     {

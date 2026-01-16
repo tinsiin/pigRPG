@@ -1,5 +1,7 @@
 # PlayersProgress 廃止計画
 
+**ステータス: クローズ（2026-01-16完了）**
+
 ## 概要
 
 旧歩行システムの遺物である `PlayersProgressTracker` を廃止し、新歩行システムの `GameContext.Counters` に完全統一する。
@@ -247,16 +249,175 @@ public static class GameContextHub
 - PlayersContext.cs
 - PlayersBootstrapper.cs
 
-### Phase 6: セーブデータ移行（オプション）
+### Phase 6: 旧システム残存物の完全削除
 
-**目的**: 既存セーブデータとの互換性を維持
+**目的**: 互換性のために残していた旧システム関連コードを完全に削除
+
+#### Phase 6A: 旧セーブデータ構造の削除
 
 **タスク**:
-1. 旧セーブデータを検出する処理を追加
-2. 旧 `NowProgress` を新 `GlobalSteps` に変換するマイグレーション処理
-3. マイグレーション完了フラグの管理
+1. `PlayersProgressSaveData` クラスを削除
+2. `PlayersSaveData.Progress` フィールドを削除
 
-**注意**: ゲームがまだ開発中であれば、この Phase はスキップ可能
+**影響範囲**:
+- PlayersSaveData.cs
+
+**注意**: 旧セーブデータは読み込めなくなる（開発中なので問題なし）
+
+#### Phase 6B: PlayersBootstrapper の Obsolete コード削除
+
+**タスク**:
+1. `NowStageID` プロパティを削除（Obsolete）
+2. `NowAreaID` プロパティを削除（Obsolete）
+3. `AddProgress` メソッドを削除（Obsolete）
+4. `ProgressReset` メソッドを削除（Obsolete）
+5. `SetArea` メソッドを削除（Obsolete）
+
+**影響範囲**:
+- PlayersBootstrapper.cs
+
+#### Phase 6C: NowProgress → GlobalSteps 名前統一
+
+**目的**: 旧システム由来の「NowProgress」という名前を新システムの「GlobalSteps」に統一
+
+**変更対象ファイル（計11ファイル）**:
+
+##### 1. IBattleMetaProvider.cs（インターフェース定義）
+```csharp
+// 変更前
+int NowProgress { get; }
+// 変更後
+int GlobalSteps { get; }
+```
+
+##### 2. WalkBattleMetaProvider.cs:14（実装）
+```csharp
+// 変更前
+public int NowProgress => GameContextHub.Current?.Counters?.GlobalSteps ?? 0;
+// 変更後
+public int GlobalSteps => GameContextHub.Current?.Counters?.GlobalSteps ?? 0;
+```
+
+##### 3. BattleOutcomeTracker.cs:12（ラッパー）
+```csharp
+// 変更前
+public int NowProgress => inner != null ? inner.NowProgress : 0;
+// 変更後
+public int GlobalSteps => inner != null ? inner.GlobalSteps : 0;
+```
+
+##### 4. EncounterContext.cs:5,11（プロパティ）
+```csharp
+// 変更前
+public int NowProgress { get; }
+NowProgress = gameContext != null ? gameContext.Counters.GlobalSteps : 0;
+// 変更後
+public int GlobalSteps { get; }
+GlobalSteps = gameContext != null ? gameContext.Counters.GlobalSteps : 0;
+```
+
+##### 5. BattleManager.cs:1352（呼び出し側）
+```csharp
+// 変更前
+var progress = metaProvider != null ? metaProvider.NowProgress : 0;
+// 変更後
+var progress = metaProvider != null ? metaProvider.GlobalSteps : 0;
+```
+
+##### 6. UnityBattleRunner.cs:37（引数渡し）
+```csharp
+// 変更前
+context.NowProgress,
+// 変更後
+context.GlobalSteps,
+```
+
+##### 7. BattleInitializer.cs:22,32（引数名）
+```csharp
+// 変更前（行22）
+int nowProgress,
+// 変更後
+int globalSteps,
+
+// 変更前（行32）
+var enemyGroup = EncounterEnemySelector.SelectGroup(enemies, nowProgress, enemyNumber);
+// 変更後
+var enemyGroup = EncounterEnemySelector.SelectGroup(enemies, globalSteps, enemyNumber);
+```
+
+##### 8. EncounterEnemySelector.cs:9,28,37（引数名・使用箇所）
+```csharp
+// 変更前（行9）
+public static BattleGroup SelectGroup(IReadOnlyList<NormalEnemy> enemies, int nowProgress, int number = -1)
+// 変更後
+public static BattleGroup SelectGroup(IReadOnlyList<NormalEnemy> enemies, int globalSteps, int number = -1)
+
+// 変更前（行28）
+if (ene.Reborn && ene.CanRebornWhatHeWill(nowProgress))
+// 変更後
+if (ene.Reborn && ene.CanRebornWhatHeWill(globalSteps))
+
+// 変更前（行37）
+ene.ReEncountCallback(nowProgress);
+// 変更後
+ene.ReEncountCallback(globalSteps);
+```
+
+##### 9. NormalEnemy.cs（引数名・変数名）
+変更箇所:
+- 行67: `ReadyRecovelyStep(int nowProgress)` → `ReadyRecovelyStep(int globalSteps)`
+- 行69: `_lastEncountProgressForReborn = nowProgress;` → `_lastEncountProgressForReborn = globalSteps;`
+- 行76: `CanRebornWhatHeWill(int nowProgress)` → `CanRebornWhatHeWill(int globalSteps)`
+- 行84: `Math.Abs(nowProgress - _lastEncountProgressForReborn)` → `Math.Abs(globalSteps - _lastEncountProgressForReborn)`
+- 行93: `_lastEncountProgressForReborn = nowProgress;` → `_lastEncountProgressForReborn = globalSteps;`
+- 行378: `ReEncountCallback(int nowProgress)` → `ReEncountCallback(int globalSteps)`
+- 行389: `Math.Abs(nowProgress - _lastEncounterProgress)` → `Math.Abs(globalSteps - _lastEncounterProgress)`
+- 行420: `_lastEncounterProgress = nowProgress;` → `_lastEncounterProgress = globalSteps;`
+- 行427: `ReadyRecovelyStep(nowProgress)` → `ReadyRecovelyStep(globalSteps)`
+
+##### 10. BattleGroup.cs:449,459（引数名・使用箇所）
+```csharp
+// 変更前（行449）
+public void RecovelyStart(int nowProgress)
+// 変更後
+public void RecovelyStart(int globalSteps)
+
+// 変更前（行459）
+ene.ReadyRecovelyStep(nowProgress);
+// 変更後
+ene.ReadyRecovelyStep(globalSteps);
+```
+
+##### 11. PlayersBootstrapper.cs:120（プロパティ名）
+```csharp
+// 変更前
+public int NowProgress => GameContextHub.Current?.Counters?.GlobalSteps ?? 0;
+// 変更後
+public int GlobalSteps => GameContextHub.Current?.Counters?.GlobalSteps ?? 0;
+```
+
+**除外対象（Archive フォルダ）**:
+- `Archive/Stages.cs` - 旧システムのアーカイブなので変更不要
+
+**内部フィールド（変更不要）**:
+- `NormalEnemy._lastEncountProgressForReborn` - 内部実装用、外部公開されていない
+- `NormalEnemy._lastEncounterProgress` - 同上
+
+**影響範囲サマリ**:
+| ファイル | 変更箇所数 |
+|----------|-----------|
+| IBattleMetaProvider.cs | 1 |
+| WalkBattleMetaProvider.cs | 1 |
+| BattleOutcomeTracker.cs | 1 |
+| EncounterContext.cs | 2 |
+| BattleManager.cs | 1 |
+| UnityBattleRunner.cs | 1 |
+| BattleInitializer.cs | 2 |
+| EncounterEnemySelector.cs | 3 |
+| NormalEnemy.cs | 9 |
+| BattleGroup.cs | 2 |
+| PlayersBootstrapper.cs | 1 |
+| **合計** | **24** |
 
 ## 依存関係
 
@@ -269,7 +430,9 @@ Phase 3 (UI表示) ← 並行可能 → Phase 4 (暫定恒久化)
     ↓                              ↓
     └──────────→ Phase 5 (廃止) ←──┘
                       ↓
-                Phase 6 (移行・オプション)
+    Phase 6A (旧セーブ構造削除) ← 並行可能 → Phase 6B (Obsolete削除)
+                      ↓
+            Phase 6C (名前統一・オプション)
 ```
 
 ## リスクと対策
@@ -282,12 +445,39 @@ Phase 3 (UI表示) ← 並行可能 → Phase 4 (暫定恒久化)
 
 ## 受け入れ条件
 
+### Phase 1-5（完了）
 - [x] `PlayersProgressTracker` が削除されている
 - [x] `GameContext.Counters.GlobalSteps` がセーブ/ロードされる
 - [x] UI表示が新システムの歩数を正しく表示する
 - [x] 敵復活が正しく動作する（WalkBattleMetaProvider経由）
 - [x] `NowProgress` / `PlayersProgress` 参照が歩行/遭遇/復活の基準から消えている（移行用途を除く）
 - [x] `GameContextHub` が null の場合にセーブ/ロードが安全にスキップされる
+- [x] コンパイルエラーがない
+- [x] 既存テストが通る
+
+### Phase 6A: 旧セーブデータ構造削除（完了）
+- [x] `PlayersProgressSaveData` クラスが削除されている
+- [x] `PlayersSaveData.Progress` フィールドが削除されている
+
+### Phase 6B: Obsolete コード削除（完了）
+- [x] `PlayersBootstrapper.NowStageID` が削除されている
+- [x] `PlayersBootstrapper.NowAreaID` が削除されている
+- [x] `PlayersBootstrapper.AddProgress` が削除されている
+- [x] `PlayersBootstrapper.ProgressReset` が削除されている
+- [x] `PlayersBootstrapper.SetArea` が削除されている
+
+### Phase 6C: 名前統一（完了）
+- [x] `IBattleMetaProvider.NowProgress` → `GlobalSteps` に変更
+- [x] `WalkBattleMetaProvider.NowProgress` → `GlobalSteps` に変更
+- [x] `BattleOutcomeTracker.NowProgress` → `GlobalSteps` に変更
+- [x] `EncounterContext.NowProgress` → `GlobalSteps` に変更
+- [x] `BattleManager.cs` の参照が `GlobalSteps` に変更
+- [x] `UnityBattleRunner.cs` の参照が `GlobalSteps` に変更
+- [x] `BattleInitializer.cs` の引数名が `globalSteps` に変更
+- [x] `EncounterEnemySelector.cs` の引数名が `globalSteps` に変更
+- [x] `NormalEnemy.cs` の引数名が `globalSteps` に変更（9箇所）
+- [x] `BattleGroup.cs` の引数名が `globalSteps` に変更
+- [x] `PlayersBootstrapper.NowProgress` → `GlobalSteps` に変更
 - [x] コンパイルエラーがない
 - [x] 既存テストが通る
 

@@ -5,17 +5,8 @@ using System.Collections.Generic;
 [Serializable]
 public sealed class PlayersSaveData
 {
-    public PlayersProgressSaveData Progress = new PlayersProgressSaveData();
     public List<PlayersAllySaveData> Allies = new List<PlayersAllySaveData>();
     public WalkProgressData WalkProgress;
-}
-
-[Serializable]
-public sealed class PlayersProgressSaveData
-{
-    public int NowProgress;
-    public int NowStageID;
-    public int NowAreaID;
 }
 
 [Serializable]

@@ -1349,7 +1349,7 @@ public class BattleManager : IBattleContext
         AllyGroup.ResetCharactersUseThinges();        
 
         //敵キャラは死んだりした該当者のみ選んで復活準備
-        var progress = metaProvider != null ? metaProvider.NowProgress : 0;
+        var progress = metaProvider != null ? metaProvider.GlobalSteps : 0;
         EnemyGroup.RecovelyStart(progress);
 
         //敵グループの終了時のスキルAI

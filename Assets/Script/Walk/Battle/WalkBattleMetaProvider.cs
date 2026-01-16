@@ -11,7 +11,7 @@ public sealed class WalkBattleMetaProvider : IBattleMetaProvider
         this.uiControl = uiControl;
     }
 
-    public int NowProgress => GameContextHub.Current?.Counters?.GlobalSteps ?? 0;
+    public int GlobalSteps => GameContextHub.Current?.Counters?.GlobalSteps ?? 0;
 
     public void OnPlayersWin()
     {

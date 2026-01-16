@@ -446,7 +446,7 @@ public class BattleGroup
     /// <summary>
     /// oursがnormalEnemyの時だけ利用する。リカバリーステップのカウント準備の処理
     /// </summary>
-    public void RecovelyStart(int nowProgress)
+    public void RecovelyStart(int globalSteps)
     {
         List<NormalEnemy> enes =  Ours.OfType<NormalEnemy>().ToList();
         if (enes.Count < 1) Debug.LogWarning("恐らくRecovelyStep用の関数を敵じゃないクラスで利用してる");
@@ -456,7 +456,7 @@ public class BattleGroup
 
             foreach(var ene in enes)
             {
-                ene.ReadyRecovelyStep(nowProgress);//敵キャラの復活歩数準備
+                ene.ReadyRecovelyStep(globalSteps);//敵キャラの復活歩数準備
             }
         }
     }

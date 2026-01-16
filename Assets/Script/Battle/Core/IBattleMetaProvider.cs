@@ -1,6 +1,6 @@
 public interface IBattleMetaProvider
 {
-    int NowProgress { get; }
+    int GlobalSteps { get; }
     void OnPlayersWin();
     void OnPlayersLost();
     void OnPlayersRunOut();

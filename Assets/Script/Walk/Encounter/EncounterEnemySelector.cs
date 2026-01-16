@@ -6,7 +6,7 @@ using static CommonCalc;
 
 public static class EncounterEnemySelector
 {
-    public static BattleGroup SelectGroup(IReadOnlyList<NormalEnemy> enemies, int nowProgress, int number = -1)
+    public static BattleGroup SelectGroup(IReadOnlyList<NormalEnemy> enemies, int globalSteps, int number = -1)
     {
         if (enemies == null || enemies.Count == 0) return null;
 
@@ -25,7 +25,7 @@ public static class EncounterEnemySelector
             }
             if (ene.broken) continue;
 
-            if (ene.Reborn && ene.CanRebornWhatHeWill(nowProgress))
+            if (ene.Reborn && ene.CanRebornWhatHeWill(globalSteps))
             {
                 validEnemies.Add(ene);
             }
@@ -34,7 +34,7 @@ public static class EncounterEnemySelector
         foreach (var ene in validEnemies)
         {
             EnsureInitialized(ene);
-            ene.ReEncountCallback(nowProgress);
+            ene.ReEncountCallback(globalSteps);
         }
 
         if (!validEnemies.Any())
