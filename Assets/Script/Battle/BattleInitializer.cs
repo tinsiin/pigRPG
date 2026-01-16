@@ -21,7 +21,6 @@ public class BattleInitializer
         IReadOnlyList<NormalEnemy> enemies,
         int nowProgress,
         IPlayersParty playersParty,
-        IPlayersProgress playersProgress,
         IPlayersUIControl playersUIControl,
         IPlayersSkillUI playersSkillUI,
         IPlayersRoster playersRoster,
@@ -34,7 +33,6 @@ public class BattleInitializer
         return InitializeBattleFromGroup(
             enemyGroup,
             playersParty,
-            playersProgress,
             playersUIControl,
             playersSkillUI,
             playersRoster,
@@ -46,7 +44,6 @@ public class BattleInitializer
     private async UniTask<BattleSetupResult> InitializeBattleFromGroup(
         BattleGroup enemyGroup,
         IPlayersParty playersParty,
-        IPlayersProgress playersProgress,
         IPlayersUIControl playersUIControl,
         IPlayersSkillUI playersSkillUI,
         IPlayersRoster playersRoster,
@@ -77,7 +74,7 @@ public class BattleInitializer
         BindTuning(result.EnemyGroup, playersTuning);
         BindSkillUi(result.AllyGroup, playersSkillUI);
 
-        var metaProvider = metaProviderOverride ?? new PlayersStatesBattleMetaProvider(playersProgress, playersParty, playersUIControl);
+        var metaProvider = metaProviderOverride ?? new WalkBattleMetaProvider(playersParty, playersUIControl);
         result.Orchestrator = new BattleOrchestrator(
             result.AllyGroup,
             result.EnemyGroup,

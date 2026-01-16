@@ -2,15 +2,14 @@ using System.Collections.Generic;
 
 public sealed class PlayersSaveService
 {
-    public PlayersSaveData Build(PlayersProgressTracker progress, PlayersRoster roster)
+    public PlayersSaveData Build(PlayersRoster roster)
     {
         var data = new PlayersSaveData();
 
-        if (progress != null)
+        var gameContext = GameContextHub.Current;
+        if (gameContext != null)
         {
-            data.Progress.NowProgress = progress.NowProgress;
-            data.Progress.NowStageID = progress.NowStageID;
-            data.Progress.NowAreaID = progress.NowAreaID;
+            data.WalkProgress = WalkProgressData.FromContext(gameContext);
         }
 
         var allies = roster?.Allies;
@@ -139,15 +138,14 @@ public sealed class PlayersSaveService
         return data;
     }
 
-    public void Apply(PlayersSaveData data, PlayersProgressTracker progress, PlayersRoster roster)
+    public void Apply(PlayersSaveData data, PlayersRoster roster)
     {
         if (data == null) return;
 
-        if (progress != null && data.Progress != null)
+        var gameContext = GameContextHub.Current;
+        if (gameContext != null && data.WalkProgress != null)
         {
-            progress.SetProgress(data.Progress.NowProgress);
-            progress.SetStage(data.Progress.NowStageID);
-            progress.SetArea(data.Progress.NowAreaID);
+            data.WalkProgress.ApplyToContext(gameContext);
         }
 
         var allies = roster?.Allies;

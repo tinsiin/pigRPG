@@ -13,7 +13,6 @@ public sealed class PlayersRuntimeConfig
 
 public sealed class PlayersRuntime
 {
-    private readonly PlayersProgressTracker progress = new PlayersProgressTracker();
     private readonly PlayersTuningConfig tuningConfig = new PlayersTuningConfig();
     private readonly PlayersRoster roster = new PlayersRoster();
     private readonly PlayersSaveService saveService = new PlayersSaveService();
@@ -36,7 +35,6 @@ public sealed class PlayersRuntime
     private int mentalHpToPRecoveryConversionFactor;
 
     public PlayersContext Context => context;
-    public IPlayersProgress Progress => progress;
     public IPlayersParty Party => partyService;
     public IPlayersUIControl UIControl => uiFacade;
     public IPlayersSkillUI SkillUI => uiFacade;
@@ -71,7 +69,7 @@ public sealed class PlayersRuntime
         ApplyConfig(config);
         RefreshTuningConfig();
 
-        context = new PlayersContext(progress, partyService, uiFacade, uiFacade, tuningConfig, roster);
+        context = new PlayersContext(partyService, uiFacade, uiFacade, tuningConfig, roster);
     }
 
     public void Shutdown()
@@ -84,10 +82,6 @@ public sealed class PlayersRuntime
         Debug.Log("Init");
 
         CreateDecideValues();
-
-        progress.SetProgress(0);
-        progress.SetStage(0);
-        progress.SetArea(0);
 
         BindTemplateContext();
         var allies = new AllyClass[]
@@ -172,12 +166,12 @@ public sealed class PlayersRuntime
 
     public PlayersSaveData CreateSaveData()
     {
-        return saveService.Build(progress, roster);
+        return saveService.Build(roster);
     }
 
     public void ApplySaveData(PlayersSaveData data)
     {
-        saveService.Apply(data, progress, roster);
+        saveService.Apply(data, roster);
         UpdateSkillButtonVisibility();
     }
 }

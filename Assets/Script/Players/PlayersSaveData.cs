@@ -7,6 +7,7 @@ public sealed class PlayersSaveData
 {
     public PlayersProgressSaveData Progress = new PlayersProgressSaveData();
     public List<PlayersAllySaveData> Allies = new List<PlayersAllySaveData>();
+    public WalkProgressData WalkProgress;
 }
 
 [Serializable]

@@ -93,4 +93,36 @@ public sealed class GameContext
         }
         return list;
     }
+
+    public IReadOnlyDictionary<string, bool> GetAllFlags()
+    {
+        return flags;
+    }
+
+    public IReadOnlyDictionary<string, int> GetAllCounters()
+    {
+        return counters;
+    }
+
+    public void RestoreFlags(IEnumerable<FlagEntry> entries)
+    {
+        flags.Clear();
+        if (entries == null) return;
+        foreach (var entry in entries)
+        {
+            if (entry == null || entry.Key == null) continue;
+            flags[entry.Key] = entry.Value;
+        }
+    }
+
+    public void RestoreCounters(IEnumerable<CounterEntry> entries)
+    {
+        counters.Clear();
+        if (entries == null) return;
+        foreach (var entry in entries)
+        {
+            if (entry == null || entry.Key == null) continue;
+            counters[entry.Key] = entry.Value;
+        }
+    }
 }

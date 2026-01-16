@@ -24,16 +24,22 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
     private void OnEnable()
     {
         PlayersContextRegistry.Register(this);
+        if (gameContext != null)
+        {
+            GameContextHub.Set(gameContext);
+        }
     }
 
     private void OnDisable()
     {
         PlayersContextRegistry.Unregister(this);
+        GameContextHub.Clear(gameContext);
         CleanupSpawnedObjects();
     }
 
     private void OnDestroy()
     {
+        GameContextHub.Clear(gameContext);
         CleanupSpawnedObjects();
     }
 
@@ -115,6 +121,7 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
         if (gameContext == null)
         {
             gameContext = new GameContext(playersContext);
+            GameContextHub.Set(gameContext);
         }
         else
         {

@@ -73,7 +73,6 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
     /// </summary>
     private List<SelectButton> buttons;
 
-    private IPlayersProgress playersProgress;
     private IPlayersParty playersParty;
     private IPlayersUIControl playersUIControl;
     private IPlayersSkillUI playersSkillUI;
@@ -81,7 +80,6 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
     private IPlayersTuning playersTuning;
     private  void Start()
     {
-        if (playersProgress == null) Debug.LogError("playersProgress が null です");
         if (playersParty == null) Debug.LogError("playersParty が null です");
         if (playersUIControl == null) Debug.LogError("playersUIControl が null です");
         if (playersSkillUI == null) Debug.LogError("playersSkillUI が null です");
@@ -109,7 +107,6 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
 
     public void InjectPlayersContext(PlayersContext context)
     {
-        playersProgress = context?.Progress;
         playersParty = context?.Party;
         playersUIControl = context?.UIControl;
         playersSkillUI = context?.SkillUI;
@@ -354,6 +351,7 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
     //最終的にeyearea側で一気にeyeareaのUIを処理するのを作って、そっちにデータを渡すようにする。
     private void TestProgressUIUpdate() //テスト用
     {
-        tmp.text = "" + playersProgress.NowProgress;
+        var steps = GameContextHub.Current?.Counters?.GlobalSteps ?? 0;
+        tmp.text = "" + steps;
     }
 }

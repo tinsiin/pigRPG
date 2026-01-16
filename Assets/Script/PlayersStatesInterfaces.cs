@@ -1,16 +1,6 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 
-public interface IPlayersProgress
-{
-    int NowProgress { get; }
-    int NowStageID { get; }
-    int NowAreaID { get; }
-    void AddProgress(int addPoint);
-    void ProgressReset();
-    void SetArea(int id);
-}
-
 public interface IPlayersParty
 {
     BattleGroup GetParty();

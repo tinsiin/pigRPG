@@ -117,11 +117,13 @@ public class PlayersBootstrapper : MonoBehaviour
         runtime?.UIFacade?.ReturnCancelPassiveToDefaultArea(allyId);
     }
 
-    public int NowProgress => runtime?.Progress?.NowProgress ?? 0;
+    public int NowProgress => GameContextHub.Current?.Counters?.GlobalSteps ?? 0;
 
-    public int NowStageID => runtime?.Progress?.NowStageID ?? 0;
+    [System.Obsolete("NowStageID is deprecated. Use new walk system instead.")]
+    public int NowStageID => 0;
 
-    public int NowAreaID => runtime?.Progress?.NowAreaID ?? 0;
+    [System.Obsolete("NowAreaID is deprecated. Use new walk system instead.")]
+    public int NowAreaID => 0;
 
     public void AllyAlliesUISetActive(bool isActive)
     {
@@ -133,20 +135,22 @@ public class PlayersBootstrapper : MonoBehaviour
         return runtime?.Party?.GetParty();
     }
 
+    [System.Obsolete("AddProgress is deprecated. Use new walk system (GameContext.Counters) instead.")]
     public void AddProgress(int addPoint)
     {
-        runtime?.Progress?.AddProgress(addPoint);
+        // Legacy method - no longer functional
     }
 
+    [System.Obsolete("ProgressReset is deprecated. Use new walk system instead.")]
     public void ProgressReset()
     {
-        runtime?.Progress?.ProgressReset();
+        // Legacy method - no longer functional
     }
 
+    [System.Obsolete("SetArea is deprecated. Use new walk system instead.")]
     public void SetArea(int id)
     {
-        runtime?.Progress?.SetArea(id);
-        Debug.Log(id + "をPlayerStatesに記録");
+        Debug.Log(id + "をPlayerStatesに記録 (deprecated)");
     }
 
     public void PlayersOnWin()

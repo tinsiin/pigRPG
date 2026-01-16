@@ -25,7 +25,7 @@ public sealed class UnityBattleRunner : IBattleRunner
         }
 
         var initializer = new BattleInitializer(messageDropper);
-        var metaProvider = new PlayersStatesBattleMetaProvider(players.Progress, players.Party, players.UIControl, context.NowProgress);
+        var metaProvider = new WalkBattleMetaProvider(players.Party, players.UIControl);
         var tracker = new BattleOutcomeTracker(metaProvider);
 
         var enemies = context.GameContext != null
@@ -36,7 +36,6 @@ public sealed class UnityBattleRunner : IBattleRunner
             enemies,
             context.NowProgress,
             players.Party,
-            players.Progress,
             players.UIControl,
             players.SkillUI,
             players.Roster,

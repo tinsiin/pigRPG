@@ -48,4 +48,9 @@ public sealed class WalkCounters
         NodeSteps = 0;
         TrackProgress = 0;
     }
+
+    public void SetGlobalSteps(int value)
+    {
+        GlobalSteps = Math.Max(0, value);
+    }
 }
