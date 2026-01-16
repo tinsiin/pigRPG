@@ -81,7 +81,9 @@ public class SelectTargetButtons : MonoBehaviour
         //範囲選択されたこと前提でこの後分岐するので。
         if (BattleOrchestratorHub.Current == null && !skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))
         {
-            acter.RangeWill |= skill.ZoneTrait;//実行者の範囲意志にそのままスキルの範囲性質を入れる。
+            // 旧UI経路: 正規化を適用してRangeWillに追加（競合解消）
+            var normalizedTrait = SkillZoneTraitNormalizer.NormalizeForInitial(skill.ZoneTrait);
+            acter.RangeWill = acter.RangeWill.Add(normalizedTrait);
         }
 
         // 現在の位置を初期化

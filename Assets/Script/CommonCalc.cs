@@ -92,7 +92,9 @@ public static class CommonCalc
     /// <summary>
     /// 単体系のスキル範囲性質
     /// </summary>
-    public static SkillZoneTrait SingleZoneTrait = SkillZoneTrait.CanPerfectSelectSingleTarget | SkillZoneTrait.CanSelectSingleTarget | 
-                                SkillZoneTrait.RandomSingleTarget | SkillZoneTrait.ControlByThisSituation;
+    /// <remarks>
+    /// SkillZoneTraitGroups.SingleTargetTraits を参照
+    /// </remarks>
+    public static SkillZoneTrait SingleZoneTrait => SkillZoneTraitGroups.SingleTargetTraits;
 
 }

@@ -1076,7 +1076,8 @@ public class BattleManager : IBattleContext
         //ランダム範囲でない範囲系など
         if(Acter.RangeWill == 0)
         {
-            Acter.RangeWill = skill.ZoneTrait;
+            // スキルの範囲性質を正規化してから代入（競合解消）
+            Acter.RangeWill = SkillZoneTraitNormalizer.NormalizeForInitial(skill.ZoneTrait);
         }
 
         //人数やスキルの攻撃傾向によって、被攻撃者の選別をする
@@ -1122,7 +1123,8 @@ public class BattleManager : IBattleContext
                 //_atkCountupは【連続攻撃実行完了】以外ではBattlemanager単位での戦闘終了時と死亡時にしかリセットされないので、次回引っ掛かってもそのまま連続攻撃の途中と認識される。
 
                 Acter.FreezeSkill();//連続実行の為凍結
-                Acter.SetFreezeRangeWill(skill.ZoneTrait);//範囲意志も凍結
+                // 範囲性質を正規化してから凍結（競合解消）
+                Acter.SetFreezeRangeWill(SkillZoneTraitNormalizer.NormalizeForInitial(skill.ZoneTrait));
             }
         }
         else //複数実行が終わり
@@ -1177,30 +1179,15 @@ public class BattleManager : IBattleContext
         // スキルの全性質をまず範囲意志に代入（サブ的性質も含むために）
         Acter.RangeWill = skill.ZoneTrait;
 
-        // すべてのランダム選択性質を一度除去する（これらは分岐のための性質なので実際の実行時には不要）=>詳しくはメモ、範囲性質の仕様書を参照
-        SkillZoneTrait randomTraits = SkillZoneTrait.RandomTargetALLSituation | 
-                                     SkillZoneTrait.RandomTargetALLorMulti | 
-                                     SkillZoneTrait.RandomTargetALLorSingle | 
-                                     SkillZoneTrait.RandomTargetMultiOrSingle;
-        Acter.RangeWill &= ~randomTraits;//まぁ別にこれ実行時に悪影響与えないから(そもそもここ以外で使われないし)別にここで無理に省かなくていいけど。
+        // SkillZoneTraitGroupsを使用して性質を除去（詳しくはメモ、範囲性質の仕様書を参照）
+        // ランダム分岐用性質を除去（これらは分岐のための性質なので実行時には不要）
+        Acter.RangeWill = Acter.RangeWill.Remove(SkillZoneTraitGroups.RandomBranchTraits);
 
-        // 実際の範囲性質（AllTarget, RandomMultiTarget, RandomSelectMultiTarget, RandomSingleTarget）も
-        // 一度除去して、これから適切なものを選択して追加するため=>詳しくはメモ、範囲性質の仕様書を参照
-        SkillZoneTrait rangeTraits = SkillZoneTrait.AllTarget | 
-                                    SkillZoneTrait.RandomMultiTarget | 
-                                    SkillZoneTrait.RandomSelectMultiTarget | 
-                                    SkillZoneTrait.RandomSingleTarget;
-        Acter.RangeWill &= ~rangeTraits;
+        // 実際の範囲性質も除去（これから適切なものを選択して追加するため）
+        Acter.RangeWill = Acter.RangeWill.Remove(SkillZoneTraitGroups.ActualRangeTraits);
 
-        //ここで代入するランダム範囲性質はSelectTargetFromWillで処理されるため、競合するメイン系の性質を省く
-        SkillZoneTrait MainSelectFromWillTraits = SkillZoneTrait.CanSelectSingleTarget |
-                                                  SkillZoneTrait.RandomSingleTarget|
-                                                  SkillZoneTrait.ControlByThisSituation|
-                                                  SkillZoneTrait.CanSelectMultiTarget|
-                                                  SkillZoneTrait.RandomSelectMultiTarget|
-                                                  SkillZoneTrait.RandomMultiTarget|
-                                                  SkillZoneTrait.AllTarget;
-        Acter.RangeWill &= MainSelectFromWillTraits;
+        // メイン選択性質を除去（SelectTargetFromWillで処理されるため、競合を避ける）
+        Acter.RangeWill = Acter.RangeWill.Remove(SkillZoneTraitGroups.MainSelectTraits);
 
         //全部　全範囲　単体ランダム　前のめり後衛
         if (skill.HasZoneTrait(SkillZoneTrait.RandomTargetALLSituation))

@@ -532,7 +532,9 @@ public class SelectRangeButtons : MonoBehaviour
             return;
         }
 
-        battle.Acter.RangeWill |= range;
+        // 旧UI経路: 正規化を適用してRangeWillに追加
+        var normalizedRange = SkillZoneTraitNormalizer.Normalize(battle.Acter.RangeWill | range);
+        battle.Acter.RangeWill = normalizedRange;
         foreach (var button in buttonList)
         {
             Destroy(button);//ボタン全部削除

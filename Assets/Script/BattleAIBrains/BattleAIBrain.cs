@@ -120,7 +120,8 @@ public abstract class BattleAIBrain : ScriptableObject
         }
 
         if (decision.HasSkill) user.SKillUseCall(decision.Skill);
-        if (decision.HasRangeWill) user.RangeWill = decision.RangeWill.Value;
+        // AI決定の範囲意志を正規化してから適用（競合解消）
+        if (decision.HasRangeWill) user.RangeWill = SkillZoneTraitNormalizer.Normalize(decision.RangeWill.Value);
         if (decision.HasTargetWill) manager.Acter.Target = decision.TargetWill.Value;
         // d.Targets(直接的な対象者) の具体的な積み先は既存BMフロー依存のためここでは未コミット
     }

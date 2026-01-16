@@ -5,11 +5,11 @@ public static class SkillFilterPresets
     /// <summary>
     /// 単体先約用の範囲トレイトとタイプのマスク（共通定義）
     /// </summary>
+    /// <remarks>
+    /// SkillZoneTraitGroups.SingleTargetTraits を参照
+    /// </remarks>
     public static readonly SkillZoneTrait SingleTargetZoneTraitMask =
-          SkillZoneTrait.CanPerfectSelectSingleTarget
-        | SkillZoneTrait.CanSelectSingleTarget
-        | SkillZoneTrait.RandomSingleTarget
-        | SkillZoneTrait.ControlByThisSituation;
+        SkillZoneTraitGroups.SingleTargetTraits;
 
     /// <summary>
     /// 単体先約用のタイプのマスク（共通定義）

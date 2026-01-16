@@ -172,7 +172,9 @@ public sealed class BattleOrchestrator
 
         if (!input.Skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))
         {
-            actor.RangeWill |= input.Skill.ZoneTrait;
+            // スキルの範囲性質を正規化してからRangeWillに追加（競合解消）
+            var normalizedTrait = SkillZoneTraitNormalizer.NormalizeForInitial(input.Skill.ZoneTrait);
+            actor.RangeWill = actor.RangeWill.Add(normalizedTrait);
         }
 
         var nextState = Manager.Acts.GetAtSingleTarget(0) != null
@@ -228,7 +230,9 @@ public sealed class BattleOrchestrator
             return CurrentUiState;
         }
 
-        actor.RangeWill |= input.RangeWill;
+        // RangeWillに追加後、正規化を適用（競合解消）
+        actor.RangeWill = SkillZoneTraitNormalizer.Normalize(
+            actor.RangeWill.Add(input.RangeWill));
         if (input.IsOption)
         {
             return CurrentUiState;
