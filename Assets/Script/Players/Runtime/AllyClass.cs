@@ -297,40 +297,24 @@ public class AllyClass : BaseStates
     {
         var skill = SkillList[skillListIndex];
         var orchestrator = BattleOrchestratorHub.Current;
-        if (orchestrator != null)
+        if (orchestrator == null)
         {
-            var input = new ActionInput
-            {
-                Kind = ActionInputKind.SkillSelect,
-                RequestId = orchestrator.CurrentChoiceRequest.RequestId,
-                Actor = this,
-                Skill = skill
-            };
-            var state = orchestrator.ApplyInput(input);
-            var uiBridge = BattleUIBridge.Active;
-            if (uiBridge != null)
-            {
-                uiBridge.SetUserUiState(state, false);
-            }
-            else
-            {
-                Debug.LogError("PlayersStates.OnSkillBtnCallBack: BattleUIBridge が null です");
-            }
+            Debug.LogError("[CRITICAL] AllyClass.OnSkillBtnCallBack: BattleOrchestrator is not initialized");
             return;
         }
 
-        SKillUseCall(skill);//スキル使用
-
-        //もし先約リストによる単体指定ならば、範囲や対象者選択画面にはいかず、直接actbranchiへ移行
-        //スキルの性質によるボタンの行く先の分岐
-        var nextState = manager.Acts.GetAtSingleTarget(0) != null
-            ? TabState.NextWait
-            : DetermineNextUIState(NowUseSkill);
-
-        var fallbackBridge = BattleUIBridge.Active;
-        if (fallbackBridge != null)
+        var input = new ActionInput
         {
-            fallbackBridge.SetUserUiState(nextState);
+            Kind = ActionInputKind.SkillSelect,
+            RequestId = orchestrator.CurrentChoiceRequest.RequestId,
+            Actor = this,
+            Skill = skill
+        };
+        var state = orchestrator.ApplyInput(input);
+        var uiBridge = BattleUIBridge.Active;
+        if (uiBridge != null)
+        {
+            uiBridge.SetUserUiState(state, false);
         }
         else
         {
@@ -345,60 +329,29 @@ public class AllyClass : BaseStates
     {
         var skill = SkillList[skillListIndex];
         var orchestrator = BattleOrchestratorHub.Current;
-        if (orchestrator != null)
+        if (orchestrator == null)
         {
-            var input = new ActionInput
-            {
-                Kind = ActionInputKind.StockSkill,
-                RequestId = orchestrator.CurrentChoiceRequest.RequestId,
-                Actor = this,
-                Skill = skill
-            };
-            var state = orchestrator.ApplyInput(input);
-            var inputBridge = BattleUIBridge.Active;
-            if (inputBridge != null)
-            {
-                inputBridge.SetUserUiState(state, false);
-            }
-            else
-            {
-                Debug.LogError("PlayersStates.OnSkillStockBtnCallBack: BattleUIBridge が null です");
-            }
+            Debug.LogError("[CRITICAL] AllyClass.OnSkillStockBtnCallBack: BattleOrchestrator is not initialized");
             return;
         }
-        if(skill.IsFullStock())
-        {
-            Debug.Log(skill.SkillName + "をストックが満杯。");
-            return;//ストックが満杯なら何もしない
-        } 
-        skill.ATKCountStock();;//該当のスキルをストックする。
-        Debug.Log(skill.SkillName + "をストックしました。");
 
-        
-        
-        //今回選んだストックスキル以外のストックが減る。
-        var list = SkillList.Where((skill,index) => index != skillListIndex && skill.HasConsecutiveType(SkillConsecutiveType.Stockpile)).ToList();
-        foreach(var stockSkill in list)
+        var input = new ActionInput
         {
-            stockSkill.ForgetStock();
-        }
-
-        var uiBridge = BattleUIBridge.Active;
-        var battle = uiBridge?.BattleContext;
-        if (battle != null)
+            Kind = ActionInputKind.StockSkill,
+            RequestId = orchestrator.CurrentChoiceRequest.RequestId,
+            Actor = this,
+            Skill = skill
+        };
+        var state = orchestrator.ApplyInput(input);
+        var inputBridge = BattleUIBridge.Active;
+        if (inputBridge != null)
         {
-            battle.SkillStock = true;//ACTBranchingでストックboolをtrueに。
-        }
-
-        if (uiBridge != null)
-        {
-            uiBridge.SetUserUiState(TabState.NextWait);//CharacterACTBranchingへ
+            inputBridge.SetUserUiState(state, false);
         }
         else
         {
             Debug.LogError("PlayersStates.OnSkillStockBtnCallBack: BattleUIBridge が null です");
         }
-        
     }
 
     /// <summary>
@@ -491,34 +444,16 @@ public class AllyClass : BaseStates
     }
     /// <summary>
     /// スキルの性質に基づいて、次に遷移すべき画面状態を判定する
+    /// TargetingPlanに処理を委譲し、ロジックを一元化
     /// </summary>
     /// <param name="skill">判定対象のスキル</param>
     /// <returns>遷移先のTabState</returns>
     public static TabState DetermineNextUIState(BaseSkill skill)
     {
-        //var acter = Walking.Instance.BattleContext?.Acter;
+        if (skill == null) return TabState.NextWait;
 
-        //範囲を選べるのなら　　 (自分だけのスキルなら範囲選択の性質があってもできない、本来できないもの)
-        if (skill.HasZoneTrait(SkillZoneTrait.CanSelectRange) && !skill.HasZoneTrait(SkillZoneTrait.SelfSkill))
-        {
-            return TabState.SelectRange;//範囲選択画面へ飛ぶ
-        }
-        else if ((skill.HasZoneTrait(SkillZoneTrait.CanPerfectSelectSingleTarget) || 
-                skill.HasZoneTrait(SkillZoneTrait.CanSelectSingleTarget) || 
-                skill.HasZoneTrait(SkillZoneTrait.CanSelectMultiTarget))&& !skill.HasZoneTrait(SkillZoneTrait.SelfSkill))
-        {//選択できる系なら (自分だけのスキルなら範囲選択の性質があってもできない、本来なら範囲性質に含めてないはず)
-            return TabState.SelectTarget;//選択画面へ飛ぶ
-        }
-        else if (skill.HasZoneTrait(SkillZoneTrait.ControlByThisSituation))
-        {
-            //~~実行意志ではないので、RangeWillに入れない。~~
-            //普通にSelectTargetWillの直前で範囲意志に入ります。
-            return TabState.NextWait;//何もないなら事象ボタンへ
-        }
-
-        Debug.Log("範囲選択も対象者選択も起こらないControlByThisSituation以外のスキル性質: " + skill.ZoneTrait);
-        //acter.RangeWill = skill.ZoneTrait;//実行者の範囲意志にそのままスキルの範囲性質を入れる。
-        return TabState.NextWait; // デフォルトの遷移先
+        var plan = TargetingPlan.FromSkill(skill);
+        return plan.ToTabState();
     }
 
     // ================================

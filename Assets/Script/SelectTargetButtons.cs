@@ -58,6 +58,83 @@ public class SelectTargetButtons : MonoBehaviour
 
     List<BaseStates> CashUnders;//分散値に対するランダム性を担保するための対象者キャッシュ
     DirectedWill selectedTargetWill = DirectedWill.One;
+
+    /// <summary>
+    /// 全ボタンを削除してリストをクリア
+    /// </summary>
+    private void ClearAllTargetButtons()
+    {
+        foreach (var button in AllybuttonList)
+            if (button != null) Destroy(button.gameObject);
+        foreach (var button in EnemybuttonList)
+            if (button != null) Destroy(button.gameObject);
+        AllybuttonList.Clear();
+        EnemybuttonList.Clear();
+    }
+
+    /// <summary>
+    /// 対象選択ボタンを生成するヘルパー（個別キャラ選択用）
+    /// </summary>
+    private Button CreateTargetButton(
+        BaseStates target,
+        string text,
+        DirectedWill will,
+        allyOrEnemy faction,
+        ref float currentX,
+        ref float currentY,
+        List<Button> targetButtonList)
+    {
+        var button = Instantiate(buttonPrefab, transform);
+        var rect = button.GetComponent<RectTransform>();
+
+        // 親オブジェクトの右端を超える場合は次の行に移動
+        if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+        {
+            currentX = startX;
+            currentY -= buttonSize.y + verticalPadding;
+        }
+
+        rect.anchoredPosition = new Vector2(currentX, currentY);
+        currentX += buttonSize.x + horizontalPadding;
+
+        button.onClick.AddListener(() => OnClickSelectTarget(target, button, faction, will));
+        button.GetComponentInChildren<TextMeshProUGUI>().text = text;
+        targetButtonList.Add(button);
+        return button;
+    }
+
+    /// <summary>
+    /// 前のめり/後衛選択ボタンを生成するヘルパー
+    /// </summary>
+    private Button CreateVanguardButton(
+        string text,
+        DirectedWill will,
+        ref float currentX,
+        ref float currentY)
+    {
+        var button = Instantiate(buttonPrefab, transform);
+        var rect = button.GetComponent<RectTransform>();
+
+        if (currentX + buttonSize.x / 2 > parentSize.x / 2)
+        {
+            currentX = startX;
+            currentY -= buttonSize.y + verticalPadding;
+        }
+
+        rect.anchoredPosition = new Vector2(currentX, currentY);
+        currentX += buttonSize.x + horizontalPadding;
+
+        button.onClick.AddListener(() => OnClickSelectVanguardOrBacklines(button, will));
+        button.GetComponentInChildren<TextMeshProUGUI>().text = text;
+        EnemybuttonList.Add(button);
+        return button;
+    }
+
+    private void OnDestroy()
+    {
+        ClearAllTargetButtons();
+    }
+
     /// <summary>
     /// 生成用コールバック
     /// </summary>
@@ -77,14 +154,8 @@ public class SelectTargetButtons : MonoBehaviour
         AllybuttonList.Clear();
         EnemybuttonList.Clear();
 
-        //もしスキルの範囲性質にcanSelectRangeがない場合 (=範囲選択の必要がないスキルなので範囲選択が発生せず代入されないのでここで入れる)
-        //範囲選択されたこと前提でこの後分岐するので。
-        if (BattleOrchestratorHub.Current == null && !skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))
-        {
-            // 旧UI経路: 正規化を適用してRangeWillに追加（競合解消）
-            var normalizedTrait = SkillZoneTraitNormalizer.NormalizeForInitial(skill.ZoneTrait);
-            acter.RangeWill = acter.RangeWill.Add(normalizedTrait);
-        }
+        // RangeWillの初期化はBattleOrchestrator.ApplySkillSelect()で行われる
+        // CanSelectRangeがないスキルは、そこで正規化済みの値が設定される
 
         // 現在の位置を初期化
         float currentX = startX;
@@ -160,8 +231,8 @@ public class SelectTargetButtons : MonoBehaviour
 
         if (EnemyVanguardOrBackLine) //前のめりか後衛かを敵から選ぶには
         {
-            //前のめりが存在するかしないか、そもそも一人かどうかだと強制的にBackOrAnyにDirectedWillになって対象選択画面を飛ばす。
-            //つまりボタンを作らずそのままNextWaitへ
+            //前のめりが存在するかしないか、そもそも一人かどうかなら　味方がいるなら選択ボタンとして強制的にBackOrAnyにDirectedWillになる
+            //選べるオプションとしての味方がいないのならボタンを作らずそのままNextWaitへ　対象選択画面を飛ばす。
 
             var enemyLives = RemoveDeathCharacters(battleContext.EnemyGroup.Ours);//生きてる敵だけ
             if(battleContext.EnemyGroup.InstantVanguard == null || enemyLives.Count < 2) //前のめりがいないか　敵の生きてる人数が二人未満
@@ -169,31 +240,13 @@ public class SelectTargetButtons : MonoBehaviour
                 if (!AllyTargeting && !MySelfTargeting)//味方選択がないなら
                 {
                     ReturnNextWaitView();//そのまま次の画面へ
-                    //bmに処理を任せる
+                    //bmに処理を任せる  selecttargetsで自動で一人の敵として選ばれるからdirectedwillを入れる必要なし
+                    //oneは必ず分岐に使われるが　backorany,instantvanguardは明示的に必要な場所でしか使われないから
+                    // この場合の自動選択に影響なし
                 }
                 else//味方も選択できるなら
                 {
                     //敵一人を選択可能なボタンとして配置する
-                    var button = Instantiate(buttonPrefab, transform);
-                    var rect = button.GetComponent<RectTransform>();
-
-                    // 親オブジェクトの右端を超える場合は次の行に移動
-                    if (currentX + buttonSize.x / 2 > parentSize.x / 2)
-                    {
-                        // 左端にリセット
-                        currentX = startX;
-
-                        // 次の行に移動
-                        currentY -= buttonSize.y + verticalPadding;
-                    }
-
-                    // ボタンの位置を設定
-                    rect.anchoredPosition = new Vector2(currentX, currentY);
-
-                    // 次のボタンのX位置を更新
-                    currentX += buttonSize.x + horizontalPadding;
-
-                    //テキスト
                     var txt = "敵";
 
                     //対象者ボーナスの発動範囲なのでテキストに記す
@@ -201,18 +254,14 @@ public class SelectTargetButtons : MonoBehaviour
                     {
                         var data = acter.TargetBonusDatas;
                         var singleEne = enemyLives[0];
-                        if(data.DoIHaveTargetBonus(singleEne))//対象者ボーナスに該当の敵キャラが含まれてるのなら
+                        if(data.DoIHaveTargetBonus(singleEne))
                         {
-                            //その対象者のボーナス倍率を取得し、ボタンテキストに追加
-                            var percentage = data.GetAtPowerBonusPercentage(data.GetTargetIndex(singleEne));//対象者ボーナス
+                            var percentage = data.GetAtPowerBonusPercentage(data.GetTargetIndex(singleEne));
                             txt += "\n " + percentage + "倍";
                         }
-                        
                     }
 
-                    button.onClick.AddListener(() => OnClickSelectVanguardOrBacklines(button, DirectedWill.BacklineOrAny));
-                    button.GetComponentInChildren<TextMeshProUGUI>().text = txt;//ボタンのテキスト
-                    EnemybuttonList.Add(button);//敵のボタンリストに入れる
+                    CreateVanguardButton(txt, DirectedWill.BacklineOrAny, ref currentX, ref currentY);
                 }
             }
             else//前のめりがいて二人以上いるなら
@@ -220,48 +269,16 @@ public class SelectTargetButtons : MonoBehaviour
                 //前のめりのキャラクターが対象者ボーナスに含まれているか調査
                 var vanguard = battleContext.EnemyGroup.InstantVanguard;
                 var data = acter.TargetBonusDatas;
-                var txt = "前のめり-1";
-                if(data.DoIHaveTargetBonus(vanguard))//対象者ボーナスに含まれてるのなら
+                var vanguardTxt = "前のめり-1";
+                if(data.DoIHaveTargetBonus(vanguard))
                 {
-                    //その対象者のボーナス倍率を取得し、ボタンテキストに追加
-                    var percentage = data.GetAtPowerBonusPercentage(data.GetTargetIndex(vanguard));//対象者ボーナス
-                    txt += "\n " + percentage + "倍";
+                    var percentage = data.GetAtPowerBonusPercentage(data.GetTargetIndex(vanguard));
+                    vanguardTxt += "\n " + percentage + "倍";
                 }
 
-                DirectedWill[] WillSet = new DirectedWill[] { DirectedWill.InstantVanguard, DirectedWill.BacklineOrAny };//for文で処理するため配列
-                string[] BtnStringSet = new string[] { txt, "それ以外" };
-
-                for (var i = 0; i < 2; i++)
-                {
-                    var button = Instantiate(buttonPrefab, transform);
-                    var rect = button.GetComponent<RectTransform>();
-
-                    // 親オブジェクトの右端を超える場合は次の行に移動
-                    if (currentX + buttonSize.x / 2 > parentSize.x / 2)
-                    {
-                        // 左端にリセット
-                        currentX = startX;
-
-                        // 次の行に移動
-                        currentY -= buttonSize.y + verticalPadding;
-                    }
-
-                    // ボタンの位置を設定
-                    rect.anchoredPosition = new Vector2(currentX, currentY);
-
-                    // 次のボタンのX位置を更新
-                    currentX += buttonSize.x + horizontalPadding;
-
-                    var will = WillSet[i];
-                    var str = BtnStringSet[i];
-                    vanguard.UI.SetActiveSetNumber_NumberEffect(true, 1);
-                    button.onClick.AddListener(() => OnClickSelectVanguardOrBacklines(button, will));
-                    button.GetComponentInChildren<TextMeshProUGUI>().text = str;//ボタンのテキストに前のめり等の記述
-                    EnemybuttonList.Add(button);//敵のボタンリストに入れる
-
-                }
-
-
+                vanguard.UI.SetActiveSetNumber_NumberEffect(true, 1);
+                CreateVanguardButton(vanguardTxt, DirectedWill.InstantVanguard, ref currentX, ref currentY);
+                CreateVanguardButton("それ以外", DirectedWill.BacklineOrAny, ref currentX, ref currentY);
             }
         }
 
@@ -278,59 +295,38 @@ public class SelectTargetButtons : MonoBehaviour
 
             if (selects.Count < 2 && !AllyTargeting && !MySelfTargeting)//敵の生きてる人数が二人未満で、味方の選択もなければ
             {
+                // 対象が1人でもUI選択と同様の結果になるよう、リストに追加してから終了
+                // これにより CanPerfectSelectSingleTarget + RandomRange の特権（選択済み対象が残る）が維持される
+                if (selects.Count == 1)
+                {
+                    CashUnders.Add(selects[0]);
+                    selectedTargetWill = DirectedWill.One;
+                }
                 ReturnNextWaitView();//そのまま次の画面へ
-                                     //bmに処理を任せる
             }
             else
             {
+                var allyActer = acter as AllyClass;
                 for (var i = 0; i < selects.Count; i++)
                 {
-                    var button = Instantiate(buttonPrefab, transform);
-                    var rect = button.GetComponent<RectTransform>();
-
-                    // 親オブジェクトの右端を超える場合は次の行に移動
-                    if (currentX + buttonSize.x / 2 > parentSize.x / 2)
-                    {
-                        // 左端にリセット
-                        currentX = startX;
-
-                        // 次の行に移動
-                        currentY -= buttonSize.y + verticalPadding;
-                    }
-
-                    // ボタンの位置を設定
-                    rect.anchoredPosition = new Vector2(currentX, currentY);
-
-                    // 次のボタンのX位置を更新
-                    currentX += buttonSize.x + horizontalPadding;
-
                     var ene = selects[i];
-                    var txt = $"「{i+1}」";//テキストにキャラ名
+                    var txt = $"「{i+1}」";
                     var data = acter.TargetBonusDatas;
-                    if(data.DoIHaveTargetBonus(ene))//対象者ボーナスに含まれてるのなら
+                    if(data.DoIHaveTargetBonus(ene))
                     {
-                        //その対象者のボーナス倍率を取得し、ボタンテキストに追加
-                        var percentage = data.GetAtPowerBonusPercentage(data.GetTargetIndex(ene));//対象者ボーナス
+                        var percentage = data.GetAtPowerBonusPercentage(data.GetTargetIndex(ene));
                         txt += "\n " + percentage + "倍";
                     }
 
-                    //隙だらけ補正の命中パーセンテージ補正0より大きいのなら
-                    var allyActer = acter as AllyClass;
                     var ExposureModifier = allyActer.GetExposureAccuracyPercentageBonus(ene.PassivesTargetProbability());
                     if(ExposureModifier > 0)
                     {
-                        //その補正をボタンテキストに追加 1.〇倍の形で表示
                         txt += "\n 隙だらけ命中補正 " + ExposureModifier + "倍";
                     }
-                    
+
                     ene.UI.SetActiveSetNumber_NumberEffect(true, i+1);
-                    var chara = selects[i];//ここでこのままこれを渡すと、ボタンをクリックする時には、iの値が変わってしまう
-                    button.onClick.AddListener(() => OnClickSelectTarget(chara, button, allyOrEnemy.Enemyiy, DirectedWill.One));//関数を登録
-                    button.GetComponentInChildren<TextMeshProUGUI>().text = txt;//ボタンのテキスト
-                    EnemybuttonList.Add(button);//敵のボタンリストを入れる
-
+                    CreateTargetButton(ene, txt, DirectedWill.One, allyOrEnemy.Enemyiy, ref currentX, ref currentY, EnemybuttonList);
                 }
-
             }
         }
 
@@ -360,30 +356,11 @@ public class SelectTargetButtons : MonoBehaviour
 
             for (var i = 0; i < selects.Count; i++)
             {
-                var button = Instantiate(buttonPrefab, transform);
-                var rect = button.GetComponent<RectTransform>();
-
-                // 親オブジェクトの右端を超える場合は次の行に移動
-                if (currentX + buttonSize.x / 2 > parentSize.x / 2)
-                {
-                    // 左端にリセット
-                    currentX = startX;
-
-                    // 次の行に移動
-                    currentY -= buttonSize.y + verticalPadding;
-                }
-
-                // ボタンの位置を設定
-                rect.anchoredPosition = new Vector2(currentX, currentY);
-
-                // 次のボタンのX位置を更新
-                currentX += buttonSize.x + horizontalPadding;
                 var chara = selects[i];
                 chara.UI.SetActiveSetNumber_NumberEffect(true, i+11);
-                button.onClick.AddListener(() => OnClickSelectTarget(chara, button, allyOrEnemy.alliy, DirectedWill.One));//関数を登録
-                button.GetComponentInChildren<TextMeshProUGUI>().text = chara.CharacterName + $"「{i+11}」";//ボタンのテキストにキャラ名
-                EnemybuttonList.Add(button);//敵のボタンリストを入れる
-
+                var txt = chara.CharacterName + $"「{i+11}」";
+                // 味方ボタンはAllybuttonListに追加（OnClickSelectTargetの終了判定と整合性を保つ）
+                CreateTargetButton(chara, txt, DirectedWill.One, allyOrEnemy.alliy, ref currentX, ref currentY, AllybuttonList);
             }
 
         }
@@ -473,11 +450,24 @@ public class SelectTargetButtons : MonoBehaviour
         if (faction == allyOrEnemy.Enemyiy)
             NeedSelectCountEnemy--;
 
-        //各陣営ごとに属したボタンが二つ以上なくても終わり (一つだけあってもそれは廃棄予定の"このオブジェクト"だから)
-        //つまりもう選ぶボタンがないなら
+        // ボタンをリストから削除してDestroy（リストのCountを正確に保つ、同一キャラの重複選択を防ぐ）
+        if (faction == allyOrEnemy.alliy)
+        {
+            AllybuttonList.Remove(thisBtn);
+        }
+        else if (faction == allyOrEnemy.Enemyiy)
+        {
+            EnemybuttonList.Remove(thisBtn);
+        }
+        Destroy(thisBtn);
+
+        // 終了判定：
+        // - ボタンが二つ以上残っていないなら選択の余地がないので終了
+        // - 必要選択数に達した（NeedSelectCount <= 0）なら終了
+        // ※対象が最初から1人しかいない場合は、OnCreated()でボタンを作らずReturnNextWaitView()している
         if (faction == allyOrEnemy.alliy)
         {//味方ボタンなら
-            if (AllybuttonList.Count > 1 || NeedSelectCountAlly <= 0)//味方ボタンが二つ以上ないか、味方選択必要カウントダウンがゼロ以下なら次行く処理
+            if (AllybuttonList.Count < 1 || NeedSelectCountAlly <= 0)
             {
                 ReturnNextWaitView();
             }
@@ -489,7 +479,7 @@ public class SelectTargetButtons : MonoBehaviour
         }
         else if (faction == allyOrEnemy.Enemyiy)
         {//敵ボタンなら
-            if (EnemybuttonList.Count > 1 || NeedSelectCountEnemy <= 0) //敵ボタンが二つ以上ないなら、敵選択必要カウントダウンがゼロ以下なら次行く処理
+            if (EnemybuttonList.Count < 1 || NeedSelectCountEnemy <= 0)
             {
                 ReturnNextWaitView();
             }
@@ -498,7 +488,6 @@ public class SelectTargetButtons : MonoBehaviour
                 //まだ選べるのなら、途中で選択を止められるボタンを表示する。
                 SelectEndBtn.gameObject.SetActive(true);
             }
-            Destroy(thisBtn);//このボタンは破棄
         }
     }
     /// <summary>
@@ -507,57 +496,28 @@ public class SelectTargetButtons : MonoBehaviour
     private void ReturnNextWaitView()
     {
         var orchestrator = BattleOrchestratorHub.Current;
-        if (orchestrator != null)
+        if (orchestrator == null)
         {
-            var input = new ActionInput
-            {
-                Kind = ActionInputKind.TargetSelect,
-                RequestId = orchestrator.CurrentChoiceRequest.RequestId,
-                Actor = battle?.Acter,
-                TargetWill = selectedTargetWill,
-                Targets = new List<BaseStates>(CashUnders)
-            };
-            var state = orchestrator.ApplyInput(input);
-            if (uiBridge != null)
-            {
-                uiBridge.SetUserUiState(state, false);
-            }
-            else
-            {
-                Debug.LogError("SelectTargetButtons.ReturnNextWaitView: BattleUIBridge が null です");
-            }
+            Debug.LogError("[CRITICAL] SelectTargetButtons.ReturnNextWaitView: BattleOrchestrator is not initialized");
+            return;
+        }
+
+        var input = new ActionInput
+        {
+            Kind = ActionInputKind.TargetSelect,
+            RequestId = orchestrator.CurrentChoiceRequest.RequestId,
+            Actor = battle?.Acter,
+            TargetWill = selectedTargetWill,
+            Targets = new List<BaseStates>(CashUnders)
+        };
+        var state = orchestrator.ApplyInput(input);
+        if (uiBridge != null)
+        {
+            uiBridge.SetUserUiState(state, false);
         }
         else
         {
-            if (uiBridge != null)
-            {
-                uiBridge.SetUserUiState(TabState.NextWait);
-            }
-            else
-            {
-                Debug.LogError("SelectTargetButtons.ReturnNextWaitView: BattleUIBridge が null です");
-            }
-
-            if (battle != null)
-            {
-                battle.Acter.Target = selectedTargetWill;
-
-                //bmの対象者リストにキャッシュリストを入れる
-                CashUnders.Shuffle();//分散値のランダム性のためシャッフル
-                var allyActer = battle.Acter as AllyClass;
-                foreach(var cash in CashUnders)
-                {
-                    if (allyActer != null && !battle.IsFriend(battle.Acter, cash))
-                    {
-                        var exposureModifier = allyActer.GetExposureAccuracyPercentageBonus(cash.PassivesTargetProbability());
-                        if (exposureModifier > 0)
-                        {
-                            allyActer.SetCharaConditionalModifierList(cash, "隙だらけ", whatModify.eye, exposureModifier);
-                        }
-                    }
-                    battle.unders.CharaAdd(cash);
-                }
-            }
+            Debug.LogError("SelectTargetButtons.ReturnNextWaitView: BattleUIBridge が null です");
         }
 
         foreach (var button in AllybuttonList)

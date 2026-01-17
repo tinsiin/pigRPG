@@ -86,6 +86,8 @@ public class BattleInitializer
             playersRoster
         );
         BattleOrchestratorHub.Set(result.Orchestrator);
+        Debug.Assert(BattleOrchestratorHub.Current != null,
+            "BattleOrchestrator initialization failed - BattleOrchestratorHub.Current is null after Set()");
         result.BattleContext = result.Orchestrator.Manager;
 
         if (playersSkillUI != null)
