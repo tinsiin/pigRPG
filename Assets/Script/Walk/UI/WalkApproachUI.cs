@@ -9,7 +9,8 @@ public enum ApproachChoice
     Skip,
     Left,
     Right,
-    Center
+    Center,
+    Gate
 }
 
 public sealed class WalkApproachUI : MonoBehaviour
@@ -17,10 +18,12 @@ public sealed class WalkApproachUI : MonoBehaviour
     [SerializeField] private Button leftButton;
     [SerializeField] private Button rightButton;
     [SerializeField] private Button centerButton;
+    [SerializeField] private Button gateButton;
 
     private TMP_Text leftLabel;
     private TMP_Text rightLabel;
     private TMP_Text centerLabel;
+    private TMP_Text gateLabel;
     private UniTaskCompletionSource<ApproachChoice> pending;
     private bool isAwaiting;
 
@@ -31,6 +34,7 @@ public sealed class WalkApproachUI : MonoBehaviour
         ResolveButtons();
         HookButtons();
         SetActive(false, false, false);
+        SetGateActive(false);
     }
 
     public UniTask<ApproachChoice> WaitForSelection(string leftText, string rightText, bool showCenter, string centerText)
@@ -53,6 +57,29 @@ public sealed class WalkApproachUI : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// ゲート/出口用の選択待機
+    /// </summary>
+    public UniTask<ApproachChoice> WaitForGateSelection(string labelText)
+    {
+        ResolveButtons();
+        SetGateLabel(labelText);
+        SetGateActive(true);
+
+        pending = new UniTaskCompletionSource<ApproachChoice>();
+        isAwaiting = true;
+        return AwaitGateSelection();
+    }
+
+    private async UniTask<ApproachChoice> AwaitGateSelection()
+    {
+        var result = await pending.Task;
+        SetGateActive(false);
+        isAwaiting = false;
+        pending = null;
+        return result;
+    }
+
     private async UniTask<ApproachChoice> AwaitSelection()
     {
         var result = await pending.Task;
@@ -67,10 +94,12 @@ public sealed class WalkApproachUI : MonoBehaviour
         if (leftButton == null) leftButton = FindButton("ApproachLeftButton");
         if (rightButton == null) rightButton = FindButton("ApproachRightButton");
         if (centerButton == null) centerButton = FindButton("ApproachCenterButton");
+        if (gateButton == null) gateButton = FindButton("GateApproachButton");
 
         leftLabel = ResolveLabel(leftButton, leftLabel);
         rightLabel = ResolveLabel(rightButton, rightLabel);
         centerLabel = ResolveLabel(centerButton, centerLabel);
+        gateLabel = ResolveLabel(gateButton, gateLabel);
     }
 
     private void HookButtons()
@@ -89,6 +118,11 @@ public sealed class WalkApproachUI : MonoBehaviour
         {
             centerButton.onClick.RemoveAllListeners();
             centerButton.onClick.AddListener(() => Resolve(ApproachChoice.Center));
+        }
+        if (gateButton != null)
+        {
+            gateButton.onClick.RemoveAllListeners();
+            gateButton.onClick.AddListener(() => Resolve(ApproachChoice.Gate));
         }
     }
 
@@ -122,5 +156,15 @@ public sealed class WalkApproachUI : MonoBehaviour
     {
         if (current != null || button == null) return current;
         return button.GetComponentInChildren<TMP_Text>(true);
+    }
+
+    private void SetGateLabel(string text)
+    {
+        if (gateLabel != null) gateLabel.text = string.IsNullOrEmpty(text) ? "アプローチ" : text;
+    }
+
+    private void SetGateActive(bool active)
+    {
+        if (gateButton != null) gateButton.gameObject.SetActive(active);
     }
 }

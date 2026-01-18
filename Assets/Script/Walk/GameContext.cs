@@ -13,11 +13,35 @@ public sealed class GameContext
     public WalkState WalkState { get; }
     public IBattleRunner BattleRunner { get; set; }
 
+    // Phase 2: Gate/Anchor integration
+    public GateResolver GateResolver { get; set; }
+    public AnchorManager AnchorManager { get; set; }
+    public NodeSO CurrentNode { get; set; }
+    private bool _requestRefreshWithoutStep;
+    public bool RequestRefreshWithoutStep
+    {
+        get => _requestRefreshWithoutStep;
+        set
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (value != _requestRefreshWithoutStep)
+            {
+                UnityEngine.Debug.Log($"[Walk] RequestRefreshWithoutStep: {_requestRefreshWithoutStep} → {value}\n{UnityEngine.StackTraceUtility.ExtractStackTrace()}");
+            }
+#endif
+            _requestRefreshWithoutStep = value;
+        }
+    }
+    public bool IsWalkingStep { get; set; }
+
     public GameContext(PlayersContext players)
     {
         Players = players;
         Counters = new WalkCounters();
         WalkState = new WalkState();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        UnityEngine.Debug.Log($"[Walk] GameContext created: RequestRefreshWithoutStep={RequestRefreshWithoutStep}, IsWalkingStep={IsWalkingStep}");
+#endif
     }
 
     public void SetPlayersContext(PlayersContext players)

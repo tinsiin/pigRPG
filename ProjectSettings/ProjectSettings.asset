@@ -657,7 +657,7 @@ PlayerSettings:
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Android: 
+    Android: ENABLE_WALK_PHASE2_TESTS
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}

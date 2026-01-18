@@ -14,6 +14,9 @@ public sealed class NodeSO : ScriptableObject
     [SerializeField] private CentralObjectVisual centralVisual;
     [SerializeField] private ExitSpawnRule exitSpawn;
     [SerializeField] private ExitCandidate[] exits;
+    [SerializeField] private TrackConfig trackConfig;
+    [SerializeField] private GateMarker[] gates;
+    [SerializeField] private ExitVisual exitVisual;
 
     public string NodeId => nodeId;
     public string DisplayName => displayName;
@@ -26,6 +29,9 @@ public sealed class NodeSO : ScriptableObject
     public CentralObjectVisual CentralVisual => centralVisual;
     public ExitSpawnRule ExitSpawn => exitSpawn;
     public ExitCandidate[] Exits => exits;
+    public TrackConfig TrackConfig => trackConfig;
+    public GateMarker[] Gates => gates;
+    public ExitVisual ExitVisual => exitVisual;
 }
 
 [System.Serializable]

@@ -98,6 +98,179 @@ public static class WalkTestSetup
         Debug.Log($"P2 test assets created: {RootFolder}");
     }
 
+    [MenuItem("Tools/Walk/Create P2 Gate Test Assets")]
+    public static void CreateP2GateTestAssets()
+    {
+        CreateP2TestAssets();
+
+        // Create condition assets
+        var gateCondition = CreateAsset<HasFlagCondition>($"{RootFolder}/Condition_GateTest.asset");
+        ConfigureHasFlagCondition(gateCondition, "gateTestFlag", true);
+
+        // Create anchor effect assets
+        var createAnchor = CreateAsset<CreateAnchorEffect>($"{RootFolder}/Effect_CreateAnchor.asset");
+        ConfigureCreateAnchorEffect(createAnchor, "testAnchor", AnchorScope.Region);
+
+        var rewindAnchor = CreateAsset<RewindToAnchorEffect>($"{RootFolder}/Effect_RewindAnchor.asset");
+        ConfigureRewindToAnchorEffect(rewindAnchor, "testAnchor", RewindMode.PositionAndState);
+
+        // Create gate event
+        var gateEvent = CreateAsset<EventDefinitionSO>($"{RootFolder}/Event_Gate.asset");
+        ConfigureEventDefinition(gateEvent, "ゲートに到達しました");
+
+        // Configure NodeA with gates and trackConfig
+        var nodeA = AssetDatabase.LoadAssetAtPath<NodeSO>($"{RootFolder}/Node_A.asset");
+        ConfigureNodeAWithGates(nodeA, gateCondition, createAnchor, rewindAnchor, gateEvent);
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        Selection.activeObject = nodeA;
+        Debug.Log($"P2 Gate test assets created: {RootFolder}");
+    }
+
+    private const string MigrationFolder = "Assets/ScriptableObject/WalkMigration";
+    private const string Phase2Folder = "Assets/ScriptableObject/WalkMigration/Phase2";
+
+    [MenuItem("Tools/Walk/Setup P2 Gate on WalkMigration")]
+    public static void SetupP2GateOnWalkMigration()
+    {
+        EnsureFolder(MigrationFolder, "Phase2");
+
+        // Create condition assets
+        var gateCondition = CreateAsset<HasFlagCondition>($"{Phase2Folder}/Condition_GateTest.asset");
+        ConfigureHasFlagCondition(gateCondition, "gateTestFlag", true);
+
+        // Create anchor effect assets
+        var createAnchor = CreateAsset<CreateAnchorEffect>($"{Phase2Folder}/Effect_CreateAnchor.asset");
+        ConfigureCreateAnchorEffect(createAnchor, "testAnchor", AnchorScope.Region);
+
+        var rewindAnchor = CreateAsset<RewindToAnchorEffect>($"{Phase2Folder}/Effect_RewindAnchor.asset");
+        ConfigureRewindToAnchorEffect(rewindAnchor, "testAnchor", RewindMode.PositionAndState);
+
+        // Create gate event
+        var gateEvent = CreateAsset<EventDefinitionSO>($"{Phase2Folder}/Event_Gate.asset");
+        ConfigureEventDefinition(gateEvent, "ゲートに到達しました");
+
+        // Configure existing Node_0__________ with gates and trackConfig
+        var existingNode = AssetDatabase.LoadAssetAtPath<NodeSO>($"{MigrationFolder}/0__________/Node_0__________.asset");
+        if (existingNode != null)
+        {
+            ConfigureNodeAWithGates(existingNode, gateCondition, createAnchor, rewindAnchor, gateEvent);
+            Debug.Log($"P2 Gate configured on: {existingNode.name}");
+        }
+        else
+        {
+            Debug.LogWarning("Node_0__________ not found in WalkMigration folder");
+        }
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        Selection.activeObject = existingNode;
+        Debug.Log($"P2 Gate assets created in: {Phase2Folder}");
+    }
+
+    private static void ConfigureHasFlagCondition(HasFlagCondition condition, string flagKey, bool expectedValue)
+    {
+        if (condition == null) return;
+        var serialized = new SerializedObject(condition);
+        serialized.FindProperty("flagKey").stringValue = flagKey;
+        serialized.FindProperty("expectedValue").boolValue = expectedValue;
+        serialized.ApplyModifiedProperties();
+        EditorUtility.SetDirty(condition);
+    }
+
+    private static void ConfigureCreateAnchorEffect(CreateAnchorEffect effect, string anchorId, AnchorScope scope)
+    {
+        if (effect == null) return;
+        var serialized = new SerializedObject(effect);
+        serialized.FindProperty("anchorId").stringValue = anchorId;
+        serialized.FindProperty("scope").enumValueIndex = (int)scope;
+        serialized.ApplyModifiedProperties();
+        EditorUtility.SetDirty(effect);
+    }
+
+    private static void ConfigureRewindToAnchorEffect(RewindToAnchorEffect effect, string anchorId, RewindMode mode)
+    {
+        if (effect == null) return;
+        var serialized = new SerializedObject(effect);
+        serialized.FindProperty("anchorId").stringValue = anchorId;
+        serialized.FindProperty("mode").enumValueIndex = (int)mode;
+        serialized.ApplyModifiedProperties();
+        EditorUtility.SetDirty(effect);
+    }
+
+    private static void ConfigureNodeAWithGates(NodeSO node, HasFlagCondition gateCondition, CreateAnchorEffect createAnchor, RewindToAnchorEffect rewindAnchor, EventDefinitionSO gateEvent)
+    {
+        if (node == null) return;
+        var serialized = new SerializedObject(node);
+
+        // Configure TrackConfig
+        var trackConfig = serialized.FindProperty("trackConfig");
+        trackConfig.FindPropertyRelative("length").intValue = 50;
+        trackConfig.FindPropertyRelative("stepDelta").intValue = 1;
+        trackConfig.FindPropertyRelative("progressKey").stringValue = "testProgress";
+
+        // Configure Gates
+        var gates = serialized.FindProperty("gates");
+        gates.arraySize = 2;
+
+        // Gate 1: Hard block at step 20, requires flag condition, creates anchor on pass
+        var gate1 = gates.GetArrayElementAtIndex(0);
+        gate1.FindPropertyRelative("gateId").stringValue = "gate_checkpoint";
+        gate1.FindPropertyRelative("order").intValue = 0;
+
+        var pos1 = gate1.FindPropertyRelative("positionSpec");
+        pos1.FindPropertyRelative("type").enumValueIndex = (int)GatePositionSpec.PositionType.AbsSteps;
+        pos1.FindPropertyRelative("absSteps").intValue = 20;
+
+        var conditions1 = gate1.FindPropertyRelative("passConditions");
+        conditions1.arraySize = 1;
+        conditions1.GetArrayElementAtIndex(0).objectReferenceValue = gateCondition;
+
+        var onPass1 = gate1.FindPropertyRelative("onPass");
+        onPass1.arraySize = 1;
+        onPass1.GetArrayElementAtIndex(0).objectReferenceValue = createAnchor;
+
+        gate1.FindPropertyRelative("onFail").arraySize = 0;
+        gate1.FindPropertyRelative("gateEvent").objectReferenceValue = gateEvent;
+        gate1.FindPropertyRelative("eventTiming").enumValueIndex = (int)GateEventTiming.OnAppear;
+        gate1.FindPropertyRelative("blockingMode").enumValueIndex = (int)GateBlockingMode.HardBlock;
+        gate1.FindPropertyRelative("repeatable").boolValue = false;
+        gate1.FindPropertyRelative("cooldownSteps").intValue = 0;
+        gate1.FindPropertyRelative("resetOnSkip").boolValue = true;
+        gate1.FindPropertyRelative("resetOnFail").boolValue = true;
+        gate1.FindPropertyRelative("resetTarget").enumValueIndex = (int)GateResetTarget.NodeStepsOnly;
+
+        // Gate 2: Soft block at 80%, repeatable, rewinds to anchor on fail
+        var gate2 = gates.GetArrayElementAtIndex(1);
+        gate2.FindPropertyRelative("gateId").stringValue = "gate_loop";
+        gate2.FindPropertyRelative("order").intValue = 1;
+
+        var pos2 = gate2.FindPropertyRelative("positionSpec");
+        pos2.FindPropertyRelative("type").enumValueIndex = (int)GatePositionSpec.PositionType.Percent;
+        pos2.FindPropertyRelative("percent").floatValue = 0.8f;
+
+        gate2.FindPropertyRelative("passConditions").arraySize = 0;
+
+        gate2.FindPropertyRelative("onPass").arraySize = 0;
+
+        var onFail2 = gate2.FindPropertyRelative("onFail");
+        onFail2.arraySize = 1;
+        onFail2.GetArrayElementAtIndex(0).objectReferenceValue = rewindAnchor;
+
+        gate2.FindPropertyRelative("gateEvent").objectReferenceValue = null;
+        gate2.FindPropertyRelative("eventTiming").enumValueIndex = (int)GateEventTiming.OnPass;
+        gate2.FindPropertyRelative("blockingMode").enumValueIndex = (int)GateBlockingMode.SoftBlock;
+        gate2.FindPropertyRelative("repeatable").boolValue = true;
+        gate2.FindPropertyRelative("cooldownSteps").intValue = 5;
+        gate2.FindPropertyRelative("resetOnSkip").boolValue = false;
+        gate2.FindPropertyRelative("resetOnFail").boolValue = false;
+        gate2.FindPropertyRelative("resetTarget").enumValueIndex = (int)GateResetTarget.TrackProgressOnly;
+
+        serialized.ApplyModifiedProperties();
+        EditorUtility.SetDirty(node);
+    }
+
     private static void EnsureFolder(string parent, string child)
     {
         var path = $"{parent}/{child}";

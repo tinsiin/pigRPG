@@ -49,8 +49,28 @@ public sealed class WalkCounters
         TrackProgress = 0;
     }
 
+    public void ResetTrackProgress()
+    {
+        TrackProgress = 0;
+    }
+
+    public void AdvanceTrackProgress(int stepDelta)
+    {
+        TrackProgress += stepDelta;
+    }
+
     public void SetGlobalSteps(int value)
     {
         GlobalSteps = Math.Max(0, value);
+    }
+
+    public void SetNodeSteps(int value)
+    {
+        NodeSteps = Math.Max(0, value);
+    }
+
+    public void SetTrackProgress(int value)
+    {
+        TrackProgress = Math.Max(0, value);
     }
 }

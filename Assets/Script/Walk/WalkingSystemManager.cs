@@ -8,6 +8,7 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
     [SerializeField] private Walking walking;
     [SerializeField] private MessageDropper messageDropper;
     [SerializeField] private WalkApproachUI approachUI;
+    [SerializeField] private ProgressIndicatorUI progressUI;
 
     private PlayersContext playersContext;
     private GameContext gameContext;
@@ -26,6 +27,8 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
         PlayersContextRegistry.Register(this);
         if (gameContext != null)
         {
+            // Clear stale refresh so the first step advances normally after re-enable.
+            gameContext.RequestRefreshWithoutStep = false;
             GameContextHub.Set(gameContext);
         }
     }
@@ -127,6 +130,8 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
         {
             gameContext.SetPlayersContext(playersContext);
         }
+        // Don't carry refresh requests across initialization.
+        gameContext.RequestRefreshWithoutStep = false;
 
         if (messageDropper == null) messageDropper = ResolveMessageDropper();
         if (approachUI == null) approachUI = ResolveApproachUI();
@@ -179,6 +184,22 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
             eventHost,
             sidePresenter,
             centralPresenter);
+
+        if (progressUI != null)
+        {
+            areaController.SetProgressCallback(OnProgressChanged);
+            // 初期状態をUIに反映
+            var initialSnapshot = areaController.GetCurrentProgress();
+            progressUI.UpdateDisplay(initialSnapshot);
+        }
+    }
+
+    private void OnProgressChanged(ProgressSnapshot snapshot)
+    {
+        if (progressUI != null)
+        {
+            progressUI.UpdateDisplay(snapshot);
+        }
     }
 
     private void CleanupSpawnedObjects()
@@ -323,6 +344,10 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
             if (approachUI == null) approachUI = ResolveApproachUI();
             areaController.SetApproachUI(approachUI);
             UpdateNodeUI();
+            if (gameContext != null)
+            {
+                gameContext.IsWalkingStep = true;
+            }
             await areaController.WalkStep();
             UpdateNodeUI();
         }
@@ -333,6 +358,13 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
         catch (Exception ex)
         {
             Debug.LogException(ex);
+        }
+        finally
+        {
+            if (gameContext != null)
+            {
+                gameContext.IsWalkingStep = false;
+            }
         }
     }
 

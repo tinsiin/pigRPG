@@ -1,3 +1,6 @@
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,6 +12,12 @@ public sealed class CentralObjectPresenter
     private RectTransform rectTransform;
     private Sprite fallbackSprite;
     private Texture2D fallbackTexture;
+
+    private Image backImage;
+    private TMP_Text labelText;
+    private CanvasGroup canvasGroup;
+    private Button button;
+    private CentralDisplayMode currentMode;
 
     public void SetRoot(RectTransform nextRoot)
     {
@@ -49,6 +58,102 @@ public sealed class CentralObjectPresenter
         {
             viewObject.SetActive(false);
         }
+        if (backImage != null)
+        {
+            backImage.gameObject.SetActive(false);
+        }
+        if (labelText != null)
+        {
+            labelText.gameObject.SetActive(false);
+        }
+        currentMode = CentralDisplayMode.Hidden;
+    }
+
+    public void ShowGate(GateVisual visual, CentralDisplayMode mode)
+    {
+        EnsureViewObject();
+        if (image == null || rectTransform == null) return;
+
+        currentMode = mode;
+
+        image.sprite = visual.HasSprite ? visual.Sprite : GetFallbackSprite();
+        image.color = visual.Tint;
+
+        var size = visual.Size;
+        if (size.x <= 0f || size.y <= 0f)
+        {
+            size = new Vector2(160f, 160f);
+        }
+
+        rectTransform.sizeDelta = size;
+        rectTransform.anchoredPosition = visual.Offset;
+
+        if (visual.HasBackSprite)
+        {
+            EnsureBackImage();
+            backImage.sprite = visual.BackSprite;
+            backImage.color = visual.BackTint;
+
+            // Set back image size and position
+            var backRect = backImage.rectTransform;
+            var backSize = visual.BackSize;
+            if (backSize.x <= 0f || backSize.y <= 0f)
+            {
+                backSize = size; // Fallback: same size as main image
+            }
+            backRect.sizeDelta = backSize;
+            backRect.anchoredPosition = visual.BackOffset;
+        }
+        else if (backImage != null)
+        {
+            backImage.gameObject.SetActive(false);
+        }
+
+        if (!string.IsNullOrEmpty(visual.Label))
+        {
+            EnsureLabelText();
+            labelText.text = visual.Label;
+            labelText.gameObject.SetActive(true);
+        }
+        else if (labelText != null)
+        {
+            labelText.gameObject.SetActive(false);
+        }
+
+        if (mode == CentralDisplayMode.HardBlock)
+        {
+            EnsureButton();
+            image.raycastTarget = true;
+        }
+        else
+        {
+            image.raycastTarget = false;
+        }
+
+        viewObject.SetActive(true);
+    }
+
+    public void ShowExit(ExitVisual visual, bool allGatesCleared)
+    {
+        if (!allGatesCleared) return;
+        ShowGate(visual.ToGateVisual(), CentralDisplayMode.HardBlock);
+    }
+
+    public async UniTask<CentralInteractionResult> WaitForInteraction(IWalkInputProvider walkInput, CancellationToken ct = default)
+    {
+        if (currentMode != CentralDisplayMode.HardBlock)
+            return CentralInteractionResult.Approached;
+
+        EnsureButton();
+
+        var clickTask = button.OnClickAsync(ct);
+        var walkTask = walkInput.WaitForWalkButtonAsync(ct);
+
+        var winIndex = await UniTask.WhenAny(clickTask, walkTask);
+
+        return winIndex == 0
+            ? CentralInteractionResult.Approached
+            : CentralInteractionResult.Skipped;
     }
 
     public void ClearImmediate()
@@ -60,14 +165,32 @@ public sealed class CentralObjectPresenter
             image = null;
             rectTransform = null;
         }
-        if (root == null) return;
-        var rects = root.GetComponentsInChildren<RectTransform>(true);
-        for (var i = 0; i < rects.Length; i++)
+
+        // Also destroy gate-related objects (BackImage, Label)
+        if (backImage != null)
         {
-            var rt = rects[i];
-            if (rt == null) continue;
-            if (rt.name != "CentralObject") continue;
-            DestroyObject(rt.gameObject);
+            DestroyObject(backImage.gameObject);
+            backImage = null;
+        }
+        if (labelText != null)
+        {
+            DestroyObject(labelText.gameObject);
+            labelText = null;
+        }
+
+        button = null;
+        canvasGroup = null;
+        currentMode = CentralDisplayMode.Hidden;
+
+        if (root == null) return;
+
+        // Only destroy objects with WalkSpawnedMarker to avoid deleting unrelated UI elements
+        var markers = root.GetComponentsInChildren<WalkSpawnedMarker>(true);
+        for (var i = 0; i < markers.Length; i++)
+        {
+            var marker = markers[i];
+            if (marker == null) continue;
+            DestroyObject(marker.gameObject);
         }
     }
 
@@ -86,6 +209,65 @@ public sealed class CentralObjectPresenter
         image = viewObject.GetComponent<Image>();
         image.raycastTarget = false;
         viewObject.AddComponent<WalkSpawnedMarker>();
+    }
+
+    private void EnsureBackImage()
+    {
+        if (backImage != null)
+        {
+            backImage.gameObject.SetActive(true);
+            return;
+        }
+        if (root == null) return;
+
+        var backObj = new GameObject("BackImage", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        var backRect = backObj.GetComponent<RectTransform>();
+        backRect.SetParent(root, false);
+        backRect.anchorMin = new Vector2(0.5f, 0.5f);
+        backRect.anchorMax = new Vector2(0.5f, 0.5f);
+        backRect.pivot = new Vector2(0.5f, 0.5f);
+        backRect.SetSiblingIndex(0);
+
+        backImage = backObj.GetComponent<Image>();
+        backImage.raycastTarget = false;
+        backObj.AddComponent<WalkSpawnedMarker>();
+    }
+
+    private void EnsureLabelText()
+    {
+        if (labelText != null)
+        {
+            labelText.gameObject.SetActive(true);
+            return;
+        }
+        if (root == null) return;
+
+        var labelObj = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+        var labelRect = labelObj.GetComponent<RectTransform>();
+        labelRect.SetParent(root, false);
+        labelRect.anchorMin = new Vector2(0.5f, 0.5f);
+        labelRect.anchorMax = new Vector2(0.5f, 0.5f);
+        labelRect.pivot = new Vector2(0.5f, 0.5f);
+        labelRect.anchoredPosition = new Vector2(0f, -100f);
+        labelRect.sizeDelta = new Vector2(300f, 50f);
+
+        labelText = labelObj.GetComponent<TMP_Text>();
+        labelText.alignment = TextAlignmentOptions.Center;
+        labelText.fontSize = 24f;
+        labelText.color = Color.white;
+        labelObj.AddComponent<WalkSpawnedMarker>();
+    }
+
+    private void EnsureButton()
+    {
+        if (button != null) return;
+        if (viewObject == null) return;
+
+        button = viewObject.GetComponent<Button>();
+        if (button == null)
+        {
+            button = viewObject.AddComponent<Button>();
+        }
     }
 
     private Sprite GetFallbackSprite()
