@@ -47,6 +47,18 @@ public class WalkProgressData
     public uint NodeSeed;
     public int VarietyHistoryIndex;
 
+    // Phase 1.3: EncounterState persistence
+    public List<EncounterStateData> EncounterStates = new();
+
+    // Phase 1.1: SideObject state persistence
+    public SideObjectState SideObjectState;
+
+    // Phase 2.3: Persistent encounter overlays
+    public List<EncounterOverlayData> EncounterOverlays = new();
+
+    // Phase 3.1: Tags
+    public List<string> Tags = new();
+
     public static WalkProgressData FromContext(GameContext context)
     {
         if (context == null) return null;
@@ -62,7 +74,8 @@ public class WalkProgressData
             GateStates = new List<GateRuntimeStateData>(),
             Anchors = new List<WalkAnchorData>(),
             NodeSeed = context.WalkState.NodeSeed,
-            VarietyHistoryIndex = context.WalkState.VarietyHistoryIndex
+            VarietyHistoryIndex = context.WalkState.VarietyHistoryIndex,
+            EncounterStates = context.ExportEncounterStates()
         };
 
         foreach (var kvp in context.GetAllFlags())
@@ -89,6 +102,18 @@ public class WalkProgressData
         if (context.AnchorManager != null)
         {
             data.Anchors = context.AnchorManager.ExportAnchors();
+        }
+
+        // Export persistent encounter overlays
+        data.EncounterOverlays = context.EncounterOverlays.ExportPersistent();
+
+        // Export tags
+        data.Tags = new List<string>(context.GetAllTags());
+
+        // Export side object state
+        if (context.SideObjectSelector != null)
+        {
+            data.SideObjectState = context.SideObjectSelector.ExportState();
         }
 
         return data;
@@ -124,6 +149,21 @@ public class WalkProgressData
         if (context.AnchorManager != null && Anchors != null)
         {
             context.AnchorManager.ImportAnchors(Anchors);
+        }
+
+        // Restore encounter states
+        context.ImportEncounterStates(EncounterStates);
+
+        // Restore persistent encounter overlays
+        context.EncounterOverlays.ImportPersistent(EncounterOverlays);
+
+        // Restore tags
+        context.RestoreTags(Tags);
+
+        // Restore side object state
+        if (context.SideObjectSelector != null && SideObjectState != null)
+        {
+            context.SideObjectSelector.ImportState(SideObjectState);
         }
     }
 }

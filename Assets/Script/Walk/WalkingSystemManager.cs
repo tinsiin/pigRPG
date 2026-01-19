@@ -19,6 +19,7 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
     private EventHost eventHost;
     private IEventUI eventUI;
     private IBattleRunner battleRunner;
+    private IWalkSFXPlayer sfxPlayer;
 
     public bool HasRootGraph => rootGraph != null;
 
@@ -139,6 +140,9 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
         {
             eventUI = new WalkingEventUI(walking, messageDropper);
         }
+        // Wire EventUI to GameContext for ShowMessageEffect
+        gameContext.EventUI = eventUI;
+
         if (eventRunner == null)
         {
             eventRunner = new EventRunner();
@@ -161,6 +165,13 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
         {
             centralPresenter = new CentralObjectPresenter();
         }
+
+        // Initialize SFX player and wire to presenter
+        if (sfxPlayer == null)
+        {
+            sfxPlayer = ResolveSFXPlayer();
+        }
+        centralPresenter.SetSFXPlayer(sfxPlayer);
 
         EnsureBattleRunner();
 
@@ -320,6 +331,24 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
         }
 
         return null;
+    }
+
+    private IWalkSFXPlayer ResolveSFXPlayer()
+    {
+        // Try to find an AudioSource in the scene for SFX playback
+        var audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = FindObjectOfType<AudioSource>();
+        }
+
+        if (audioSource != null)
+        {
+            return new WalkSFXPlayer(audioSource);
+        }
+
+        // No AudioSource available, use null implementation (SFX disabled)
+        return NullWalkSFXPlayer.Instance;
     }
 
     private async UniTask RunOneStepInternalAsync()

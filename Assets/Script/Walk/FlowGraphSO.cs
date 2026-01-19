@@ -28,4 +28,18 @@ public sealed class FlowGraphSO : ScriptableObject
         }
         return false;
     }
+
+    public List<EdgeSO> GetEdgesFrom(string nodeId)
+    {
+        var result = new List<EdgeSO>();
+        if (string.IsNullOrEmpty(nodeId) || edges == null) return result;
+        foreach (var edge in edges)
+        {
+            if (edge != null && edge.FromNodeId == nodeId)
+            {
+                result.Add(edge);
+            }
+        }
+        return result;
+    }
 }

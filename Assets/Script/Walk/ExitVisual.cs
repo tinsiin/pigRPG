@@ -11,6 +11,7 @@ public struct ExitVisual
     [SerializeField] private Color tint;
     [SerializeField] private Color backTint;
     [SerializeField] private string label;
+    [SerializeField] private string sfxOnAppear;
 
     public Sprite Sprite => sprite;
     public Sprite BackSprite => backSprite;
@@ -19,6 +20,7 @@ public struct ExitVisual
     public Color Tint => tint.a > 0f ? tint : Color.white;
     public Color BackTint => backTint.a > 0f ? backTint : Color.white;
     public string Label => label;
+    public string SfxOnAppear => sfxOnAppear;
     public bool HasSprite => sprite != null;
     public bool HasBackSprite => backSprite != null;
 

@@ -4,4 +4,5 @@ public sealed class EncounterState
     public int CooldownRemaining { get; set; }
     public int GraceRemaining { get; set; }
     public int Misses { get; set; }
+    public float PityAccumulated { get; set; }
 }

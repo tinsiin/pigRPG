@@ -22,6 +22,7 @@ public sealed class WalkAnchor
     public Dictionary<string, bool> FlagsSnapshot { get; }
     public Dictionary<string, int> CountersSnapshotMap { get; }
     public Dictionary<string, GateRuntimeState> GateStatesSnapshot { get; }
+    public SideObjectState SideObjectStateSnapshot { get; }
     public AnchorScope Scope { get; }
 
     public WalkAnchor(
@@ -32,6 +33,7 @@ public sealed class WalkAnchor
         Dictionary<string, bool> flags,
         Dictionary<string, int> counterMap,
         Dictionary<string, GateRuntimeState> gateStates,
+        SideObjectState sideObjectState,
         AnchorScope scope)
     {
         AnchorId = anchorId;
@@ -48,6 +50,7 @@ public sealed class WalkAnchor
                 GateStatesSnapshot[kvp.Key] = kvp.Value.Clone();
             }
         }
+        SideObjectStateSnapshot = sideObjectState;
         Scope = scope;
     }
 }

@@ -17,8 +17,9 @@ public sealed class AreaController
     private readonly SideObjectPresenter sidePresenter;
     private readonly CentralObjectPresenter centralPresenter;
     private readonly EventHost eventHost;
-    private readonly SideObjectResolver sideObjectResolver = new SideObjectResolver();
+    private readonly SideObjectSelector sideObjectSelector = new SideObjectSelector();
     private readonly EncounterResolver encounterResolver = new EncounterResolver();
+    private readonly ExitResolver exitResolver = new ExitResolver();
     private const int RewindStepsOnFail = 10;
     private NodeSO currentNode;
     private bool hasEnteredCurrentNode;
@@ -58,16 +59,21 @@ public sealed class AreaController
         anchorManager = new AnchorManager();
         context.GateResolver = gateResolver;
         context.AnchorManager = anchorManager;
+        context.SideObjectSelector = sideObjectSelector;
 
         InitializeStartNode();
         hasEnteredCurrentNode = false;
 
         // ゲート情報を初期化（UI表示用）
         InitializeGateResolverForCurrentNode();
+
+        // Phase 1.1: Initialize side object selector
+        ConfigureSideObjectSelector();
     }
 
     public string CurrentNodeId => currentNode != null ? currentNode.NodeId : null;
     public NodeSO CurrentNode => currentNode;
+    public SideObjectSelector SideObjectSelector => sideObjectSelector;
 
     public void SetApproachUI(WalkApproachUI ui)
     {
@@ -116,6 +122,9 @@ public sealed class AreaController
             return;
         }
 
+        // Capture node entry flag before updating it
+        var isNodeEntry = !hasEnteredCurrentNode;
+
         if (!hasEnteredCurrentNode)
         {
             await TriggerEvent(currentNode.OnEnterEvent);
@@ -129,7 +138,13 @@ public sealed class AreaController
         // Phase 2: Update track progress (additional progress beyond the base 1)
         UpdateTrackProgress();
 
-        var sidePair = sideObjectResolver.RollPair(currentNode.SideObjectTable);
+        // Advance side object cooldowns
+        sideObjectSelector.AdvanceStep();
+
+        // Advance encounter overlays
+        context.AdvanceEncounterOverlays();
+
+        var sidePair = sideObjectSelector.RollPair(currentNode.SideObjectTable, currentNode, context, isNodeEntry: isNodeEntry);
         var centralEvent = currentNode.CentralEvent;
         var hasCentral = centralEvent != null || currentNode.CentralVisual.HasVisual;
 
@@ -155,7 +170,7 @@ public sealed class AreaController
         // ここで一度UIを更新して、歩数の進行を即時反映させる
         NotifyProgressChanged();
 
-        var encounterResult = encounterResolver.Resolve(currentNode.EncounterTable, context, skipRoll: false);
+        var encounterResult = encounterResolver.Resolve(currentNode.EncounterTable, context, skipRoll: false, currentNode.EncounterRateMultiplier);
         if (encounterResult.Triggered)
         {
             var battleResult = await RunEncounter(encounterResult.Encounter);
@@ -213,7 +228,10 @@ public sealed class AreaController
     /// </summary>
     private async UniTask RefreshWithoutStep()
     {
-        var sidePair = sideObjectResolver.RollPair(currentNode.SideObjectTable);
+        // Clear pending on refresh without step
+        sideObjectSelector.ClearPending();
+
+        var sidePair = sideObjectSelector.RollPair(currentNode.SideObjectTable, currentNode, context, isNodeEntry: false);
         var centralEvent = currentNode.CentralEvent;
         var hasCentral = centralEvent != null || currentNode.CentralVisual.HasVisual;
 
@@ -340,6 +358,9 @@ public sealed class AreaController
 
         if (passed)
         {
+            // Play pass SFX
+            centralPresenter?.PlayGatePassSFX(gate.Visual);
+
             // GateEvent: OnPass timing
             if (gate.GateEvent != null && gate.EventTiming == GateEventTiming.OnPass)
             {
@@ -351,6 +372,9 @@ public sealed class AreaController
         }
         else
         {
+            // Play fail SFX
+            centralPresenter?.PlayGateFailSFX(gate.Visual);
+
             // GateEvent: OnFail timing
             if (gate.GateEvent != null && gate.EventTiming == GateEventTiming.OnFail)
             {
@@ -475,8 +499,15 @@ public sealed class AreaController
     /// </summary>
     private async UniTask<ExitResult> ShowExitAndSelectDestination()
     {
-        var exits = currentNode.Exits;
-        if (exits == null || exits.Length == 0)
+        // Check if any exits are available (considering conditions)
+        var availableExits = exitResolver.ResolveExits(
+            currentNode,
+            graph,
+            context,
+            currentNode.ExitSelectionMode,
+            currentNode.MaxExitChoices);
+
+        if (availableExits.Count == 0)
         {
             return new ExitResult(false, false);
         }
@@ -506,10 +537,10 @@ public sealed class AreaController
         var selectedExit = await SelectExit(currentNode);
         centralPresenter?.Hide();
 
-        if (selectedExit != null)
+        if (selectedExit.HasValue)
         {
             await TriggerEvent(currentNode.OnExitEvent);
-            TransitionTo(selectedExit.ToNodeId, selectedExit.Id);
+            TransitionTo(selectedExit.Value.ToNodeId, selectedExit.Value.Id);
             hasEnteredCurrentNode = false;
             return new ExitResult(true, false);
         }
@@ -565,7 +596,7 @@ public sealed class AreaController
         Debug.LogError("AreaController.InitializeStartNode: start node not found.");
     }
 
-    private async UniTask<ExitCandidate> SelectExit(NodeSO node)
+    private async UniTask<ResolvedExit?> SelectExit(NodeSO node)
     {
         if (exitSelectionUI == null)
         {
@@ -573,23 +604,16 @@ public sealed class AreaController
             return null;
         }
 
-        if (node.Exits == null || node.Exits.Length == 0)
-        {
-            Debug.LogError("AreaController.SelectExit: no exits on node.");
-            return null;
-        }
-
-        var exits = new List<ExitCandidate>();
-        for (var i = 0; i < node.Exits.Length; i++)
-        {
-            var candidate = node.Exits[i];
-            if (candidate == null) continue;
-            exits.Add(candidate);
-        }
+        var exits = exitResolver.ResolveExits(
+            node,
+            graph,
+            context,
+            node.ExitSelectionMode,
+            node.MaxExitChoices);
 
         if (exits.Count == 0)
         {
-            Debug.LogError("AreaController.SelectExit: all exits are null.");
+            Debug.LogError("AreaController.SelectExit: no valid exits found.");
             return null;
         }
 
@@ -611,26 +635,61 @@ public sealed class AreaController
     private async UniTask HandleApproach(SideObjectEntry[] sidePair, EventDefinitionSO centralEvent, bool hasCentral)
     {
         if (sidePair == null && !hasCentral) return;
+
+        // AutoTrigger mode: 中央イベントを即時実行
+        if (hasCentral && centralEvent != null && currentNode.CenterTriggerMode == CenterTriggerMode.AutoTrigger)
+        {
+            await TriggerEvent(centralEvent);
+            centralPresenter?.Hide();
+            // サイドオブジェクトは選択されず、pendingをクリア
+            sideObjectSelector.ClearPending();
+            return;
+        }
+
         if (approachUI == null)
         {
             Debug.LogWarning("AreaController.HandleApproach: approachUI is null.");
             return;
         }
 
-        var leftLabel = sidePair != null && sidePair.Length > 0 ? sidePair[0]?.SideObject?.UILabel : null;
-        var rightLabel = sidePair != null && sidePair.Length > 1 ? sidePair[1]?.SideObject?.UILabel : null;
+        var leftEntry = sidePair != null && sidePair.Length > 0 ? sidePair[0] : null;
+        var rightEntry = sidePair != null && sidePair.Length > 1 ? sidePair[1] : null;
+        var leftLabel = leftEntry?.SideObject?.UILabel;
+        var rightLabel = rightEntry?.SideObject?.UILabel;
 
         var choice = await approachUI.WaitForSelection(leftLabel, rightLabel, hasCentral, "中央");
         switch (choice)
         {
             case ApproachChoice.Left:
-                await TriggerEvent(sidePair != null && sidePair.Length > 0 ? sidePair[0]?.SideObject?.EventDefinition : null);
+                if (leftEntry != null)
+                {
+                    sideObjectSelector.OnSideObjectSelected(leftEntry, leftEntry.CooldownSteps);
+                    // Retain unselected side if enabled
+                    if (currentNode.RetainUnselectedSide)
+                    {
+                        sideObjectSelector.SetPending(null, rightEntry?.SideObject?.Id);
+                    }
+                }
+                await TriggerEvent(leftEntry?.SideObject?.EventDefinition);
                 break;
             case ApproachChoice.Right:
-                await TriggerEvent(sidePair != null && sidePair.Length > 1 ? sidePair[1]?.SideObject?.EventDefinition : null);
+                if (rightEntry != null)
+                {
+                    sideObjectSelector.OnSideObjectSelected(rightEntry, rightEntry.CooldownSteps);
+                    // Retain unselected side if enabled
+                    if (currentNode.RetainUnselectedSide)
+                    {
+                        sideObjectSelector.SetPending(leftEntry?.SideObject?.Id, null);
+                    }
+                }
+                await TriggerEvent(rightEntry?.SideObject?.EventDefinition);
                 break;
             case ApproachChoice.Center:
                 await TriggerEvent(centralEvent);
+                break;
+            case ApproachChoice.Skip:
+                // Neither selected, clear pending
+                sideObjectSelector.ClearPending();
                 break;
         }
 
@@ -650,7 +709,8 @@ public sealed class AreaController
         if (outcome == BattleOutcome.Defeat || outcome == BattleOutcome.Escape)
         {
             context.Counters.Rewind(RewindStepsOnFail);
-            sidePair = sideObjectResolver.RollPair(currentNode.SideObjectTable);
+            sideObjectSelector.ClearPending();
+            sidePair = sideObjectSelector.RollPair(currentNode.SideObjectTable, currentNode, context, isNodeEntry: false);
             centralEvent = currentNode.CentralEvent;
             hasCentral = centralEvent != null || currentNode.CentralVisual.HasVisual;
             ShowApproachObjects(sidePair, hasCentral);
@@ -747,6 +807,20 @@ public sealed class AreaController
 
         // Phase 2: Clear node-scoped anchors
         anchorManager.ClearAnchorsInScope(AnchorScope.Node);
+
+        // Phase 1.1: Reset side object state on node transition
+        sideObjectSelector.ClearPending();
+        ConfigureSideObjectSelector();
+    }
+
+    /// <summary>
+    /// Configure side object selector based on current node's table settings
+    /// </summary>
+    private void ConfigureSideObjectSelector()
+    {
+        var table = currentNode?.SideObjectTable;
+        var varietyDepth = table?.VarietyDepth ?? 0;
+        sideObjectSelector.Configure(varietyDepth);
     }
 
     /// <summary>

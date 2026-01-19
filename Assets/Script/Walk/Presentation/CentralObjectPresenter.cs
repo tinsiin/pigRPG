@@ -18,10 +18,16 @@ public sealed class CentralObjectPresenter
     private CanvasGroup canvasGroup;
     private Button button;
     private CentralDisplayMode currentMode;
+    private IWalkSFXPlayer sfxPlayer;
 
     public void SetRoot(RectTransform nextRoot)
     {
         root = nextRoot;
+    }
+
+    public void SetSFXPlayer(IWalkSFXPlayer player)
+    {
+        sfxPlayer = player;
     }
 
     public void Show(CentralObjectVisual visual, bool forceShow)
@@ -75,6 +81,9 @@ public sealed class CentralObjectPresenter
         if (image == null || rectTransform == null) return;
 
         currentMode = mode;
+
+        // Play SFX on appear
+        sfxPlayer?.Play(visual.SfxOnAppear);
 
         image.sprite = visual.HasSprite ? visual.Sprite : GetFallbackSprite();
         image.color = visual.Tint;
@@ -136,7 +145,21 @@ public sealed class CentralObjectPresenter
     public void ShowExit(ExitVisual visual, bool allGatesCleared)
     {
         if (!allGatesCleared) return;
+
+        // Play exit-specific SFX
+        sfxPlayer?.Play(visual.SfxOnAppear);
+
         ShowGate(visual.ToGateVisual(), CentralDisplayMode.HardBlock);
+    }
+
+    public void PlayGatePassSFX(GateVisual visual)
+    {
+        sfxPlayer?.Play(visual.SfxOnPass);
+    }
+
+    public void PlayGateFailSFX(GateVisual visual)
+    {
+        sfxPlayer?.Play(visual.SfxOnFail);
     }
 
     public async UniTask<CentralInteractionResult> WaitForInteraction(IWalkInputProvider walkInput, CancellationToken ct = default)

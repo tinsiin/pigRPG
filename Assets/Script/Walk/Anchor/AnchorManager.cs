@@ -8,7 +8,7 @@ public sealed class AnchorManager
 
     public bool HasAnchor(string anchorId) => anchors.ContainsKey(anchorId);
 
-    public void CreateAnchor(string anchorId, GameContext context, GateResolver gateResolver, AnchorScope scope)
+    public void CreateAnchor(string anchorId, GameContext context, GateResolver gateResolver, AnchorScope scope, SideObjectSelector sideObjectSelector = null)
     {
         var snapshot = new WalkCountersSnapshot(
             context.Counters.GlobalSteps,
@@ -23,13 +23,14 @@ public sealed class AnchorManager
             new Dictionary<string, bool>(context.GetAllFlags()),
             new Dictionary<string, int>(context.GetAllCounters()),
             gateResolver?.TakeSnapshot(),
+            sideObjectSelector?.ExportState(),
             scope);
 
         anchors[anchorId] = anchor;
         anchorHistory.Push(anchorId);
     }
 
-    public void RewindToAnchor(string anchorId, GameContext context, GateResolver gateResolver, RewindMode mode)
+    public void RewindToAnchor(string anchorId, GameContext context, GateResolver gateResolver, RewindMode mode, SideObjectSelector sideObjectSelector = null)
     {
         if (!anchors.TryGetValue(anchorId, out var anchor)) return;
 
@@ -47,6 +48,9 @@ public sealed class AnchorManager
 
             // Pass the anchor's node ID so cross-node rewinds can validate the snapshot
             gateResolver?.RestoreFromSnapshot(anchor.GateStatesSnapshot, anchor.NodeId);
+
+            // Restore side object state
+            sideObjectSelector?.ImportState(anchor.SideObjectStateSnapshot);
         }
     }
 

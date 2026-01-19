@@ -72,6 +72,7 @@ public sealed class WalkAnchorData
     public List<StringBoolPair> Flags = new();
     public List<StringIntPair> CounterValues = new();
     public List<GateRuntimeStateData> GateStates = new();
+    public SideObjectState SideObjectState;
     public AnchorScope Scope;
 
     public static WalkAnchorData FromAnchor(WalkAnchor anchor)
@@ -87,6 +88,7 @@ public sealed class WalkAnchorData
             Flags = new List<StringBoolPair>(),
             CounterValues = new List<StringIntPair>(),
             GateStates = new List<GateRuntimeStateData>(),
+            SideObjectState = anchor.SideObjectStateSnapshot,
             Scope = anchor.Scope
         };
 
@@ -124,6 +126,7 @@ public sealed class WalkAnchorData
             flags,
             counters,
             gateStates,
+            SideObjectState,
             Scope);
     }
 }

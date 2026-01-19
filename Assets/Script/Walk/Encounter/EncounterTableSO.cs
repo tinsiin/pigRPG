@@ -3,6 +3,9 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Walk/Encounter Table")]
 public sealed class EncounterTableSO : ScriptableObject
 {
+    [Tooltip("Unique ID for save/load. Use GUID or stable string.")]
+    [SerializeField] private string tableId;
+
     [Range(0f, 1f)]
     [SerializeField] private float baseRate = 0.1f;
     [SerializeField] private int cooldownSteps;
@@ -13,6 +16,7 @@ public sealed class EncounterTableSO : ScriptableObject
     [SerializeField] private bool enableDebugLog;
     [SerializeField] private EncounterEntry[] entries;
 
+    public string TableId => tableId;
     public float BaseRate => baseRate;
     public int CooldownSteps => cooldownSteps;
     public int GraceSteps => graceSteps;

@@ -30,12 +30,19 @@ public sealed class EncounterResolver
         Debug.Log($"[Encounter] {message} (table={table.name}, node={nodeId})");
     }
 
-    public EncounterRollResult Resolve(EncounterTableSO table, GameContext context, bool skipRoll)
+    public EncounterRollResult Resolve(EncounterTableSO table, GameContext context, bool skipRoll, float nodeMultiplier = 1f)
     {
         if (table == null || context == null) return EncounterRollResult.None;
         if (skipRoll)
         {
             Log(table, context, "skip: skipRoll");
+            return EncounterRollResult.None;
+        }
+
+        // Check if encounters are disabled
+        if (context.IsEncounterDisabled)
+        {
+            Log(table, context, "skip: encounters disabled");
             return EncounterRollResult.None;
         }
 
@@ -60,7 +67,11 @@ public sealed class EncounterResolver
             return EncounterRollResult.None;
         }
 
-        var rate = Mathf.Clamp01(table.BaseRate + state.Misses * table.PityIncrement);
+        // Calculate combined multiplier (node + overlays)
+        var overlayMultiplier = context.GetEncounterMultiplier();
+        var combinedMultiplier = nodeMultiplier * overlayMultiplier;
+
+        var rate = Mathf.Clamp01((table.BaseRate + state.Misses * table.PityIncrement) * combinedMultiplier);
         if (table.PityMax > 0f)
         {
             rate = Mathf.Min(rate, table.PityMax);

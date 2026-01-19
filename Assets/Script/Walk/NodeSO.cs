@@ -1,5 +1,11 @@
 using UnityEngine;
 
+public enum CenterTriggerMode
+{
+    Manual,
+    AutoTrigger
+}
+
 [CreateAssetMenu(menuName = "Walk/Node")]
 public sealed class NodeSO : ScriptableObject
 {
@@ -7,13 +13,19 @@ public sealed class NodeSO : ScriptableObject
     [SerializeField] private string displayName;
     [SerializeField] private NodeUIHints uiHints;
     [SerializeField] private SideObjectTableSO sideObjectTable;
+    [SerializeField] private FixedSideObjectPair fixedSideObjects;
+    [SerializeField] private bool retainUnselectedSide;
     [SerializeField] private EncounterTableSO encounterTable;
+    [SerializeField] private float encounterRateMultiplier = 1f;
     [SerializeField] private EventDefinitionSO onEnterEvent;
     [SerializeField] private EventDefinitionSO onExitEvent;
     [SerializeField] private EventDefinitionSO centralEvent;
+    [SerializeField] private CenterTriggerMode centerTriggerMode = CenterTriggerMode.Manual;
     [SerializeField] private CentralObjectVisual centralVisual;
     [SerializeField] private ExitSpawnRule exitSpawn;
     [SerializeField] private ExitCandidate[] exits;
+    [SerializeField] private ExitSelectionMode exitSelectionMode = ExitSelectionMode.ShowAll;
+    [SerializeField] private int maxExitChoices;
     [SerializeField] private TrackConfig trackConfig;
     [SerializeField] private GateMarker[] gates;
     [SerializeField] private ExitVisual exitVisual;
@@ -22,13 +34,19 @@ public sealed class NodeSO : ScriptableObject
     public string DisplayName => displayName;
     public NodeUIHints UiHints => uiHints;
     public SideObjectTableSO SideObjectTable => sideObjectTable;
+    public FixedSideObjectPair FixedSideObjects => fixedSideObjects;
+    public bool RetainUnselectedSide => retainUnselectedSide;
     public EncounterTableSO EncounterTable => encounterTable;
+    public float EncounterRateMultiplier => encounterRateMultiplier;
     public EventDefinitionSO OnEnterEvent => onEnterEvent;
     public EventDefinitionSO OnExitEvent => onExitEvent;
     public EventDefinitionSO CentralEvent => centralEvent;
+    public CenterTriggerMode CenterTriggerMode => centerTriggerMode;
     public CentralObjectVisual CentralVisual => centralVisual;
     public ExitSpawnRule ExitSpawn => exitSpawn;
     public ExitCandidate[] Exits => exits;
+    public ExitSelectionMode ExitSelectionMode => exitSelectionMode;
+    public int MaxExitChoices => maxExitChoices;
     public TrackConfig TrackConfig => trackConfig;
     public GateMarker[] Gates => gates;
     public ExitVisual ExitVisual => exitVisual;
