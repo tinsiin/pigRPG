@@ -1,6 +1,6 @@
 # Unity Editorデバッグツール一覧
 
-pigRPGプロジェクトで使用可能なUnity Editor拡張ツールのリファレンスです。
+pigRPGプロジェクトで使用可能なデバッグ用Unity Editor拡張ツールのリファレンスです。
 
 ---
 
@@ -64,18 +64,6 @@ PlayMode中の歩行システム状態をリアルタイムで監視・操作す
 
 ---
 
-### WalkPlayModeCleanup
-**ファイル:** `Assets/Editor/Walk/WalkPlayModeCleanup.cs`
-**起動:** PlayMode終了時に自動実行
-
-PlayMode終了時にスポーンされたオブジェクトを自動クリーンアップする。
-
-**対象:**
-- SideObject系のスポーン済みオブジェクト
-- CentralObject系のスポーン済みオブジェクト
-
----
-
 ## スキル関連
 
 ### SkillTraitValidator
@@ -92,24 +80,25 @@ SkillZoneTraitの値を検証するツール。
 
 ## システム/ユーティリティ
 
-### AutoSave / SceneBackup
-**ファイル:**
-- `Assets/Editor/AutoSave.cs`
-- `Assets/Editor/SceneBackup.cs`
-
+### AutoSave
+**ファイル:** `Assets/Editor/AutoSave.cs`
 **設定:** `Edit > Preferences > Auto Save`
+**メニュー:** `File > Backup > Backup / Rollback`
 
 シーンの自動保存とバックアップ機能。
 
 **機能:**
-- 指定間隔での自動保存
-- 手動保存時のバックアップ作成
-- バックアップファイルの世代管理
+- PlayMode開始時の自動保存
+- 指定間隔での自動保存（Hierarchy変更時のみ）
+- 手動保存時のバックアップ自動作成
+- バックアップからのロールバック
 
 **設定項目:**
-- 自動保存の有効/無効
-- 保存間隔
-- バックアップ保持数
+- Auto Save: 自動保存の有効/無効
+- Save Prefabs: プレハブも保存するか
+- Save Scene: シーンを保存するか
+- Timer Save: タイマー保存の有効/無効
+- Interval: 保存間隔（秒、最小60秒）
 
 ---
 
@@ -118,43 +107,26 @@ SkillZoneTraitの値を検証するツール。
 **メニュー:**
 - `Tools > Metrics > Enable Metrics`
 - `Tools > Metrics > Disable Metrics`
+- `Tools > Metrics > Enable Metrics (All Common Targets)`
+- `Tools > Metrics > Disable Metrics (All Common Targets)`
 
-METRICS_DISABLEDシンボル定義の切り替えツール。
+パフォーマンスメトリクス収集機能の有効/無効を切り替えるツール。
 
-**機能:**
-- メトリクス収集の有効/無効切り替え
-- Scripting Define Symbolsの自動更新
+**影響範囲:**
+- `PerformanceHUD`: 画面上のパフォーマンス表示
+- `MetricsHub`: メトリクスデータの収集・集計
 
----
+**使用タイミング:**
+- **開発中:** Enable（有効）にしてパフォーマンス監視
+- **リリースビルド:** Disable（無効）にしてオーバーヘッド削減
+- **パフォーマンス調査時:** 一時的にEnableにして計測
 
-### PresetSweepSafeStop
-**ファイル:** `Assets/Editor/PresetSweepSafeStop.cs`
-**メニュー:** `Tools > Benchmark > Safe Stop Preset Sweep` (Ctrl+Alt+S)
-**自動起動:** PlayMode終了時
-
-Preset Sweepを安全に停止するツール。
-
-**機能:**
-- PlayMode終了時のズーム状態復元
-- スイープ中断時の状態クリーンアップ
-- 手動停止コマンド（Ctrl+Alt+S）
-
----
-
-## カスタムインスペクタ（参考）
-
-以下はデバッグツールではなく、Inspector表示のカスタマイズ用です：
-
-| ファイル | 対象 |
-|----------|------|
-| `ToggleButtonEditor.cs` | ToggleButton |
-| `SideObjectMovePositionEditor.cs` | SideObjectMovePosition |
-| `UILineRendererEditor.cs` | UILineRenderer |
-| `AttackPowerCoefficientsTableViewEditor.cs` | 攻撃力係数テーブル |
-| `PowerCoefficientsTableViewBaseEditor.cs` | 能力係数テーブル基底 |
+**仕組み:**
+`METRICS_DISABLED` Scripting Define Symbolを追加/削除することで、メトリクス関連コードをコンパイル時に除外/含める。
 
 ---
 
 ## 更新履歴
 
 - 2025-01: WalkingSystemManagerEditor追加、ドキュメント初版作成
+- 2025-01: 不要ツール削除、MetricsDefineToggle説明改善
