@@ -11,11 +11,14 @@ public enum ComparisonOperator
 }
 
 [CreateAssetMenu(menuName = "Walk/Conditions/HasCounter")]
-public sealed class HasCounterCondition : ConditionSO
+public sealed class HasCounterCondition : ConditionSO, IKeyedCondition
 {
     [SerializeField] private string counterKey;
     [SerializeField] private ComparisonOperator comparison = ComparisonOperator.GreaterOrEqual;
     [SerializeField] private int value;
+
+    public string ConditionKey => counterKey;
+    public ConditionKeyType KeyType => ConditionKeyType.Counter;
 
     public override bool IsMet(GameContext context)
     {

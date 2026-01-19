@@ -114,6 +114,14 @@ public sealed class EncounterOverlayStack
         return result;
     }
 
+    /// <summary>
+    /// デバッグ用: 全てのアクティブなオーバーレイを取得（永続/非永続を問わず）
+    /// </summary>
+    public IReadOnlyList<EncounterOverlay> GetAllActive()
+    {
+        return overlays;
+    }
+
     public void ImportPersistent(List<EncounterOverlayData> dataList)
     {
         // 既存のオーバーレイをクリアしてから復元（累積防止）

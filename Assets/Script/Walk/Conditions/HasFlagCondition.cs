@@ -1,10 +1,13 @@
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Walk/Conditions/HasFlag")]
-public sealed class HasFlagCondition : ConditionSO
+public sealed class HasFlagCondition : ConditionSO, IKeyedCondition
 {
     [SerializeField] private string flagKey;
     [SerializeField] private bool expectedValue = true;
+
+    public string ConditionKey => flagKey;
+    public ConditionKeyType KeyType => ConditionKeyType.Flag;
 
     public override bool IsMet(GameContext context)
     {

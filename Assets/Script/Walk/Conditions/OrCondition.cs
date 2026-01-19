@@ -5,6 +5,8 @@ public sealed class OrCondition : ConditionSO
 {
     [SerializeField] private ConditionSO[] conditions;
 
+    public ConditionSO[] Conditions => conditions;
+
     public override bool IsMet(GameContext context)
     {
         if (conditions == null || conditions.Length == 0) return true;

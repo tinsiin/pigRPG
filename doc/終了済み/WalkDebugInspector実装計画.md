@@ -1,5 +1,21 @@
 # WalkDebugInspector 実装計画
 
+**ステータス: ✅ 完了（2026-01-19）**
+
+## 実装結果
+
+### 新規ファイル
+- `Assets/Script/Walk/Conditions/IKeyedCondition.cs`
+- `Assets/Editor/Walk/WalkConditionCollector.cs`
+- `Assets/Editor/Walk/WalkingSystemManagerEditor.cs`
+
+### 変更ファイル
+- `HasTagCondition.cs`, `HasFlagCondition.cs`, `HasCounterCondition.cs` - IKeyedCondition実装
+- `AndCondition.cs`, `OrCondition.cs`, `NotCondition.cs` - アクセサ追加
+- `WalkingSystemManager.cs` - GameContextゲッター追加
+
+---
+
 ## 概要
 
 WalkingSystemManagerのカスタムインスペクターを作成し、PlayMode中にGameContextの状態（タグ/フラグ/カウンター/オーバーレイ）を可視化・操作できるデバッグUIを提供する。
@@ -146,7 +162,18 @@ public class WalkingSystemManagerEditor : Editor
     {
         // 選択中のManagerに紐づくGameContextを取得（Hub.Currentではない）
         var manager = (WalkingSystemManager)target;
-        return manager.GameContext;
+        return manager.GameContext; // 初期化前はnullの可能性あり
+    }
+
+    private void DrawDebugSection()
+    {
+        var context = GetGameContext();
+        if (context == null)
+        {
+            EditorGUILayout.HelpBox("GameContext未初期化（歩行システム起動前）", MessageType.Info);
+            return;
+        }
+        // ... デバッグUI描画
     }
 }
 ```
@@ -156,13 +183,21 @@ public class WalkingSystemManagerEditor : Editor
 ```csharp
 public sealed class WalkConditionCollector
 {
-    // FlowGraphからすべてのConditionSOを収集
-    public void CollectFromFlowGraph(FlowGraphSO graph);
-
     // 収集結果（Dictionary: キー名 → 使用回数）
     public Dictionary<string, int> UsedTags { get; } = new();
     public Dictionary<string, int> UsedFlags { get; } = new();
     public Dictionary<string, int> UsedCounters { get; } = new();
+
+    // FlowGraphからすべてのConditionSOを収集
+    public void CollectFromFlowGraph(FlowGraphSO graph)
+    {
+        // Refresh時の累積を防ぐため、収集前にクリア
+        UsedTags.Clear();
+        UsedFlags.Clear();
+        UsedCounters.Clear();
+
+        // ... FlowGraph走査処理
+    }
 
     // 単一のConditionを処理（And/Or/Not再帰対応）
     private void CollectFromCondition(ConditionSO condition)
@@ -199,7 +234,7 @@ public sealed class WalkConditionCollector
         }
         else if (condition is NotCondition not)
         {
-            CollectFromCondition(not.Inner);
+            CollectFromCondition(not.Condition);
         }
     }
 }
@@ -215,7 +250,7 @@ public ConditionSO[] Conditions => conditions;
 public ConditionSO[] Conditions => conditions;
 
 // NotCondition
-public ConditionSO Inner => inner;
+public ConditionSO Condition => condition;
 ```
 
 ## UI設計
@@ -278,7 +313,7 @@ public ConditionSO Inner => inner;
 |---------------|----------|
 | AndCondition | `Conditions[]` |
 | OrCondition | `Conditions[]` |
-| NotCondition | `Inner` |
+| NotCondition | `Condition` |
 
 ### 収集範囲
 
@@ -301,19 +336,19 @@ FlowGraph内の以下の場所を走査：
 
 ## Clear Debug State の対象範囲
 
-「Clear Debug State」ボタンは**デバッグ操作で変更したもののみ**をクリアする:
+「Clear Debug State」ボタンは対象4種を**全消去**する。ゲーム進行で設定された値も含めて消去されるため、実行前に確認ダイアログを表示する。
 
 | 対象 | クリア | 備考 |
 |------|--------|------|
-| タグ | ✓ | GameContext.tags |
-| フラグ | ✓ | GameContext.flags |
-| カウンター | ✓ | GameContext.counters |
-| オーバーレイ | ✓ | EncounterOverlayStack |
+| タグ | ✓ | GameContext.tags を全消去 |
+| フラグ | ✓ | GameContext.flags を全消去 |
+| カウンター | ✓ | GameContext.counters を全消去 |
+| オーバーレイ | ✓ | EncounterOverlayStack を全消去 |
 | 歩数 | ✗ | 進行状態は維持 |
 | アンカー | ✗ | 進行状態は維持 |
 | ゲート状態 | ✗ | 進行状態は維持 |
 
-**確認ダイアログ**: 実行前に「タグ/フラグ/カウンター/オーバーレイをすべてクリアしますか？」と確認
+**確認ダイアログ**: 「タグ/フラグ/カウンター/オーバーレイをすべてクリアします。ゲーム中に設定された値も消去されますが、よろしいですか？」
 
 ## 実装フェーズ
 
@@ -423,7 +458,7 @@ GUI.enabled = true;
 - `Assets/Script/Walk/Conditions/HasCounterCondition.cs` (IKeyedCondition実装)
 - `Assets/Script/Walk/Conditions/AndCondition.cs` (Conditionsアクセサ追加)
 - `Assets/Script/Walk/Conditions/OrCondition.cs` (Conditionsアクセサ追加)
-- `Assets/Script/Walk/Conditions/NotCondition.cs` (Innerアクセサ追加)
+- `Assets/Script/Walk/Conditions/NotCondition.cs` (Conditionアクセサ追加)
 - `Assets/Script/Walk/WalkingSystemManager.cs` (GameContextゲッター追加)
 
 ## FAQ

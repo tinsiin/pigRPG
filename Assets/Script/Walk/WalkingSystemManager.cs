@@ -22,6 +22,7 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
     private IWalkSFXPlayer sfxPlayer;
 
     public bool HasRootGraph => rootGraph != null;
+    public GameContext GameContext => gameContext;
 
     private void OnEnable()
     {
