@@ -54,9 +54,65 @@ Assets/Editor/Walk/
 ├── WalkingSystemManagerEditor.cs    # カスタムインスペクター本体
 ├── WalkDebugDrawer.cs               # デバッグUI描画ヘルパー
 └── WalkConditionCollector.cs        # Condition自動収集ユーティリティ
+
+Assets/Script/Walk/Conditions/
+└── IKeyedCondition.cs               # キー取得用インターフェース（新規）
 ```
 
 ### クラス設計
+
+#### IKeyedCondition（新規インターフェース）
+
+リフレクションに依存せず、安全にキーを取得するためのインターフェース:
+
+```csharp
+public enum ConditionKeyType
+{
+    Tag,
+    Flag,
+    Counter
+}
+
+public interface IKeyedCondition
+{
+    string ConditionKey { get; }
+    ConditionKeyType KeyType { get; }
+}
+```
+
+対象Conditionに実装:
+
+```csharp
+// HasTagCondition
+public sealed class HasTagCondition : ConditionSO, IKeyedCondition
+{
+    [SerializeField] private string tag;
+
+    public string ConditionKey => tag;
+    public ConditionKeyType KeyType => ConditionKeyType.Tag;
+    // ...
+}
+
+// HasFlagCondition
+public sealed class HasFlagCondition : ConditionSO, IKeyedCondition
+{
+    [SerializeField] private string flagKey;
+
+    public string ConditionKey => flagKey;
+    public ConditionKeyType KeyType => ConditionKeyType.Flag;
+    // ...
+}
+
+// HasCounterCondition
+public sealed class HasCounterCondition : ConditionSO, IKeyedCondition
+{
+    [SerializeField] private string counterKey;
+
+    public string ConditionKey => counterKey;
+    public ConditionKeyType KeyType => ConditionKeyType.Counter;
+    // ...
+}
+```
 
 #### WalkingSystemManagerEditor
 
@@ -67,15 +123,30 @@ public class WalkingSystemManagerEditor : Editor
     private WalkConditionCollector collector;
     private bool showDebugFoldout = true;
 
-    // デフォルトインスペクター + デバッグセクション
     public override void OnInspectorGUI()
     {
+        // PlayMode中は通常フィールドを編集禁止
+        if (Application.isPlaying)
+        {
+            GUI.enabled = false;
+        }
+
         DrawDefaultInspector();
+
+        GUI.enabled = true;
 
         if (Application.isPlaying)
         {
+            EditorGUILayout.Space();
             DrawDebugSection();
         }
+    }
+
+    private GameContext GetGameContext()
+    {
+        // 選択中のManagerに紐づくGameContextを取得（Hub.Currentではない）
+        var manager = (WalkingSystemManager)target;
+        return manager.GameContext;
     }
 }
 ```
@@ -88,11 +159,63 @@ public sealed class WalkConditionCollector
     // FlowGraphからすべてのConditionSOを収集
     public void CollectFromFlowGraph(FlowGraphSO graph);
 
-    // 収集結果
-    public HashSet<string> UsedTags { get; }
-    public HashSet<string> UsedFlags { get; }
-    public HashSet<string> UsedCounters { get; }
+    // 収集結果（Dictionary: キー名 → 使用回数）
+    public Dictionary<string, int> UsedTags { get; } = new();
+    public Dictionary<string, int> UsedFlags { get; } = new();
+    public Dictionary<string, int> UsedCounters { get; } = new();
+
+    // 単一のConditionを処理（And/Or/Not再帰対応）
+    private void CollectFromCondition(ConditionSO condition)
+    {
+        if (condition == null) return;
+
+        // IKeyedConditionインターフェースで安全にキー取得
+        if (condition is IKeyedCondition keyed && !string.IsNullOrEmpty(keyed.ConditionKey))
+        {
+            var dict = keyed.KeyType switch
+            {
+                ConditionKeyType.Tag => UsedTags,
+                ConditionKeyType.Flag => UsedFlags,
+                ConditionKeyType.Counter => UsedCounters,
+                _ => null
+            };
+            if (dict != null)
+            {
+                dict.TryGetValue(keyed.ConditionKey, out var count);
+                dict[keyed.ConditionKey] = count + 1;
+            }
+        }
+
+        // 複合条件を再帰的に辿る
+        if (condition is AndCondition and)
+        {
+            foreach (var child in and.Conditions)
+                CollectFromCondition(child);
+        }
+        else if (condition is OrCondition or)
+        {
+            foreach (var child in or.Conditions)
+                CollectFromCondition(child);
+        }
+        else if (condition is NotCondition not)
+        {
+            CollectFromCondition(not.Inner);
+        }
+    }
 }
+```
+
+**注意**: `AndCondition`, `OrCondition`, `NotCondition`に内部配列へのアクセサが必要:
+
+```csharp
+// AndCondition
+public ConditionSO[] Conditions => conditions;
+
+// OrCondition
+public ConditionSO[] Conditions => conditions;
+
+// NotCondition
+public ConditionSO Inner => inner;
 ```
 
 ## UI設計
@@ -101,9 +224,9 @@ public sealed class WalkConditionCollector
 ┌─────────────────────────────────────────────────────┐
 │ Walking System Manager                              │
 ├─────────────────────────────────────────────────────┤
-│ Flow Graph: [FlowGraph_Stages]                      │
-│ Start Node: [エントランスホール]                      │
-│ ...（通常のフィールド）                               │
+│ Flow Graph: [FlowGraph_Stages]      (編集禁止)       │
+│ Start Node: [エントランスホール]      (編集禁止)       │
+│ ...（通常のフィールド）                (編集禁止)       │
 ├─────────────────────────────────────────────────────┤
 │ ▼ Debug (PlayMode)                                  │
 │ ┌─────────────────────────────────────────────────┐ │
@@ -114,39 +237,48 @@ public sealed class WalkConditionCollector
 │ └─────────────────────────────────────────────────┘ │
 │ ┌─────────────────────────────────────────────────┐ │
 │ │ Tags                              [+ Add]       │ │
-│ │   [✓] vip          (used by: 2 conditions)     │ │
-│ │   [ ] healed       (used by: 1 condition)      │ │
-│ │   [✓] custom_tag   (manual)                    │ │
+│ │   [✓] vip          (2箇所で使用)                │ │
+│ │   [ ] healed       (1箇所で使用)                │ │
+│ │   [✓] custom_tag   (手動追加)                   │ │
 │ └─────────────────────────────────────────────────┘ │
 │ ┌─────────────────────────────────────────────────┐ │
 │ │ Flags                             [+ Add]       │ │
-│ │   [✓] gate_passed  (used by: 1 condition)      │ │
-│ │   [ ] boss_defeated                            │ │
+│ │   [✓] gate_passed  (1箇所で使用)                │ │
+│ │   [ ] boss_defeated (手動追加)                  │ │
 │ └─────────────────────────────────────────────────┘ │
 │ ┌─────────────────────────────────────────────────┐ │
 │ │ Counters                          [+ Add]       │ │
-│ │   kills: [___5___]                             │ │
-│ │   items: [___12__]                             │ │
+│ │   kills: [___5___]                              │ │
+│ │   items: [___12__]                              │ │
 │ └─────────────────────────────────────────────────┘ │
 │ ┌─────────────────────────────────────────────────┐ │
 │ │ Encounter Overlays                [+ Add]       │ │
-│ │   double_encounter: x2.0 (残り 5歩)             │ │
-│ │   [Remove]                                     │ │
+│ │   double_encounter: x2.0 (残り 5歩)    [Remove] │ │
 │ └─────────────────────────────────────────────────┘ │
 │                                                     │
-│ [Refresh Conditions] [Clear All State]              │
+│ [Refresh Conditions] [Clear Debug State]            │
 └─────────────────────────────────────────────────────┘
 ```
 
 ## 収集対象のConditionSO
 
-以下のConditionSOから使用キーを自動収集：
+以下のConditionSOから使用キーを自動収集（IKeyedCondition実装クラス）:
 
-| ConditionSO | 収集対象 |
-|-------------|----------|
-| HasTagCondition | tag フィールド → UsedTags |
-| HasFlagCondition | flagKey フィールド → UsedFlags |
-| CounterCondition | counterKey フィールド → UsedCounters |
+| ConditionSO | キー取得 | 収集先 |
+|-------------|----------|--------|
+| HasTagCondition | `ConditionKey` (tag) | UsedTags |
+| HasFlagCondition | `ConditionKey` (flagKey) | UsedFlags |
+| HasCounterCondition | `ConditionKey` (counterKey) | UsedCounters |
+
+### 複合条件の再帰走査
+
+以下の複合条件は内部のConditionを再帰的に辿る:
+
+| 複合Condition | 走査対象 |
+|---------------|----------|
+| AndCondition | `Conditions[]` |
+| OrCondition | `Conditions[]` |
+| NotCondition | `Inner` |
 
 ### 収集範囲
 
@@ -165,57 +297,90 @@ FlowGraph内の以下の場所を走査：
 4. **EdgeSO**
    - conditions
 
+**対象外**: EventDefinitionSO（現状はConditionフィールドを持たないため）
+
+## Clear Debug State の対象範囲
+
+「Clear Debug State」ボタンは**デバッグ操作で変更したもののみ**をクリアする:
+
+| 対象 | クリア | 備考 |
+|------|--------|------|
+| タグ | ✓ | GameContext.tags |
+| フラグ | ✓ | GameContext.flags |
+| カウンター | ✓ | GameContext.counters |
+| オーバーレイ | ✓ | EncounterOverlayStack |
+| 歩数 | ✗ | 進行状態は維持 |
+| アンカー | ✗ | 進行状態は維持 |
+| ゲート状態 | ✗ | 進行状態は維持 |
+
+**確認ダイアログ**: 実行前に「タグ/フラグ/カウンター/オーバーレイをすべてクリアしますか？」と確認
+
 ## 実装フェーズ
+
+### Phase 0: 前提準備
+
+0. `IKeyedCondition.cs` インターフェース作成
+1. `HasTagCondition`, `HasFlagCondition`, `HasCounterCondition` に `IKeyedCondition` 実装
+2. `AndCondition`, `OrCondition`, `NotCondition` に内部アクセサ追加
+3. `WalkingSystemManager` に `GameContext` publicゲッター追加
 
 ### Phase 1: 基盤（必須）
 
-1. `WalkingSystemManagerEditor.cs` 作成
-   - デフォルトインスペクター描画
+4. `WalkingSystemManagerEditor.cs` 作成
+   - デフォルトインスペクター描画（PlayMode中は編集禁止）
    - PlayMode判定
    - デバッグセクションのFoldout
 
-2. `WalkConditionCollector.cs` 作成
+5. `WalkConditionCollector.cs` 作成
    - FlowGraph走査ロジック
-   - HasTagCondition/HasFlagCondition対応
+   - IKeyedCondition対応
+   - And/Or/Not再帰走査
 
-3. タグ操作UI
-   - 収集したタグの一覧表示
+6. タグ操作UI
+   - 収集したタグの一覧表示（使用回数付き）
    - チェックボックスでトグル
 
 ### Phase 2: 拡張
 
-4. フラグ操作UI
-5. カウンター操作UI
-6. オーバーレイ表示UI
+7. フラグ操作UI
+8. カウンター操作UI
+9. オーバーレイ表示UI
 
 ### Phase 3: 利便性向上
 
-7. カスタム値の手動追加UI
-8. 状態サマリー表示
-9. Refresh/Clear Allボタン
+10. カスタム値の手動追加UI
+11. 状態サマリー表示
+12. Refresh/Clear Debug Stateボタン（確認ダイアログ付き）
 
 ## 実装上の注意点
 
 ### GameContextへのアクセス
 
 ```csharp
-// WalkingSystemManagerからGameContextを取得
+// 選択中のManagerに紐付くGameContextを取得
+// ※ GameContextHub.Current ではなく、target経由で取得
 var manager = (WalkingSystemManager)target;
 var context = manager.GameContext; // publicプロパティが必要
 ```
 
+**理由**: 将来的に複数のWalkingSystemManagerが存在する場合、`GameContextHub.Current`は最後にアクティブになったものを指すため、Inspector選択と一致しない可能性がある。
+
 **必要な変更**: WalkingSystemManagerにGameContextのpublicゲッターを追加
 
-### Condition型の判定
+```csharp
+// WalkingSystemManager.cs
+public GameContext GameContext => gameContext;
+```
+
+### Condition型の判定（IKeyedCondition使用）
 
 ```csharp
-if (condition is HasTagCondition tagCond)
+// リフレクション不要、インターフェースで安全に取得
+if (condition is IKeyedCondition keyed)
 {
-    // リフレクションでtagフィールドを取得
-    var tagField = typeof(HasTagCondition)
-        .GetField("tag", BindingFlags.NonPublic | BindingFlags.Instance);
-    var tag = (string)tagField.GetValue(tagCond);
-    usedTags.Add(tag);
+    var key = keyed.ConditionKey;
+    var type = keyed.KeyType;
+    // ...
 }
 ```
 
@@ -224,18 +389,54 @@ if (condition is HasTagCondition tagCond)
 - Condition収集はFlowGraph変更時またはRefreshボタン押下時のみ実行
 - 収集結果はキャッシュし、毎フレーム再計算しない
 
+### PlayMode中の安全性
+
+```csharp
+// 通常フィールドは編集禁止にして誤操作を防止
+if (Application.isPlaying)
+{
+    GUI.enabled = false;
+}
+DrawDefaultInspector();
+GUI.enabled = true;
+```
+
 ## テスト方法
 
 1. PlayModeでWalkingSystemManagerを選択
 2. Debugセクションが表示されることを確認
-3. タグのチェックボックスをONにし、コンソールで確認
-4. ゲート通過後、自動的にタグが付与されチェックが入ることを確認
+3. 通常フィールドが編集禁止になっていることを確認
+4. タグのチェックボックスをONにし、コンソールで確認
+5. ゲート通過後、自動的にタグが付与されチェックが入ることを確認
+6. Clear Debug Stateで確認ダイアログが表示されることを確認
 
 ## 成果物
 
+### 新規ファイル
+- `Assets/Script/Walk/Conditions/IKeyedCondition.cs`
 - `Assets/Editor/Walk/WalkingSystemManagerEditor.cs`
 - `Assets/Editor/Walk/WalkConditionCollector.cs`
-- WalkingSystemManagerへの軽微な変更（GameContextゲッター追加）
+
+### 変更ファイル
+- `Assets/Script/Walk/Conditions/HasTagCondition.cs` (IKeyedCondition実装)
+- `Assets/Script/Walk/Conditions/HasFlagCondition.cs` (IKeyedCondition実装)
+- `Assets/Script/Walk/Conditions/HasCounterCondition.cs` (IKeyedCondition実装)
+- `Assets/Script/Walk/Conditions/AndCondition.cs` (Conditionsアクセサ追加)
+- `Assets/Script/Walk/Conditions/OrCondition.cs` (Conditionsアクセサ追加)
+- `Assets/Script/Walk/Conditions/NotCondition.cs` (Innerアクセサ追加)
+- `Assets/Script/Walk/WalkingSystemManager.cs` (GameContextゲッター追加)
+
+## FAQ
+
+### Q: EventDefinition内の条件も収集対象ですか？
+
+A: **現状は対象外**。`EventDefinitionSO`は`ConditionSO`フィールドを持たず、`EffectSO`のみを持つため収集不要。将来的にEventStepに条件フィールドを追加する場合は収集対象に加える。
+
+### Q: 複数のWalkingSystemManagerがある場合はどうなりますか？
+
+A: **Inspectorは選択中のManagerに紐付ける**方針。`GameContextHub.Current`は最後にアクティブになったManagerを指すため、複数Manager時に意図しないContextを参照する可能性がある。`target`経由で確実に選択中のManagerのContextを取得する。
+
+（ただし現状はManager1つのため、どちらでも同じ動作になる）
 
 ## 将来の拡張
 
@@ -243,3 +444,4 @@ if (condition is HasTagCondition tagCond)
 - 複数GameContextの比較表示
 - 状態のスナップショット保存/復元
 - PlayModeテストとの統合
+- EventDefinitionSOに条件フィールド追加時の収集対応
