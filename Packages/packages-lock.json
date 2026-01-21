@@ -219,6 +219,15 @@
         "com.unity.2d.tooling": "1.0.0"
       }
     },
+    "com.unity.graphtoolkit": {
+      "version": "0.4.0-exp.2",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.modules.uielements": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
+    },
     "com.unity.ide.rider": {
       "version": "3.0.38",
       "depth": 0,
@@ -236,15 +245,6 @@
         "com.unity.test-framework": "1.1.33"
       },
       "url": "https://packages.unity.com"
-    },
-    "com.unity.ide.windsurf": {
-      "version": "https://github.com/Asuta/com.unity.ide.windsurf.git",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {
-        "com.unity.test-framework": "1.1.9"
-      },
-      "hash": "6161accf3e7beab96341813913e714c7e2fb5c5d"
     },
     "com.unity.inputsystem": {
       "version": "1.17.0",
