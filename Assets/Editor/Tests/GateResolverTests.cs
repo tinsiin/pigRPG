@@ -67,7 +67,6 @@ public class GateResolverTests
         var original = new GateRuntimeState("gate1", 50)
         {
             IsCleared = true,
-            CooldownRemaining = 5,
             FailCount = 2
         };
 
@@ -75,11 +74,10 @@ public class GateResolverTests
 
         // Modify original
         original.IsCleared = false;
-        original.CooldownRemaining = 0;
+        original.FailCount = 0;
 
         // Clone should be unaffected
         Assert.IsTrue(clone.IsCleared);
-        Assert.AreEqual(5, clone.CooldownRemaining);
         Assert.AreEqual(2, clone.FailCount);
     }
 
@@ -114,38 +112,6 @@ public class GateResolverTests
         var resolver = new GateResolver();
         // Node with no gates
         Assert.IsTrue(resolver.AllGatesCleared(null));
-    }
-
-    [Test]
-    public void GateResolver_TickCooldowns_DecrementsAllCooldowns()
-    {
-        var resolver = new GateResolver();
-        var snapshot = new Dictionary<string, GateRuntimeState>
-        {
-            ["gate1"] = new GateRuntimeState("gate1", 10) { CooldownRemaining = 5 },
-            ["gate2"] = new GateRuntimeState("gate2", 20) { CooldownRemaining = 3 }
-        };
-        resolver.RestoreFromSnapshot(snapshot);
-
-        resolver.TickCooldowns();
-
-        Assert.AreEqual(4, resolver.GetState("gate1").CooldownRemaining);
-        Assert.AreEqual(2, resolver.GetState("gate2").CooldownRemaining);
-    }
-
-    [Test]
-    public void GateResolver_TickCooldowns_DoesNotGoNegative()
-    {
-        var resolver = new GateResolver();
-        var snapshot = new Dictionary<string, GateRuntimeState>
-        {
-            ["gate1"] = new GateRuntimeState("gate1", 10) { CooldownRemaining = 0 }
-        };
-        resolver.RestoreFromSnapshot(snapshot);
-
-        resolver.TickCooldowns();
-
-        Assert.AreEqual(0, resolver.GetState("gate1").CooldownRemaining);
     }
 
     #endregion
@@ -317,7 +283,6 @@ public class GateResolverTests
             GateId = "gate1",
             ResolvedPosition = 50,
             IsCleared = true,
-            CooldownRemaining = 3,
             FailCount = 1
         };
 
@@ -326,7 +291,6 @@ public class GateResolverTests
         Assert.AreEqual("gate1", state.GateId);
         Assert.AreEqual(50, state.ResolvedPosition);
         Assert.IsTrue(state.IsCleared);
-        Assert.AreEqual(3, state.CooldownRemaining);
         Assert.AreEqual(1, state.FailCount);
     }
 
@@ -336,7 +300,6 @@ public class GateResolverTests
         var state = new GateRuntimeState("gate2", 75)
         {
             IsCleared = false,
-            CooldownRemaining = 5,
             FailCount = 2
         };
 
@@ -345,7 +308,6 @@ public class GateResolverTests
         Assert.AreEqual("gate2", data.GateId);
         Assert.AreEqual(75, data.ResolvedPosition);
         Assert.IsFalse(data.IsCleared);
-        Assert.AreEqual(5, data.CooldownRemaining);
         Assert.AreEqual(2, data.FailCount);
     }
 

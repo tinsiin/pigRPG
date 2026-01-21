@@ -196,31 +196,6 @@ public class ProgressCalculatorTests
     }
 
     [Test]
-    public void ProgressCalculator_Calculate_MarksGatesOnCooldown()
-    {
-        var calculator = new ProgressCalculator();
-        var resolver = new GateResolver();
-        var counters = new WalkCounters();
-
-        var snapshot = new Dictionary<string, GateRuntimeState>
-        {
-            ["gate1"] = new GateRuntimeState("gate1", 10) { CooldownRemaining = 3 }
-        };
-        resolver.RestoreFromSnapshot(snapshot);
-
-        var node = CreateNodeWithGates(new[]
-        {
-            CreateGateMarker("gate1", 1, 10)
-        });
-
-        var result = calculator.Calculate(node, resolver, counters);
-
-        Assert.GreaterOrEqual(result.Entries.Count, 1);
-        Assert.IsTrue(result.Entries[0].IsCoolingDown);
-        Assert.IsFalse(result.Entries[0].IsActive);
-    }
-
-    [Test]
     public void ProgressCalculator_Calculate_CalculatesStepsToNextGate()
     {
         var calculator = new ProgressCalculator();

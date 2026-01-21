@@ -1,9 +1,7 @@
 public enum CentralDisplayMode
 {
     Hidden,
-    HardBlock,
-    SoftBlock,
-    AutoTrigger
+    Visible  // 常にボタン表示（アプローチ/スルー選択可能）
 }
 
 public enum CentralInteractionResult

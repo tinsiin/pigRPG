@@ -196,11 +196,12 @@ public sealed class AreaController
         // Phase 2: Check exit with gate cleared status
         // カウンターを再取得（ゲート処理でリセットされている可能性があるため）
         var allGatesCleared = gateResolver.AllGatesCleared(currentNode);
+        var maxGatePosition = gateResolver.GetMaxResolvedPosition();
         var exitCounters = new WalkCountersSnapshot(
             context.Counters.GlobalSteps,
             context.Counters.NodeSteps,
             context.Counters.TrackProgress);
-        if (currentNode.ExitSpawn != null && currentNode.ExitSpawn.ShouldSpawn(exitCounters, allGatesCleared))
+        if (currentNode.ExitSpawn != null && currentNode.ExitSpawn.ShouldSpawn(exitCounters, allGatesCleared, maxGatePosition))
         {
             var exitResult = await ShowExitAndSelectDestination();
 
@@ -210,16 +211,11 @@ public sealed class AreaController
                 return;
             }
 
-            if (exitResult.Skipped && currentNode.ExitSpawn.Mode == ExitSpawnMode.Steps)
-            {
-                context.Counters.ResetNodeSteps();
-            }
+            // HandleExitSkipped() already handles TrackProgress reset for Steps mode
             NotifyProgressChanged(); // 1回だけ通知
             return;
         }
 
-        // Phase 2: Tick cooldowns at end of step
-        gateResolver.TickCooldowns();
         NotifyProgressChanged(); // 1回だけ通知（最後に1回）
     }
 
@@ -331,14 +327,11 @@ public sealed class AreaController
             await TriggerEvent(gate.GateEvent);
         }
 
-        // Show gate
-        var displayMode = gate.BlockingMode == GateBlockingMode.HardBlock
-            ? CentralDisplayMode.HardBlock
-            : CentralDisplayMode.SoftBlock;
-        centralPresenter?.ShowGate(gate.Visual, displayMode);
+        // Show gate（常にボタン表示）
+        centralPresenter?.ShowGate(gate.Visual);
 
         // Wait for approach button (GateApproachButton or walk button to skip)
-        if (gate.BlockingMode == GateBlockingMode.HardBlock && approachUI != null)
+        if (approachUI != null)
         {
             var gateLabel = !string.IsNullOrEmpty(gate.Visual.Label) ? gate.Visual.Label : "門";
             var choice = await approachUI.WaitForGateSelection(gateLabel);
@@ -392,21 +385,12 @@ public sealed class AreaController
             }
 
             gateResolver.MarkFailed(gate);
-
-            if (gate.ResetOnFail)
-            {
-                ApplyGateReset(gate.ResetTarget);
-            }
+            ResetTrackProgressForGate();
         }
 
-        // Only hide gate visual when blocking (HardBlock)
-        // SoftBlock gates let the step continue, so leave visual for subsequent content
-        if (gate.BlockingMode == GateBlockingMode.HardBlock)
-        {
-            centralPresenter?.Hide();
-            return true;
-        }
-        return false;
+        // ゲート処理完了後は常にHideしてreturn true（歩行をブロック）
+        centralPresenter?.Hide();
+        return true;
     }
 
     /// <summary>
@@ -414,54 +398,23 @@ public sealed class AreaController
     /// </summary>
     private async UniTask HandleGateSkipped(GateMarker gate)
     {
-        if (gate.ResetOnSkip)
-        {
-            ApplyGateReset(gate.ResetTarget);
-        }
-
+        ResetTrackProgressForGate();
         await UniTask.CompletedTask;
     }
 
     /// <summary>
-    /// Apply gate reset based on target
+    /// Reset track progress when gate is skipped or failed.
+    /// This allows the player to walk back to the gate position and try again.
     /// </summary>
-    private void ApplyGateReset(GateResetTarget target)
+    private void ResetTrackProgressForGate()
     {
-        var progressKey = currentNode?.TrackConfig?.ProgressKey;
+        context.Counters.ResetTrackProgress();
 
-        switch (target)
+        // Sync ProgressKey counter with TrackProgress to maintain consistency
+        var progressKey = currentNode?.TrackConfig?.ProgressKey;
+        if (!string.IsNullOrEmpty(progressKey))
         {
-            case GateResetTarget.NodeStepsOnly:
-                context.Counters.ResetNodeSteps();
-                // ResetNodeSteps also resets TrackProgress, so sync ProgressKey
-                if (!string.IsNullOrEmpty(progressKey))
-                {
-                    context.SetCounter(progressKey, 0);
-                }
-                break;
-            case GateResetTarget.TrackProgressOnly:
-                context.Counters.ResetTrackProgress();
-                // Sync ProgressKey counter with TrackProgress to maintain consistency
-                if (!string.IsNullOrEmpty(progressKey))
-                {
-                    context.SetCounter(progressKey, 0);
-                }
-                break;
-            case GateResetTarget.Both:
-                context.Counters.ResetNodeSteps();
-                context.Counters.ResetTrackProgress();
-                // Sync ProgressKey counter with TrackProgress to maintain consistency
-                if (!string.IsNullOrEmpty(progressKey))
-                {
-                    context.SetCounter(progressKey, 0);
-                }
-                break;
-            case GateResetTarget.ProgressKeyOnly:
-                if (!string.IsNullOrEmpty(progressKey))
-                {
-                    context.SetCounter(progressKey, 0);
-                }
-                break;
+            context.SetCounter(progressKey, 0);
         }
     }
 
@@ -555,7 +508,7 @@ public sealed class AreaController
     {
         if (currentNode.ExitSpawn?.Mode == ExitSpawnMode.Steps)
         {
-            context.Counters.ResetNodeSteps();
+            context.Counters.ResetTrackProgress();
         }
     }
 
@@ -635,16 +588,6 @@ public sealed class AreaController
     private async UniTask HandleApproach(SideObjectEntry[] sidePair, EventDefinitionSO centralEvent, bool hasCentral)
     {
         if (sidePair == null && !hasCentral) return;
-
-        // AutoTrigger mode: 中央イベントを即時実行
-        if (hasCentral && centralEvent != null && currentNode.CenterTriggerMode == CenterTriggerMode.AutoTrigger)
-        {
-            await TriggerEvent(centralEvent);
-            centralPresenter?.Hide();
-            // サイドオブジェクトは選択されず、pendingをクリア
-            sideObjectSelector.ClearPending();
-            return;
-        }
 
         if (approachUI == null)
         {

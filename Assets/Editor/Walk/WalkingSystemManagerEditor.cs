@@ -91,7 +91,13 @@ public sealed class WalkingSystemManagerEditor : Editor
         EditorGUILayout.LabelField("Node", currentNode != null ? currentNode.DisplayName : "(none)");
         EditorGUILayout.LabelField("Steps",
             $"Global={context.Counters.GlobalSteps} Node={context.Counters.NodeSteps} Track={context.Counters.TrackProgress}");
-        EditorGUILayout.LabelField("Encounter Multiplier", $"x{context.GetEncounterMultiplier():F2}");
+
+        // Encounter Multiplier breakdown
+        float nodeMultiplier = currentNode != null ? currentNode.EncounterRateMultiplier : 1f;
+        float overlayMultiplier = context.GetEncounterMultiplier();
+        float combinedMultiplier = nodeMultiplier * overlayMultiplier;
+        EditorGUILayout.LabelField("Encounter Multiplier",
+            $"Node x{nodeMultiplier:F2} × Overlay x{overlayMultiplier:F2} = x{combinedMultiplier:F2}");
         EditorGUILayout.EndVertical();
 
         EditorGUILayout.Space();

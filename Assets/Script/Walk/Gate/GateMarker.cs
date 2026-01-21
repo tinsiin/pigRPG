@@ -15,14 +15,6 @@ public sealed class GateMarker
     [SerializeField] private EventDefinitionSO gateEvent;
     [SerializeField] private GateEventTiming eventTiming;
 
-    [SerializeField] private GateBlockingMode blockingMode = GateBlockingMode.HardBlock;
-
-    [SerializeField] private bool repeatable;
-    [SerializeField] private int cooldownSteps;
-    [SerializeField] private bool resetOnSkip = true;
-    [SerializeField] private bool resetOnFail = true;
-    [SerializeField] private GateResetTarget resetTarget;
-
     [SerializeField] private GateVisual visual;
 
     public string GateId => gateId;
@@ -33,19 +25,7 @@ public sealed class GateMarker
     public EffectSO[] OnFail => onFail;
     public EventDefinitionSO GateEvent => gateEvent;
     public GateEventTiming EventTiming => eventTiming;
-    public GateBlockingMode BlockingMode => blockingMode;
-    public bool Repeatable => repeatable;
-    public int CooldownSteps => cooldownSteps;
-    public bool ResetOnSkip => resetOnSkip;
-    public bool ResetOnFail => resetOnFail;
-    public GateResetTarget ResetTarget => resetTarget;
     public GateVisual Visual => visual;
-}
-
-public enum GateBlockingMode
-{
-    HardBlock,
-    SoftBlock
 }
 
 public enum GateEventTiming
@@ -53,14 +33,6 @@ public enum GateEventTiming
     OnAppear,
     OnPass,
     OnFail
-}
-
-public enum GateResetTarget
-{
-    NodeStepsOnly,
-    TrackProgressOnly,
-    Both,
-    ProgressKeyOnly
 }
 
 [Serializable]

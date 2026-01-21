@@ -1,11 +1,5 @@
 using UnityEngine;
 
-public enum CenterTriggerMode
-{
-    Manual,
-    AutoTrigger
-}
-
 [CreateAssetMenu(menuName = "Walk/Node")]
 public sealed class NodeSO : ScriptableObject
 {
@@ -20,7 +14,6 @@ public sealed class NodeSO : ScriptableObject
     [SerializeField] private EventDefinitionSO onEnterEvent;
     [SerializeField] private EventDefinitionSO onExitEvent;
     [SerializeField] private EventDefinitionSO centralEvent;
-    [SerializeField] private CenterTriggerMode centerTriggerMode = CenterTriggerMode.Manual;
     [SerializeField] private CentralObjectVisual centralVisual;
     [SerializeField] private ExitSpawnRule exitSpawn;
     [SerializeField] private ExitCandidate[] exits;
@@ -41,7 +34,6 @@ public sealed class NodeSO : ScriptableObject
     public EventDefinitionSO OnEnterEvent => onEnterEvent;
     public EventDefinitionSO OnExitEvent => onExitEvent;
     public EventDefinitionSO CentralEvent => centralEvent;
-    public CenterTriggerMode CenterTriggerMode => centerTriggerMode;
     public CentralObjectVisual CentralVisual => centralVisual;
     public ExitSpawnRule ExitSpawn => exitSpawn;
     public ExitCandidate[] Exits => exits;

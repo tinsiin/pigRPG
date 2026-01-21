@@ -33,7 +33,6 @@ public sealed class GateRuntimeStateData
     public string GateId;
     public int ResolvedPosition;
     public bool IsCleared;
-    public int CooldownRemaining;
     public int FailCount;
 
     public GateRuntimeStateData() { }
@@ -43,7 +42,6 @@ public sealed class GateRuntimeStateData
         GateId = state.GateId;
         ResolvedPosition = state.ResolvedPosition;
         IsCleared = state.IsCleared;
-        CooldownRemaining = state.CooldownRemaining;
         FailCount = state.FailCount;
     }
 
@@ -54,7 +52,6 @@ public sealed class GateRuntimeStateData
             GateId = this.GateId,
             ResolvedPosition = this.ResolvedPosition,
             IsCleared = this.IsCleared,
-            CooldownRemaining = this.CooldownRemaining,
             FailCount = this.FailCount
         };
     }

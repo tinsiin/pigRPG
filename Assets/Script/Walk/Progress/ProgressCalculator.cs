@@ -39,7 +39,6 @@ public sealed class ProgressCalculator
             var (marker, state) = gateStateBuffer[i];
 
             var isActive = !state.IsCleared &&
-                           state.CooldownRemaining <= 0 &&
                            state.ResolvedPosition <= trackProgress;
 
             var entry = ProgressEntry.CreateGate(
@@ -48,13 +47,13 @@ public sealed class ProgressCalculator
                 state.ResolvedPosition,
                 state.IsCleared,
                 isActive,
-                state.CooldownRemaining > 0);
+                isCoolingDown: false); // cooldown機能は廃止
 
             entryBuffer.Add(entry);
             orderIndex++;
 
-            // Repeatable gates don't count as "remaining" for exit blocking
-            if (!state.IsCleared && !marker.Repeatable)
+            // 全ての未クリアゲートをカウント
+            if (!state.IsCleared)
             {
                 remainingGateCount++;
             }
@@ -63,7 +62,8 @@ public sealed class ProgressCalculator
         // 出口を最後に追加
         var exitSpawn = node.ExitSpawn;
         var exitMode = exitSpawn?.Mode ?? ExitSpawnMode.None;
-        int exitPosition = CalculateExitPosition(exitSpawn, counters);
+        var maxGatePosition = gateResolver.GetMaxResolvedPosition();
+        int exitPosition = CalculateExitPosition(exitSpawn, counters, maxGatePosition);
 
         if (exitMode != ExitSpawnMode.None)
         {
@@ -82,7 +82,7 @@ public sealed class ProgressCalculator
 
             if (entry.Type == ProgressEntry.EntryType.Gate)
             {
-                if (!entry.IsCleared && !entry.IsCoolingDown)
+                if (!entry.IsCleared)
                 {
                     nextEntryIndex = i;
                     stepsToNext = entry.Position > trackProgress
@@ -103,8 +103,8 @@ public sealed class ProgressCalculator
                 else if (exitMode == ExitSpawnMode.Steps)
                 {
                     nextEntryIndex = i;
-                    stepsToNext = exitPosition > counters.NodeSteps
-                        ? exitPosition - counters.NodeSteps
+                    stepsToNext = exitPosition > trackProgress
+                        ? exitPosition - trackProgress
                         : 0;
                 }
                 else if (exitMode == ExitSpawnMode.Probability)
@@ -142,16 +142,17 @@ public sealed class ProgressCalculator
             exitRequiresAllGatesCleared);
     }
 
-    private static int CalculateExitPosition(ExitSpawnRule exitSpawn, WalkCounters counters)
+    private static int CalculateExitPosition(ExitSpawnRule exitSpawn, WalkCounters counters, int maxGatePosition)
     {
         if (exitSpawn == null) return 0;
 
         switch (exitSpawn.Mode)
         {
             case ExitSpawnMode.Steps:
-                return exitSpawn.Steps;
+                // 出口位置 = 最大門位置 + 設定歩数（ハードル並び設計）
+                return maxGatePosition + exitSpawn.Steps;
             case ExitSpawnMode.Probability:
-                return counters.NodeSteps; // 確率モードでは現在位置
+                return counters.TrackProgress; // 確率モードでは現在位置
             default:
                 return 0;
         }

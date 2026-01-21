@@ -22,7 +22,7 @@ public sealed class ExitSpawnRule
     public float Rate => rate;
     public bool RequireAllGatesCleared => requireAllGatesCleared;
 
-    public bool ShouldSpawn(WalkCountersSnapshot nextCounters, bool allGatesCleared)
+    public bool ShouldSpawn(WalkCountersSnapshot nextCounters, bool allGatesCleared, int maxGatePosition = 0)
     {
         // If gates are required but not all cleared, don't spawn exit
         if (requireAllGatesCleared && !allGatesCleared)
@@ -32,7 +32,9 @@ public sealed class ExitSpawnRule
         {
             case ExitSpawnMode.Steps:
                 if (steps <= 0) return true;
-                return nextCounters.NodeSteps >= steps;
+                // 出口位置 = 最大門位置 + 設定歩数（ハードル並び設計）
+                var effectiveExitPosition = maxGatePosition + steps;
+                return nextCounters.TrackProgress >= effectiveExitPosition;
             case ExitSpawnMode.Probability:
                 return RandomEx.Shared.NextFloat(0f, 1f) < Mathf.Clamp01(rate);
             default:
@@ -43,6 +45,6 @@ public sealed class ExitSpawnRule
     // Backward compatibility overload
     public bool ShouldSpawn(WalkCountersSnapshot nextCounters)
     {
-        return ShouldSpawn(nextCounters, allGatesCleared: true);
+        return ShouldSpawn(nextCounters, allGatesCleared: true, maxGatePosition: 0);
     }
 }

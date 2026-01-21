@@ -75,12 +75,12 @@ public sealed class CentralObjectPresenter
         currentMode = CentralDisplayMode.Hidden;
     }
 
-    public void ShowGate(GateVisual visual, CentralDisplayMode mode)
+    public void ShowGate(GateVisual visual)
     {
         EnsureViewObject();
         if (image == null || rectTransform == null) return;
 
-        currentMode = mode;
+        currentMode = CentralDisplayMode.Visible;
 
         // Play SFX on appear
         sfxPlayer?.Play(visual.SfxOnAppear);
@@ -129,15 +129,9 @@ public sealed class CentralObjectPresenter
             labelText.gameObject.SetActive(false);
         }
 
-        if (mode == CentralDisplayMode.HardBlock)
-        {
-            EnsureButton();
-            image.raycastTarget = true;
-        }
-        else
-        {
-            image.raycastTarget = false;
-        }
+        // 常にボタン有効化（アプローチ/スルー選択可能）
+        EnsureButton();
+        image.raycastTarget = true;
 
         viewObject.SetActive(true);
     }
@@ -149,7 +143,7 @@ public sealed class CentralObjectPresenter
         // Play exit-specific SFX
         sfxPlayer?.Play(visual.SfxOnAppear);
 
-        ShowGate(visual.ToGateVisual(), CentralDisplayMode.HardBlock);
+        ShowGate(visual.ToGateVisual());
     }
 
     public void PlayGatePassSFX(GateVisual visual)
@@ -164,8 +158,8 @@ public sealed class CentralObjectPresenter
 
     public async UniTask<CentralInteractionResult> WaitForInteraction(IWalkInputProvider walkInput, CancellationToken ct = default)
     {
-        if (currentMode != CentralDisplayMode.HardBlock)
-            return CentralInteractionResult.Approached;
+        if (currentMode == CentralDisplayMode.Hidden)
+            return CentralInteractionResult.Skipped;
 
         EnsureButton();
 

@@ -76,7 +76,6 @@ public sealed class GateResolver
             if (!gateStates.TryGetValue(gate.GateId, out var state)) continue;
             if (state.IsCleared) continue;
             if (state.ResolvedPosition > trackProgress) continue;
-            if (state.CooldownRemaining > 0) continue;
 
             return gate;
         }
@@ -104,9 +103,6 @@ public sealed class GateResolver
         {
             if (gate == null) continue;
 
-            // Repeatable gates don't block exit (they respawn after cooldown)
-            if (gate.Repeatable) continue;
-
             if (!gateStates.TryGetValue(gate.GateId, out var state))
             {
                 cachedAllGatesCleared = false;
@@ -132,15 +128,7 @@ public sealed class GateResolver
         if (!gateStates.TryGetValue(gate.GateId, out var state)) return;
 
         allGatesClearedDirty = true; // キャッシュ無効化
-
-        if (gate.Repeatable)
-        {
-            state.CooldownRemaining = gate.CooldownSteps;
-        }
-        else
-        {
-            state.IsCleared = true;
-        }
+        state.IsCleared = true;
     }
 
     public void MarkFailed(GateMarker gate)
@@ -149,16 +137,6 @@ public sealed class GateResolver
         if (!gateStates.TryGetValue(gate.GateId, out var state)) return;
 
         state.FailCount++;
-        state.CooldownRemaining = gate.CooldownSteps;
-    }
-
-    public void TickCooldowns()
-    {
-        foreach (var state in gateStates.Values)
-        {
-            if (state.CooldownRemaining > 0)
-                state.CooldownRemaining--;
-        }
     }
 
     public GateRuntimeState GetState(string gateId)
@@ -217,6 +195,23 @@ public sealed class GateResolver
             }
         }
         return count;
+    }
+
+    /// <summary>
+    /// 全ゲートの最大解決位置を取得（出口位置計算用）
+    /// ゲートがない場合は0を返す
+    /// </summary>
+    public int GetMaxResolvedPosition()
+    {
+        int max = 0;
+        foreach (var state in gateStates.Values)
+        {
+            if (state.ResolvedPosition > max)
+            {
+                max = state.ResolvedPosition;
+            }
+        }
+        return max;
     }
 
     /// <summary>

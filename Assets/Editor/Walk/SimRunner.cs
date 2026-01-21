@@ -13,6 +13,13 @@ public sealed class SimRunner
         public Dictionary<string, int> SideObjectCounts;
         public Dictionary<string, int> NodeVisitCounts;
         public List<string> Errors;
+
+        /// <summary>
+        /// SideObject出現の偏りスコア（変動係数 CV = 標準偏差/平均）
+        /// 0に近いほど均等、高いほど偏りあり
+        /// 目安: 0.1以下=非常に均等, 0.2以下=均等, 0.3以上=偏りあり
+        /// </summary>
+        public float SideObjectVariationScore;
     }
 
     // シミュレーション用のシード付きRNG
@@ -55,6 +62,12 @@ public sealed class SimRunner
         var exitResolver = new ExitResolver();
         var currentNode = startNode;
 
+        // Configure variety tracking from table settings
+        if (currentNode.SideObjectTable != null)
+        {
+            sideObjectSelector.Configure(currentNode.SideObjectTable.VarietyDepth);
+        }
+
         for (int step = 0; step < steps; step++)
         {
             if (currentNode == null)
@@ -90,6 +103,9 @@ public sealed class SimRunner
                         result.SideObjectCounts[soId] = 0;
                     }
                     result.SideObjectCounts[soId]++;
+
+                    // Record selection for variety tracking (critical for varietyBias!)
+                    sideObjectSelector.OnSideObjectSelected(entry, entry.CooldownSteps);
                 }
             }
 
@@ -124,12 +140,53 @@ public sealed class SimRunner
                     currentNode = nextNode;
                     context.WalkState.CurrentNodeId = nextNode.NodeId;
                     context.Counters.ResetNodeSteps();
+
+                    // Update variety depth when changing nodes
+                    if (currentNode.SideObjectTable != null)
+                    {
+                        sideObjectSelector.Configure(currentNode.SideObjectTable.VarietyDepth);
+                    }
                 }
             }
         }
 
         result.EncounterRate = steps > 0 ? (float)result.EncounterCount / steps : 0f;
+        result.SideObjectVariationScore = CalculateVariationScore(result.SideObjectCounts);
         return result;
+    }
+
+    /// <summary>
+    /// 変動係数（CV）を計算: 標準偏差 / 平均
+    /// 0に近いほど均等、高いほど偏りあり
+    /// </summary>
+    private static float CalculateVariationScore(Dictionary<string, int> counts)
+    {
+        if (counts == null || counts.Count < 2) return 0f;
+
+        // 平均を計算
+        float sum = 0f;
+        foreach (var kvp in counts)
+        {
+            sum += kvp.Value;
+        }
+        float mean = sum / counts.Count;
+
+        if (mean < 0.001f) return 0f; // ゼロ除算を防ぐ
+
+        // 分散を計算
+        float variance = 0f;
+        foreach (var kvp in counts)
+        {
+            float diff = kvp.Value - mean;
+            variance += diff * diff;
+        }
+        variance /= counts.Count;
+
+        // 標準偏差
+        float stdDev = Mathf.Sqrt(variance);
+
+        // 変動係数 (CV)
+        return stdDev / mean;
     }
 }
 
@@ -202,6 +259,33 @@ public class SimRunnerWindow : EditorWindow
             {
                 EditorGUILayout.Space();
                 EditorGUILayout.LabelField("Side Object Distribution:", EditorStyles.boldLabel);
+
+                // 偏りスコアを目立つように表示
+                var cv = lastResult.SideObjectVariationScore;
+                string biasLabel;
+                MessageType msgType;
+                if (cv < 0.1f)
+                {
+                    biasLabel = $"偏りスコア: {cv:F3} (非常に均等 ✓)";
+                    msgType = MessageType.Info;
+                }
+                else if (cv < 0.2f)
+                {
+                    biasLabel = $"偏りスコア: {cv:F3} (均等)";
+                    msgType = MessageType.Info;
+                }
+                else if (cv < 0.3f)
+                {
+                    biasLabel = $"偏りスコア: {cv:F3} (やや偏りあり)";
+                    msgType = MessageType.Warning;
+                }
+                else
+                {
+                    biasLabel = $"偏りスコア: {cv:F3} (偏りあり)";
+                    msgType = MessageType.Warning;
+                }
+                EditorGUILayout.HelpBox(biasLabel, msgType);
+
                 var total = 0;
                 foreach (var kvp in lastResult.SideObjectCounts)
                 {

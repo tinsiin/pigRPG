@@ -121,7 +121,7 @@ public class WalkPhase2IntegrationTests
         var gateSnapshot = new Dictionary<string, GateRuntimeState>
         {
             ["gate1"] = new GateRuntimeState("gate1", 10) { IsCleared = true },
-            ["gate2"] = new GateRuntimeState("gate2", 20) { CooldownRemaining = 3 }
+            ["gate2"] = new GateRuntimeState("gate2", 20) { FailCount = 2 }
         };
         resolver.RestoreFromSnapshot(gateSnapshot);
 
@@ -138,7 +138,7 @@ public class WalkPhase2IntegrationTests
 
         var savedGate2 = saveData.GateStates.Find(g => g.GateId == "gate2");
         Assert.IsNotNull(savedGate2);
-        Assert.AreEqual(3, savedGate2.CooldownRemaining);
+        Assert.AreEqual(2, savedGate2.FailCount);
     }
 
     [Test]
@@ -177,44 +177,6 @@ public class WalkPhase2IntegrationTests
         Assert.IsTrue(context.HasFlag("flag1"));
         Assert.AreEqual(42, context.GetCounter("counter1"));
         Assert.IsTrue(resolver.GetState("gate1").IsCleared);
-    }
-
-    #endregion
-
-    #region Repeatable Gate Integration
-
-    [Test]
-    public void RepeatableGate_SetsClowndownInsteadOfClearing()
-    {
-        var resolver = new GateResolver();
-
-        // Create gate state
-        var snapshot = new Dictionary<string, GateRuntimeState>
-        {
-            ["loopGate"] = new GateRuntimeState("loopGate", 10)
-        };
-        resolver.RestoreFromSnapshot(snapshot);
-
-        // Simulate marking a repeatable gate as cleared
-        // In actual code, this is done via GateResolver.MarkCleared(gate) where gate.Repeatable=true
-        // For testing, we simulate the expected behavior
-        var state = resolver.GetState("loopGate");
-
-        // Simulate repeatable behavior: set cooldown instead of clearing
-        state.CooldownRemaining = 5;
-        // state.IsCleared stays false for repeatable gates
-
-        Assert.IsFalse(state.IsCleared);
-        Assert.AreEqual(5, state.CooldownRemaining);
-
-        // After 5 ticks, gate should be available again
-        for (var i = 0; i < 5; i++)
-        {
-            resolver.TickCooldowns();
-        }
-
-        Assert.AreEqual(0, state.CooldownRemaining);
-        Assert.IsFalse(state.IsCleared); // Still not cleared, can trigger again
     }
 
     #endregion
