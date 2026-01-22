@@ -24,17 +24,6 @@ public sealed class WalkConditionCollector
                 CollectFromNode(node);
             }
         }
-
-        // Collect from all edges (guard against null array for newly created graphs)
-        var edges = graph.Edges;
-        if (edges != null)
-        {
-            foreach (var edge in edges)
-            {
-                if (edge == null) continue;
-                CollectFromConditions(edge.Conditions);
-            }
-        }
     }
 
     private void CollectFromNode(NodeSO node)

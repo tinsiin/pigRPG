@@ -64,7 +64,7 @@ public sealed class GraphValidator
         foreach (var node in nodes)
         {
             if (node == null) continue;
-            ValidateNode(node, nodeIds, graph, result);
+            ValidateNode(node, nodeIds, result);
         }
 
         // Check reachability
@@ -73,17 +73,15 @@ public sealed class GraphValidator
         return result;
     }
 
-    private void ValidateNode(NodeSO node, HashSet<string> nodeIds, FlowGraphSO graph, ValidationResult result)
+    private void ValidateNode(NodeSO node, HashSet<string> nodeIds, ValidationResult result)
     {
         var exits = node.Exits;
         var hasExits = exits != null && exits.Length > 0;
-        var edges = graph.GetEdgesFrom(node.NodeId);
-        var hasEdges = edges.Count > 0;
 
         // Check for exit-less node
-        if (!hasExits && !hasEdges)
+        if (!hasExits)
         {
-            result.Warnings.Add($"Node '{node.NodeId}' has no exits and no outgoing edges (dead end).");
+            result.Warnings.Add($"Node '{node.NodeId}' has no exits (dead end).");
         }
 
         // Validate exit destinations
@@ -100,16 +98,6 @@ public sealed class GraphValidator
                 {
                     result.Errors.Add($"Node '{node.NodeId}' exit '{exit.Id}' references non-existent node '{exit.ToNodeId}'.");
                 }
-            }
-        }
-
-        // Validate edge destinations
-        foreach (var edge in edges)
-        {
-            if (edge == null) continue;
-            if (!nodeIds.Contains(edge.ToNodeId))
-            {
-                result.Errors.Add($"Edge from '{node.NodeId}' to '{edge.ToNodeId}' references non-existent node.");
             }
         }
     }
@@ -140,17 +128,6 @@ public sealed class GraphValidator
                     {
                         queue.Enqueue(exit.ToNodeId);
                     }
-                }
-            }
-
-            // Follow edges
-            var edges = graph.GetEdgesFrom(current);
-            foreach (var edge in edges)
-            {
-                if (edge == null || string.IsNullOrEmpty(edge.ToNodeId)) continue;
-                if (reachable.Add(edge.ToNodeId))
-                {
-                    queue.Enqueue(edge.ToNodeId);
                 }
             }
         }

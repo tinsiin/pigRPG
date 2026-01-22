@@ -455,7 +455,6 @@ public sealed class AreaController
         // Check if any exits are available (considering conditions)
         var availableExits = exitResolver.ResolveExits(
             currentNode,
-            graph,
             context,
             currentNode.ExitSelectionMode,
             currentNode.MaxExitChoices);
@@ -559,7 +558,6 @@ public sealed class AreaController
 
         var exits = exitResolver.ResolveExits(
             node,
-            graph,
             context,
             node.ExitSelectionMode,
             node.MaxExitChoices);

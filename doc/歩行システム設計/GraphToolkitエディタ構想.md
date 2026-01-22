@@ -1,6 +1,6 @@
-# GraphViewエディタ構想
+# Graph Toolkitエディタ構想
 
-本書はFlowGraphSOをGraphViewで視覚的に編集するエディタの構想をまとめたもの。
+本書はFlowGraphSOをGraph Toolkitで視覚的に編集するエディタの構想をまとめたもの。
 
 ---
 
@@ -11,11 +11,13 @@
 ```
 FlowGraphSO（ステージ全体）
 ├── nodes[] : NodeSO配列
-├── edges[] : EdgeSO配列
 └── startNodeId : 開始ノードID
+
+NodeSO（各ノード）
+└── exits[] : ExitCandidate配列（toNodeId, weight, conditions, uiLabel）
 ```
 
-- ノード間の接続は文字列ID（fromNodeId, toNodeId）で管理
+- ノード間の接続はNodeSO内のExitCandidate（toNodeId文字列）で管理
 - Inspector上で全て設定可能
 - シンプルで保守しやすい
 
@@ -28,182 +30,463 @@ FlowGraphSO（ステージ全体）
 
 ---
 
-## GraphViewとは
+## Graph Toolkitとは
 
-Unity UIElements ベースのノードエディタフレームワーク。
+Unity公式のノードエディタフレームワーク（com.unity.graphtoolkit）。
 
-- Shader Graph、VFX Graph等で使用実績あり
-- ノードをドラッグ配置、線で接続
-- ズーム、パン操作
-- Unity 2018頃から利用可能、情報が豊富
+| 特徴 | 説明 |
+|------|------|
+| パッケージ | com.unity.graphtoolkit 0.4.0-exp.2 |
+| 状態 | 実験的（experimental） |
+| UIElements | 自動生成（手動実装不要） |
+| データ形式 | 独自ファイル形式 + Importer でランタイムSOに変換 |
+
+### GraphView（旧）との比較
+
+| 観点 | GraphView | Graph Toolkit |
+|------|-----------|---------------|
+| 抽象度 | 低い（UIを自前実装） | 高い（UI自動生成） |
+| コード量 | 多い | 少ない |
+| ポート定義 | 手動でInstantiatePort | `OnDefinePorts()`で宣言的に |
+| ノード配置 | 手動実装 | 自動処理 |
+| Undo/Redo | 手動実装 | 自動対応 |
 
 ---
 
-## SOとGraphViewの共存
+## SOとGraph Toolkitの共存
 
 ### 基本方針
 
-**データはSOのまま、GraphViewは「エディタUI」として追加。**
+**Graph Toolkit独自ファイル（.flowgraph）をエディタで編集し、Importerで既存のFlowGraphSOに変換する。**
 
 ```
-[データ層] 変更なし
+[エディタ層] Graph Toolkit
+FlowEditorGraph : Graph
+├── FlowEditorNode : Node（各ノード）
+└── 接続情報（ポート間のワイヤー）
+↓
+[変換層] ScriptedImporter
+FlowGraphImporter
+↓
+[ランタイム層] 既存SO（変更なし）
 FlowGraphSO
-├── NodeSO[]
-└── EdgeSO[]
-
-[エディタ層] 新規追加
-FlowGraphEditorWindow
-└── FlowGraphView（GraphView継承）
-    ├── NodeSOを「ノード」として描画
-    └── EdgeSOを「線」として描画
+└── NodeSO[]
+    └── ExitCandidate[]（各ノード内）
 ```
 
 ### 連携の仕組み
 
-| 操作 | GraphView上 | SO上の反映 |
-|------|------------|-----------|
-| ノード配置 | ドラッグで移動 | NodeSOに位置情報を保存（UIHints等） |
-| ノード追加 | 右クリックメニュー | NodeSO新規作成、FlowGraphSO.nodesに追加 |
-| ノード削除 | Deleteキー | FlowGraphSO.nodesから削除 |
-| 線で接続 | ポートをドラッグ | EdgeSO新規作成、FlowGraphSO.edgesに追加 |
-| 線を削除 | 線を選択→Delete | FlowGraphSO.edgesから削除 |
-| ノード詳細編集 | ノードをクリック | Inspectorで編集 |
+| 操作 | Graph Toolkit上 | SO上の反映 |
+|------|----------------|-----------|
+| ノード配置 | ドラッグで移動 | Importer実行時にNodeSOに反映 |
+| ノード追加 | 右クリックメニュー | Importer実行時にNodeSO生成 |
+| ノード削除 | Deleteキー | Importer実行時にFlowGraphSOから除外 |
+| 線で接続 | ポートをドラッグ | Importer実行時にNodeSOのExitCandidateに反映 |
+| 線を削除 | 線を選択→Delete | Importer実行時にExitCandidateから除外 |
+| ノード詳細編集 | ノード上のフィールド編集 | Importer実行時にNodeSOに反映 |
 
 ### Undo/Redo
 
-SerializedObject経由で編集すればUnityのUndo/Redoが自動対応。
+Graph Toolkitが自動対応。追加実装不要。
 
 ---
 
-## 必要な実装
+## 実装設計
 
 ### ファイル構成
 
 ```
-Assets/Editor/Walk/GraphView/
-├── FlowGraphEditorWindow.cs   // EditorWindow
-├── FlowGraphView.cs           // GraphView継承
-├── FlowNodeView.cs            // Node継承（NodeSO表示用）
-├── FlowEdgeView.cs            // Edge表示（必要なら）
-└── FlowGraphSearchProvider.cs // ノード追加メニュー
+Assets/Editor/Walk/GraphToolkit/
+├── Model/
+│   ├── FlowEditorGraph.cs      // Graph継承（グラフ定義）
+│   ├── FlowEditorNode.cs       // Node継承（基底ノード）
+│   ├── FlowStartNode.cs        // 開始ノード
+│   └── FlowAreaNode.cs         // エリアノード
+├── Import/
+│   └── FlowGraphImporter.cs    // ScriptedImporter（SO変換）
+└── FlowGraph.Editor.asmdef     // アセンブリ定義
 ```
 
-### 1. FlowGraphEditorWindow
+### 1. FlowEditorGraph（グラフ定義）
 
 ```csharp
-public class FlowGraphEditorWindow : EditorWindow
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Unity.GraphToolkit.Editor;
+using UnityEditor;
+
+namespace Walk.Editor.GraphToolkit
 {
-    private FlowGraphSO targetGraph;
-    private FlowGraphView graphView;
-
-    [MenuItem("Window/Walk/Flow Graph Editor")]
-    public static void Open() { ... }
-
-    // FlowGraphSOをダブルクリックで開く
-    [OnOpenAsset]
-    public static bool OnOpenAsset(int instanceId, int line) { ... }
-
-    private void OnEnable()
+    /// <summary>
+    /// FlowGraph のエディタグラフ定義
+    /// </summary>
+    [Serializable]
+    [Graph(AssetExtension)]
+    internal class FlowEditorGraph : Graph
     {
-        // GraphView作成、ツールバー追加
+        internal const string AssetExtension = "flowgraph";
+
+        [MenuItem("Assets/Create/Walk/Flow Graph")]
+        static void CreateAssetFile()
+        {
+            GraphDatabase.PromptInProjectBrowserToCreateNewAsset<FlowEditorGraph>("New FlowGraph");
+        }
+
+        /// <summary>
+        /// グラフ変更時のリアルタイムバリデーション
+        /// 既存GraphValidatorのロジックを移植
+        /// </summary>
+        public override void OnGraphChanged(GraphLogger infos)
+        {
+            base.OnGraphChanged(infos);
+            ValidateStartNode(infos);
+            ValidateNodeIds(infos);
+            ValidateConnections(infos);
+            ValidateReachability(infos);
+        }
+
+        // 開始ノードのチェック
+        void ValidateStartNode(GraphLogger infos)
+        {
+            var startNodes = GetNodes().OfType<FlowStartNode>().ToList();
+            if (startNodes.Count == 0)
+            {
+                infos.LogError("開始ノードが必要です", this);
+            }
+            else if (startNodes.Count > 1)
+            {
+                infos.LogWarning("開始ノードは1つのみ有効です", startNodes[1]);
+            }
+        }
+
+        // NodeId重複・空チェック
+        void ValidateNodeIds(GraphLogger infos)
+        {
+            var nodeIds = new HashSet<string>();
+            foreach (var node in GetNodes().OfType<FlowAreaNode>())
+            {
+                if (string.IsNullOrEmpty(node.NodeId))
+                {
+                    infos.LogError("NodeIdが空です", node);
+                }
+                else if (!nodeIds.Add(node.NodeId))
+                {
+                    infos.LogError($"NodeId '{node.NodeId}' が重複しています", node);
+                }
+            }
+        }
+
+        // 出口先の存在確認
+        void ValidateConnections(GraphLogger infos)
+        {
+            var validNodeIds = new HashSet<string>(
+                GetNodes().OfType<FlowAreaNode>().Select(n => n.NodeId));
+
+            foreach (var node in GetNodes().OfType<FlowAreaNode>())
+            {
+                // ポート接続先のNodeIdを確認
+                foreach (var port in node.GetOutputPortEnumerable())
+                {
+                    foreach (var connected in port.connectedPorts)
+                    {
+                        if (connected.GetNode() is FlowAreaNode targetNode)
+                        {
+                            if (!validNodeIds.Contains(targetNode.NodeId))
+                            {
+                                infos.LogError($"出口先 '{targetNode.NodeId}' が存在しません", node);
+                            }
+                        }
+                    }
+                }
+
+                // 出口がないノード（デッドエンド）の警告
+                var hasExit = node.GetOutputPortEnumerable().Any(p => p.connectedPorts.Any());
+                if (!hasExit)
+                {
+                    infos.LogWarning($"ノード '{node.NodeId}' に出口がありません（デッドエンド）", node);
+                }
+            }
+        }
+
+        // 到達不能ノードのチェック
+        void ValidateReachability(GraphLogger infos)
+        {
+            var startNode = GetNodes().OfType<FlowStartNode>().FirstOrDefault();
+            if (startNode == null) return;
+
+            var reachable = new HashSet<INode>();
+            var queue = new Queue<INode>();
+
+            // 開始ノードからBFS
+            queue.Enqueue(startNode);
+            reachable.Add(startNode);
+
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                foreach (var port in current.GetOutputPortEnumerable())
+                {
+                    foreach (var connected in port.connectedPorts)
+                    {
+                        var targetNode = connected.GetNode();
+                        if (targetNode != null && reachable.Add(targetNode))
+                        {
+                            queue.Enqueue(targetNode);
+                        }
+                    }
+                }
+            }
+
+            // 到達不能ノードを警告
+            foreach (var node in GetNodes().OfType<FlowAreaNode>())
+            {
+                if (!reachable.Contains(node))
+                {
+                    infos.LogWarning($"ノード '{node.NodeId}' は開始ノードから到達できません", node);
+                }
+            }
+        }
     }
 }
 ```
 
-### 2. FlowGraphView
+### 2. FlowEditorNode（基底ノード）
 
 ```csharp
-public class FlowGraphView : GraphView
+using System;
+using Unity.GraphToolkit.Editor;
+
+namespace Walk.Editor.GraphToolkit
 {
-    private FlowGraphSO graphData;
-
-    public FlowGraphView()
+    /// <summary>
+    /// FlowGraph ノードの基底クラス
+    /// </summary>
+    [Serializable]
+    internal abstract class FlowEditorNode : Node
     {
-        // 基本設定
-        this.AddManipulator(new ContentDragger());
-        this.AddManipulator(new SelectionDragger());
-        this.AddManipulator(new RectangleSelector());
-        SetupZoom(ContentZoomer.DefaultMinScale, ContentZoomer.DefaultMaxScale);
+        public const string EXECUTION_PORT = "Execution";
 
-        // スタイルシート
-        var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("...");
-        styleSheets.Add(styleSheet);
-    }
-
-    public void LoadGraph(FlowGraphSO graph)
-    {
-        graphData = graph;
-        // 既存ノードを描画
-        foreach (var node in graph.Nodes)
+        /// <summary>
+        /// 標準の入出力ポートを追加
+        /// </summary>
+        protected void AddExecutionPorts(IPortDefinitionContext context)
         {
-            CreateNodeView(node);
-        }
-        // 既存エッジを描画
-        foreach (var edge in graph.Edges)
-        {
-            CreateEdgeView(edge);
-        }
-    }
+            context.AddInputPort(EXECUTION_PORT)
+                .WithDisplayName("In")
+                .WithConnectorUI(PortConnectorUI.Arrowhead)
+                .Build();
 
-    public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
-    {
-        // 接続可能なポートを返す
+            context.AddOutputPort(EXECUTION_PORT)
+                .WithDisplayName("Out")
+                .WithConnectorUI(PortConnectorUI.Arrowhead)
+                .Build();
+        }
     }
 }
 ```
 
-### 3. FlowNodeView
+### 3. FlowAreaNode（エリアノード）
 
 ```csharp
-public class FlowNodeView : Node
+using System;
+using Unity.GraphToolkit.Editor;
+using UnityEngine;
+
+namespace Walk.Editor.GraphToolkit
 {
-    public NodeSO NodeData { get; private set; }
-    public Port InputPort { get; private set; }
-    public Port OutputPort { get; private set; }
-
-    public FlowNodeView(NodeSO nodeData)
+    /// <summary>
+    /// ステージ内の1エリア（NodeSOに相当）
+    /// </summary>
+    [Serializable]
+    internal class FlowAreaNode : FlowEditorNode
     {
-        NodeData = nodeData;
-        title = nodeData.DisplayName;
+        // NodeSO相当のフィールド
+        [SerializeField] private string nodeId;
+        [SerializeField] private string displayName;
+        [SerializeField] private int exitSteps = 100;
 
-        // 入力ポート（このノードへの入口）
-        InputPort = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(bool));
-        InputPort.portName = "In";
-        inputContainer.Add(InputPort);
+        // 門の数（詳細設定はInspector拡張で）
+        [SerializeField] private int gateCount;
 
-        // 出力ポート（このノードからの出口）
-        OutputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Multi, typeof(bool));
-        OutputPort.portName = "Out";
-        outputContainer.Add(OutputPort);
+        // 遭遇テーブル参照
+        [SerializeField] private EncountTableSO encountTable;
 
-        // ノード概要表示（門の数、出口の数など）
-        RefreshExpandedState();
-        RefreshPorts();
+        public string NodeId => nodeId;
+        public string DisplayName => displayName;
+        public int ExitSteps => exitSteps;
+        public int GateCount => gateCount;
+        public EncountTableSO EncountTable => encountTable;
+
+        protected override void OnDefinePorts(IPortDefinitionContext context)
+        {
+            AddExecutionPorts(context);
+
+            // 複数出口がある場合は追加ポートを定義可能
+            // context.AddOutputPort("Exit_Castle").WithDisplayName("城へ").Build();
+        }
+    }
+}
+```
+
+### 4. FlowStartNode（開始ノード）
+
+```csharp
+using System;
+using Unity.GraphToolkit.Editor;
+
+namespace Walk.Editor.GraphToolkit
+{
+    /// <summary>
+    /// グラフの開始点
+    /// </summary>
+    [Serializable]
+    internal class FlowStartNode : FlowEditorNode
+    {
+        protected override void OnDefinePorts(IPortDefinitionContext context)
+        {
+            // 開始ノードは出力のみ
+            context.AddOutputPort(EXECUTION_PORT)
+                .WithDisplayName("Start")
+                .WithConnectorUI(PortConnectorUI.Arrowhead)
+                .Build();
+        }
+    }
+}
+```
+
+### 5. FlowGraphImporter（SO変換）
+
+```csharp
+using System.Collections.Generic;
+using System.Linq;
+using Unity.GraphToolkit.Editor;
+using UnityEditor;
+using UnityEditor.AssetImporters;
+using UnityEngine;
+
+namespace Walk.Editor.GraphToolkit
+{
+    /// <summary>
+    /// .flowgraph → FlowGraphSO 変換
+    /// </summary>
+    [ScriptedImporter(1, FlowEditorGraph.AssetExtension)]
+    internal class FlowGraphImporter : ScriptedImporter
+    {
+        public override void OnImportAsset(AssetImportContext ctx)
+        {
+            var graph = GraphDatabase.LoadGraphForImporter<FlowEditorGraph>(ctx.assetPath);
+            if (graph == null)
+            {
+                Debug.LogError($"Failed to load FlowGraph: {ctx.assetPath}");
+                return;
+            }
+
+            // ランタイムアセット作成
+            var runtimeGraph = ScriptableObject.CreateInstance<FlowGraphSO>();
+
+            // 開始ノード取得
+            var startNode = graph.GetNodes().OfType<FlowStartNode>().FirstOrDefault();
+            if (startNode != null)
+            {
+                var firstArea = GetNextNode(startNode) as FlowAreaNode;
+                if (firstArea != null)
+                {
+                    runtimeGraph.SetStartNodeId(firstArea.NodeId);
+                }
+            }
+
+            // ノード変換（接続情報はExitCandidateとしてノード内に保持）
+            var nodes = new List<NodeSO>();
+            var nodeMap = new Dictionary<string, (FlowAreaNode editorNode, NodeSO runtimeNode)>();
+
+            foreach (var areaNode in graph.GetNodes().OfType<FlowAreaNode>())
+            {
+                // NodeSO生成
+                var nodeSO = ConvertToNodeSO(areaNode);
+                nodes.Add(nodeSO);
+                nodeMap[areaNode.NodeId] = (areaNode, nodeSO);
+                ctx.AddObjectToAsset(areaNode.NodeId, nodeSO);
+            }
+
+            // 接続をExitCandidateに変換
+            foreach (var (nodeId, pair) in nodeMap)
+            {
+                var exits = new List<ExitCandidate>();
+                var outputPort = pair.editorNode.GetOutputPortByName(FlowEditorNode.EXECUTION_PORT);
+                foreach (var connectedPort in outputPort.connectedPorts)
+                {
+                    var targetNode = connectedPort.GetNode() as FlowAreaNode;
+                    if (targetNode != null)
+                    {
+                        exits.Add(CreateExitCandidate(targetNode.NodeId));
+                    }
+                }
+                pair.runtimeNode.SetExits(exits.ToArray());
+            }
+
+            runtimeGraph.SetNodes(nodes.ToArray());
+
+            ctx.AddObjectToAsset("MainAsset", runtimeGraph);
+            ctx.SetMainObject(runtimeGraph);
+        }
+
+        static NodeSO ConvertToNodeSO(FlowAreaNode areaNode)
+        {
+            var nodeSO = ScriptableObject.CreateInstance<NodeSO>();
+            // フィールドをコピー
+            // nodeSO.nodeId = areaNode.NodeId;
+            // nodeSO.displayName = areaNode.DisplayName;
+            // ...
+            return nodeSO;
+        }
+
+        static ExitCandidate CreateExitCandidate(string toNodeId)
+        {
+            return new ExitCandidate
+            {
+                Id = System.Guid.NewGuid().ToString(),
+                ToNodeId = toNodeId,
+                Weight = 1,
+                UILabel = null // ノードエディタで個別設定
+            };
+        }
+
+        static INode GetNextNode(INode currentNode)
+        {
+            var outputPort = currentNode.GetOutputPortByName(FlowEditorNode.EXECUTION_PORT);
+            return outputPort?.firstConnectedPort?.GetNode();
+        }
     }
 }
 ```
 
 ---
 
-## 表示する情報
+## ノード上に表示する情報
 
-### ノード上に表示
+### グラフビュー上
 
-- ノード名（displayName）
-- ノードID（nodeId）
-- 門の数
-- 出口の数
-- 開始ノードマーク
+| 情報 | 表示方法 |
+|------|---------|
+| ノード名 | タイトル |
+| ノードID | サブタイトル |
+| 門の数 | バッジまたはラベル |
+| 出口歩数 | フィールド |
+| 開始ノード | 特別なアイコン |
 
-### ノード選択時（Inspector）
+### ノード選択時
 
-- NodeSOの全設定項目
-- 門、出口、遭遇テーブル等の詳細
+- Graph Toolkitのインスペクタで詳細フィールドを編集
+- 門、遭遇テーブル、条件等の複雑な設定
 
-### エッジ上に表示（オプション）
+### 出口（ExitCandidate）上
 
-- 条件がある場合はアイコン表示
-- 重み
+- 条件がある場合はアイコン表示（将来対応）
+- 重み（WeightedRandom用）
+- UIラベル（プレイヤーに表示する選択肢名）
+
+**注**: Graph Toolkitのワイヤー（線）自体にはメタデータを載せられないため、条件・重み・UIラベル等はノード側のフィールドで管理する。
 
 ---
 
@@ -211,96 +494,262 @@ public class FlowNodeView : Node
 
 ### Phase 1: 最小限の可視化
 
-1. FlowGraphEditorWindow作成
-2. FlowGraphView作成
-3. FlowNodeView作成（ノード表示のみ）
-4. 既存エッジの線描画
+1. FlowEditorGraph作成（.flowgraph拡張子）
+2. FlowStartNode作成
+3. FlowAreaNode作成（基本フィールドのみ）
+4. FlowGraphImporter作成（FlowGraphSOへの変換）
 
-**目標: 既存FlowGraphSOを開いて構造を確認できる**
+**目標: .flowgraphファイルを作成・編集し、FlowGraphSOとして使用できる**
 
-### Phase 2: 編集機能
+### Phase 2: 詳細設定とバリデーション
 
-5. ノードのドラッグ移動 → 位置保存
-6. エッジの作成・削除
-7. Undo/Redo対応
+5. FlowAreaNodeに詳細フィールド追加（門、遭遇テーブル等）
+6. ExitCandidateの詳細設定（条件、重み、UIラベル）
+7. Node Optionsで動的出口ポート数を設定（下記「Node Options」参照）
+8. GraphLoggerバリデーション実装（上記FlowEditorGraphに設計済み）
+   - 既存GraphValidator.csのロジックを移植
+   - リアルタイムでエラー/警告を表示
 
-**目標: GraphView上でグラフ構造を編集できる**
+**目標: 既存のNodeSO相当の設定が可能 + エディタ上で即時フィードバック**
 
 ### Phase 3: 高度な機能
 
-8. ノード追加メニュー（SearchWindow）
-9. ノード削除
-10. ミニマップ
-11. 条件付きエッジの視覚化
+8. 既存FlowGraphSOからの逆変換（マイグレーション）
+9. Subgraph対応（複雑なステージ構造のグループ化）
+10. ContextNode + BlockNode 導入（門/出口の視覚化）
+    - 通常ノードで運用してみて必要性を判断
+    - 導入する場合、FlowAreaNode → FlowAreaContextNode に移行
 
-**目標: フル機能のエディタ**
-
----
-
-## 位置情報の保存
-
-NodeSOに位置情報を追加する必要がある。
-
-### 案1: NodeUIHintsに追加
-
-```csharp
-[System.Serializable]
-public struct NodeUIHints
-{
-    // 既存
-    public bool useThemeColors;
-    public Color frameArtColor;
-    // ...
-
-    // 追加
-    public Vector2 graphPosition; // GraphView上の位置
-}
-```
-
-### 案2: FlowGraphSOに別途保持
-
-```csharp
-[CreateAssetMenu(menuName = "Walk/FlowGraph")]
-public sealed class FlowGraphSO : ScriptableObject
-{
-    [SerializeField] private NodeSO[] nodes;
-    [SerializeField] private EdgeSO[] edges;
-    [SerializeField] private string startNodeId;
-
-    // 追加: ノード位置情報（nodeId → position）
-    [SerializeField] private List<NodePositionEntry> nodePositions;
-}
-```
-
-**案1を推奨。** NodeSO自体に位置情報を持たせた方が管理しやすい。
+**目標: 完全な置き換え + 視覚的な門/出口管理**
 
 ---
 
-## 参考資料
+## 活用可能なGraph Toolkit機能
 
-- Unity公式: [GraphView](https://docs.unity3d.com/ScriptReference/Experimental.GraphView.GraphView.html)
-- Shader Graphのソースコード（参考実装）
-- Unity Forum: GraphView関連スレッド
+### Node Options（動的ポート数）
+
+`OnDefineOptions`で出口数を動的に設定できる。
+
+**重要: ポートID命名規約**
+
+ポート名はIDとして使われるため、安定したIDを使用し、表示名はラベルで分離する:
+- **ポートID**: `ExitCandidate.Id`（GUID等の安定ID）を使用
+- **表示名**: `WithDisplayName()` で `UILabel` を設定
+- **メリット**: 表示名を変更しても接続が壊れない
+
+```csharp
+[Serializable]
+internal class FlowAreaNode : FlowEditorNode
+{
+    const string k_ExitCountName = "ExitCount";
+
+    // 各出口のID/ラベル情報を保持
+    [SerializeField] private List<ExitPortInfo> exitPorts = new();
+
+    [Serializable]
+    internal class ExitPortInfo
+    {
+        public string id;       // GUID（安定ID）
+        public string uiLabel;  // 表示名
+        public int weight = 1;
+        // conditions等は別途
+    }
+
+    protected override void OnDefineOptions(IOptionDefinitionContext context)
+    {
+        context.AddOption<int>(k_ExitCountName)
+            .WithDisplayName("出口数")
+            .WithDefaultValue(1)
+            .Delayed();
+    }
+
+    protected override void OnDefinePorts(IPortDefinitionContext context)
+    {
+        // 入力ポート
+        context.AddInputPort(EXECUTION_PORT)
+            .WithDisplayName("In")
+            .WithConnectorUI(PortConnectorUI.Arrowhead)
+            .Build();
+
+        // 動的な出口ポート
+        var exitCountOption = GetNodeOptionByName(k_ExitCountName);
+        exitCountOption.TryGetValue<int>(out var exitCount);
+
+        // exitPorts配列を出口数に合わせる
+        EnsureExitPortCount(exitCount);
+
+        for (int i = 0; i < exitCount; i++)
+        {
+            var exitPort = exitPorts[i];
+            context.AddOutputPort(exitPort.id)           // GUID = 安定ID
+                .WithDisplayName(exitPort.uiLabel ?? $"出口{i + 1}")  // 表示名
+                .WithConnectorUI(PortConnectorUI.Arrowhead)
+                .Build();
+        }
+    }
+
+    void EnsureExitPortCount(int count)
+    {
+        // 不足分を追加
+        while (exitPorts.Count < count)
+        {
+            exitPorts.Add(new ExitPortInfo
+            {
+                id = System.Guid.NewGuid().ToString(),
+                uiLabel = null
+            });
+        }
+        // 超過分は削除しない（接続情報を保持）
+    }
+}
+```
+
+### ContextNode + BlockNode（門/出口の視覚化）
+
+門や出口が複雑化した場合、ノード内にブロックとして視覚的に配置できる。
+
+**通常ノード（現在の設計）**:
+```
+┌─────────────────────────────┐
+│ FlowAreaNode                │
+│  nodeId: "forest_01"        │
+│  gates: [Inspector配列]     │  ← 配列をInspectorで編集
+│  exits: [Inspector配列]     │
+│  [In] ──────────── [Out]    │
+└─────────────────────────────┘
+※ 門の詳細はInspectorを開かないと見えない
+```
+
+**ContextNode + BlockNode（将来の拡張案）**:
+```
+┌─────────────────────────────────────────────┐
+│ FlowAreaNode (ContextNode)                  │
+│  nodeId: "forest_01"                        │
+│                                             │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+│  │ GateBlock   │ │ GateBlock   │ │ GateBlock   │
+│  │ "ボス門"    │ │ "鍵門"      │ │ "謎解き門"  │
+│  │ pos: 50歩  │ │ pos: 80歩  │ │ pos: 100歩 │
+│  └─────────────┘ └─────────────┘ └─────────────┘
+│         ↑ ドラッグで順序変更可能 ↑
+│                                             │
+│  ┌─────────────┐ ┌─────────────┐             │
+│  │ ExitBlock   │ │ ExitBlock   │             │
+│  │ "城へ"      │→│ "村へ"      │→ [接続先]   │
+│  └─────────────┘ └─────────────┘             │
+└─────────────────────────────────────────────┘
+※ グラフ上で全て見える、ドラッグで並べ替え可能
+```
+
+**実装コード例**:
+```csharp
+// コンテキストノード（親）
+[Serializable]
+internal class FlowAreaContextNode : ContextNode
+{
+    [SerializeField] private string nodeId;
+    [SerializeField] private string displayName;
+
+    // 子ブロック（gates/exits）は自動管理される
+
+    protected override void OnDefinePorts(IPortDefinitionContext context)
+    {
+        context.AddInputPort("In").Build();
+        // 出口ポートは子のExitBlockが定義
+    }
+}
+
+// 門ブロック（子）
+[Serializable]
+internal class GateBlockNode : BlockNode
+{
+    [SerializeField] private string gateId;
+    [SerializeField] private int order;
+    [SerializeField] private int positionSteps;
+    [SerializeField] private ConditionSO[] passConditions;
+}
+
+// 出口ブロック（子）
+[Serializable]
+internal class ExitBlockNode : BlockNode
+{
+    [SerializeField] private string exitId;
+    [SerializeField] private string uiLabel;
+    [SerializeField] private int weight;
+
+    protected override void OnDefinePorts(IPortDefinitionContext context)
+    {
+        context.AddOutputPort(exitId)
+            .WithDisplayName(uiLabel ?? "Exit")
+            .Build();
+    }
+}
+```
+
+**導入タイミング**: Phase 3以降。通常ノードで運用してみて、視覚化が必要と感じたら導入。
+
+### Subgraph（サブグラフ）
+
+複雑なステージ構造をグループ化し、再利用可能にする:
+
+- **Local Subgraph**: 単一グラフ内でのグループ化
+- **Asset Subgraph**: 複数グラフで再利用可能なサブグラフ
+
+### Variables / Blackboard（将来検討）
+
+グラフ全体で共有する変数。フラグ条件の可視化に活用可能。
+
+---
+
+## データ移行
+
+### 既存FlowGraphSOからの移行
+
+既存のFlowGraphSOを.flowgraph形式に変換するエディタスクリプトを用意:
+
+```csharp
+[MenuItem("Walk/Migrate FlowGraphSO to Graph Toolkit")]
+static void MigrateFlowGraphs()
+{
+    // 全FlowGraphSOを検索
+    // 各NodeSOをFlowAreaNodeに変換
+    // 各NodeSO.ExitsをFlowAreaNodeの出口ポート接続に変換
+    // .flowgraphファイルとして保存
+}
+```
+
+### 互換性
+
+- 移行後もFlowGraphSOはランタイムで使用（変更なし）
+- Importerが.flowgraph → FlowGraphSOを自動変換
+- 既存のゲームロジックに影響なし
 
 ---
 
 ## 注意事項
 
-### Graph Tools Foundation (GTF)
+### 実験的パッケージ
 
-Unity 2021以降で新しいグラフフレームワーク（GTF）が開発中だが:
+Graph Toolkit 0.4.0-exp.2 は実験的（experimental）パッケージ:
 
-- ドキュメントが少ない
-- 実験的な部分がある
-- 情報が少なく学習コストが高い
+- APIが変更される可能性あり
+- Unity 6以降で安定化予定
+- 本番投入前にバージョン確認必須
 
-**現時点ではGraphViewを推奨。** 将来的にGTFが安定したら移行を検討。
+### 制限事項
+
+| 制限 | 対応 |
+|------|------|
+| 複雑なNodeSO設定 | カスタムInspector拡張で対応 |
+| GateMarker等のSO参照 | インライン編集またはSO参照フィールド |
+| 既存ワークフローとの共存 | 移行期間中は両方式をサポート |
 
 ---
 
 ## まとめ
 
-- 現在のSOベースのデータ構造は変更不要
-- GraphViewは「可視化・編集UI」として後付け可能
-- ステージが複雑化したら実装価値あり
-- 最小限の可視化から段階的に機能追加可能
+- **データ形式**: .flowgraph（エディタ用）→ FlowGraphSO（ランタイム用）
+- **編集方法**: Graph Toolkitのビジュアルエディタ
+- **互換性**: 既存のFlowGraphSOベースのランタイムは変更なし
+- **メリット**: UIコード不要、Undo/Redo自動、ノード配置の視覚化
+- **段階的導入**: Phase 1から順次実装し、既存システムと共存可能

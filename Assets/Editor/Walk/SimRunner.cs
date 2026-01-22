@@ -124,7 +124,6 @@ public sealed class SimRunner
             // Check for exit (simplified - no spawn rule check)
             var exits = exitResolver.ResolveExits(
                 currentNode,
-                graph,
                 context,
                 currentNode.ExitSelectionMode,
                 currentNode.MaxExitChoices);

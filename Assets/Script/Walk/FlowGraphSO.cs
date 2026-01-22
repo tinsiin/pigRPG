@@ -5,11 +5,9 @@ using UnityEngine;
 public sealed class FlowGraphSO : ScriptableObject
 {
     [SerializeField] private NodeSO[] nodes;
-    [SerializeField] private EdgeSO[] edges;
     [SerializeField] private string startNodeId;
 
     public IReadOnlyList<NodeSO> Nodes => nodes;
-    public IReadOnlyList<EdgeSO> Edges => edges;
     public string StartNodeId => startNodeId;
 
     public bool TryGetNode(string nodeId, out NodeSO node)
@@ -27,19 +25,5 @@ public sealed class FlowGraphSO : ScriptableObject
             }
         }
         return false;
-    }
-
-    public List<EdgeSO> GetEdgesFrom(string nodeId)
-    {
-        var result = new List<EdgeSO>();
-        if (string.IsNullOrEmpty(nodeId) || edges == null) return result;
-        foreach (var edge in edges)
-        {
-            if (edge != null && edge.FromNodeId == nodeId)
-            {
-                result.Add(edge);
-            }
-        }
-        return result;
     }
 }
