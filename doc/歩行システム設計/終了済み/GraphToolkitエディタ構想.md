@@ -2,6 +2,11 @@
 
 本書はFlowGraphSOをGraph Toolkitで視覚的に編集するエディタの構想をまとめたもの。
 
+相性悪いから断念した
+→GraphToolkitと歩行システムの相性評価.md
+今後は　可視化、診断ノード繋がりツールとして歩行システムに
+既存のsoだけの形式で続けることにする。
+しかも可視化ツールだけなら　むしろgraphtoolkitはオーバースペックなので、完全に使わないことに(歩行システム管理としては、ただまぁ局所的な所で今後向いてるかもしれないところが出るかもね)
 ---
 
 ## 背景
@@ -512,15 +517,17 @@ namespace Walk.Editor.GraphToolkit
 
 **目標: 既存のNodeSO相当の設定が可能 + エディタ上で即時フィードバック**
 
-### Phase 3: 高度な機能
+### Phase 3: 高度な機能（必要に応じて）
 
-8. 既存FlowGraphSOからの逆変換（マイグレーション）
-9. Subgraph対応（複雑なステージ構造のグループ化）
-10. ContextNode + BlockNode 導入（門/出口の視覚化）
+8. Subgraph対応（複雑なステージ構造のグループ化）
+9. ContextNode + BlockNode 導入（門/出口の視覚化）
     - 通常ノードで運用してみて必要性を判断
     - 導入する場合、FlowAreaNode → FlowAreaContextNode に移行
 
-**目標: 完全な置き換え + 視覚的な門/出口管理**
+**目標: 視覚的な門/出口管理**
+
+※ 移行ツール（既存FlowGraphSO → .flowgraph変換）は作成しない。
+  既存システムと並行運用し、使い勝手を比較してから判断する。
 
 ---
 
@@ -701,28 +708,31 @@ internal class ExitBlockNode : BlockNode
 
 ---
 
-## データ移行
+## 運用方針: 並行運用（共存）
 
-### 既存FlowGraphSOからの移行
+### 基本方針
 
-既存のFlowGraphSOを.flowgraph形式に変換するエディタスクリプトを用意:
+**既存システムとGraph Toolkitを並行して使用する。**
 
-```csharp
-[MenuItem("Walk/Migrate FlowGraphSO to Graph Toolkit")]
-static void MigrateFlowGraphs()
-{
-    // 全FlowGraphSOを検索
-    // 各NodeSOをFlowAreaNodeに変換
-    // 各NodeSO.ExitsをFlowAreaNodeの出口ポート接続に変換
-    // .flowgraphファイルとして保存
-}
+移行ツールは作成しない。理由:
+- 既存システムで本番データは作成していない
+- どちらが便利か実際に使ってから判断する
+- 必要になった時点で移行を検討すればよい
+
+### 並行運用の構成
+
+```
+既存ステージ: FlowGraphSO.asset（Inspector編集）
+新規ステージ: .flowgraph（Graph Toolkit編集）
+
+両方とも FlowGraphSO としてランタイムで使用可能
 ```
 
 ### 互換性
 
-- 移行後もFlowGraphSOはランタイムで使用（変更なし）
-- Importerが.flowgraph → FlowGraphSOを自動変換
-- 既存のゲームロジックに影響なし
+- 両形式とも最終的に `FlowGraphSO` になる
+- ランタイムコードは変更不要
+- ステージ参照箇所で `.asset` でも `.flowgraph` でも同じように扱える
 
 ---
 
@@ -750,6 +760,7 @@ Graph Toolkit 0.4.0-exp.2 は実験的（experimental）パッケージ:
 
 - **データ形式**: .flowgraph（エディタ用）→ FlowGraphSO（ランタイム用）
 - **編集方法**: Graph Toolkitのビジュアルエディタ
+- **運用方針**: 既存Inspector編集と並行運用（移行不要）
 - **互換性**: 既存のFlowGraphSOベースのランタイムは変更なし
 - **メリット**: UIコード不要、Undo/Redo自動、ノード配置の視覚化
-- **段階的導入**: Phase 1から順次実装し、既存システムと共存可能
+- **判断基準**: 実際に両方使ってみて、便利な方に後から寄せる
