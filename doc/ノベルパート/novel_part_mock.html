@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ノベルパート技術デモ</title>
+  <style>
+    :root {
+      --primary: #2a2a3a;
+      --secondary: #4a4a6a;
+      --accent: #ff6b9d;
+      --text: #ffffff;
+      --dinoid-box: #1a1a2a;
+      --portrait-box: #2a1a2a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      background: #0a0a1a;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ===== メインコンテナ ===== */
+    .game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ===== 背景レイヤー ===== */
+    .background-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #1a2a3a 0%, #0a1a2a 100%);
+      opacity: 0;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      z-index: 1;
+    }
+
+    .background-layer.visible {
+      opacity: 1;
+    }
+
+    .background-layer.slide-in {
+      animation: slideInBg 0.6s ease-out forwards;
+    }
+
+    @keyframes slideInBg {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* 歩行画面モック */
+    .walking-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #2a3a2a 0%, #1a2a1a 50%, #3a3a2a 100%);
+      z-index: 0;
+    }
+
+    .walking-screen::before {
+      content: '[ 歩行画面 ]';
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: rgba(255,255,255,0.3);
+      font-size: 14px;
+    }
+
+    /* サイドオブジェクト（歩行画面の装飾） */
+    .side-object {
+      position: absolute;
+      width: 60px;
+      height: 80px;
+      background: rgba(100, 150, 100, 0.5);
+      border-radius: 8px;
+    }
+    .side-object.left { left: 10%; top: 30%; }
+    .side-object.right { right: 10%; top: 35%; }
+
+    /* ===== 中央オブジェクト ===== */
+    .central-object {
+      position: absolute;
+      top: 25%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, #6a6a8a, #4a4a6a);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      text-align: center;
+      transition: transform 0.5s ease;
+      z-index: 5;
+      cursor: pointer;
+    }
+
+    .central-object.zoomed {
+      transform: translateX(-50%) scale(2) translateY(30%);
+    }
+
+    .central-object:hover {
+      filter: brightness(1.2);
+    }
+
+    /* ===== 立ち絵 ===== */
+    .portrait {
+      position: absolute;
+      bottom: 25%;
+      width: 150px;
+      height: 300px;
+      background: linear-gradient(180deg, #5a5a7a 0%, #3a3a5a 100%);
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.4s ease;
+      z-index: 10;
+    }
+
+    .portrait.left {
+      left: 5%;
+      transform: translateX(-100%);
+    }
+
+    .portrait.right {
+      right: 5%;
+      transform: translateX(100%);
+    }
+
+    .portrait.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* 立ち絵登場: ロックマン案（雨バーが落ちてから立ち絵フェードイン） */
+    .portrait.rockman-enter {
+      animation: rockmanPortraitFadeIn 0.3s ease-out 0.35s forwards;
+      opacity: 0;
+    }
+
+    @keyframes rockmanPortraitFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 雨バー（キャラ色の縦型直方体） */
+    .rain-bar {
+      position: absolute;
+      width: 20px;
+      height: 100px;
+      border-radius: 4px;
+      z-index: 11;
+      animation: rainFall 0.35s ease-in forwards;
+      filter: blur(2px);
+    }
+
+    .rain-bar.left {
+      left: calc(5% + 65px);
+    }
+
+    .rain-bar.right {
+      right: calc(5% + 65px);
+    }
+
+    @keyframes rainFall {
+      0% {
+        top: -100px;
+        opacity: 0.9;
+        height: 100px;
+      }
+      60% {
+        opacity: 1;
+        height: 150px;
+      }
+      100% {
+        top: calc(75% - 300px);
+        opacity: 0;
+        height: 80px;
+      }
+    }
+
+    /* 立ち絵登場: 上から */
+    .portrait.slide-from-top {
+      animation: slideFromTop 0.4s ease-out forwards;
+    }
+
+    @keyframes slideFromTop {
+      from {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 立ち絵登場: 下から */
+    .portrait.slide-from-bottom {
+      animation: slideFromBottom 0.4s ease-out forwards;
+    }
+
+    @keyframes slideFromBottom {
+      from {
+        opacity: 0;
+        transform: translateY(50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 立ち絵退場 */
+    .portrait.exit-left {
+      animation: exitLeft 0.3s ease-in forwards;
+    }
+
+    .portrait.exit-right {
+      animation: exitRight 0.3s ease-in forwards;
+    }
+
+    @keyframes exitLeft {
+      to { transform: translateX(-150%); opacity: 0; }
+    }
+
+    @keyframes exitRight {
+      to { transform: translateX(150%); opacity: 0; }
+    }
+
+    /* ===== テキストボックス共通 ===== */
+    .textbox-container {
+      position: absolute;
+      bottom: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 800px;
+      z-index: 20;
+    }
+
+    /* ===== ディノイド用テキストボックス ===== */
+    .dinoid-textbox {
+      background: var(--dinoid-box);
+      border: 2px solid var(--secondary);
+      border-radius: 12px;
+      padding: 20px;
+      padding-left: 80px;
+      position: relative;
+      opacity: 0;
+      transform: scale(0.9);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .dinoid-textbox.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .dinoid-textbox.flash {
+      animation: flash 0.1s ease 3;
+    }
+
+    @keyframes flash {
+      50% { opacity: 0.5; }
+    }
+
+    .dinoid-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    /* ===== 立ち絵用テキストボックス ===== */
+    .portrait-textbox {
+      background: linear-gradient(135deg, var(--portrait-box), #3a2a3a);
+      border: 3px solid var(--accent);
+      border-radius: 8px;
+      padding: 25px;
+      position: relative;
+      opacity: 0;
+      transform: translateY(20px) rotate(-1deg);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .portrait-textbox.visible {
+      opacity: 1;
+      transform: translateY(0) rotate(0deg);
+    }
+
+    .portrait-textbox.enter-anim {
+      animation: portraitBoxEnter 0.4s ease-out forwards;
+    }
+
+    @keyframes portraitBoxEnter {
+      0% {
+        opacity: 0;
+        transform: translateX(30px) translateY(20px) rotate(5deg);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(0) translateY(0) rotate(0deg);
+      }
+    }
+
+    .speaker-name {
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background: var(--accent);
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .text-content {
+      font-size: 18px;
+      line-height: 1.6;
+      min-height: 60px;
+    }
+
+    /* ===== 選択肢 ===== */
+    .choices-container {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .choices-container.visible {
+      display: flex;
+    }
+
+    .choice-btn {
+      background: var(--secondary);
+      border: 2px solid transparent;
+      border-radius: 8px;
+      padding: 12px 20px;
+      color: var(--text);
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+
+    .choice-btn:hover {
+      border-color: var(--accent);
+      background: #5a5a7a;
+      transform: translateX(5px);
+    }
+
+    .choice-btn .spirit-tag {
+      float: right;
+      color: var(--accent);
+      font-size: 14px;
+    }
+
+    /* ===== 精神属性インジケータ ===== */
+    .spirit-indicator {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.7);
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 2px solid var(--accent);
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.3s;
+      z-index: 30;
+    }
+
+    .spirit-indicator.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ===== 雑音（弾幕コメント） ===== */
+    .noise-layer {
+      position: absolute;
+      top: 20%;
+      left: 0;
+      width: 100%;
+      height: 30%;
+      pointer-events: none;
+      z-index: 15;
+      overflow: hidden;
+    }
+
+    .noise {
+      position: absolute;
+      white-space: nowrap;
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.8);
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+      animation: flowLeft 4s linear forwards;
+    }
+
+    .noise.fast {
+      animation-duration: 0.5s;
+    }
+
+    @keyframes flowLeft {
+      from { transform: translateX(100vw); }
+      to { transform: translateX(-100%); }
+    }
+
+    .noise .noise-icon {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-right: 8px;
+      vertical-align: middle;
+      font-size: 12px;
+      text-align: center;
+      line-height: 24px;
+    }
+
+    /* ===== ログ（MessageDropper風） ===== */
+    .log-layer {
+      position: absolute;
+      bottom: 25%;
+      left: 20px;
+      width: 250px;
+      height: 200px;
+      pointer-events: none;
+      z-index: 12;
+      overflow: hidden;
+    }
+
+    .log-message {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+      background: rgba(0, 0, 0, 0.3);
+      padding: 4px 8px;
+      border-radius: 4px;
+      animation: floatUp 6s linear forwards;
+    }
+
+    @keyframes floatUp {
+      from {
+        transform: translateY(0);
+        opacity: 0.8;
+      }
+      to {
+        transform: translateY(-180px);
+        opacity: 0;
+      }
+    }
+
+    /* ===== コントロールパネル ===== */
+    .control-panel {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 15px;
+      border-radius: 8px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-panel h3 {
+      font-size: 14px;
+      margin-bottom: 5px;
+      color: var(--accent);
+    }
+
+    .control-btn {
+      background: var(--secondary);
+      border: none;
+      border-radius: 4px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .control-btn:hover {
+      background: var(--accent);
+    }
+
+    .control-btn.active {
+      background: var(--accent);
+    }
+
+    .control-row {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    /* ===== クリックヒント ===== */
+    .click-hint {
+      position: absolute;
+      bottom: 2%;
+      right: 10%;
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      animation: blink 1s infinite;
+      z-index: 25;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0.3; }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container" id="gameContainer">
+    <!-- 歩行画面（背景なし時） -->
+    <div class="walking-screen">
+      <div class="side-object left"></div>
+      <div class="side-object right"></div>
+    </div>
+
+    <!-- 背景レイヤー -->
+    <div class="background-layer" id="backgroundLayer">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,0.3);">
+        [ 背景画像 ]
+      </div>
+    </div>
+
+    <!-- 中央オブジェクト -->
+    <div class="central-object" id="centralObject">
+      中央<br>オブジェクト
+    </div>
+
+    <!-- 立ち絵 -->
+    <div class="portrait left" id="portraitLeft">左立ち絵</div>
+    <div class="portrait right" id="portraitRight">右立ち絵</div>
+
+    <!-- 雑音レイヤー -->
+    <div class="noise-layer" id="noiseLayer"></div>
+
+    <!-- ログレイヤー -->
+    <div class="log-layer" id="logLayer"></div>
+
+    <!-- テキストボックスコンテナ -->
+    <div class="textbox-container">
+      <!-- ディノイド用 -->
+      <div class="dinoid-textbox" id="dinoidBox">
+        <div class="dinoid-icon" id="dinoidIcon">G</div>
+        <div class="text-content" id="dinoidText">ここにセリフが表示されます</div>
+      </div>
+
+      <!-- 立ち絵用 -->
+      <div class="portrait-textbox" id="portraitBox">
+        <div class="speaker-name" id="speakerName">Geino</div>
+        <div class="text-content" id="portraitText">ここにセリフが表示されます</div>
+        <div class="choices-container" id="choicesContainer"></div>
+      </div>
+    </div>
+
+    <!-- 精神属性インジケータ -->
+    <div class="spirit-indicator" id="spiritIndicator">
+      精神属性: <span id="spiritValue">-</span>
+    </div>
+
+    <!-- クリックヒント -->
+    <div class="click-hint">▼ クリックで進む</div>
+
+    <!-- コントロールパネル -->
+    <div class="control-panel">
+      <h3>モード切替</h3>
+      <div class="control-row">
+        <button class="control-btn active" onclick="setMode('dinoid')">ディノイド</button>
+        <button class="control-btn" onclick="setMode('portrait')">立ち絵</button>
+      </div>
+
+      <h3>背景</h3>
+      <div class="control-row">
+        <button class="control-btn active" onclick="setBackground(false)">なし</button>
+        <button class="control-btn" onclick="setBackground(true)">あり</button>
+      </div>
+
+      <h3>立ち絵登場</h3>
+      <div class="control-row">
+        <button class="control-btn" onclick="showPortrait('left', 'rockman')">ロックマン案</button>
+        <button class="control-btn" onclick="showPortrait('left', 'top')">上から</button>
+        <button class="control-btn" onclick="showPortrait('left', 'bottom')">下から</button>
+      </div>
+
+      <h3>ズーム</h3>
+      <div class="control-row">
+        <button class="control-btn" onclick="toggleZoom()">中央ズーム</button>
+      </div>
+
+      <h3>シナリオ</h3>
+      <div class="control-row">
+        <button class="control-btn" onclick="resetScenario()">最初から</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== 状態管理 =====
+    let currentMode = 'dinoid'; // 'dinoid' or 'portrait'
+    let hasBackground = false;
+    let isZoomed = false;
+    let scenarioIndex = 0;
+    let isChoiceMode = false;
+
+    // ===== 要素取得 =====
+    const dinoidBox = document.getElementById('dinoidBox');
+    const portraitBox = document.getElementById('portraitBox');
+    const dinoidText = document.getElementById('dinoidText');
+    const portraitText = document.getElementById('portraitText');
+    const dinoidIcon = document.getElementById('dinoidIcon');
+    const speakerName = document.getElementById('speakerName');
+    const backgroundLayer = document.getElementById('backgroundLayer');
+    const centralObject = document.getElementById('centralObject');
+    const portraitLeft = document.getElementById('portraitLeft');
+    const portraitRight = document.getElementById('portraitRight');
+    const noiseLayer = document.getElementById('noiseLayer');
+    const logLayer = document.getElementById('logLayer');
+    const choicesContainer = document.getElementById('choicesContainer');
+    const spiritIndicator = document.getElementById('spiritIndicator');
+    const spiritValue = document.getElementById('spiritValue');
+
+    // ===== サンプルシナリオ =====
+    const scenario = [
+      {
+        mode: 'dinoid',
+        speaker: 'G',
+        speakerFull: 'Geino',
+        text: 'なんか静かだな...',
+        noises: []
+      },
+      {
+        mode: 'dinoid',
+        speaker: 'N',
+        speakerFull: 'Noramlia',
+        text: 'そうね。嫌な予感がする。',
+        noises: [
+          { speaker: 'S', text: '確かに' }
+        ]
+      },
+      {
+        mode: 'dinoid',
+        speaker: 'S',
+        speakerFull: 'Sites',
+        text: 'あの中央にあるの、なんだろう？',
+        noises: [
+          { speaker: 'G', text: 'ん？' },
+          { speaker: 'N', text: 'どれ？' }
+        ]
+      },
+      {
+        mode: 'portrait',
+        speaker: 'G',
+        speakerFull: 'Geino',
+        text: 'ちょっと近づいてみるか。',
+        noises: [],
+        showPortraits: ['left', 'right'],
+        portraitAnim: 'rockman'
+      },
+      {
+        mode: 'portrait',
+        speaker: 'N',
+        speakerFull: 'Noramlia',
+        text: '気をつけてね。',
+        noises: [
+          { speaker: 'S', text: '危なくない？' }
+        ]
+      },
+      {
+        type: 'choice',
+        mode: 'portrait',
+        text: 'どうする？',
+        choices: [
+          { text: '近づいてみる', spirit: 'kindergarden' },
+          { text: '様子を見る', spirit: 'cquiest' },
+          { text: '俺が確認する', spirit: 'sacrifaith' }
+        ]
+      },
+      {
+        mode: 'portrait',
+        speaker: 'G',
+        speakerFull: 'Geino',
+        text: '...なんだ、ただの自販機か。',
+        background: true,
+        noises: [
+          { speaker: 'N', text: 'よかった' },
+          { speaker: 'S', text: 'びっくりした〜' }
+        ]
+      },
+      {
+        mode: 'portrait',
+        speaker: 'S',
+        speakerFull: 'Sites',
+        text: 'なんか買う？',
+        noises: []
+      },
+      {
+        mode: 'dinoid',
+        speaker: 'G',
+        speakerFull: 'Geino',
+        text: 'いや、先を急ごう。',
+        noises: [],
+        hidePortraits: true,
+        background: false
+      }
+    ];
+
+    // ===== モード切り替え =====
+    function setMode(mode) {
+      currentMode = mode;
+      updateControlButtons();
+
+      if (mode === 'dinoid') {
+        // 立ち絵ボックス閉じる
+        portraitBox.classList.remove('visible');
+        portraitBox.classList.add('flash');
+        setTimeout(() => {
+          portraitBox.classList.remove('flash');
+          // ディノイドボックス開く
+          dinoidBox.classList.add('visible');
+        }, 300);
+      } else {
+        // ディノイドボックス閉じる
+        dinoidBox.classList.remove('visible');
+        dinoidBox.classList.add('flash');
+        setTimeout(() => {
+          dinoidBox.classList.remove('flash');
+          // 立ち絵ボックス開く
+          portraitBox.classList.add('visible', 'enter-anim');
+          setTimeout(() => portraitBox.classList.remove('enter-anim'), 400);
+        }, 300);
+      }
+    }
+
+    // ===== 背景切り替え =====
+    function setBackground(show) {
+      hasBackground = show;
+      updateControlButtons();
+
+      if (show) {
+        backgroundLayer.classList.add('visible', 'slide-in');
+        setTimeout(() => backgroundLayer.classList.remove('slide-in'), 600);
+      } else {
+        backgroundLayer.classList.remove('visible', 'slide-in');
+      }
+    }
+
+    // ===== 立ち絵表示 =====
+    function showPortrait(side, animType) {
+      const portrait = side === 'left' ? portraitLeft : portraitRight;
+
+      // リセット
+      portrait.className = `portrait ${side}`;
+
+      // アニメーション適用
+      setTimeout(() => {
+        switch(animType) {
+          case 'rockman':
+            // 雨バーを生成して落とす
+            spawnRainBar(side);
+            // 雨バーが落ちた後に立ち絵フェードイン
+            portrait.classList.add('rockman-enter');
+            break;
+          case 'top':
+            portrait.classList.add('slide-from-top');
+            break;
+          case 'bottom':
+            portrait.classList.add('slide-from-bottom');
+            break;
+          default:
+            portrait.classList.add('visible');
+        }
+      }, 50);
+    }
+
+    // ===== 雨バー生成（ロックマン案用） =====
+    function spawnRainBar(side) {
+      const rainBar = document.createElement('div');
+      rainBar.className = `rain-bar ${side}`;
+      // キャラ特有の色（サンプル：左はピンク系、右は青系）
+      const color = side === 'left'
+        ? 'linear-gradient(180deg, #ff6b9d, #ff3a7a, #ff6b9d)'
+        : 'linear-gradient(180deg, #6b9dff, #3a7aff, #6b9dff)';
+      rainBar.style.background = color;
+
+      document.querySelector('.game-container').appendChild(rainBar);
+
+      // アニメーション終了後に削除
+      setTimeout(() => rainBar.remove(), 400);
+    }
+
+    // ===== 立ち絵非表示 =====
+    function hidePortrait(side) {
+      const portrait = side === 'left' ? portraitLeft : portraitRight;
+      portrait.classList.add(side === 'left' ? 'exit-left' : 'exit-right');
+      setTimeout(() => {
+        portrait.className = `portrait ${side}`;
+      }, 300);
+    }
+
+    // ===== ズーム =====
+    function toggleZoom() {
+      isZoomed = !isZoomed;
+      centralObject.classList.toggle('zoomed', isZoomed);
+    }
+
+    // ===== 雑音発生 =====
+    function spawnNoise(speaker, text) {
+      const noise = document.createElement('div');
+      noise.className = 'noise';
+      noise.innerHTML = `<span class="noise-icon">${speaker}</span>${text}`;
+      noise.style.top = `${Math.random() * 80}%`;
+      noiseLayer.appendChild(noise);
+
+      // 終了後に削除
+      setTimeout(() => noise.remove(), 4000);
+    }
+
+    // ===== 雑音を加速 =====
+    function accelerateNoises() {
+      document.querySelectorAll('.noise:not(.fast)').forEach(n => {
+        n.classList.add('fast');
+      });
+    }
+
+    // ===== ログ追加 =====
+    function addLog(text) {
+      const log = document.createElement('div');
+      log.className = 'log-message';
+      log.textContent = text;
+      logLayer.appendChild(log);
+
+      // 終了後に削除
+      setTimeout(() => log.remove(), 6000);
+    }
+
+    // ===== 選択肢表示 =====
+    function showChoices(choices) {
+      isChoiceMode = true;
+      choicesContainer.innerHTML = '';
+      choices.forEach((choice, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.innerHTML = `${choice.text} <span class="spirit-tag">[${choice.spirit}]</span>`;
+        btn.onclick = () => selectChoice(choice);
+        choicesContainer.appendChild(btn);
+      });
+      choicesContainer.classList.add('visible');
+    }
+
+    // ===== 選択肢選択 =====
+    function selectChoice(choice) {
+      isChoiceMode = false;
+      choicesContainer.classList.remove('visible');
+
+      // 精神属性表示
+      spiritValue.textContent = choice.spirit;
+      spiritIndicator.classList.add('visible');
+      setTimeout(() => spiritIndicator.classList.remove('visible'), 2000);
+
+      // 次へ
+      scenarioIndex++;
+      playScenarioStep();
+    }
+
+    // ===== シナリオ再生 =====
+    function playScenarioStep() {
+      if (scenarioIndex >= scenario.length) {
+        addLog('（シナリオ終了）');
+        return;
+      }
+
+      const step = scenario[scenarioIndex];
+
+      // 雑音を加速（前のを消す）
+      accelerateNoises();
+
+      // モード切り替え
+      if (step.mode && step.mode !== currentMode) {
+        setMode(step.mode);
+      }
+
+      // 背景
+      if (step.background !== undefined) {
+        setBackground(step.background);
+      }
+
+      // 立ち絵表示
+      if (step.showPortraits) {
+        step.showPortraits.forEach(side => {
+          showPortrait(side, step.portraitAnim || 'top');
+        });
+      }
+
+      // 立ち絵非表示
+      if (step.hidePortraits) {
+        hidePortrait('left');
+        hidePortrait('right');
+      }
+
+      // 選択肢
+      if (step.type === 'choice') {
+        portraitText.textContent = step.text;
+        showChoices(step.choices);
+        return;
+      }
+
+      // テキスト更新
+      if (currentMode === 'dinoid') {
+        dinoidIcon.textContent = step.speaker;
+        dinoidText.textContent = step.text;
+      } else {
+        speakerName.textContent = step.speakerFull;
+        portraitText.textContent = step.text;
+      }
+
+      // ログ追加
+      addLog(`${step.speakerFull}: ${step.text}`);
+
+      // 雑音発生
+      if (step.noises) {
+        step.noises.forEach((noise, i) => {
+          setTimeout(() => spawnNoise(noise.speaker, noise.text), i * 300);
+        });
+      }
+    }
+
+    // ===== シナリオリセット =====
+    function resetScenario() {
+      scenarioIndex = 0;
+      isChoiceMode = false;
+      choicesContainer.classList.remove('visible');
+      setMode('dinoid');
+      setBackground(false);
+      hidePortrait('left');
+      hidePortrait('right');
+      centralObject.classList.remove('zoomed');
+      isZoomed = false;
+      noiseLayer.innerHTML = '';
+      logLayer.innerHTML = '';
+
+      setTimeout(() => playScenarioStep(), 500);
+    }
+
+    // ===== コントロールボタン更新 =====
+    function updateControlButtons() {
+      document.querySelectorAll('.control-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+    }
+
+    // ===== クリックで進行 =====
+    document.getElementById('gameContainer').addEventListener('click', (e) => {
+      // コントロールパネルのクリックは除外
+      if (e.target.closest('.control-panel')) return;
+      if (e.target.closest('.choice-btn')) return;
+      if (e.target.closest('.central-object')) {
+        toggleZoom();
+        return;
+      }
+
+      if (isChoiceMode) return;
+
+      scenarioIndex++;
+      playScenarioStep();
+    });
+
+    // ===== 初期化 =====
+    dinoidBox.classList.add('visible');
+    playScenarioStep();
+  </script>
+</body>
+</html>
