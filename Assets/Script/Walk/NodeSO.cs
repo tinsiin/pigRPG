@@ -22,6 +22,7 @@ public sealed class NodeSO : ScriptableObject
     [SerializeField] private TrackConfig trackConfig;
     [SerializeField] private GateMarker[] gates;
     [SerializeField] private ExitVisual exitVisual;
+    [SerializeField] private ForcedEventTrigger[] forcedEventTriggers;
 
     public string NodeId => nodeId;
     public string DisplayName => displayName;
@@ -42,6 +43,8 @@ public sealed class NodeSO : ScriptableObject
     public TrackConfig TrackConfig => trackConfig;
     public GateMarker[] Gates => gates;
     public ExitVisual ExitVisual => exitVisual;
+    public ForcedEventTrigger[] ForcedEventTriggers => forcedEventTriggers;
+    public bool HasForcedEventTriggers => forcedEventTriggers != null && forcedEventTriggers.Length > 0;
 }
 
 [System.Serializable]

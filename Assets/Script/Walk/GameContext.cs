@@ -17,6 +17,8 @@ public sealed class GameContext
     public WalkState WalkState { get; }
     public IBattleRunner BattleRunner { get; set; }
     public IEventUI EventUI { get; set; }
+    public IDialogueRunner DialogueRunner { get; set; }
+    public ForcedEventStateManager ForcedEventStateManager { get; } = new();
 
     // Phase 2: Gate/Anchor integration
     public GateResolver GateResolver { get; set; }

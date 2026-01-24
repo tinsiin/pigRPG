@@ -19,6 +19,7 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
     private EventHost eventHost;
     private IEventUI eventUI;
     private IBattleRunner battleRunner;
+    private IDialogueRunner dialogueRunner;
     private IWalkSFXPlayer sfxPlayer;
 
     public bool HasRootGraph => rootGraph != null;
@@ -175,6 +176,7 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
         centralPresenter.SetSFXPlayer(sfxPlayer);
 
         EnsureBattleRunner();
+        EnsureDialogueRunner();
 
         if (areaController != null)
         {
@@ -232,6 +234,51 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
         {
             gameContext.BattleRunner = battleRunner;
         }
+    }
+
+    private void EnsureDialogueRunner()
+    {
+        if (dialogueRunner == null)
+        {
+            var novelEventUI = ResolveNovelEventUI();
+            if (novelEventUI != null)
+            {
+                dialogueRunner = new NovelPartDialogueRunner(novelEventUI);
+
+                // NovelPartEventUIはIEventUIも実装しているので、EventUIとしても設定
+                // これによりHidePortraitEffectなどのノベル専用Effectが動作する
+                if (gameContext != null)
+                {
+                    gameContext.EventUI = novelEventUI;
+                }
+            }
+        }
+        if (gameContext != null)
+        {
+            gameContext.DialogueRunner = dialogueRunner;
+        }
+    }
+
+    private INovelEventUI ResolveNovelEventUI()
+    {
+        // Try to find NovelPartEventUI in the scene
+        var found = FindObjectOfType<NovelPartEventUI>();
+        if (found != null)
+        {
+            return found;
+        }
+
+        var all = Resources.FindObjectsOfTypeAll<NovelPartEventUI>();
+        for (var i = 0; i < all.Length; i++)
+        {
+            var candidate = all[i];
+            if (candidate == null) continue;
+            if (!candidate.gameObject.scene.IsValid()) continue;
+            return candidate;
+        }
+
+        // No NovelPartEventUI available
+        return null;
     }
 
     private RectTransform ResolveSideRoot()
@@ -361,6 +408,7 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
         else
         {
             EnsureBattleRunner();
+            EnsureDialogueRunner();
         }
 
         if (areaController == null)

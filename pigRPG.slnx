@@ -1,6 +1,5 @@
 ﻿<Solution>
   <Project Path="Assembly-CSharp.csproj" />
-  <Project Path="Walk.Editor.GraphToolkit.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="Tests.EditMode.csproj" />
 </Solution>

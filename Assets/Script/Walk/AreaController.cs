@@ -183,6 +183,14 @@ public sealed class AreaController
             }
         }
 
+        // 強制イベントチェック（エンカウント後、アプローチ前）
+        var forcedEventHandled = await CheckForcedEvents();
+        if (forcedEventHandled)
+        {
+            NotifyProgressChanged();
+            return;
+        }
+
         await HandleApproach(sidePair, centralEvent, hasCentral);
 
         // If an event triggered a rewind (e.g., RewindToAnchorEffect), skip exit check
@@ -391,6 +399,95 @@ public sealed class AreaController
         // ゲート処理完了後は常にHideしてreturn true（歩行をブロック）
         centralPresenter?.Hide();
         return true;
+    }
+
+    /// <summary>
+    /// Check and handle forced events. Returns true if event was triggered.
+    /// </summary>
+    private async UniTask<bool> CheckForcedEvents()
+    {
+        // 歩数を進める（クールダウン用）
+        context.ForcedEventStateManager.IncrementSteps();
+
+        // トリガーがなければスキップ
+        if (!currentNode.HasForcedEventTriggers) return false;
+
+        var triggers = currentNode.ForcedEventTriggers;
+        if (triggers == null) return false;
+
+        foreach (var trigger in triggers)
+        {
+            if (trigger == null) continue;
+
+            // 発火可能かチェック
+            if (!context.ForcedEventStateManager.CanTrigger(trigger)) continue;
+
+            // 条件チェック
+            if (trigger.HasConditions)
+            {
+                var conditionsMet = true;
+                foreach (var condition in trigger.Conditions)
+                {
+                    if (condition == null) continue;
+                    if (!condition.IsMet(context))
+                    {
+                        conditionsMet = false;
+                        break;
+                    }
+                }
+                if (!conditionsMet) continue;
+            }
+
+            // タイプ別判定
+            var shouldTrigger = false;
+            switch (trigger.Type)
+            {
+                case ForcedEventType.Steps:
+                    shouldTrigger = context.Counters.NodeSteps >= trigger.StepCount;
+                    break;
+                case ForcedEventType.Probability:
+                    shouldTrigger = context.GetRandomFloat() < trigger.Probability;
+                    break;
+            }
+
+            if (!shouldTrigger) continue;
+
+            // ダイアログ実行
+            if (trigger.Dialogue != null && context.DialogueRunner != null)
+            {
+                var dialogueContext = new DialogueContext(trigger.Dialogue, context);
+                var dialogueResult = await context.DialogueRunner.RunDialogueAsync(dialogueContext);
+
+                // リアクション終了の場合、リアクションタイプに応じた処理
+                if (dialogueResult.IsReactionEnded)
+                {
+                    var reaction = dialogueResult.TriggeredReaction;
+                    if (reaction.Type == ReactionType.Battle && reaction.Encounter != null)
+                    {
+                        var battleResult = await RunEncounter(reaction.Encounter);
+                        if (battleResult.Encountered)
+                        {
+                            // バトル結果に応じた処理（勝敗イベント等）
+                            await TriggerEncounterOutcome(reaction.Encounter, battleResult.Outcome);
+
+                            // 敗北/逃走時は歩数を巻き戻す
+                            if (battleResult.Outcome == BattleOutcome.Defeat || battleResult.Outcome == BattleOutcome.Escape)
+                            {
+                                context.Counters.Rewind(RewindStepsOnFail);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 発火を記録
+            context.ForcedEventStateManager.RecordTrigger(trigger.TriggerId, trigger.ConsumeOnTrigger);
+
+            // 1つ発火したら終了（1歩で複数発火は避ける）
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
