@@ -78,12 +78,18 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
     private IPlayersSkillUI playersSkillUI;
     private IPlayersRoster playersRoster;
     private IPlayersTuning playersTuning;
+
+    // Phase 1: DI注入されたコントローラー
+    private IKZoomController _kZoom;
     private  void Start()
     {
         if (playersParty == null) Debug.LogError("playersParty が null です");
         if (playersUIControl == null) Debug.LogError("playersUIControl が null です");
         if (playersSkillUI == null) Debug.LogError("playersSkillUI が null です");
         BaseStates.CsvLoad();
+
+        // Phase 1: WatchUIUpdate.Instanceはここでのみ使用
+        _kZoom = WatchUIUpdate.Instance?.KZoomCtrl;
         
         //初期UI更新　最適化のため最終開発の段階で初期UIの更新だけをするようにする。
         TestProgressUIUpdate();
@@ -241,7 +247,7 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
     private async UniTask OnClickNextWaitBtn()
     {
         // Kモードがアクティブなら即時解除（アニメなし）
-        WatchUIUpdate.Instance?.ForceExitKImmediate();
+        _kZoom?.ForceExitKImmediate();
         //USERUI_state.Value = await orchestrator.Step();
         if (orchestrator == null || orchestrator.Phase == BattlePhase.Completed)
         {

@@ -10,11 +10,15 @@ public class BattleInitializer
 {
     private readonly MessageDropper _messageDropper;
     private readonly WatchUIUpdate _watchUIUpdate;
-    
-    public BattleInitializer(MessageDropper messageDropper)
+
+    /// <summary>
+    /// Phase 1: WatchUIUpdateをコンストラクタで注入
+    /// </summary>
+    public BattleInitializer(MessageDropper messageDropper, WatchUIUpdate watchUIUpdate = null)
     {
         _messageDropper = messageDropper;
-        _watchUIUpdate = WatchUIUpdate.Instance;
+        // フォールバックでWatchUIUpdate.Instanceを使用（段階的移行のため）
+        _watchUIUpdate = watchUIUpdate ?? WatchUIUpdate.Instance;
     }
     
     public UniTask<BattleSetupResult> InitializeBattle(

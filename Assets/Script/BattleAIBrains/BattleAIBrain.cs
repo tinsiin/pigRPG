@@ -1043,10 +1043,14 @@ public abstract class BattleAIBrain : ScriptableObject
         int goodPassiveCount = 0;
         try
         {
-            // PassiveManager/VitalLayerManager が利用可能なら良性のみカウント（失敗時は総数で代替）
+            // Phase 3b: DI注入を優先、フォールバックでPassiveManager.Instance
+            var provider = self.PassiveProvider ?? PassiveManager.Instance;
+            // PassiveManager/VitalLayerManager が利用可能なら良性のみカウント
             if (skill.SubEffects != null)
             {
-                goodPassiveCount = skill.SubEffects.Count(id => !PassiveManager.Instance.GetAtID(id).IsBad);
+                goodPassiveCount = provider != null
+                    ? skill.SubEffects.Count(id => !provider.GetAtID(id).IsBad)
+                    : skill.SubEffects.Count;  // providerがない場合は総数で代替
             }
         }
         catch { goodPassiveCount = skill.SubEffects?.Count ?? 0; }

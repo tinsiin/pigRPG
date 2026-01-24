@@ -17,4 +17,5 @@ public interface IViewportController
 
     /// <summary>共通背景への参照（BackGround）</summary>
     Transform Background { get; }
+
 }

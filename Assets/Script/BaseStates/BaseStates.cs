@@ -24,22 +24,38 @@ public abstract partial class BaseStates
     //  ==============================================================================================================================
 
 
-    WatchUIUpdate wui => WatchUIUpdate.Instance;
+    // Phase 2a: 未使用のwuiプロパティを削除
     protected IBattleContext manager => BattleContextHub.Current;
-    protected SchizoLog schizoLog => SchizoLog.Instance;
+
+    // Phase 2b: schizoLogプロパティを削除し、BattleUIBridge経由に統一
     protected void AddBattleLog(string message, bool important = false)
     {
         var bridge = BattleUIBridge.Active;
         if (bridge != null)
         {
             bridge.AddLog(message, important);
-            return;
         }
-        schizoLog?.AddLog(message, important);
+        // バトル外では何もしない（BattleUIBridge.Activeがnullの場合）
     }
 
     public IPlayersTuning Tuning { get; private set; }
     public IPlayersSkillUI SkillUI { get; private set; }
+
+    // Phase 3b: PassiveManager DI注入
+    public IPassiveProvider PassiveProvider { get; private set; }
+
+    public void BindPassiveProvider(IPassiveProvider provider)
+    {
+        PassiveProvider = provider;
+    }
+
+    // Phase 3d: ArrowManager DI注入
+    public IArrowManager ArrowManager { get; private set; }
+
+    public void BindArrowManager(IArrowManager arrowManager)
+    {
+        ArrowManager = arrowManager;
+    }
 
     public void BindTuning(IPlayersTuning tuning)
     {

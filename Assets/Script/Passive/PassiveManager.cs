@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 
 [DefaultExecutionOrder(-1000)]
-public class PassiveManager : MonoBehaviour
+public class PassiveManager : MonoBehaviour, IPassiveProvider
 {
     public static PassiveManager Instance;
 

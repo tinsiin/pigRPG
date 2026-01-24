@@ -22,6 +22,12 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
     private IDialogueRunner dialogueRunner;
     private IWalkSFXPlayer sfxPlayer;
 
+    // Phase 1: DI注入されたコントローラー
+    private IWalkingUIController _walkingUI;
+
+    // Phase 3d: ArrowManager DI注入
+    private IArrowManager _arrowManager;
+
     public bool HasRootGraph => rootGraph != null;
     public GameContext GameContext => gameContext;
 
@@ -138,6 +144,10 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
 
         if (messageDropper == null) messageDropper = ResolveMessageDropper();
         if (approachUI == null) approachUI = ResolveApproachUI();
+        // Phase 1: WatchUIUpdate.InstanceはここでのみIWalkingUIControllerを取得
+        if (_walkingUI == null) _walkingUI = WatchUIUpdate.Instance?.WalkingUICtrl;
+        // Phase 3d: ArrowManager取得
+        if (_arrowManager == null) _arrowManager = BattleSystemArrowManager.Instance;
         if (eventUI == null)
         {
             eventUI = new WalkingEventUI(walking, messageDropper);
@@ -283,10 +293,10 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
 
     private RectTransform ResolveSideRoot()
     {
-        var watchUI = WatchUIUpdate.Instance;
-        if (watchUI != null && watchUI.SideObjectRoot != null)
+        // Phase 1: 注入されたコントローラーを優先
+        if (_walkingUI?.SideObjectRoot != null)
         {
-            return watchUI.SideObjectRoot;
+            return _walkingUI.SideObjectRoot;
         }
 
         var bg = GameObject.Find("BackGround");
@@ -451,34 +461,16 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
         var node = areaController?.CurrentNode;
         if (node == null) return;
 
-        var wui = WatchUIUpdate.Instance;
-        if (wui != null)
-        {
-            wui.ApplyNodeUI(node.DisplayName, node.UiHints);
-        }
+        // Phase 1: 注入されたコントローラーを優先
+        _walkingUI?.ApplyNodeUI(node.DisplayName, node.UiHints);
 
         var hints = node.UiHints;
         if (hints.UseThemeColors)
         {
             sidePresenter?.SetThemeColors(hints.FrameArtColor, hints.TwoColor);
 
-            var arrowManager = BattleSystemArrowManager.Instance;
-            if (arrowManager == null)
-            {
-                var all = Resources.FindObjectsOfTypeAll<BattleSystemArrowManager>();
-                for (var i = 0; i < all.Length; i++)
-                {
-                    var candidate = all[i];
-                    if (candidate == null) continue;
-                    if (!candidate.gameObject.scene.IsValid()) continue;
-                    arrowManager = candidate;
-                    break;
-                }
-            }
-            if (arrowManager != null)
-            {
-                arrowManager.ApplyStageThemeColors(hints.FrameArtColor, hints.TwoColor);
-            }
+            // Phase 3d: DI注入を優先
+            _arrowManager?.ApplyStageThemeColors(hints.FrameArtColor, hints.TwoColor);
         }
 
         if (hints.UseActionMarkColor)

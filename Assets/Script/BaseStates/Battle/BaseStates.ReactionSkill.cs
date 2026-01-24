@@ -281,7 +281,9 @@ public abstract partial class BaseStates
     bool BadPassiveHit(BaseSkill skill,BaseStates grantor)
     {
         var hit = false;
-        foreach (var id in skill.SubEffects.Where(id => PassiveManager.Instance.GetAtID(id).IsBad))
+        // Phase 3b: DI注入を優先、フォールバックでPassiveManager.Instance
+        var provider = PassiveProvider ?? PassiveManager.Instance;
+        foreach (var id in skill.SubEffects.Where(id => provider.GetAtID(id).IsBad))
         {//付与する瞬間はインスタンス作成のディープコピーがまだないので、passivemanagerで調査する
             ApplyPassiveBufferInBattleByID(id,grantor);
             hit = true;//goodpassiveHitに説明
@@ -356,7 +358,9 @@ public abstract partial class BaseStates
     bool GoodPassiveHit(BaseSkill skill,BaseStates grantor)
     {
         var hit = false;
-        foreach (var id in skill.SubEffects.Where(id => !PassiveManager.Instance.GetAtID(id).IsBad))
+        // Phase 3b: DI注入を優先、フォールバックでPassiveManager.Instance
+        var provider = PassiveProvider ?? PassiveManager.Instance;
+        foreach (var id in skill.SubEffects.Where(id => !provider.GetAtID(id).IsBad))
         {
             ApplyPassiveBufferInBattleByID(id,grantor);
             hit = true;//スキル命中率を介してるのだから、適合したかどうかはヒットしたかしないかに関係ない。 = ApplyPassiveで元々適合したかどうかをhitに代入してた
@@ -993,7 +997,9 @@ public abstract partial class BaseStates
         attacker.AggregateSkillHit(bestHitOutcome);
 
         //今回の攻撃結果を矢印の描画キューに
-        BattleSystemArrowManager.Instance.Enqueue(attacker,this,arrowThicknessDamagePercent);
+        // Phase 3d: DI注入を優先、フォールバックでBattleSystemArrowManager.Instance
+        var arrowMgr = ArrowManager ?? BattleSystemArrowManager.Instance;
+        arrowMgr?.Enqueue(attacker,this,arrowThicknessDamagePercent);
 
         return txt;
     }

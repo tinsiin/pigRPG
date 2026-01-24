@@ -100,7 +100,9 @@ public abstract partial class BaseStates
     public void ApplyPassiveBufferInBattleByID(int id,BaseStates grantor = null)
     {
         if(grantor == null) grantor = this;//指定してないのなら、付与者は自分自身
-        var status = PassiveManager.Instance.GetAtID(id).DeepCopy();//idを元にpassiveManagerから取得 ディープコピーでないとインスタンス共有される
+        // Phase 3b: DI注入を優先、フォールバックでPassiveManager.Instance
+        var provider = PassiveProvider ?? PassiveManager.Instance;
+        var status = provider.GetAtID(id).DeepCopy();//idを元にpassiveManagerから取得 ディープコピーでないとインスタンス共有される
         BufferApplyingPassiveList.Add((status,grantor));
     }
     //  ==============================================================================================================================
@@ -113,11 +115,11 @@ public abstract partial class BaseStates
     {
         if(grantor == null) grantor = this;//指定してないのなら、付与者は自分自身
 
-        // マネージャ未初期化やID不正の安全ガード
-        var pm = PassiveManager.Instance;
+        // Phase 3b: DI注入を優先、フォールバックでPassiveManager.Instance
+        var pm = PassiveProvider ?? PassiveManager.Instance;
         if (pm == null)
         {
-            Debug.LogError($"[ApplyPassiveByID] PassiveManager.Instance が null です。id={id}, character={CharacterName}. 初期化順序の前に呼ばれています。処理をスキップします。");
+            Debug.LogError($"[ApplyPassiveByID] PassiveProvider/PassiveManager.Instance が null です。id={id}, character={CharacterName}. 初期化順序の前に呼ばれています。処理をスキップします。");
             return;
         }
 

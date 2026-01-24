@@ -7,12 +7,12 @@ using RandomExtensions;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 
-public class EnemyCollectManager : MonoBehaviour
+public class EnemyCollectManager : MonoBehaviour, IEnemyMatchCalculator
 {
     /// <summary>
     ///     敵が一人の際の属性をそのままパーティー属性に変換する辞書データ
     /// </summary>
-    public Dictionary<SpiritualProperty, PartyProperty> EnemyLonelyPartyImpression;
+    public Dictionary<SpiritualProperty, PartyProperty> EnemyLonelyPartyImpression { get; set; }
 
     /// <summary>
     ///     キャラ属性同士の敵集まりAIの相性の辞書データ　方向がある為順序の情報も含む。

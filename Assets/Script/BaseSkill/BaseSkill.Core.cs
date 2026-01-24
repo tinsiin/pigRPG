@@ -15,7 +15,7 @@ public partial class BaseSkill
     //                                              参照
     //  ==============================================================================================================================
 
-    protected SchizoLog schizoLog => SchizoLog.Instance;
+    // Phase 2b: 未使用のschizoLogプロパティを削除
     protected IBattleContext manager => BattleContextHub.Current;
     [NonSerialized]
     public BaseStates Doer;//行使者

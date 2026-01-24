@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [DisallowMultipleComponent]
-public class BattleSystemArrowManager : MonoBehaviour
+public class BattleSystemArrowManager : MonoBehaviour, IArrowManager
 {
     [Header("描画コンテナ")]
     [Tooltip("矢印を描画する親の RectTransform（同一 Canvas 配下を推奨）。未設定時は自分の RectTransform を使用します。")]

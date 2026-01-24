@@ -317,7 +317,17 @@ public class BattleManager : IBattleContext
         Acts = new ActionQueue();
         turnScheduler = new TurnScheduler(AllyGroup, EnemyGroup, Acts, battleState);
         unders = new UnderActersEntryList(this);
-        uiBridge = new BattleUIBridge(messageDropper, skillUi, roster);
+        // Phase 1: WatchUIUpdate.Instanceはここでのみ使用し、各コントローラーを注入
+        var wui = WatchUIUpdate.Instance;
+        uiBridge = new BattleUIBridge(
+            messageDropper,
+            skillUi,
+            roster,
+            wui?.ActionMarkCtrl,
+            wui?.EnemyPlacementCtrl,
+            wui?.IntroOrchestrator,  // Intro Orchestrator Facade（文脈込み）
+            SchizoLog.Instance,  // Phase 3a: SchizoLog注入
+            BattleSystemArrowManager.Instance);  // Phase 3d: ArrowManager注入
         uiBridge.BindBattleContext(this);
         BattleUIBridge.SetActive(uiBridge);
         stageEscapeRate = escapeRate;

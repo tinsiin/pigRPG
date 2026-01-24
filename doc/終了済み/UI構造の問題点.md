@@ -1,8 +1,15 @@
 # UI構造の問題点
 
+**状態: ✅ 完了（2026-01-24）**
+
 ## 概要
 
 SampSceneのUI構造における問題点と、リファクタリングの方向性についてまとめる。
+
+**全課題解決済み:**
+- 課題1: シングルトン依存 → ✅ 解決
+- 課題2: EyeArea/USERUI状態管理 → ✅ 解決（設計完了）
+- 課題3: ズーム汎用ラッパーの不足 → ✅ 解決
 
 ---
 
@@ -726,8 +733,100 @@ await viewport.Zoom.ZoomInAsync(0.5f, ct);
 ### 残存する課題
 
 1. ~~**命名の問題**: KZoomArea → ViewportArea等のリネームは未実施~~ → ✅ 2026-01-24 シーン上でリネーム完了
-2. **シングルトン依存**: WatchUIUpdate.Instanceは依然として存在（完全排除には大規模変更が必要）
-3. **EyeArea/USERUI状態管理**: 複数システム間のUI状態遷移管理は未実装
+
+---
+
+## 今後の課題（未着手）
+
+### 課題1: シングルトン依存 ✅ 解決済み（2026-01-24）
+
+**解決内容:**
+
+[シングルトン依存解消計画.md](./シングルトン依存解消計画.md)に基づき、Phase 0〜3eを実施。
+
+| Phase | 内容 | 状況 |
+|-------|------|------|
+| Phase 0 | DI基盤準備 | ✅ 完了 |
+| Phase 1 | WatchUIUpdate依存解消 | ✅ 完了 |
+| Phase 2a | BaseStates.wui削除 | ✅ 完了 |
+| Phase 2b | BaseStates.schizoLog整理 | ✅ 完了 |
+| Phase 3a | SchizoLog DI注入化 | ✅ 完了 |
+| Phase 3b | PassiveManager DI注入化 | ✅ 完了 |
+| Phase 3c | EnemyCollectManager DI注入化 | ✅ 完了 |
+| Phase 3d | ArrowManager DI注入化 | ✅ 完了 |
+| Phase 3e | IntroOrchestrator Facade分離 | ✅ 完了 |
+
+**主な成果:**
+- `BattleUIBridge`がインターフェース経由でコントローラーを受け取るように変更
+- `IIntroOrchestratorFacade`でズーム復帰の設計問題を根本解決
+- `IPassiveProvider`, `IEnemyMatchCalculator`, `IArrowManager`等のインターフェース作成
+- シングルトン直接参照は初期化箇所のみに限定
+
+**現在のアクセス方法:**
+```csharp
+// DI注入（推奨）
+public class BattleUIBridge
+{
+    private readonly IActionMarkController _actionMark;
+    private readonly IIntroOrchestratorFacade _introOrchestrator;
+
+    public BattleUIBridge(..., IActionMarkController actionMark, IIntroOrchestratorFacade introOrchestrator, ...)
+    {
+        _actionMark = actionMark;
+        _introOrchestrator = introOrchestrator;
+    }
+}
+
+// 汎用アクセス（EyeAreaManager経由）
+var viewport = EyeAreaManager.Instance.Viewport;
+var intro = EyeAreaManager.Instance.IntroOrchestrator;
+```
+
+---
+
+### 課題2: EyeArea/USERUI状態管理 ✅ 解決済み（2026-01-24）
+
+**解決内容:**
+
+[EyeArea_USERUI状態管理設計.md](./EyeArea_USERUI状態管理設計.md)で設計完了。
+
+**結論:**
+- **USERUI**: 既存のObserver仕組み（TabState + ReactiveProperty）を拡張するだけで対応可能
+- **EyeArea**: 既にインターフェース分離済み（IViewportController, IIntroOrchestratorFacade等）で十分使いやすい
+- **統合管理**: 現時点では不要。ノベルパート実装中に必要なら検討
+
+**具体的な対応:**
+| エリア | 対応内容 |
+|--------|----------|
+| USERUI | TabStateに `FieldDialogue`, `NovelPortrait` 等を追加 |
+| EyeArea | MiddleFixedContainerにノベルUI（立ち絵等）を配置 |
+
+**詳細:** [EyeArea_USERUI状態管理設計.md](./EyeArea_USERUI状態管理設計.md)を参照
+
+---
+
+### 課題3: ズーム汎用ラッパーの不足 ✅ 解決済み（2026-01-24）
+
+**解決内容:**
+
+[ズーム共通化_実装計画.md](./ズーム共通化_実装計画.md)に基づき実装完了。
+
+**実装されたラッパー（EyeAreaManager）:**
+```csharp
+// バトル/ノベル/歩行 どこからでも同じ入口でズーム演出を呼べる
+await EyeAreaManager.Instance.PrepareZoomAsync();     // 原状キャプチャ
+await EyeAreaManager.Instance.PlayZoomAsync();        // ズームイン
+await EyeAreaManager.Instance.RestoreZoomAsync(true, 0.4f);  // ズームアウト
+```
+
+**解決された問題:**
+- ✅ 「ズーム操作（IZoomController）」と「ズーム演出（文脈込み）」を分離
+- ✅ CaptureOriginalの呼び忘れ防止（Facade内で管理）
+- ✅ バトル/ノベル/歩行で同じ呼び方に統一
+
+**詳細:** [ズーム仕様書.md](../ズーム仕様書.md)を参照
+
+---
 
 ### 成果のまとめ
 
@@ -813,3 +912,8 @@ await viewport.Zoom.ZoomInAsync(0.3f, ct);  // 同じ仕組み
 | 2026-01-24 | WatchUIUpdate神クラス問題の分析追加 |
 | 2026-01-24 | **WatchUIUpdateリファクタリング完了**（Phase 1〜6）。対応状況セクション追加 |
 | 2026-01-24 | シーン上でKZoomArea → ViewportAreaにリネーム。将来対応可能性の確認・記載 |
+| 2026-01-24 | **シングルトン依存解消計画完了**（Phase 0〜3e）。課題1を解決済みに更新 |
+| 2026-01-24 | 課題3「ズーム汎用ラッパーの不足」を追加。IZoomControllerは共通化済みだがラッパーが未実装 |
+| 2026-01-24 | **課題3解決済み**。EyeAreaManagerに汎用ラッパー実装完了 |
+| 2026-01-24 | **課題2解決済み**。EyeArea_USERUI状態管理設計.mdで設計完了 |
+| 2026-01-24 | **全課題完了**。doc/終了済みに移動 |

@@ -6,9 +6,23 @@ using static CommonCalc;
 
 public static class EncounterEnemySelector
 {
-    public static BattleGroup SelectGroup(IReadOnlyList<NormalEnemy> enemies, int globalSteps, int number = -1)
+    /// <summary>
+    /// 敵グループを選択する
+    /// </summary>
+    /// <param name="enemies">候補となる敵リスト</param>
+    /// <param name="globalSteps">現在のグローバルステップ数</param>
+    /// <param name="number">指定人数（-1で自動）</param>
+    /// <param name="matchCalc">相性計算インターフェース（null時はEnemyCollectManager.Instance）</param>
+    public static BattleGroup SelectGroup(
+        IReadOnlyList<NormalEnemy> enemies,
+        int globalSteps,
+        int number = -1,
+        IEnemyMatchCalculator matchCalc = null)
     {
         if (enemies == null || enemies.Count == 0) return null;
+
+        // Phase 3c: DI注入を優先、フォールバックでEnemyCollectManager.Instance
+        var calc = matchCalc ?? EnemyCollectManager.Instance;
 
         var resultList = new List<NormalEnemy>();
         var targetList = new List<NormalEnemy>(enemies);
@@ -53,15 +67,15 @@ public static class EncounterEnemySelector
 
         if (manualCount && targetCount == 1)
         {
-            ourImpression = EnemyCollectManager.Instance.EnemyLonelyPartyImpression[resultList[0].MyImpression];
-            return CreateBattleGroup(resultList, ourImpression);
+            ourImpression = calc.EnemyLonelyPartyImpression[resultList[0].MyImpression];
+            return CreateBattleGroup(resultList, ourImpression, calc);
         }
 
         if (!manualCount &&
-            (EnemyCollectManager.Instance.LonelyMatchUp(resultList[0].MyImpression) || validEnemies.Count <= 0))
+            (calc.LonelyMatchUp(resultList[0].MyImpression) || validEnemies.Count <= 0))
         {
-            ourImpression = EnemyCollectManager.Instance.EnemyLonelyPartyImpression[resultList[0].MyImpression];
-            return CreateBattleGroup(resultList, ourImpression);
+            ourImpression = calc.EnemyLonelyPartyImpression[resultList[0].MyImpression];
+            return CreateBattleGroup(resultList, ourImpression, calc);
         }
 
         while (true)
@@ -69,16 +83,16 @@ public static class EncounterEnemySelector
             if (manualCount && resultList.Count >= targetCount)
             {
                 ourImpression = (resultList.Count == 1)
-                    ? EnemyCollectManager.Instance.EnemyLonelyPartyImpression[resultList[0].MyImpression]
-                    : EnemyCollectManager.Instance.calculatePartyProperty(resultList);
+                    ? calc.EnemyLonelyPartyImpression[resultList[0].MyImpression]
+                    : calc.calculatePartyProperty(resultList);
                 break;
             }
 
             if (manualCount && validEnemies.Count < 1)
             {
                 ourImpression = (resultList.Count == 1)
-                    ? EnemyCollectManager.Instance.EnemyLonelyPartyImpression[resultList[0].MyImpression]
-                    : EnemyCollectManager.Instance.calculatePartyProperty(resultList);
+                    ? calc.EnemyLonelyPartyImpression[resultList[0].MyImpression]
+                    : calc.calculatePartyProperty(resultList);
                 break;
             }
 
@@ -95,9 +109,9 @@ public static class EncounterEnemySelector
 
             for (var i = 0; i < resultList.Count; i++)
             {
-                if (EnemyCollectManager.Instance.TypeMatchUp(resultList[i].MyType, target.MyType))
+                if (calc.TypeMatchUp(resultList[i].MyType, target.MyType))
                 {
-                    if (EnemyCollectManager.Instance.ImpressionMatchUp(resultList[i].MyImpression, target.MyImpression, sympathy))
+                    if (calc.ImpressionMatchUp(resultList[i].MyImpression, target.MyImpression, sympathy))
                     {
                         okCount++;
                     }
@@ -117,9 +131,9 @@ public static class EncounterEnemySelector
                 {
                     if (RandomEx.Shared.NextInt(100) < 88)
                     {
-                        if (EnemyCollectManager.Instance.LonelyMatchUp(resultList[0].MyImpression))
+                        if (calc.LonelyMatchUp(resultList[0].MyImpression))
                         {
-                            ourImpression = EnemyCollectManager.Instance.EnemyLonelyPartyImpression[resultList[0].MyImpression];
+                            ourImpression = calc.EnemyLonelyPartyImpression[resultList[0].MyImpression];
                             break;
                         }
                     }
@@ -130,25 +144,25 @@ public static class EncounterEnemySelector
             {
                 if (RandomEx.Shared.NextInt(100) < 65)
                 {
-                    ourImpression = EnemyCollectManager.Instance.calculatePartyProperty(resultList);
+                    ourImpression = calc.calculatePartyProperty(resultList);
                     break;
                 }
             }
 
             if (resultList.Count >= 3)
             {
-                ourImpression = EnemyCollectManager.Instance.calculatePartyProperty(resultList);
+                ourImpression = calc.calculatePartyProperty(resultList);
                 break;
             }
 
             if (validEnemies.Count < 1)
             {
-                ourImpression = EnemyCollectManager.Instance.calculatePartyProperty(resultList);
+                ourImpression = calc.calculatePartyProperty(resultList);
                 break;
             }
         }
 
-        return CreateBattleGroup(resultList, ourImpression);
+        return CreateBattleGroup(resultList, ourImpression, calc);
     }
 
     private static void EnsureInitialized(NormalEnemy enemy)
@@ -173,13 +187,13 @@ public static class EncounterEnemySelector
         }
     }
 
-    private static BattleGroup CreateBattleGroup(List<NormalEnemy> resultList, PartyProperty ourImpression)
+    private static BattleGroup CreateBattleGroup(List<NormalEnemy> resultList, PartyProperty ourImpression, IEnemyMatchCalculator calc)
     {
-        var compatibilityData = BuildCompatibilityData(resultList);
+        var compatibilityData = BuildCompatibilityData(resultList, calc);
         return new BattleGroup(resultList.Cast<BaseStates>().ToList(), ourImpression, allyOrEnemy.Enemyiy, compatibilityData);
     }
 
-    private static Dictionary<(BaseStates, BaseStates), int> BuildCompatibilityData(List<NormalEnemy> resultList)
+    private static Dictionary<(BaseStates, BaseStates), int> BuildCompatibilityData(List<NormalEnemy> resultList, IEnemyMatchCalculator calc)
     {
         var compatibilityData = new Dictionary<(BaseStates, BaseStates), int>();
         if (resultList == null || resultList.Count < 2) return compatibilityData;
@@ -191,9 +205,9 @@ public static class EncounterEnemySelector
                 var first = resultList[i];
                 var second = resultList[j];
                 if (first == null || second == null) continue;
-                var compatibilityValue = EnemyCollectManager.Instance.GetImpressionMatchPercent(first.MyImpression, second.MyImpression);
+                var compatibilityValue = calc.GetImpressionMatchPercent(first.MyImpression, second.MyImpression);
                 compatibilityData[(first, second)] = compatibilityValue;
-                compatibilityValue = EnemyCollectManager.Instance.GetImpressionMatchPercent(second.MyImpression, first.MyImpression);
+                compatibilityValue = calc.GetImpressionMatchPercent(second.MyImpression, first.MyImpression);
                 compatibilityData[(second, first)] = compatibilityValue;
             }
         }

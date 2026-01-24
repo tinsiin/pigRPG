@@ -26,10 +26,19 @@ public class UIController : MonoBehaviour, IPointerClickHandler
     public IconButtonLinkNumberEffect numberEffect;
 
     private BaseStates _user;
+    private IKZoomController _kZoom;
 
     public void BindUser(BaseStates user)
     {
         _user = user;
+    }
+
+    /// <summary>
+    /// Phase 1: IKZoomControllerを注入
+    /// </summary>
+    public void BindKZoom(IKZoomController kZoom)
+    {
+        _kZoom = kZoom;
     }
 
 
@@ -214,7 +223,9 @@ public class UIController : MonoBehaviour, IPointerClickHandler
     {
         Debug.Log($"[K/UI] TriggerKMode called on {name}", this);
         var iconRT = Icon != null ? Icon.transform as RectTransform : null;
-        var wui = WatchUIUpdate.Instance;
+
+        // Phase 1: 注入されたコントローラーを優先、フォールバックでWatchUIUpdate.Instance
+        var kZoom = _kZoom ?? WatchUIUpdate.Instance?.KZoomCtrl;
 
         if (Icon == null)
         {
@@ -226,21 +237,21 @@ public class UIController : MonoBehaviour, IPointerClickHandler
             Debug.LogWarning($"[K/UI] iconRT is NULL (Icon not assigned or not a RectTransform) on {name}", this);
             return;
         }
-        if (wui == null)
+        if (kZoom == null)
         {
-            Debug.LogError("[K/UI] WatchUIUpdate.Instance is NULL. Scene missing WatchUIUpdate?", this);
+            Debug.LogError("[K/UI] IKZoomController is NULL. Scene missing WatchUIUpdate?", this);
             return;
         }
 
         // K中の再タップ動作（ユーザー要望）
-        if (wui.IsKActive)
+        if (kZoom.IsKActive)
         {
-            if (wui.IsCurrentKTarget(this))
+            if (kZoom.IsCurrentKTarget(this))
             {
-                if (!wui.IsKAnimating)
+                if (!kZoom.IsKAnimating)
                 {
                     Debug.Log("[K/UI] Re-tap on current K target -> ExitK", this);
-                    wui.ExitK().Forget();
+                    kZoom.ExitK().Forget();
                 }
                 else
                 {
@@ -255,15 +266,15 @@ public class UIController : MonoBehaviour, IPointerClickHandler
             return;
         }
 
-        Debug.Log($"[K/UI] CanEnterK={wui.CanEnterK} on {name}", this);
-        if (wui.CanEnterK)
+        Debug.Log($"[K/UI] CanEnterK={kZoom.CanEnterK} on {name}", this);
+        if (kZoom.CanEnterK)
         {
             // タイトルは暫定でゲームオブジェクト名を使用（将来: BaseStatesの名前に置換）
             var title = "名前: " + _user.CharacterName;
             Debug.Log($"[K/UI] EnterK invoked with iconRT={iconRT.name}, title={title}", this);
             // クリック発火時のみ、Icon以外を即時OFF（アニメなし）
             SetExclusiveIconMode(true);
-            wui.EnterK(iconRT, title).Forget();
+            kZoom.EnterK(iconRT, title).Forget();
         }
         else
         {

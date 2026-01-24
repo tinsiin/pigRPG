@@ -28,7 +28,9 @@ using Unity.Profiling;
 public partial class WatchUIUpdate : MonoBehaviour,
     IViewportController,
     IActionMarkController,
-    IKZoomController
+    IKZoomController,
+    IIntroContextProvider,
+    IEnemyPlacementContextProvider
 {
     // シングルトン参照
     public static WatchUIUpdate Instance { get; private set; }
@@ -47,10 +49,12 @@ public partial class WatchUIUpdate : MonoBehaviour,
         try
         {
             var token = _sweepCts != null ? _sweepCts.Token : System.Threading.CancellationToken.None;
-            EnsureOrchestrator();
-            var ictx = BuildIntroContextForOrchestrator();
+            var intro = IntroOrchestrator;
             Debug.Log($"[WatchUIUpdate] RestoreZoomViaOrchestrator animated={animated} duration={duration}");
-            await _orchestrator.RestoreAsync(ictx, animated, duration, token);
+            if (intro != null)
+            {
+                await intro.RestoreAsync(animated, duration, token);
+            }
         }
         catch (System.OperationCanceledException)
         {
@@ -65,7 +69,7 @@ public partial class WatchUIUpdate : MonoBehaviour,
         if (_orchestrator == null)
         {
             // ズーム外出しは次フェーズ。配置はアダプタで既存実装へ委譲
-            var zoom = new WuiZoomControllerAdapter();
+            var zoom = Viewport?.Zoom;
             _orchestrator = new DefaultIntroOrchestrator(new WuiEnemyPlacerAdapter(), zoom);
         }
     }
@@ -102,11 +106,18 @@ public partial class WatchUIUpdate : MonoBehaviour,
         return new EnemyPlacementContext(enemyGroup, count, batchActivate: true, fixedSizeOverride: null);
     }
 
+    IIntroContext IIntroContextProvider.BuildIntroContext()
+        => BuildIntroContextForOrchestrator();
+
+    IEnemyPlacementContext IEnemyPlacementContextProvider.BuildPlacementContext(BattleGroup enemyGroup)
+        => BuildPlacementContext(enemyGroup);
+
     // キャンセル制御用
     private CancellationTokenSource _sweepCts;
 
     // Orchestrator（I/F注入）。当面は内部でデフォルト生成し、段階的に移行する
     private global::IIntroOrchestrator _orchestrator;
+    private IIntroOrchestratorFacade _introFacade;
 
     private void Awake()
     {
@@ -544,6 +555,26 @@ public partial class WatchUIUpdate : MonoBehaviour,
                 );
             }
             return _viewportController;
+        }
+    }
+
+    /// <summary>
+    /// Orchestratorファサードへのアクセス（Intro/Restoreなどを文脈込みで実行）。
+    /// </summary>
+    public IIntroOrchestratorFacade IntroOrchestrator
+    {
+        get
+        {
+            EnsureOrchestrator();
+            if (_introFacade == null)
+            {
+                _introFacade = new IntroOrchestratorFacade(
+                    _orchestrator,
+                    this,
+                    this,
+                    () => _sweepCts != null ? _sweepCts.Token : System.Threading.CancellationToken.None);
+            }
+            return _introFacade;
         }
     }
 

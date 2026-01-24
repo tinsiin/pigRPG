@@ -13,11 +13,35 @@ public sealed class BattleUIBridge
     private readonly IPlayersRoster roster;
     private readonly BattleEventHistory eventHistory = new BattleEventHistory();
 
-    public BattleUIBridge(MessageDropper messageDropper, IPlayersSkillUI skillUi, IPlayersRoster roster)
+    // Phase 1: DI注入されたコントローラー
+    private readonly IActionMarkController _actionMark;
+    private readonly IEnemyPlacementController _enemyPlacement;
+    private readonly IIntroOrchestratorFacade _introOrchestrator;
+
+    // Phase 3a: SchizoLog DI注入
+    private readonly SchizoLog _schizoLog;
+
+    // Phase 3d: ArrowManager DI注入
+    private readonly IArrowManager _arrowManager;
+
+    public BattleUIBridge(
+        MessageDropper messageDropper,
+        IPlayersSkillUI skillUi,
+        IPlayersRoster roster,
+        IActionMarkController actionMark = null,
+        IEnemyPlacementController enemyPlacement = null,
+        IIntroOrchestratorFacade introOrchestrator = null,
+        SchizoLog schizoLog = null,
+        IArrowManager arrowManager = null)
     {
         this.messageDropper = messageDropper;
         this.skillUi = skillUi;
         this.roster = roster;
+        _actionMark = actionMark;
+        _enemyPlacement = enemyPlacement;
+        _introOrchestrator = introOrchestrator;
+        _schizoLog = schizoLog;
+        _arrowManager = arrowManager;
     }
 
     public static void SetActive(BattleUIBridge bridge)
@@ -71,14 +95,13 @@ public sealed class BattleUIBridge
 
     public void DisplayLogs()
     {
-        var log = SchizoLog.Instance;
-        if (log == null) return;
-        log.ClearLogs();
+        if (_schizoLog == null) return;
+        _schizoLog.ClearLogs();
         foreach (var entry in eventHistory.Entries)
         {
-            log.AddLog(entry.Message, entry.Important);
+            _schizoLog.AddLog(entry.Message, entry.Important);
         }
-        log.DisplayAllAsync().Forget();
+        _schizoLog.DisplayAllAsync().Forget();
     }
 
     public void SetSelectedActor(BaseStates acter)
@@ -156,63 +179,60 @@ public sealed class BattleUIBridge
     public void AddLog(string message, bool important)
     {
         eventHistory.Add(message, important);
-        SchizoLog.Instance.AddLog(message, important);
+        _schizoLog?.AddLog(message, important);
     }
 
     public void HardStopAndClearLogs()
     {
         eventHistory.Clear();
-        SchizoLog.Instance.HardStopAndClearAsync().Forget();
+        _schizoLog?.HardStopAndClearAsync().Forget();
     }
 
     public void MoveActionMarkToActorScaled(BaseStates acter, bool immediate, bool waitForIntro)
     {
-        var ui = WatchUIUpdate.Instance;
-        if (ui != null && acter != null)
+        if (_actionMark != null && acter != null)
         {
-            ui.MoveActionMarkToActorScaled(acter, immediate, waitForIntro).Forget();
+            _actionMark.MoveToActorScaled(acter, immediate, waitForIntro).Forget();
         }
     }
 
     public void ShowActionMarkFromSpawn()
     {
-        WatchUIUpdate.Instance?.ShowActionMarkFromSpawn();
+        _actionMark?.ShowFromSpawn();
     }
 
     public bool PrepareBattleEnd()
     {
-        var ui = WatchUIUpdate.Instance;
-        if (ui == null)
+        if (_actionMark == null && _enemyPlacement == null)
         {
-            Debug.LogError("OnBattleEndでWatchUIUpdateが認識されていない");
+            Debug.LogError("OnBattleEndでActionMark/EnemyPlacementが認識されていない");
             return false;
         }
 
-        ui.HideActionMark();
-        ui.EraceEnemyUI();
+        _actionMark?.Hide();
+        _enemyPlacement?.ClearEnemyUI();
         return true;
     }
 
     public UniTask RestoreZoomViaOrchestrator(bool animated, float duration)
     {
-        var ui = WatchUIUpdate.Instance;
-        if (ui == null) return UniTask.CompletedTask;
-        return ui.RestoreZoomViaOrchestrator(animated: animated, duration: duration);
+        if (_introOrchestrator == null) return UniTask.CompletedTask;
+        return _introOrchestrator.RestoreAsync(animated, duration);
     }
 
     public void ClearArrows()
     {
-        BattleSystemArrowManager.Instance.ClearQueue();
+        _arrowManager?.ClearQueue();
     }
 
     public void NextArrow()
     {
-        BattleSystemArrowManager.Instance.Next();
+        _arrowManager?.Next();
     }
 
     public void SetArrowColors(Color frameColor, Color twoColor)
     {
-        BattleSystemArrowManager.Instance.SetColorsForAll(frameColor, twoColor);
+        _arrowManager?.SetColorsForAll(frameColor, twoColor);
     }
 
     public void SetArrowColorsFromStage()
