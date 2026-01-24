@@ -10,6 +10,9 @@
 
 - [ノベルパート設計.md](./ノベルパート設計.md)
 - [ノベルパートUIシーン配置.md](./ノベルパートUIシーン配置.md)
+- [ノベルパート未実装機能一覧.md](./ノベルパート未実装機能一覧.md) - UI関連の未実装項目
+- [リアクションシステム実装計画.md](./リアクションシステム実装計画.md) - リアクションボタン（EyeArea側）
+- [UIBlocker設計.md](./UIBlocker設計.md) - USERUI操作ブロック機構
 - [ゼロトタイプ歩行システム設計書.md](../歩行システム設計/ゼロトタイプ歩行システム設計書.md)
 - [ズーム仕様書.md](../ズーム仕様書.md)
 
@@ -54,16 +57,21 @@ public static ReactiveProperty<TabState> UserState { get; }
 
 ```
 方針C（統合状態管理） ← 最終ゴール
-├── 方針A（TabState拡張）      ← 必須の土台
-├── 方針B（EyeArea側状態管理）  ← 必要なら追加
-└── UIStateManager             ← C独自の統合層
+├── 方針A（TabState拡張）           ← 必須の土台（USERUI操作UI切替）
+├── 方針B（EyeArea演出の共通IF化）  ← 必要なら追加
+└── UIStateManager                  ← C独自の統合層
 ```
 
 | 方針 | 内容 | 位置づけ |
 |------|------|----------|
-| A | TabStateにノベル用値を追加 | Cの土台（必須） |
-| B | EyeAreaにReactiveProperty追加 | Cの構成要素（必要時） |
+| A | TabStateにFieldDialogue/EventDialogue追加 | Cの土台（必須） |
+| B | EyeAreaStateでWalk/Novel/Battle切替 | Cの構成要素（必要時） |
 | C | UIStateManagerで一括制御 | 最終ゴール |
+
+**方針Bの詳細:**
+- EyeArea専用のstate（`EyeAreaState` enum）を導入
+- Walk/Novel/Battleの3状態で親GameObjectをSetActive切替
+- NovelContent内部の演出（立ち絵トランジション等）はPresenterが直接制御
 
 ### 方針Cが最終ゴールである理由
 
@@ -85,15 +93,16 @@ public static ReactiveProperty<TabState> UserState { get; }
 
 ```
 Step 1: 方針A実装（ノベルパート実装時）
-  └── TabStateにNovel系を追加
-  └── 既存Observerでノベル用UIを表示/非表示
+  └── TabStateにFieldDialogue/EventDialogue追加
+  └── USERUI側: 既存Observerで操作UI（タップ領域/左右ボタン）を切替
+  └── EyeArea側: ConversationRunnerがトランジション付きで直接制御
 
 Step 2: パターンを発見（複数システム実装後）
-  └── 「USERUI変更 + EyeAreaズーム + 立ち絵表示」が毎回セットだと気づく
-  └── 方針Bの必要性を判断
+  └── 「USERUI変更 + EyeArea演出」の組み合わせパターンが見えてくる
+  └── 方針Bの必要性を判断（演出の共通IF化）
 
 Step 3: 方針C実装（パターンが固まったら）
-  └── UIStateManager.SetState(GameUIState.Novel) で一括化
+  └── UIStateManager.SetState(GameUIState.FieldDialogue) で一括化
   └── 新システム追加が1行で済むようになる
 ```
 
@@ -114,11 +123,27 @@ public enum TabState
     walk, TalkWindow, NextWait, Skill, SelectTarget, SelectRange,
 
     // ノベルパート用（追加）
-    FieldDialogue,  // フィールド会話（ディノイドモード）
-    NovelPortrait,  // ノベル（立ち絵モード）
-    NovelChoice,    // ノベル（選択肢表示中）
+    FieldDialogue,  // フィールド会話（タップで進むのみ、戻れない）
+    EventDialogue,  // イベント会話（左右ボタンで戻れる）
+    NovelChoice,    // 選択肢表示中（選択肢ボタンのみ）
 }
 ```
+
+**重要: USERUIだけがTabStateで切り替わる**
+
+| TabState | USERUI側の表示 |
+|----------|---------------|
+| FieldDialogue | タップ領域のみ（進むだけ） |
+| EventDialogue | 左右ボタン（進む/戻る） |
+| NovelChoice | 選択肢ボタンのみ |
+
+**リアクションボタンの表示条件:**
+- NovelChoice以外のノベル系state（FieldDialogue/EventDialogue）で表示可能
+- stateに縛られず、該当ステップにリアクションがあれば表示
+- 選択肢表示中は非表示（選択に集中させるため）
+
+EyeArea側（立ち絵、テキストボックス、背景）はTabStateで切り替え**ない**。
+詳細は後述の「USERUI vs EyeAreaの責務分離」を参照。
 
 ### 課題2: ノベルUIの配置場所
 
@@ -137,14 +162,32 @@ public enum TabState
 ### 課題4: 歩行→ノベル→歩行の状態遷移
 
 ```csharp
-// ノベル開始
-UIStateHub.UserState.Value = TabState.NovelPortrait;
-await EyeAreaManager.Instance.PlayZoomAsync();
+// フィールド会話開始
+UIStateHub.UserState.Value = TabState.FieldDialogue;
+// → USERUI側: タップ領域表示（+ リアクションボタンがあれば表示）
+// → EyeArea側: ConversationRunnerがトランジション付きで立ち絵等を表示
 
-// ノベル終了
-await EyeAreaManager.Instance.RestoreZoomAsync(true, 0.4f);
+// イベント会話に移行（フィールド会話から）
+UIStateHub.UserState.Value = TabState.EventDialogue;
+// → USERUI側: 左右ボタン表示に切替（+ リアクションボタンがあれば表示）
+// → EyeArea側: 変化なし（同じ部品を使い続ける）
+
+// 選択肢表示
+UIStateHub.UserState.Value = TabState.NovelChoice;
+// → USERUI側: 選択肢ボタンのみ表示（リアクションボタン非表示）
+// → EyeArea側: 変化なし
+
+// 選択肢選択後、会話に戻る
+UIStateHub.UserState.Value = TabState.FieldDialogue; // or EventDialogue
+// → USERUI側: タップ領域 or 左右ボタンに戻る
+
+// 会話終了
 UIStateHub.UserState.Value = TabState.walk;
+// → USERUI側: 通常のPlayerContent表示
+// → EyeArea側: ConversationRunnerがトランジション付きで立ち絵等を退場
 ```
+
+**ポイント:** TabState変更はUSERUIの操作UIだけを切り替える。EyeArea側の演出は別途ConversationRunner等が制御。
 
 ### 課題5: テキストボックスの2モード対応
 
@@ -215,114 +258,105 @@ EyeArea
     └── SchizoLog
 ```
 
-### モード別の要素分離（検討案）
+### USERUI vs EyeAreaの責務分離
 
-| モード | USERUI | EyeArea |
-|--------|--------|---------|
-| 歩行中 | PlayerContent表示 | ActionMark表示、Charas表示 |
-| フィールド会話 | テキストボックス表示 | ActionMark非表示、ディノイド表示 |
-| イベント会話（立ち絵） | 選択肢ボタン表示 | 立ち絵表示（MiddleFixedContainer） |
-| バトル中 | Skill/Target系表示 | EnemyArea表示 |
+**核心的な違い:**
 
-### 重要: ズーム制御とGameObject切り替えの分離
+| 領域 | 切り替え方式 | 理由 |
+|------|-------------|------|
+| USERUI | TabStateでSetActive切替 | 操作方式が排他的（タップ or 左右ボタン） |
+| EyeArea | トランジション付きで中身を変更 | 同じ部品が滑らかに変化する |
 
+### なぜEyeAreaはTabStateで切り替えないのか
+
+**EyeArea側の要素は全部同じ部品:**
+- 立ち絵表示エリア、テキストボックス、背景 → 全部同じGameObject
+- ディノイド→立ち絵、背景変化、表情変化 → **トランジション付きで中身（スプライト等）が変わるだけ**
+- 同じ時間に存在しながらアニメーションで滑らかに切り替わる
+- SetActive(true/false)でパッパ切り替えるものではない
+
+**ノベルパート設計.mdより:**
 ```
-【ズーム演出】
-  → BattleManager等のロジック側がPlayZoomAsync()を呼ぶタイミングで制御
-  → EyeAreaContentの責務ではない
-
-【GameObject表示切替】
-  → 純粋に「どのGameObjectが見えるか」だけ
-  → USERUIのMainContent.SwitchContent()と同じ役割
-  → TabStateに応じてSetActive(true/false)するだけ
+ディノイド → 立ち絵:
+1. ディノイド用テキストボックスが閉じる（点滅/回転などの演出）
+2. 立ち絵の登場トランジション
+3. 立ち絵用テキストボックスが開く
 ```
 
-**目的:**
-- Unityエディタでシーンを見たときに「このGameObjectはどのシステムで使われるか」が一目で分かる
-- ロジックと表示の責務分離
+これらは「同じGameObject」の中でトランジション付きで変化する。
+WalkContent/NovelContentのように分けると、このトランジションが実現できない。
 
-### EyeArea内のシーン構造（提案）
+### USERUIだけが排他的な理由
 
-各ZoomContainer内に、USERUIのPlayerContent/ConfigContentと同様に「システム別のコンテナ」を配置：
+**唯一排他的なのは「イベントか否か」:**
+
+| 会話種類 | USERUI側 | 特徴 |
+|----------|----------|------|
+| フィールド会話 | タップ領域のみ | 進むだけ、戻れない |
+| イベント会話 | 左右ボタン | 進む/戻るが可能 |
+
+- イベントの間は絶対にフィールド会話に切り替わらない
+- トランジションとは無関係に「イベント中かどうか」で決まる
+- だからUSERUIはSetActive切替でOK
+
+### EyeArea側の実装方針（方針B: EyeAreaState）
+
+**EyeAreaState enumで大分類を切り替え、内部はトランジション制御:**
+
+```csharp
+// 方針B: EyeArea専用のstate（TabStateとは別）
+public enum EyeAreaState
+{
+    Walk,    // 歩行中（ActionMark等）
+    Novel,   // ノベルパート（全モード含む：ディノイド、立ち絵、背景あり/なし）
+    Battle,  // バトル中（EnemyArea等）
+}
+```
+
+**シーン構造（USERUI同様に親GameObjectで分ける）:**
 
 ```
 EyeArea
 └── ViewportArea
     ├── ZoomBackContainer
-    │   ├── WalkBackContent      ← 歩行時の背景
-    │   └── NovelBackContent     ← ノベル時の背景（必要なら）
+    │   └── BackGround
     │
     ├── MiddleFixedContainer
-    │   ├── WalkFixedContent     ← ActionMark等
-    │   └── NovelFixedContent    ← 立ち絵、テキストボックス
+    │   ├── WalkContent        ← EyeAreaState.Walk時にactive
+    │   │   └── （歩行専用要素があれば）
+    │   │
+    │   ├── NovelContent       ← EyeAreaState.Novel時にactive
+    │   │   ├── PortraitArea（立ち絵）
+    │   │   ├── TextBoxArea（テキストボックス）
+    │   │   └── BackgroundArea（背景）
+    │   │
+    │   └── BattleContent      ← EyeAreaState.Battle時にactive
+    │       └── ActionMark, ActionMarkSpawnPoint
     │
     └── ZoomFrontContainer
-        ├── WalkFrontContent     ← 歩行時の前景
-        └── BattleFrontContent   ← EnemyArea
+        └── EnemyArea
 ```
 
-### EyeAreaContent.cs（提案）
+**注意:** リアクションボタンはUSERUI側（SelectRangeButtons等と同じパターン）
 
-```csharp
-// MainContentと同様のパターン
-public class EyeAreaContent : MonoBehaviour
-{
-    [Header("ZoomBackContainer内")]
-    [SerializeField] GameObject WalkBackContent;
-    [SerializeField] GameObject NovelBackContent;
+**切り替え方式:**
 
-    [Header("MiddleFixedContainer内")]
-    [SerializeField] GameObject WalkFixedContent;
-    [SerializeField] GameObject NovelFixedContent;
+| 切り替え対象 | 方式 |
+|-------------|------|
+| WalkContent / NovelContent / BattleContent | EyeAreaStateでSetActive切替 |
+| NovelContent内部（立ち絵、背景、モード） | トランジション付きで中身を変更 |
 
-    [Header("ZoomFrontContainer内")]
-    [SerializeField] GameObject WalkFrontContent;
-    [SerializeField] GameObject BattleFrontContent;
+**ポイント:**
+- EyeAreaStateはTabStateとは別のstate
+- NovelContentの中に全てのノベルモード要素が入る（ディノイド、立ち絵、背景あり/なし全て）
+- NovelContent内部の切り替えはSetActiveではなく、Presenterがトランジション付きで制御
 
-    public void SwitchContent(TabState state)
-    {
-        // 視覚的な表示切替のみ（ズーム制御はしない）
-        switch (state)
-        {
-            case TabState.walk:
-                SetWalkMode();
-                break;
-            case TabState.NovelPortrait:
-                SetNovelMode();
-                break;
-            // バトル系はBattleManager側で制御するため、ここでは触らない場合も
-        }
-    }
+### ズーム制御について
 
-    void SetWalkMode()
-    {
-        WalkBackContent?.SetActive(true);
-        NovelBackContent?.SetActive(false);
-        WalkFixedContent?.SetActive(true);
-        NovelFixedContent?.SetActive(false);
-        // ...
-    }
-
-    void SetNovelMode()
-    {
-        WalkBackContent?.SetActive(false);
-        NovelBackContent?.SetActive(true);
-        WalkFixedContent?.SetActive(false);
-        NovelFixedContent?.SetActive(true);
-        // ...
-    }
-}
-```
-
-**メリット:**
-- USERUIと同じパターンで理解しやすい
-- TabStateの購読で自動的に切り替わる
-- 方針Aの実装で十分対応可能
-- シーン構造を見るだけで「何がどのモードで使われるか」が分かる
-
-**注意点:**
-- EyeAreaはWatchUIUpdateが管理しているため、既存ロジックとの整合性確認が必要
-- バトル系の表示切替はBattleManager側の責務と重複しないよう調整
+ズーム演出はEyeAreaの表示切替とは独立：
+- BattleManager等のロジック側が`PlayZoomAsync()`を呼ぶタイミングで制御
+- TabStateとは無関係
+- 中央オブジェクト由来の会話でのみ発生（選択可能）
 
 ---
 
@@ -331,12 +365,14 @@ public class EyeAreaContent : MonoBehaviour
 ### USERUI側
 
 ```csharp
-// 状態変更
-UIStateHub.UserState.Value = TabState.NovelPortrait;
+// 状態変更（操作UIの切替）
+UIStateHub.UserState.Value = TabState.FieldDialogue;  // タップのみ
+UIStateHub.UserState.Value = TabState.EventDialogue;  // 左右ボタン
 
 // 状態監視（既存のSubscribe）
 USERUI_state.Subscribe(state => {
     // TabContents.SwitchContent(state) が自動で呼ばれる
+    // → FieldDialogue/EventDialogue用のUIが表示される
 });
 ```
 
@@ -357,9 +393,10 @@ public enum GameUIState
 {
     Walking,
     Battle,
-    Novel,
-    Inference,  // 推理パート
-    Trade,      // 取引パート
+    FieldDialogue,   // フィールド会話
+    EventDialogue,   // イベント会話
+    Inference,       // 推理パート
+    Trade,           // 取引パート
     // ...
 }
 
@@ -369,14 +406,63 @@ public class UIStateManager
     {
         switch (state)
         {
-            case GameUIState.Novel:
-                USERUI_state.Value = TabState.NovelPortrait;
-                // EyeArea側の状態変更（方針B実装時）
+            case GameUIState.FieldDialogue:
+                USERUI_state.Value = TabState.FieldDialogue;
+                // EyeArea側はConversationRunnerが直接制御
+                break;
+            case GameUIState.EventDialogue:
+                USERUI_state.Value = TabState.EventDialogue;
                 break;
         }
     }
 }
 ```
+
+**注:** EyeArea側の演出（立ち絵、背景等）はTabStateではなく、ConversationRunner等が直接トランジション制御する。
+
+---
+
+## 未実装UI機能との関連
+
+本ドキュメントの設計に基づいて実装が必要なUI要素。
+詳細は [ノベルパート未実装機能一覧.md](./ノベルパート未実装機能一覧.md) を参照。
+
+### USERUI側（TabStateで切り替え）
+
+| 未実装項目 | TabState | 必要なGameObject |
+|-----------|----------|-----------------|
+| 入力待ち（タップ進行） | FieldDialogue | FieldDialogueObject（タップ領域） |
+| 入力待ち（左右ボタン） | EventDialogue | EventDialogueObject（進む/戻るボタン） |
+| 選択肢UI | NovelChoice | NovelChoiceObject（選択肢ボタン群、精神属性タグ付き） |
+| リアクションボタン | FieldDialogue/EventDialogue | 動的生成（stateに縛られず条件付き表示） |
+
+**実装イメージ:**
+```
+USERUI/ToggleButtons/PlayerContent
+├── WalkObject          ← 既存（歩行時）
+├── SkillObject         ← 既存（バトル時）
+├── SelectRangeObject   ← 既存（バトル時）
+├── SelectTargetObject  ← 既存（バトル時）
+├── ...                 ← 既存
+├── FieldDialogueObject ← 新規（タップ領域）
+├── EventDialogueObject ← 新規（左右ボタン）
+└── NovelChoiceObject   ← 新規（選択肢ボタン群）
+```
+
+**リアクションボタンの表示ルール:**
+- FieldDialogue/EventDialogue時に、該当ステップにリアクションがあれば動的生成
+- NovelChoice時は非表示（選択肢に集中させるため）
+- SelectRangeButtons等と同じパターンでUSERUI側に動的生成
+
+詳細: [リアクションシステム実装計画.md](./リアクションシステム実装計画.md)
+
+### EyeArea側（トランジション制御、EyeAreaStateで切り替え）
+
+| 未実装項目 | 配置場所 | 備考 |
+|-----------|---------|------|
+| 立ち絵（既存Presenter） | NovelContent/PortraitArea | 実装済み、配置のみ |
+| テキストボックス | NovelContent/TextBoxArea | 実装済み、配置のみ |
+| 背景 | NovelContent/BackgroundArea | 実装済み、配置のみ |
 
 ---
 
@@ -396,3 +482,8 @@ public class UIStateManager
 | 2026-01-24 | 方針A/B/Cの関係と段階的進め方を追記 |
 | 2026-01-24 | MCP調査結果追記（USERUI/EyeAreaシーン構造、モード別分離案） |
 | 2026-01-24 | ズーム制御とGameObject切替の分離を明確化、ZoomContainer内構造案追記 |
+| 2026-01-24 | 設計修正: EyeAreaはTabStateで切り替えない、トランジション付きで中身を変更する方式に変更 |
+| 2026-01-24 | 未実装UI機能との関連セクション追加、リアクションシステム実装計画との連携 |
+| 2026-01-24 | 方針B詳細追加: EyeAreaState（Walk/Novel/Battle）で親GameObjectをSetActive切替 |
+| 2026-01-24 | TabStateにNovelChoice追加、リアクションボタンの表示条件明確化 |
+| 2026-01-24 | UIBlocker設計ドキュメントへのリンク追加 |
