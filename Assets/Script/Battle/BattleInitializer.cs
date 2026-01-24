@@ -105,7 +105,10 @@ public class BattleInitializer
 
         if (_watchUIUpdate != null)
         {
-            await _watchUIUpdate.FirstImpressionZoomImproved();
+            using (UIBlocker.Instance?.Acquire(BlockScope.AllContents))
+            {
+                await _watchUIUpdate.FirstImpressionZoomImproved();
+            }
         }
 
         return result;

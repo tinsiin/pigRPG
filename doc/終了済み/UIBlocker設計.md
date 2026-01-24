@@ -1,6 +1,6 @@
 # UIBlocker設計
 
-**状態:** 設計中
+**状態:** 完了
 
 ## 概要
 
@@ -530,3 +530,5 @@ USERUI/ToggleButtons
 | 日付 | 内容 |
 |------|------|
 | 2026-01-24 | 初版作成 |
+| 2026-01-24 | UIBlocker.cs実装完了、BusyOverlay.cs削除 |
+| 2026-01-24 | BattleInitializerにUIBlocker統合、動作確認完了 |
