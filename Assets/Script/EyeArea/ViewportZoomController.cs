@@ -3,21 +3,22 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
-/// WatchUIUpdate の zoomFrontContainer / zoomBackContainer を直接操作する簡易アダプタ。
-/// Phase 1リファクタリング: リフレクション依存を解消し、IViewportController経由でアクセス。
+/// IZoomControllerの実装。WatchUIUpdateのzoomContainersを直接操作する。
+/// WuiZoomControllerAdapterのリフレクション依存を解消するための置き換え。
 /// </summary>
-public sealed class WuiZoomControllerAdapter : IZoomController
+public sealed class ViewportZoomController : IZoomController
 {
+    private readonly IViewportController _viewport;
     private RectTransform _front;
     private RectTransform _back;
     private Vector2 _origFrontPos, _origFrontScale;
     private Vector2 _origBackPos, _origBackScale;
     private bool _hasOriginal;
 
-    /// <summary>
-    /// IViewportController経由でzoomContainersを取得
-    /// </summary>
-    private IViewportController Viewport => WatchUIUpdate.Instance;
+    public ViewportZoomController(IViewportController viewport)
+    {
+        _viewport = viewport;
+    }
 
     public UniTask ZoomInAsync(float duration, CancellationToken ct)
     {
@@ -31,12 +32,8 @@ public sealed class WuiZoomControllerAdapter : IZoomController
 
     public UniTask SetZoomAsync(float target, float duration, CancellationToken ct)
     {
-        var viewport = Viewport;
-        if (viewport == null) return UniTask.CompletedTask;
-
-        // IViewportController経由で直接アクセス（リフレクション不要）
-        var front = viewport.ZoomFrontContainer;
-        var back = viewport.ZoomBackContainer;
+        var front = _viewport.ZoomFrontContainer;
+        var back = _viewport.ZoomBackContainer;
 
         if (front != null)
         {
@@ -51,11 +48,8 @@ public sealed class WuiZoomControllerAdapter : IZoomController
 
     public void Reset()
     {
-        var viewport = Viewport;
-        if (viewport == null) return;
-
-        var front = viewport.ZoomFrontContainer;
-        var back = viewport.ZoomBackContainer;
+        var front = _viewport.ZoomFrontContainer;
+        var back = _viewport.ZoomBackContainer;
 
         if (front != null) front.localScale = Vector3.one;
         if (back != null) back.localScale = Vector3.one;
@@ -63,8 +57,8 @@ public sealed class WuiZoomControllerAdapter : IZoomController
 
     public void CaptureOriginal(RectTransform front, RectTransform back)
     {
-        _front = front;
-        _back = back;
+        _front = front ?? _viewport.ZoomFrontContainer;
+        _back = back ?? _viewport.ZoomBackContainer;
         _hasOriginal = false;
 
         if (_back != null)
@@ -81,14 +75,14 @@ public sealed class WuiZoomControllerAdapter : IZoomController
             _origFrontScale = new Vector2(s.x, s.y);
             _hasOriginal = true;
         }
-        Debug.Log("[WuiZoomControllerAdapter] CaptureOriginal: hasOriginal=" + _hasOriginal);
+        Debug.Log("[ViewportZoomController] CaptureOriginal: hasOriginal=" + _hasOriginal);
     }
 
     public void RestoreImmediate()
     {
         if (!_hasOriginal)
         {
-            Debug.Log("[WuiZoomControllerAdapter] RestoreImmediate skipped (no original)");
+            Debug.Log("[ViewportZoomController] RestoreImmediate skipped (no original)");
             return;
         }
         if (_back != null)
@@ -101,7 +95,7 @@ public sealed class WuiZoomControllerAdapter : IZoomController
             _front.anchoredPosition = _origFrontPos;
             _front.localScale = new Vector3(_origFrontScale.x, _origFrontScale.y, 1f);
         }
-        Debug.Log("[WuiZoomControllerAdapter] RestoreImmediate completed");
+        Debug.Log("[ViewportZoomController] RestoreImmediate completed");
     }
 
     public async UniTask RestoreAsync(float duration, AnimationCurve curve, CancellationToken ct)
@@ -136,7 +130,7 @@ public sealed class WuiZoomControllerAdapter : IZoomController
             var all = UniTask.WhenAll(tasks);
             await all.AttachExternalCancellation(ct);
         }
-        Debug.Log("[WuiZoomControllerAdapter] RestoreAsync completed (duration=" + duration + ")");
+        Debug.Log("[ViewportZoomController] RestoreAsync completed (duration=" + duration + ")");
     }
 
     private async UniTask AnimateAsync(
@@ -167,6 +161,4 @@ public sealed class WuiZoomControllerAdapter : IZoomController
         target.localScale = new Vector3(toScale.x, toScale.y, 1f);
         target.anchoredPosition = toPos;
     }
-
-    // GetRectメソッド削除（リフレクション不要になったため）
 }

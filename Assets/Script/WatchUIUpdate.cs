@@ -23,8 +23,13 @@ using System.IO;
 /// WatchUIUpdateクラスに戦闘画面用のレイヤー分離システムを追加しました。
 /// 背景と敵は一緒にズームし、味方アイコンは独立してスライドインします。
 /// 戦闘エリアはズーム後の座標系で直接デザイン可能です。
+///
+/// Phase 1リファクタリング: IViewportController, IActionMarkController, IKZoomController実装
 /// </summary>
-public partial class WatchUIUpdate : MonoBehaviour
+public partial class WatchUIUpdate : MonoBehaviour,
+    IViewportController,
+    IActionMarkController,
+    IKZoomController
 {
     // シングルトン参照
     public static WatchUIUpdate Instance { get; private set; }
@@ -1022,6 +1027,35 @@ public partial class WatchUIUpdate : MonoBehaviour
     [Header("ズーム対象コンテナ")]
     [SerializeField] private Transform zoomBackContainer;  // 背景用ズームコンテナ
     [SerializeField] private Transform zoomFrontContainer; // 敵用ズームコンテナ
+
+    // IViewportController実装用のキャッシュ
+    private IZoomController _zoomController;
+
+    #region IViewportController実装
+
+    /// <summary>ズーム制御（IZoomController）</summary>
+    public IZoomController Zoom
+    {
+        get
+        {
+            if (_zoomController == null)
+            {
+                _zoomController = new ViewportZoomController(this);
+            }
+            return _zoomController;
+        }
+    }
+
+    /// <summary>ズームする背景レイヤー（ZoomBackContainer）</summary>
+    public RectTransform ZoomBackContainer => zoomBackContainer as RectTransform;
+
+    /// <summary>ズームする前景レイヤー（ZoomFrontContainer）</summary>
+    public RectTransform ZoomFrontContainer => zoomFrontContainer as RectTransform;
+
+    /// <summary>共通背景への参照（BackGround - ZoomBackContainerの子）</summary>
+    public Transform Background => zoomBackContainer?.childCount > 0 ? zoomBackContainer.GetChild(0) : null;
+
+    #endregion
 
     [Header("K拡大ステータス(Kモード)")]
     [SerializeField] private RectTransform kZoomRoot;             // 画面全体をまとめるルート（Kズーム対象）
@@ -2128,6 +2162,28 @@ public partial class WatchUIUpdate : MonoBehaviour
             actionMark.SetSize(0f, 0f);
         }
     }
+
+    #region IActionMarkController実装
+
+    void IActionMarkController.MoveToIcon(RectTransform targetIcon, bool immediate)
+        => MoveActionMarkToIcon(targetIcon, immediate);
+
+    void IActionMarkController.MoveToIconScaled(RectTransform targetIcon, bool immediate)
+        => MoveActionMarkToIconScaled(targetIcon, immediate);
+
+    void IActionMarkController.MoveToActor(BaseStates actor, bool immediate)
+        => MoveActionMarkToActor(actor, immediate);
+
+    UniTask IActionMarkController.MoveToActorScaled(BaseStates actor, bool immediate, bool waitAnimations)
+        => MoveActionMarkToActorScaled(actor, immediate, waitAnimations);
+
+    void IActionMarkController.Show() => ShowActionMark();
+
+    void IActionMarkController.Hide() => HideActionMark();
+
+    void IActionMarkController.ShowFromSpawn(bool zeroSize) => ShowActionMarkFromSpawn(zeroSize);
+
+    #endregion
 
     /// <summary>
     /// ワールド座標をRectTransformのanchoredPosition座標系へ変換
