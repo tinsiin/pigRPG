@@ -148,21 +148,24 @@ BackGround（共通背景）
 すべて同じBackGroundをズームする
 ```
 
-### ズーム処理 = 共通化可能
+### ズーム処理 = 部分的に共通化可能
 
 ```
-現状:
-IZoomController + WuiZoomControllerAdapter
-    ↓
-KZoom（バトル用）で使用
+【共通化できるもの】
+IZoomController（Back/Frontを個別にズーム）
+├─ バトルイントロズーム      ✅ 共用可能
+├─ ノベルパート中央オブジェクトズーム  ✅ 共用可能
+└─ その他のズーム演出        ✅ 共用可能
 
-今後:
-同じIZoomControllerを
-├─ KZoom
-├─ ノベルパート中央オブジェクトズーム
-└─ その他のズーム演出
-で共用可能
+【共通化できないもの】
+KZoom（ViewportArea全体をズーム）
+└─ バトル専用（アイコンタップ詳細）  ❌ 独自実装のまま
+   理由: 親ごとズーム + UI非表示化 + フィット計算という特殊要件
 ```
+
+**注意**: IZoomControllerとKZoomは完全に別の仕組み。
+- IZoomController: 子コンテナ（Back/Front）を個別にズーム → MiddleFixedはズームしない
+- KZoom: 親（ViewportArea全体）をズーム → 全部一緒にズーム
 
 ### ノベルパートのズーム仕様（設計書より）
 
@@ -638,6 +641,169 @@ public class BattleIntroController
 
 ---
 
+## リファクタリング対応状況（2026-01-24実施）
+
+### 概要
+
+WatchUIUpdateリファクタリング（Phase 1〜6）により、本ドキュメントで指摘した問題点の多くが解決された。
+
+### 問題点の解決状況
+
+| 問題点 | 状況 | 詳細 |
+|--------|------|------|
+| 3. 参照方法の問題 | ✅ **解決** | IViewportController経由でpublicアクセス可能に。リフレクション削除 |
+| 4. 抽象化レイヤーの不足 | ✅ **解決** | IViewportController, IActionMarkController, IKZoomController等を実装 |
+| 5. WatchUIUpdateの肥大化 | ✅ **大幅改善** | 責務を5つのControllerクラスに分離。約400行のベンチマークコード削除 |
+| 1. 歴史的経緯 | - | 事実記録（対応不要） |
+| 2. 命名と構造の不一致 | ❌ 未対応 | KZoomArea等のリネームは未実施（低優先度） |
+
+### WatchUIUpdate段階的改善案の達成状況
+
+| フェーズ | 計画時の想定 | 実際の達成 |
+|----------|-------------|-----------|
+| Phase 1 | zoomContainersをpublic化 | ✅ IViewportController.BackLayer/FrontLayerで公開 |
+| Phase 2 | IViewportController実装 | ✅ ViewportControllerクラスとして分離・実装 |
+| Phase 3 | 責務別にインターフェース分離 | ✅ 5つのインターフェース定義済み |
+| Phase 4 | WatchUIUpdateを複数クラスに分割 | ✅ 6つのControllerクラスに分離 |
+
+### 作成されたファイル
+
+```
+Assets/Script/EyeArea/
+├── EyeAreaManager.cs              ← 統合ファサード（シングルトン）
+├── IViewportController.cs         ← ビューポート制御I/F
+├── ViewportController.cs          ← IViewportController実装
+├── ViewportZoomController.cs      ← IZoomController実装
+├── IActionMarkController.cs       ← ActionMark制御I/F
+├── ActionMarkController.cs        ← IActionMarkController実装
+├── IKZoomController.cs            ← KZoom制御I/F
+├── KZoomController.cs             ← IKZoomController実装
+├── KZoomConfig.cs                 ← KZoom設定クラス
+├── KZoomState.cs                  ← KZoom状態管理クラス
+├── IEnemyPlacementController.cs   ← 敵配置制御I/F
+├── EnemyPlacementController.cs    ← IEnemyPlacementController実装
+├── EnemyPlacementConfig.cs        ← 敵配置設定クラス
+├── IWalkingUIController.cs        ← 歩行UI制御I/F
+└── WalkingUIController.cs         ← IWalkingUIController実装
+```
+
+### リファクタリングタスクの達成状況
+
+| タスク | 状況 | 詳細 |
+|--------|------|------|
+| タスク1: 背景を共通リソースとして再定義 | ✅ **解決** | IViewportController.Backgroundで明示的アクセス可能 |
+| タスク2: IZoomControllerの汎用化 | ✅ **解決** | リフレクション依存解消。IViewportController.Zoom経由で統一アクセス |
+| タスク3: WatchUIUpdateの段階的改善 | ✅ **完了** | Phase 1〜4すべて実施済み |
+| タスク4: EyeArea/USERUI状態管理 | ❌ 未着手 | 将来課題として残存 |
+
+### 「汎用化の対象外」としていた項目の結果
+
+当初「対象外」としていた以下の項目も、結果的にインターフェース化された:
+
+| 項目 | 当初の判断 | 実際の結果 |
+|------|-----------|-----------|
+| KZoom（EnterK/ExitK） | バトル専用、現状維持 | ✅ IKZoomControllerとして分離 |
+| ActionMark制御 | バトル専用、現状維持 | ✅ IActionMarkControllerとして分離 |
+| ベンチマーク系 | デバッグ用、分離不要 | 🗑️ 完全削除（約400行） |
+
+### ノベルパートからの利用
+
+リファクタリング後、ノベルパートからは以下のようにズーム機能を利用可能:
+
+```csharp
+// リファクタリング前（リフレクション使用、問題あり）
+var adapter = new WuiZoomControllerAdapter(); // 内部でリフレクション
+
+// リファクタリング後（正式なpublic API）
+var viewport = WatchUIUpdate.Instance.Viewport;
+await viewport.Zoom.ZoomInAsync(0.5f, ct);
+
+// または EyeAreaManager経由
+var viewport = EyeAreaManager.Instance.Viewport;
+await viewport.Zoom.ZoomInAsync(0.5f, ct);
+```
+
+### 残存する課題
+
+1. ~~**命名の問題**: KZoomArea → ViewportArea等のリネームは未実施~~ → ✅ 2026-01-24 シーン上でリネーム完了
+2. **シングルトン依存**: WatchUIUpdate.Instanceは依然として存在（完全排除には大規模変更が必要）
+3. **EyeArea/USERUI状態管理**: 複数システム間のUI状態遷移管理は未実装
+
+### 成果のまとめ
+
+- **コード削減**: 約400行のベンチマーク/計測コード削除
+- **責務分離**: 1クラス（約3,200行）→ 6クラス（各200〜500行程度）
+- **テスタビリティ向上**: インターフェース経由でモック可能に
+- **拡張性向上**: 新システム（ノベルパート等）からの利用が容易に
+
+---
+
+## 将来のズーム利用への対応確認（2026-01-24）
+
+### 現在のシーン構造（リネーム後）
+
+```
+AlwaysCanvas/EyeArea/ViewportArea (旧KZoomArea)
+├── ZoomBackContainer        ← IZoomControllerでズームされる
+│   └── BackGround           ← 歩行背景（共通リソース）
+│       ├── NoiseSea
+│       ├── cloud
+│       ├── WalkWeb
+│       ├── TriggerCount
+│       └── Road
+├── MiddleFixedContainer     ← ズームされない（固定レイヤー）
+│   ├── ActionMark
+│   └── ActionMarkSpawnPoint
+├── ZoomFrontContainer       ← IZoomControllerでズームされる
+│   └── EnemyArea
+├── Charas
+├── BSAmanager
+└── SchizoLog
+```
+
+### ノベルパート中央オブジェクトズームへの対応
+
+ノベルパート設計書（269-271行）の要件:
+> - **歩行画面の背景ごと**中央オブジェクトにズームイン
+> - ノベルパートのUI（左右立ち絵、テキストボックス等）は**ズームしない**
+> - 左右の立ち絵はそのまま表示され続ける
+
+| 要素 | 配置場所 | ズーム時の挙動 |
+|------|----------|---------------|
+| 歩行背景（BackGround） | ZoomBackContainer | ✅ ズームされる |
+| 中央オブジェクト | BackGround内 or ZoomFrontContainer | ✅ ズームされる |
+| ノベルUI（立ち絵、テキストボックス） | MiddleFixedContainer | ✅ ズームされない |
+
+### 結論: 現在の構造で対応可能
+
+**BackGroundに歩行背景を置く今の構成のまま**、以下のすべてに対応可能:
+
+| システム | 対応方法 |
+|----------|----------|
+| バトルイントロズーム | IViewportController.Zoom経由 ✅ |
+| ノベルパート中央オブジェクトズーム | 同じIZoomController経由 ✅ |
+| 将来の歩行システム拡張 | 同じIZoomController経由 ✅ |
+
+**利用例:**
+```csharp
+// ノベルパートから
+var viewport = EyeAreaManager.Instance.Viewport;
+await viewport.Zoom.ZoomInAsync(0.5f, ct);  // BackGround + ZoomFrontがズーム
+// MiddleFixedContainerに置いた立ち絵/テキストボックスはズームされない
+
+// バトルイントロから（既存）
+await viewport.Zoom.ZoomInAsync(0.3f, ct);  // 同じ仕組み
+```
+
+### 物理的なシーン構造変更は不要
+
+この結論は本ドキュメントの「結論: シーン構造は良好」（467行目〜）と一致する:
+- 問題の本質は「命名」と「参照方法」のみだった
+- 両方ともリファクタリングで解決済み
+- **シーン構造自体は当初から適切に設計されていた**
+
+---
+
 ## 更新履歴
 
 | 日付 | 内容 |
@@ -645,3 +811,5 @@ public class BattleIntroController
 | 2026-01-24 | 初版作成、シーン階層調査 |
 | 2026-01-24 | 2つのズーム機構（IZoomController/KZoom）の分析追加 |
 | 2026-01-24 | WatchUIUpdate神クラス問題の分析追加 |
+| 2026-01-24 | **WatchUIUpdateリファクタリング完了**（Phase 1〜6）。対応状況セクション追加 |
+| 2026-01-24 | シーン上でKZoomArea → ViewportAreaにリネーム。将来対応可能性の確認・記載 |

@@ -18,12 +18,9 @@ public sealed class DefaultIntroOrchestrator : IIntroOrchestrator
 
     public UniTask PrepareAsync(IIntroContext ctx, CancellationToken ct)
     {
-        using (global::MetricsHub.Instance.BeginSpan("Intro.Zoom.Prepare", global::MetricsContext.None))
-        {
-            // 初期ズーム状態のキャプチャをオーケストレータ側で実施
-            _zoom?.CaptureOriginal(ctx?.ZoomFrontContainer, ctx?.ZoomBackContainer);
-            Debug.Log($"[Orchestrator.Zoom] Prepare: captured original (front={(ctx?.ZoomFrontContainer!=null)}, back={(ctx?.ZoomBackContainer!=null)})");
-        }
+        // 初期ズーム状態のキャプチャをオーケストレータ側で実施
+        _zoom?.CaptureOriginal(ctx?.ZoomFrontContainer, ctx?.ZoomBackContainer);
+        Debug.Log($"[Orchestrator.Zoom] Prepare: captured original (front={(ctx?.ZoomFrontContainer!=null)}, back={(ctx?.ZoomBackContainer!=null)})");
         return UniTask.CompletedTask;
     }
 
@@ -40,39 +37,35 @@ public sealed class DefaultIntroOrchestrator : IIntroOrchestrator
         if (zoomFront == null && zoomBack == null) return;
         ct.ThrowIfCancellationRequested();
 
-        using (global::MetricsHub.Instance.BeginSpan("Intro.Zoom.Play", global::MetricsContext.None))
+        Debug.Log($"[Orchestrator.Zoom] Play: duration={duration}, gotoScale={gotoScaleXY}, gotoPos={gotoPos}");
+        var tasks = new System.Collections.Generic.List<UniTask>(2);
+        if (zoomBack != null)
         {
-            Debug.Log($"[Orchestrator.Zoom] Play: duration={duration}, gotoScale={gotoScaleXY}, gotoPos={gotoPos}");
-            var tasks = new System.Collections.Generic.List<UniTask>(2);
-            if (zoomBack != null)
-            {
-                var startScale = new Vector2(zoomBack.localScale.x, zoomBack.localScale.y);
-                var startPos   = new Vector2(zoomBack.anchoredPosition.x, zoomBack.anchoredPosition.y);
-                tasks.Add(AnimateZoomAsync(zoomBack, startScale, gotoScaleXY, startPos, gotoPos, duration, curve, ct));
-            }
-            if (zoomFront != null)
-            {
-                var startScale = new Vector2(zoomFront.localScale.x, zoomFront.localScale.y);
-                var startPos   = new Vector2(zoomFront.anchoredPosition.x, zoomFront.anchoredPosition.y);
-                tasks.Add(AnimateZoomAsync(zoomFront, startScale, gotoScaleXY, startPos, gotoPos, duration, curve, ct));
-            }
+            var startScale = new Vector2(zoomBack.localScale.x, zoomBack.localScale.y);
+            var startPos   = new Vector2(zoomBack.anchoredPosition.x, zoomBack.anchoredPosition.y);
+            tasks.Add(AnimateZoomAsync(zoomBack, startScale, gotoScaleXY, startPos, gotoPos, duration, curve, ct));
+        }
+        if (zoomFront != null)
+        {
+            var startScale = new Vector2(zoomFront.localScale.x, zoomFront.localScale.y);
+            var startPos   = new Vector2(zoomFront.anchoredPosition.x, zoomFront.anchoredPosition.y);
+            tasks.Add(AnimateZoomAsync(zoomFront, startScale, gotoScaleXY, startPos, gotoPos, duration, curve, ct));
+        }
 
-            if (tasks.Count > 0)
+        if (tasks.Count > 0)
+        {
+            // 外部キャンセルを尊重しつつ並行完了を待機
+            ct.ThrowIfCancellationRequested();
+            try
             {
-                // 外部キャンセルを尊重しつつ並行完了を待機
-                ct.ThrowIfCancellationRequested();
-                try
-                {
-                    var all = UniTask.WhenAll(tasks);
-                    await all.AttachExternalCancellation(ct);
-                }
-                catch (System.OperationCanceledException)
-                {
-                    Debug.Log("[Orchestrator.Zoom] Cancel detected. Restoring immediately.");
-                    try { _zoom?.RestoreImmediate(); } catch { /* no-op */ }
-                    using (global::MetricsHub.Instance.BeginSpan("Intro.Zoom.Cancel", global::MetricsContext.None)) { }
-                    throw;
-                }
+                var all = UniTask.WhenAll(tasks);
+                await all.AttachExternalCancellation(ct);
+            }
+            catch (System.OperationCanceledException)
+            {
+                Debug.Log("[Orchestrator.Zoom] Cancel detected. Restoring immediately.");
+                try { _zoom?.RestoreImmediate(); } catch { /* no-op */ }
+                throw;
             }
         }
     }
@@ -120,27 +113,24 @@ public sealed class DefaultIntroOrchestrator : IIntroOrchestrator
 
     public async UniTask RestoreAsync(IIntroContext ctx, bool animated, float duration, CancellationToken ct)
     {
-        using (global::MetricsHub.Instance.BeginSpan("Intro.Zoom.Restore", global::MetricsContext.None))
+        Debug.Log($"[Orchestrator.Zoom] Restore: animated={animated}, duration={duration}");
+        if (!animated)
         {
-            Debug.Log($"[Orchestrator.Zoom] Restore: animated={animated}, duration={duration}");
-            if (!animated)
+            _zoom?.RestoreImmediate();
+            return;
+        }
+        try
+        {
+            if (_zoom != null)
             {
-                _zoom?.RestoreImmediate();
-                return;
+                await _zoom.RestoreAsync(Mathf.Max(0f, duration), ctx?.ZoomCurve, ct);
             }
-            try
-            {
-                if (_zoom != null)
-                {
-                    await _zoom.RestoreAsync(Mathf.Max(0f, duration), ctx?.ZoomCurve, ct);
-                }
-            }
-            catch (System.OperationCanceledException)
-            {
-                Debug.Log("[Orchestrator.Zoom] Restore canceled. Forcing immediate restore.");
-                _zoom?.RestoreImmediate();
-                throw;
-            }
+        }
+        catch (System.OperationCanceledException)
+        {
+            Debug.Log("[Orchestrator.Zoom] Restore canceled. Forcing immediate restore.");
+            _zoom?.RestoreImmediate();
+            throw;
         }
     }
 

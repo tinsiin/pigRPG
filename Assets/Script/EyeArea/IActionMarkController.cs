@@ -7,6 +7,9 @@ using UnityEngine;
 /// </summary>
 public interface IActionMarkController
 {
+    /// <summary>マーカーが現在表示中かどうか</summary>
+    bool IsVisible { get; }
+
     /// <summary>指定アイコンへマーカーを移動</summary>
     void MoveToIcon(RectTransform targetIcon, bool immediate = false);
 
@@ -27,4 +30,7 @@ public interface IActionMarkController
 
     /// <summary>スポーン位置からマーカーを表示（拡大アニメーション用）</summary>
     void ShowFromSpawn(bool zeroSize = true);
+
+    /// <summary>ステージテーマカラーを設定</summary>
+    void SetStageThemeColor(Color color);
 }

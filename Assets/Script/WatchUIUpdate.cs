@@ -17,7 +17,6 @@ using UnityEditor;
 #endif
 using System.Threading;
 using Unity.Profiling;
-using System.IO;
 
 /// <summary>
 /// WatchUIUpdateクラスに戦闘画面用のレイヤー分離システムを追加しました。
@@ -38,22 +37,6 @@ public partial class WatchUIUpdate : MonoBehaviour,
     private static readonly ProfilerMarker kPrepareIntro = new ProfilerMarker("WUI.PrepareIntro");
     private static readonly ProfilerMarker kPlayIntro    = new ProfilerMarker("WUI.PlayIntro");
     private static readonly ProfilerMarker kPlaceEnemies = new ProfilerMarker("WUI.PlaceEnemies");
-
-    // 導入メトリクス（HUD表示用）
-    public sealed class IntroMetricsData
-    {
-        public double PlannedMs;   // 理論所要（ズーム/スライド/段差+preDelay）
-        public double ActualMs;    // 実測（Play開始〜完了）
-        public double DelayMs;     // 実測-理論（0未満は0として扱う想定）
-        public double EnemyPlacementMs; // 敵UI配置の実測（PlaceEnemiesFromBattleGroup全体）
-        public System.DateTime Timestamp; // 計測時刻
-        public int AllyCount;
-        public int EnemyCount;
-        // アニメーション滑らかさ（Play中のみのフレーム時間分布）
-        public double IntroFrameAvgMs;   // 平均フレーム時間
-        public double IntroFrameP95Ms;   // 95パーセンタイル
-        public double IntroFrameMaxMs;   // 最大フレーム時間
-    }
 
     /// <summary>
     /// Orchestrator 経由でズーム原状復帰を行う任意呼び出しの導線。
@@ -89,11 +72,6 @@ public partial class WatchUIUpdate : MonoBehaviour,
 
     private IIntroContext BuildIntroContextForOrchestrator()
     {
-        var bc = BenchmarkContext.Current;
-        string sc = bc?.ScenarioName ?? (scenarioSelector != null ? (scenarioSelector.CreateSelectedScenario()?.Name ?? "-") : "-");
-        int pi = bc?.PresetIndex ?? -1;
-        string ps = bc?.PresetSummary ?? BuildMetricsContext()?.PresetSummary ?? "-";
-        var tags = bc?.Tags;
         var frontRect = zoomFrontContainer as RectTransform;
         var backRect  = zoomBackContainer  as RectTransform;
         // Diagnostics: ズームスキップの原因特定用
@@ -103,10 +81,10 @@ public partial class WatchUIUpdate : MonoBehaviour,
             Debug.LogWarning("[WUI] Zoom containers are both null. zoomFrontContainer/zoomBackContainer の割当を確認してください。");
         }
         return new IntroContext(
-            sc,
-            pi,
-            ps,
-            tags,
+            "Runtime",
+            -1,
+            "-",
+            null,
             enemySpawnArea,
             frontRect,
             backRect,
@@ -124,473 +102,11 @@ public partial class WatchUIUpdate : MonoBehaviour,
         return new EnemyPlacementContext(enemyGroup, count, batchActivate: true, fixedSizeOverride: null);
     }
 
-    // ===== ベンチ進捗（HUD 用） =====
-    public sealed class SweepProgressSnapshot
-    {
-        public int PresetIndex;    // 0-based（完了レポートでは presets まで到達することあり）
-        public int PresetCount;
-        public int RunIndex;       // 1-based
-        public int RunCount;       // 各プリセットの総ラン数
-        public int CompletedRuns;  // 全体で完了したラン数
-        public int TotalRuns;      // 全体の総ラン数
-        public DateTime StartedAt;
-        public double ElapsedSec;
-        public double ETASec;
-    }
-    private SweepProgressSnapshot _lastSweepProgress;
-    public SweepProgressSnapshot LastSweepProgress => _lastSweepProgress;
-
-    // スイープのキャンセル制御
+    // キャンセル制御用
     private CancellationTokenSource _sweepCts;
-
-    // ===== SO 構成状態（UI連携用の公開プロパティ） =====
-    public bool HasPresetConfig => (presetConfig != null && presetConfig.items != null && presetConfig.items.Length > 0);
-    public bool HasOutputSettings => (outputSettings != null);
-    public bool HasMetricsSettings => (metricsSettings != null);
-
-    private IntroMetricsData _lastIntroMetrics = new IntroMetricsData();
-    public IntroMetricsData LastIntroMetrics => _lastIntroMetrics;
-
-    // Walk全体（ボタン押下→Walk完了）計測
-    public sealed class WalkMetricsData
-    {
-        public double TotalMs;             // Walk() 全体の実測
-        public DateTime Timestamp;  // 計測時刻
-    }
-    private WalkMetricsData _lastWalkMetrics = new WalkMetricsData();
-    public WalkMetricsData LastWalkMetrics => _lastWalkMetrics;
-    private System.Diagnostics.Stopwatch _walkSw;
-
-    public void BeginWalkCycleTiming()
-    {
-        if (_walkSw == null) _walkSw = new System.Diagnostics.Stopwatch();
-        _walkSw.Reset();
-        _walkSw.Start();
-    }
-
-    public void EndWalkCycleTiming()
-    {
-        if (_walkSw == null || !_walkSw.IsRunning) return;
-        _walkSw.Stop();
-        _lastWalkMetrics.TotalMs = _walkSw.Elapsed.TotalMilliseconds;
-        _lastWalkMetrics.Timestamp = System.DateTime.Now;
-        // MetricsHubへ記録（コンテキストは現在のIntro設定を要約）
-        try
-        {
-            var ctx = BuildMetricsContext();
-            global::MetricsHub.Instance.RecordWalk(new global::WalkMetricsEvent
-            {
-                TotalMs = _lastWalkMetrics.TotalMs,
-                Timestamp = _lastWalkMetrics.Timestamp,
-                Context = ctx,
-            });
-        }
-        catch { /* no-op */ }
-    }
-
-    // ===== ベンチマーク設定／結果 =====
-    [Header(
-        "ベンチマーク（単一設定×回数）\n" +
-        "・このセクションはSO非依存です（Preset/Output/Metrics のSOとは別系統）。\n" +
-        "・手早く1種類の実処理（Walk(1)）をN回回して平均を確認したいときに使用します。\n" +
-        "・プリセットスイープ（SO必須）とは出力や実行系が独立しています。")]
-    [Tooltip("1プリセットにつき何回繰り返すか（大きいほど平均が安定します）。")]
-    [SerializeField] private int benchmarkRepeatCount = 5;           // 反復回数
-    [Tooltip("各回のあいだに挟む待機時間（秒）。0で連続実行。状態詰まりの緩和に少量の待機を推奨。")]
-    [SerializeField] private float benchmarkInterRunDelaySec = 0.0f; // 反復間の待機（秒）
-    public bool IsBenchmarkRunning { get; private set; } = false;
-
-    [Header(
-        "Metrics 設定（SO 必須）\n" +
-        "・MetricsSettings を割り当ててください（未割り当て時は計測を自動で全無効）。\n" +
-        "・本番ビルド等でオーバーヘッドを避けたい場合は SO 側でOFFにできます。\n" +
-        "・個別（Span/Jitter）もSO側で切替可能です。")]
-    [Tooltip("Metrics 設定のSO。未割り当ての場合、Metricsは無効化されます。")]
-    [SerializeField] private MetricsSettings metricsSettings;
-
-    public sealed class BenchMetricsData
-    {
-        public int Requested;          // 要求反復数
-        public int SuccessCount;       // 成功数
-        public int FailCount;          // 失敗数
-        public double AvgActualMs;     // A の平均
-        public double AvgWalkTotalMs;  // W の平均
-        public double AvgJitAvgMs;     // IntroFrameAvg の平均
-        public double AvgJitP95Ms;     // IntroFrameP95 の平均
-        public double AvgJitMaxMs;     // IntroFrameMax の平均
-        public DateTime Timestamp; // 計測完了時刻
-        public float InterDelaySec;    // 反復待機秒
-    }
-
-    private BenchMetricsData _lastBenchMetrics = null;
-    public BenchMetricsData LastBenchMetrics => _lastBenchMetrics;
-
-    [ContextMenu("Run Benchmark Now (Walk xN)")]
-    public async void RunBenchmarkNowContext()
-    {
-        await RunBenchmarkNow();
-    }
-
-    // UIのOnClickなどから直接呼べるvoidラッパー
-    public void StartBenchmarkNow()
-    {
-        RunBenchmarkNow().Forget();
-    }
-
-    public async UniTask RunBenchmarkNow()
-    {
-        IsBenchmarkRunning = true;
-        try
-        {
-            if (!Application.isPlaying)
-            {
-                Debug.LogWarning("[Benchmark] Play Mode で実行してください（Editor停止中は実処理を回せません）");
-                return;
-            }
-            int req = Mathf.Max(1, benchmarkRepeatCount);
-            var scenario = (scenarioSelector != null ? scenarioSelector.CreateSelectedScenario() : null) ?? new global::WalkOneStepScenario();
-            var summary = await global::BenchmarkRunner.RunRepeatAsync(
-                scenario,
-                req,
-                benchmarkInterRunDelaySec,
-                0,
-                1,
-                onEachRun: null,
-                progress: null,
-                CancellationToken.None);
-
-            _lastBenchMetrics = new BenchMetricsData
-            {
-                Requested      = summary.RequestCount,
-                SuccessCount   = summary.SuccessCount,
-                FailCount      = summary.FailCount,
-                AvgActualMs    = summary.AvgActualMs,
-                AvgWalkTotalMs = summary.AvgWalkTotalMs,
-                AvgJitAvgMs    = summary.AvgIntroAvgMs,
-                AvgJitP95Ms    = summary.AvgIntroP95Ms,
-                AvgJitMaxMs    = summary.AvgIntroMaxMs,
-                Timestamp      = System.DateTime.Now,
-                InterDelaySec  = benchmarkInterRunDelaySec,
-            };
-        }
-        finally
-        {
-            IsBenchmarkRunning = false;
-        }
-    }
-
-    // ===== プリセットスイープ（配列の各設定 × 指定回数 実行し、行ごとにログ追記） =====
-    [System.Serializable]
-    public struct IntroPreset
-    {
-        public bool introYieldDuringPrepare;
-        public int introYieldEveryN;
-        public float introPreAnimationDelaySec;
-        public float introSlideStaggerInterval;
-    }
-
-    [Header(
-        "ベンチプリセットスイープ（SO 必須）\n" +
-        "・手順: 1) IntroPresetCollection を作成→ items, repeatCount, interRunDelaySec を設定\n" +
-        "          2) 本フィールドに割り当て\n" +
-        "          3) （任意）BenchmarkOutputSettings を割り当ててCSV/JSONを有効化\n" +
-        "          4) 実行（StartPresetSweep/ContextMenu）\n" +
-        "・依存: MetricsSettings が割当済みなら計測ON/OFF/種別が反映されます（任意）。\n" +
-        "・結果: 画面のTMP（任意）へ1行サマリ、（任意）CSV/JSONの生成と保存。")]
-    [Tooltip("プリセット/回数/待機のSO。未割り当ての場合は実行できません。")]
-    [SerializeField] private IntroPresetCollection presetConfig;
-
-    [Header(
-        "ベンチログ表示（任意・TMP出力）\n" +
-        "・TMP(TextMeshProUGUI) を割り当てると、プリセットごとの平均結果を1行ずつ表示します。\n" +
-        "・未割り当てなら画面表示はスキップ（Consoleには出力します）。")]
-    [Tooltip("画面上にログを出す先のTextMeshProUGUI。未指定なら画面表示はスキップ（Consoleのみ）。")]
-    [SerializeField] private TextMeshProUGUI presetLogTMP;
-    [Tooltip("画面に保持する最大行数。超過すると古い行から自動で削除します。")]
-    [SerializeField] private int presetLogMaxLines = 400;
-    private readonly List<string> _presetLogBuffer = new List<string>(512);
-
-    [Header(
-        "ベンチ出力（SO 推奨）\n" +
-        "・BenchmarkOutputSettings を割り当てると、CSV/JSONの生成やファイル保存が可能になります。\n" +
-        "・enableCsv/enableJson=true で内部バッファ生成、writeToFile=true でファイル保存。\n" +
-        "・outputFolder が空のときは Application.persistentDataPath に保存します。\n" +
-        "・未割り当ての場合は出力なし（画面のTMPのみ）。")]
-    [Tooltip("出力設定のSO。未割り当ての場合はCSV/JSON出力は行いません。")]
-    [SerializeField] private BenchmarkOutputSettings outputSettings;
-
-    [Header("シナリオ選択（任意）")]
-    [Tooltip("UIから切替できる ScenarioSelector。未割り当てなら Walk(1) を使用します。")]
-    [SerializeField] private ScenarioSelector scenarioSelector;
 
     // Orchestrator（I/F注入）。当面は内部でデフォルト生成し、段階的に移行する
     private global::IIntroOrchestrator _orchestrator;
-
-    
-
-    private void AppendPresetLogLine(string line)
-    {
-        _presetLogBuffer.Add(line);
-        if (presetLogMaxLines > 0 && _presetLogBuffer.Count > presetLogMaxLines)
-        {
-            int remove = _presetLogBuffer.Count - presetLogMaxLines;
-            _presetLogBuffer.RemoveRange(0, remove);
-        }
-        if (presetLogTMP != null)
-        {
-            presetLogTMP.text = string.Join("\n", _presetLogBuffer);
-        }
-    }
-
-    // ファイル名用に不正文字を '_' に置換し、空や空白のみの場合は "-" を返す
-    private static string SanitizeForFile(string s)
-    {
-        if (string.IsNullOrWhiteSpace(s)) return "-";
-        var invalid = System.IO.Path.GetInvalidFileNameChars();
-        var sb = new System.Text.StringBuilder(s.Length);
-        for (int i = 0; i < s.Length; i++)
-        {
-            char c = s[i];
-            bool bad = false;
-            for (int j = 0; j < invalid.Length; j++)
-            {
-                if (c == invalid[j]) { bad = true; break; }
-            }
-            sb.Append(bad ? '_' : c);
-        }
-        return sb.ToString();
-    }
-
-    // 出力ファイル名テンプレートを適用し、必要に応じてサブフォルダを作成したフルパスを返す
-    private string ResolveOutputPath(string dir, string baseName, string scenarioName, string presetCollectionName, string timestamp, int repeat, int presets, string ext)
-    {
-        string template = (outputSettings != null) ? outputSettings.fileNameTemplate : string.Empty;
-        bool allowSub = (outputSettings != null) ? outputSettings.createSubfolders : true;
-        string safeBase = SanitizeForFile(baseName);
-        string safeSc = SanitizeForFile(scenarioName);
-        string safePc = SanitizeForFile(presetCollectionName);
-
-        string fileName;
-        if (string.IsNullOrEmpty(template))
-        {
-            fileName = $"{safeBase}_{safeSc}_{safePc}_{timestamp}";
-        }
-        else
-        {
-            fileName = template
-                .Replace("{base}", safeBase)
-                .Replace("{scenario}", safeSc)
-                .Replace("{presetCol}", safePc)
-                .Replace("{ts}", timestamp)
-                .Replace("{repeat}", repeat.ToString())
-                .Replace("{presets}", presets.ToString());
-            if (!allowSub)
-            {
-                fileName = fileName.Replace('/', '_').Replace('\\', '_');
-            }
-        }
-        string full = System.IO.Path.Combine(dir, fileName + "." + ext);
-        string targetDir = System.IO.Path.GetDirectoryName(full);
-        if (!string.IsNullOrEmpty(targetDir)) System.IO.Directory.CreateDirectory(targetDir);
-        return full;
-    }
-
-    public struct IntroSettingsSnapshot
-    {
-        public bool introYieldDuringPrepare;
-        public int introYieldEveryN;
-        public float introPreAnimationDelaySec;
-        public float introSlideStaggerInterval;
-    }
-
-    public IntroSettingsSnapshot SaveCurrentIntroSettings()
-    {
-        return new IntroSettingsSnapshot
-        {
-            introYieldDuringPrepare = this.introYieldDuringPrepare,
-            introYieldEveryN = this.introYieldEveryN,
-            introPreAnimationDelaySec = this.introPreAnimationDelaySec,
-            introSlideStaggerInterval = this.introSlideStaggerInterval,
-        };
-    }
-
-    public void ApplyIntroPreset(IntroPreset p)
-    {
-        this.introYieldDuringPrepare = p.introYieldDuringPrepare;
-        this.introYieldEveryN = Mathf.Max(1, p.introYieldEveryN);
-        this.introPreAnimationDelaySec = Mathf.Max(0f, p.introPreAnimationDelaySec);
-        this.introSlideStaggerInterval = Mathf.Max(0f, p.introSlideStaggerInterval);
-    }
-
-    public void RestoreIntroSettings(IntroSettingsSnapshot s)
-    {
-        this.introYieldDuringPrepare = s.introYieldDuringPrepare;
-        this.introYieldEveryN = s.introYieldEveryN;
-        this.introPreAnimationDelaySec = s.introPreAnimationDelaySec;
-        this.introSlideStaggerInterval = s.introSlideStaggerInterval;
-    }
-
-    [ContextMenu("Run Preset Sweep (All)")]
-    public async void RunPresetSweepContext()
-    {
-        await RunPresetSweepBenchmark();
-    }
-
-    // UIのOnClickなどから直接呼べるvoidラッパー
-    public void StartPresetSweep()
-    {
-        RunPresetSweepBenchmark().Forget();
-    }
-
-    [ContextMenu("Cancel Preset Sweep (If Running)")]
-    public void CancelPresetSweep()
-    {
-        if (_sweepCts != null && !_sweepCts.IsCancellationRequested)
-        {
-            _sweepCts.Cancel();
-            Debug.Log("[PresetSweep] Cancel requested");
-        }
-        else
-        {
-            Debug.Log("[PresetSweep] Not running or already cancelled");
-        }
-    }
-
-    public async UniTask RunPresetSweepBenchmark()
-    {
-        // 検証
-        if (!this.ValidatePresetSweepPrerequisites(out var effPresets))
-            return;
-
-        IsBenchmarkRunning = true;
-        try
-        {
-            int repeat = Mathf.Max(1, presetConfig.repeatCount);
-            float interDelay = presetConfig.interRunDelaySec;
-            int total = effPresets.Length * repeat;
-            Debug.Log($"[PresetSweep] Start {effPresets.Length} presets x {repeat} runs (total {total})");
-
-            // フォーマッター作成
-            var formatters = this.CreateBenchmarkFormatters();
-            // シナリオ生成 & ヘッダにシナリオ名とプリセットコレクション名を付与
-            var scenario = (scenarioSelector != null ? scenarioSelector.CreateSelectedScenario() : null) ?? new global::WalkOneStepScenario();
-            string scenarioName = scenario.Name;
-            string presetCollectionName = presetConfig != null ? presetConfig.name : "-";
-            AppendPresetLogLine(formatters.tmpFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName));
-            if (formatters.useCsv)  formatters.csvSb.AppendLine(formatters.csvFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName));
-            if (formatters.useJson) formatters.jsonSb.AppendLine(formatters.jsonFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName));
-            if (formatters.usePerRunCsv)  formatters.perRunCsvSb.AppendLine(formatters.perRunCsvFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName));
-            if (formatters.usePerRunJson) formatters.perRunJsonSb.AppendLine(formatters.perRunJsonFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName));
-
-            // per-run ストリーム書き出し（任意）
-            int flushEvery = (outputSettings != null) ? outputSettings.perRunFlushEvery : 0;
-            bool perRunStream = formatters.writeToFile && flushEvery > 0 && (formatters.usePerRunCsv || formatters.usePerRunJson);
-            string dirForRuns = string.Empty, tsRuns = string.Empty, baseRunsName = string.Empty, pathRunsCsv = string.Empty, pathRunsJson = string.Empty;
-            if (perRunStream)
-            {
-                dirForRuns = string.IsNullOrEmpty(formatters.outputFolder) ? Application.persistentDataPath : formatters.outputFolder;
-                Directory.CreateDirectory(dirForRuns);
-                tsRuns = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                baseRunsName = formatters.fileBaseName + "_runs";
-                if (formatters.usePerRunCsv)
-                {
-                    pathRunsCsv = ResolveOutputPath(dirForRuns, baseRunsName, scenarioName, presetCollectionName, tsRuns, repeat, effPresets.Length, "csv");
-                    File.WriteAllText(pathRunsCsv, formatters.perRunCsvFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName) + "\n", Encoding.UTF8);
-                }
-                if (formatters.usePerRunJson)
-                {
-                    pathRunsJson = ResolveOutputPath(dirForRuns, baseRunsName, scenarioName, presetCollectionName, tsRuns, repeat, effPresets.Length, "json");
-                    File.WriteAllText(pathRunsJson, formatters.perRunJsonFormatter.Header(effPresets.Length, repeat, scenarioName, presetCollectionName) + "\n", Encoding.UTF8);
-                }
-            }
-
-            // 集計（フッタに総OK/総リクエスト/行数を出力するため）
-            int sinkRows = 0;
-            int sinkOkSum = 0;
-            int sinkTotalSum = 0;
-            int perRunRows = 0;
-            int perRunOk = 0;
-
-            // 実行（上で生成した scenario を使用）
-            var applier  = new global::IntroSettingsApplier(this);
-            // 進捗初期化
-            var startedAt = System.DateTime.Now;
-            // キャンセルトークン準備
-            _sweepCts?.Dispose();
-            _sweepCts = new System.Threading.CancellationTokenSource();
-            _lastSweepProgress = new SweepProgressSnapshot
-            {
-                PresetIndex = 0,
-                PresetCount = effPresets.Length,
-                RunIndex = 0,
-                RunCount = repeat,
-                CompletedRuns = 0,
-                TotalRuns = total,
-                StartedAt = startedAt,
-                ElapsedSec = 0,
-                ETASec = 0,
-            };
-            var progress = this.CreateProgressReporter(startedAt, total, effPresets.Length);
-            await global::BenchmarkRunner.RunPresetSweepAsync(
-                scenario,
-                effPresets,
-                applier,
-                repeat,
-                interDelay,
-                formatters.tmpFormatter,
-                AppendPresetLogLine,
-                (global::WatchUIUpdate.IntroPreset p, global::BenchmarkSummary s) =>
-                {
-                    if (formatters.useCsv)  formatters.csvSb.AppendLine(formatters.csvFormatter.SummaryLine(p, s));
-                    if (formatters.useJson) formatters.jsonSb.AppendLine(formatters.jsonFormatter.SummaryLine(p, s));
-                    sinkRows++;
-                    sinkOkSum   += s.SuccessCount;
-                    sinkTotalSum += s.RequestCount;
-                },
-                (int runIndex, global::WatchUIUpdate.IntroPreset p, global::BenchmarkRunResult r) =>
-                {
-                    this.ProcessPerRunResult(
-                        formatters,
-                        runIndex,
-                        p,
-                        r,
-                        scenarioName,
-                        pathRunsCsv,
-                        pathRunsJson,
-                        perRunStream,
-                        ref perRunRows,
-                        ref perRunOk);
-                },
-                buildTags: null,
-                progress,
-                _sweepCts.Token);
-
-            // まとめて保存
-            this.SaveBenchmarkResults(
-                formatters,
-                scenarioName,
-                presetCollectionName,
-                repeat,
-                effPresets.Length,
-                sinkRows,
-                sinkOkSum,
-                sinkTotalSum,
-                perRunRows,
-                perRunOk,
-                pathRunsCsv,
-                pathRunsJson,
-                perRunStream);
-        }
-        finally
-        {
-            IsBenchmarkRunning = false;
-            _sweepCts?.Dispose();
-            _sweepCts = null;
-            Debug.Log("[PresetSweep] Finished");
-            var formatter = new global::TmpSummaryFormatter();
-            AppendPresetLogLine(formatter.Footer());
-        }
-    }
 
     private void Awake()
     {
@@ -600,25 +116,6 @@ public partial class WatchUIUpdate : MonoBehaviour,
             return;
         }
         Instance = this;
-        // Metrics トグルを適用
-        ApplyMetricsToggles();
-    }
-
-#if UNITY_EDITOR
-    private void OnValidate()
-    {
-        ApplyMetricsToggles();
-    }
-#endif
-
-    private void ApplyMetricsToggles()
-    {
-        bool enabled = (metricsSettings != null) ? metricsSettings.enableMetrics : false;
-        bool span    = (metricsSettings != null) ? metricsSettings.enableSpan     : false;
-        bool jitter  = (metricsSettings != null) ? metricsSettings.enableJitter   : false;
-        global::MetricsHub.Enabled = enabled;
-        global::MetricsHub.EnableSpan = span;
-        global::MetricsHub.EnableJitter = jitter;
     }
 
     // ===== Kモード: パッシブ一覧表示（フェードイン） =====
@@ -1028,34 +525,188 @@ public partial class WatchUIUpdate : MonoBehaviour,
     [SerializeField] private Transform zoomBackContainer;  // 背景用ズームコンテナ
     [SerializeField] private Transform zoomFrontContainer; // 敵用ズームコンテナ
 
-    // IViewportController実装用のキャッシュ
-    private IZoomController _zoomController;
+    // Phase 2: ViewportController への委譲
+    private ViewportController _viewportController;
 
-    #region IViewportController実装
-
-    /// <summary>ズーム制御（IZoomController）</summary>
-    public IZoomController Zoom
+    /// <summary>
+    /// ビューポートコントローラーへのアクセス（外部からの直接参照用）。
+    /// Phase 2で追加: WatchUIUpdate.Instance.Viewport として利用可能。
+    /// </summary>
+    public ViewportController Viewport
     {
         get
         {
-            if (_zoomController == null)
+            if (_viewportController == null)
             {
-                _zoomController = new ViewportZoomController(this);
+                _viewportController = new ViewportController(
+                    zoomBackContainer as RectTransform,
+                    zoomFrontContainer as RectTransform
+                );
             }
-            return _zoomController;
+            return _viewportController;
         }
     }
 
-    /// <summary>ズームする背景レイヤー（ZoomBackContainer）</summary>
-    public RectTransform ZoomBackContainer => zoomBackContainer as RectTransform;
+    #region IViewportController実装（ViewportControllerへの委譲）
 
-    /// <summary>ズームする前景レイヤー（ZoomFrontContainer）</summary>
-    public RectTransform ZoomFrontContainer => zoomFrontContainer as RectTransform;
+    /// <summary>ズーム制御（IZoomController）- ViewportControllerへ委譲</summary>
+    public IZoomController Zoom => Viewport.Zoom;
 
-    /// <summary>共通背景への参照（BackGround - ZoomBackContainerの子）</summary>
-    public Transform Background => zoomBackContainer?.childCount > 0 ? zoomBackContainer.GetChild(0) : null;
+    /// <summary>ズームする背景レイヤー - ViewportControllerへ委譲</summary>
+    public RectTransform ZoomBackContainer => Viewport.ZoomBackContainer;
+
+    /// <summary>ズームする前景レイヤー - ViewportControllerへ委譲</summary>
+    public RectTransform ZoomFrontContainer => Viewport.ZoomFrontContainer;
+
+    /// <summary>共通背景への参照 - ViewportControllerへ委譲</summary>
+    public Transform Background => Viewport.Background;
 
     #endregion
+
+    // Phase 3: ActionMarkController への委譲
+    private ActionMarkController _actionMarkController;
+
+    /// <summary>
+    /// ActionMarkコントローラーへのアクセス（外部からの直接参照用）。
+    /// Phase 3で追加: WatchUIUpdate.Instance.ActionMarkCtrl として利用可能。
+    /// </summary>
+    public ActionMarkController ActionMarkCtrl
+    {
+        get
+        {
+            if (_actionMarkController == null)
+            {
+                _actionMarkController = new ActionMarkController(
+                    actionMark,
+                    actionMarkSpawnPoint,
+                    WaitBattleIntroAnimations  // アニメーション待機用デリゲート
+                );
+            }
+            return _actionMarkController;
+        }
+    }
+
+    // Phase 3b: KZoomController への委譲
+    private KZoomController _kZoomController;
+    private KZoomConfig _kZoomConfig;
+    private KZoomState _kZoomState;
+
+    /// <summary>
+    /// KZoomコントローラーへのアクセス（外部からの直接参照用）。
+    /// Phase 3bで追加: WatchUIUpdate.Instance.KZoomCtrl として利用可能。
+    /// </summary>
+    public KZoomController KZoomCtrl
+    {
+        get
+        {
+            if (_kZoomController == null)
+            {
+                // Config作成
+                _kZoomConfig = new KZoomConfig
+                {
+                    ZoomRoot = kZoomRoot,
+                    TargetRect = kTargetRect,
+                    FitBlend = kFitBlend01,
+                    ZoomDuration = kZoomDuration,
+                    ZoomEase = kZoomEase,
+                    NameText = kNameText,
+                    PassivesText = kPassivesText,
+                    TextSlideDuration = kTextSlideDuration,
+                    TextSlideEase = kTextSlideEase,
+                    TextSlideOffsetX = kTextSlideOffsetX,
+                    PassivesFadeDuration = kPassivesFadeDuration,
+                    PassivesEllipsisDotCount = kPassivesEllipsisDotCount,
+                    PassivesFitSafety = kPassivesFitSafety,
+                    PassivesAlwaysAppendEllipsis = kPassivesAlwaysAppendEllipsis,
+                    PassivesUseRectMask = kPassivesUseRectMask,
+                    PassivesDebugMode = kPassivesDebugMode,
+                    PassivesDebugCount = kPassivesDebugCount,
+                    PassivesDebugPrefix = kPassivesDebugPrefix,
+                    DisableIconClickWhileBattleZoom = disableIconClickWhileBattleZoom
+                };
+
+                // State作成
+                _kZoomState = new KZoomState();
+
+                // Controller作成
+                _kZoomController = new KZoomController(
+                    _kZoomConfig,
+                    _kZoomState,
+                    ActionMarkCtrl,
+                    () => BattleUIBridge.Active?.BattleContext?.AllCharacters,
+                    () => _isZoomAnimating,
+                    () => _isAllySlideAnimating,
+                    visible => SchizoLog.Instance?.SetVisible(visible),
+                    () => SchizoLog.Instance?.IsVisible() ?? false,
+                    GetOrSetupTMPForBackground,
+                    FitTextIntoRectWithEllipsis
+                );
+            }
+            return _kZoomController;
+        }
+    }
+
+    // Phase 3c: EnemyPlacementController への委譲
+    private EnemyPlacementController _enemyPlacementController;
+    private EnemyPlacementConfig _enemyPlacementConfig;
+
+    /// <summary>
+    /// EnemyPlacementコントローラーへのアクセス（外部からの直接参照用）。
+    /// Phase 3cで追加: WatchUIUpdate.Instance.EnemyPlacementCtrl として利用可能。
+    /// </summary>
+    public EnemyPlacementController EnemyPlacementCtrl
+    {
+        get
+        {
+            if (_enemyPlacementController == null)
+            {
+                // Config作成
+                _enemyPlacementConfig = new EnemyPlacementConfig
+                {
+                    BattleLayer = enemyBattleLayer,
+                    EnemyUIPrefab = enemyUIPrefab,
+                    SpawnArea = enemySpawnArea,
+                    HpBarSizeRatio = hpBarSizeRatio,
+                    Margin = enemyMargin,
+                    ThrottleSpawns = throttleEnemySpawns,
+                    SpawnBatchSize = enemySpawnBatchSize,
+                    SpawnInterBatchFrames = enemySpawnInterBatchFrames,
+                    EnableVerboseLogs = enableVerboseEnemyLogs
+                };
+
+                // Controller作成
+                _enemyPlacementController = new EnemyPlacementController(
+                    _enemyPlacementConfig,
+                    () => _gotoPos,
+                    () => _gotoScaleXY
+                );
+            }
+            return _enemyPlacementController;
+        }
+    }
+
+    // Phase 4: WalkingUIController への委譲
+    private WalkingUIController _walkingUIController;
+
+    /// <summary>
+    /// WalkingUIコントローラーへのアクセス（外部からの直接参照用）。
+    /// Phase 4で追加: WatchUIUpdate.Instance.WalkingUICtrl として利用可能。
+    /// </summary>
+    public WalkingUIController WalkingUICtrl
+    {
+        get
+        {
+            if (_walkingUIController == null)
+            {
+                _walkingUIController = new WalkingUIController(
+                    StagesString,
+                    bgRect,
+                    ActionMarkCtrl
+                );
+            }
+            return _walkingUIController;
+        }
+    }
 
     [Header("K拡大ステータス(Kモード)")]
     [SerializeField] private RectTransform kZoomRoot;             // 画面全体をまとめるルート（Kズーム対象）
@@ -1252,19 +903,10 @@ public partial class WatchUIUpdate : MonoBehaviour,
 
     /// <summary>
     ///     新歩行システム向けのUI更新
+    ///     Phase 4: WalkingUIControllerに委譲
     /// </summary>
     public void ApplyNodeUI(string displayName, NodeUIHints hints)
-    {
-        if (StagesString != null && !string.IsNullOrEmpty(displayName))
-        {
-            StagesString.text = displayName;
-        }
-
-        if (hints.UseActionMarkColor && actionMark != null)
-        {
-            actionMark.SetStageThemeColor(hints.ActionMarkColor);
-        }
-    }
+        => WalkingUICtrl.ApplyNodeUI(displayName, hints);
 
     /// <summary>
     /// エンカウントしたら最初にズームする処理（改良版）
@@ -1272,42 +914,20 @@ public partial class WatchUIUpdate : MonoBehaviour,
     public async UniTask FirstImpressionZoomImproved()
     {
         // 準備（計算）→ 一斉起動（アニメ）の二段階でスパイクを抑制
-        var ctx = BuildMetricsContext();
         IntroMotionPlan plan;
-        using (global::MetricsHub.Instance.BeginSpan("Intro.Prepare", ctx))
+        // Orchestrator 事前準備（I/F先行：現状はno-op）
+        try
         {
-            // Orchestrator 事前準備（I/F先行：現状はno-op）
-            try
-            {
-                EnsureOrchestrator();
-                var ictx = BuildIntroContextForOrchestrator();
-                var token = _sweepCts != null ? _sweepCts.Token : System.Threading.CancellationToken.None;
-                await _orchestrator.PrepareAsync(ictx, token);
-            }
-            catch { /* no-op */ }
-            plan = await PrepareIntroMotions(introYieldDuringPrepare, introYieldEveryN);
+            EnsureOrchestrator();
+            var ictx = BuildIntroContextForOrchestrator();
+            var token = _sweepCts != null ? _sweepCts.Token : System.Threading.CancellationToken.None;
+            await _orchestrator.PrepareAsync(ictx, token);
         }
+        catch { /* no-op */ }
+        plan = await PrepareIntroMotions(introYieldDuringPrepare, introYieldEveryN);
 
-        // 理論所要時間（秒）を算出（ズーム/スライド段差/プリディレイを考慮）
-        double plannedSec = ComputePlannedIntroDurationSeconds(plan, introPreAnimationDelaySec);
-
-        // 実測：Playの開始から完了までを計測
-        var sw = System.Diagnostics.Stopwatch.StartNew();
-        using (global::MetricsHub.Instance.BeginSpan("Intro.Play", ctx))
-        {
-            await PlayIntroMotions(plan, introPreAnimationDelaySec);
-        }
-        sw.Stop();
-
-        // メトリクス保存
-        _lastIntroMetrics.PlannedMs = plannedSec * 1000.0;
-        _lastIntroMetrics.ActualMs  = sw.Elapsed.TotalMilliseconds;
-        _lastIntroMetrics.DelayMs   = Math.Max(0.0, _lastIntroMetrics.ActualMs - _lastIntroMetrics.PlannedMs);
-        _lastIntroMetrics.Timestamp = System.DateTime.Now;
-        _lastIntroMetrics.AllyCount = BattleUIBridge.Active?.BattleContext?.AllyGroup?.Ours?.Count ?? (allySpawnPositions?.Length ?? 0);
-        _lastIntroMetrics.EnemyCount = BattleUIBridge.Active?.BattleContext?.EnemyGroup?.Ours?.Count ?? 0;
-
-        Debug.Log($"[Intro] Planned={_lastIntroMetrics.PlannedMs:F2}ms, Actual={_lastIntroMetrics.ActualMs:F2}ms, Delay={_lastIntroMetrics.DelayMs:F2}ms, Allies={_lastIntroMetrics.AllyCount}, Enemies={_lastIntroMetrics.EnemyCount}");
+        // アニメーション実行
+        await PlayIntroMotions(plan, introPreAnimationDelaySec);
     }
 
     // ===== 準備→一斉起動 フェーズ実装 =====
@@ -1401,32 +1021,20 @@ public partial class WatchUIUpdate : MonoBehaviour,
             }
 
             var tasks = new List<UniTask>();
-            // --- Jitter（アニメ滑らかさ）計測開始 ---
-            var jitter = global::MetricsHub.Instance.StartJitter("Intro.Jitter", BuildMetricsContext());
 
             // 敵UI生成（従来はZoom開始時に並行起動していたものをここで起動）
             var currentBattle = BattleUIBridge.Active?.BattleContext;
             if (currentBattle?.EnemyGroup != null)
             {
-                var placeSw = System.Diagnostics.Stopwatch.StartNew();
                 var placeTask = UniTask.Create(async () =>
                 {
                     EnsureOrchestrator();
                     var ictx = BuildIntroContextForOrchestrator();
                     var pctx = BuildPlacementContext(currentBattle.EnemyGroup);
-                    using (MetricsHub.Instance.BeginSpan("PlaceEnemies", BuildMetricsContext()))
-                    {
-                        var token = _sweepCts != null ? _sweepCts.Token : System.Threading.CancellationToken.None;
-                        await _orchestrator.PlaceEnemiesAsync(ictx, pctx, token);
-                    }
-                    placeSw.Stop();
-                    _lastIntroMetrics.EnemyPlacementMs = placeSw.Elapsed.TotalMilliseconds;
+                    var token = _sweepCts != null ? _sweepCts.Token : System.Threading.CancellationToken.None;
+                    await _orchestrator.PlaceEnemiesAsync(ictx, pctx, token);
                 });
                 tasks.Add(placeTask);
-            }
-            else
-            {
-                _lastIntroMetrics.EnemyPlacementMs = 0;
             }
 
             // Zoom 同時起動（常に Orchestrator 経由）
@@ -1500,54 +1108,8 @@ public partial class WatchUIUpdate : MonoBehaviour,
                 }
             }
 
-            // --- Jitter終了＆統計反映 ---
-            var stats = await jitter.EndAsync();
-            _lastIntroMetrics.IntroFrameAvgMs = stats.AvgMs;
-            _lastIntroMetrics.IntroFrameP95Ms = stats.P95Ms;
-            _lastIntroMetrics.IntroFrameMaxMs = stats.MaxMs;
-
             _isZoomAnimating = false;
             _isAllySlideAnimating = false;
-
-            // MetricsHubへ最終結果を記録（Planned/Actual/Delay/配置/Jitter統計を含む）
-            try
-            {
-                var ctx = BuildMetricsContext();
-                global::MetricsHub.Instance.RecordIntro(new global::IntroMetricsEvent
-                {
-                    PlannedMs = _lastIntroMetrics.PlannedMs,
-                    ActualMs = _lastIntroMetrics.ActualMs,
-                    DelayMs = _lastIntroMetrics.DelayMs,
-                    EnemyPlacementMs = _lastIntroMetrics.EnemyPlacementMs,
-                    Timestamp = _lastIntroMetrics.Timestamp,
-                    AllyCount = _lastIntroMetrics.AllyCount,
-                    EnemyCount = _lastIntroMetrics.EnemyCount,
-                    IntroFrameAvgMs = _lastIntroMetrics.IntroFrameAvgMs,
-                    IntroFrameP95Ms = _lastIntroMetrics.IntroFrameP95Ms,
-                    IntroFrameMaxMs = _lastIntroMetrics.IntroFrameMaxMs,
-                    Context = ctx,
-                });
-            }
-            catch { /* no-op */ }
-    }
-
-    // ===== MetricsHub 用コンテキスト生成 =====
-    private global::MetricsContext BuildMetricsContext()
-    {
-        // 基本は現在のIntro設定からSummaryを作る
-        string currentPresetSummary = $"{introYieldDuringPrepare.ToString().ToLower()} {introYieldEveryN} {introPreAnimationDelaySec} {introSlideStaggerInterval}";
-        var baseScenario = IsBenchmarkRunning ? "Benchmark" : "Runtime";
-
-        // BenchmarkRunner からの文脈があれば優先
-        var outer = global::BenchmarkContext.Current;
-        return new global::MetricsContext
-        {
-            ScenarioName = outer?.ScenarioName ?? baseScenario,
-            PresetSummary = outer?.PresetSummary ?? currentPresetSummary,
-            PresetIndex = outer?.PresetIndex ?? -1,
-            RunIndex = outer?.RunIndex ?? -1,
-            Tags = outer?.Tags,
-        };
     }
 
     /// <summary>
@@ -1597,97 +1159,34 @@ public partial class WatchUIUpdate : MonoBehaviour,
     
     /// <summary>
     /// アクションマークを指定アイコンの中心へ移動（サイズは自動追従）
+    /// Phase 3: ActionMarkControllerへ委譲
     /// </summary>
-    /// <param name="targetIcon">対象アイコンのRectTransform</param>
-    /// <param name="immediate">即時反映（アニメーションなし）</param>
     public void MoveActionMarkToIcon(RectTransform targetIcon, bool immediate = false)
-    {
-        if (actionMark == null)
-        {
-            Debug.LogWarning("ActionMarkUI が未設定です。WatchUIUpdate の Inspector で actionMark を割り当ててください。");
-            return;
-        }
-        if (targetIcon == null)
-        {
-            Debug.LogWarning("MoveActionMarkToIcon: targetIcon が null です。");
-            return;
-        }
-
-        actionMark.MoveToTarget(targetIcon, immediate);
-    }
+        => ActionMarkCtrl.MoveToIcon(targetIcon, immediate);
 
     /// <summary>
     /// スケール補正付きでアイコンへ移動（ズーム/スライドの見かけスケール差を補正）
+    /// Phase 3: ActionMarkControllerへ委譲
     /// </summary>
     public void MoveActionMarkToIconScaled(RectTransform targetIcon, bool immediate = false)
-    {
-        if (actionMark == null || targetIcon == null)
-        {
-            Debug.LogWarning("MoveActionMarkToIconScaled: 必要参照が不足しています。");
-            return;
-        }
-        var extraScale = ComputeScaleRatioForTarget(targetIcon);
-        actionMark.MoveToTargetWithScale(targetIcon, extraScale, immediate);
-    }
+        => ActionMarkCtrl.MoveToIconScaled(targetIcon, immediate);
 
     /// <summary>
     /// アクションマークを指定アクター（BaseStates）のUIアイコンへ移動
+    /// Phase 3: ActionMarkControllerへ委譲
     /// </summary>
-    /// <param name="actor">BaseStates 派生のアクター</param>
-    /// <param name="immediate">即時反映（アニメーションなし）</param>
     public void MoveActionMarkToActor(BaseStates actor, bool immediate = false)
-    {
-        if (actor == null)
-        {
-            Debug.LogWarning("MoveActionMarkToActor: actor が null です。");
-            return;
-        }
-
-        var ui = actor.UI;
-        if (ui == null)
-        {
-            Debug.LogWarning($"MoveActionMarkToActor: actor.UI が null です。actor={actor.GetType().Name}");
-            return;
-        }
-
-        var img = ui.Icon;
-        if (img == null)
-        {
-            Debug.LogWarning($"MoveActionMarkToActor: UI.Icon が null です。actor={actor.GetType().Name}");
-            return;
-        }
-
-        var iconRT = img.transform as RectTransform;
-        MoveActionMarkToIcon(iconRT, immediate);
-    }
+        => ActionMarkCtrl.MoveToActor(actor, immediate);
 
     /// <summary>
     /// ズーム/スライド完了を待ってから、スケール補正付きでアクションマークを移動
+    /// Phase 3: ActionMarkControllerへ委譲
     /// </summary>
-    public async UniTask MoveActionMarkToActorScaled(BaseStates actor, bool immediate = false, bool waitAnimations = true)
-    {
-        if (actor == null)
-        {
-            Debug.LogWarning("MoveActionMarkToActorScaled: actor が null です。");
-            return;
-        }
-        var ui = actor.UI;
-        if (ui?.Icon == null)
-        {
-            Debug.LogWarning($"MoveActionMarkToActorScaled: UI.Icon が null です。actor={actor.GetType().Name}");
-            return;
-        }
-        if (waitAnimations)
-        {
-            await WaitBattleIntroAnimations();
-        }
-        var iconRT = ui.Icon.transform as RectTransform;
-        MoveActionMarkToIconScaled(iconRT, immediate);
-    }
+    public UniTask MoveActionMarkToActorScaled(BaseStates actor, bool immediate = false, bool waitAnimations = true)
+        => ActionMarkCtrl.MoveToActorScaled(actor, immediate, waitAnimations);
 
-    /// <summary>
-    /// target(アイコン)の見かけスケールと、ActionMark親の見かけスケールの比率を返す
-    /// </summary>
+    // ComputeScaleRatioForTarget と GetWorldScaleXY は ActionMarkController に移動済み
+    // 以下は後方互換のため残す（他で使用されている可能性）
     private Vector2 ComputeScaleRatioForTarget(RectTransform target)
     {
         var parentRT = actionMark?.rectTransform?.parent as RectTransform;
@@ -1721,304 +1220,48 @@ public partial class WatchUIUpdate : MonoBehaviour,
         }
     }
 
-    // ===== K MODE (ステータス拡大) =====
+    // ===== K MODE (ステータス拡大) - Phase 3b: KZoomControllerへ委譲 =====
     /// <summary>
     /// Kモードに入れるかどうか（戦闘導入ズームや味方スライドが走っている場合は抑制可能）
+    /// Phase 3b: KZoomControllerへ委譲
     /// </summary>
-    public bool CanEnterK => !_isKActive && !_isKAnimating && !(disableIconClickWhileBattleZoom && (_isZoomAnimating || _isAllySlideAnimating));
+    public bool CanEnterK => KZoomCtrl.CanEnterK;
 
     /// <summary>
     /// Kモードがアクティブか
+    /// Phase 3b: KZoomControllerへ委譲
     /// </summary>
-    public bool IsKActive => _isKActive;
+    public bool IsKActive => KZoomCtrl.IsKActive;
+
     /// <summary>
     /// Kモードのアニメーション中か
+    /// Phase 3b: KZoomControllerへ委譲
     /// </summary>
-    public bool IsKAnimating => _isKAnimating;
+    public bool IsKAnimating => KZoomCtrl.IsKAnimating;
+
     /// <summary>
     /// 現在のKズーム対象UIかどうか
+    /// Phase 3b: KZoomControllerへ委譲
     /// </summary>
-    public bool IsCurrentKTarget(UIController ui) => _isKActive && (_kExclusiveUI == ui);
+    public bool IsCurrentKTarget(UIController ui) => KZoomCtrl.IsCurrentKTarget(ui);
 
     /// <summary>
     /// 指定アイコンをkTargetRectにフィットさせるように、kZoomRootをスケール・移動させてKモード突入
+    /// Phase 3b: KZoomControllerへ委譲
     /// </summary>
-    public async UniTask EnterK(RectTransform iconRT, string title)
-    {
-        if (!CanEnterK)
-        {
-            Debug.Log("[K] CanEnterK=false のためEnterKを無視");
-            return;
-        }
-        if (iconRT == null || kZoomRoot == null || kTargetRect == null)
-        {
-            Debug.LogWarning("[K] 必要参照が不足しています(iconRT/kZoomRoot/kTargetRect)。");
-            return;
-        }
-
-        // テキスト設定（まずは非表示）
-        if (kNameText != null) { kNameText.text = title ?? string.Empty; kNameText.gameObject.SetActive(false); }
-        
-        _kCts?.Cancel();
-        _kCts?.Dispose();
-        _kCts = new CancellationTokenSource();
-
-        var ct = _kCts.Token;
-        _isKAnimating = true;
-
-        // クリック元UIの参照のみ保持（復元用）。非表示化はUIController.TriggerKModeで行う。
-        _kExclusiveUI = iconRT.GetComponentInParent<UIController>();
-
-        // 非対象キャラのUIControllerをK中は丸ごと非表示にする（元の有効状態を退避）
-        _kHiddenOtherUIs = new List<(UIController ui, bool wasActive)>();
-        var battle = BattleUIBridge.Active?.BattleContext;
-        var allChars = battle?.AllCharacters;
-        if (allChars != null)
-        {
-            foreach (var ch in allChars)
-            {
-                var ui = ch?.UI;
-                if (ui == null || ui == _kExclusiveUI) continue;
-                bool prev = ui.gameObject.activeSelf;
-                _kHiddenOtherUIs.Add((ui, prev));
-                if (prev)
-                {
-                    ui.SetActive(false);
-                }
-            }
-        }
-
-        // ActionMarkの表示状態を退避し、K中は非表示にする
-        if (actionMark != null)
-        {
-            _actionMarkWasActiveBeforeK = actionMark.gameObject.activeSelf;
-            if (_actionMarkWasActiveBeforeK)
-            {
-                HideActionMark();
-            }
-        }
-
-        // SchizoLogの表示状態を退避し、K中は非表示にする（不要な参照を増やさずシングルトンを直接利用）
-        if (SchizoLog.Instance != null)
-        {
-            _schizoWasVisibleBeforeK = SchizoLog.Instance.IsVisible();
-            if (_schizoWasVisibleBeforeK)
-            {
-                SchizoLog.Instance.SetVisible(false);
-            }
-        }
-
-        // もとの状態を保存
-        _kOriginalPos = kZoomRoot.anchoredPosition;
-        _kOriginalScale = kZoomRoot.localScale;
-        _kSnapshotValid = true;
-
-        // フィット計算
-        ComputeKFit(iconRT, out float targetScale, out Vector2 targetAnchoredPos);
-        // Kテキスト/ボタンの再マッピング計算は廃止（レイアウトのアンカー/位置決めに任せる）
-
-        // ズームイン（位置＋スケール）
-        var rootRT = kZoomRoot;
-        var scaleTask = LMotion.Create((Vector3)_kOriginalScale, new Vector3(targetScale, targetScale, _kOriginalScale.z), kZoomDuration)
-            .WithEase(kZoomEase)
-            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-            .BindToLocalScale(rootRT)
-            .ToUniTask(ct);
-
-        var posTask = LMotion.Create(_kOriginalPos, targetAnchoredPos, kZoomDuration)
-            .WithEase(kZoomEase)
-            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-            .BindToAnchoredPosition(rootRT)
-            .ToUniTask(ct);
-
-        // Kパッシブテキストの準備（内容セット＆非表示→フェード表示準備）
-        BaseStates actorForK = FindActorByUI(_kExclusiveUI);
-        SetKPassivesText(actorForK);
-
-        // テキストのスライドインもズームと同時に開始
-        var slideTask = SlideInKTexts(title, ct);
-        var fadePassivesTask = FadeInKPassives(actorForK, ct);
-
-        try
-        {
-            await UniTask.WhenAll(scaleTask, posTask, slideTask, fadePassivesTask);
-        }
-        catch (OperationCanceledException)
-        {
-            // 即時終了などのキャンセル
-            if (_kExclusiveUI != null)
-            {
-                _kExclusiveUI.SetExclusiveIconMode(false);
-                _kExclusiveUI = null;
-            }
-            // 非対象UIを元の有効状態へ復帰
-            if (_kHiddenOtherUIs != null)
-            {
-                foreach (var pair in _kHiddenOtherUIs)
-                {
-                    if (pair.ui != null) pair.ui.SetActive(pair.wasActive);
-                }
-                _kHiddenOtherUIs = null;
-            }
-            _isKAnimating = false;
-            _kSnapshotValid = false;
-            // キャンセル時はテキストを念のため非表示へ戻す
-            if (kNameText != null) kNameText.gameObject.SetActive(false);
-            if (kPassivesText != null) kPassivesText.gameObject.SetActive(false);
-            // EnterK中断時はActionMarkを元状態に戻す
-            if (actionMark != null && _actionMarkWasActiveBeforeK)
-            {
-                ShowActionMark();
-            }
-            _actionMarkWasActiveBeforeK = false;
-            // EnterK中断時はSchizoLogも元状態に戻す
-            if (SchizoLog.Instance != null && _schizoWasVisibleBeforeK)
-            {
-                SchizoLog.Instance.SetVisible(true);
-            }
-            _schizoWasVisibleBeforeK = false;
-            return;
-        }
-
-        _isKActive = true;
-        _isKAnimating = false;
-
-        // 以降の処理（_isKActive の更新など）のみ。テキストのスライドはズームと同時に完了済み。
-    }
+    public UniTask EnterK(RectTransform iconRT, string title) => KZoomCtrl.EnterK(iconRT, title);
 
     /// <summary>
     /// Kモード解除（アニメーションあり）
+    /// Phase 3b: KZoomControllerへ委譲
     /// </summary>
-    public async UniTask ExitK()
-    {
-        if (!_isKActive && !_isKAnimating)
-        {
-            return;
-        }
-
-        // テキストは即時非表示
-        if (kNameText != null) kNameText.gameObject.SetActive(false);
-        if (kPassivesText != null) kPassivesText.gameObject.SetActive(false);
-
-        _kCts?.Cancel();
-        _kCts?.Dispose();
-        _kCts = new CancellationTokenSource();
-        var ct = _kCts.Token;
-
-        _isKAnimating = true;
-
-        // ここで即時にK中に非表示にしていたUIを復帰させる（ズームアウト中に表示して良い要件）
-        // クリック元UIのIcon以外の可視状態を復元
-        if (_kExclusiveUI != null)
-        {
-            _kExclusiveUI.SetExclusiveIconMode(false);
-            _kExclusiveUI = null;
-        }
-        // 非対象UIControllerを元の有効状態へ復帰
-        if (_kHiddenOtherUIs != null)
-        {
-            foreach (var pair in _kHiddenOtherUIs)
-            {
-                if (pair.ui != null) pair.ui.SetActive(pair.wasActive);
-            }
-            _kHiddenOtherUIs = null;
-        }
-        // ActionMarkの表示状態を復帰
-        if (actionMark != null && _actionMarkWasActiveBeforeK)
-        {
-            ShowActionMark();
-            _actionMarkWasActiveBeforeK = false;
-        }
-        // SchizoLogの表示状態を復帰
-        if (SchizoLog.Instance != null && _schizoWasVisibleBeforeK)
-        {
-            SchizoLog.Instance.SetVisible(true);
-            _schizoWasVisibleBeforeK = false;
-        }
-
-        var rootRT = kZoomRoot;
-        if (rootRT == null)
-        {
-            _isKActive = false;
-            _isKAnimating = false;
-            return;
-        }
-
-        var scaleTask = LMotion.Create(rootRT.localScale, _kOriginalScale, kZoomDuration)
-            .WithEase(kZoomEase)
-            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-            .BindToLocalScale(rootRT)
-            .ToUniTask(ct);
-
-        var posTask = LMotion.Create(rootRT.anchoredPosition, _kOriginalPos, kZoomDuration)
-            .WithEase(kZoomEase)
-            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-            .BindToAnchoredPosition(rootRT)
-            .ToUniTask(ct);
-
-        try
-        {
-            await UniTask.WhenAll(scaleTask, posTask);
-        }
-        catch (OperationCanceledException)
-        {
-            // 即時終了など
-        }
-
-        _isKActive = false;
-        _isKAnimating = false;
-        _kSnapshotValid = false;
-        // 復帰処理はズームアウト開始時に実施済み
-    }
+    public UniTask ExitK() => KZoomCtrl.ExitK();
 
     /// <summary>
     /// Kモードを即時解除（キャンセルやNextWaitで使用）
+    /// Phase 3b: KZoomControllerへ委譲
     /// </summary>
-    public void ForceExitKImmediate()
-    {
-        _kCts?.Cancel();
-        _kCts?.Dispose();
-        _kCts = null;
-
-        // クリック元UIのIcon以外の可視状態を即時復元
-        if (_kExclusiveUI != null)
-        {
-            _kExclusiveUI.SetExclusiveIconMode(false);
-            _kExclusiveUI = null;
-        }
-        // 非対象UIControllerを元の有効状態に即時復帰
-        if (_kHiddenOtherUIs != null)
-        {
-            foreach (var pair in _kHiddenOtherUIs)
-            {
-                if (pair.ui != null) pair.ui.SetActive(pair.wasActive);
-            }
-            _kHiddenOtherUIs = null;
-        }
-
-        if (kNameText != null) kNameText.gameObject.SetActive(false);
-
-        if (kZoomRoot != null && _kSnapshotValid)
-        {
-            kZoomRoot.anchoredPosition = _kOriginalPos;
-            kZoomRoot.localScale = _kOriginalScale;
-        }
-
-        _isKActive = false;
-        _isKAnimating = false;
-        // 即時解除時もActionMarkを元状態へ復帰
-        if (actionMark != null && _actionMarkWasActiveBeforeK)
-        {
-            ShowActionMark();
-        }
-        _actionMarkWasActiveBeforeK = false;
-        // 即時解除時もSchizoLogを元状態へ復帰
-        if (SchizoLog.Instance != null && _schizoWasVisibleBeforeK)
-        {
-            SchizoLog.Instance.SetVisible(true);
-        }
-        _schizoWasVisibleBeforeK = false;
-    }
+    public void ForceExitKImmediate() => KZoomCtrl.ForceExitKImmediate();
 
     /// <summary>
     /// テキストの右→左スライドイン
@@ -2106,82 +1349,40 @@ public partial class WatchUIUpdate : MonoBehaviour,
         size = max - min;
     }
 
-    // ActionMark の表示/非表示ファサード
-    public void ShowActionMark()
-    {
-        if (actionMark == null)
-        {
-            Debug.LogWarning("ShowActionMark: ActionMarkUI が未設定です。");
-            return;
-        }
-        actionMark.gameObject.SetActive(true);
-    }
+    // ActionMark の表示/非表示ファサード（Phase 3: ActionMarkControllerへ委譲）
+    public void ShowActionMark() => ActionMarkCtrl.Show();
 
-    public void HideActionMark()
-    {
-        if (actionMark == null)
-        {
-            Debug.LogWarning("HideActionMark: ActionMarkUI が未設定です。");
-            return;
-        }
-        actionMark.gameObject.SetActive(false);
-    }
+    public void HideActionMark() => ActionMarkCtrl.Hide();
 
     /// <summary>
     /// 特別版: スポーン位置(actionMarkSpawnPoint)の中心に0サイズで出す
-    /// 次の MoveActionMarkToActor/Icon 時に、ここから拡大・移動する演出になります。
+    /// Phase 3: ActionMarkControllerへ委譲
     /// </summary>
-    public void ShowActionMarkFromSpawn(bool zeroSize = true)
-    {
-        if (actionMark == null)
-        {
-            Debug.LogWarning("ShowActionMarkFromSpawn: ActionMarkUI が未設定です。");
-            return;
-        }
-        if (actionMarkSpawnPoint == null)
-        {
-            Debug.LogWarning("ShowActionMarkFromSpawn: actionMarkSpawnPoint が未設定です。通常の ShowActionMark() を使用します。");
-            ShowActionMark();
-            return;
-        }
+    public void ShowActionMarkFromSpawn(bool zeroSize = true) => ActionMarkCtrl.ShowFromSpawn(zeroSize);
 
-        var markRT = actionMark.rectTransform;
-        // 念のため中央基準
-        markRT.pivot = new Vector2(0.5f, 0.5f);
-        markRT.anchorMin = new Vector2(0.5f, 0.5f);
-        markRT.anchorMax = new Vector2(0.5f, 0.5f);
-
-        // スポーン位置(中心)のワールド座標 → ActionMark親のローカル(anchoredPosition)へ
-        Vector2 worldCenter = actionMarkSpawnPoint.TransformPoint(actionMarkSpawnPoint.rect.center);
-        Vector2 anchored = WorldToAnchoredPosition(markRT, worldCenter);
-
-        actionMark.gameObject.SetActive(true);
-        markRT.anchoredPosition = anchored;
-        if (zeroSize)
-        {
-            actionMark.SetSize(0f, 0f);
-        }
-    }
-
-    #region IActionMarkController実装
+    #region IActionMarkController実装（ActionMarkControllerへの委譲）
 
     void IActionMarkController.MoveToIcon(RectTransform targetIcon, bool immediate)
-        => MoveActionMarkToIcon(targetIcon, immediate);
+        => ActionMarkCtrl.MoveToIcon(targetIcon, immediate);
 
     void IActionMarkController.MoveToIconScaled(RectTransform targetIcon, bool immediate)
-        => MoveActionMarkToIconScaled(targetIcon, immediate);
+        => ActionMarkCtrl.MoveToIconScaled(targetIcon, immediate);
 
     void IActionMarkController.MoveToActor(BaseStates actor, bool immediate)
-        => MoveActionMarkToActor(actor, immediate);
+        => ActionMarkCtrl.MoveToActor(actor, immediate);
 
     UniTask IActionMarkController.MoveToActorScaled(BaseStates actor, bool immediate, bool waitAnimations)
-        => MoveActionMarkToActorScaled(actor, immediate, waitAnimations);
+        => ActionMarkCtrl.MoveToActorScaled(actor, immediate, waitAnimations);
 
-    void IActionMarkController.Show() => ShowActionMark();
+    void IActionMarkController.Show() => ActionMarkCtrl.Show();
 
-    void IActionMarkController.Hide() => HideActionMark();
+    void IActionMarkController.Hide() => ActionMarkCtrl.Hide();
 
-    void IActionMarkController.ShowFromSpawn(bool zeroSize) => ShowActionMarkFromSpawn(zeroSize);
+    void IActionMarkController.ShowFromSpawn(bool zeroSize) => ActionMarkCtrl.ShowFromSpawn(zeroSize);
+
+    void IActionMarkController.SetStageThemeColor(Color color) => ActionMarkCtrl.SetStageThemeColor(color);
+
+    bool IActionMarkController.IsVisible => ActionMarkCtrl.IsVisible;
 
     #endregion
 
@@ -2326,8 +1527,19 @@ public partial class WatchUIUpdate : MonoBehaviour,
 
     /// <summary>
     /// BattleGroupの敵リストに基づいて敵UIを配置（戦闘参加敵のみ）
+    /// Phase 3c: EnemyPlacementControllerに委譲
     /// </summary>
-    public async UniTask PlaceEnemiesFromBattleGroup(BattleGroup enemyGroup)
+    public UniTask PlaceEnemiesFromBattleGroup(BattleGroup enemyGroup)
+        => EnemyPlacementCtrl.PlaceEnemiesAsync(enemyGroup);
+
+    // ========================================================================
+    // 以下のメソッドはPhase 3cでEnemyPlacementControllerへ移動済み
+    // 後方互換のため削除せず残しているがコントローラー経由で呼び出されるようになった
+    // ========================================================================
+
+#if false
+    // NOTE: 以下は EnemyPlacementController に移動済みのため無効化
+    private async UniTask PlaceEnemiesFromBattleGroup_Legacy(BattleGroup enemyGroup)
     {
         // NOTE: ProfilerMarker.Auto() は await を跨ぐとフレーム越境で警告/エラーになるため未使用
         if (enemyGroup?.Ours == null || enemyBattleLayer == null) return;
@@ -2372,13 +1584,10 @@ public partial class WatchUIUpdate : MonoBehaviour,
                         {
                             batchCounter = 0;
                             // バッチ分をまとめて有効化
-                            using (global::MetricsHub.Instance.BeginSpan("PlaceEnemies.Activate", BuildMetricsContext()))
+                            for (int i = 0; i < batchCreated.Count; i++)
                             {
-                                for (int i = 0; i < batchCreated.Count; i++)
-                                {
-                                    if (batchCreated[i] != null)
-                                        batchCreated[i].gameObject.SetActive(true);
-                                }
+                                if (batchCreated[i] != null)
+                                    batchCreated[i].gameObject.SetActive(true);
                             }
                             batchCreated.Clear();
                             for (int f = 0; f < Mathf.Max(0, enemySpawnInterBatchFrames); f++)
@@ -2391,13 +1600,10 @@ public partial class WatchUIUpdate : MonoBehaviour,
                 // 余り分を最後に有効化
                 if (batchCreated.Count > 0)
                 {
-                    using (global::MetricsHub.Instance.BeginSpan("PlaceEnemies.Activate", BuildMetricsContext()))
+                    for (int i = 0; i < batchCreated.Count; i++)
                     {
-                        for (int i = 0; i < batchCreated.Count; i++)
-                        {
-                            if (batchCreated[i] != null)
-                                batchCreated[i].gameObject.SetActive(true);
-                        }
+                        if (batchCreated[i] != null)
+                            batchCreated[i].gameObject.SetActive(true);
                     }
                 }
             }
@@ -2430,12 +1636,9 @@ public partial class WatchUIUpdate : MonoBehaviour,
                 }
                 var results = await UniTask.WhenAll(tasks);
                 // まとめて有効化
-                using (global::MetricsHub.Instance.BeginSpan("PlaceEnemies.Activate", BuildMetricsContext()))
+                foreach (var ui in results)
                 {
-                    foreach (var ui in results)
-                    {
-                        if (ui != null) ui.gameObject.SetActive(true);
-                    }
+                    if (ui != null) ui.gameObject.SetActive(true);
                 }
             }
     }
@@ -2473,19 +1676,15 @@ public partial class WatchUIUpdate : MonoBehaviour,
             }
 #endif
             // 敵UIプレハブを生成（enemyBattleLayer直下）
-            using (global::MetricsHub.Instance.BeginSpan("PlaceEnemies.Spawn", BuildMetricsContext()))
-            {
-                var uiInstanceSpawn = Instantiate(enemyUIPrefab, enemyBattleLayer, false);
-                // 設定中は非アクティブにしてCanvas再構築を抑制
-                uiInstanceSpawn.gameObject.SetActive(false);
-                uiInstance = uiInstanceSpawn;
-            }
+            var uiInstanceSpawn = Instantiate(enemyUIPrefab, enemyBattleLayer, false);
+            // 設定中は非アクティブにしてCanvas再構築を抑制
+            uiInstanceSpawn.gameObject.SetActive(false);
+            uiInstance = uiInstanceSpawn;
             if (enableVerboseEnemyLogs)
             {
                 Debug.Log($"[Instantiated] {uiInstance.name} activeSelf={uiInstance.gameObject.activeSelf}, inHierarchy={uiInstance.gameObject.activeInHierarchy}", uiInstance);
             }
             var rectTransform = (RectTransform)uiInstance.transform;
-            using (global::MetricsHub.Instance.BeginSpan("PlaceEnemies.Layout", BuildMetricsContext()))
             {
                 // ズーム前のローカル座標で配置（ズーム後に正しい位置に収まる）
                 rectTransform.pivot = new Vector2(0.5f, 0.5f);
@@ -2578,6 +1777,7 @@ public partial class WatchUIUpdate : MonoBehaviour,
             // ここでは有効化せず、呼び出し側でバッチ一括有効化する
             return UniTask.FromResult(uiInstance);
     }
+#endif
 
     private bool _isZoomAnimating;
     private bool _isAllySlideAnimating;
