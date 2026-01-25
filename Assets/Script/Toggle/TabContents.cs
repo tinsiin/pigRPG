@@ -5,7 +5,12 @@
 /// </summary>
 public enum TabState
 {
-    walk, TalkWindow, NextWait, Skill, SelectTarget, SelectRange
+    walk, TalkWindow, NextWait, Skill, SelectTarget, SelectRange,
+
+    // ノベルパート用
+    FieldDialogue,  // フィールド会話（タップで進むのみ、戻れない）
+    EventDialogue,  // イベント会話（左右ボタンで戻れる）
+    NovelChoice,    // 選択肢表示中（選択肢ボタンのみ）
 }
 public enum SkillUICharaState
 {
@@ -33,6 +38,14 @@ public abstract class TabContents : MonoBehaviour //tabContentsChangerのクラ�
     protected GameObject SelectTargetObject;
     [SerializeField]
     protected GameObject SelectRangeObject;
+
+    // ノベルパート用
+    [SerializeField]
+    protected GameObject FieldDialogueObject;   // タップ領域のみ（進むだけ）
+    [SerializeField]
+    protected GameObject EventDialogueObject;   // 左右ボタン（進む/戻る）
+    [SerializeField]
+    protected GameObject NovelChoiceObject;     // 選択肢ボタン群
 
     /// <summary>
     /// キャラ状態によってuiが変わる

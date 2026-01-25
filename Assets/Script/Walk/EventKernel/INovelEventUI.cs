@@ -105,4 +105,14 @@ public interface INovelEventUI : IEventUI
     /// 全UI要素を非表示にする（リアクション終了時等）。
     /// </summary>
     UniTask HideAllAsync();
+
+    /// <summary>
+    /// 入力プロバイダーを取得する。
+    /// </summary>
+    INovelInputProvider InputProvider { get; }
+
+    /// <summary>
+    /// TabStateを切り替える（USERUI側の表示切替）。
+    /// </summary>
+    void SetTabState(TabState state);
 }

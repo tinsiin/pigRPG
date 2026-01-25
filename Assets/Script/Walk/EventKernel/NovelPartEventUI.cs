@@ -24,12 +24,22 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
     [Header("Reaction")]
     [SerializeField] private ReactionTextHandler reactionTextHandler;
 
+    [Header("Message Dropper")]
+    [SerializeField] private MessageDropper messageDropper;
+
+    [Header("Novel Input UI")]
+    [SerializeField] private FieldDialogueUI fieldDialogueUI;
+    [SerializeField] private EventDialogueUI eventDialogueUI;
+    [SerializeField] private NovelChoicePresenter novelChoicePresenter;
+
     private DisplayMode currentDisplayMode = DisplayMode.Dinoid;
+    private NovelInputHub inputHub;
     private bool backRequested;
     private bool backlogRequested;
     private System.Action<ReactionSegment> currentReactionCallback;
 
     public DisplayMode CurrentDisplayMode => currentDisplayMode;
+    public INovelInputProvider InputProvider => inputHub;
 
     private void Awake()
     {
@@ -38,6 +48,23 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
 
     public void Initialize()
     {
+        // 入力ハブの初期化
+        inputHub = new NovelInputHub();
+
+        // 各入力UIにハブを設定
+        if (fieldDialogueUI != null)
+        {
+            fieldDialogueUI.SetInputHub(inputHub);
+        }
+        if (eventDialogueUI != null)
+        {
+            eventDialogueUI.SetInputHub(inputHub);
+        }
+        if (novelChoicePresenter != null)
+        {
+            novelChoicePresenter.SetInputHub(inputHub);
+        }
+
         // Presenterにデータベースを設定
         if (portraitPresenter != null)
         {
@@ -63,6 +90,20 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         }
     }
 
+    public void SetTabState(TabState state)
+    {
+        if (UIStateHub.UserState != null)
+        {
+            UIStateHub.UserState.Value = state;
+        }
+
+        // 戻るボタンの有効/無効を状態に応じて設定
+        if (eventDialogueUI != null)
+        {
+            eventDialogueUI.SetPrevButtonEnabled(state == TabState.EventDialogue);
+        }
+    }
+
     #region IEventUI Implementation (既存互換)
 
     public void ShowMessage(string message)
@@ -80,10 +121,22 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
 
     public async UniTask<int> ShowChoices(string[] labels, string[] ids)
     {
-        // TODO: 選択肢UIの実装（Phase 5以降）
-        Debug.Log($"[NovelPartEventUI] ShowChoices: {string.Join(", ", labels)}");
-        await UniTask.Yield();
-        return 0;
+        if (novelChoicePresenter == null || inputHub == null)
+        {
+            Debug.LogWarning("[NovelPartEventUI] ShowChoices: NovelChoicePresenter or InputHub is null");
+            return 0;
+        }
+
+        // TabStateをNovelChoiceに切り替え
+        SetTabState(TabState.NovelChoice);
+
+        // 選択肢ボタンを表示
+        novelChoicePresenter.ShowChoices(labels);
+
+        // 選択を待つ
+        var selectedIndex = await inputHub.WaitForChoiceAsync(labels.Length);
+
+        return selectedIndex;
     }
 
     #endregion
@@ -174,13 +227,15 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         if (textBoxPresenter != null)
         {
             textBoxPresenter.SetText(speaker, text);
-            await UniTask.Yield();
         }
-        else
+
+        // ディノイドモード時はMessageDropperにも送信
+        if (currentDisplayMode == DisplayMode.Dinoid && messageDropper != null)
         {
-            Debug.Log($"[NovelPartEventUI] ShowText: [{speaker}] {text}");
-            await UniTask.Yield();
+            messageDropper.CreateMessage(text);
         }
+
+        await UniTask.Yield();
     }
 
     public async UniTask SwitchTextBox(DisplayMode mode)

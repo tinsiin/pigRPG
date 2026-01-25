@@ -105,6 +105,12 @@ public class BattleInitializer
 
         if (_watchUIUpdate != null)
         {
+            // ズーム前にEyeAreaStateをBattleに変更（BattleContentを先にactiveにする）
+            if (UIStateHub.EyeState != null)
+            {
+                UIStateHub.EyeState.Value = EyeAreaState.Battle;
+            }
+
             using (UIBlocker.Instance?.Acquire(BlockScope.AllContents))
             {
                 await _watchUIUpdate.FirstImpressionZoomImproved();

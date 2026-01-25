@@ -1,6 +1,6 @@
 # ノベルパート USERUIとEyeArea連携
 
-**状態:** 設計中
+**状態:** Step 1完了 + 方針B完了（USERUI側・EyeArea側・Runner統合・Presenter配置・UI要素配置・参照アサイン・EyeAreaState切替システム全て完了）
 
 ## 概要
 
@@ -110,24 +110,32 @@ Step 3: 方針C実装（パターンが固まったら）
 
 ## 課題一覧
 
-### 課題1: TabStateの拡張
+### 課題1: TabStateの拡張 ✅ 実装完了
 
-- 現状のTabStateはバトル用のみ
-- ノベルパート用のTabState値が未定義
+~~- 現状のTabStateはバトル用のみ~~
+~~- ノベルパート用のTabState値が未定義~~
+
+**実装済み** (`Assets/Script/Toggle/TabContents.cs`):
 
 ```csharp
-// 追加が必要な値
 public enum TabState
 {
     // 既存
     walk, TalkWindow, NextWait, Skill, SelectTarget, SelectRange,
 
-    // ノベルパート用（追加）
+    // ノベルパート用（実装済み）
     FieldDialogue,  // フィールド会話（タップで進むのみ、戻れない）
     EventDialogue,  // イベント会話（左右ボタンで戻れる）
     NovelChoice,    // 選択肢表示中（選択肢ボタンのみ）
 }
 ```
+
+**追加されたGameObjectフィールド** (`TabContents.cs`):
+- `FieldDialogueObject` - タップ領域のみ
+- `EventDialogueObject` - 左右ボタン
+- `NovelChoiceObject` - 選択肢ボタン群
+
+**MainContent.SwitchContent()** も対応済み。PlayerContentへのアサイン完了。
 
 **重要: USERUIだけがTabStateで切り替わる**
 
@@ -299,7 +307,7 @@ WalkContent/NovelContentのように分けると、このトランジション�
 - トランジションとは無関係に「イベント中かどうか」で決まる
 - だからUSERUIはSetActive切替でOK
 
-### EyeArea側の実装方針（方針B: EyeAreaState）
+### EyeArea側の実装方針（方針B: EyeAreaState）✅ 実装完了
 
 **EyeAreaState enumで大分類を切り替え、内部はトランジション制御:**
 
@@ -427,16 +435,16 @@ public class UIStateManager
 本ドキュメントの設計に基づいて実装が必要なUI要素。
 詳細は [ノベルパート未実装機能一覧.md](./ノベルパート未実装機能一覧.md) を参照。
 
-### USERUI側（TabStateで切り替え）
+### USERUI側（TabStateで切り替え） ✅ 実装完了
 
-| 未実装項目 | TabState | 必要なGameObject |
-|-----------|----------|-----------------|
-| 入力待ち（タップ進行） | FieldDialogue | FieldDialogueObject（タップ領域） |
-| 入力待ち（左右ボタン） | EventDialogue | EventDialogueObject（進む/戻るボタン） |
-| 選択肢UI | NovelChoice | NovelChoiceObject（選択肢ボタン群、精神属性タグ付き） |
-| リアクションボタン | FieldDialogue/EventDialogue | 動的生成（stateに縛られず条件付き表示） |
+| 項目 | TabState | 状態 | 備考 |
+|------|----------|------|------|
+| タップ進行 | FieldDialogue | ✅ 完了 | FieldDialogueUI.cs |
+| 左右ボタン | EventDialogue | ✅ 完了 | EventDialogueUI.cs |
+| 選択肢UI | NovelChoice | ✅ 完了 | NovelChoicePresenter.cs |
+| ~~リアクションボタン~~ | - | → EyeArea側 | 文字タップ方式採用（USERUI側配置不要） |
 
-**実装イメージ:**
+**シーン構造:**
 ```
 USERUI/ToggleButtons/PlayerContent
 ├── WalkObject          ← 既存（歩行時）
@@ -444,25 +452,68 @@ USERUI/ToggleButtons/PlayerContent
 ├── SelectRangeObject   ← 既存（バトル時）
 ├── SelectTargetObject  ← 既存（バトル時）
 ├── ...                 ← 既存
-├── FieldDialogueObject ← 新規（タップ領域）
-├── EventDialogueObject ← 新規（左右ボタン）
-└── NovelChoiceObject   ← 新規（選択肢ボタン群）
+├── FieldDialogueObject ← FieldDialogueUI ✅
+├── EventDialogueObject ← EventDialogueUI ✅
+└── NovelChoiceObject   ← NovelChoicePresenter ✅
+
+AlwaysCanvas/EyeArea
+└── NovelPartEventUI    ← 入力UI統合 ✅
 ```
 
-**リアクションボタンの表示ルール:**
-- FieldDialogue/EventDialogue時に、該当ステップにリアクションがあれば動的生成
-- NovelChoice時は非表示（選択肢に集中させるため）
-- SelectRangeButtons等と同じパターンでUSERUI側に動的生成
+**実装済みスクリプト:**
 
-詳細: [リアクションシステム実装計画.md](./リアクションシステム実装計画.md)
+| スクリプト | 場所 | 役割 |
+|-----------|------|------|
+| INovelInputProvider.cs | Assets/Script/Novel/ | 入力インターフェース |
+| NovelInputHub.cs | Assets/Script/Novel/ | 入力集約ハブ |
+| FieldDialogueUI.cs | Assets/Script/Novel/ | タップ→次へ |
+| EventDialogueUI.cs | Assets/Script/Novel/ | 左右ボタン→戻る/次へ |
+| DynamicButtonPresenterBase.cs | Assets/Script/UI/ | 動的ボタン共通基底 |
+| NovelChoicePresenter.cs | Assets/Script/Novel/ | 選択肢ボタン動的生成 |
 
-### EyeArea側（トランジション制御、EyeAreaStateで切り替え）
+**Runner統合済み:**
+- NovelPartDialogueRunner.WaitForInput() → NovelInputHub連携
+- NovelPartEventUI.ShowChoices() → NovelChoicePresenter連携
+- TabState自動切替（FieldDialogue/EventDialogue/NovelChoice）
 
-| 未実装項目 | 配置場所 | 備考 |
-|-----------|---------|------|
-| 立ち絵（既存Presenter） | NovelContent/PortraitArea | 実装済み、配置のみ |
-| テキストボックス | NovelContent/TextBoxArea | 実装済み、配置のみ |
-| 背景 | NovelContent/BackgroundArea | 実装済み、配置のみ |
+**リアクションについて（決定済み）:**
+- **文字タップ方式採用**: テキストボックス内の色付き文字を直接タップ
+- USERUI側にボタン配置不要（EyeArea側テキストボックス内で完結）
+- 詳細は [リアクションシステム実装計画.md](./リアクションシステム実装計画.md) 参照
+
+### EyeArea側（トランジション制御、EyeAreaStateで切り替え） ✅ UI要素配置完了
+
+| 項目 | 配置場所 | 状態 | 備考 |
+|------|---------|------|------|
+| NovelPartEventUI | AlwaysCanvas/EyeArea | ✅ 完了 | 入力UI・Presenter参照アサイン完了 |
+| NovelContent | AlwaysCanvas/EyeArea | ✅ 完了 | Presenter親オブジェクト |
+| PortraitPresenter | NovelContent/PortraitArea | ✅ 完了 | leftImage/rightImage/Transform全てアサイン |
+| TextBoxPresenter | NovelContent/TextBoxArea | ✅ 完了 | 全8フィールドアサイン完了 |
+| BackgroundPresenter | NovelContent/BackgroundArea | ✅ 完了 | backgroundImage/Transform全てアサイン |
+| NoisePresenter | NovelContent/NoiseArea | ✅ 完了 | noiseContainerアサイン完了 |
+| ReactionTextHandler | TextBoxArea配下のText | ⬜ 未配置 | 文字タップ方式（Phase R5で配置） |
+| PortraitDatabase | Assets/Data/Novel/ | ✅ 作成済み | NovelPartEventUIにアサイン完了 |
+| BackgroundDatabase | Assets/Data/Novel/ | ✅ 作成済み | NovelPartEventUIにアサイン完了 |
+
+**シーン構造:**
+```
+AlwaysCanvas/EyeArea
+├── NovelPartEventUI     ← 入力UI・Presenter統合
+└── NovelContent         ← Presenter親オブジェクト
+    ├── BackgroundArea   ← BackgroundPresenter + BackgroundImage
+    ├── PortraitArea     ← PortraitPresenter + LeftPortrait/RightPortrait
+    ├── TextBoxArea      ← TextBoxPresenter + DinoidTextBox/PortraitTextBox
+    └── NoiseArea        ← NoisePresenter + NoiseContainer
+```
+
+**不要と判断した項目:**
+- backlogPanel - 不要（イベント会話は左右ボタンで戻れる、フィールド会話はMessageDropperでログが流れる）
+- backButton - 不要（同上）
+
+**次のステップ:**
+1. ~~データベースエントリ登録~~ ✅ 完了
+2. 動作テスト（テストシナリオで立ち絵・背景表示確認）
+3. ReactionTextHandlerシーン配置（文字タップ方式）
 
 ---
 
@@ -487,3 +538,14 @@ USERUI/ToggleButtons/PlayerContent
 | 2026-01-24 | 方針B詳細追加: EyeAreaState（Walk/Novel/Battle）で親GameObjectをSetActive切替 |
 | 2026-01-24 | TabStateにNovelChoice追加、リアクションボタンの表示条件明確化 |
 | 2026-01-24 | UIBlocker設計ドキュメントへのリンク追加 |
+| 2026-01-24 | **Step 1実装完了**: TabState拡張（FieldDialogue/EventDialogue/NovelChoice）、MainContent対応、PlayerContentアサイン |
+| 2026-01-24 | USERUI側UI部品の実装計画更新: FieldDialogue/EventDialogueシーン配置済み、リアクションボタン保留 |
+| 2026-01-25 | **USERUI側スクリプト実装完了**: INovelInputProvider, NovelInputHub, FieldDialogueUI, EventDialogueUI, DynamicButtonPresenterBase, NovelChoicePresenter |
+| 2026-01-25 | **Runner統合完了**: INovelEventUI拡張（InputProvider, SetTabState）、NovelPartEventUI更新、NovelPartDialogueRunner入力待ち統合 |
+| 2026-01-25 | NovelPartEventUIシーン配置・入力UIアサイン完了、ドキュメント進捗更新 |
+| 2026-01-25 | **EyeArea側Presenter配置完了**: NovelContent作成、PortraitArea/TextBoxArea/BackgroundArea/NoiseArea配置・Presenterアタッチ |
+| 2026-01-25 | **データベースアサイン完了**: PortraitDatabase・BackgroundDatabase作成・NovelPartEventUIにアサイン |
+| 2026-01-25 | **Step 1完全完了**: USERUI側・EyeArea側・Runner統合・Presenter配置・データベースアサイン全て完了 |
+| 2026-01-25 | **Presenter UI要素配置完了**: 各Presenter内のImage/Text/CanvasGroup配置・参照アサイン完了、次ステップ更新 |
+| 2026-01-25 | **設計決定**: バックログUI不要（イベント会話は左右ボタンで戻れる、フィールド会話はMessageDropperで流れる）、リアクション方式は文字タップ方式採用 |
+| 2026-01-25 | **方針B完了**: EyeAreaState切替システム（EyeAreaState.cs, EyeAreaContents.cs, EyeAreaMainContent.cs, EyeAreaToggle.cs）実装・シーン配置・アタッチ完了 |

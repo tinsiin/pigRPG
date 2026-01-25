@@ -15,6 +15,7 @@ public class MainContent : TabContents
                 SkillObject.SetActive(false);
                 SelectTargetObject.SetActive(false);
                 SelectRangeObject.SetActive(false);
+                SetNovelObjectsActive(false, false, false);
                 break;
             case TabState.TalkWindow:
                 WalkObject.SetActive(false);
@@ -23,6 +24,7 @@ public class MainContent : TabContents
                 SkillObject.SetActive(false);
                 SelectTargetObject.SetActive(false);
                 SelectRangeObject.SetActive(false);
+                SetNovelObjectsActive(false, false, false);
                 break;
             case TabState.NextWait:
                 WalkObject.SetActive(false);
@@ -31,6 +33,7 @@ public class MainContent : TabContents
                 SkillObject.SetActive(false);
                 SelectTargetObject.SetActive(false);
                 SelectRangeObject.SetActive(false);
+                SetNovelObjectsActive(false, false, false);
                 break;
             case TabState.Skill:
                 WalkObject.SetActive(false);
@@ -39,6 +42,7 @@ public class MainContent : TabContents
                 SkillObject.SetActive(true);
                 SelectTargetObject.SetActive(false);
                 SelectRangeObject.SetActive(false);
+                SetNovelObjectsActive(false, false, false);
                 break;
             case TabState.SelectTarget:
                 WalkObject.SetActive(false);
@@ -47,6 +51,7 @@ public class MainContent : TabContents
                 SkillObject.SetActive(false);
                 SelectTargetObject.SetActive(true);
                 SelectRangeObject.SetActive(false);
+                SetNovelObjectsActive(false, false, false);
                 break;
             case TabState.SelectRange:
                 WalkObject.SetActive(false);
@@ -55,8 +60,40 @@ public class MainContent : TabContents
                 SkillObject.SetActive(false);
                 SelectTargetObject.SetActive(false);
                 SelectRangeObject.SetActive(true);
+                SetNovelObjectsActive(false, false, false);
+                break;
+
+            // ノベルパート用
+            case TabState.FieldDialogue:
+                SetBattleObjectsActive(false);
+                SetNovelObjectsActive(true, false, false);
+                break;
+            case TabState.EventDialogue:
+                SetBattleObjectsActive(false);
+                SetNovelObjectsActive(false, true, false);
+                break;
+            case TabState.NovelChoice:
+                SetBattleObjectsActive(false);
+                SetNovelObjectsActive(false, false, true);
                 break;
         }
+    }
+
+    private void SetBattleObjectsActive(bool active)
+    {
+        WalkObject.SetActive(active);
+        TalkObject.SetActive(false);
+        NextObject.SetActive(false);
+        SkillObject.SetActive(false);
+        SelectTargetObject.SetActive(false);
+        SelectRangeObject.SetActive(false);
+    }
+
+    private void SetNovelObjectsActive(bool field, bool eventDialogue, bool choice)
+    {
+        if (FieldDialogueObject != null) FieldDialogueObject.SetActive(field);
+        if (EventDialogueObject != null) EventDialogueObject.SetActive(eventDialogue);
+        if (NovelChoiceObject != null) NovelChoiceObject.SetActive(choice);
     }
 
 }

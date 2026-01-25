@@ -14,6 +14,7 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
     private DialogueBacklog backlog;
     private List<DialogueStateSnapshot> snapshots;
     private bool allowBacktrack;
+    private bool backRequested;
     private ReactionSegment reactionTriggered;
 
     public NovelPartDialogueRunner(INovelEventUI ui)
@@ -24,6 +25,8 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
     private void OnReactionClicked(ReactionSegment segment)
     {
         reactionTriggered = segment;
+        // 入力待ちをキャンセルして即座にリアクション処理へ進む
+        ui.InputProvider?.CancelWait();
     }
 
     public async UniTask<DialogueResult> RunDialogueAsync(DialogueContext context)
@@ -36,6 +39,7 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
         var result = new DialogueResult { Completed = true, SelectedChoiceIndex = -1 };
         previousStep = null;
         reactionTriggered = null;
+        backRequested = false;
 
         // バックログと戻る機能の初期化
         allowBacktrack = context.AllowBacktrack;
@@ -73,7 +77,9 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
                 ui.SetBackButtonEnabled(false);
             }
 
-            // 状態スナップショット保存
+            var stepResult = await ExecuteStep(step, context, currentIndex);
+
+            // 状態スナップショット保存（ExecuteStep後、Effect実行後の状態を保存）
             if (snapshots != null && snapshots.Count <= currentIndex)
             {
                 var snapshot = new DialogueStateSnapshot(currentIndex, step, ui.CurrentDisplayMode);
@@ -93,8 +99,6 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
                 snapshots.Add(snapshot);
             }
 
-            var stepResult = await ExecuteStep(step, context, currentIndex);
-
             // リアクションがクリックされた場合 → リアクション終了
             if (reactionTriggered != null)
             {
@@ -104,14 +108,16 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
                 ui.ClearReactions();
                 ui.SetBackButtonEnabled(false);
                 await ui.HideAllAsync();
+                ui.SetTabState(TabState.walk);  // 歩行状態に戻す
 
                 // リアクション情報を含めて終了を返す
                 return DialogueResult.ReactionEndedResult(reactionTriggered);
             }
 
-            // 戻るリクエストをチェック
-            if (allowBacktrack && ui.ConsumeBackRequest() && currentIndex > 0)
+            // 戻るリクエストをチェック（NovelInputHubからの通知 or UIボタンからの通知）
+            if (allowBacktrack && (backRequested || ui.ConsumeBackRequest()) && currentIndex > 0)
             {
+                backRequested = false;  // リセット
                 currentIndex--;
                 var prevSnapshot = snapshots[currentIndex];
                 ui.RestoreState(prevSnapshot);
@@ -119,6 +125,7 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
                 previousStep = currentIndex > 0 ? steps[currentIndex - 1] : null;
                 continue;
             }
+            backRequested = false;  // 使われなかった場合もリセット
 
             // バックログリクエストをチェック
             if (backlog != null && ui.ConsumeBacklogRequest())
@@ -160,6 +167,7 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
 
         ui.SetBackButtonEnabled(false);
         ui.ClearReactions();
+        ui.SetTabState(TabState.walk);  // 歩行状態に戻す
         return result;
     }
 
@@ -281,9 +289,37 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
 
     private async UniTask WaitForInput(DialogueContext context)
     {
-        // TODO: 入力待ちの実装（クリック/タップ）
-        // 今は簡易的に1フレーム待機
-        await UniTask.Yield();
+        var inputProvider = ui.InputProvider;
+        if (inputProvider == null)
+        {
+            // フォールバック: 1フレーム待機
+            await UniTask.Yield();
+            return;
+        }
+
+        // 戻る機能の有無でTabStateを切り替え
+        try
+        {
+            if (allowBacktrack)
+            {
+                ui.SetTabState(TabState.EventDialogue);
+                var isNext = await inputProvider.WaitForNextOrBackAsync();
+                if (!isNext)
+                {
+                    // 戻るリクエストをセット（既存のConsumeBackRequestで処理される）
+                    backRequested = true;
+                }
+            }
+            else
+            {
+                ui.SetTabState(TabState.FieldDialogue);
+                await inputProvider.WaitForNextAsync();
+            }
+        }
+        catch (System.OperationCanceledException)
+        {
+            // リアクションクリック等でキャンセルされた場合は正常終了
+        }
     }
 
     private async UniTask<int> ShowChoices(DialogueChoice[] choices)

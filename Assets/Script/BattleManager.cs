@@ -1371,6 +1371,11 @@ public class BattleManager : IBattleContext
         uiBridge.HardStopAndClearLogs();
         await uiBridge.RestoreZoomViaOrchestrator(animated: true, duration: 0.4f);//ズームの処理
 
+        // ズームアウト完了後にEyeAreaStateをWalkに戻す
+        if (UIStateHub.EyeState != null)
+        {
+            UIStateHub.EyeState.Value = EyeAreaState.Walk;
+        }
 
         //schizoLog.AddLog("戦闘を終わらせた",true);
         //schizoLog.DisplayAllAsync().Forget();//ACTPOPが呼ばれないのでここで呼ぶ
