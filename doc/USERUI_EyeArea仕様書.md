@@ -10,7 +10,61 @@
 
 ---
 
+## 設計原則
+
+### 1. 全てのイベントはUSERUI・EyeAreaを通じて表現する
+
+ゲーム中の全てのイベント（歩行、バトル、ノベルパート、将来の推理・取引パート等）は、
+**必ずUSERUI（操作UI）とEyeArea（視覚要素）を使用して表現する**。
+
+- 新しいイベント種別を追加する際も、この2つの領域を通じてUIを構築する
+- 独自のCanvas/UIシステムを作らず、既存の構造に統合する
+
+### 2. Stateは大枠的な切替のみ、具体的な操作は各イベントロジック内で行う
+
+**TabState / EyeAreaState の役割:**
+- トランジションや複雑なUI由来の変化を必要としない、大枠的な状態の切替
+- 例: Walk → Battle、Walk → Novel といったモード変更
+
+**各イベントロジック内で行うこと:**
+- ズーム演出（バトル開始時、ノベル開始時など）
+- 立ち絵・背景のトランジション
+- モード内での細かい表示切替（ディノイド→立ち絵など）
+- その他の演出・アニメーション
+
+```csharp
+// 例: BattleInitializer での実装パターン
+
+// 1. 大枠的なstate切替（EyeAreaState）
+UIStateHub.EyeState.Value = EyeAreaState.Battle;
+
+// 2. 具体的な操作は各ロジック内で行う
+using (UIBlocker.Instance?.Acquire(BlockScope.AllContents))
+{
+    await _watchUIUpdate.FirstImpressionZoomImproved(); // ズーム演出
+}
+```
+
+**この分離の意図:**
+- Stateはあくまで「どのContentをactiveにするか」だけを決める
+- ズームやトランジションのタイミング・演出は、BattleManager/NovelPartRunner等の各システムが制御する
+- これにより、同じstate内でも多様な演出が可能になる
+
+---
+
 ## USERUI
+
+### 3タブ構造
+
+USERUIは**3つのタブ**で構成される。全ての操作UIはこの3タブのいずれかに属する。
+
+| タブ | 内容 | 切替方式 |
+|------|------|---------|
+| **PlayerContent** | ゲームプレイ用UI（歩行、バトル、ノベル等） | TabStateで内部切替 |
+| **ConfigContent** | 設定UI | タブボタンで切替 |
+| **CharaConfigContent** | キャラクター設定UI | タブボタンで切替 |
+
+**重要:** 新しいUI要素を追加する際は、必ずこの3タブのいずれかに配置する。
 
 ### 構造
 
@@ -26,8 +80,46 @@ DynamicCanvas
         │   ├── EventDialogueObject
         │   └── NovelChoiceObject
         ├── ConfigContent
-        └── CharaConfigContent
+        ├── CharaConfigContent
+        └── UIBlocker ← タブ単位のブロック制御
 ```
+
+### UIBlocker: タブ単位の操作ブロック
+
+USERUIには**UIBlocker**による操作ブロック機構がある。
+特定のタブだけをブロックしたり、全タブをブロックしたりできる。
+
+```csharp
+public enum BlockScope
+{
+    MainContent,        // PlayerContentのみブロック
+    ConfigContent,      // Configタブのみブロック
+    CharaConfigContent, // CharaConfigタブのみブロック
+    AllContents,        // 3タブ全てブロック
+}
+```
+
+**使用例:**
+
+```csharp
+// 短時間ブロック（アニメーション中）
+using (UIBlocker.Instance.Acquire(BlockScope.AllContents))
+{
+    await PlayTransitionAsync();
+}
+
+// 長時間ブロック（ノベルパート全体など）
+UIBlocker.Instance.BeginBlock("NovelPart", BlockScope.AllContents);
+try { await RunNovelPartAsync(); }
+finally { UIBlocker.Instance.EndBlock("NovelPart"); }
+```
+
+**特徴:**
+- 参照カウント方式でネストしたブロック要求を安全に管理
+- タブ切り替え自体は常に可能（ブロックするのは各タブ内のコンテンツ操作のみ）
+- R3 ReactivePropertyで状態変更を購読可能
+
+**詳細:** [UIBlocker設計.md](./終了済み/UIBlocker設計.md)
 
 ### 状態管理: TabState
 
@@ -230,6 +322,8 @@ currentState = EyeAreaState.Walk | EyeAreaState.Novel;
 
 - [ズーム仕様書.md](./ズーム仕様書.md) - ズーム階層の詳細
 - [ノベルパート_USERUIとEyeArea連携.md](./ノベルパート/ノベルパート_USERUIとEyeArea連携.md) - ノベルパート実装時の設計
+- [UIBlocker設計.md](./終了済み/UIBlocker設計.md) - USERUI操作ブロック機構の詳細
+- [ゼロトタイプ歩行システム設計書.md](./歩行システム設計/ゼロトタイプ歩行システム設計書.md) - 歩行システムとイベント実行基盤
 
 ---
 
@@ -240,3 +334,5 @@ currentState = EyeAreaState.Walk | EyeAreaState.Novel;
 | 2026-01-25 | 初版作成。USERUI/EyeAreaの構造と課題を整理 |
 | 2026-01-25 | 決定: 4階層全てにContent配置、レイヤー方式（Walk常時+Novel/Battle排他） |
 | 2026-01-25 | 決定: 階層軸（案A）採用。レビュー完了 |
+| 2026-01-27 | 設計原則追加: 全イベントでUSERUI/EyeArea使用、Stateは大枠のみ |
+| 2026-01-27 | USERUI: 3タブ構造の説明追加、UIBlockerセクション追加 |
