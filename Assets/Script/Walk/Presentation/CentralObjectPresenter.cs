@@ -30,6 +30,19 @@ public sealed class CentralObjectPresenter
         sfxPlayer = player;
     }
 
+    /// <summary>
+    /// 現在表示中の中央オブジェクトのRectTransformを取得する。
+    /// ズームシステムで使用。
+    /// </summary>
+    public RectTransform GetCurrentRectTransform()
+    {
+        if (viewObject == null || !viewObject.activeSelf)
+        {
+            return null;
+        }
+        return rectTransform;
+    }
+
     public void Show(CentralObjectVisual visual, bool forceShow)
     {
         if (!forceShow)

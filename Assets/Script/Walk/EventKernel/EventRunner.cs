@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -7,9 +9,59 @@ public interface IEventUI
     UniTask<int> ShowChoices(string[] labels, string[] ids);
 }
 
-public sealed class EventRunner
+/// <summary>
+/// EventDefinitionSOを実行するランナー。
+/// IEventRunnerインターフェースを実装。
+/// </summary>
+public sealed class EventRunner : IEventRunner
 {
-    public async UniTask Run(EventDefinitionSO definition, GameContext context, IEventUI ui)
+    /// <summary>
+    /// EventDefinitionSOを実行し、収集したEffectを返す。
+    /// 新しいIEventStep対応API。
+    /// </summary>
+    public async UniTask<EffectSO[]> RunAsync(EventDefinitionSO definition, EventContext context)
+    {
+        if (definition == null)
+        {
+            Debug.LogWarning("EventRunner.RunAsync: definition is null.");
+            return Array.Empty<EffectSO>();
+        }
+
+        var steps = definition.Steps;
+        if (steps == null || steps.Length == 0)
+        {
+            // TerminalEffectsのみ返す
+            return definition.TerminalEffects ?? Array.Empty<EffectSO>();
+        }
+
+        var collectedEffects = new List<EffectSO>();
+
+        for (var i = 0; i < steps.Length; i++)
+        {
+            var step = steps[i];
+            if (step == null) continue;
+
+            var effects = await step.ExecuteAsync(context);
+            if (effects != null && effects.Length > 0)
+            {
+                collectedEffects.AddRange(effects);
+            }
+        }
+
+        // TerminalEffectsを追加
+        if (definition.TerminalEffects != null && definition.TerminalEffects.Length > 0)
+        {
+            collectedEffects.AddRange(definition.TerminalEffects);
+        }
+
+        return collectedEffects.ToArray();
+    }
+
+    /// <summary>
+    /// EventDefinitionSOを実行し、収集したEffectを即座に適用する。
+    /// 旧API互換（GameContext + IEventUI）。
+    /// </summary>
+    public async UniTask Run(EventDefinitionSO definition, GameContext gameContext, IEventUI ui)
     {
         if (definition == null)
         {
@@ -17,48 +69,22 @@ public sealed class EventRunner
             return;
         }
 
-        var steps = definition.Steps;
-        if (steps == null || steps.Length == 0) return;
-
-        for (var i = 0; i < steps.Length; i++)
+        // EventContextを構築
+        var context = new EventContext
         {
-            var step = steps[i];
-            if (step == null) continue;
+            GameContext = gameContext,
+            EventUI = ui,
+            NovelUI = ui as INovelEventUI,
+            EventRunner = this,
+            DialogueRunner = gameContext?.DialogueRunner,
+            BattleRunner = gameContext?.BattleRunner
+        };
 
-            if (!string.IsNullOrEmpty(step.Message))
-            {
-                ui?.ShowMessage(step.Message);
-            }
+        // 実行してEffectを収集
+        var effects = await RunAsync(definition, context);
 
-            var choices = step.Choices;
-            if (choices != null && choices.Length > 0)
-            {
-                if (ui == null)
-                {
-                    Debug.LogWarning("EventRunner.Run: UI is null, cannot show choices.");
-                    return;
-                }
-
-                var labels = new string[choices.Length];
-                var ids = new string[choices.Length];
-                for (var c = 0; c < choices.Length; c++)
-                {
-                    var choice = choices[c];
-                    labels[c] = choice != null && !string.IsNullOrEmpty(choice.Label) ? choice.Label : $"Choice {c}";
-                    ids[c] = c.ToString();
-                }
-
-                var selected = await ui.ShowChoices(labels, ids);
-                if (selected >= 0 && selected < choices.Length)
-                {
-                    await ApplyEffects(choices[selected]?.Effects, context);
-                }
-
-                continue;
-            }
-
-            await ApplyEffects(step.Effects, context);
-        }
+        // Effectを適用
+        await ApplyEffects(effects, gameContext);
     }
 
     private static async UniTask ApplyEffects(EffectSO[] effects, GameContext context)

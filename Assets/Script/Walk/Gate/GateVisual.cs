@@ -22,6 +22,9 @@ public struct GateVisual
     [SerializeField] private string sfxOnPass;
     [SerializeField] private string sfxOnFail;
 
+    [Header("Zoom Focus")]
+    [SerializeField] private FocusArea focusArea;
+
     public Sprite Sprite => sprite;
     public Vector2 Size => size;
     public Vector2 Offset => offset;
@@ -40,6 +43,11 @@ public struct GateVisual
     public string SfxOnAppear => sfxOnAppear;
     public string SfxOnPass => sfxOnPass;
     public string SfxOnFail => sfxOnFail;
+
+    /// <summary>
+    /// ズーム時のフォーカス領域。
+    /// </summary>
+    public FocusArea FocusArea => focusArea;
 
     public GateVisual(
         Sprite sprite,
@@ -64,6 +72,7 @@ public struct GateVisual
         this.sfxOnAppear = null;
         this.sfxOnPass = null;
         this.sfxOnFail = null;
+        this.focusArea = FocusArea.Default;
     }
 }
 

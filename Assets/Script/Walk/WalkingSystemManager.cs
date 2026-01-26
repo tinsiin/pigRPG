@@ -261,6 +261,9 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
                 {
                     gameContext.EventUI = novelEventUI;
                 }
+
+                // EventHostにも設定（CreateEventContextでNovelUIを取得できるようにする）
+                eventHost?.SetUI(novelEventUI);
             }
         }
         if (gameContext != null)

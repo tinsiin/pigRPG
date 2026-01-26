@@ -115,4 +115,28 @@ public interface INovelEventUI : IEventUI
     /// TabStateを切り替える（USERUI側の表示切替）。
     /// </summary>
     void SetTabState(TabState state);
+
+    /// <summary>
+    /// 中央オブジェクトにズームインする。
+    /// 中央オブジェクトがターゲット領域にフィットするようズーム。
+    /// </summary>
+    /// <param name="centralObjectRT">中央オブジェクトのRectTransform</param>
+    /// <param name="focusArea">フォーカス領域（どの部分をフィットさせるか）</param>
+    UniTask ZoomToCentralAsync(UnityEngine.RectTransform centralObjectRT, FocusArea focusArea);
+
+    /// <summary>
+    /// ズームを終了して原状復帰する。
+    /// </summary>
+    UniTask ExitZoomAsync();
+
+    /// <summary>
+    /// ズームを即座に原状復帰する（フェイルセーフ用）。
+    /// </summary>
+    void RestoreZoomImmediate();
+
+    /// <summary>
+    /// 主人公の精神属性を表示する（ディノイドモードのアイコン下）。
+    /// nullで非表示。
+    /// </summary>
+    void SetProtagonistSpiritualProperty(SpiritualProperty? property);
 }

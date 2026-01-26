@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// IDialogueRunnerの実装。
-/// FieldDialogueSOを実行し、各ステップを順次処理する。
+/// DialogueSOを実行し、各ステップを順次処理する。
 /// 戻る機能とバックログをサポート。
 /// </summary>
 public sealed class NovelPartDialogueRunner : IDialogueRunner
@@ -49,10 +49,20 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
         ui.SetBackButtonEnabled(false);
         ui.ClearReactions();
 
+        // 主人公の精神属性を表示（ディノイドモード用）
+        var protagonistImpression = context.GetProtagonistImpression();
+        ui.SetProtagonistSpiritualProperty(protagonistImpression);
+
         // 初期モード設定
         if (ui.CurrentDisplayMode != context.InitialMode)
         {
             await ui.SwitchTextBox(context.InitialMode);
+        }
+
+        // 中央オブジェクトにズームイン（指定されている場合）
+        if (context.CentralObjectRT != null)
+        {
+            await ui.ZoomToCentralAsync(context.CentralObjectRT, context.ZoomFocusArea);
         }
 
         var steps = context.GetSteps();
@@ -107,7 +117,15 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
                 // ノベルパートを閉じる（終了）
                 ui.ClearReactions();
                 ui.SetBackButtonEnabled(false);
+                ui.SetProtagonistSpiritualProperty(null);  // 精神属性表示をクリア
                 await ui.HideAllAsync();
+
+                // ズームアウト
+                if (context.CentralObjectRT != null)
+                {
+                    await ui.ExitZoomAsync();
+                }
+
                 ui.SetTabState(TabState.walk);  // 歩行状態に戻す
 
                 // リアクション情報を含めて終了を返す
@@ -167,6 +185,14 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
 
         ui.SetBackButtonEnabled(false);
         ui.ClearReactions();
+        ui.SetProtagonistSpiritualProperty(null);  // 精神属性表示をクリア
+
+        // ズームアウト
+        if (context.CentralObjectRT != null)
+        {
+            await ui.ExitZoomAsync();
+        }
+
         ui.SetTabState(TabState.walk);  // 歩行状態に戻す
         return result;
     }

@@ -15,12 +15,17 @@ public sealed class TextBoxPresenter : MonoBehaviour
     [SerializeField] private CanvasGroup dinoidCanvasGroup;
     [SerializeField] private Image dinoidIcon;
     [SerializeField] private TMP_Text dinoidText;
+    [SerializeField] private TMP_Text dinoidSpiritText;  // アイコン下の精神属性テキスト
 
     [Header("Portraitモード")]
     [SerializeField] private GameObject portraitTextBox;
     [SerializeField] private CanvasGroup portraitCanvasGroup;
     [SerializeField] private TMP_Text portraitSpeakerName;
     [SerializeField] private TMP_Text portraitText;
+
+    [Header("リアクション")]
+    [SerializeField] private ReactionTextHandler dinoidReactionHandler;
+    [SerializeField] private ReactionTextHandler portraitReactionHandler;
 
     [Header("設定")]
     [SerializeField] private float switchDuration = 0.3f;
@@ -133,12 +138,61 @@ public sealed class TextBoxPresenter : MonoBehaviour
         return currentMode == DisplayMode.Dinoid ? dinoidText : portraitText;
     }
 
+    /// <summary>
+    /// 現在のモードで使用中のReactionTextHandlerを取得する。
+    /// </summary>
+    public ReactionTextHandler GetCurrentReactionHandler()
+    {
+        return currentMode == DisplayMode.Dinoid ? dinoidReactionHandler : portraitReactionHandler;
+    }
+
+    /// <summary>
+    /// 全てのReactionTextHandlerをクリアする。
+    /// </summary>
+    public void ClearAllReactionHandlers()
+    {
+        dinoidReactionHandler?.Clear();
+        portraitReactionHandler?.Clear();
+    }
+
+    /// <summary>
+    /// 精神属性テキストを設定する（ディノイドモードのアイコン下に表示）。
+    /// </summary>
+    public void SetSpiritualProperty(SpiritualProperty? property)
+    {
+        if (dinoidSpiritText == null) return;
+
+        if (property == null)
+        {
+            dinoidSpiritText.text = string.Empty;
+            dinoidSpiritText.gameObject.SetActive(false);
+        }
+        else
+        {
+            dinoidSpiritText.text = property.Value.ToString();
+            dinoidSpiritText.gameObject.SetActive(true);
+        }
+    }
+
+    /// <summary>
+    /// 精神属性テキストをクリアする。
+    /// </summary>
+    public void ClearSpiritualProperty()
+    {
+        if (dinoidSpiritText != null)
+        {
+            dinoidSpiritText.text = string.Empty;
+            dinoidSpiritText.gameObject.SetActive(false);
+        }
+    }
+
     public void Clear()
     {
         if (dinoidText != null) dinoidText.text = string.Empty;
         if (portraitText != null) portraitText.text = string.Empty;
         if (portraitSpeakerName != null) portraitSpeakerName.text = string.Empty;
         if (dinoidIcon != null) dinoidIcon.sprite = null;
+        ClearSpiritualProperty();
     }
 
     public void Hide()

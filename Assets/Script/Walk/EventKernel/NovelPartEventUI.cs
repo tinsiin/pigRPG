@@ -21,8 +21,7 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
     [SerializeField] private GameObject backlogPanel;
     [SerializeField] private GameObject backButton;
 
-    [Header("Reaction")]
-    [SerializeField] private ReactionTextHandler reactionTextHandler;
+    // ReactionTextHandlerはTextBoxPresenter経由で取得するため、フィールド不要
 
     [Header("Message Dropper")]
     [SerializeField] private MessageDropper messageDropper;
@@ -32,11 +31,15 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
     [SerializeField] private EventDialogueUI eventDialogueUI;
     [SerializeField] private NovelChoicePresenter novelChoicePresenter;
 
+    [Header("Zoom")]
+    [SerializeField] private NovelZoomConfig zoomConfig;
+
     private DisplayMode currentDisplayMode = DisplayMode.Dinoid;
     private NovelInputHub inputHub;
     private bool backRequested;
     private bool backlogRequested;
     private System.Action<ReactionSegment> currentReactionCallback;
+    private NovelZoomController zoomController;
 
     public DisplayMode CurrentDisplayMode => currentDisplayMode;
     public INovelInputProvider InputProvider => inputHub;
@@ -87,6 +90,12 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         {
             textBoxPresenter.SetPortraitDatabase(portraitDatabase);
             textBoxPresenter.Initialize(currentDisplayMode);
+        }
+
+        // ズームコントローラー初期化
+        if (zoomConfig != null)
+        {
+            zoomController = new NovelZoomController(zoomConfig);
         }
     }
 
@@ -389,16 +398,15 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         {
             textBoxPresenter.SetRichText(richText);
 
-            // ReactionTextHandlerに現在のTMP_Textを設定
-            if (reactionTextHandler != null)
+            // 現在のモードに応じたReactionTextHandlerを取得
+            var reactionHandler = textBoxPresenter.GetCurrentReactionHandler();
+            if (reactionHandler != null)
             {
-                var textComponent = textBoxPresenter.GetCurrentTextComponent();
-                reactionTextHandler.SetTextComponent(textComponent);
-                reactionTextHandler.Setup(reactions, OnReactionClicked);
+                reactionHandler.Setup(reactions, OnReactionClicked);
             }
             else
             {
-                Debug.LogWarning("[NovelPartEventUI] ReactionTextHandler is not assigned");
+                Debug.LogWarning("[NovelPartEventUI] ReactionTextHandler is not assigned in TextBoxPresenter");
             }
         }
         else
@@ -410,7 +418,8 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
     public void ClearReactions()
     {
         currentReactionCallback = null;
-        reactionTextHandler?.Clear();
+        // 両方のReactionTextHandlerをクリア
+        textBoxPresenter?.ClearAllReactionHandlers();
     }
 
     private void OnReactionClicked(ReactionSegment segment)
@@ -436,6 +445,44 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         if (backgroundPresenter != null)
         {
             await backgroundPresenter.SlideIn(backgroundId);
+        }
+    }
+
+    #endregion
+
+    #region Zoom System
+
+    public async UniTask ZoomToCentralAsync(RectTransform centralObjectRT, FocusArea focusArea)
+    {
+        if (zoomController == null)
+        {
+            Debug.LogWarning("[NovelPartEventUI] ZoomController is not initialized");
+            return;
+        }
+
+        await zoomController.EnterZoom(centralObjectRT, focusArea);
+    }
+
+    public async UniTask ExitZoomAsync()
+    {
+        if (zoomController == null) return;
+        await zoomController.ExitZoom();
+    }
+
+    public void RestoreZoomImmediate()
+    {
+        zoomController?.RestoreImmediate();
+    }
+
+    #endregion
+
+    #region Spiritual Property Display
+
+    public void SetProtagonistSpiritualProperty(SpiritualProperty? property)
+    {
+        if (textBoxPresenter != null)
+        {
+            textBoxPresenter.SetSpiritualProperty(property);
         }
     }
 

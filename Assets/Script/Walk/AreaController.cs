@@ -452,32 +452,10 @@ public sealed class AreaController
 
             if (!shouldTrigger) continue;
 
-            // ダイアログ実行
-            if (trigger.Dialogue != null && context.DialogueRunner != null)
+            // イベント実行（EventDefinitionSO経由）
+            if (trigger.EventDefinition != null)
             {
-                var dialogueContext = new DialogueContext(trigger.Dialogue, context);
-                var dialogueResult = await context.DialogueRunner.RunDialogueAsync(dialogueContext);
-
-                // リアクション終了の場合、リアクションタイプに応じた処理
-                if (dialogueResult.IsReactionEnded)
-                {
-                    var reaction = dialogueResult.TriggeredReaction;
-                    if (reaction.Type == ReactionType.Battle && reaction.Encounter != null)
-                    {
-                        var battleResult = await RunEncounter(reaction.Encounter);
-                        if (battleResult.Encountered)
-                        {
-                            // バトル結果に応じた処理（勝敗イベント等）
-                            await TriggerEncounterOutcome(reaction.Encounter, battleResult.Outcome);
-
-                            // 敗北/逃走時は歩数を巻き戻す
-                            if (battleResult.Outcome == BattleOutcome.Defeat || battleResult.Outcome == BattleOutcome.Escape)
-                            {
-                                context.Counters.Rewind(RewindStepsOnFail);
-                            }
-                        }
-                    }
-                }
+                await TriggerEvent(trigger.EventDefinition);
             }
 
             // 発火を記録
@@ -723,7 +701,7 @@ public sealed class AreaController
                 await TriggerEvent(rightEntry?.SideObject?.EventDefinition);
                 break;
             case ApproachChoice.Center:
-                await TriggerEvent(centralEvent);
+                await RunCentralEvent(centralEvent);
                 break;
             case ApproachChoice.Skip:
                 // Neither selected, clear pending
@@ -809,6 +787,44 @@ public sealed class AreaController
         }
 
         return eventHost.Trigger(definition);
+    }
+
+    /// <summary>
+    /// CentralEventを実行。
+    /// ズーム責務はNovelDialogueStep側に移行したため、ここではズームしない。
+    /// CentralObjectRTをEventContextに渡すことで、NovelDialogueStepがズーム可能になる。
+    /// </summary>
+    private async UniTask RunCentralEvent(EventDefinitionSO centralEvent)
+    {
+        if (centralEvent == null)
+        {
+            return;
+        }
+
+        if (eventHost == null)
+        {
+            Debug.LogWarning("AreaController.RunCentralEvent: eventHost is null.");
+            return;
+        }
+
+        // CentralObjectRTを含むEventContextを生成
+        var centralRT = centralPresenter?.GetCurrentRectTransform();
+        var eventContext = eventHost.CreateEventContext(centralRT);
+
+        // TriggerWithContextで実行（ズーム責務はNovelDialogueStep側）
+        var effects = await eventHost.TriggerWithContext(centralEvent, eventContext);
+
+        // Effectを適用
+        if (effects != null)
+        {
+            foreach (var effect in effects)
+            {
+                if (effect != null)
+                {
+                    await effect.Apply(context);
+                }
+            }
+        }
     }
 
     private void TransitionTo(string nodeId, string exitId)

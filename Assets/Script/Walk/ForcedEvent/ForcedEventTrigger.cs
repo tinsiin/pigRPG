@@ -23,7 +23,7 @@ public sealed class ForcedEventTrigger
     [SerializeField] private int maxTriggerCount;
 
     [Header("内容")]
-    [SerializeField] private FieldDialogueSO dialogue;
+    [SerializeField] private EventDefinitionSO eventDefinition;
 
     public string TriggerId => triggerId;
     public ForcedEventType Type => type;
@@ -33,7 +33,7 @@ public sealed class ForcedEventTrigger
     public bool ConsumeOnTrigger => consumeOnTrigger;
     public int CooldownSteps => cooldownSteps;
     public int MaxTriggerCount => maxTriggerCount;
-    public FieldDialogueSO Dialogue => dialogue;
+    public EventDefinitionSO EventDefinition => eventDefinition;
 
     public bool HasConditions => conditions != null && conditions.Length > 0;
 }
