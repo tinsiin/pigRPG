@@ -9,9 +9,9 @@ using UnityEngine;
 public class PlayersBootstrapper : MonoBehaviour
 {
     [Header("初期キャラ")]
-    public StairStates Init_geino;
-    public BassJackStates Init_noramlia;
-    public SateliteProcessStates Init_sites;
+    public AllyClass Init_geino;
+    public AllyClass Init_noramlia;
+    public AllyClass Init_sites;
 
     [Header("思い入れスキル弱体化用スキルパッシブ")]
     public BaseSkillPassive EmotionalAttachmentSkillWeakeningPassive;
@@ -24,9 +24,9 @@ public class PlayersBootstrapper : MonoBehaviour
 
     public PlayersContext Context => context;
 
-    public StairStates geino => runtime?.Roster?.GetAllyById(AllyId.Geino) as StairStates;
-    public BassJackStates noramlia => runtime?.Roster?.GetAllyById(AllyId.Noramlia) as BassJackStates;
-    public SateliteProcessStates sites => runtime?.Roster?.GetAllyById(AllyId.Sites) as SateliteProcessStates;
+    public AllyClass geino => runtime?.Roster?.GetAlly(CharacterId.Geino);
+    public AllyClass noramlia => runtime?.Roster?.GetAlly(CharacterId.Noramlia);
+    public AllyClass sites => runtime?.Roster?.GetAlly(CharacterId.Sites);
 
     public int AllyCount => runtime?.Roster?.AllyCount ?? 0;
 

@@ -13,10 +13,8 @@ public sealed class RestPartyEffect : EffectSO
         var roster = context?.Players?.Roster;
         if (roster == null) return UniTask.CompletedTask;
 
-        var count = roster.AllyCount;
-        for (var i = 0; i < count; i++)
+        foreach (var ally in roster.AllAllies)
         {
-            var ally = roster.GetAllyById((AllyId)i);
             if (ally == null) continue;
 
             if (restoreHp)

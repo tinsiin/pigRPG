@@ -1,18 +1,32 @@
 using System;
 using System.Collections.Generic;
 
-// Save data for PlayersRuntime (battle-temporary data excluded).
+/// <summary>
+/// PlayersRuntime のセーブデータ（バトル一時データ除外）
+/// </summary>
 [Serializable]
 public sealed class PlayersSaveData
 {
+    /// <summary>全キャラクターのセーブデータ</summary>
     public List<PlayersAllySaveData> Allies = new List<PlayersAllySaveData>();
+
+    /// <summary>現在のパーティー編成（CharacterId の文字列リスト）</summary>
+    public List<string> ActivePartyIds = new List<string>();
+
+    /// <summary>歩行進捗データ</summary>
     public WalkProgressData WalkProgress;
 }
 
 [Serializable]
 public sealed class PlayersAllySaveData
 {
+    /// <summary>キャラクターID（文字列）</summary>
+    public string CharacterId;
+
+    /// <summary>互換性用: 旧 AllyId（移行期間中のみ使用）</summary>
+    [Obsolete("CharacterId を使用してください")]
     public AllyId AllyId;
+
     public float HP;
     public float MentalHP;
     public int P;

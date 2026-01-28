@@ -31,6 +31,8 @@ public sealed class PlayersUIService
         for (int i = 0; i < allies.Length; i++)
         {
             var actor = allies[i];
+            if (actor == null) continue;
+
             var uiSet = GetUISet((AllyId)i);
 
             if (uiSet?.SkillUILists != null)
@@ -71,9 +73,12 @@ public sealed class PlayersUIService
         var allies = roster.Allies;
         for (int i = 0; i < allies.Length; i++)
         {
+            var actor = allies[i];
+            if (actor == null) continue;
+
             var uiSet = GetUISet((AllyId)i);
             if (uiSet?.SkillUILists == null) continue;
-            var activeSkillIds = new HashSet<int>(allies[i].SkillList.Cast<AllySkill>().Select(skill => skill.ID));
+            var activeSkillIds = new HashSet<int>(actor.SkillList.Cast<AllySkill>().Select(skill => skill.ID));
             foreach (var hold in uiSet.SkillUILists.skillButtons)
             {
                 hold.button.interactable = activeSkillIds.Contains(hold.skillID);

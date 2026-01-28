@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 public sealed class PlayersSaveService
 {
-    public PlayersSaveData Build(PlayersRoster roster)
+    public PlayersSaveData Build(PlayersRoster roster, IPartyComposition composition = null)
     {
         var data = new PlayersSaveData();
 
@@ -12,17 +12,25 @@ public sealed class PlayersSaveService
             data.WalkProgress = WalkProgressData.FromContext(gameContext);
         }
 
-        var allies = roster?.Allies;
-        if (allies == null) return data;
-
-        for (int i = 0; i < allies.Length; i++)
+        // パーティー編成を保存
+        if (composition != null)
         {
-            var ally = allies[i];
+            foreach (var id in composition.ActiveMemberIds)
+            {
+                data.ActivePartyIds.Add(id.Value);
+            }
+        }
+
+        // 全キャラクターを保存
+        if (roster == null) return data;
+
+        foreach (var ally in roster.AllAllies)
+        {
             if (ally == null) continue;
 
             var allyData = new PlayersAllySaveData
             {
-                AllyId = (AllyId)i,
+                CharacterId = ally.CharacterId.Value,
                 HP = ally.HP,
                 MentalHP = ally.MentalHP,
                 P = ally.P,
@@ -108,27 +116,24 @@ public sealed class PlayersSaveService
                 }
             }
 
-            if (ally is AllyClass allyClass)
-            {
-                allyData.EmotionalAttachmentSkillID = allyClass.EmotionalAttachmentSkillID;
-                allyData.EmotionalAttachmentSkillQuantity = allyClass.EmotionalAttachmentSkillQuantity;
-                allyData.ValidSkillIds = allyClass.ValidSkillIDList != null
-                    ? new List<int>(allyClass.ValidSkillIDList)
-                    : new List<int>();
+            allyData.EmotionalAttachmentSkillID = ally.EmotionalAttachmentSkillID;
+            allyData.EmotionalAttachmentSkillQuantity = ally.EmotionalAttachmentSkillQuantity;
+            allyData.ValidSkillIds = ally.ValidSkillIDList != null
+                ? new List<int>(ally.ValidSkillIDList)
+                : new List<int>();
 
-                var skills = allyClass.AllSkills;
-                if (skills != null)
+            var skills = ally.AllSkills;
+            if (skills != null)
+            {
+                foreach (var skill in skills)
                 {
-                    foreach (var skill in skills)
+                    if (skill == null) continue;
+                    allyData.Skills.Add(new PlayerSkillSaveData
                     {
-                        if (skill == null) continue;
-                        allyData.Skills.Add(new PlayerSkillSaveData
-                        {
-                            SkillId = skill.ID,
-                            RecordDoCount = skill.RecordDoCount,
-                            Proficiency = skill.Proficiency
-                        });
-                    }
+                        SkillId = skill.ID,
+                        RecordDoCount = skill.RecordDoCount,
+                        Proficiency = skill.Proficiency
+                    });
                 }
             }
 
@@ -138,7 +143,7 @@ public sealed class PlayersSaveService
         return data;
     }
 
-    public void Apply(PlayersSaveData data, PlayersRoster roster)
+    public void Apply(PlayersSaveData data, PlayersRoster roster, PartyComposition composition = null)
     {
         if (data == null) return;
 
@@ -148,25 +153,35 @@ public sealed class PlayersSaveService
             data.WalkProgress.ApplyToContext(gameContext);
         }
 
-        var allies = roster?.Allies;
-        if (allies == null || allies.Length == 0) return;
-
-        var lookup = new Dictionary<AllyId, PlayersAllySaveData>();
-        if (data.Allies != null)
+        // パーティー編成を復元
+        if (composition != null && data.ActivePartyIds != null)
         {
-            foreach (var allyData in data.Allies)
+            var ids = new CharacterId[data.ActivePartyIds.Count];
+            for (int i = 0; i < data.ActivePartyIds.Count; i++)
             {
-                lookup[allyData.AllyId] = allyData;
+                ids[i] = new CharacterId(data.ActivePartyIds[i]);
+            }
+            composition.SetMembers(ids);
+        }
+
+        if (roster == null || data.Allies == null) return;
+
+        // CharacterId でルックアップ
+        var lookup = new Dictionary<string, PlayersAllySaveData>();
+        foreach (var allyData in data.Allies)
+        {
+            if (!string.IsNullOrEmpty(allyData.CharacterId))
+            {
+                lookup[allyData.CharacterId.ToLowerInvariant()] = allyData;
             }
         }
 
-        for (int i = 0; i < allies.Length; i++)
+        foreach (var ally in roster.AllAllies)
         {
-            var ally = allies[i];
             if (ally == null) continue;
 
-            var allyId = (AllyId)i;
-            if (!lookup.TryGetValue(allyId, out var allyData) || allyData == null) continue;
+            var charId = ally.CharacterId.Value;
+            if (!lookup.TryGetValue(charId, out var allyData) || allyData == null) continue;
 
             ally.NowPower = allyData.NowPower;
             ally.SetImpressions(allyData.MyImpression, allyData.DefaultImpression);
@@ -196,20 +211,27 @@ public sealed class PlayersSaveService
             ally.MentalHP = allyData.MentalHP;
             ally.NowResonanceValue = allyData.NowResonanceValue;
 
-            if (ally is AllyClass allyClass)
-            {
-                allyClass.EmotionalAttachmentSkillID = allyData.EmotionalAttachmentSkillID;
-                allyClass.EmotionalAttachmentSkillQuantity = allyData.EmotionalAttachmentSkillQuantity;
-                allyClass.ValidSkillIDList = allyData.ValidSkillIds != null
-                    ? new List<int>(allyData.ValidSkillIds)
-                    : new List<int>();
+            ally.EmotionalAttachmentSkillID = allyData.EmotionalAttachmentSkillID;
+            ally.EmotionalAttachmentSkillQuantity = allyData.EmotionalAttachmentSkillQuantity;
+            ally.ValidSkillIDList = allyData.ValidSkillIds != null
+                ? new List<int>(allyData.ValidSkillIds)
+                : new List<int>();
 
-                ApplySkillState(allyClass, allyData.Skills);
-            }
-
+            ApplySkillState(ally, allyData.Skills);
             ReplacePassives(ally, allyData.Passives);
             ReplaceVitalLayers(ally, allyData.VitalLayers);
         }
+    }
+
+    // 互換性用: 旧シグネチャ
+    public PlayersSaveData Build(PlayersRoster roster)
+    {
+        return Build(roster, null);
+    }
+
+    public void Apply(PlayersSaveData data, PlayersRoster roster)
+    {
+        Apply(data, roster, null);
     }
 
     private static AttrPointModule.AttrPointModuleState BuildAttrPointState(AttrPointSaveState saved)

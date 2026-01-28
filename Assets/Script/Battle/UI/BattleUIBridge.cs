@@ -147,22 +147,30 @@ public sealed class BattleUIBridge
     {
         id = default;
         if (actor == null) return false;
+
+        // まず roster から AllyId を取得
         if (roster != null && roster.TryGetAllyId(actor, out id)) return true;
 
-        switch (actor)
+        // CharacterId ベースで判定（派生クラスに依存しない）
+        if (actor is AllyClass ally && ally.CharacterId.IsValid)
         {
-            case StairStates:
+            if (ally.CharacterId == CharacterId.Geino)
+            {
                 id = AllyId.Geino;
                 return true;
-            case BassJackStates:
+            }
+            if (ally.CharacterId == CharacterId.Noramlia)
+            {
                 id = AllyId.Noramlia;
                 return true;
-            case SateliteProcessStates:
+            }
+            if (ally.CharacterId == CharacterId.Sites)
+            {
                 id = AllyId.Sites;
                 return true;
-            default:
-                return false;
+            }
         }
+        return false;
     }
 
     private SkillUICharaState ToSkillUiState(AllyId allyId)

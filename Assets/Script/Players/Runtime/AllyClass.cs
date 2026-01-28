@@ -11,6 +11,19 @@ using static CommonCalc;
 public class AllyClass : BaseStates
 {
     /// <summary>
+    /// このキャラクターのID
+    /// </summary>
+    public CharacterId CharacterId { get; private set; }
+
+    /// <summary>
+    /// CharacterId を設定する（初期化時に1回のみ呼ぶ）
+    /// </summary>
+    public void SetCharacterId(CharacterId id)
+    {
+        CharacterId = id;
+    }
+
+    /// <summary>
     /// 主人公キャラはUIコントローラーを直接参照
     /// </summary>
     [SerializeField] UIController _uic;
@@ -794,69 +807,40 @@ public class AllyClass : BaseStates
         }
     }
     /// <summary>
-    /// AllyClassのディープコピー
+    /// AllyClassのディープコピー（新しいインスタンスを返す）
+    /// </summary>
+    public AllyClass DeepCopy()
+    {
+        var clone = new AllyClass();
+        DeepCopyTo(clone);
+        Debug.Log("AllyClassディープコピー完了");
+        return clone;
+    }
+
+    /// <summary>
+    /// AllyClassのディープコピー（既存インスタンスにコピー）
     /// 初期化の処理もawake代わりにここでやろう
     /// </summary>
     /// <param name="dst"></param>
-    public void DeepCopy(AllyClass dst)
+    public void DeepCopyTo(AllyClass dst)
     {
-
-        // 2. BaseStates のフィールドをコピー
+        // BaseStates のフィールドをコピー
         InitBaseStatesDeepCopy(dst);
 
-        // 3. AllyClass 独自フィールドをコピー
+        // AllyClass 独自フィールドをコピー
         dst._skillALLList = new List<AllySkill>();
         foreach(var skill in _skillALLList)
         {
             dst._skillALLList.Add(skill.InitAllyDeepCopy());
         }
-        dst.ValidSkillIDList = new List<int>(ValidSkillIDList);  //主人公達の初期有効化スキルIDをランタイム用リストにセット
-        dst.EmotionalAttachmentSkillID = EmotionalAttachmentSkillID;//思い入れスキルIDをコピー
-        //dst._uic = _uic;//参照なのでそのまま渡す 主人公キャラの参照UIオブジェクト
+        dst.ValidSkillIDList = new List<int>(ValidSkillIDList);
+        dst.EmotionalAttachmentSkillID = EmotionalAttachmentSkillID;
         if(_uic != null)
         {
-            dst.BindUIController(_uic);//一元化された基本クラスのフィールドに設定する
+            dst.BindUIController(_uic);
         }
         if(dst.UI == null)Debug.LogError("UIがnullです");
         if(dst.UI.arrowGrowAndVanish == null)Debug.LogError("arrowGrowAndVanishがnullです");
         dst.UI.Init();
-
-        Debug.Log("AllyClassディープコピー完了");
-    }
-
-
-}
-
-[Serializable]
-public class BassJackStates : AllyClass //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
-{
-    public BassJackStates DeepCopy()
-    {
-        var clone = new BassJackStates();
-        DeepCopy(clone);
-        Debug.Log("BassJackStatesディープコピー完了");
-        return clone;
-    }
-}
-[Serializable]
-public class SateliteProcessStates : AllyClass //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
-{
-    public SateliteProcessStates DeepCopy()
-    {
-        var clone = new SateliteProcessStates();
-        DeepCopy(clone);
-        Debug.Log("SateliteProcessStatesディープコピー完了");
-        return clone;
-    }
-}
-[Serializable]
-public class StairStates : AllyClass //共通ステータスにプラスでそれぞれのキャラの独自ステータスとかその処理
-{
-    public StairStates DeepCopy()
-    {
-        var clone = new StairStates();
-        DeepCopy(clone);
-        Debug.Log("StairStatesディープコピー完了");
-        return clone;
     }
 }

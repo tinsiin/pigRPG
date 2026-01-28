@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using R3;
 using TMPro;
@@ -50,6 +51,12 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
     private IPlayersSkillUI skillUi;
     private IPlayersParty playersParty;
     private IPlayersRoster playersRoster;
+    private IPartyComposition composition;
+
+    /// <summary>
+    /// パーティーメンバーのIDリスト（固定順序: Geino, Noramlia, Sites, その他）
+    /// </summary>
+    private readonly List<CharacterId> _partyMemberIds = new();
 
     // 選択変更イベント（indexを流す）
     private readonly Subject<int> _onSelectionChanged = new();
@@ -72,9 +79,13 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
         {
             BindSharedButtonWithIndex(m_OpenEmotionalAttachmentButton, i =>
             {
+                var actor = GetActor(i);
+                if (actor == null) return;
+                var allyId = actor.CharacterId.ToAllyId();
+
                 if (skillUi != null)
                 {
-                    skillUi.OpenEmotionalAttachmentSkillSelectUIArea((AllyId)i);
+                    skillUi.OpenEmotionalAttachmentSkillSelectUIArea(allyId);
                 }
                 else
                 {
@@ -86,9 +97,13 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
         {
             BindSharedButtonWithIndex(m_StopFreezeConsecutiveButton, i =>
             {
+                var actor = GetActor(i);
+                if (actor == null) return;
+                var allyId = actor.CharacterId.ToAllyId();
+
                 if (playersParty != null)
                 {
-                    playersParty.RequestStopFreezeConsecutive((AllyId)i);
+                    playersParty.RequestStopFreezeConsecutive(allyId);
                 }
                 else
                 {
@@ -126,6 +141,39 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
         skillUi = context?.SkillUI;
         playersParty = context?.Party;
         playersRoster = context?.Roster;
+        composition = context?.Composition;
+        RefreshPartyMemberIds();
+    }
+
+    /// <summary>
+    /// パーティーメンバーIDリストを更新（固定順序でソート）
+    /// </summary>
+    private void RefreshPartyMemberIds()
+    {
+        _partyMemberIds.Clear();
+        if (composition == null) return;
+
+        // 固定順序: Geino, Noramlia, Sites, その他（将来の新キャラ）
+        var fixedOrder = new[] { CharacterId.Geino, CharacterId.Noramlia, CharacterId.Sites };
+        var activeIds = composition.ActiveMemberIds;
+
+        // 固定順序のキャラを先に追加
+        foreach (var id in fixedOrder)
+        {
+            if (activeIds.Contains(id))
+            {
+                _partyMemberIds.Add(id);
+            }
+        }
+
+        // 固定順序以外のキャラ（新キャラ）を追加
+        foreach (var id in activeIds)
+        {
+            if (!fixedOrder.Contains(id))
+            {
+                _partyMemberIds.Add(id);
+            }
+        }
     }
 
     // 外部API: 次へ
@@ -197,6 +245,15 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
 
     private void RefreshUI()
     {
+        // パーティー編成が変わっている可能性があるため、毎回リフレッシュ
+        RefreshPartyMemberIds();
+
+        // インデックスが範囲外になった場合は補正
+        if (m_CurrentIndex >= _partyMemberIds.Count)
+        {
+            m_CurrentIndex = Mathf.Max(0, _partyMemberIds.Count - 1);
+        }
+
         var actor = GetActor(m_CurrentIndex);
 
         //キャラ名表示
@@ -372,27 +429,17 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
 
     private int GetAllyCount()
     {
-        return playersRoster?.AllyCount ?? 0;
+        return _partyMemberIds.Count;
     }
 
     private AllyClass GetActor(int index)
     {
-        if (playersRoster == null)
-        {
-            Debug.LogWarning("PlayersRoster が null です。");
-            return null;
-        }
-        int count = playersRoster.AllyCount;
-        if (count <= 0) 
-        {
-            Debug.LogWarning("Alliesがない。");
-            return null;
-        }
-        if (index < 0 || index >= count)
+        if (index < 0 || index >= _partyMemberIds.Count)
         {
             return null;
         }
-        return playersRoster.GetAllyById((AllyId)index) as AllyClass;
+        var id = _partyMemberIds[index];
+        return playersRoster?.GetAlly(id);
     }
 
     // 共有ボタンに「現在のindexで」コールバックを流したい場合のユーティリティ

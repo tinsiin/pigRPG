@@ -3,9 +3,9 @@ using UnityEngine;
 
 public sealed class PlayersRuntimeConfig
 {
-    public StairStates InitGeino;
-    public BassJackStates InitNoramlia;
-    public SateliteProcessStates InitSites;
+    public AllyClass InitGeino;
+    public AllyClass InitNoramlia;
+    public AllyClass InitSites;
     public BaseSkillPassive EmotionalAttachmentSkillWeakeningPassive;
     public int HpToMaxPConversionFactor = 80;
     public int MentalHpToPRecoveryConversionFactor = 120;
@@ -15,6 +15,7 @@ public sealed class PlayersRuntime
 {
     private readonly PlayersTuningConfig tuningConfig = new PlayersTuningConfig();
     private readonly PlayersRoster roster = new PlayersRoster();
+    private readonly PartyComposition composition = new PartyComposition();
     private readonly PlayersSaveService saveService = new PlayersSaveService();
     private PlayersUIService uiService;
     private PlayersUIFacade uiFacade;
@@ -27,9 +28,9 @@ public sealed class PlayersRuntime
     private EmotionalAttachmentUI emotionalAttachmentUI;
     private PlayersContext context;
 
-    private StairStates initGeino;
-    private BassJackStates initNoramlia;
-    private SateliteProcessStates initSites;
+    private AllyClass initGeino;
+    private AllyClass initNoramlia;
+    private AllyClass initSites;
     private BaseSkillPassive emotionalAttachmentSkillWeakeningPassive;
     private int hpToMaxPConversionFactor;
     private int mentalHpToPRecoveryConversionFactor;
@@ -40,6 +41,7 @@ public sealed class PlayersRuntime
     public IPlayersSkillUI SkillUI => uiFacade;
     public IPlayersTuning Tuning => tuningConfig;
     public IPlayersRoster Roster => roster;
+    public IPartyComposition Composition => composition;
     public PlayersUIFacade UIFacade => uiFacade;
 
     public void Initialize(PlayersUIRefs refs, PlayersRuntimeConfig config)
@@ -61,7 +63,11 @@ public sealed class PlayersRuntime
             emotionalAttachmentUI);
         uiFacade = new PlayersUIFacade();
         uiEventRouter = new PlayersUIEventRouter(uiFacade, uiService);
-        partyBuilder = new PartyBuilder(roster, uiFacade);
+
+        // PartyPropertyCalculator（将来SOから取得するが、今は直接生成）
+        var propertyCalculator = ScriptableObject.CreateInstance<PartyPropertyCalculatorSO>();
+        partyBuilder = new PartyBuilder(roster, composition, uiFacade, propertyCalculator);
+
         walkLoopService = new WalkLoopService(roster);
         battleCallbacks = new PlayersBattleCallbacks(roster);
         partyService = new PlayersPartyService(roster, partyBuilder, battleCallbacks, walkLoopService);
@@ -69,7 +75,7 @@ public sealed class PlayersRuntime
         ApplyConfig(config);
         RefreshTuningConfig();
 
-        context = new PlayersContext(partyService, uiFacade, uiFacade, tuningConfig, roster);
+        context = new PlayersContext(partyService, uiFacade, uiFacade, tuningConfig, roster, composition);
     }
 
     public void Shutdown()
@@ -84,15 +90,29 @@ public sealed class PlayersRuntime
         CreateDecideValues();
 
         BindTemplateContext();
-        var allies = new AllyClass[]
+
+        // キャラクターを Roster に登録
+        if (initGeino != null)
         {
-            initGeino != null ? initGeino.DeepCopy() : null,
-            initNoramlia != null ? initNoramlia.DeepCopy() : null,
-            initSites != null ? initSites.DeepCopy() : null
-        };
-        roster.SetAllies(allies);
+            var geino = initGeino.DeepCopy();
+            roster.RegisterAlly(CharacterId.Geino, geino);
+        }
+        if (initNoramlia != null)
+        {
+            var noramlia = initNoramlia.DeepCopy();
+            roster.RegisterAlly(CharacterId.Noramlia, noramlia);
+        }
+        if (initSites != null)
+        {
+            var sites = initSites.DeepCopy();
+            roster.RegisterAlly(CharacterId.Sites, sites);
+        }
+
+        // 初期パーティー編成（3人全員）
+        composition.SetMembers(CharacterId.Geino, CharacterId.Noramlia, CharacterId.Sites);
+
         BindAllyContext();
-        foreach (var ally in allies)
+        foreach (var ally in roster.AllAllies)
         {
             if (ally == null) continue;
             ally.OnInitializeSkillsAndChara();
@@ -166,12 +186,12 @@ public sealed class PlayersRuntime
 
     public PlayersSaveData CreateSaveData()
     {
-        return saveService.Build(roster);
+        return saveService.Build(roster, composition);
     }
 
     public void ApplySaveData(PlayersSaveData data)
     {
-        saveService.Apply(data, roster);
+        saveService.Apply(data, roster, composition);
         UpdateSkillButtonVisibility();
     }
 }

@@ -39,4 +39,21 @@ public interface IPlayersRoster
     int AllyCount { get; }
     bool TryGetAllyId(BaseStates actor, out AllyId id);
     BaseStates GetAllyById(AllyId id);
+
+    // === CharacterId 対応（新規） ===
+
+    /// <summary>キャラクターを取得</summary>
+    AllyClass GetAlly(CharacterId id);
+
+    /// <summary>全解放済みキャラクター</summary>
+    IEnumerable<AllyClass> AllAllies { get; }
+
+    /// <summary>解放済みキャラクターを固定順序で取得（インデックスアクセス用）</summary>
+    IReadOnlyList<AllyClass> OrderedAllies { get; }
+
+    /// <summary>キャラクターが解放済みか</summary>
+    bool IsUnlocked(CharacterId id);
+
+    /// <summary>キャラクターIDを逆引き</summary>
+    bool TryGetCharacterId(BaseStates actor, out CharacterId id);
 }
