@@ -12903,7 +12903,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8977287203216872369, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
       propertyPath: m_Name
-      value: BassJack
+      value: RightBattleIcon
       objectReference: {fileID: 0}
     - target: {fileID: 8977287203216872369, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
       propertyPath: m_IsActive
@@ -12935,6 +12935,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 4496517682972063812, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
   m_PrefabInstance: {fileID: 340528243}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &340528245 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 167246213309373739, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
+  m_PrefabInstance: {fileID: 340528243}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4d9421229b74084c827cdd16d8b4301, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &344880655
 GameObject:
   m_ObjectHideFlags: 0
@@ -23357,7 +23368,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.97172034, g: 0.12082713, b: 0.9657012, a: 0.8962213}
+  m_Color: {r: 0.99473345, g: 0.022501856, b: 0.99361247, a: 0.98067313}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -44362,6 +44373,10 @@ MonoBehaviour:
   EmotionalAttachmentSkillSelectUIArea: {fileID: 965992562}
   EyeArea: {fileID: 132546428}
   ActionMar: {fileID: 686993905}
+  BattleIconSlots:
+  - {fileID: 1845692092}
+  - {fileID: 1393269996}
+  - {fileID: 340528245}
 --- !u!114 &1195921984
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -50742,7 +50757,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8977287203216872369, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
       propertyPath: m_Name
-      value: Geino
+      value: CenterBattleIcon
       objectReference: {fileID: 0}
     - target: {fileID: 8977287203216872369, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
       propertyPath: m_IsActive
@@ -67250,7 +67265,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8977287203216872369, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
       propertyPath: m_Name
-      value: Satelite
+      value: LeftBattleIcon
       objectReference: {fileID: 0}
     - target: {fileID: 8977287203216872369, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
       propertyPath: m_IsActive
@@ -67278,6 +67293,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 4496517682972063812, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
   m_PrefabInstance: {fileID: 1845692090}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1845692092 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 167246213309373739, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
+  m_PrefabInstance: {fileID: 1845692090}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4d9421229b74084c827cdd16d8b4301, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1847771585
 GameObject:
   m_ObjectHideFlags: 0

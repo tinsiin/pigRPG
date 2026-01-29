@@ -12903,7 +12903,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8977287203216872369, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
       propertyPath: m_Name
-      value: BassJack
+      value: RightBattleIcon
       objectReference: {fileID: 0}
     - target: {fileID: 8977287203216872369, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
       propertyPath: m_IsActive
@@ -12935,6 +12935,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 4496517682972063812, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
   m_PrefabInstance: {fileID: 340528243}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &340528245 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 167246213309373739, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
+  m_PrefabInstance: {fileID: 340528243}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4d9421229b74084c827cdd16d8b4301, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &344880655
 GameObject:
   m_ObjectHideFlags: 0
@@ -23357,7 +23368,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.96326077, g: 0.15697144, b: 0.95544106, a: 0.86517686}
+  m_Color: {r: 0.99473345, g: 0.022501856, b: 0.99361247, a: 0.98067313}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -42901,40 +42912,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 440ef6f28be5c104cbb968a1e4febc22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CharacterRegistry: {fileID: 0}
-  Init_geino:
-    CharacterName: 
-    Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
-    ImpressionStringName: 
-    _p: 0
-    _hp: 0
-    _maxhp: 0
-    _mentalHP: 0
-    HeavyResistance: 1
-    voltenResistance: 1
-    DishSmackRsistance: 1
-    b_b_atk: 4
-    b_b_def: 4
-    b_b_eye: 4
-    b_b_agi: 4
-    _tenDayTemplate:
-      _list: []
-    _machineBrokenRate: 0.3
-    _thinkingFactor: 0
-    _myImpression: 0
-    DefaultImpression: 0
-    MyType: 0
-    NowPower: 2
-    InitVitalLaerIDList: 
-    InitWeaponID: 0
-    maxRecoveryTurn: 0
-    Target: 0
-    RangeWill: 0
-    InitpassiveIDList: 
-    _uic: {fileID: 0}
-    _skillALLList: []
-    ValidSkillIDList: 
-    EmotionalAttachmentSkillID: 0
+  CharacterRegistry: {fileID: 11400000, guid: 2e40dabfd6f9aa0428634d121660ed93, type: 2}
   EmotionalAttachmentSkillWeakeningPassive:
     Name: "\u601D\u3044\u5165\u308C\u5F31\u4F53\u5316\u30B9\u30AD\u30EB\u30D1\u30C3\u30B7\u30D6"
     DurationTurn: 99
@@ -42944,9 +42922,6 @@ MonoBehaviour:
     IsBad: 0
   HP_TO_MaxP_CONVERSION_FACTOR: 1
   MentalHP_TO_P_Recovely_CONVERSION_FACTOR: 2
-  references:
-    version: 2
-    RefIds: []
 --- !u!114 &1195921977
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -44398,6 +44373,10 @@ MonoBehaviour:
   EmotionalAttachmentSkillSelectUIArea: {fileID: 965992562}
   EyeArea: {fileID: 132546428}
   ActionMar: {fileID: 686993905}
+  BattleIconSlots:
+  - {fileID: 1845692092}
+  - {fileID: 1393269996}
+  - {fileID: 340528245}
 --- !u!114 &1195921984
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -44429,6 +44408,7 @@ MonoBehaviour:
       CancelPassiveButtonField: {fileID: 1400616400}
       GoToCancelPassiveFieldButton: {fileID: 263722060}
       ReturnCancelPassiveToDefaultAreaButton: {fileID: 1157177639}
+    BattleIconUI: {fileID: 1393269996}
 --- !u!1 &1197626739
 GameObject:
   m_ObjectHideFlags: 0
@@ -50777,7 +50757,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8977287203216872369, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
       propertyPath: m_Name
-      value: Geino
+      value: CenterBattleIcon
       objectReference: {fileID: 0}
     - target: {fileID: 8977287203216872369, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
       propertyPath: m_IsActive
@@ -50809,6 +50789,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 4496517682972063812, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
   m_PrefabInstance: {fileID: 1393269993}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1393269996 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 167246213309373739, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
+  m_PrefabInstance: {fileID: 1393269993}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4d9421229b74084c827cdd16d8b4301, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1394707927
 GameObject:
   m_ObjectHideFlags: 0
@@ -67274,7 +67265,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8977287203216872369, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
       propertyPath: m_Name
-      value: Satelite
+      value: LeftBattleIcon
       objectReference: {fileID: 0}
     - target: {fileID: 8977287203216872369, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
       propertyPath: m_IsActive
@@ -67302,6 +67293,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 4496517682972063812, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
   m_PrefabInstance: {fileID: 1845692090}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1845692092 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 167246213309373739, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
+  m_PrefabInstance: {fileID: 1845692090}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4d9421229b74084c827cdd16d8b4301, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1847771585
 GameObject:
   m_ObjectHideFlags: 0
