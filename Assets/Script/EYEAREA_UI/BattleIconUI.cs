@@ -8,10 +8,11 @@ using TMPro;
 using UnityEditor;
 #endif
 /// <summary>
-/// 全てのキャラで同じ個人UIを共有するためのコントローラー
-/// 例えば特定のキャラならちょっと違うエフェクトの振る舞いをしてほしいなら、継承とかすればいい。
+/// バトル中のキャラクターアイコンUI。
+/// HPバー、アイコン画像、前衛エフェクト、数字表示などを管理する。
+/// 味方・敵問わず全キャラクターで共通のバトル用個人UIコンポーネント。
 /// </summary>
-public class UIController : MonoBehaviour, IPointerClickHandler
+public class BattleIconUI : MonoBehaviour, IPointerClickHandler
 {
     //GameObject UIObject=> this.gameObject;
     
@@ -47,27 +48,27 @@ public class UIController : MonoBehaviour, IPointerClickHandler
 
     private void Awake()
     {
-        Debug.Log($"[UIController.Awake] {name} activeSelf={gameObject.activeSelf}, inHierarchy={gameObject.activeInHierarchy}", this);
+        Debug.Log($"[BattleIconUI.Awake] {name} activeSelf={gameObject.activeSelf}, inHierarchy={gameObject.activeInHierarchy}", this);
     }
 
     private void OnEnable()
     {
-        Debug.Log($"[UIController.OnEnable] {name} activeSelf={gameObject.activeSelf}, inHierarchy={gameObject.activeInHierarchy}", this);
+        Debug.Log($"[BattleIconUI.OnEnable] {name} activeSelf={gameObject.activeSelf}, inHierarchy={gameObject.activeInHierarchy}", this);
     }
 
     private void OnDisable()
     {
-        Debug.Log($"[UIController.OnDisable] {name} activeSelf={gameObject.activeSelf}, inHierarchy={gameObject.activeInHierarchy}", this);
+        Debug.Log($"[BattleIconUI.OnDisable] {name} activeSelf={gameObject.activeSelf}, inHierarchy={gameObject.activeInHierarchy}", this);
     }
 
     public void SetActive(bool isActive)
     {
-        Debug.Log($"[UIController.SetActive] {name} -> {isActive}\n{new System.Diagnostics.StackTrace(true)}", this);
+        Debug.Log($"[BattleIconUI.SetActive] {name} -> {isActive}\n{new System.Diagnostics.StackTrace(true)}", this);
 #if UNITY_EDITOR
         // Prefabアセットに対して呼び出されていないか検出（アセット本体を無効化してしまう事故を防止）
         if (PrefabUtility.IsPartOfPrefabAsset(gameObject))
         {
-            Debug.LogError($"[UIController.SetActive] PREFAB ASSET に対して SetActive が呼ばれました。処理を中断します。 name={name} -> {isActive}\n{new System.Diagnostics.StackTrace(true)}", this);
+            Debug.LogError($"[BattleIconUI.SetActive] PREFAB ASSET に対して SetActive が呼ばれました。処理を中断します。 name={name} -> {isActive}\n{new System.Diagnostics.StackTrace(true)}", this);
             return;
         }
 #endif
@@ -229,7 +230,7 @@ public class UIController : MonoBehaviour, IPointerClickHandler
 
         if (Icon == null)
         {
-            Debug.LogWarning($"[K/UI] Icon is NULL on UIController: {name}", this);
+            Debug.LogWarning($"[K/UI] Icon is NULL on BattleIconUI: {name}", this);
         }
 
         if (iconRT == null)

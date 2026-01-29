@@ -9,28 +9,25 @@ public sealed class PlayersBattleCallbacks
 
     public void PlayersOnWin()
     {
-        var allies = roster.Allies;
-        for (int i = 0; i < allies.Length; i++)
+        foreach (var ally in roster.AllAllies)
         {
-            allies[i].OnAllyWinCallBack();
+            ally.OnAllyWinCallBack();
         }
     }
 
     public void PlayersOnLost()
     {
-        var allies = roster.Allies;
-        for (int i = 0; i < allies.Length; i++)
+        foreach (var ally in roster.AllAllies)
         {
-            allies[i].OnAllyLostCallBack();
+            ally.OnAllyLostCallBack();
         }
     }
 
     public void PlayersOnRunOut()
     {
-        var allies = roster.Allies;
-        for (int i = 0; i < allies.Length; i++)
+        foreach (var ally in roster.AllAllies)
         {
-            allies[i].OnAllyRunOutCallBack();
+            ally.OnAllyRunOutCallBack();
         }
     }
 }

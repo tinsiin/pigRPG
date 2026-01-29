@@ -7,6 +7,9 @@ using System.Collections.Generic;
 [Serializable]
 public sealed class PlayersSaveData
 {
+    /// <summary>解放済みキャラクターID一覧（Roster.AllIdsから生成）</summary>
+    public List<string> UnlockedCharacterIds = new List<string>();
+
     /// <summary>全キャラクターのセーブデータ</summary>
     public List<PlayersAllySaveData> Allies = new List<PlayersAllySaveData>();
 

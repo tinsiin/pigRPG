@@ -12,6 +12,15 @@ public sealed class PlayersSaveService
             data.WalkProgress = WalkProgressData.FromContext(gameContext);
         }
 
+        // UnlockedCharacterIds を Roster.AllIds から生成（唯一の情報源）
+        if (roster != null)
+        {
+            foreach (var id in roster.AllIds)
+            {
+                data.UnlockedCharacterIds.Add(id.Value);
+            }
+        }
+
         // パーティー編成を保存
         if (composition != null)
         {
@@ -143,7 +152,7 @@ public sealed class PlayersSaveService
         return data;
     }
 
-    public void Apply(PlayersSaveData data, PlayersRoster roster, PartyComposition composition = null)
+    public void Apply(PlayersSaveData data, PlayersRoster roster, CharacterDataRegistry registry, PartyComposition composition = null)
     {
         if (data == null) return;
 
@@ -153,29 +162,131 @@ public sealed class PlayersSaveService
             data.WalkProgress.ApplyToContext(gameContext);
         }
 
-        // パーティー編成を復元
-        if (composition != null && data.ActivePartyIds != null)
+        if (roster == null) return;
+
+        if (registry == null)
         {
-            var ids = new CharacterId[data.ActivePartyIds.Count];
-            for (int i = 0; i < data.ActivePartyIds.Count; i++)
-            {
-                ids[i] = new CharacterId(data.ActivePartyIds[i]);
-            }
-            composition.SetMembers(ids);
+            UnityEngine.Debug.LogError("PlayersSaveService.Apply: CharacterDataRegistry が null です");
+            return;
         }
 
-        if (roster == null || data.Allies == null) return;
+        // Rosterをクリア（Init()で登録された初期パーティを上書き）
+        roster.Clear();
 
-        // CharacterId でルックアップ
+        // UnlockedCharacterIds から Roster を再構築
+        // レガシーセーブ対応: UnlockedCharacterIds が空の場合、Allies から推定
+        var unlockedIds = data.UnlockedCharacterIds ?? new List<string>();
+        if (unlockedIds.Count == 0 && data.Allies != null && data.Allies.Count > 0)
+        {
+            UnityEngine.Debug.Log("PlayersSaveService.Apply: レガシーセーブを検出、Alliesから解放キャラを復元");
+            foreach (var allyData in data.Allies)
+            {
+                var charId = ResolveCharacterIdFromSaveData(allyData);
+                if (charId.IsValid && !unlockedIds.Contains(charId.Value))
+                {
+                    unlockedIds.Add(charId.Value);
+                }
+            }
+        }
+
+        foreach (var idStr in unlockedIds)
+        {
+            var id = new CharacterId(idStr);
+            if (!id.IsValid)
+            {
+                UnityEngine.Debug.LogWarning($"PlayersSaveService.Apply: 無効なID '{idStr}' をスキップ");
+                continue;
+            }
+
+            var characterData = registry.GetCharacter(id);
+            if (characterData == null)
+            {
+                UnityEngine.Debug.LogError($"PlayersSaveService.Apply: {id} のCharacterDataSOが見つかりません");
+                continue;
+            }
+
+            var instance = characterData.CreateInstance();
+            if (instance == null)
+            {
+                UnityEngine.Debug.LogError($"PlayersSaveService.Apply: {id} のインスタンス生成に失敗");
+                continue;
+            }
+
+            roster.RegisterAlly(id, instance);
+            instance.OnInitializeSkillsAndChara();
+        }
+
+        // Alliesデータ用ルックアップ作成
         var lookup = new Dictionary<string, PlayersAllySaveData>();
-        foreach (var allyData in data.Allies)
+        if (data.Allies != null)
         {
-            if (!string.IsNullOrEmpty(allyData.CharacterId))
+            foreach (var allyData in data.Allies)
             {
-                lookup[allyData.CharacterId.ToLowerInvariant()] = allyData;
+                var charId = ResolveCharacterIdFromSaveData(allyData);
+                if (charId.IsValid)
+                {
+                    lookup[charId.Value] = allyData;
+                }
             }
         }
 
+        // AlliesにあるがRosterにないキャラクターを復旧
+        foreach (var kvp in lookup)
+        {
+            var charId = new CharacterId(kvp.Key);
+            if (roster.IsUnlocked(charId)) continue;
+
+            // Rosterにない → 復旧
+            UnityEngine.Debug.LogWarning($"PlayersSaveService.Apply: {charId} がUnlockedになかったため復旧");
+            var characterData = registry.GetCharacter(charId);
+            if (characterData != null)
+            {
+                var instance = characterData.CreateInstance();
+                if (instance != null)
+                {
+                    roster.RegisterAlly(charId, instance);
+                    instance.OnInitializeSkillsAndChara();
+                }
+            }
+        }
+
+        // パーティー編成を復元
+        if (composition != null)
+        {
+            if (data.ActivePartyIds != null && data.ActivePartyIds.Count > 0)
+            {
+                var partyIds = new List<CharacterId>();
+                foreach (var idStr in data.ActivePartyIds)
+                {
+                    var id = new CharacterId(idStr);
+                    if (roster.IsUnlocked(id))
+                    {
+                        partyIds.Add(id);
+                    }
+                }
+
+                if (partyIds.Count > 0)
+                {
+                    composition.SetMembers(partyIds.ToArray());
+                }
+                else
+                {
+                    // ActivePartyIdsの全員がRosterにいない → フォールバック
+                    UnityEngine.Debug.LogWarning("PlayersSaveService.Apply: ActivePartyIdsが全て無効、Roster全員をパーティに設定");
+                    var allIds = new List<CharacterId>(roster.AllIds);
+                    composition.SetMembers(allIds.ToArray());
+                }
+            }
+            else
+            {
+                // ActivePartyIdsが空/欠落 → Roster全員をパーティに設定
+                UnityEngine.Debug.LogWarning("PlayersSaveService.Apply: ActivePartyIdsが空、Roster全員をパーティに設定");
+                var allIds = new List<CharacterId>(roster.AllIds);
+                composition.SetMembers(allIds.ToArray());
+            }
+        }
+
+        // ステータス復元
         foreach (var ally in roster.AllAllies)
         {
             if (ally == null) continue;
@@ -223,16 +334,6 @@ public sealed class PlayersSaveService
         }
     }
 
-    // 互換性用: 旧シグネチャ
-    public PlayersSaveData Build(PlayersRoster roster)
-    {
-        return Build(roster, null);
-    }
-
-    public void Apply(PlayersSaveData data, PlayersRoster roster)
-    {
-        Apply(data, roster, null);
-    }
 
     private static AttrPointModule.AttrPointModuleState BuildAttrPointState(AttrPointSaveState saved)
     {
@@ -352,4 +453,30 @@ public sealed class PlayersSaveService
         }
         return null;
     }
+
+    /// <summary>
+    /// セーブデータからCharacterIdを解決（レガシーセーブ対応）
+    /// </summary>
+    private static CharacterId ResolveCharacterIdFromSaveData(PlayersAllySaveData allyData)
+    {
+        if (allyData == null) return default;
+
+        // 新形式: CharacterId が設定されている場合
+        if (!string.IsNullOrEmpty(allyData.CharacterId))
+        {
+            return new CharacterId(allyData.CharacterId);
+        }
+
+        // レガシー形式: AllyId から変換
+#pragma warning disable CS0618 // Obsolete警告を抑制
+        var allyId = allyData.AllyId;
+#pragma warning restore CS0618
+        if (allyId != default)
+        {
+            return CharacterId.FromAllyId(allyId);
+        }
+
+        return default;
+    }
+
 }

@@ -72,29 +72,40 @@ public abstract partial class BaseStates
     //  ==============================================================================================================================
 
     /// <summary>
-    /// 一元化したキャラ用のUIコントローラー
+    /// バトル中のキャラクターアイコンUI（HPバー、アイコン、エフェクト等）
     /// </summary>
-    public UIController UI { get; private set; }
+    public BattleIconUI BattleIcon { get; private set; }
+
     /// <summary>
-    /// それぞれの陣営でUIの生成方法をは違うので、基本クラスの一元化したフィールドに設定する。
+    /// 後方互換性のためのエイリアス（将来削除予定）
     /// </summary>
-    /// <param name="ui"></param>
-    public void BindUIController(UIController ui)
+    public BattleIconUI UI => BattleIcon;
+
+    /// <summary>
+    /// バトルアイコンUIをバインドする。
+    /// 味方はCharacterUIRegistry経由、敵はEnemyPlacementController経由で設定される。
+    /// </summary>
+    public void BindBattleIconUI(BattleIconUI ui)
     {
-        UI = ui;
-        UI.BindUser(this);
+        BattleIcon = ui;
+        BattleIcon.BindUser(this);
 
         // 属性ポイントリングUIを探し、無ければ追加して初期化
-        if (UI != null && UI.Icon != null)
+        if (BattleIcon != null && BattleIcon.Icon != null)
         {
-            var ring = UI.GetComponentInChildren<AttrPointRingUIController>(true);
+            var ring = BattleIcon.GetComponentInChildren<AttrPointRingUIController>(true);
             if (ring == null)
             {
-                ring = UI.gameObject.AddComponent<AttrPointRingUIController>();
+                ring = BattleIcon.gameObject.AddComponent<AttrPointRingUIController>();
             }
-            ring.Initialize(this, UI.Icon.rectTransform);
+            ring.Initialize(this, BattleIcon.Icon.rectTransform);
         }
     }
+
+    /// <summary>
+    /// 後方互換性のためのエイリアス（将来削除予定）
+    /// </summary>
+    public void BindUIController(BattleIconUI ui) => BindBattleIconUI(ui);
     //  ==============================================================================================================================
     //                                              フレーバー要素
     //  ==============================================================================================================================

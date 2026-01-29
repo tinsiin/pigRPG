@@ -24,9 +24,11 @@ public class AllyClass : BaseStates
     }
 
     /// <summary>
-    /// 主人公キャラはUIコントローラーを直接参照
+    /// 【旧システム - 使用されていない】
+    /// CharacterDataSOからのインスタンス生成ではこのフィールドは常にnull。
+    /// BattleIconUIはCharacterUIRegistry経由でバインドされる。
     /// </summary>
-    [SerializeField] UIController _uic;
+    [SerializeField, HideInInspector] BattleIconUI _uic;
 
 
     /// <summary>
@@ -835,12 +837,7 @@ public class AllyClass : BaseStates
         }
         dst.ValidSkillIDList = new List<int>(ValidSkillIDList);
         dst.EmotionalAttachmentSkillID = EmotionalAttachmentSkillID;
-        if(_uic != null)
-        {
-            dst.BindUIController(_uic);
-        }
-        if(dst.UI == null)Debug.LogError("UIがnullです");
-        if(dst.UI.arrowGrowAndVanish == null)Debug.LogError("arrowGrowAndVanishがnullです");
-        dst.UI.Init();
+        // BattleIconUIはCharacterUIRegistry経由でバインドされるため、
+        // DeepCopyでは何もしない（_uicは旧システムで現在は使用されない）
     }
 }

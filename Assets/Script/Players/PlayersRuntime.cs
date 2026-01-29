@@ -1,11 +1,10 @@
+using System.Collections.Generic;
 using RandomExtensions;
 using UnityEngine;
 
 public sealed class PlayersRuntimeConfig
 {
-    public AllyClass InitGeino;
-    public AllyClass InitNoramlia;
-    public AllyClass InitSites;
+    public CharacterDataRegistry CharacterRegistry;
     public BaseSkillPassive EmotionalAttachmentSkillWeakeningPassive;
     public int HpToMaxPConversionFactor = 80;
     public int MentalHpToPRecoveryConversionFactor = 120;
@@ -28,9 +27,7 @@ public sealed class PlayersRuntime
     private EmotionalAttachmentUI emotionalAttachmentUI;
     private PlayersContext context;
 
-    private AllyClass initGeino;
-    private AllyClass initNoramlia;
-    private AllyClass initSites;
+    private CharacterDataRegistry characterRegistry;
     private BaseSkillPassive emotionalAttachmentSkillWeakeningPassive;
     private int hpToMaxPConversionFactor;
     private int mentalHpToPRecoveryConversionFactor;
@@ -43,6 +40,7 @@ public sealed class PlayersRuntime
     public IPlayersRoster Roster => roster;
     public IPartyComposition Composition => composition;
     public PlayersUIFacade UIFacade => uiFacade;
+    public CharacterDataRegistry CharacterRegistry => characterRegistry;
 
     public void Initialize(PlayersUIRefs refs, PlayersRuntimeConfig config)
     {
@@ -52,13 +50,10 @@ public sealed class PlayersRuntime
             return;
         }
 
-        refs.EnsureAllyUISets();
-
         skillPassiveSelectionUI = new SkillPassiveSelectionUI(refs.SelectSkillPassiveTargetHandle);
         emotionalAttachmentUI = new EmotionalAttachmentUI(roster, refs.EmotionalAttachmentSkillSelectUIArea);
         uiService = new PlayersUIService(
             roster,
-            refs.AllyUISets,
             skillPassiveSelectionUI,
             emotionalAttachmentUI);
         uiFacade = new PlayersUIFacade();
@@ -75,7 +70,7 @@ public sealed class PlayersRuntime
         ApplyConfig(config);
         RefreshTuningConfig();
 
-        context = new PlayersContext(partyService, uiFacade, uiFacade, tuningConfig, roster, composition);
+        context = new PlayersContext(partyService, uiFacade, uiFacade, tuningConfig, roster, composition, characterRegistry);
     }
 
     public void Shutdown()
@@ -85,31 +80,60 @@ public sealed class PlayersRuntime
 
     public void Init()
     {
-        Debug.Log("Init");
+        Debug.Log("PlayersRuntime.Init");
 
         CreateDecideValues();
 
-        BindTemplateContext();
-
-        // キャラクターを Roster に登録
-        if (initGeino != null)
+        if (characterRegistry == null)
         {
-            var geino = initGeino.DeepCopy();
-            roster.RegisterAlly(CharacterId.Geino, geino);
-        }
-        if (initNoramlia != null)
-        {
-            var noramlia = initNoramlia.DeepCopy();
-            roster.RegisterAlly(CharacterId.Noramlia, noramlia);
-        }
-        if (initSites != null)
-        {
-            var sites = initSites.DeepCopy();
-            roster.RegisterAlly(CharacterId.Sites, sites);
+            Debug.LogError("PlayersRuntime.Init: CharacterDataRegistry が設定されていません");
+            return;
         }
 
-        // 初期パーティー編成（3人全員）
-        composition.SetMembers(CharacterId.Geino, CharacterId.Noramlia, CharacterId.Sites);
+        // 初期パーティメンバーのみRoster登録（全キャラではない）
+        var initialParty = new List<CharacterId>();
+        foreach (var characterData in characterRegistry.GetInitialPartyMembers())
+        {
+            if (characterData == null)
+            {
+                Debug.LogWarning("PlayersRuntime.Init: null の CharacterDataSO がスキップされました");
+                continue;
+            }
+
+            var id = characterData.Id;
+            if (!id.IsValid)
+            {
+                Debug.LogError($"PlayersRuntime.Init: 無効なID '{characterData.name}'");
+                continue;
+            }
+
+            if (roster.IsUnlocked(id))
+            {
+                Debug.LogWarning($"PlayersRuntime.Init: {id} は既に登録済みです（重複スキップ）");
+                continue;
+            }
+
+            var instance = characterData.CreateInstance();
+            if (instance == null)
+            {
+                Debug.LogError($"PlayersRuntime.Init: {id} のインスタンス生成に失敗しました（_templateが未設定？）");
+                continue;
+            }
+
+            roster.RegisterAlly(id, instance);
+            initialParty.Add(id);
+            Debug.Log($"PlayersRuntime.Init: {id} を初期パーティとして登録");
+        }
+
+        // 初期パーティ編成
+        if (initialParty.Count > 0)
+        {
+            composition.SetMembers(initialParty.ToArray());
+        }
+        else
+        {
+            Debug.LogWarning("PlayersRuntime.Init: 初期パーティメンバーが0人です");
+        }
 
         BindAllyContext();
         foreach (var ally in roster.AllAllies)
@@ -131,32 +155,37 @@ public sealed class PlayersRuntime
             return;
         }
 
-        initGeino = config.InitGeino;
-        initNoramlia = config.InitNoramlia;
-        initSites = config.InitSites;
+        characterRegistry = config.CharacterRegistry;
         emotionalAttachmentSkillWeakeningPassive = config.EmotionalAttachmentSkillWeakeningPassive;
         hpToMaxPConversionFactor = config.HpToMaxPConversionFactor;
         mentalHpToPRecoveryConversionFactor = config.MentalHpToPRecoveryConversionFactor;
     }
 
-    private void BindTemplateContext()
-    {
-        initGeino?.BindTuning(tuningConfig);
-        initGeino?.BindSkillUI(uiFacade);
-        initNoramlia?.BindTuning(tuningConfig);
-        initNoramlia?.BindSkillUI(uiFacade);
-        initSites?.BindTuning(tuningConfig);
-        initSites?.BindSkillUI(uiFacade);
-    }
-
     private void BindAllyContext()
     {
-        var allies = roster.Allies;
-        if (allies == null) return;
-        foreach (var ally in allies)
+        var uiRegistry = CharacterUIRegistry.Instance;
+
+        // 全登録済みキャラクター（固定3人 + 新キャラ）にバインド
+        foreach (var ally in roster.AllAllies)
         {
-            ally?.BindTuning(tuningConfig);
-            ally?.BindSkillUI(uiFacade);
+            if (ally == null) continue;
+            ally.BindTuning(tuningConfig);
+            ally.BindSkillUI(uiFacade);
+
+            // BattleIconUIをバインド（バトル中のアイコン・HPバー・エフェクト用）
+            if (uiRegistry != null)
+            {
+                var battleIconUI = uiRegistry.GetBattleIconUI(ally.CharacterId);
+                if (battleIconUI != null)
+                {
+                    ally.BindBattleIconUI(battleIconUI);
+                    battleIconUI.Init();
+                }
+                else
+                {
+                    Debug.LogWarning($"PlayersRuntime.BindAllyContext: {ally.CharacterId} のBattleIconUIが見つかりません。CharacterUIRegistryで設定してください。");
+                }
+            }
         }
     }
 
@@ -191,7 +220,13 @@ public sealed class PlayersRuntime
 
     public void ApplySaveData(PlayersSaveData data)
     {
-        saveService.Apply(data, roster, composition);
+        saveService.Apply(data, roster, characterRegistry, composition);
+
+        // 復元されたキャラクター（新キャラ含む）にTuning/SkillUIをバインド
+        BindAllyContext();
+
+        // スキルボタンを再バインド
+        ApplySkillButtons();
         UpdateSkillButtonVisibility();
     }
 }
