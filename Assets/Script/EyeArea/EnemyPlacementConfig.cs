@@ -12,7 +12,7 @@ public class EnemyPlacementConfig
     public Transform BattleLayer;
 
     /// <summary>敵UIプレハブ</summary>
-    public UIController EnemyUIPrefab;
+    public BattleIconUI EnemyUIPrefab;
 
     /// <summary>敵ランダム配置エリア（ズーム後座標系）</summary>
     public RectTransform SpawnArea;

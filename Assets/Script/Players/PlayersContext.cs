@@ -6,6 +6,7 @@ public sealed class PlayersContext
     public IPlayersTuning Tuning { get; }
     public IPlayersRoster Roster { get; }
     public IPartyComposition Composition { get; }
+    public CharacterDataRegistry CharacterRegistry { get; }
 
     public PlayersContext(
         IPlayersParty party,
@@ -13,7 +14,8 @@ public sealed class PlayersContext
         IPlayersSkillUI skillUi,
         IPlayersTuning tuning,
         IPlayersRoster roster,
-        IPartyComposition composition = null)
+        IPartyComposition composition,
+        CharacterDataRegistry characterRegistry)
     {
         Party = party;
         UIControl = uiControl;
@@ -21,6 +23,7 @@ public sealed class PlayersContext
         Tuning = tuning;
         Roster = roster;
         Composition = composition;
+        CharacterRegistry = characterRegistry;
     }
 }
 

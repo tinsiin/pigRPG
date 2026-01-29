@@ -9,10 +9,25 @@ public class ButtonAndSkillIDHold
 {
     public Button button;
     public int skillID;
+
+    /// <summary>
+    /// ボタンにコールバックを追加する。
+    /// </summary>
     public void AddButtonFunc(UnityAction<int> call)
     {
         Debug.Log("AddButtonFunc" + skillID);
         button.onClick.AddListener(() => call(skillID));
+    }
+
+    /// <summary>
+    /// ボタンのリスナーをクリアする（再バインド前に呼ぶ）。
+    /// </summary>
+    public void ClearButtonFunc()
+    {
+        if (button != null)
+        {
+            button.onClick.RemoveAllListeners();
+        }
     }
 }
 /// <summary>

@@ -8,22 +8,39 @@ public interface IPlayersParty
     void PlayersOnLost();
     void PlayersOnRunOut();
     void PlayersOnWalks(int walkCount);
+
+    // === AllyId ベース（互換性用） ===
     void RequestStopFreezeConsecutive(AllyId allyId);
+
+    // === CharacterId ベース（新規） ===
+    void RequestStopFreezeConsecutive(CharacterId id);
 }
 
 public interface IPlayersUIControl
 {
     void AllyAlliesUISetActive(bool isActive);
+
+    /// <summary>
+    /// 新キャラクターのUIバインディングを行う。
+    /// CharacterUnlockEffect や セーブロード時に呼び出す。
+    /// </summary>
+    void BindNewCharacter(CharacterId id);
 }
 
 public interface IPlayersSkillUI
 {
+    // === AllyId ベース（互換性用） ===
     void OnlySelectActs(SkillZoneTrait trait, SkillType type, AllyId allyId);
     void OnSkillSelectionScreenTransition(AllyId allyId);
     UniTask<List<BaseSkill>> GoToSelectSkillPassiveTargetSkillButtonsArea(List<BaseSkill> skills, int selectCount);
     void ReturnSelectSkillPassiveTargetSkillButtonsArea();
     void OpenEmotionalAttachmentSkillSelectUIArea(AllyId allyId);
     void OnBattleStart();
+
+    // === CharacterId ベース（新規） ===
+    void OnlySelectActs(SkillZoneTrait trait, SkillType type, CharacterId id);
+    void OnSkillSelectionScreenTransition(CharacterId id);
+    void OpenEmotionalAttachmentSkillSelectUIArea(CharacterId id);
 }
 
 public interface IPlayersTuning

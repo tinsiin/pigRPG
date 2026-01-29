@@ -34,7 +34,7 @@ public class KZoomState
     public TMP_Text PassivesTMP { get; set; }
 
     /// <summary>K中のクリック元UI（排他表示用）</summary>
-    public UIController ExclusiveUI { get; set; }
+    public BattleIconUI ExclusiveUI { get; set; }
 
     /// <summary>K開始時のActionMark表示状態</summary>
     public bool ActionMarkWasActive { get; set; }
@@ -43,7 +43,7 @@ public class KZoomState
     public bool SchizoWasVisible { get; set; }
 
     /// <summary>K中に非表示にした他UIの退避リスト</summary>
-    public List<(UIController ui, bool wasActive)> HiddenOtherUIs { get; set; }
+    public List<(BattleIconUI ui, bool wasActive)> HiddenOtherUIs { get; set; }
 
     /// <summary>状態をリセットする</summary>
     public void Reset()

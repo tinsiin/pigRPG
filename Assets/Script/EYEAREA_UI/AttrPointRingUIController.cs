@@ -79,7 +79,7 @@ public class AttrPointRingUIController : MonoBehaviour
     }
 
     /// <summary>
-    /// 外部から初期化される（BaseStates.BindUIController から呼ばれる想定）。
+    /// 外部から初期化される（BaseStates.BindBattleIconUI から呼ばれる想定）。
     /// </summary>
     public void Initialize(BaseStates owner, RectTransform iconRect)
     {
@@ -91,12 +91,12 @@ public class AttrPointRingUIController : MonoBehaviour
         // レジストリ登録（同一オーナーに対しては上書き）
         s_registry[_owner] = this;
 
-        // リングコンテナ未設定なら自動生成（Icon の"親"= UIController 配下、中心は Icon を基準に初期化時のみ合わせる）
+        // リングコンテナ未設定なら自動生成（Icon の"親"= BattleIconUI 配下、中心は Icon を基準に初期化時のみ合わせる）
         if (m_RingContainer == null)
         {
             var go = new GameObject("AttrPointRing", typeof(RectTransform));
             m_RingContainer = go.GetComponent<RectTransform>();
-            // 親は Icon の親（= UIController の RectTransform を想定）
+            // 親は Icon の親（= BattleIconUI の RectTransform を想定）
             var parentRect = _iconRect.transform.parent as RectTransform;
             if (parentRect == null) parentRect = _iconRect; // フォールバック
             m_RingContainer.SetParent(parentRect, false);

@@ -27,13 +27,37 @@ public sealed class NovelDialogueStep : IEventStep
     [Header("主人公設定（精神属性連携用）")]
     [Tooltip("精神属性の表示・変化対象となるパーティーメンバー")]
     [SerializeField] private bool hasProtagonist;
+    [Tooltip("CharacterId（文字列）で指定。空の場合はAllyIdを使用。")]
+    [SerializeField] private string protagonistCharacterId;
+    [Tooltip("互換性用: CharacterIdが空の場合に使用")]
     [SerializeField] private AllyId protagonist;
 
     public DialogueSO Dialogue => dialogue;
 
     /// <summary>
-    /// 主人公（精神属性連携用）を取得。未設定の場合はnull。
+    /// 主人公（精神属性連携用）をCharacterIdで取得。未設定の場合はnull。
+    /// CharacterIdが設定されていればそちらを優先、なければAllyIdから変換。
     /// </summary>
+    public CharacterId? GetProtagonistCharacterId()
+    {
+        if (!hasProtagonist) return null;
+
+        // CharacterId文字列が設定されていればそちらを優先
+        if (!string.IsNullOrEmpty(protagonistCharacterId))
+        {
+            var id = new CharacterId(protagonistCharacterId);
+            if (id.IsValid) return id;
+        }
+
+        // フォールバック: AllyIdからCharacterIdに変換
+        return CharacterId.FromAllyId(protagonist);
+    }
+
+    /// <summary>
+    /// 主人公（精神属性連携用）をAllyIdで取得。未設定の場合はnull。
+    /// 互換性用。新規コードはGetProtagonistCharacterId()を使用。
+    /// </summary>
+    [Obsolete("GetProtagonistCharacterId()を使用してください")]
     public AllyId? GetProtagonist() => hasProtagonist ? protagonist : null;
     public DisplayMode DisplayMode => displayMode;
 
@@ -87,8 +111,8 @@ public sealed class NovelDialogueStep : IEventStep
                 AllowBacktrack = allowBacktrack,
                 ShowBacklog = showBacklog,
                 // 注: CentralObjectRTは渡さない（ズーム責務はStep側）
-                // 精神属性連携用
-                Protagonist = GetProtagonist(),
+                // 精神属性連携用（CharacterId版を使用）
+                ProtagonistCharacterId = GetProtagonistCharacterId(),
                 Roster = context.GameContext?.Players?.Roster
             };
 

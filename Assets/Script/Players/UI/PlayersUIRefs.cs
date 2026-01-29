@@ -3,9 +3,6 @@ using UnityEngine.UI;
 
 public class PlayersUIRefs : MonoBehaviour
 {
-    [Header(PlayersConstants.AllyIndexHeader)]
-    public AllyUISet[] AllyUISets = new AllyUISet[PlayersConstants.AllyCount];
-
     [Header("モーダルエリア")]
     public GameObject ModalArea;
 
@@ -18,34 +15,4 @@ public class PlayersUIRefs : MonoBehaviour
     [Header("EyeArea / ActionMark")]
     public GameObject EyeArea;
     public ActionMarkUI ActionMar;
-
-    public void EnsureAllyUISets()
-    {
-        var count = AllyUISets != null ? AllyUISets.Length : 0;
-        if (count <= 0) count = PlayersConstants.AllyCount;
-
-        if (AllyUISets == null || AllyUISets.Length != count)
-        {
-            var next = new AllyUISet[count];
-            if (AllyUISets != null)
-            {
-                var copyCount = Mathf.Min(AllyUISets.Length, next.Length);
-                for (int i = 0; i < copyCount; i++)
-                {
-                    next[i] = AllyUISets[i];
-                }
-            }
-            AllyUISets = next;
-        }
-
-        for (int i = 0; i < AllyUISets.Length; i++)
-        {
-            if (AllyUISets[i] == null)
-            {
-                AllyUISets[i] = new AllyUISet();
-            }
-
-            var set = AllyUISets[i];
-        }
-    }
 }

@@ -88,6 +88,14 @@ public sealed class BattleUIBridge
         }
     }
 
+    /// <summary>
+    /// CharacterIdでスキルUI状態を設定する。
+    /// </summary>
+    public void SetSkillUiState(CharacterId id)
+    {
+        SetSkillUiState(ToSkillUiState(id));
+    }
+
     public void PushMessage(string message)
     {
         messageDropper?.CreateMessage(message);
@@ -132,15 +140,16 @@ public sealed class BattleUIBridge
             onlyRemainButtonByType = SkillFilterPresets.SingleTargetTypeMask;
         }
 
-        if (!TryGetAllyId(acter, out var allyId))
+        // CharacterIdベースで処理（新キャラにも対応）
+        if (!TryGetCharacterId(acter, out var characterId))
         {
-            Debug.LogWarning("BattleUIBridge.SwitchAllySkillUiState: AllyId が特定できません。");
+            Debug.LogWarning("BattleUIBridge.SwitchAllySkillUiState: CharacterId が特定できません。");
             return;
         }
 
-        skillUi.OnlySelectActs(onlyRemainButtonByZoneTrait, onlyRemainButtonByType, allyId);
-        skillUi.OnSkillSelectionScreenTransition(allyId);
-        SetSkillUiState(ToSkillUiState(allyId));
+        skillUi.OnlySelectActs(onlyRemainButtonByZoneTrait, onlyRemainButtonByType, characterId);
+        skillUi.OnSkillSelectionScreenTransition(characterId);
+        UIStateHub.SetSelectedCharacter(characterId);
     }
 
     private bool TryGetAllyId(BaseStates actor, out AllyId id)
@@ -173,6 +182,30 @@ public sealed class BattleUIBridge
         return false;
     }
 
+    /// <summary>
+    /// BaseStatesからCharacterIdを取得する。
+    /// </summary>
+    private bool TryGetCharacterId(BaseStates actor, out CharacterId id)
+    {
+        id = default;
+        if (actor == null) return false;
+
+        // AllyClass の場合は CharacterId を直接取得
+        if (actor is AllyClass ally && ally.CharacterId.IsValid)
+        {
+            id = ally.CharacterId;
+            return true;
+        }
+
+        // roster から CharacterId を逆引き
+        if (roster is PlayersRoster playersRoster && playersRoster.TryGetCharacterId(actor, out id))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     private SkillUICharaState ToSkillUiState(AllyId allyId)
     {
         return allyId switch
@@ -182,6 +215,20 @@ public sealed class BattleUIBridge
             AllyId.Sites => SkillUICharaState.sites,
             _ => SkillUICharaState.geino
         };
+    }
+
+    /// <summary>
+    /// CharacterIdからSkillUICharaStateに変換する（互換性用）。
+    /// </summary>
+    private SkillUICharaState ToSkillUiState(CharacterId id)
+    {
+        if (id == CharacterId.Geino) return SkillUICharaState.geino;
+        if (id == CharacterId.Noramlia) return SkillUICharaState.normalia;
+        if (id == CharacterId.Sites) return SkillUICharaState.sites;
+
+        // 新キャラクターは暫定でgeinoを返す
+        Debug.LogWarning($"BattleUIBridge.ToSkillUiState: 新キャラクター {id} は暫定的にgeinoを返します");
+        return SkillUICharaState.geino;
     }
 
     public void AddLog(string message, bool important)

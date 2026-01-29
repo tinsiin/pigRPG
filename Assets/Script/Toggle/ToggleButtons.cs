@@ -36,20 +36,21 @@ public class ToggleButtons : MonoBehaviour //カスタマイズしやすいTabCo
                 }).AddTo(this);
         //_tabContentsChanger.Select(0);//選んだ状態に予めする奴だから消しとく。
 
-        var skillState = UIStateHub.SkillState;
-        if (skillState != null)
+        // SelectedCharacterIdを購読（新キャラクターにも対応）
+        var selectedCharacterId = UIStateHub.SelectedCharacterId;
+        if (selectedCharacterId != null)
         {
-            skillState.Subscribe(
-                state =>
+            selectedCharacterId.Subscribe(
+                id =>
                 {
-                    //今の所メイン画面のみがキャラ状態によって変わる
-                    _tabContentsChanger.GetViewFromKind(TabContentsKind.Players).CharaStateSwitch(state);
+                    // CharacterIdでUI切り替え（新キャラにも対応）
+                    _tabContentsChanger.GetViewFromKind(TabContentsKind.Players).SwitchCharacter(id);
                 }).AddTo(this);
-            skillState.Value = SkillUICharaState.geino;//とりあえず親父が選ばれてる
+            selectedCharacterId.Value = CharacterId.Geino; // とりあえず親父が選ばれてる
         }
         else
         {
-            Debug.LogError("ToggleButtons.Start: UIStateHub.SkillState が null です");
+            Debug.LogError("ToggleButtons.Start: UIStateHub.SelectedCharacterId が null です");
         }
 
         var userState = UIStateHub.UserState;

@@ -15,6 +15,8 @@ public sealed class PlayersUIEventRouter
     private void Bind()
     {
         if (facade == null || service == null) return;
+
+        // === AllyId ベースのイベント（互換性用） ===
         facade.AllyAlliesUISetActiveRequested += service.AllyAlliesUISetActive;
         facade.OnlySelectActsRequested += service.OnlySelectActs;
         facade.OnSkillSelectionScreenTransitionRequested += service.OnSkillSelectionScreenTransition;
@@ -24,11 +26,21 @@ public sealed class PlayersUIEventRouter
         facade.OnBattleStartRequested += service.OnBattleStart;
         facade.GoToCancelPassiveFieldRequested += service.GoToCancelPassiveField;
         facade.ReturnCancelPassiveToDefaultAreaRequested += service.ReturnCancelPassiveToDefaultArea;
+
+        // === CharacterId ベースのイベント（新規） ===
+        facade.OnlySelectActsByCharacterIdRequested += service.OnlySelectActs;
+        facade.OnSkillSelectionScreenTransitionByCharacterIdRequested += service.OnSkillSelectionScreenTransition;
+        facade.OpenEmotionalAttachmentSkillSelectUIAreaByCharacterIdRequested += service.OpenEmotionalAttachmentSkillSelectUIArea;
+        facade.GoToCancelPassiveFieldByCharacterIdRequested += service.GoToCancelPassiveField;
+        facade.ReturnCancelPassiveToDefaultAreaByCharacterIdRequested += service.ReturnCancelPassiveToDefaultArea;
+        facade.BindNewCharacterRequested += service.BindSkillButtonsForNewCharacter;
     }
 
     public void Unbind()
     {
         if (facade == null || service == null) return;
+
+        // === AllyId ベースのイベント（互換性用） ===
         facade.AllyAlliesUISetActiveRequested -= service.AllyAlliesUISetActive;
         facade.OnlySelectActsRequested -= service.OnlySelectActs;
         facade.OnSkillSelectionScreenTransitionRequested -= service.OnSkillSelectionScreenTransition;
@@ -38,5 +50,13 @@ public sealed class PlayersUIEventRouter
         facade.OnBattleStartRequested -= service.OnBattleStart;
         facade.GoToCancelPassiveFieldRequested -= service.GoToCancelPassiveField;
         facade.ReturnCancelPassiveToDefaultAreaRequested -= service.ReturnCancelPassiveToDefaultArea;
+
+        // === CharacterId ベースのイベント（新規） ===
+        facade.OnlySelectActsByCharacterIdRequested -= service.OnlySelectActs;
+        facade.OnSkillSelectionScreenTransitionByCharacterIdRequested -= service.OnSkillSelectionScreenTransition;
+        facade.OpenEmotionalAttachmentSkillSelectUIAreaByCharacterIdRequested -= service.OpenEmotionalAttachmentSkillSelectUIArea;
+        facade.GoToCancelPassiveFieldByCharacterIdRequested -= service.GoToCancelPassiveField;
+        facade.ReturnCancelPassiveToDefaultAreaByCharacterIdRequested -= service.ReturnCancelPassiveToDefaultArea;
+        facade.BindNewCharacterRequested -= service.BindSkillButtonsForNewCharacter;
     }
 }

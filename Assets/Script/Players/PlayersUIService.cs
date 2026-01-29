@@ -2,82 +2,145 @@ using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UI;
 
 public sealed class PlayersUIService
 {
     private readonly PlayersRoster roster;
-    private readonly AllyUISet[] allyUISets;
     private readonly SkillPassiveSelectionUI skillPassiveSelectionUI;
     private readonly EmotionalAttachmentUI emotionalAttachmentUI;
 
+    /// <summary>
+    /// CharacterUIRegistryへのアクセス。
+    /// シーンに配置されたCharacterUIRegistryコンポーネントを参照する。
+    /// </summary>
+    private CharacterUIRegistry UIRegistry => CharacterUIRegistry.Instance;
+
     public PlayersUIService(
         PlayersRoster roster,
-        AllyUISet[] allyUISets,
         SkillPassiveSelectionUI skillPassiveSelectionUI,
         EmotionalAttachmentUI emotionalAttachmentUI)
     {
         this.roster = roster;
-        this.allyUISets = allyUISets;
         this.skillPassiveSelectionUI = skillPassiveSelectionUI;
         this.emotionalAttachmentUI = emotionalAttachmentUI;
+
+        // CharacterUIRegistryはシーンに配置されたMonoBehaviourを使用
+        if (CharacterUIRegistry.Instance == null)
+        {
+            Debug.LogWarning("PlayersUIService: CharacterUIRegistry.Instance が null です。シーンにCharacterUIRegistryを配置してください。");
+        }
     }
 
     public void BindSkillButtons()
     {
         Debug.Log("ApplySkillButtons");
 
-        var allies = roster.Allies;
-        for (int i = 0; i < allies.Length; i++)
+        if (UIRegistry == null)
         {
-            var actor = allies[i];
+            Debug.LogError("PlayersUIService.BindSkillButtons: CharacterUIRegistry.Instance が null です");
+            return;
+        }
+
+        // 全登録済みCharacterIdに対してバインド（新キャラにも対応）
+        foreach (var characterId in UIRegistry.AllCharacterIds)
+        {
+            var actor = roster.GetAlly(characterId);
             if (actor == null) continue;
 
-            var uiSet = GetUISet((AllyId)i);
-
-            if (uiSet?.SkillUILists != null)
-            {
-                foreach (var button in uiSet.SkillUILists.skillButtons)
-                {
-                    button.AddButtonFunc(actor.OnSkillBtnCallBack);
-                }
-            }
-
-            if (uiSet?.SkillUILists != null)
-            {
-                foreach (var button in uiSet.SkillUILists.stockButtons)
-                {
-                    button.AddButtonFunc(actor.OnSkillStockBtnCallBack);
-                }
-            }
-
-            if (uiSet?.SkillUILists != null)
-            {
-                foreach (var radio in uiSet.SkillUILists.aggressiveCommitRadios)
-                {
-                    radio.AddRadioFunc(actor.OnSkillSelectAgressiveCommitBtnCallBack);
-                }
-            }
-
-            if (uiSet?.DoNothingButton != null)
-            {
-                uiSet.DoNothingButton.onClick.AddListener(actor.OnSkillDoNothingBtnCallBack);
-            }
+            var uiSet = UIRegistry.GetUISet(characterId);
+            BindSkillButtonsForCharacter(actor, uiSet);
         }
 
         Debug.Log("ボタンとコールバックを結び付けました - ApplySkillButtons");
     }
 
+    /// <summary>
+    /// 単一キャラクターのスキルボタンをバインドする。
+    /// 既存リスナーをクリアしてから追加するので、再バインドしても重複しない。
+    /// </summary>
+    private void BindSkillButtonsForCharacter(AllyClass actor, AllyUISet uiSet)
+    {
+        if (actor == null || uiSet == null) return;
+
+        if (uiSet.SkillUILists != null)
+        {
+            // スキルボタン: クリアしてから追加
+            foreach (var button in uiSet.SkillUILists.skillButtons)
+            {
+                button.ClearButtonFunc();
+                button.AddButtonFunc(actor.OnSkillBtnCallBack);
+            }
+
+            // ストックボタン: クリアしてから追加
+            foreach (var button in uiSet.SkillUILists.stockButtons)
+            {
+                button.ClearButtonFunc();
+                button.AddButtonFunc(actor.OnSkillStockBtnCallBack);
+            }
+
+            // ラジオボタン: ToggleGroupController.AddListener 内でクリアされる
+            foreach (var radio in uiSet.SkillUILists.aggressiveCommitRadios)
+            {
+                radio.AddRadioFunc(actor.OnSkillSelectAgressiveCommitBtnCallBack);
+            }
+        }
+
+        // DoNothingボタン: クリアしてから追加
+        if (uiSet.DoNothingButton != null)
+        {
+            uiSet.DoNothingButton.onClick.RemoveAllListeners();
+            uiSet.DoNothingButton.onClick.AddListener(actor.OnSkillDoNothingBtnCallBack);
+        }
+    }
+
+    /// <summary>
+    /// 新たに解放されたキャラクターのスキルボタンをバインドする。
+    /// CharacterUnlockEffect等から呼び出す用。
+    /// </summary>
+    public void BindSkillButtonsForNewCharacter(CharacterId id)
+    {
+        if (UIRegistry == null)
+        {
+            Debug.LogWarning($"PlayersUIService.BindSkillButtonsForNewCharacter: CharacterUIRegistry.Instance が null です。UIバインドを延期します。");
+            return;
+        }
+
+        var actor = roster.GetAlly(id);
+        var uiSet = UIRegistry.GetUISet(id);
+
+        if (actor == null)
+        {
+            Debug.LogWarning($"PlayersUIService.BindSkillButtonsForNewCharacter: キャラクター '{id}' が見つかりません");
+            return;
+        }
+
+        if (uiSet == null)
+        {
+            Debug.LogWarning($"PlayersUIService.BindSkillButtonsForNewCharacter: UISet '{id}' が見つかりません");
+            return;
+        }
+
+        BindSkillButtonsForCharacter(actor, uiSet);
+        Debug.Log($"PlayersUIService: '{id}' のスキルボタンをバインドしました");
+    }
+
     public void UpdateSkillButtonVisibility()
     {
-        var allies = roster.Allies;
-        for (int i = 0; i < allies.Length; i++)
+        if (UIRegistry == null)
         {
-            var actor = allies[i];
+            Debug.LogError("PlayersUIService.UpdateSkillButtonVisibility: CharacterUIRegistry.Instance が null です");
+            return;
+        }
+
+        // 全登録済みCharacterIdに対して更新（新キャラにも対応）
+        foreach (var characterId in UIRegistry.AllCharacterIds)
+        {
+            var actor = roster.GetAlly(characterId);
             if (actor == null) continue;
 
-            var uiSet = GetUISet((AllyId)i);
+            var uiSet = UIRegistry.GetUISet(characterId);
             if (uiSet?.SkillUILists == null) continue;
+
             var activeSkillIds = new HashSet<int>(actor.SkillList.Cast<AllySkill>().Select(skill => skill.ID));
             foreach (var hold in uiSet.SkillUILists.skillButtons)
             {
@@ -91,6 +154,32 @@ public sealed class PlayersUIService
             {
                 hold.Interactable(activeSkillIds.Contains(hold.skillID));
             }
+        }
+    }
+
+    /// <summary>
+    /// 特定キャラクターのスキルボタン可視性を更新する。
+    /// </summary>
+    public void UpdateSkillButtonVisibilityForCharacter(CharacterId id)
+    {
+        var actor = roster.GetAlly(id);
+        if (actor == null) return;
+
+        var uiSet = UIRegistry.GetUISet(id);
+        if (uiSet?.SkillUILists == null) return;
+
+        var activeSkillIds = new HashSet<int>(actor.SkillList.Cast<AllySkill>().Select(skill => skill.ID));
+        foreach (var hold in uiSet.SkillUILists.skillButtons)
+        {
+            hold.button.interactable = activeSkillIds.Contains(hold.skillID);
+        }
+        foreach (var hold in uiSet.SkillUILists.stockButtons)
+        {
+            hold.button.interactable = activeSkillIds.Contains(hold.skillID);
+        }
+        foreach (var hold in uiSet.SkillUILists.aggressiveCommitRadios)
+        {
+            hold.Interactable(activeSkillIds.Contains(hold.skillID));
         }
     }
 
@@ -158,10 +247,10 @@ public sealed class PlayersUIService
 
     public void AllyAlliesUISetActive(bool isActive)
     {
-        var allies = roster.Allies;
-        for (int i = 0; i < allies.Length; i++)
+        // 全登録済みキャラクター（固定3人 + 新キャラ）のUI表示/非表示を制御
+        foreach (var ally in roster.AllAllies)
         {
-            if (allies[i]?.UI != null) allies[i].UI.SetActive(isActive);
+            if (ally?.UI != null) ally.UI.SetActive(isActive);
         }
     }
 
@@ -198,8 +287,113 @@ public sealed class PlayersUIService
 
     private AllyUISet GetUISet(AllyId allyId)
     {
-        var index = (int)allyId;
-        if (allyUISets == null || index < 0 || index >= allyUISets.Length) return null;
-        return allyUISets[index];
+        // AllyId → CharacterId に変換してCharacterUIRegistry経由で取得
+        var characterId = CharacterId.FromAllyId(allyId);
+        return UIRegistry?.GetUISet(characterId);
+    }
+
+    // === CharacterIdベースのAPI ===
+
+    /// <summary>
+    /// CharacterIdでUIセットを取得する。
+    /// </summary>
+    public AllyUISet GetUISet(CharacterId id)
+    {
+        return UIRegistry?.GetUISet(id);
+    }
+
+    /// <summary>
+    /// CharacterIdでスキル選択画面に遷移する。
+    /// </summary>
+    public void OnSkillSelectionScreenTransition(CharacterId id)
+    {
+        var ally = roster.GetAlly(id);
+        if (ally == null) return;
+
+        var uiSet = UIRegistry.GetUISet(id);
+        if (uiSet?.SkillUILists == null) return;
+
+        foreach (var radio in uiSet.SkillUILists.aggressiveCommitRadios.Where(rad => ally.ValidSkillIDList.Contains(rad.skillID)))
+        {
+            BaseSkill skill = ally.SkillList[radio.skillID];
+            if (skill == null) Debug.LogError("スキルがありません");
+            radio.Controller.SetOnWithoutNotify(skill.IsAggressiveCommit ? 0 : 1);
+        }
+    }
+
+    /// <summary>
+    /// CharacterIdでスキルボタンの有効/無効を設定する。
+    /// </summary>
+    public void OnlySelectActs(SkillZoneTrait trait, SkillType type, CharacterId id)
+    {
+        var ally = roster.GetAlly(id);
+        if (ally == null) return;
+
+        var uiSet = UIRegistry.GetUISet(id);
+        if (uiSet?.SkillUILists == null) return;
+
+        foreach (var skill in ally.SkillList.Cast<AllySkill>())
+        {
+            var hold = uiSet.SkillUILists.skillButtons.Find(hold => hold.skillID == skill.ID);
+            if (ally.HasCanCancelCantACTPassive)
+            {
+                if (hold != null)
+                {
+                    hold.button.interactable = false;
+                }
+            }
+            else
+            {
+                Debug.Log("スキルのボタンを有効化します" + skill.ID);
+                if (hold != null)
+                {
+                    hold.button.interactable =
+                        ZoneTraitAndTypeSkillMatchesUIFilter(skill, trait, type)
+                        && CanCastNow(ally, skill);
+                    Debug.Log(ZoneTraitAndTypeSkillMatchesUIFilter(skill, trait, type) + " |" + hold.skillID + "| " + CanCastNow(ally, skill));
+                }
+            }
+        }
+        if (uiSet.CancelPassiveButtonField == null) Debug.LogError("CancelPassiveButtonFieldがnullです");
+        uiSet.CancelPassiveButtonField?.ShowPassiveButtons(ally);
+    }
+
+    /// <summary>
+    /// CharacterIdでキャンセルパッシブフィールドに遷移する。
+    /// </summary>
+    public void GoToCancelPassiveField(CharacterId id)
+    {
+        var uiSet = UIRegistry.GetUISet(id);
+        if (uiSet?.DefaultButtonArea == null || uiSet.CancelPassiveButtonField == null) return;
+        uiSet.DefaultButtonArea.gameObject.SetActive(false);
+        uiSet.CancelPassiveButtonField.gameObject.SetActive(true);
+    }
+
+    /// <summary>
+    /// CharacterIdでデフォルトエリアに戻る。
+    /// </summary>
+    public void ReturnCancelPassiveToDefaultArea(CharacterId id)
+    {
+        var uiSet = UIRegistry.GetUISet(id);
+        if (uiSet?.DefaultButtonArea == null || uiSet.CancelPassiveButtonField == null) return;
+        uiSet.CancelPassiveButtonField.gameObject.SetActive(false);
+        uiSet.DefaultButtonArea.gameObject.SetActive(true);
+    }
+
+    /// <summary>
+    /// CharacterIdで思い入れスキル選択UIを開く。
+    /// </summary>
+    public void OpenEmotionalAttachmentSkillSelectUIArea(CharacterId id)
+    {
+        // 固定メンバーの場合はAllyId経由で呼び出す（互換性）
+        if (id.IsOriginalMember)
+        {
+            emotionalAttachmentUI.OpenEmotionalAttachmentSkillSelectUIArea(id.ToAllyId());
+        }
+        else
+        {
+            // 新キャラクターの場合は将来的に対応
+            Debug.LogWarning($"PlayersUIService.OpenEmotionalAttachmentSkillSelectUIArea: 新キャラクター {id} は未対応です");
+        }
     }
 }

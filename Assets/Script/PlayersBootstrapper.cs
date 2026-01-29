@@ -8,10 +8,8 @@ using UnityEngine;
 [DefaultExecutionOrder(-900)]
 public class PlayersBootstrapper : MonoBehaviour
 {
-    [Header("初期キャラ")]
-    public AllyClass Init_geino;
-    public AllyClass Init_noramlia;
-    public AllyClass Init_sites;
+    [Header("キャラクターデータ")]
+    public CharacterDataRegistry CharacterRegistry;
 
     [Header("思い入れスキル弱体化用スキルパッシブ")]
     public BaseSkillPassive EmotionalAttachmentSkillWeakeningPassive;
@@ -47,12 +45,17 @@ public class PlayersBootstrapper : MonoBehaviour
             return;
         }
 
+        if (CharacterRegistry == null)
+        {
+            Debug.LogError("CharacterRegistry not assigned on PlayersBootstrapper.");
+            Destroy(gameObject);
+            return;
+        }
+
         runtime = new PlayersRuntime();
         var config = new PlayersRuntimeConfig
         {
-            InitGeino = Init_geino,
-            InitNoramlia = Init_noramlia,
-            InitSites = Init_sites,
+            CharacterRegistry = CharacterRegistry,
             EmotionalAttachmentSkillWeakeningPassive = EmotionalAttachmentSkillWeakeningPassive,
             HpToMaxPConversionFactor = HP_TO_MaxP_CONVERSION_FACTOR,
             MentalHpToPRecoveryConversionFactor = MentalHP_TO_P_Recovely_CONVERSION_FACTOR

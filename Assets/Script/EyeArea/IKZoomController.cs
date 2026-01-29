@@ -17,7 +17,7 @@ public interface IKZoomController
     bool IsKAnimating { get; }
 
     /// <summary>指定UIが現在のKZoomターゲットか</summary>
-    bool IsCurrentKTarget(UIController ui);
+    bool IsCurrentKTarget(BattleIconUI ui);
 
     /// <summary>KZoomに入る（指定アイコンにズーム）</summary>
     UniTask EnterK(RectTransform iconRT, string title);

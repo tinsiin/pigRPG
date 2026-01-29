@@ -54,4 +54,15 @@ public sealed class PlayersPartyService : IPlayersParty
         }
         actor.TurnOnDeleteMyFreezeConsecutiveFlag();
     }
+
+    public void RequestStopFreezeConsecutive(CharacterId id)
+    {
+        var actor = roster.GetAlly(id);
+        if (actor == null)
+        {
+            Debug.LogWarning($"RequestStopFreezeConsecutive: CharacterId {id} が不正です。");
+            return;
+        }
+        actor.TurnOnDeleteMyFreezeConsecutiveFlag();
+    }
 }

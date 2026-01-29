@@ -12935,17 +12935,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 4496517682972063812, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
   m_PrefabInstance: {fileID: 340528243}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &340528245 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 167246213309373739, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
-  m_PrefabInstance: {fileID: 340528243}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e4d9421229b74084c827cdd16d8b4301, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &344880655
 GameObject:
   m_ObjectHideFlags: 0
@@ -23368,7 +23357,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9938196, g: 0.026406202, b: 0.9925042, a: 0.97731966}
+  m_Color: {r: 0.97172034, g: 0.12082713, b: 0.9657012, a: 0.8962213}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -36256,6 +36245,7 @@ MonoBehaviour:
   dinoidCanvasGroup: {fileID: 1927266251}
   dinoidIcon: {fileID: 1748389755}
   dinoidText: {fileID: 235615597}
+  dinoidSpiritText: {fileID: 0}
   portraitTextBox: {fileID: 1010740816}
   portraitCanvasGroup: {fileID: 1010740818}
   portraitSpeakerName: {fileID: 209903146}
@@ -42852,6 +42842,7 @@ GameObject:
   - component: {fileID: 1195921980}
   - component: {fileID: 1195921982}
   - component: {fileID: 1195921983}
+  - component: {fileID: 1195921984}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -42910,114 +42901,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 440ef6f28be5c104cbb968a1e4febc22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Init_geino:
-    CharacterName: "\u30B8\u30FC\u30CE"
-    Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
-    ImpressionStringName: 
-    _p: 0
-    _hp: 60
-    _maxhp: 60
-    _mentalHP: 0.34
-    HeavyResistance: 2.91
-    voltenResistance: 4.91
-    DishSmackRsistance: 6.28
-    b_b_atk: 4
-    b_b_def: 4
-    b_b_eye: 4
-    b_b_agi: 4
-    _tenDayTemplate:
-      _list:
-      - key: 7
-        value: 45
-      - key: 17
-        value: 3
-    _machineBrokenRate: 0.3
-    _thinkingFactor: 17.2
-    _myImpression: 2
-    DefaultImpression: 256
-    MyType: 0
-    NowPower: 1
-    InitVitalLaerIDList: 
-    InitWeaponID: 0
-    maxRecoveryTurn: 0
-    Target: 0
-    RangeWill: 0
-    InitpassiveIDList: 
-    _uic: {fileID: 1393269996}
-    _skillALLList:
-    - rid: 2127851150886043649
-    - rid: 9189338325697429504
-    - rid: 5115255248247586911
-    - rid: 5115255248247586912
-    - rid: 5115255248247586913
-    ValidSkillIDList: 0000000001000000020000000300000004000000
-    EmotionalAttachmentSkillID: 0
-  Init_noramlia:
-    CharacterName: "\u30D0\u30B9\u30B8\u30E3\u30C3\u30AF"
-    Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
-    ImpressionStringName: 
-    _p: 0
-    _hp: 0
-    _maxhp: 0
-    _mentalHP: 0
-    HeavyResistance: 1
-    voltenResistance: 1
-    DishSmackRsistance: 1
-    b_b_atk: 4
-    b_b_def: 4
-    b_b_eye: 4
-    b_b_agi: 4
-    _tenDayTemplate:
-      _list: []
-    _machineBrokenRate: 0.3
-    _thinkingFactor: 0
-    _myImpression: 0
-    DefaultImpression: 1
-    MyType: 0
-    NowPower: 2
-    InitVitalLaerIDList: 
-    InitWeaponID: 0
-    maxRecoveryTurn: 0
-    Target: 0
-    RangeWill: 0
-    InitpassiveIDList: 
-    _uic: {fileID: 340528245}
-    _skillALLList: []
-    ValidSkillIDList: 
-    EmotionalAttachmentSkillID: 0
-  Init_sites:
-    CharacterName: "\u885B\u2606"
-    Description: "\u5165\u529B\u3055\u308C\u3066\u3044\u307E\u305B\u3093"
-    ImpressionStringName: 
-    _p: 0
-    _hp: 0
-    _maxhp: 0
-    _mentalHP: 0
-    HeavyResistance: 1
-    voltenResistance: 1
-    DishSmackRsistance: 1
-    b_b_atk: 4
-    b_b_def: 4
-    b_b_eye: 4
-    b_b_agi: 4
-    _tenDayTemplate:
-      _list: []
-    _machineBrokenRate: 0.3
-    _thinkingFactor: 0
-    _myImpression: 0
-    DefaultImpression: 8
-    MyType: 0
-    NowPower: 2
-    InitVitalLaerIDList: 
-    InitWeaponID: 0
-    maxRecoveryTurn: 0
-    Target: 0
-    RangeWill: 0
-    InitpassiveIDList: 
-    _uic: {fileID: 1845692092}
-    _skillALLList: []
-    ValidSkillIDList: 
-    EmotionalAttachmentSkillID: 0
+  CharacterRegistry: {fileID: 11400000, guid: 2e40dabfd6f9aa0428634d121660ed93, type: 2}
   EmotionalAttachmentSkillWeakeningPassive:
     Name: "\u601D\u3044\u5165\u308C\u5F31\u4F53\u5316\u30B9\u30AD\u30EB\u30D1\u30C3\u30B7\u30D6"
     DurationTurn: 99
@@ -43027,383 +42911,6 @@ MonoBehaviour:
     IsBad: 0
   HP_TO_MaxP_CONVERSION_FACTOR: 1
   MentalHP_TO_P_Recovely_CONVERSION_FACTOR: 2
-  references:
-    version: 2
-    RefIds:
-    - rid: 2127851150886043649
-      type: {class: AllySkill, ns: , asm: Assembly-CSharp}
-      data:
-        IsAggressiveCommit: 1
-        IsReadyTriggerAgressiveCommit: 0
-        IsStockAgressiveCommit: 0
-        CanSelectAggressiveCommit: 0
-        _RandomConsecutivePer: 0
-        _defaultStockCount: 1
-        _stockPower: 1
-        _stockForgetPower: 1
-        SkillName: "\u30E9\u30D3\u30C3\u30C8\u30AD\u30E3\u30C3\u30C8"
-        SkillSpiritual: 1
-        Impression: 2
-        MotionFlavor: {fileID: 0}
-        SkillPhysical: 3
-        SpecialFlags: 0
-        _baseSkillType: 512
-        ConsecutiveType: 0
-        ZoneTrait: 1
-        RequiredNormalP: 0
-        RequiredAttrP:
-          _list: []
-        RequiredRemainingHPPercent: 0
-        Cantkill: 0
-        SKillDidWaitCount: 0
-        EvasionModifier: 1
-        AttackModifier: 1.6
-        AttackMentalHealPercent: 80
-        _defAtk: 0
-        DistributionType: 0
-        PowerRangePercentageDictionary:
-          _list: []
-        HitRangePercentageDictionary:
-          _list: []
-        subEffects: 
-        subVitalLayers: 
-        canEraceEffectIDs: 
-        CanEraceEffectCount: 0
-        canEraceVitalLayerIDs: 
-        CanEraceVitalLayerCount: 0
-        _mentalDamageRatio: 0
-        _a_moveset: []
-        _b_moveset: []
-        _powerSpread: []
-        _skillHitPer: 68
-        FixedSkillLevelData: []
-        _infiniteSkillPowerUnit: 0
-        _infiniteSkillTenDaysUnit: 0
-        ReactiveSkillPassiveList: []
-        AggressiveSkillPassiveList: []
-        TargetSelection: 0
-        SkillPassiveEffectCount: 1
-        _skillPassiveGibeSkill_SkillFilter:
-          Impressions: 
-          MotionFlavors: []
-          MentalAttrs: 
-          PhysicalAttrs: 
-          AttackTypes: 
-          TenDayAbilities: 
-          TenDayMode: 0
-          SkillTypes: 
-          SkillTypeMode: 0
-          SpecialFlags: 
-          SpecialFlagMode: 0
-        _triggerCountMax: 0
-        CanCancelTrigger: 1
-        _triggerRollBackCount: 0
-        _iD: 0
-        Proficiency: 0
-    - rid: 5115255248247586911
-      type: {class: AllySkill, ns: , asm: Assembly-CSharp}
-      data:
-        IsAggressiveCommit: 1
-        IsReadyTriggerAgressiveCommit: 0
-        IsStockAgressiveCommit: 0
-        CanSelectAggressiveCommit: 0
-        _RandomConsecutivePer: 0
-        _defaultStockCount: 1
-        _stockPower: 1
-        _stockForgetPower: 1
-        SkillName: "\u30C6\u30B9\u30C8\u30B7\u30F3\u30D7\u30EB\u653B\u6483\u30B9\u30AD\u30EB"
-        SkillSpiritual: 8
-        Impression: 0
-        MotionFlavor: {fileID: 0}
-        SkillPhysical: 0
-        SpecialFlags: 0
-        _baseSkillType: 1
-        ConsecutiveType: 0
-        ZoneTrait: 16416
-        RequiredNormalP: 2
-        RequiredAttrP:
-          _list: []
-        RequiredRemainingHPPercent: 0
-        Cantkill: 0
-        SKillDidWaitCount: 0
-        EvasionModifier: 1
-        AttackModifier: 1
-        AttackMentalHealPercent: 80
-        _defAtk: 0
-        DistributionType: 0
-        PowerRangePercentageDictionary:
-          _list: []
-        HitRangePercentageDictionary:
-          _list: []
-        subEffects: 
-        subVitalLayers: 
-        canEraceEffectIDs: 
-        CanEraceEffectCount: 0
-        canEraceVitalLayerIDs: 
-        CanEraceVitalLayerCount: 0
-        _mentalDamageRatio: 0
-        _a_moveset: []
-        _b_moveset: []
-        _powerSpread: []
-        _skillHitPer: 100
-        FixedSkillLevelData:
-        - TenDayValues:
-            _list: []
-          SkillPower: 10
-          OptionMentalDamageRatio: 0
-          OptionPowerSpread: []
-          OptionSkillHitPer: -1
-          OptionA_MoveSet: []
-          OptionB_MoveSet: []
-        _infiniteSkillPowerUnit: 0
-        _infiniteSkillTenDaysUnit: 0
-        ReactiveSkillPassiveList: []
-        AggressiveSkillPassiveList: []
-        TargetSelection: 0
-        SkillPassiveEffectCount: 1
-        _skillPassiveGibeSkill_SkillFilter:
-          Impressions: 
-          MotionFlavors: []
-          MentalAttrs: 
-          PhysicalAttrs: 
-          AttackTypes: 
-          TenDayAbilities: 
-          TenDayMode: 0
-          SkillTypes: 
-          SkillTypeMode: 0
-          SpecialFlags: 
-          SpecialFlagMode: 0
-        _triggerCountMax: 0
-        CanCancelTrigger: 1
-        _triggerRollBackCount: 0
-        _iD: 2
-        Proficiency: 0
-    - rid: 5115255248247586912
-      type: {class: AllySkill, ns: , asm: Assembly-CSharp}
-      data:
-        IsAggressiveCommit: 1
-        IsReadyTriggerAgressiveCommit: 0
-        IsStockAgressiveCommit: 0
-        CanSelectAggressiveCommit: 0
-        _RandomConsecutivePer: 0
-        _defaultStockCount: 1
-        _stockPower: 1
-        _stockForgetPower: 1
-        SkillName: "\u30C6\u30B9\u30C8\u5B8C\u5168\u5358\u4F53\u9078\u629E\u30B9\u30AD\u30EB"
-        SkillSpiritual: 1
-        Impression: 0
-        MotionFlavor: {fileID: 0}
-        SkillPhysical: 0
-        SpecialFlags: 0
-        _baseSkillType: 1
-        ConsecutiveType: 0
-        ZoneTrait: 1
-        RequiredNormalP: 1
-        RequiredAttrP:
-          _list: []
-        RequiredRemainingHPPercent: 0
-        Cantkill: 0
-        SKillDidWaitCount: 0
-        EvasionModifier: 1
-        AttackModifier: 1
-        AttackMentalHealPercent: 80
-        _defAtk: 0
-        DistributionType: 0
-        PowerRangePercentageDictionary:
-          _list: []
-        HitRangePercentageDictionary:
-          _list: []
-        subEffects: 
-        subVitalLayers: 
-        canEraceEffectIDs: 
-        CanEraceEffectCount: 0
-        canEraceVitalLayerIDs: 
-        CanEraceVitalLayerCount: 0
-        _mentalDamageRatio: 22
-        _a_moveset: []
-        _b_moveset: []
-        _powerSpread: []
-        _skillHitPer: 99
-        FixedSkillLevelData:
-        - TenDayValues:
-            _list: []
-          SkillPower: 55
-          OptionMentalDamageRatio: 0
-          OptionPowerSpread: []
-          OptionSkillHitPer: 0
-          OptionA_MoveSet: []
-          OptionB_MoveSet: []
-        _infiniteSkillPowerUnit: 0
-        _infiniteSkillTenDaysUnit: 0
-        ReactiveSkillPassiveList: []
-        AggressiveSkillPassiveList: []
-        TargetSelection: 0
-        SkillPassiveEffectCount: 1
-        _skillPassiveGibeSkill_SkillFilter:
-          Impressions: 
-          MotionFlavors: []
-          MentalAttrs: 
-          PhysicalAttrs: 
-          AttackTypes: 
-          TenDayAbilities: 
-          TenDayMode: 0
-          SkillTypes: 
-          SkillTypeMode: 0
-          SpecialFlags: 
-          SpecialFlagMode: 0
-        _triggerCountMax: 0
-        CanCancelTrigger: 1
-        _triggerRollBackCount: 0
-        _iD: 3
-        Proficiency: 0
-    - rid: 5115255248247586913
-      type: {class: AllySkill, ns: , asm: Assembly-CSharp}
-      data:
-        IsAggressiveCommit: 1
-        IsReadyTriggerAgressiveCommit: 0
-        IsStockAgressiveCommit: 0
-        CanSelectAggressiveCommit: 0
-        _RandomConsecutivePer: 0
-        _defaultStockCount: 1
-        _stockPower: 1
-        _stockForgetPower: 1
-        SkillName: "\u30C6\u30B9\u30C8\u30B7\u30F3\u30D7\u30EB\u653B\u6483\u30B9\u30AD\u30EB"
-        SkillSpiritual: 16
-        Impression: 0
-        MotionFlavor: {fileID: 0}
-        SkillPhysical: 0
-        SpecialFlags: 0
-        _baseSkillType: 1
-        ConsecutiveType: 0
-        ZoneTrait: 16416
-        RequiredNormalP: 2
-        RequiredAttrP:
-          _list: []
-        RequiredRemainingHPPercent: 0
-        Cantkill: 0
-        SKillDidWaitCount: 0
-        EvasionModifier: 1
-        AttackModifier: 1
-        AttackMentalHealPercent: 80
-        _defAtk: 0
-        DistributionType: 0
-        PowerRangePercentageDictionary:
-          _list: []
-        HitRangePercentageDictionary:
-          _list: []
-        subEffects: 
-        subVitalLayers: 
-        canEraceEffectIDs: 
-        CanEraceEffectCount: 0
-        canEraceVitalLayerIDs: 
-        CanEraceVitalLayerCount: 0
-        _mentalDamageRatio: 0
-        _a_moveset: []
-        _b_moveset: []
-        _powerSpread: []
-        _skillHitPer: 100
-        FixedSkillLevelData:
-        - TenDayValues:
-            _list: []
-          SkillPower: 5
-          OptionMentalDamageRatio: 0
-          OptionPowerSpread: []
-          OptionSkillHitPer: -1
-          OptionA_MoveSet: []
-          OptionB_MoveSet: []
-        _infiniteSkillPowerUnit: 0
-        _infiniteSkillTenDaysUnit: 0
-        ReactiveSkillPassiveList: []
-        AggressiveSkillPassiveList: []
-        TargetSelection: 0
-        SkillPassiveEffectCount: 1
-        _skillPassiveGibeSkill_SkillFilter:
-          Impressions: 
-          MotionFlavors: []
-          MentalAttrs: 
-          PhysicalAttrs: 
-          AttackTypes: 
-          TenDayAbilities: 
-          TenDayMode: 0
-          SkillTypes: 
-          SkillTypeMode: 0
-          SpecialFlags: 
-          SpecialFlagMode: 0
-        _triggerCountMax: 0
-        CanCancelTrigger: 1
-        _triggerRollBackCount: 0
-        _iD: 4
-        Proficiency: 0
-    - rid: 9189338325697429504
-      type: {class: AllySkill, ns: , asm: Assembly-CSharp}
-      data:
-        IsAggressiveCommit: 0
-        IsReadyTriggerAgressiveCommit: 0
-        IsStockAgressiveCommit: 0
-        CanSelectAggressiveCommit: 0
-        _RandomConsecutivePer: 0
-        _defaultStockCount: 1
-        _stockPower: 1
-        _stockForgetPower: 1
-        SkillName: "\u30A2\u30AD\u30EC\u30B9\u3068\u4E80-\u6DF7\u6C8C\u6642\u9593"
-        SkillSpiritual: 8
-        Impression: 2
-        MotionFlavor: {fileID: 0}
-        SkillPhysical: 3
-        SpecialFlags: 0
-        _baseSkillType: 512
-        ConsecutiveType: 0
-        ZoneTrait: 1
-        RequiredNormalP: 0
-        RequiredAttrP:
-          _list: []
-        RequiredRemainingHPPercent: 0
-        Cantkill: 0
-        SKillDidWaitCount: 2
-        EvasionModifier: 1.1
-        AttackModifier: 1
-        AttackMentalHealPercent: 80
-        _defAtk: 0
-        DistributionType: 0
-        PowerRangePercentageDictionary:
-          _list: []
-        HitRangePercentageDictionary:
-          _list: []
-        subEffects: 
-        subVitalLayers: 
-        canEraceEffectIDs: 
-        CanEraceEffectCount: 0
-        canEraceVitalLayerIDs: 
-        CanEraceVitalLayerCount: 0
-        _mentalDamageRatio: 0
-        _a_moveset: []
-        _b_moveset: []
-        _powerSpread: []
-        _skillHitPer: 0
-        FixedSkillLevelData: []
-        _infiniteSkillPowerUnit: 0
-        _infiniteSkillTenDaysUnit: 0
-        ReactiveSkillPassiveList: []
-        AggressiveSkillPassiveList: []
-        TargetSelection: 0
-        SkillPassiveEffectCount: 1
-        _skillPassiveGibeSkill_SkillFilter:
-          Impressions: 
-          MotionFlavors: []
-          MentalAttrs: 
-          PhysicalAttrs: 
-          AttackTypes: 
-          TenDayAbilities: 
-          TenDayMode: 0
-          SkillTypes: 
-          SkillTypeMode: 0
-          SpecialFlags: 
-          SpecialFlagMode: 0
-        _triggerCountMax: 0
-        CanCancelTrigger: 1
-        _triggerRollBackCount: 0
-        _iD: 1
-        Proficiency: 0
 --- !u!114 &1195921977
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -44850,45 +44357,43 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 128600c183022b0419f86baf88bb218a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AllyUISets:
-  - SkillUILists:
-      skillButtons:
-      - button: {fileID: 602005237}
-        skillID: 2
-      - button: {fileID: 85669209}
-        skillID: 3
-      - button: {fileID: 1852605335}
-        skillID: 4
-      stockButtons: []
-      aggressiveCommitRadios: []
-    DefaultButtonArea: {fileID: 0}
-    DoNothingButton: {fileID: 1568280088}
-    CancelPassiveButtonField: {fileID: 1400616400}
-    GoToCancelPassiveFieldButton: {fileID: 0}
-    ReturnCancelPassiveToDefaultAreaButton: {fileID: 0}
-  - SkillUILists:
-      skillButtons: []
-      stockButtons: []
-      aggressiveCommitRadios: []
-    DefaultButtonArea: {fileID: 0}
-    DoNothingButton: {fileID: 0}
-    CancelPassiveButtonField: {fileID: 0}
-    GoToCancelPassiveFieldButton: {fileID: 0}
-    ReturnCancelPassiveToDefaultAreaButton: {fileID: 0}
-  - SkillUILists:
-      skillButtons: []
-      stockButtons: []
-      aggressiveCommitRadios: []
-    DefaultButtonArea: {fileID: 0}
-    DoNothingButton: {fileID: 0}
-    CancelPassiveButtonField: {fileID: 0}
-    GoToCancelPassiveFieldButton: {fileID: 0}
-    ReturnCancelPassiveToDefaultAreaButton: {fileID: 0}
   ModalArea: {fileID: 2061243746}
   SelectSkillPassiveTargetHandle: {fileID: 348096248}
   EmotionalAttachmentSkillSelectUIArea: {fileID: 965992562}
   EyeArea: {fileID: 132546428}
   ActionMar: {fileID: 686993905}
+--- !u!114 &1195921984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1195921973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e5f605ab66542840be537ca2f20e11e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterUIRegistry
+  entries:
+  - CharacterId: geino
+    SkillUIObject: {fileID: 514049931}
+    AllyUISet:
+      SkillUILists:
+        skillButtons:
+        - button: {fileID: 602005237}
+          skillID: 2
+        - button: {fileID: 1852605335}
+          skillID: 4
+        - button: {fileID: 85669209}
+          skillID: 3
+        stockButtons: []
+        aggressiveCommitRadios: []
+      DefaultButtonArea: {fileID: 770666932}
+      DoNothingButton: {fileID: 1568280088}
+      CancelPassiveButtonField: {fileID: 1400616400}
+      GoToCancelPassiveFieldButton: {fileID: 263722060}
+      ReturnCancelPassiveToDefaultAreaButton: {fileID: 1157177639}
+    BattleIconUI: {fileID: 1393269996}
 --- !u!1 &1197626739
 GameObject:
   m_ObjectHideFlags: 0
@@ -64602,9 +64107,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2215fb533482f34fb4eb3ccef98b884, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  geino: {fileID: 514049931}
-  sites: {fileID: 570427287}
-  normalia: {fileID: 436718585}
 --- !u!1 &1741189953
 GameObject:
   m_ObjectHideFlags: 0
@@ -67776,17 +67278,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 4496517682972063812, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
   m_PrefabInstance: {fileID: 1845692090}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1845692092 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 167246213309373739, guid: c4eac0b65ac0e9c47a295fda3bb00538, type: 3}
-  m_PrefabInstance: {fileID: 1845692090}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e4d9421229b74084c827cdd16d8b4301, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1847771585
 GameObject:
   m_ObjectHideFlags: 0

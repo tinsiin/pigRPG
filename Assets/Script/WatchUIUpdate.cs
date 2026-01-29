@@ -130,7 +130,7 @@ public partial class WatchUIUpdate : MonoBehaviour,
     }
 
     // ===== Kモード: パッシブ一覧表示（フェードイン） =====
-    private BaseStates FindActorByUI(UIController ui)
+    private BaseStates FindActorByUI(BattleIconUI ui)
     {
         var battle = BattleUIBridge.Active?.BattleContext;
         var all = battle?.AllCharacters;
@@ -517,9 +517,9 @@ public partial class WatchUIUpdate : MonoBehaviour,
     [Header("敵HPバー設定")]
     [SerializeField] private Vector2 hpBarSizeRatio = new Vector2(1.0f, 0.15f); // x: バー幅/アイコン幅, y: バー高/アイコン幅
     
-    // 敵UIプレハブ（UIController付き）
+    // 敵UIプレハブ（BattleIconUI付き）
     [Header("敵UI Prefab")]
-    [SerializeField] private UIController enemyUIPrefab;
+    [SerializeField] private BattleIconUI enemyUIPrefab;
 
     // 敵ランダム配置時の余白（ピクセル）
     [Header("敵ランダム配置 余白設定")]
@@ -717,7 +717,7 @@ public partial class WatchUIUpdate : MonoBehaviour,
     }
 
     // Phase 4: WalkingUIController への委譲
-    private WalkingUIController _walkingUIController;
+    private WalkingUIController _walkingBattleIconUI;
 
     /// <summary>
     /// WalkingUIコントローラーへのアクセス（外部からの直接参照用）。
@@ -727,15 +727,15 @@ public partial class WatchUIUpdate : MonoBehaviour,
     {
         get
         {
-            if (_walkingUIController == null)
+            if (_walkingBattleIconUI == null)
             {
-                _walkingUIController = new WalkingUIController(
+                _walkingBattleIconUI = new WalkingUIController(
                     StagesString,
                     bgRect,
                     ActionMarkCtrl
                 );
             }
-            return _walkingUIController;
+            return _walkingBattleIconUI;
         }
     }
 
@@ -778,14 +778,14 @@ public partial class WatchUIUpdate : MonoBehaviour,
     private string _kPassivesTokensRaw = string.Empty;
     // Kパッシブ表示: 子TMPキャッシュ
     private TMP_Text _kPassivesTMP;
-    // K中: クリック元のUI（UIController）で、Icon以外の子を一時的にOFFにするための参照
-    private UIController _kExclusiveUI;
+    // K中: クリック元のUI（BattleIconUI）で、Icon以外の子を一時的にOFFにするための参照
+    private BattleIconUI _kExclusiveUI;
     // K開始時のActionMark表示状態を退避
     private bool _actionMarkWasActiveBeforeK = false;
     // K開始時のSchizoLog表示状態を退避
     private bool _schizoWasVisibleBeforeK = false;
-    // K中: 対象以外のUIControllerの有効状態を退避して一時的に非表示にする
-    private List<(UIController ui, bool wasActive)> _kHiddenOtherUIs;
+    // K中: 対象以外のBattleIconUIの有効状態を退避して一時的に非表示にする
+    private List<(BattleIconUI ui, bool wasActive)> _kHiddenOtherUIs;
 
     [Header("前のめりUI設定")]
     [SerializeField] private Vector2 vanguardOffsetPxRange = new Vector2(8f, 16f);//前のめり時の移動量
@@ -1274,7 +1274,7 @@ public partial class WatchUIUpdate : MonoBehaviour,
     /// 現在のKズーム対象UIかどうか
     /// Phase 3b: KZoomControllerへ委譲
     /// </summary>
-    public bool IsCurrentKTarget(UIController ui) => KZoomCtrl.IsCurrentKTarget(ui);
+    public bool IsCurrentKTarget(BattleIconUI ui) => KZoomCtrl.IsCurrentKTarget(ui);
 
     /// <summary>
     /// 指定アイコンをkTargetRectにフィットさせるように、kZoomRootをスケール・移動させてKモード突入
@@ -1585,7 +1585,7 @@ public partial class WatchUIUpdate : MonoBehaviour,
             if (throttleEnemySpawns)
             {
                 int batchCounter = 0;
-                var batchCreated = new List<UIController>();
+                var batchCreated = new List<BattleIconUI>();
                 foreach (var character in enemyGroup.Ours)
                 {
                     if (character is NormalEnemy enemy)
@@ -1641,7 +1641,7 @@ public partial class WatchUIUpdate : MonoBehaviour,
             else
             {
                 // 旧挙動: 並列生成（スパイクが発生しやすい）
-                var tasks = new List<UniTask<UIController>>();
+                var tasks = new List<UniTask<BattleIconUI>>();
                 foreach (var character in enemyGroup.Ours)
                 {
                     if (character is NormalEnemy enemy)
@@ -1677,20 +1677,20 @@ public partial class WatchUIUpdate : MonoBehaviour,
     /// <summary>
     /// 個別の敵UIを配置（ズーム前座標で即座に配置）
     /// </summary>
-    private UniTask<UIController> PlaceEnemyUI(NormalEnemy enemy, Vector2 preZoomLocalPosition)
+    private UniTask<BattleIconUI> PlaceEnemyUI(NormalEnemy enemy, Vector2 preZoomLocalPosition)
     {
         if (enemyUIPrefab == null)
         {
             Debug.LogWarning("enemyUIPrefab が設定されていません。敵UIを生成できません。");
-            return UniTask.FromResult<UIController>(null);
+            return UniTask.FromResult<BattleIconUI>(null);
         }
 
         if (enemyBattleLayer == null)
         {
             Debug.LogWarning("enemyBattleLayerが設定されていません。");
-            return UniTask.FromResult<UIController>(null);
+            return UniTask.FromResult<BattleIconUI>(null);
         }
-            UIController uiInstance = null;
+            BattleIconUI uiInstance = null;
             if (enableVerboseEnemyLogs)
             {
                 Debug.Log($"[Prefab ref] enemyUIPrefab.activeSelf={enemyUIPrefab.gameObject.activeSelf}", enemyUIPrefab);
@@ -1803,7 +1803,7 @@ public partial class WatchUIUpdate : MonoBehaviour,
             }
 
             // BaseStatesへバインド
-            enemy.BindUIController(uiInstance);
+            enemy.BindBattleIconUI(uiInstance);
             
             // ここでは有効化せず、呼び出し側でバッチ一括有効化する
             return UniTask.FromResult(uiInstance);

@@ -65,7 +65,7 @@ public sealed class KZoomController : IKZoomController
 
     public bool IsKAnimating => _state.IsAnimating;
 
-    public bool IsCurrentKTarget(UIController ui) => _state.IsActive && (_state.ExclusiveUI == ui);
+    public bool IsCurrentKTarget(BattleIconUI ui) => _state.IsActive && (_state.ExclusiveUI == ui);
 
     public async UniTask EnterK(RectTransform iconRT, string title)
     {
@@ -95,10 +95,10 @@ public sealed class KZoomController : IKZoomController
         _state.IsAnimating = true;
 
         // クリック元UIの参照を保持
-        _state.ExclusiveUI = iconRT.GetComponentInParent<UIController>();
+        _state.ExclusiveUI = iconRT.GetComponentInParent<BattleIconUI>();
 
-        // 非対象キャラのUIControllerをK中は非表示にする
-        _state.HiddenOtherUIs = new List<(UIController ui, bool wasActive)>();
+        // 非対象キャラのBattleIconUIをK中は非表示にする
+        _state.HiddenOtherUIs = new List<(BattleIconUI ui, bool wasActive)>();
         var allChars = _getAllCharacters?.Invoke();
         if (allChars != null)
         {
@@ -317,7 +317,7 @@ public sealed class KZoomController : IKZoomController
         }
     }
 
-    private BaseStates FindActorByUI(UIController ui)
+    private BaseStates FindActorByUI(BattleIconUI ui)
     {
         var all = _getAllCharacters?.Invoke();
         if (ui == null || all == null) return null;

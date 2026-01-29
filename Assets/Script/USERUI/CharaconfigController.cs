@@ -81,11 +81,11 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
             {
                 var actor = GetActor(i);
                 if (actor == null) return;
-                var allyId = actor.CharacterId.ToAllyId();
 
                 if (skillUi != null)
                 {
-                    skillUi.OpenEmotionalAttachmentSkillSelectUIArea(allyId);
+                    // CharacterId版を使用（新キャラ対応）
+                    skillUi.OpenEmotionalAttachmentSkillSelectUIArea(actor.CharacterId);
                 }
                 else
                 {
@@ -99,11 +99,11 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
             {
                 var actor = GetActor(i);
                 if (actor == null) return;
-                var allyId = actor.CharacterId.ToAllyId();
 
                 if (playersParty != null)
                 {
-                    playersParty.RequestStopFreezeConsecutive(allyId);
+                    // CharacterId版を使用（新キャラ対応）
+                    playersParty.RequestStopFreezeConsecutive(actor.CharacterId);
                 }
                 else
                 {
@@ -227,19 +227,48 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
         _onSelectionChanged.OnNext(m_CurrentIndex);
     }
 
-    // 外部API: enum指定
+    // 外部API: enum指定（互換性用）
     public void SetSelectedAllyByEnum(AllyId id)
     {
-        SetSelectedIndex((int)id);
+        // AllyIdをCharacterIdに変換して検索
+        var characterId = CharacterId.FromAllyId(id);
+        SetSelectedByCharacterId(characterId);
+    }
+
+    // 外部API: CharacterId指定（新規）
+    public void SetSelectedByCharacterId(CharacterId id)
+    {
+        if (!id.IsValid) return;
+
+        // パーティーメンバーリストから該当するインデックスを検索
+        for (int i = 0; i < _partyMemberIds.Count; i++)
+        {
+            if (_partyMemberIds[i] == id)
+            {
+                SetSelectedIndex(i);
+                return;
+            }
+        }
+
+        Debug.LogWarning($"CharaconfigController: CharacterId '{id}' はパーティーに含まれていません");
     }
 
     // 外部API: アクターからインデックスへ変換して選択同期
     public void SetSelectedByActor(BaseStates actor)
     {
         if (actor == null || playersRoster == null) return;
-        if (playersRoster.TryGetAllyId(actor, out var id))
+
+        // CharacterId版を優先使用
+        if (playersRoster.TryGetCharacterId(actor, out var characterId))
         {
-            SetSelectedIndex((int)id);
+            SetSelectedByCharacterId(characterId);
+            return;
+        }
+
+        // フォールバック: AllyId版
+        if (playersRoster.TryGetAllyId(actor, out var allyId))
+        {
+            SetSelectedAllyByEnum(allyId);
         }
     }
 

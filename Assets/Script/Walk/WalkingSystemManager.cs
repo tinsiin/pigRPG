@@ -216,6 +216,34 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
             var initialSnapshot = areaController.GetCurrentProgress();
             progressUI.UpdateDisplay(initialSnapshot);
         }
+
+        // 新規ゲーム開始時（セーブデータなし）は開始ノードのOnEnterEventを自動発火
+        if (areaController.IsNewGame)
+        {
+            TriggerInitialOnEnterAsync().Forget();
+        }
+    }
+
+    /// <summary>
+    /// 新規ゲーム開始時に開始ノードのOnEnterEventを発火する。
+    /// </summary>
+    private async UniTask TriggerInitialOnEnterAsync()
+    {
+        if (areaController == null) return;
+
+        try
+        {
+            await areaController.TriggerInitialOnEnterIfNewGameAsync();
+            UpdateNodeUI();
+        }
+        catch (System.OperationCanceledException)
+        {
+            // Play停止時などのキャンセルは無視
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogException(ex);
+        }
     }
 
     private void OnProgressChanged(ProgressSnapshot snapshot)

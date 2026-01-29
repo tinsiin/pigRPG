@@ -33,6 +33,12 @@ public sealed class AreaController
     private readonly ProgressCalculator progressCalculator = new ProgressCalculator();
     private System.Action<ProgressSnapshot> onProgressChanged;
 
+    /// <summary>
+    /// セーブデータなしの新規ゲーム開始時にtrueになる。
+    /// この場合、初期化後にOnEnterEventを自動発火する必要がある。
+    /// </summary>
+    private bool isNewGame;
+
     public AreaController(
         FlowGraphSO graph,
         GameContext context,
@@ -606,22 +612,61 @@ public sealed class AreaController
             return;
         }
 
+        // セーブデータがある場合（CurrentNodeIdが設定済み）
         if (!string.IsNullOrEmpty(context.WalkState.CurrentNodeId) &&
             graph.TryGetNode(context.WalkState.CurrentNodeId, out var savedNode))
         {
             currentNode = savedNode;
+            isNewGame = false;
             return;
         }
 
+        // セーブデータなし → 新規ゲーム開始
         if (graph.TryGetNode(graph.StartNodeId, out var startNode))
         {
             currentNode = startNode;
             context.WalkState.CurrentNodeId = startNode.NodeId;
+            isNewGame = true;
+            Debug.Log($"AreaController: 新規ゲーム開始 - 開始ノード '{startNode.NodeId}' のOnEnterEventを初期化時に発火します");
             return;
         }
 
         Debug.LogError("AreaController.InitializeStartNode: start node not found.");
     }
+
+    /// <summary>
+    /// 新規ゲーム開始時に呼び出し、開始ノードのOnEnterEventを発火する。
+    /// セーブデータからロードした場合は何もしない。
+    /// </summary>
+    public async UniTask TriggerInitialOnEnterIfNewGameAsync()
+    {
+        if (!isNewGame)
+        {
+            return;
+        }
+
+        if (currentNode == null)
+        {
+            Debug.LogWarning("AreaController.TriggerInitialOnEnterIfNewGameAsync: currentNode is null.");
+            return;
+        }
+
+        if (currentNode.OnEnterEvent == null)
+        {
+            Debug.Log($"AreaController: 開始ノード '{currentNode.NodeId}' にOnEnterEventが設定されていません");
+            hasEnteredCurrentNode = true;
+            return;
+        }
+
+        Debug.Log($"AreaController: 開始ノード '{currentNode.NodeId}' のOnEnterEventを発火");
+        await TriggerEvent(currentNode.OnEnterEvent);
+        hasEnteredCurrentNode = true;
+    }
+
+    /// <summary>
+    /// 新規ゲーム（セーブデータなし）かどうか。
+    /// </summary>
+    public bool IsNewGame => isNewGame;
 
     private async UniTask<ResolvedExit?> SelectExit(NodeSO node)
     {

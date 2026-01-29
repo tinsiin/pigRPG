@@ -66,7 +66,7 @@ public sealed class EnemyPlacementController : IEnemyPlacementController
     private async UniTask PlaceEnemiesThrottled(BattleGroup enemyGroup, List<Vector2> placedWorldPositions)
     {
         int batchCounter = 0;
-        var batchCreated = new List<UIController>();
+        var batchCreated = new List<BattleIconUI>();
 
         foreach (var character in enemyGroup.Ours)
         {
@@ -104,7 +104,7 @@ public sealed class EnemyPlacementController : IEnemyPlacementController
     /// </summary>
     private async UniTask PlaceEnemiesParallel(BattleGroup enemyGroup, List<Vector2> placedWorldPositions)
     {
-        var tasks = new List<UniTask<UIController>>();
+        var tasks = new List<UniTask<BattleIconUI>>();
 
         foreach (var character in enemyGroup.Ours)
         {
@@ -123,7 +123,7 @@ public sealed class EnemyPlacementController : IEnemyPlacementController
     /// <summary>
     /// バッチをまとめて有効化
     /// </summary>
-    private void ActivateBatch(IEnumerable<UIController> batch)
+    private void ActivateBatch(IEnumerable<BattleIconUI> batch)
     {
         foreach (var ui in batch)
         {
@@ -250,21 +250,21 @@ public sealed class EnemyPlacementController : IEnemyPlacementController
     /// <summary>
     /// 個別の敵UIを配置（ズーム前座標で即座に配置）
     /// </summary>
-    private UniTask<UIController> PlaceEnemyUI(NormalEnemy enemy, Vector2 preZoomLocalPosition)
+    private UniTask<BattleIconUI> PlaceEnemyUI(NormalEnemy enemy, Vector2 preZoomLocalPosition)
     {
         if (_config.EnemyUIPrefab == null)
         {
             Debug.LogWarning("enemyUIPrefab が設定されていません。敵UIを生成できません。");
-            return UniTask.FromResult<UIController>(null);
+            return UniTask.FromResult<BattleIconUI>(null);
         }
 
         if (_config.BattleLayer == null)
         {
             Debug.LogWarning("enemyBattleLayerが設定されていません。");
-            return UniTask.FromResult<UIController>(null);
+            return UniTask.FromResult<BattleIconUI>(null);
         }
 
-        UIController uiInstance = null;
+        BattleIconUI uiInstance = null;
 
         if (_config.EnableVerboseLogs)
         {
@@ -301,7 +301,7 @@ public sealed class EnemyPlacementController : IEnemyPlacementController
         SetupIcon(uiInstance, enemy);
         SetupHPBar(uiInstance, enemy, rectTransform);
 
-        enemy.BindUIController(uiInstance);
+        enemy.BindBattleIconUI(uiInstance);
 
         return UniTask.FromResult(uiInstance);
     }
@@ -309,7 +309,7 @@ public sealed class EnemyPlacementController : IEnemyPlacementController
     /// <summary>
     /// アイコンのセットアップ
     /// </summary>
-    private void SetupIcon(UIController uiInstance, NormalEnemy enemy)
+    private void SetupIcon(BattleIconUI uiInstance, NormalEnemy enemy)
     {
         if (uiInstance.Icon == null) return;
 
@@ -353,7 +353,7 @@ public sealed class EnemyPlacementController : IEnemyPlacementController
     /// <summary>
     /// HPバーのセットアップ
     /// </summary>
-    private void SetupHPBar(UIController uiInstance, NormalEnemy enemy, RectTransform rectTransform)
+    private void SetupHPBar(BattleIconUI uiInstance, NormalEnemy enemy, RectTransform rectTransform)
     {
         if (uiInstance.HPBar == null) return;
 

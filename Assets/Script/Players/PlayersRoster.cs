@@ -93,6 +93,16 @@ public sealed class PlayersRoster : IPlayersRoster
     /// <summary>キャラクターが解放済みか</summary>
     public bool IsUnlocked(CharacterId id) => _allies.ContainsKey(id);
 
+    /// <summary>全解放済みキャラクターIDの一覧</summary>
+    public IEnumerable<CharacterId> AllIds => _allies.Keys;
+
+    /// <summary>全キャラクターをクリアする（ロード時の再構築用）</summary>
+    public void Clear()
+    {
+        _allies.Clear();
+        _arrayDirty = true;
+    }
+
     /// <summary>キャラクターIDを逆引き</summary>
     public bool TryGetCharacterId(BaseStates actor, out CharacterId id)
     {
