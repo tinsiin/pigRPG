@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// キャラクター識別子。AllyId enum の置き換え。
+/// キャラクター識別子。
 /// Unity シリアライズ対応済み。デシリアライズ時に小文字正規化。
 /// </summary>
 [Serializable]
@@ -56,27 +56,6 @@ public struct CharacterId : IEquatable<CharacterId>, ISerializationCallbackRecei
     // === 暗黙変換（デバッグ用） ===
 
     public static implicit operator string(CharacterId id) => id.Value;
-
-    // === AllyId との相互変換（互換性用） ===
-
-    public static CharacterId FromAllyId(AllyId id)
-    {
-        return id switch
-        {
-            AllyId.Geino => Geino,
-            AllyId.Noramlia => Noramlia,
-            AllyId.Sites => Sites,
-            _ => None
-        };
-    }
-
-    public AllyId ToAllyId()
-    {
-        if (this == Geino) return AllyId.Geino;
-        if (this == Noramlia) return AllyId.Noramlia;
-        if (this == Sites) return AllyId.Sites;
-        return (AllyId)(-1); // 無効
-    }
 
     /// <summary>固定メンバー（Geino, Noramlia, Sites）かどうか</summary>
     public bool IsOriginalMember =>

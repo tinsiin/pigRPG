@@ -27,7 +27,7 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
         if (Instance == null)
         {
             Instance = this;
-            UIStateHub.Bind(USERUI_state, SKILLUI_state);
+            UIStateHub.Bind(USERUI_state);
         }
         else
         {
@@ -50,13 +50,6 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
     /// USERUIの状態
     /// </summary>
     public ReactiveProperty<TabState> USERUI_state = new();
-
-    /// <summary>
-    /// スキルUIで誰のスキルが映っているか
-    /// </summary>
-    public ReactiveProperty<SkillUICharaState> SKILLUI_state = new();
-
-
 
     /// <summary>
     ///     選択肢ボタンを入れる親オブジェクト取得

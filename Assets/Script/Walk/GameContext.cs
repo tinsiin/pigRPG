@@ -8,7 +8,7 @@ public sealed class GameContext
     private readonly HashSet<string> tags = new();
     private readonly Dictionary<string, EncounterState> encounterStatesByTableId = new();
     private readonly Dictionary<EncounterSO, List<NormalEnemy>> encounterEnemies = new();
-    private readonly Dictionary<AllyId, StageBonus> stageBonuses = new();
+    private readonly Dictionary<CharacterId, StageBonus> stageBonuses = new();
     private readonly EncounterOverlayStack encounterOverlays = new();
     private bool isEncounterDisabled;
 
@@ -114,17 +114,17 @@ public sealed class GameContext
         }
     }
 
-    public StageBonus GetStageBonus(AllyId id)
+    public StageBonus GetStageBonus(CharacterId id)
     {
         return stageBonuses.TryGetValue(id, out var bonus) ? bonus : default;
     }
 
-    public void SetStageBonus(AllyId id, StageBonus bonus)
+    public void SetStageBonus(CharacterId id, StageBonus bonus)
     {
         stageBonuses[id] = bonus;
     }
 
-    public void AddStageBonus(AllyId id, StageBonus bonus)
+    public void AddStageBonus(CharacterId id, StageBonus bonus)
     {
         stageBonuses[id] = GetStageBonus(id) + bonus;
     }

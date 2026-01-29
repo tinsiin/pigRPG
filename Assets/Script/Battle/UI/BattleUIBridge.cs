@@ -75,25 +75,12 @@ public sealed class BattleUIBridge
         }
     }
 
-    public void SetSkillUiState(SkillUICharaState state)
-    {
-        var skillState = UIStateHub.SkillState;
-        if (skillState != null)
-        {
-            skillState.Value = state;
-        }
-        else
-        {
-            Debug.LogError("BattleUIBridge.SetSkillUiState: UIStateHub.SkillState が null です");
-        }
-    }
-
     /// <summary>
     /// CharacterIdでスキルUI状態を設定する。
     /// </summary>
     public void SetSkillUiState(CharacterId id)
     {
-        SetSkillUiState(ToSkillUiState(id));
+        UIStateHub.SetSelectedCharacter(id);
     }
 
     public void PushMessage(string message)
@@ -152,36 +139,6 @@ public sealed class BattleUIBridge
         UIStateHub.SetSelectedCharacter(characterId);
     }
 
-    private bool TryGetAllyId(BaseStates actor, out AllyId id)
-    {
-        id = default;
-        if (actor == null) return false;
-
-        // まず roster から AllyId を取得
-        if (roster != null && roster.TryGetAllyId(actor, out id)) return true;
-
-        // CharacterId ベースで判定（派生クラスに依存しない）
-        if (actor is AllyClass ally && ally.CharacterId.IsValid)
-        {
-            if (ally.CharacterId == CharacterId.Geino)
-            {
-                id = AllyId.Geino;
-                return true;
-            }
-            if (ally.CharacterId == CharacterId.Noramlia)
-            {
-                id = AllyId.Noramlia;
-                return true;
-            }
-            if (ally.CharacterId == CharacterId.Sites)
-            {
-                id = AllyId.Sites;
-                return true;
-            }
-        }
-        return false;
-    }
-
     /// <summary>
     /// BaseStatesからCharacterIdを取得する。
     /// </summary>
@@ -204,31 +161,6 @@ public sealed class BattleUIBridge
         }
 
         return false;
-    }
-
-    private SkillUICharaState ToSkillUiState(AllyId allyId)
-    {
-        return allyId switch
-        {
-            AllyId.Geino => SkillUICharaState.geino,
-            AllyId.Noramlia => SkillUICharaState.normalia,
-            AllyId.Sites => SkillUICharaState.sites,
-            _ => SkillUICharaState.geino
-        };
-    }
-
-    /// <summary>
-    /// CharacterIdからSkillUICharaStateに変換する（互換性用）。
-    /// </summary>
-    private SkillUICharaState ToSkillUiState(CharacterId id)
-    {
-        if (id == CharacterId.Geino) return SkillUICharaState.geino;
-        if (id == CharacterId.Noramlia) return SkillUICharaState.normalia;
-        if (id == CharacterId.Sites) return SkillUICharaState.sites;
-
-        // 新キャラクターは暫定でgeinoを返す
-        Debug.LogWarning($"BattleUIBridge.ToSkillUiState: 新キャラクター {id} は暫定的にgeinoを返します");
-        return SkillUICharaState.geino;
     }
 
     public void AddLog(string message, bool important)

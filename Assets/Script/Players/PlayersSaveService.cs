@@ -455,25 +455,16 @@ public sealed class PlayersSaveService
     }
 
     /// <summary>
-    /// セーブデータからCharacterIdを解決（レガシーセーブ対応）
+    /// セーブデータからCharacterIdを解決
     /// </summary>
     private static CharacterId ResolveCharacterIdFromSaveData(PlayersAllySaveData allyData)
     {
         if (allyData == null) return default;
 
-        // 新形式: CharacterId が設定されている場合
+        // CharacterId が設定されている場合
         if (!string.IsNullOrEmpty(allyData.CharacterId))
         {
             return new CharacterId(allyData.CharacterId);
-        }
-
-        // レガシー形式: AllyId から変換
-#pragma warning disable CS0618 // Obsolete警告を抑制
-        var allyId = allyData.AllyId;
-#pragma warning restore CS0618
-        if (allyId != default)
-        {
-            return CharacterId.FromAllyId(allyId);
         }
 
         return default;

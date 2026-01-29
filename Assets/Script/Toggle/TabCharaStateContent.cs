@@ -61,21 +61,6 @@ public class TabCharaStateContent : MonoBehaviour
     }
 
     /// <summary>
-    /// SkillUICharaStateでコンテンツを切り替える（互換性用）。
-    /// </summary>
-    public void SwitchContent(SkillUICharaState state)
-    {
-        var id = state switch
-        {
-            SkillUICharaState.geino => CharacterId.Geino,
-            SkillUICharaState.normalia => CharacterId.Noramlia,
-            SkillUICharaState.sites => CharacterId.Sites,
-            _ => CharacterId.Geino
-        };
-        SwitchContent(id);
-    }
-
-    /// <summary>
     /// CharacterIdでコンテンツを切り替える。
     /// </summary>
     public void SwitchContent(CharacterId id)

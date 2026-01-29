@@ -30,6 +30,19 @@ public class AllyClass : BaseStates
     /// </summary>
     [SerializeField, HideInInspector] BattleIconUI _uic;
 
+    /// <summary>
+    /// 戦闘中に表示するキャラクターアイコンスプライト。
+    /// 規格: 476 x 722 px
+    /// </summary>
+    [Header("バトルアイコン")]
+    [Tooltip("戦闘中に表示するキャラクターアイコン（規格: 476 x 722 px）")]
+    [SerializeField] private Sprite _battleIconSprite;
+
+    /// <summary>
+    /// バトルアイコンスプライトを取得する
+    /// </summary>
+    public Sprite BattleIconSprite => _battleIconSprite;
+
 
     /// <summary>
     /// 主人公達の全所持スキルリスト
@@ -839,5 +852,8 @@ public class AllyClass : BaseStates
         dst.EmotionalAttachmentSkillID = EmotionalAttachmentSkillID;
         // BattleIconUIはCharacterUIRegistry経由でバインドされるため、
         // DeepCopyでは何もしない（_uicは旧システムで現在は使用されない）
+
+        // バトルアイコンスプライト（アセット参照なので参照コピー）
+        dst._battleIconSprite = _battleIconSprite;
     }
 }

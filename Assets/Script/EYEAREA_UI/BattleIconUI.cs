@@ -35,6 +35,17 @@ public class BattleIconUI : MonoBehaviour, IPointerClickHandler
     }
 
     /// <summary>
+    /// アイコン画像を設定する
+    /// </summary>
+    public void SetIconSprite(Sprite sprite)
+    {
+        if (Icon != null && sprite != null)
+        {
+            Icon.sprite = sprite;
+        }
+    }
+
+    /// <summary>
     /// Phase 1: IKZoomControllerを注入
     /// </summary>
     public void BindKZoom(IKZoomController kZoom)

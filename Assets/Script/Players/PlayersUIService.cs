@@ -183,68 +183,6 @@ public sealed class PlayersUIService
         }
     }
 
-    public void OnSkillSelectionScreenTransition(AllyId allyId)
-    {
-        var index = (int)allyId;
-        var uiSet = GetUISet(allyId);
-        if (uiSet?.SkillUILists == null) return;
-        var allies = roster.Allies;
-        foreach (var radio in uiSet.SkillUILists.aggressiveCommitRadios.Where(rad => allies[index].ValidSkillIDList.Contains(rad.skillID)))
-        {
-            BaseSkill skill = allies[index].SkillList[radio.skillID];
-            if (skill == null) Debug.LogError("スキルがありません");
-            radio.Controller.SetOnWithoutNotify(skill.IsAggressiveCommit ? 0 : 1);
-        }
-    }
-
-    public void OnlySelectActs(SkillZoneTrait trait, SkillType type, AllyId allyId)
-    {
-        var index = (int)allyId;
-        var uiSet = GetUISet(allyId);
-        if (uiSet?.SkillUILists == null) return;
-        var allies = roster.Allies;
-        foreach (var skill in allies[index].SkillList.Cast<AllySkill>())
-        {
-            var hold = uiSet.SkillUILists.skillButtons.Find(hold => hold.skillID == skill.ID);
-            if (allies[index].HasCanCancelCantACTPassive)
-            {
-                if (hold != null)
-                {
-                    hold.button.interactable = false;
-                }
-            }
-            else
-            {
-                Debug.Log("スキルのボタンを有効化します" + skill.ID);
-                if (hold != null)
-                {
-                    hold.button.interactable =
-                        ZoneTraitAndTypeSkillMatchesUIFilter(skill, trait, type)
-                        && CanCastNow(allies[index], skill);
-                    Debug.Log(ZoneTraitAndTypeSkillMatchesUIFilter(skill, trait, type) + " |" + hold.skillID + "| " + CanCastNow(allies[index], skill));
-                }
-            }
-        }
-        if (uiSet.CancelPassiveButtonField == null) Debug.LogError("CancelPassiveButtonFieldがnullです");
-        uiSet.CancelPassiveButtonField?.ShowPassiveButtons(allies[index]);
-    }
-
-    public void GoToCancelPassiveField(AllyId allyId)
-    {
-        var uiSet = GetUISet(allyId);
-        if (uiSet?.DefaultButtonArea == null || uiSet.CancelPassiveButtonField == null) return;
-        uiSet.DefaultButtonArea.gameObject.SetActive(false);
-        uiSet.CancelPassiveButtonField.gameObject.SetActive(true);
-    }
-
-    public void ReturnCancelPassiveToDefaultArea(AllyId allyId)
-    {
-        var uiSet = GetUISet(allyId);
-        if (uiSet?.DefaultButtonArea == null || uiSet.CancelPassiveButtonField == null) return;
-        uiSet.CancelPassiveButtonField.gameObject.SetActive(false);
-        uiSet.DefaultButtonArea.gameObject.SetActive(true);
-    }
-
     public void AllyAlliesUISetActive(bool isActive)
     {
         // 全登録済みキャラクター（固定3人 + 新キャラ）のUI表示/非表示を制御
@@ -264,11 +202,6 @@ public sealed class PlayersUIService
         skillPassiveSelectionUI.Close();
     }
 
-    public void OpenEmotionalAttachmentSkillSelectUIArea(AllyId allyId)
-    {
-        emotionalAttachmentUI.OpenEmotionalAttachmentSkillSelectUIArea(allyId);
-    }
-
     public void OnBattleStart()
     {
         emotionalAttachmentUI.OnBattleStart();
@@ -285,15 +218,6 @@ public sealed class PlayersUIService
         return SkillResourceFlow.CanCastSkill(actor, skill);
     }
 
-    private AllyUISet GetUISet(AllyId allyId)
-    {
-        // AllyId → CharacterId に変換してCharacterUIRegistry経由で取得
-        var characterId = CharacterId.FromAllyId(allyId);
-        return UIRegistry?.GetUISet(characterId);
-    }
-
-    // === CharacterIdベースのAPI ===
-
     /// <summary>
     /// CharacterIdでUIセットを取得する。
     /// </summary>
@@ -302,9 +226,6 @@ public sealed class PlayersUIService
         return UIRegistry?.GetUISet(id);
     }
 
-    /// <summary>
-    /// CharacterIdでスキル選択画面に遷移する。
-    /// </summary>
     public void OnSkillSelectionScreenTransition(CharacterId id)
     {
         var ally = roster.GetAlly(id);
@@ -321,9 +242,6 @@ public sealed class PlayersUIService
         }
     }
 
-    /// <summary>
-    /// CharacterIdでスキルボタンの有効/無効を設定する。
-    /// </summary>
     public void OnlySelectActs(SkillZoneTrait trait, SkillType type, CharacterId id)
     {
         var ally = roster.GetAlly(id);
@@ -358,9 +276,6 @@ public sealed class PlayersUIService
         uiSet.CancelPassiveButtonField?.ShowPassiveButtons(ally);
     }
 
-    /// <summary>
-    /// CharacterIdでキャンセルパッシブフィールドに遷移する。
-    /// </summary>
     public void GoToCancelPassiveField(CharacterId id)
     {
         var uiSet = UIRegistry.GetUISet(id);
@@ -369,9 +284,6 @@ public sealed class PlayersUIService
         uiSet.CancelPassiveButtonField.gameObject.SetActive(true);
     }
 
-    /// <summary>
-    /// CharacterIdでデフォルトエリアに戻る。
-    /// </summary>
     public void ReturnCancelPassiveToDefaultArea(CharacterId id)
     {
         var uiSet = UIRegistry.GetUISet(id);
@@ -380,20 +292,8 @@ public sealed class PlayersUIService
         uiSet.DefaultButtonArea.gameObject.SetActive(true);
     }
 
-    /// <summary>
-    /// CharacterIdで思い入れスキル選択UIを開く。
-    /// </summary>
     public void OpenEmotionalAttachmentSkillSelectUIArea(CharacterId id)
     {
-        // 固定メンバーの場合はAllyId経由で呼び出す（互換性）
-        if (id.IsOriginalMember)
-        {
-            emotionalAttachmentUI.OpenEmotionalAttachmentSkillSelectUIArea(id.ToAllyId());
-        }
-        else
-        {
-            // 新キャラクターの場合は将来的に対応
-            Debug.LogWarning($"PlayersUIService.OpenEmotionalAttachmentSkillSelectUIArea: 新キャラクター {id} は未対応です");
-        }
+        emotionalAttachmentUI.OpenEmotionalAttachmentSkillSelectUIArea(id);
     }
 }

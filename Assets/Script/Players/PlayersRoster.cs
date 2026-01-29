@@ -1,48 +1,12 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public sealed class PlayersRoster : IPlayersRoster
 {
-    // === 新しい Dictionary ベースのストレージ ===
     private readonly Dictionary<CharacterId, AllyClass> _allies = new();
-
-    // === 互換性用の配列ビュー（既存コード用） ===
-    private AllyClass[] _alliesArray;
-    private bool _arrayDirty = true;
 
     /// <summary>解放済みキャラ数</summary>
     public int AllyCount => _allies.Count;
-
-    /// <summary>
-    /// 互換性用: 配列形式でのアクセス。
-    /// 順序は Geino, Noramlia, Sites の固定順。
-    /// </summary>
-    public AllyClass[] Allies
-    {
-        get
-        {
-            if (_arrayDirty)
-            {
-                RebuildArray();
-            }
-            return _alliesArray;
-        }
-    }
-
-    /// <summary>配列キャッシュを再構築</summary>
-    private void RebuildArray()
-    {
-        // 固定順序: Geino, Noramlia, Sites
-        _alliesArray = new AllyClass[3];
-        _alliesArray[0] = GetAlly(CharacterId.Geino);
-        _alliesArray[1] = GetAlly(CharacterId.Noramlia);
-        _alliesArray[2] = GetAlly(CharacterId.Sites);
-        _arrayDirty = false;
-    }
-
-    // === 新しい CharacterId ベースのAPI ===
 
     /// <summary>キャラクターを登録（解放/加入）</summary>
     public void RegisterAlly(CharacterId id, AllyClass ally)
@@ -59,7 +23,6 @@ public sealed class PlayersRoster : IPlayersRoster
         }
         ally.SetCharacterId(id);
         _allies[id] = ally;
-        _arrayDirty = true;
     }
 
     /// <summary>キャラクターを取得</summary>
@@ -100,7 +63,6 @@ public sealed class PlayersRoster : IPlayersRoster
     public void Clear()
     {
         _allies.Clear();
-        _arrayDirty = true;
     }
 
     /// <summary>キャラクターIDを逆引き</summary>
@@ -116,68 +78,5 @@ public sealed class PlayersRoster : IPlayersRoster
         }
         id = default;
         return false;
-    }
-
-    // === 互換性レイヤー（既存コード用、段階的に廃止） ===
-
-    /// <summary>互換性用: 配列で一括設定</summary>
-    [Obsolete("RegisterAlly を使用してください")]
-    public void SetAllies(AllyClass[] value)
-    {
-        _allies.Clear();
-        if (value != null)
-        {
-            if (value.Length > 0 && value[0] != null)
-                RegisterAlly(CharacterId.Geino, value[0]);
-            if (value.Length > 1 && value[1] != null)
-                RegisterAlly(CharacterId.Noramlia, value[1]);
-            if (value.Length > 2 && value[2] != null)
-                RegisterAlly(CharacterId.Sites, value[2]);
-        }
-    }
-
-    /// <summary>互換性用: インデックスでアクセス</summary>
-    public bool TryGetAllyIndex(BaseStates actor, out int index)
-    {
-        index = -1;
-        if (actor == null) return false;
-
-        var arr = Allies;
-        for (int i = 0; i < arr.Length; i++)
-        {
-            if (ReferenceEquals(arr[i], actor))
-            {
-                index = i;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /// <summary>互換性用: インデックスでアクセス</summary>
-    public BaseStates GetAllyByIndex(int index)
-    {
-        var arr = Allies;
-        if (index < 0 || index >= arr.Length) return null;
-        return arr[index];
-    }
-
-    /// <summary>互換性用: AllyId で取得</summary>
-    public bool TryGetAllyId(BaseStates actor, out AllyId id)
-    {
-        id = default;
-        if (TryGetAllyIndex(actor, out var idx) && Enum.IsDefined(typeof(AllyId), idx))
-        {
-            id = (AllyId)idx;
-            return true;
-        }
-        return false;
-    }
-
-    /// <summary>互換性用: AllyId で取得</summary>
-    public BaseStates GetAllyById(AllyId id)
-    {
-        var charId = CharacterId.FromAllyId(id);
-        return GetAlly(charId);
     }
 }

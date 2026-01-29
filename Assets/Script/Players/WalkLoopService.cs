@@ -12,12 +12,11 @@ public sealed class WalkLoopService
     public void PlayersOnWalks(int walkCount)
     {
         int steps = Mathf.Max(1, walkCount);
-        var allies = roster.Allies;
         for (int s = 0; s < steps; s++)
         {
-            for (int i = 0; i < allies.Length; i++)
+            foreach (var ally in roster.AllAllies)
             {
-                allies[i].OnWalkStepCallBack();
+                ally?.OnWalkStepCallBack();
             }
         }
     }

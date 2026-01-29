@@ -15,4 +15,8 @@ public class PlayersUIRefs : MonoBehaviour
     [Header("EyeArea / ActionMark")]
     public GameObject EyeArea;
     public ActionMarkUI ActionMar;
+
+    [Header("バトルアイコンUIスロット")]
+    [Tooltip("スロット順: Left(0), Center(1), Right(2)")]
+    public BattleIconUI[] BattleIconSlots = new BattleIconUI[3];
 }

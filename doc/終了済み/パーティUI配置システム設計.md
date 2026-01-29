@@ -1,5 +1,10 @@
 # パーティUI配置システム設計
 
+> **ステータス: 実装完了** ✅
+>
+> 実装日: 2026-01-30
+> 関連仕様書: `doc/味方バトルアイコン仕様書.md`
+
 ## 概要
 
 新パーティシステム導入に伴い、BattleIconUI（バトル時のキャラアイコン）の配置を動的に管理するシステムを設計する。
@@ -15,11 +20,11 @@
 1. **パーティ人数**: 最大3人（変更なし）
 2. **UI位置**: Left, Center, Right の3スロット
 3. **オリジナルメンバーの固定位置**:
-   - Geino → 固定位置（要決定: Left/Center/Right）
-   - Normlia → 固定位置（要決定: Left/Center/Right）
-   - Sites → 固定位置（要決定: Left/Center/Right）
+   - Sites → Left (Slot0)
+   - Geino → Center (Slot1)
+   - Normlia → Right (Slot2)
 4. **新メンバーの配置**: オリジナルメンバーが抜けた位置に、パーティ順で左から詰めて配置
-5. **Sprite設定**: AllyClass（CharacterDataSO）からspriteを取得して設定
+5. **Sprite設定**: AllyClassの`BattleIconSprite`フィールドからspriteを取得して設定
 
 ## 設計
 
@@ -32,19 +37,16 @@
 └─────────┴─────────┴─────────┘
 ```
 
-### 2. オリジナルメンバー固定位置マッピング
+### 2. オリジナルメンバー固定位置マッピング（確定）
 
 ```csharp
-// CharacterIdごとの固定スロット（要確認）
-public enum UISlot { Left = 0, Center = 1, Right = 2 }
+public enum Slot { Left = 0, Center = 1, Right = 2 }
 
-// 例:
-// Geino → Left
-// Normlia → Center
-// Sites → Right
+// 固定スロット（PlayersRuntime.PartyUISlotManager内でハードコード）
+// Sites → Left (0)
+// Geino → Center (1)
+// Normlia → Right (2)
 ```
-
-**要確認**: 各オリジナルメンバーの固定位置を決定してください。
 
 ### 3. 配置ロジック
 
@@ -89,20 +91,33 @@ public enum UISlot { Left = 0, Center = 1, Right = 2 }
 
 ### 4. データ構造
 
-#### CharacterDataSO に追加
+#### AllyClass に追加（実装）
+
+> **設計からの変更**: 当初CharacterDataSOに追加予定だったが、味方専用グラフィックとしてAllyClassに配置
 
 ```csharp
-[CreateAssetMenu]
-public class CharacterDataSO : ScriptableObject
+public partial class AllyClass : BaseStates
 {
-    // 既存フィールド...
+    [Header("バトルアイコン")]
+    [Tooltip("戦闘中に表示するキャラクターアイコン（規格: 476 x 722 px）")]
+    [SerializeField] private Sprite _battleIconSprite;
 
-    [Header("UI設定")]
-    [Tooltip("バトルアイコン用スプライト")]
-    public Sprite BattleIconSprite;
+    public Sprite BattleIconSprite => _battleIconSprite;
+}
+```
 
-    [Tooltip("オリジナルメンバーの場合の固定UIスロット（-1 = 固定なし）")]
-    public int FixedUISlot = -1;  // 0=Left, 1=Center, 2=Right, -1=新メンバー
+#### 固定スロット設定（実装）
+
+> **設計からの変更**: CharacterDataSOのフィールドではなく、PartyUISlotManager内でハードコード
+
+```csharp
+// PlayersRuntime.PartyUISlotManager.GetFixedSlot() 内
+private Slot? GetFixedSlot(CharacterId id)
+{
+    if (id == CharacterId.Sites) return Slot.Left;
+    if (id == CharacterId.Geino) return Slot.Center;
+    if (id == CharacterId.Normlia) return Slot.Right;
+    return null;
 }
 ```
 
@@ -269,38 +284,48 @@ public class PlayersRuntime
 
 ### 6. 実装タスク
 
-1. [ ] CharacterDataSOに `BattleIconSprite`, `FixedUISlot` フィールド追加
-2. [ ] BattleIconUIに `SetIconSprite()` メソッド追加
-3. [ ] PartyUISlotManager クラス作成
-4. [ ] PlayersRuntimeにPartyUISlotManager統合
-5. [ ] 各オリジナルメンバーのCharacterDataSOに固定スロット設定
-6. [ ] CharacterUIRegistryの役割見直し（BattleIconUI管理を移管？）
+1. [x] ~~CharacterDataSOに `BattleIconSprite`, `FixedUISlot` フィールド追加~~ → AllyClassに`_battleIconSprite`として実装
+2. [x] BattleIconUIに `SetIconSprite()` メソッド追加
+3. [x] PartyUISlotManager クラス作成 → PlayersRuntime内にネストクラスとして実装
+4. [x] PlayersRuntimeにPartyUISlotManager統合
+5. [x] 各オリジナルメンバーの固定スロット設定 → PartyUISlotManager内でハードコード
+6. [x] CharacterUIRegistryの役割見直し → AllyUISet専用、BattleIconUI管理はPartyUISlotManagerに移管
 
-### 7. 既知の問題（設計完了後に対応）
+### 7. 既知の問題（解決済み）
 
-- [ ] **CharacterUnlockEffect でBattleIconUIがバインドされない**
-  - 新しく解放されたキャラクターに `BattleIconUI` がバインドされていない
-  - バトル参加時にUIが表示されない可能性
-  - **対応**: PartyUISlotManager 実装時に、パーティー変更時の動的バインドで解決予定
+- [x] **CharacterUnlockEffect でBattleIconUIがバインドされない**
+  - PartyUISlotManagerの実装により、パーティー変更時の動的バインドで解決
 
-### 8. 未決定事項
+### 8. 決定事項
 
-- [ ] オリジナルメンバーの固定位置（Left/Center/Right）を決定
-  - Geino → ?
-  - Normlia → ?
-  - Sites → ?
+- [x] **オリジナルメンバーの固定位置**
+  - Sites → Left (Slot0)
+  - Geino → Center (Slot1)
+  - Normlia → Right (Slot2)
 
-- [ ] PartyUISlotManagerの配置場所（PlayersRuntime内？独立MonoBehaviour？）
+- [x] **PartyUISlotManagerの配置場所**
+  - PlayersRuntime内のネストクラス (`PlayersRuntime.PartyUISlotManager`)
 
-- [ ] CharacterUIRegistryとの役割分担
-  - CharacterUIRegistry: AllyUISet（スキルUI）管理
-  - PartyUISlotManager: BattleIconUI配置管理
-  - または統合？
+- [x] **CharacterUIRegistryとの役割分担**
+  - CharacterUIRegistry: AllyUISet（スキルUI）管理専用
+  - PartyUISlotManager: BattleIconUI配置管理専用
+
+## 実装時の変更点
+
+設計段階からの主な変更:
+
+| 項目 | 設計 | 実装 | 理由 |
+|------|------|------|------|
+| BattleIconSprite配置 | CharacterDataSO | AllyClass | 味方専用グラフィックなのでAllyClassが適切 |
+| FixedUISlot設定方法 | CharacterDataSOフィールド | ハードコード | オリジナル3人は固定のため柔軟性不要 |
+| PartyUISlotManager配置 | 独立クラス案あり | PlayersRuntime内ネストクラス | PlayersRuntimeとの密結合が自然 |
+| CharacterUIRegistry | BattleIconUI管理含む | AllyUISet専用 | 役割分離（BattleIconUIフィールド削除） |
+| UIスロット参照 | 複数案 | PlayersUIRefs.BattleIconSlots | 既存のPlayersUIRefsを活用 |
 
 ## 関連ファイル
 
-- `Assets/Script/Players/CharacterDataSO.cs`
-- `Assets/Script/Players/CharacterDataRegistry.cs`
-- `Assets/Script/Players/UI/CharacterUIRegistry.cs`
-- `Assets/Script/EYEAREA_UI/BattleIconUI.cs`
-- `Assets/Script/Players/PlayersRuntime.cs`
+- `Assets/Script/Players/Runtime/AllyClass.cs` - BattleIconSprite保持
+- `Assets/Script/Players/PlayersRuntime.cs` - PartyUISlotManager
+- `Assets/Script/Players/UI/PlayersUIRefs.cs` - BattleIconSlots参照
+- `Assets/Script/Players/UI/CharacterUIRegistry.cs` - AllyUISet専用（BattleIconUI削除済）
+- `Assets/Script/EYEAREA_UI/BattleIconUI.cs` - SetIconSprite()追加

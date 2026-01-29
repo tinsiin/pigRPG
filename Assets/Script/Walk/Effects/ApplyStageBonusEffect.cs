@@ -4,7 +4,7 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Walk/Effects/Apply Stage Bonus")]
 public sealed class ApplyStageBonusEffect : EffectSO
 {
-    [SerializeField] private AllyId target;
+    [SerializeField] private CharacterId target;
     [SerializeField] private StageBonus bonus;
     [SerializeField] private bool additive = true;
 

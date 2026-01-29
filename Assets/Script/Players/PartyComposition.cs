@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -10,6 +11,9 @@ public sealed class PartyComposition : IPartyComposition
 {
     private readonly List<CharacterId> _members = new();
     private IReadOnlyList<CharacterId> _readOnlyMembers;
+
+    /// <summary>パーティー構成が変更された時に発火するイベント</summary>
+    public event Action OnMembershipChanged;
 
     public int MaxMembers => 3;
 
@@ -39,6 +43,7 @@ public sealed class PartyComposition : IPartyComposition
             return false;
         }
         _members.Add(id);
+        OnMembershipChanged?.Invoke();
         return true;
     }
 
@@ -48,6 +53,10 @@ public sealed class PartyComposition : IPartyComposition
         if (!removed)
         {
             Debug.LogWarning($"PartyComposition.RemoveMember: {id} はパーティーにいません");
+        }
+        else
+        {
+            OnMembershipChanged?.Invoke();
         }
         return removed;
     }
@@ -62,6 +71,7 @@ public sealed class PartyComposition : IPartyComposition
                 _members.Add(id);
             }
         }
+        OnMembershipChanged?.Invoke();
     }
 
     public bool Contains(CharacterId id) => _members.Contains(id);

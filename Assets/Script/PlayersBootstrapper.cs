@@ -83,41 +83,29 @@ public class PlayersBootstrapper : MonoBehaviour
         runtime?.Init();
     }
 
-    public bool TryGetAllyId(BaseStates actor, out AllyId id)
+    public void OnSkillSelectionScreenTransition(CharacterId id)
     {
-        id = default;
-        if (runtime == null || runtime.Roster == null) return false;
-        return runtime.Roster.TryGetAllyId(actor, out id);
+        runtime?.SkillUI?.OnSkillSelectionScreenTransition(id);
     }
 
-    public BaseStates GetAllyById(AllyId id)
+    public void OnlySelectActs(SkillZoneTrait trait, SkillType type, CharacterId id)
     {
-        return runtime?.Roster?.GetAllyById(id);
+        runtime?.SkillUI?.OnlySelectActs(trait, type, id);
     }
 
-    public void OnSkillSelectionScreenTransition(AllyId allyId)
+    public void RequestStopFreezeConsecutive(CharacterId id)
     {
-        runtime?.SkillUI?.OnSkillSelectionScreenTransition(allyId);
+        runtime?.Party?.RequestStopFreezeConsecutive(id);
     }
 
-    public void OnlySelectActs(SkillZoneTrait trait, SkillType type, AllyId allyId)
+    public void GoToCancelPassiveField(CharacterId id)
     {
-        runtime?.SkillUI?.OnlySelectActs(trait, type, allyId);
+        runtime?.UIFacade?.GoToCancelPassiveField(id);
     }
 
-    public void RequestStopFreezeConsecutive(AllyId allyId)
+    public void ReturnCancelPassiveToDefaultArea(CharacterId id)
     {
-        runtime?.Party?.RequestStopFreezeConsecutive(allyId);
-    }
-
-    public void GoToCancelPassiveField(AllyId allyId)
-    {
-        runtime?.UIFacade?.GoToCancelPassiveField(allyId);
-    }
-
-    public void ReturnCancelPassiveToDefaultArea(AllyId allyId)
-    {
-        runtime?.UIFacade?.ReturnCancelPassiveToDefaultArea(allyId);
+        runtime?.UIFacade?.ReturnCancelPassiveToDefaultArea(id);
     }
 
     public int GlobalSteps => GameContextHub.Current?.Counters?.GlobalSteps ?? 0;
@@ -163,9 +151,9 @@ public class PlayersBootstrapper : MonoBehaviour
         runtime?.SkillUI?.ReturnSelectSkillPassiveTargetSkillButtonsArea();
     }
 
-    public void OpenEmotionalAttachmentSkillSelectUIArea(AllyId allyId)
+    public void OpenEmotionalAttachmentSkillSelectUIArea(CharacterId id)
     {
-        runtime?.SkillUI?.OpenEmotionalAttachmentSkillSelectUIArea(allyId);
+        runtime?.SkillUI?.OpenEmotionalAttachmentSkillSelectUIArea(id);
     }
 
     public void OnBattleStart()
@@ -215,17 +203,17 @@ public class PlayersBootstrapper : MonoBehaviour
 
     public void GoToCancelPassiveField_geino()
     {
-        GoToCancelPassiveField(AllyId.Geino);
+        GoToCancelPassiveField(CharacterId.Geino);
     }
 
     public void ReturnCancelPassiveToDefaultArea_geino()
     {
-        ReturnCancelPassiveToDefaultArea(AllyId.Geino);
+        ReturnCancelPassiveToDefaultArea(CharacterId.Geino);
     }
 
     public void Geino_OpenEmotionalAttachmentSkillSelectUIArea()
     {
-        OpenEmotionalAttachmentSkillSelectUIArea(AllyId.Geino);
+        OpenEmotionalAttachmentSkillSelectUIArea(CharacterId.Geino);
     }
 
     public void CheckGeinoTenDayValuesCallBack()
@@ -237,7 +225,7 @@ public class PlayersBootstrapper : MonoBehaviour
             return;
         }
 
-        controller.SetSelectedAllyByEnum(AllyId.Geino);
+        controller.SetSelectedByCharacterId(CharacterId.Geino);
         controller.OnClickOpenTenDayAbility();
     }
 }

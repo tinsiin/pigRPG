@@ -227,15 +227,7 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
         _onSelectionChanged.OnNext(m_CurrentIndex);
     }
 
-    // 外部API: enum指定（互換性用）
-    public void SetSelectedAllyByEnum(AllyId id)
-    {
-        // AllyIdをCharacterIdに変換して検索
-        var characterId = CharacterId.FromAllyId(id);
-        SetSelectedByCharacterId(characterId);
-    }
-
-    // 外部API: CharacterId指定（新規）
+    // 外部API: CharacterId指定
     public void SetSelectedByCharacterId(CharacterId id)
     {
         if (!id.IsValid) return;
@@ -258,17 +250,9 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
     {
         if (actor == null || playersRoster == null) return;
 
-        // CharacterId版を優先使用
         if (playersRoster.TryGetCharacterId(actor, out var characterId))
         {
             SetSelectedByCharacterId(characterId);
-            return;
-        }
-
-        // フォールバック: AllyId版
-        if (playersRoster.TryGetAllyId(actor, out var allyId))
-        {
-            SetSelectedAllyByEnum(allyId);
         }
     }
 

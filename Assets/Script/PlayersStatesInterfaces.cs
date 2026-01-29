@@ -9,10 +9,7 @@ public interface IPlayersParty
     void PlayersOnRunOut();
     void PlayersOnWalks(int walkCount);
 
-    // === AllyId ベース（互換性用） ===
-    void RequestStopFreezeConsecutive(AllyId allyId);
-
-    // === CharacterId ベース（新規） ===
+    /// <summary>FreezeConsecutive の停止リクエスト</summary>
     void RequestStopFreezeConsecutive(CharacterId id);
 }
 
@@ -29,18 +26,12 @@ public interface IPlayersUIControl
 
 public interface IPlayersSkillUI
 {
-    // === AllyId ベース（互換性用） ===
-    void OnlySelectActs(SkillZoneTrait trait, SkillType type, AllyId allyId);
-    void OnSkillSelectionScreenTransition(AllyId allyId);
-    UniTask<List<BaseSkill>> GoToSelectSkillPassiveTargetSkillButtonsArea(List<BaseSkill> skills, int selectCount);
-    void ReturnSelectSkillPassiveTargetSkillButtonsArea();
-    void OpenEmotionalAttachmentSkillSelectUIArea(AllyId allyId);
-    void OnBattleStart();
-
-    // === CharacterId ベース（新規） ===
     void OnlySelectActs(SkillZoneTrait trait, SkillType type, CharacterId id);
     void OnSkillSelectionScreenTransition(CharacterId id);
+    UniTask<List<BaseSkill>> GoToSelectSkillPassiveTargetSkillButtonsArea(List<BaseSkill> skills, int selectCount);
+    void ReturnSelectSkillPassiveTargetSkillButtonsArea();
     void OpenEmotionalAttachmentSkillSelectUIArea(CharacterId id);
+    void OnBattleStart();
 }
 
 public interface IPlayersTuning
@@ -54,10 +45,6 @@ public interface IPlayersTuning
 public interface IPlayersRoster
 {
     int AllyCount { get; }
-    bool TryGetAllyId(BaseStates actor, out AllyId id);
-    BaseStates GetAllyById(AllyId id);
-
-    // === CharacterId 対応（新規） ===
 
     /// <summary>キャラクターを取得</summary>
     AllyClass GetAlly(CharacterId id);

@@ -13,9 +13,9 @@ public sealed class EmotionalAttachmentUI
         this.emotionalAttachmentSkillSelectUIArea = emotionalAttachmentSkillSelectUIArea;
     }
 
-    public void OpenEmotionalAttachmentSkillSelectUIArea(AllyId allyId)
+    public void OpenEmotionalAttachmentSkillSelectUIArea(CharacterId id)
     {
-        var actor = roster.GetAllyById(allyId) as AllyClass;
+        var actor = roster.GetAlly(id);
         if (actor == null) return;
         emotionalAttachmentSkillSelectUIArea.OpenEmotionalAttachmentSkillSelectUIArea();
         emotionalAttachmentSkillSelectUIArea.ShowSkillsButtons(

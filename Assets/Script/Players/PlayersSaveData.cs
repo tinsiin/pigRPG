@@ -26,10 +26,6 @@ public sealed class PlayersAllySaveData
     /// <summary>キャラクターID（文字列）</summary>
     public string CharacterId;
 
-    /// <summary>互換性用: 旧 AllyId（移行期間中のみ使用）</summary>
-    [Obsolete("CharacterId を使用してください")]
-    public AllyId AllyId;
-
     public float HP;
     public float MentalHP;
     public int P;

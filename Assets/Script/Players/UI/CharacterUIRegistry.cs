@@ -8,9 +8,10 @@ using UnityEngine;
 ///
 /// 役割:
 /// - CharacterId → AllyUISet のルックアップ（スキル選択UI）
-/// - CharacterId → BattleIconUI のルックアップ（バトル中アイコンUI）
 /// - CharacterId → SkillUIObject のルックアップ
 /// - 全キャラクター（固定3人 + 新キャラ）を統一的に管理
+///
+/// 注: BattleIconUIはPartyUISlotManager（PlayersRuntime内）で管理
 /// </summary>
 public sealed class CharacterUIRegistry : MonoBehaviour
 {
@@ -28,8 +29,7 @@ public sealed class CharacterUIRegistry : MonoBehaviour
         [Tooltip("キャラクター用のAllyUISet（スキル選択ボタン等）")]
         public AllyUISet AllyUISet;
 
-        [Tooltip("バトル中のアイコンUI（HPバー、アイコン、エフェクト）")]
-        public BattleIconUI BattleIconUI;
+        // BattleIconUIはPartyUISlotManager（PlayersRuntime内）で管理するため削除
 
         public bool IsValid => !string.IsNullOrEmpty(CharacterId);
     }
@@ -116,14 +116,7 @@ public sealed class CharacterUIRegistry : MonoBehaviour
         return _map.TryGetValue(id, out var entry) ? entry.SkillUIObject : null;
     }
 
-    /// <summary>
-    /// CharacterIdでバトルアイコンUIを取得する。
-    /// </summary>
-    public BattleIconUI GetBattleIconUI(CharacterId id)
-    {
-        EnsureInitialized();
-        return _map.TryGetValue(id, out var entry) ? entry.BattleIconUI : null;
-    }
+    // GetBattleIconUI は削除 - BattleIconUIはPartyUISlotManager（PlayersRuntime内）で管理
 
     /// <summary>
     /// CharacterIdでUIセットを取得する（存在確認付き）。
@@ -152,7 +145,7 @@ public sealed class CharacterUIRegistry : MonoBehaviour
     /// <summary>
     /// 実行時にキャラクターUIを登録する（動的追加用）。
     /// </summary>
-    public void Register(CharacterId id, AllyUISet uiSet, GameObject skillUIObject = null, BattleIconUI battleIconUI = null)
+    public void Register(CharacterId id, AllyUISet uiSet, GameObject skillUIObject = null)
     {
         EnsureInitialized();
 
@@ -171,8 +164,7 @@ public sealed class CharacterUIRegistry : MonoBehaviour
         {
             CharacterId = id.Value,
             AllyUISet = uiSet,
-            SkillUIObject = skillUIObject,
-            BattleIconUI = battleIconUI
+            SkillUIObject = skillUIObject
         };
 
         Debug.Log($"CharacterUIRegistry: '{id}' を動的に登録しました");

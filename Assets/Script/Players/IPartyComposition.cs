@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -6,6 +7,8 @@ using System.Collections.Generic;
 /// </summary>
 public interface IPartyComposition
 {
+    /// <summary>パーティー構成が変更された時に発火するイベント</summary>
+    event Action OnMembershipChanged;
     /// <summary>パーティー最大人数</summary>
     int MaxMembers { get; }
 
