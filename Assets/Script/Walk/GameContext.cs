@@ -24,6 +24,7 @@ public sealed class GameContext
     public GateResolver GateResolver { get; set; }
     public AnchorManager AnchorManager { get; set; }
     public SideObjectSelector SideObjectSelector { get; set; }
+    public CentralObjectSelector CentralObjectSelector { get; set; }
     public NodeSO CurrentNode { get; set; }
     private bool _requestRefreshWithoutStep;
     public bool RequestRefreshWithoutStep

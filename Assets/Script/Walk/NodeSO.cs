@@ -13,8 +13,11 @@ public sealed class NodeSO : ScriptableObject
     [SerializeField] private float encounterRateMultiplier = 1f;
     [SerializeField] private EventDefinitionSO onEnterEvent;
     [SerializeField] private EventDefinitionSO onExitEvent;
-    [SerializeField] private EventDefinitionSO centralEvent;
-    [SerializeField] private CentralObjectVisual centralVisual;
+    [Header("中央オブジェクト")]
+    [SerializeField] private CentralObjectTableSO centralObjectTable;
+    [SerializeField] private CentralObjectSO fixedCentralObject;
+
+    [Header("出口")]
     [SerializeField] private ExitSpawnRule exitSpawn;
     [SerializeField] private ExitCandidate[] exits;
     [SerializeField] private ExitSelectionMode exitSelectionMode = ExitSelectionMode.ShowAll;
@@ -34,8 +37,11 @@ public sealed class NodeSO : ScriptableObject
     public float EncounterRateMultiplier => encounterRateMultiplier;
     public EventDefinitionSO OnEnterEvent => onEnterEvent;
     public EventDefinitionSO OnExitEvent => onExitEvent;
-    public EventDefinitionSO CentralEvent => centralEvent;
-    public CentralObjectVisual CentralVisual => centralVisual;
+
+    // 中央オブジェクト
+    public CentralObjectTableSO CentralObjectTable => centralObjectTable;
+    public CentralObjectSO FixedCentralObject => fixedCentralObject;
+
     public ExitSpawnRule ExitSpawn => exitSpawn;
     public ExitCandidate[] Exits => exits;
     public ExitSelectionMode ExitSelectionMode => exitSelectionMode;

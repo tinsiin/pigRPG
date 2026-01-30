@@ -20,6 +20,10 @@ public sealed class CentralObjectPresenter
     private CentralDisplayMode currentMode;
     private IWalkSFXPlayer sfxPlayer;
 
+    // アニメーション設定
+    private CentralAnimConfig animConfig = CentralAnimConfig.Default;
+    private bool useAnimation = true;
+
     public void SetRoot(RectTransform nextRoot)
     {
         root = nextRoot;
@@ -28,6 +32,16 @@ public sealed class CentralObjectPresenter
     public void SetSFXPlayer(IWalkSFXPlayer player)
     {
         sfxPlayer = player;
+    }
+
+    public void SetAnimConfig(CentralAnimConfig config)
+    {
+        animConfig = config;
+    }
+
+    public void SetUseAnimation(bool use)
+    {
+        useAnimation = use;
     }
 
     /// <summary>
@@ -71,6 +85,137 @@ public sealed class CentralObjectPresenter
         viewObject.SetActive(true);
     }
 
+    /// <summary>
+    /// アニメーション付きで中央オブジェクトを表示する（SideObjectPresenter.Showと同じ構造）。
+    /// </summary>
+    public void ShowWithAnimation(CentralObjectVisual visual, bool forceShow)
+    {
+        // 1. 古いオブジェクトをフェードアウト（SideObjectPresenter.FadeOutCurrentと同じ）
+        FadeOutCurrent();
+
+        if (!forceShow)
+        {
+            currentMode = CentralDisplayMode.Hidden;
+            return;
+        }
+
+        // 2. 新しいオブジェクトを作成（SideObjectPresenter.InstantiatePrefabと同じ）
+        viewObject = CreateAnimatedViewObject(visual);
+        if (viewObject != null)
+        {
+            currentMode = CentralDisplayMode.Visible;
+        }
+    }
+
+    /// <summary>
+    /// 古いオブジェクトをフェードアウト（SideObjectPresenter.FadeOutCurrentと同じ構造）。
+    /// </summary>
+    private void FadeOutCurrent()
+    {
+        if (viewObject == null)
+        {
+            return;
+        }
+
+        var mover = viewObject.GetComponent<CentralObjectMove>();
+        var oldObject = viewObject;
+        var oldRect = viewObject.GetComponent<RectTransform>();
+
+        // 参照をクリア（SideObjectPresenterと同じ: currentObjects[i] = null）
+        viewObject = null;
+        image = null;
+        rectTransform = null;
+        button = null;
+
+        if (mover != null)
+        {
+            // Hide()で非アクティブにされている場合は再アクティブ化
+            // （アニメーションを表示するため）
+            if (!oldObject.activeSelf)
+            {
+                oldObject.SetActive(true);
+            }
+            // フェードアウト中のオブジェクトを最前面に移動（新しいオブジェクトの上に表示）
+            if (oldRect != null)
+            {
+                oldRect.SetAsLastSibling();
+            }
+            // FadeOut().Forget() で待たずに開始（SideObjectPresenterと同じ）
+            mover.FadeOut().Forget();
+        }
+        else
+        {
+            // CentralObjectMoveがない場合は即座に破棄
+            DestroyObject(oldObject);
+        }
+    }
+
+    /// <summary>
+    /// アニメーション付きViewObjectを作成（SideObjectPresenter.InstantiatePrefabと同じ役割）。
+    /// </summary>
+    private GameObject CreateAnimatedViewObject(CentralObjectVisual visual)
+    {
+        if (root == null) return null;
+
+        // GameObjectを作成
+        var obj = new GameObject("CentralObject", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        var rect = obj.GetComponent<RectTransform>();
+        rect.SetParent(root, false);
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+
+        var img = obj.GetComponent<Image>();
+        img.raycastTarget = false;
+        obj.AddComponent<WalkSpawnedMarker>();
+
+        // ビジュアル設定
+        img.sprite = visual.HasSprite ? visual.Sprite : GetFallbackSprite();
+        var tint = visual.Tint;
+        if (tint.a <= 0f) tint = Color.white;
+        img.color = tint;
+
+        var size = visual.Size;
+        if (size.x <= 0f || size.y <= 0f)
+        {
+            size = new Vector2(160f, 160f);
+        }
+        rect.sizeDelta = size;
+        rect.anchoredPosition = visual.Offset;
+
+        // CentralObjectMoveを追加（SideObjectMoveと同じ役割）
+        // Start()でフェードインが自動開始される
+        if (useAnimation && animConfig.IsValid)
+        {
+            var mover = obj.AddComponent<CentralObjectMove>();
+            mover.Configure(animConfig);
+        }
+
+        // 参照を保持
+        rectTransform = rect;
+        image = img;
+
+        return obj;
+    }
+
+    /// <summary>
+    /// アニメーション付きで非表示にする（待たない）。
+    /// </summary>
+    public void HideWithAnimation()
+    {
+        FadeOutCurrent();
+
+        if (backImage != null)
+        {
+            backImage.gameObject.SetActive(false);
+        }
+        if (labelText != null)
+        {
+            labelText.gameObject.SetActive(false);
+        }
+        currentMode = CentralDisplayMode.Hidden;
+    }
+
     public void Hide()
     {
         if (viewObject != null)
@@ -90,6 +235,13 @@ public sealed class CentralObjectPresenter
 
     public void ShowGate(GateVisual visual)
     {
+        // CentralObjectMoveが付いている場合はフェードアウトして新規作成
+        // （ShowWithAnimation後にShowGateが呼ばれた場合のアニメーション干渉防止）
+        if (viewObject != null && viewObject.GetComponent<CentralObjectMove>() != null)
+        {
+            FadeOutCurrent();
+        }
+
         EnsureViewObject();
         if (image == null || rectTransform == null) return;
 

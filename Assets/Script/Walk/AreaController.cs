@@ -18,6 +18,7 @@ public sealed class AreaController
     private readonly CentralObjectPresenter centralPresenter;
     private readonly EventHost eventHost;
     private readonly SideObjectSelector sideObjectSelector = new SideObjectSelector();
+    private readonly CentralObjectSelector centralObjectSelector = new CentralObjectSelector();
     private readonly EncounterResolver encounterResolver = new EncounterResolver();
     private readonly ExitResolver exitResolver = new ExitResolver();
     private const int RewindStepsOnFail = 10;
@@ -66,6 +67,7 @@ public sealed class AreaController
         context.GateResolver = gateResolver;
         context.AnchorManager = anchorManager;
         context.SideObjectSelector = sideObjectSelector;
+        context.CentralObjectSelector = centralObjectSelector;
 
         InitializeStartNode();
         hasEnteredCurrentNode = false;
@@ -73,8 +75,9 @@ public sealed class AreaController
         // ゲート情報を初期化（UI表示用）
         InitializeGateResolverForCurrentNode();
 
-        // Phase 1.1: Initialize side object selector
+        // Phase 1.1: Initialize side/central object selectors
         ConfigureSideObjectSelector();
+        ConfigureCentralObjectSelector();
     }
 
     public string CurrentNodeId => currentNode != null ? currentNode.NodeId : null;
@@ -147,14 +150,66 @@ public sealed class AreaController
         // Advance side object cooldowns
         sideObjectSelector.AdvanceStep();
 
+        // Advance central object cooldowns
+        centralObjectSelector.AdvanceStep();
+
         // Advance encounter overlays
         context.AdvanceEncounterOverlays();
 
-        var sidePair = sideObjectSelector.RollPair(currentNode.SideObjectTable, currentNode, context, isNodeEntry: isNodeEntry);
-        var centralEvent = currentNode.CentralEvent;
-        var hasCentral = centralEvent != null || currentNode.CentralVisual.HasVisual;
+        // 排他性チェック: ゲートまたは出口が出現する歩では、サイド/中央オブジェクトは出現しない
+        var pendingGate = gateResolver.GetNextGate(currentNode, context.Counters.TrackProgress);
+        var hasGate = pendingGate != null;
 
-        ShowApproachObjects(sidePair, hasCentral);
+        // 出口の出現チェック（ゲートがない場合のみ）
+        bool exitWillSpawn = false;
+        if (!hasGate)
+        {
+            var allGatesCleared = gateResolver.AllGatesCleared(currentNode);
+            var maxGatePosition = gateResolver.GetMaxResolvedPosition();
+            var exitCounters = new WalkCountersSnapshot(
+                context.Counters.GlobalSteps,
+                context.Counters.NodeSteps,
+                context.Counters.TrackProgress);
+            exitWillSpawn = currentNode.ExitSpawn != null &&
+                            currentNode.ExitSpawn.ShouldSpawn(exitCounters, allGatesCleared, maxGatePosition);
+        }
+
+        // ゲートも出口もない場合のみ、サイド/中央オブジェクトを抽選・表示
+        SideObjectEntry[] sidePair = null;
+        CentralObjectEntry centralEntry = null;
+        EventDefinitionSO centralEvent = null;
+        CentralObjectVisual centralVisual = default;
+        bool hasCentral = false;
+
+        if (!hasGate && !exitWillSpawn)
+        {
+            sidePair = sideObjectSelector.RollPair(currentNode.SideObjectTable, currentNode, context, isNodeEntry: isNodeEntry);
+
+            // 中央オブジェクト抽選
+            centralEntry = centralObjectSelector.Roll(currentNode.CentralObjectTable, currentNode, context, isNodeEntry: isNodeEntry);
+
+            if (centralEntry == null && isNodeEntry && currentNode.FixedCentralObject != null)
+            {
+                // fixedCentralObjectがテーブルにない場合は直接使用
+                centralEvent = currentNode.FixedCentralObject.EventDefinition;
+                centralVisual = currentNode.FixedCentralObject.Visual;
+                hasCentral = true;
+            }
+            else
+            {
+                centralEvent = centralEntry?.CentralObject?.EventDefinition;
+                centralVisual = centralEntry?.CentralObject?.Visual ?? default;
+                hasCentral = centralEntry != null;
+            }
+
+            ShowApproachObjects(sidePair, centralVisual, hasCentral);
+        }
+        else
+        {
+            // P3修正: ゲートまたは出口が出現する場合は、既存のサイド/中央オブジェクトをフェードアウト
+            sidePresenter?.Show(null);
+            centralPresenter?.HideWithAnimation();
+        }
 
         // Phase 2: Check gates before encounter
         var gateHandled = await CheckGates();
@@ -182,9 +237,11 @@ public sealed class AreaController
             var battleResult = await RunEncounter(encounterResult.Encounter);
             if (battleResult.Encountered)
             {
-                var outcomeContext = await HandleEncounterOutcome(encounterResult.Encounter, battleResult.Outcome, sidePair, centralEvent, hasCentral);
+                var outcomeContext = await HandleEncounterOutcome(encounterResult.Encounter, battleResult.Outcome, sidePair, centralEntry, centralEvent, centralVisual, hasCentral);
                 sidePair = outcomeContext.SidePair;
+                centralEntry = outcomeContext.CentralEntry;
                 centralEvent = outcomeContext.CentralEvent;
+                centralVisual = outcomeContext.CentralVisual;
                 hasCentral = outcomeContext.HasCentral;
             }
         }
@@ -197,7 +254,7 @@ public sealed class AreaController
             return;
         }
 
-        await HandleApproach(sidePair, centralEvent, hasCentral);
+        await HandleApproach(sidePair, centralEntry, centralEvent, hasCentral);
 
         // If an event triggered a rewind (e.g., RewindToAnchorEffect), skip exit check
         // The next WalkStep will handle the new node state
@@ -208,14 +265,10 @@ public sealed class AreaController
         }
 
         // Phase 2: Check exit with gate cleared status
-        // カウンターを再取得（ゲート処理でリセットされている可能性があるため）
-        var allGatesCleared = gateResolver.AllGatesCleared(currentNode);
-        var maxGatePosition = gateResolver.GetMaxResolvedPosition();
-        var exitCounters = new WalkCountersSnapshot(
-            context.Counters.GlobalSteps,
-            context.Counters.NodeSteps,
-            context.Counters.TrackProgress);
-        if (currentNode.ExitSpawn != null && currentNode.ExitSpawn.ShouldSpawn(exitCounters, allGatesCleared, maxGatePosition))
+        // P2修正: カウンターが変わった可能性があるため、出口出現を再計算
+        // （敗北/逃走でRewindが発生した場合など）
+        exitWillSpawn = CheckExitShouldSpawn();
+        if (exitWillSpawn)
         {
             var exitResult = await ShowExitAndSelectDestination();
 
@@ -241,11 +294,27 @@ public sealed class AreaController
         // Clear pending on refresh without step
         sideObjectSelector.ClearPending();
 
-        var sidePair = sideObjectSelector.RollPair(currentNode.SideObjectTable, currentNode, context, isNodeEntry: false);
-        var centralEvent = currentNode.CentralEvent;
-        var hasCentral = centralEvent != null || currentNode.CentralVisual.HasVisual;
+        // 排他性チェック: ゲートが出現する場合はサイド/中央オブジェクトを表示しない
+        var pendingGate = gateResolver.GetNextGate(currentNode, context.Counters.TrackProgress);
+        var hasGate = pendingGate != null;
 
-        ShowApproachObjects(sidePair, hasCentral);
+        if (!hasGate)
+        {
+            var sidePair = sideObjectSelector.RollPair(currentNode.SideObjectTable, currentNode, context, isNodeEntry: false);
+
+            // 中央オブジェクト抽選
+            var centralEntry = centralObjectSelector.Roll(currentNode.CentralObjectTable, currentNode, context, isNodeEntry: false);
+            var centralVisual = centralEntry?.CentralObject?.Visual ?? default;
+            var hasCentral = centralEntry != null;
+
+            ShowApproachObjects(sidePair, centralVisual, hasCentral);
+        }
+        else
+        {
+            // P3修正: ゲートが出現する場合は、既存のサイド/中央オブジェクトをフェードアウト
+            sidePresenter?.Show(null);
+            centralPresenter?.HideWithAnimation();
+        }
 
         // Check gates but don't advance counters
         await CheckGates();
@@ -592,6 +661,24 @@ public sealed class AreaController
         }
     }
 
+    /// <summary>
+    /// 出口が出現するかどうかを判定する。
+    /// カウンターが変わった後に再計算する必要がある場合に使用。
+    /// </summary>
+    private bool CheckExitShouldSpawn()
+    {
+        if (currentNode.ExitSpawn == null) return false;
+
+        var allGatesCleared = gateResolver.AllGatesCleared(currentNode);
+        var maxGatePosition = gateResolver.GetMaxResolvedPosition();
+        var exitCounters = new WalkCountersSnapshot(
+            context.Counters.GlobalSteps,
+            context.Counters.NodeSteps,
+            context.Counters.TrackProgress);
+
+        return currentNode.ExitSpawn.ShouldSpawn(exitCounters, allGatesCleared, maxGatePosition);
+    }
+
     private readonly struct ExitResult
     {
         public bool Transitioned { get; }
@@ -703,7 +790,7 @@ public sealed class AreaController
         return exits[selectedIndex];
     }
 
-    private async UniTask HandleApproach(SideObjectEntry[] sidePair, EventDefinitionSO centralEvent, bool hasCentral)
+    private async UniTask HandleApproach(SideObjectEntry[] sidePair, CentralObjectEntry centralEntry, EventDefinitionSO centralEvent, bool hasCentral)
     {
         if (sidePair == null && !hasCentral) return;
 
@@ -746,6 +833,11 @@ public sealed class AreaController
                 await TriggerEvent(rightEntry?.SideObject?.EventDefinition);
                 break;
             case ApproachChoice.Center:
+                // 中央オブジェクト選択を記録（クールダウン/バラエティ用）
+                if (centralEntry != null)
+                {
+                    centralObjectSelector.OnCentralObjectSelected(centralEntry);
+                }
                 await RunCentralEvent(centralEvent);
                 break;
             case ApproachChoice.Skip:
@@ -757,13 +849,14 @@ public sealed class AreaController
         centralPresenter?.Hide();
     }
 
-    private void ShowApproachObjects(SideObjectEntry[] sidePair, bool hasCentral)
+    private void ShowApproachObjects(SideObjectEntry[] sidePair, CentralObjectVisual centralVisual, bool hasCentral)
     {
         sidePresenter?.Show(sidePair);
-        centralPresenter?.Show(currentNode.CentralVisual, hasCentral);
+        // サイドオブジェクトと同じ方式：フェードアウト/フェードインを待たない
+        centralPresenter?.ShowWithAnimation(centralVisual, hasCentral);
     }
 
-    private async UniTask<EncounterOutcomeContext> HandleEncounterOutcome(EncounterSO encounter, BattleOutcome outcome, SideObjectEntry[] sidePair, EventDefinitionSO centralEvent, bool hasCentral)
+    private async UniTask<EncounterOutcomeContext> HandleEncounterOutcome(EncounterSO encounter, BattleOutcome outcome, SideObjectEntry[] sidePair, CentralObjectEntry centralEntry, EventDefinitionSO centralEvent, CentralObjectVisual centralVisual, bool hasCentral)
     {
         await TriggerEncounterOutcome(encounter, outcome);
 
@@ -772,12 +865,17 @@ public sealed class AreaController
             context.Counters.Rewind(RewindStepsOnFail);
             sideObjectSelector.ClearPending();
             sidePair = sideObjectSelector.RollPair(currentNode.SideObjectTable, currentNode, context, isNodeEntry: false);
-            centralEvent = currentNode.CentralEvent;
-            hasCentral = centralEvent != null || currentNode.CentralVisual.HasVisual;
-            ShowApproachObjects(sidePair, hasCentral);
+
+            // 中央オブジェクト再抽選
+            centralEntry = centralObjectSelector.Roll(currentNode.CentralObjectTable, currentNode, context, isNodeEntry: false);
+            centralEvent = centralEntry?.CentralObject?.EventDefinition;
+            centralVisual = centralEntry?.CentralObject?.Visual ?? default;
+            hasCentral = centralEntry != null;
+
+            ShowApproachObjects(sidePair, centralVisual, hasCentral);
         }
 
-        return new EncounterOutcomeContext(sidePair, centralEvent, hasCentral);
+        return new EncounterOutcomeContext(sidePair, centralEntry, centralEvent, centralVisual, hasCentral);
     }
 
     private async UniTask<BattleResult> RunEncounter(EncounterSO encounter)
@@ -811,13 +909,17 @@ public sealed class AreaController
     private readonly struct EncounterOutcomeContext
     {
         public SideObjectEntry[] SidePair { get; }
+        public CentralObjectEntry CentralEntry { get; }
         public EventDefinitionSO CentralEvent { get; }
+        public CentralObjectVisual CentralVisual { get; }
         public bool HasCentral { get; }
 
-        public EncounterOutcomeContext(SideObjectEntry[] sidePair, EventDefinitionSO centralEvent, bool hasCentral)
+        public EncounterOutcomeContext(SideObjectEntry[] sidePair, CentralObjectEntry centralEntry, EventDefinitionSO centralEvent, CentralObjectVisual centralVisual, bool hasCentral)
         {
             SidePair = sidePair;
+            CentralEntry = centralEntry;
             CentralEvent = centralEvent;
+            CentralVisual = centralVisual;
             HasCentral = hasCentral;
         }
     }
@@ -907,9 +1009,10 @@ public sealed class AreaController
         // Phase 2: Clear node-scoped anchors
         anchorManager.ClearAnchorsInScope(AnchorScope.Node);
 
-        // Phase 1.1: Reset side object state on node transition
+        // Phase 1.1: Reset side/central object state on node transition
         sideObjectSelector.ClearPending();
         ConfigureSideObjectSelector();
+        ConfigureCentralObjectSelector();
     }
 
     /// <summary>
@@ -920,6 +1023,16 @@ public sealed class AreaController
         var table = currentNode?.SideObjectTable;
         var varietyDepth = table?.VarietyDepth ?? 0;
         sideObjectSelector.Configure(varietyDepth);
+    }
+
+    /// <summary>
+    /// Configure central object selector based on current node's table settings
+    /// </summary>
+    private void ConfigureCentralObjectSelector()
+    {
+        var table = currentNode?.CentralObjectTable;
+        var varietyDepth = table?.VarietyDepth ?? 0;
+        centralObjectSelector.Configure(varietyDepth);
     }
 
     /// <summary>

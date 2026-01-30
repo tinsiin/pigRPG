@@ -59,6 +59,9 @@ public class WalkProgressData
     // Phase 3.1: Tags
     public List<string> Tags = new();
 
+    // CentralObject state persistence
+    public CentralObjectState CentralObjectState;
+
     public static WalkProgressData FromContext(GameContext context)
     {
         if (context == null) return null;
@@ -116,6 +119,12 @@ public class WalkProgressData
             data.SideObjectState = context.SideObjectSelector.ExportState();
         }
 
+        // Export central object state
+        if (context.CentralObjectSelector != null)
+        {
+            data.CentralObjectState = context.CentralObjectSelector.ExportState();
+        }
+
         return data;
     }
 
@@ -164,6 +173,12 @@ public class WalkProgressData
         if (context.SideObjectSelector != null && SideObjectState != null)
         {
             context.SideObjectSelector.ImportState(SideObjectState);
+        }
+
+        // Restore central object state
+        if (context.CentralObjectSelector != null && CentralObjectState != null)
+        {
+            context.CentralObjectSelector.ImportState(CentralObjectState);
         }
     }
 }
