@@ -292,6 +292,12 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
 
                 // EventHostにも設定（CreateEventContextでNovelUIを取得できるようにする）
                 eventHost?.SetUI(novelEventUI);
+
+                // CentralObjectPresenterを設定（3者会話構図で中央オブジェクトスプライト変更に使用）
+                if (novelEventUI is NovelPartEventUI concreteUI && centralPresenter != null)
+                {
+                    concreteUI.SetCentralObjectPresenter(centralPresenter);
+                }
             }
         }
         if (gameContext != null)

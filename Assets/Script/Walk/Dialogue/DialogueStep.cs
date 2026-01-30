@@ -36,6 +36,9 @@ public sealed class DialogueStep
     [Header("リアクション")]
     [SerializeField] private ReactionSegment[] reactions;
 
+    [Header("中央オブジェクト")]
+    [SerializeField] private Sprite centralObjectSprite;
+
     public string Speaker => speaker;
     public string Text => text;
     public DisplayMode DisplayMode => displayMode;
@@ -52,4 +55,7 @@ public sealed class DialogueStep
     public bool HasEffects => effects != null && effects.Length > 0;
     public ReactionSegment[] Reactions => reactions;
     public bool HasReactions => reactions != null && reactions.Length > 0;
+
+    public Sprite CentralObjectSprite => centralObjectSprite;
+    public bool HasCentralObjectChange => centralObjectSprite != null;
 }

@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 /// <summary>
 /// ダイアログ状態のスナップショット。
@@ -13,6 +14,7 @@ public sealed class DialogueStateSnapshot
     public PortraitState RightPortrait;
     public bool HasBackground;
     public string BackgroundId;
+    public Sprite CentralObjectSprite;
 
     public DialogueStateSnapshot() { }
 
@@ -82,7 +84,8 @@ public sealed class DialogueStateSnapshot
             LeftPortrait = LeftPortrait?.Clone(),
             RightPortrait = RightPortrait?.Clone(),
             HasBackground = HasBackground,
-            BackgroundId = BackgroundId
+            BackgroundId = BackgroundId,
+            CentralObjectSprite = CentralObjectSprite  // 参照型なのでそのまま代入
         };
     }
 }

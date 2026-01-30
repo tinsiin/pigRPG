@@ -40,6 +40,7 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
     private bool backlogRequested;
     private System.Action<ReactionSegment> currentReactionCallback;
     private NovelZoomController zoomController;
+    private CentralObjectPresenter centralObjectPresenter;
 
     public DisplayMode CurrentDisplayMode => currentDisplayMode;
     public INovelInputProvider InputProvider => inputHub;
@@ -336,6 +337,9 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         {
             backgroundPresenter?.HideImmediate();
         }
+
+        // 中央オブジェクト復元（nullでも適用 = スナップショット時点の状態を完全に復元）
+        UpdateCentralObjectSprite(snapshot.CentralObjectSprite);
     }
 
     /// <summary>
@@ -484,6 +488,29 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         {
             textBoxPresenter.SetSpiritualProperty(property);
         }
+    }
+
+    #endregion
+
+    #region Central Object
+
+    /// <summary>
+    /// CentralObjectPresenterを設定する。
+    /// WalkingSystemManager初期化時に呼び出す。
+    /// </summary>
+    public void SetCentralObjectPresenter(CentralObjectPresenter presenter)
+    {
+        centralObjectPresenter = presenter;
+    }
+
+    public void UpdateCentralObjectSprite(Sprite sprite)
+    {
+        centralObjectPresenter?.UpdateSprite(sprite);
+    }
+
+    public Sprite GetCurrentCentralObjectSprite()
+    {
+        return centralObjectPresenter?.GetCurrentSprite();
     }
 
     #endregion

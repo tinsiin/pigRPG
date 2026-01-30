@@ -57,6 +57,25 @@ public sealed class CentralObjectPresenter
         return rectTransform;
     }
 
+    /// <summary>
+    /// スプライトのみを変更する（位置・サイズは維持）。
+    /// ノベルパート中の中央オブジェクト変更用。
+    /// </summary>
+    public void UpdateSprite(Sprite sprite)
+    {
+        if (image == null) return;
+        image.sprite = sprite ?? GetFallbackSprite();
+    }
+
+    /// <summary>
+    /// 現在のスプライトを取得する。
+    /// 状態復元用。
+    /// </summary>
+    public Sprite GetCurrentSprite()
+    {
+        return image?.sprite;
+    }
+
     public void Show(CentralObjectVisual visual, bool forceShow)
     {
         if (!forceShow)

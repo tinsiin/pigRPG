@@ -59,11 +59,8 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
             await ui.SwitchTextBox(context.InitialMode);
         }
 
-        // 中央オブジェクトにズームイン（指定されている場合）
-        if (context.CentralObjectRT != null)
-        {
-            await ui.ZoomToCentralAsync(context.CentralObjectRT, context.ZoomFocusArea);
-        }
+        // 注: ズーム責務はNovelDialogueStep側に一本化
+        // CentralObjectRTは中央オブジェクトスプライト変更判定にのみ使用
 
         var steps = context.GetSteps();
         var currentIndex = 0;
@@ -103,9 +100,14 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
                         snapshot.RightPortrait = prevSnapshot.RightPortrait;
                         snapshot.HasBackground = prevSnapshot.HasBackground;
                         snapshot.BackgroundId = prevSnapshot.BackgroundId;
+                        // 中央オブジェクトは継承しない（UIから実際の状態を取得する）
                     }
                 }
-                snapshot.ApplyStep(step);
+                snapshot.ApplyStep(step);  // 既存：立ち絵/背景の累積更新
+
+                // 中央オブジェクトはApplyStepではなくUIから直接取得
+                snapshot.CentralObjectSprite = ui.GetCurrentCentralObjectSprite();
+
                 snapshots.Add(snapshot);
             }
 
@@ -120,11 +122,7 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
                 ui.SetProtagonistSpiritualProperty(null);  // 精神属性表示をクリア
                 await ui.HideAllAsync();
 
-                // ズームアウト
-                if (context.CentralObjectRT != null)
-                {
-                    await ui.ExitZoomAsync();
-                }
+                // 注: ズームアウトはNovelDialogueStep側のfinallyで実行される
 
                 ui.SetTabState(TabState.walk);  // 歩行状態に戻す
 
@@ -187,11 +185,7 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
         ui.ClearReactions();
         ui.SetProtagonistSpiritualProperty(null);  // 精神属性表示をクリア
 
-        // ズームアウト
-        if (context.CentralObjectRT != null)
-        {
-            await ui.ExitZoomAsync();
-        }
+        // 注: ズームアウトはNovelDialogueStep側のfinallyで実行される
 
         ui.SetTabState(TabState.walk);  // 歩行状態に戻す
         return result;
@@ -229,6 +223,12 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
         if (ShouldUpdatePortrait(step))
         {
             await ui.ShowPortrait(step.LeftPortrait, step.RightPortrait);
+        }
+
+        // 2.5. 中央オブジェクト変更
+        if (step.HasCentralObjectChange && context.CentralObjectRT != null)
+        {
+            ui.UpdateCentralObjectSprite(step.CentralObjectSprite);
         }
 
         // 3. テキストボックス切り替え

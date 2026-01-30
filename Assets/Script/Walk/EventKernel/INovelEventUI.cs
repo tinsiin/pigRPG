@@ -139,4 +139,16 @@ public interface INovelEventUI : IEventUI
     /// nullで非表示。
     /// </summary>
     void SetProtagonistSpiritualProperty(SpiritualProperty? property);
+
+    /// <summary>
+    /// 中央オブジェクトのスプライトを変更する。
+    /// ズーム中の会話でのみ有効。
+    /// </summary>
+    void UpdateCentralObjectSprite(UnityEngine.Sprite sprite);
+
+    /// <summary>
+    /// 現在の中央オブジェクトスプライトを取得する。
+    /// スナップショット作成用。
+    /// </summary>
+    UnityEngine.Sprite GetCurrentCentralObjectSprite();
 }
