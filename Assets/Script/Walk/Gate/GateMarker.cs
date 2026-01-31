@@ -12,7 +12,7 @@ public sealed class GateMarker
     [SerializeField] private ConditionSO[] passConditions;
     [SerializeField] private EffectSO[] onPass;
     [SerializeField] private EffectSO[] onFail;
-    [SerializeField] private EventDefinitionSO gateEvent;
+    [SerializeField] private EventQueueEntry[] gateEvents;
     [SerializeField] private GateEventTiming eventTiming;
 
     [SerializeField] private GateVisual visual;
@@ -23,9 +23,15 @@ public sealed class GateMarker
     public ConditionSO[] PassConditions => passConditions;
     public EffectSO[] OnPass => onPass;
     public EffectSO[] OnFail => onFail;
-    public EventDefinitionSO GateEvent => gateEvent;
+    public EventQueueEntry[] GateEvents => gateEvents;
     public GateEventTiming EventTiming => eventTiming;
     public GateVisual Visual => visual;
+
+    /// <summary>
+    /// 後方互換用: 最初のイベント定義を取得。
+    /// </summary>
+    public EventDefinitionSO GateEvent =>
+        gateEvents != null && gateEvents.Length > 0 ? gateEvents[0].EventDefinition : null;
 }
 
 public enum GateEventTiming

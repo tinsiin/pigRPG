@@ -7,15 +7,13 @@ public sealed class NodeSO : ScriptableObject
     [SerializeField] private string displayName;
     [SerializeField] private NodeUIHints uiHints;
     [SerializeField] private SideObjectTableSO sideObjectTable;
-    [SerializeField] private FixedSideObjectPair fixedSideObjects;
     [SerializeField] private bool retainUnselectedSide;
     [SerializeField] private EncounterTableSO encounterTable;
     [SerializeField] private float encounterRateMultiplier = 1f;
-    [SerializeField] private EventDefinitionSO onEnterEvent;
-    [SerializeField] private EventDefinitionSO onExitEvent;
+    [SerializeField] private EventQueueEntry[] onEnterEvents;
+    [SerializeField] private EventQueueEntry[] onExitEvents;
     [Header("中央オブジェクト")]
     [SerializeField] private CentralObjectTableSO centralObjectTable;
-    [SerializeField] private CentralObjectSO fixedCentralObject;
 
     [Header("出口")]
     [SerializeField] private ExitSpawnRule exitSpawn;
@@ -31,16 +29,23 @@ public sealed class NodeSO : ScriptableObject
     public string DisplayName => displayName;
     public NodeUIHints UiHints => uiHints;
     public SideObjectTableSO SideObjectTable => sideObjectTable;
-    public FixedSideObjectPair FixedSideObjects => fixedSideObjects;
     public bool RetainUnselectedSide => retainUnselectedSide;
     public EncounterTableSO EncounterTable => encounterTable;
     public float EncounterRateMultiplier => encounterRateMultiplier;
-    public EventDefinitionSO OnEnterEvent => onEnterEvent;
-    public EventDefinitionSO OnExitEvent => onExitEvent;
+    public EventQueueEntry[] OnEnterEvents => onEnterEvents;
+    public EventQueueEntry[] OnExitEvents => onExitEvents;
+
+    /// <summary>
+    /// 後方互換用: 最初のイベント定義を取得。
+    /// </summary>
+    public EventDefinitionSO OnEnterEvent =>
+        onEnterEvents != null && onEnterEvents.Length > 0 ? onEnterEvents[0].EventDefinition : null;
+
+    public EventDefinitionSO OnExitEvent =>
+        onExitEvents != null && onExitEvents.Length > 0 ? onExitEvents[0].EventDefinition : null;
 
     // 中央オブジェクト
     public CentralObjectTableSO CentralObjectTable => centralObjectTable;
-    public CentralObjectSO FixedCentralObject => fixedCentralObject;
 
     public ExitSpawnRule ExitSpawn => exitSpawn;
     public ExitCandidate[] Exits => exits;

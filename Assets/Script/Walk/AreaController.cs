@@ -21,6 +21,7 @@ public sealed class AreaController
     private readonly CentralObjectSelector centralObjectSelector = new CentralObjectSelector();
     private readonly EncounterResolver encounterResolver = new EncounterResolver();
     private readonly ExitResolver exitResolver = new ExitResolver();
+    private readonly EventQueueResolver eventQueueResolver = new EventQueueResolver();
     private const int RewindStepsOnFail = 10;
     private NodeSO currentNode;
     private bool hasEnteredCurrentNode;
@@ -136,7 +137,7 @@ public sealed class AreaController
 
         if (!hasEnteredCurrentNode)
         {
-            await TriggerEvent(currentNode.OnEnterEvent);
+            await TriggerEventQueue(currentNode.OnEnterEvents, $"node:{currentNode.NodeId}:enter");
             // Note: GateResolver is already initialized in constructor
             hasEnteredCurrentNode = true;
         }
@@ -177,7 +178,7 @@ public sealed class AreaController
         // ゲートも出口もない場合のみ、サイド/中央オブジェクトを抽選・表示
         SideObjectEntry[] sidePair = null;
         CentralObjectEntry centralEntry = null;
-        EventDefinitionSO centralEvent = null;
+        CentralObjectSO centralObject = null;
         CentralObjectVisual centralVisual = default;
         bool hasCentral = false;
 
@@ -187,20 +188,9 @@ public sealed class AreaController
 
             // 中央オブジェクト抽選
             centralEntry = centralObjectSelector.Roll(currentNode.CentralObjectTable, currentNode, context, isNodeEntry: isNodeEntry);
-
-            if (centralEntry == null && isNodeEntry && currentNode.FixedCentralObject != null)
-            {
-                // fixedCentralObjectがテーブルにない場合は直接使用
-                centralEvent = currentNode.FixedCentralObject.EventDefinition;
-                centralVisual = currentNode.FixedCentralObject.Visual;
-                hasCentral = true;
-            }
-            else
-            {
-                centralEvent = centralEntry?.CentralObject?.EventDefinition;
-                centralVisual = centralEntry?.CentralObject?.Visual ?? default;
-                hasCentral = centralEntry != null;
-            }
+            centralObject = centralEntry?.CentralObject;
+            centralVisual = centralObject?.Visual ?? default;
+            hasCentral = centralEntry != null;
 
             ShowApproachObjects(sidePair, centralVisual, hasCentral);
         }
@@ -237,10 +227,10 @@ public sealed class AreaController
             var battleResult = await RunEncounter(encounterResult.Encounter);
             if (battleResult.Encountered)
             {
-                var outcomeContext = await HandleEncounterOutcome(encounterResult.Encounter, battleResult.Outcome, sidePair, centralEntry, centralEvent, centralVisual, hasCentral);
+                var outcomeContext = await HandleEncounterOutcome(encounterResult.Encounter, battleResult.Outcome, sidePair, centralEntry, centralObject, centralVisual, hasCentral);
                 sidePair = outcomeContext.SidePair;
                 centralEntry = outcomeContext.CentralEntry;
-                centralEvent = outcomeContext.CentralEvent;
+                centralObject = outcomeContext.CentralObject;
                 centralVisual = outcomeContext.CentralVisual;
                 hasCentral = outcomeContext.HasCentral;
             }
@@ -254,7 +244,7 @@ public sealed class AreaController
             return;
         }
 
-        await HandleApproach(sidePair, centralEntry, centralEvent, hasCentral);
+        await HandleApproach(sidePair, centralEntry, hasCentral);
 
         // If an event triggered a rewind (e.g., RewindToAnchorEffect), skip exit check
         // The next WalkStep will handle the new node state
@@ -405,9 +395,9 @@ public sealed class AreaController
         if (gate == null) return false;
 
         // GateEvent: OnAppear timing
-        if (gate.GateEvent != null && gate.EventTiming == GateEventTiming.OnAppear)
+        if (gate.GateEvents != null && gate.GateEvents.Length > 0 && gate.EventTiming == GateEventTiming.OnAppear)
         {
-            await TriggerEvent(gate.GateEvent);
+            await TriggerEventQueue(gate.GateEvents, $"gate:{gate.GateId}");
         }
 
         // Show gate（常にボタン表示）
@@ -438,9 +428,9 @@ public sealed class AreaController
             centralPresenter?.PlayGatePassSFX(gate.Visual);
 
             // GateEvent: OnPass timing
-            if (gate.GateEvent != null && gate.EventTiming == GateEventTiming.OnPass)
+            if (gate.GateEvents != null && gate.GateEvents.Length > 0 && gate.EventTiming == GateEventTiming.OnPass)
             {
-                await TriggerEvent(gate.GateEvent);
+                await TriggerEventQueue(gate.GateEvents, $"gate:{gate.GateId}");
             }
 
             await ApplyEffects(gate.OnPass);
@@ -452,9 +442,9 @@ public sealed class AreaController
             centralPresenter?.PlayGateFailSFX(gate.Visual);
 
             // GateEvent: OnFail timing
-            if (gate.GateEvent != null && gate.EventTiming == GateEventTiming.OnFail)
+            if (gate.GateEvents != null && gate.GateEvents.Length > 0 && gate.EventTiming == GateEventTiming.OnFail)
             {
-                await TriggerEvent(gate.GateEvent);
+                await TriggerEventQueue(gate.GateEvents, $"gate:{gate.GateId}");
             }
 
             await ApplyEffects(gate.OnFail);
@@ -482,7 +472,7 @@ public sealed class AreaController
     private async UniTask<bool> CheckForcedEvents()
     {
         // 歩数を進める（クールダウン用）
-        context.ForcedEventStateManager.IncrementSteps();
+        context.EventEntryStateManager.IncrementSteps();
 
         // トリガーがなければスキップ
         if (!currentNode.HasForcedEventTriggers) return false;
@@ -495,7 +485,7 @@ public sealed class AreaController
             if (trigger == null) continue;
 
             // 発火可能かチェック
-            if (!context.ForcedEventStateManager.CanTrigger(trigger)) continue;
+            if (!context.EventEntryStateManager.CanTrigger(trigger, currentNode.NodeId)) continue;
 
             // 条件チェック
             if (trigger.HasConditions)
@@ -534,7 +524,7 @@ public sealed class AreaController
             }
 
             // 発火を記録
-            context.ForcedEventStateManager.RecordTrigger(trigger.TriggerId, trigger.ConsumeOnTrigger);
+            context.EventEntryStateManager.RecordForcedTrigger(currentNode.NodeId, trigger.TriggerId, trigger.ConsumeOnTrigger);
 
             // 1つ発火したら終了（1歩で複数発火は避ける）
             return true;
@@ -641,7 +631,7 @@ public sealed class AreaController
 
         if (selectedExit.HasValue)
         {
-            await TriggerEvent(currentNode.OnExitEvent);
+            await TriggerEventQueue(currentNode.OnExitEvents, $"node:{currentNode.NodeId}:exit");
             TransitionTo(selectedExit.Value.ToNodeId, selectedExit.Value.Id);
             hasEnteredCurrentNode = false;
             return new ExitResult(true, false);
@@ -738,15 +728,15 @@ public sealed class AreaController
             return;
         }
 
-        if (currentNode.OnEnterEvent == null)
+        if (currentNode.OnEnterEvents == null || currentNode.OnEnterEvents.Length == 0)
         {
-            Debug.Log($"AreaController: 開始ノード '{currentNode.NodeId}' にOnEnterEventが設定されていません");
+            Debug.Log($"AreaController: 開始ノード '{currentNode.NodeId}' にOnEnterEventsが設定されていません");
             hasEnteredCurrentNode = true;
             return;
         }
 
-        Debug.Log($"AreaController: 開始ノード '{currentNode.NodeId}' のOnEnterEventを発火");
-        await TriggerEvent(currentNode.OnEnterEvent);
+        Debug.Log($"AreaController: 開始ノード '{currentNode.NodeId}' のOnEnterEventsを発火");
+        await TriggerEventQueue(currentNode.OnEnterEvents, $"node:{currentNode.NodeId}:enter");
         hasEnteredCurrentNode = true;
     }
 
@@ -790,7 +780,7 @@ public sealed class AreaController
         return exits[selectedIndex];
     }
 
-    private async UniTask HandleApproach(SideObjectEntry[] sidePair, CentralObjectEntry centralEntry, EventDefinitionSO centralEvent, bool hasCentral)
+    private async UniTask HandleApproach(SideObjectEntry[] sidePair, CentralObjectEntry centralEntry, bool hasCentral)
     {
         if (sidePair == null && !hasCentral) return;
 
@@ -817,8 +807,12 @@ public sealed class AreaController
                     {
                         sideObjectSelector.SetPending(null, rightEntry?.SideObject?.Id);
                     }
+                    var leftSO = leftEntry.SideObject;
+                    if (leftSO?.Events != null && leftSO.Events.Length > 0)
+                    {
+                        await TriggerEventQueue(leftSO.Events, $"side:{leftSO.Id}");
+                    }
                 }
-                await TriggerEvent(leftEntry?.SideObject?.EventDefinition);
                 break;
             case ApproachChoice.Right:
                 if (rightEntry != null)
@@ -829,8 +823,12 @@ public sealed class AreaController
                     {
                         sideObjectSelector.SetPending(leftEntry?.SideObject?.Id, null);
                     }
+                    var rightSO = rightEntry.SideObject;
+                    if (rightSO?.Events != null && rightSO.Events.Length > 0)
+                    {
+                        await TriggerEventQueue(rightSO.Events, $"side:{rightSO.Id}");
+                    }
                 }
-                await TriggerEvent(rightEntry?.SideObject?.EventDefinition);
                 break;
             case ApproachChoice.Center:
                 // 中央オブジェクト選択を記録（クールダウン/バラエティ用）
@@ -838,7 +836,7 @@ public sealed class AreaController
                 {
                     centralObjectSelector.OnCentralObjectSelected(centralEntry);
                 }
-                await RunCentralEvent(centralEvent);
+                await RunCentralEvent(centralEntry?.CentralObject);
                 break;
             case ApproachChoice.Skip:
                 // Neither selected, clear pending
@@ -856,7 +854,7 @@ public sealed class AreaController
         centralPresenter?.ShowWithAnimation(centralVisual, hasCentral);
     }
 
-    private async UniTask<EncounterOutcomeContext> HandleEncounterOutcome(EncounterSO encounter, BattleOutcome outcome, SideObjectEntry[] sidePair, CentralObjectEntry centralEntry, EventDefinitionSO centralEvent, CentralObjectVisual centralVisual, bool hasCentral)
+    private async UniTask<EncounterOutcomeContext> HandleEncounterOutcome(EncounterSO encounter, BattleOutcome outcome, SideObjectEntry[] sidePair, CentralObjectEntry centralEntry, CentralObjectSO centralObject, CentralObjectVisual centralVisual, bool hasCentral)
     {
         await TriggerEncounterOutcome(encounter, outcome);
 
@@ -868,14 +866,14 @@ public sealed class AreaController
 
             // 中央オブジェクト再抽選
             centralEntry = centralObjectSelector.Roll(currentNode.CentralObjectTable, currentNode, context, isNodeEntry: false);
-            centralEvent = centralEntry?.CentralObject?.EventDefinition;
-            centralVisual = centralEntry?.CentralObject?.Visual ?? default;
+            centralObject = centralEntry?.CentralObject;
+            centralVisual = centralObject?.Visual ?? default;
             hasCentral = centralEntry != null;
 
             ShowApproachObjects(sidePair, centralVisual, hasCentral);
         }
 
-        return new EncounterOutcomeContext(sidePair, centralEntry, centralEvent, centralVisual, hasCentral);
+        return new EncounterOutcomeContext(sidePair, centralEntry, centralObject, centralVisual, hasCentral);
     }
 
     private async UniTask<BattleResult> RunEncounter(EncounterSO encounter)
@@ -893,14 +891,15 @@ public sealed class AreaController
     private UniTask TriggerEncounterOutcome(EncounterSO encounter, BattleOutcome outcome)
     {
         if (encounter == null) return UniTask.CompletedTask;
+        var hostKeyBase = $"encounter:{encounter.Id}";
         switch (outcome)
         {
             case BattleOutcome.Victory:
-                return TriggerEvent(encounter.OnWin);
+                return TriggerEventQueue(encounter.OnWinEvents, $"{hostKeyBase}:win");
             case BattleOutcome.Defeat:
-                return TriggerEvent(encounter.OnLose);
+                return TriggerEventQueue(encounter.OnLoseEvents, $"{hostKeyBase}:lose");
             case BattleOutcome.Escape:
-                return TriggerEvent(encounter.OnEscape);
+                return TriggerEventQueue(encounter.OnEscapeEvents, $"{hostKeyBase}:escape");
             default:
                 return UniTask.CompletedTask;
         }
@@ -910,15 +909,15 @@ public sealed class AreaController
     {
         public SideObjectEntry[] SidePair { get; }
         public CentralObjectEntry CentralEntry { get; }
-        public EventDefinitionSO CentralEvent { get; }
+        public CentralObjectSO CentralObject { get; }
         public CentralObjectVisual CentralVisual { get; }
         public bool HasCentral { get; }
 
-        public EncounterOutcomeContext(SideObjectEntry[] sidePair, CentralObjectEntry centralEntry, EventDefinitionSO centralEvent, CentralObjectVisual centralVisual, bool hasCentral)
+        public EncounterOutcomeContext(SideObjectEntry[] sidePair, CentralObjectEntry centralEntry, CentralObjectSO centralObject, CentralObjectVisual centralVisual, bool hasCentral)
         {
             SidePair = sidePair;
             CentralEntry = centralEntry;
-            CentralEvent = centralEvent;
+            CentralObject = centralObject;
             CentralVisual = centralVisual;
             HasCentral = hasCentral;
         }
@@ -937,12 +936,40 @@ public sealed class AreaController
     }
 
     /// <summary>
+    /// EventQueue配列から発火可能なイベントを1つ解決して実行する。
+    /// </summary>
+    private UniTask TriggerEventQueue(EventQueueEntry[] entries, string hostKey)
+    {
+        if (entries == null || entries.Length == 0) return UniTask.CompletedTask;
+
+        var resolved = eventQueueResolver.ResolveNext(
+            entries,
+            hostKey,
+            context,
+            context.EventEntryStateManager);
+
+        return TriggerEvent(resolved);
+    }
+
+    /// <summary>
     /// CentralEventを実行。
     /// ズーム責務はNovelDialogueStep側に移行したため、ここではズームしない。
     /// CentralObjectRTをEventContextに渡すことで、NovelDialogueStepがズーム可能になる。
     /// </summary>
-    private async UniTask RunCentralEvent(EventDefinitionSO centralEvent)
+    private async UniTask RunCentralEvent(CentralObjectSO centralObject)
     {
+        if (centralObject == null)
+        {
+            return;
+        }
+
+        // EventQueueから発火するイベントを解決
+        var centralEvent = eventQueueResolver.ResolveNext(
+            centralObject.Events,
+            $"central:{centralObject.Id}",
+            context,
+            context.EventEntryStateManager);
+
         if (centralEvent == null)
         {
             return;

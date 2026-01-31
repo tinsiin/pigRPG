@@ -62,6 +62,9 @@ public class WalkProgressData
     // CentralObject state persistence
     public CentralObjectState CentralObjectState;
 
+    // Event entry state persistence (unified ForcedEvent + EventQueue)
+    public List<EventQueueEntryState> EventEntryStates = new();
+
     public static WalkProgressData FromContext(GameContext context)
     {
         if (context == null) return null;
@@ -125,6 +128,9 @@ public class WalkProgressData
             data.CentralObjectState = context.CentralObjectSelector.ExportState();
         }
 
+        // Export unified event entry states
+        data.EventEntryStates = context.EventEntryStateManager.Export();
+
         return data;
     }
 
@@ -180,5 +186,8 @@ public class WalkProgressData
         {
             context.CentralObjectSelector.ImportState(CentralObjectState);
         }
+
+        // Restore unified event entry states
+        context.EventEntryStateManager.Import(EventEntryStates);
     }
 }

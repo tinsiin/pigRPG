@@ -21,27 +21,6 @@ public sealed class SideObjectSelector
     {
         if (table == null) return null;
 
-        // Check for fixed side objects on node entry
-        if (isNodeEntry && node != null && node.FixedSideObjects.HasAny)
-        {
-            var fixedPair = node.FixedSideObjects;
-            var leftEntry = fixedPair.HasLeft ? FindEntryBySideObject(table, fixedPair.Left) : null;
-            var rightEntry = fixedPair.HasRight ? FindEntryBySideObject(table, fixedPair.Right) : null;
-
-            // If fixed is specified, fill the other side with random pick
-            if (leftEntry == null && !fixedPair.HasLeft)
-            {
-                leftEntry = PickWithFilters(table, context, excludeId: rightEntry?.SideObject?.Id);
-            }
-            if (rightEntry == null && !fixedPair.HasRight)
-            {
-                rightEntry = PickWithFilters(table, context, excludeId: leftEntry?.SideObject?.Id);
-            }
-
-            ClearPending();
-            return new[] { leftEntry, rightEntry };
-        }
-
         // Check for retained (pending) side objects
         if (node != null && node.RetainUnselectedSide && HasPending())
         {
@@ -283,19 +262,6 @@ public sealed class SideObjectSelector
         }
 
         return list[list.Count - 1].entry;
-    }
-
-    private static SideObjectEntry FindEntryBySideObject(SideObjectTableSO table, SideObjectSO sideObject)
-    {
-        if (table == null || sideObject == null) return null;
-        var entries = table.Entries;
-        if (entries == null) return null;
-
-        for (var i = 0; i < entries.Length; i++)
-        {
-            if (entries[i]?.SideObject == sideObject) return entries[i];
-        }
-        return null;
     }
 
     private static SideObjectEntry FindEntryById(SideObjectTableSO table, string id)

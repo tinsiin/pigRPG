@@ -22,12 +22,6 @@ public sealed class CentralObjectSelector
     {
         if (table == null) return null;
 
-        // ノード入場時の固定中央オブジェクト
-        if (isNodeEntry && node?.FixedCentralObject != null)
-        {
-            return FindEntryByCentralObject(table, node.FixedCentralObject);
-        }
-
         // 通常の重み付き抽選
         return PickWithFilters(table, context);
     }
@@ -142,19 +136,4 @@ public sealed class CentralObjectSelector
         return true;
     }
 
-    private static CentralObjectEntry FindEntryByCentralObject(CentralObjectTableSO table, CentralObjectSO centralObject)
-    {
-        if (table == null || centralObject == null) return null;
-        var entries = table.Entries;
-        if (entries == null) return null;
-
-        for (var i = 0; i < entries.Length; i++)
-        {
-            if (entries[i]?.CentralObject == centralObject) return entries[i];
-        }
-
-        // テーブルにない場合はnullを返す
-        // fixedCentralObjectがテーブルにない場合はAreaController側で直接CentralObjectSOを扱う
-        return null;
-    }
 }
