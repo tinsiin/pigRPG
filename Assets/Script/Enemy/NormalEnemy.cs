@@ -122,11 +122,11 @@ public class NormalEnemy : BaseStates
     /// </summary>
     public virtual void SkillAI()
     {
-        _brain.SkillActRun();
+        _brain.SkillActRun(manager);
     }
     public virtual async void BattleEndSkillAI()
     {
-        await _brain.PostBattleActRun(this);
+        await _brain.PostBattleActRun(this, manager);
     }
 
     //スキル成長の処理など------------------------------------------------------------------------------------------------------スキル成長の処理などーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー

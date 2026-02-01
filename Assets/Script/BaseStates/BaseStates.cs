@@ -25,7 +25,14 @@ public abstract partial class BaseStates
 
 
     // Phase 2a: 未使用のwuiプロパティを削除
-    protected IBattleContext manager => BattleContextHub.Current;
+    // Phase 4: Hub依存削減 - 注入優先、フォールバックでHub
+    private IBattleContext _battleContext;
+    protected IBattleContext manager => _battleContext ?? BattleContextHub.Current;
+
+    public void BindBattleContext(IBattleContext context)
+    {
+        _battleContext = context;
+    }
 
     // Phase 2b: schizoLogプロパティを削除し、BattleUIBridge経由に統一
     protected void AddBattleLog(string message, bool important = false)

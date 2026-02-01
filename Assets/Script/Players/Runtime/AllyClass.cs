@@ -10,6 +10,10 @@ using static CommonCalc;
 [Serializable]
 public class AllyClass : BaseStates
 {
+    private BattleOrchestrator _orchestrator;
+    private BattleOrchestrator Orchestrator => _orchestrator ?? BattleOrchestratorHub.Current;
+    public void InitializeOrchestrator(BattleOrchestrator orchestrator) => _orchestrator = orchestrator;
+
     /// <summary>
     /// このキャラクターのID
     /// </summary>
@@ -324,7 +328,7 @@ public class AllyClass : BaseStates
     public void OnSkillBtnCallBack(int skillListIndex)
     {
         var skill = SkillList[skillListIndex];
-        var orchestrator = BattleOrchestratorHub.Current;
+        var orchestrator = Orchestrator;
         if (orchestrator == null)
         {
             Debug.LogError("[CRITICAL] AllyClass.OnSkillBtnCallBack: BattleOrchestrator is not initialized");
@@ -356,7 +360,7 @@ public class AllyClass : BaseStates
     public void OnSkillStockBtnCallBack(int skillListIndex)
     {
         var skill = SkillList[skillListIndex];
-        var orchestrator = BattleOrchestratorHub.Current;
+        var orchestrator = Orchestrator;
         if (orchestrator == null)
         {
             Debug.LogError("[CRITICAL] AllyClass.OnSkillStockBtnCallBack: BattleOrchestrator is not initialized");
@@ -433,7 +437,7 @@ public class AllyClass : BaseStates
     public void OnSkillDoNothingBtnCallBack()
     {
         Debug.Log("何もしない");
-        var orchestrator = BattleOrchestratorHub.Current;
+        var orchestrator = Orchestrator;
         if (orchestrator != null)
         {
             var input = new ActionInput

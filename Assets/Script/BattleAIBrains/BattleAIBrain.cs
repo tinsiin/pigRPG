@@ -198,10 +198,10 @@ public abstract class BattleAIBrain : ScriptableObject
     /// 強制時はキャンセル行動のみを実行し、そうでなければ既存のThink()へ委譲する。
     /// 呼び出し側は今後 Run() を利用すること。
     /// </summary>
-    public void SkillActRun()
+    public void SkillActRun(IBattleContext context = null)
     {
         // 共通初期化
-        manager = BattleContextHub.Current;
+        manager = context ?? BattleContextHub.Current;
         if (manager == null || manager.Acter == null)
         {
             Debug.LogError("BattleAIBrain.Run: manager または Acter が未設定のため実行を中断します。");
@@ -647,7 +647,7 @@ public abstract class BattleAIBrain : ScriptableObject
     /// 戦闘後の自己行動の実行エントリ。AI内部で完結してActionsを順に適用する。
     /// 呼び元（BattleManager等）は対象キャラ(self)を渡して await するだけ。
     /// </summary>
-    public async UniTask<bool> PostBattleActRun(BaseStates self)
+    public async UniTask<bool> PostBattleActRun(BaseStates self, IBattleContext context = null)
     {
         if (self == null)
         {
@@ -658,7 +658,7 @@ public abstract class BattleAIBrain : ScriptableObject
         // 実行主体を AI 側にも保持（必要に応じて派生で参照）
         user = self;
         // BM は原則取得可能想定。取得失敗時はログのみ（利他部品側で自分のみへフォールバック）
-        manager = BattleContextHub.Current;
+        manager = context ?? BattleContextHub.Current;
 
         // デフォルトは空プラン。派生で PostBattlePlan(self, decision) を実装して Actions を詰める。
         var decision = new PostBattleDecision();

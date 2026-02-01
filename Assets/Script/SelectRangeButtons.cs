@@ -50,6 +50,9 @@ public class SelectRangeButtons : MonoBehaviour
 
     BattleUIBridge uiBridge => BattleUIBridge.Active;
     IBattleContext battle => uiBridge?.BattleContext;
+    private BattleOrchestrator _orchestrator;
+    private BattleOrchestrator Orchestrator => _orchestrator ?? BattleOrchestratorHub.Current;
+    public void Initialize(BattleOrchestrator orchestrator) => _orchestrator = orchestrator;
     List<Button> buttonList;
 
     /// <summary>
@@ -255,7 +258,7 @@ public class SelectRangeButtons : MonoBehaviour
     /// </summary>
     public void OnClickOptionRangeBtn(Button thisbtn, SkillZoneTrait option)
     {
-        var orchestrator = BattleOrchestratorHub.Current;
+        var orchestrator = Orchestrator;
         if (orchestrator == null)
         {
             Debug.LogError("[CRITICAL] SelectRangeButtons.OnClickOptionRangeBtn: BattleOrchestrator is not initialized");
@@ -284,7 +287,7 @@ public class SelectRangeButtons : MonoBehaviour
 
     public void OnClickRangeBtn(Button thisbtn, SkillZoneTrait range)
     {
-        var orchestrator = BattleOrchestratorHub.Current;
+        var orchestrator = Orchestrator;
         if (orchestrator == null)
         {
             Debug.LogError("[CRITICAL] SelectRangeButtons.OnClickRangeBtn: BattleOrchestrator is not initialized");

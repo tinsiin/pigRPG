@@ -24,7 +24,7 @@ public sealed class PartyMemberEffect : EffectSO
     public override UniTask Apply(GameContext context)
     {
         // 戦闘中は編成変更不可
-        if (BattleContextHub.Current != null)
+        if (BattleContextHub.IsInBattle)
         {
             Debug.LogWarning("PartyMemberEffect: 戦闘中はパーティー編成を変更できません");
             return UniTask.CompletedTask;

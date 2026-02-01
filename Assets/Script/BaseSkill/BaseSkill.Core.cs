@@ -16,7 +16,14 @@ public partial class BaseSkill
     //  ==============================================================================================================================
 
     // Phase 2b: 未使用のschizoLogプロパティを削除
-    protected IBattleContext manager => BattleContextHub.Current;
+    // Phase 4: Hub依存削減 - 注入優先、フォールバックでHub
+    private IBattleContext _battleContext;
+    protected IBattleContext manager => _battleContext ?? BattleContextHub.Current;
+
+    public void BindBattleContext(IBattleContext context)
+    {
+        _battleContext = context;
+    }
     [NonSerialized]
     public BaseStates Doer;//行使者
 
