@@ -25,12 +25,49 @@ public static class EncounterEnemySelector
         var calc = matchCalc ?? EnemyCollectManager.Instance;
 
         var resultList = new List<NormalEnemy>();
-        var targetList = new List<NormalEnemy>(enemies);
-        var validEnemies = new List<NormalEnemy>();
-        PartyProperty ourImpression;
+        var validEnemies = FilterEligibleEnemies(enemies, globalSteps);
+        ApplyReencountCallbacks(validEnemies, globalSteps);
+        if (!validEnemies.Any()) return null;
 
-        foreach (var ene in targetList)
+        var referenceOne = SelectLeader(validEnemies);
+        resultList.Add(referenceOne);
+
+        var manualCount = number >= 1;
+        var targetCount = manualCount ? Mathf.Clamp(number, 1, 3) : -1;
+
+        if (manualCount && targetCount == 1)
         {
+            return CreateBattleGroup(resultList, GetPartyImpression(resultList, calc), calc);
+        }
+
+        if (!manualCount &&
+            (calc.LonelyMatchUp(resultList[0].MyImpression) || validEnemies.Count <= 0))
+        {
+            return CreateBattleGroup(resultList, GetPartyImpression(resultList, calc), calc);
+        }
+
+        while (true)
+        {
+            if (TryResolveManualEnd(manualCount, targetCount, resultList, validEnemies, calc, out var manualImpression))
+            {
+                return CreateBattleGroup(resultList, manualImpression, calc);
+            }
+
+            TryAddCompatibleTarget(resultList, validEnemies, calc);
+
+            if (TryResolveAutoEnd(manualCount, resultList, validEnemies, calc, out var autoImpression))
+            {
+                return CreateBattleGroup(resultList, autoImpression, calc);
+            }
+        }
+    }
+
+    private static List<NormalEnemy> FilterEligibleEnemies(IReadOnlyList<NormalEnemy> enemies, int globalSteps)
+    {
+        var validEnemies = new List<NormalEnemy>();
+        for (var i = 0; i < enemies.Count; i++)
+        {
+            var ene = enemies[i];
             if (ene == null) continue;
             if (!ene.Death())
             {
@@ -39,130 +76,150 @@ public static class EncounterEnemySelector
             }
             if (ene.broken) continue;
 
-            if (ene.Reborn && ene.CanRebornWhatHeWill(globalSteps))
+            if (ene.Reborn && EnemyRebornManager.Instance.CanReborn(ene, globalSteps))
             {
                 validEnemies.Add(ene);
             }
         }
+        return validEnemies;
+    }
 
-        foreach (var ene in validEnemies)
+    private static void ApplyReencountCallbacks(List<NormalEnemy> validEnemies, int globalSteps)
+    {
+        for (var i = 0; i < validEnemies.Count; i++)
         {
+            var ene = validEnemies[i];
             EnsureInitialized(ene);
             ene.ReEncountCallback(globalSteps);
         }
+    }
 
-        if (!validEnemies.Any())
-        {
-            return null;
-        }
-
+    private static NormalEnemy SelectLeader(List<NormalEnemy> validEnemies)
+    {
         var rndIndex = RandomEx.Shared.NextInt(0, validEnemies.Count);
         var referenceOne = validEnemies[rndIndex];
         referenceOne.InitializeMyImpression();
         validEnemies.RemoveAt(rndIndex);
-        resultList.Add(referenceOne);
+        return referenceOne;
+    }
 
-        var manualCount = number >= 1;
-        var targetCount = manualCount ? Mathf.Clamp(number, 1, 3) : -1;
+    private static bool TryResolveManualEnd(
+        bool manualCount,
+        int targetCount,
+        List<NormalEnemy> resultList,
+        List<NormalEnemy> validEnemies,
+        IEnemyMatchCalculator calc,
+        out PartyProperty impression)
+    {
+        impression = default;
+        if (!manualCount) return false;
+        if (resultList.Count < targetCount && validEnemies.Count >= 1) return false;
+        impression = GetPartyImpression(resultList, calc);
+        return true;
+    }
 
-        if (manualCount && targetCount == 1)
+    private static void TryAddCompatibleTarget(
+        List<NormalEnemy> resultList,
+        List<NormalEnemy> validEnemies,
+        IEnemyMatchCalculator calc)
+    {
+        if (validEnemies.Count < 1) return;
+
+        var targetIndex = RandomEx.Shared.NextInt(0, validEnemies.Count);
+        var target = validEnemies[targetIndex];
+        var okCount = 0;
+        var sympathy = HasSympathy(resultList, target);
+
+        for (var i = 0; i < resultList.Count; i++)
         {
-            ourImpression = calc.EnemyLonelyPartyImpression[resultList[0].MyImpression];
-            return CreateBattleGroup(resultList, ourImpression, calc);
-        }
-
-        if (!manualCount &&
-            (calc.LonelyMatchUp(resultList[0].MyImpression) || validEnemies.Count <= 0))
-        {
-            ourImpression = calc.EnemyLonelyPartyImpression[resultList[0].MyImpression];
-            return CreateBattleGroup(resultList, ourImpression, calc);
-        }
-
-        while (true)
-        {
-            if (manualCount && resultList.Count >= targetCount)
+            var ene = resultList[i];
+            if (calc.TypeMatchUp(ene.MyType, target.MyType))
             {
-                ourImpression = (resultList.Count == 1)
-                    ? calc.EnemyLonelyPartyImpression[resultList[0].MyImpression]
-                    : calc.calculatePartyProperty(resultList);
-                break;
-            }
-
-            if (manualCount && validEnemies.Count < 1)
-            {
-                ourImpression = (resultList.Count == 1)
-                    ? calc.EnemyLonelyPartyImpression[resultList[0].MyImpression]
-                    : calc.calculatePartyProperty(resultList);
-                break;
-            }
-
-            var targetIndex = RandomEx.Shared.NextInt(0, validEnemies.Count);
-            var target = validEnemies[targetIndex];
-            var okCount = 0;
-            var sympathy = false;
-
-            foreach (var ene in resultList)
-            {
-                if (ene.HP <= ene.MaxHP / 2) sympathy = true;
-            }
-            if (target.HP <= target.MaxHP / 2) sympathy = true;
-
-            for (var i = 0; i < resultList.Count; i++)
-            {
-                if (calc.TypeMatchUp(resultList[i].MyType, target.MyType))
+                if (calc.ImpressionMatchUp(ene.MyImpression, target.MyImpression, sympathy))
                 {
-                    if (calc.ImpressionMatchUp(resultList[i].MyImpression, target.MyImpression, sympathy))
-                    {
-                        okCount++;
-                    }
+                    okCount++;
                 }
-            }
-
-            if (okCount == resultList.Count)
-            {
-                target.InitializeMyImpression();
-                resultList.Add(target);
-                validEnemies.Remove(target);
-            }
-
-            if (!manualCount)
-            {
-                if (resultList.Count == 1)
-                {
-                    if (RandomEx.Shared.NextInt(100) < 88)
-                    {
-                        if (calc.LonelyMatchUp(resultList[0].MyImpression))
-                        {
-                            ourImpression = calc.EnemyLonelyPartyImpression[resultList[0].MyImpression];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (!manualCount && resultList.Count == 2)
-            {
-                if (RandomEx.Shared.NextInt(100) < 65)
-                {
-                    ourImpression = calc.calculatePartyProperty(resultList);
-                    break;
-                }
-            }
-
-            if (resultList.Count >= 3)
-            {
-                ourImpression = calc.calculatePartyProperty(resultList);
-                break;
-            }
-
-            if (validEnemies.Count < 1)
-            {
-                ourImpression = calc.calculatePartyProperty(resultList);
-                break;
             }
         }
 
-        return CreateBattleGroup(resultList, ourImpression, calc);
+        if (okCount == resultList.Count)
+        {
+            target.InitializeMyImpression();
+            resultList.Add(target);
+            validEnemies.Remove(target);
+        }
+    }
+
+    private static bool TryResolveAutoEnd(
+        bool manualCount,
+        List<NormalEnemy> resultList,
+        List<NormalEnemy> validEnemies,
+        IEnemyMatchCalculator calc,
+        out PartyProperty impression)
+    {
+        impression = default;
+        if (manualCount) return false;
+
+        if (resultList.Count == 1)
+        {
+            if (RandomEx.Shared.NextInt(100) < 88)
+            {
+                if (calc.LonelyMatchUp(resultList[0].MyImpression))
+                {
+                    impression = calc.EnemyLonelyPartyImpression[resultList[0].MyImpression];
+                    return true;
+                }
+            }
+        }
+
+        if (resultList.Count == 2)
+        {
+            if (RandomEx.Shared.NextInt(100) < 65)
+            {
+                impression = calc.calculatePartyProperty(resultList);
+                return true;
+            }
+        }
+
+        if (resultList.Count >= 3)
+        {
+            impression = calc.calculatePartyProperty(resultList);
+            return true;
+        }
+
+        if (validEnemies.Count < 1)
+        {
+            impression = calc.calculatePartyProperty(resultList);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static PartyProperty GetPartyImpression(List<NormalEnemy> resultList, IEnemyMatchCalculator calc)
+    {
+        return resultList.Count == 1
+            ? calc.EnemyLonelyPartyImpression[resultList[0].MyImpression]
+            : calc.calculatePartyProperty(resultList);
+    }
+
+    private static bool HasSympathy(List<NormalEnemy> resultList, NormalEnemy target)
+    {
+        var sympathy = false;
+        for (var i = 0; i < resultList.Count; i++)
+        {
+            var ene = resultList[i];
+            if (ene.HP <= ene.MaxHP / 2)
+            {
+                sympathy = true;
+                break;
+            }
+        }
+        if (!sympathy && target.HP <= target.MaxHP / 2)
+        {
+            sympathy = true;
+        }
+        return sympathy;
     }
 
     private static void EnsureInitialized(NormalEnemy enemy)

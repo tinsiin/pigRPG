@@ -177,7 +177,7 @@ public sealed class BattleOrchestrator
             actor.RangeWill = actor.RangeWill.Add(normalizedTrait);
         }
 
-        var nextState = Manager.Acts.GetAtSingleTarget(0) != null
+        var nextState = (Manager.Acts.TryPeek(out var entry) && entry.SingleTarget != null)
             ? TabState.NextWait
             : AllyClass.DetermineNextUIState(actor.NowUseSkill);
 
@@ -325,7 +325,7 @@ public sealed class BattleOrchestrator
             return;
         }
         _requestSequence++;
-        var hasSingleTargetReservation = Manager.Acts.GetAtSingleTarget(0) != null;
+        var hasSingleTargetReservation = Manager.Acts.TryPeek(out var entry) && entry.SingleTarget != null;
         CurrentChoiceRequest = new ChoiceRequest
         {
             Kind = kind,

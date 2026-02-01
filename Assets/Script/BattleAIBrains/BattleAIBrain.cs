@@ -171,15 +171,9 @@ public abstract class BattleAIBrain : ScriptableObject
         // 1) SkillResourceFlow.CanConsumeOnCast(acter, skill)　　ポインントによる消費可能可否判定
         // 2) (acter.NowUseWeapon.IsBlade || !skill.IsBlade)　　刃物武器と刃物スキルの嚙み合わせ
         // 3) Actsに単体指定がある場合は単体系ZoneTrait + 攻撃タイプに限定
-        bool hasSingleReservation = false;
-        try
-        {
-            hasSingleReservation = manager?.Acts?.GetAtSingleTarget(0) != null;
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"MustSkillSelect: Acts.GetAtSingleTarget(0) 参照時に例外: {e.Message}");
-        }
+        var hasSingleReservation = manager != null
+            && manager.Acts.TryPeek(out var entry)
+            && entry.SingleTarget != null;
 
         var filtered = availableSkills
             .Where(skill =>
@@ -245,7 +239,7 @@ public abstract class BattleAIBrain : ScriptableObject
 
 
         // 4) Plan結果のコミットは単体先約の有無で自動分岐（単体時はSkillのみコミット）
-        var reserved = manager.Acts.GetAtSingleTarget(0);
+        var reserved = manager.Acts.TryPeek(out var entry) ? entry.SingleTarget : null;
 
         // 5) 新スタイル：Planで結果だけを記述 → Commitで一括反映（単体先約ならSkillのみ）
         {

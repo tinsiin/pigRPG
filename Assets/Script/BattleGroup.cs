@@ -452,12 +452,7 @@ public class BattleGroup
         if (enes.Count < 1) Debug.LogWarning("恐らくRecovelyStep用の関数を敵じゃないクラスで利用してる");
         else
         {
-            enes.Where(enemy => enemy.Death() && enemy.Reborn && !enemy.broken).ToList();//死者であり、復活するタイプであり、壊れてないものだけ
-
-            foreach(var ene in enes)
-            {
-                ene.ReadyRecovelyStep(globalSteps);//敵キャラの復活歩数準備
-            }
+            EnemyRebornManager.Instance.OnBattleEnd(enes, globalSteps);
         }
     }
 }
