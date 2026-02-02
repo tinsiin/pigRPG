@@ -4,6 +4,7 @@ using System.Linq;
 using RandomExtensions;
 using RandomExtensions.Linq;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 using static CommonCalc;
 using Cysharp.Threading.Tasks;
@@ -30,18 +31,19 @@ public class NormalEnemy : BaseStates
     private readonly Dictionary<GrowthStrategyType, IGrowthStrategy> _growthStrategies = new();
 
     [Header("復活歩数設定 基本生命キャラにだけ設定して、\n-1だと復活しないです。0だと即復活します。")]
+    [FormerlySerializedAs("RecovelySteps")]
     /// <summary>
     ///     この敵キャラクターの復活する歩数
-    ///     手動だが基本的に生命キャラクターのみにこの歩数は設定する? 
+    ///     手動だが基本的に生命キャラクターのみにこの歩数は設定する?
     /// </summary>
-    public int RecovelySteps = -1;
+    public int RebornSteps = -1;
 
     /// <summary>
     /// 復活するかどうか
     /// </summary>
     public bool Reborn
     {
-        get { return RecovelySteps >= 0; }//復活歩数がゼロ以上なら復活する敵　つまり-1に設定すると復活しない
+        get { return RebornSteps >= 0; }//復活歩数がゼロ以上なら復活する敵　つまり-1に設定すると復活しない
     }
 
     [Header("割り込みカウンター有効/無効\n頭のいいキャラなら戦闘時AIAPIで変更する")]
@@ -55,17 +57,23 @@ public class NormalEnemy : BaseStates
     /// <summary>
     /// 復活歩数をカウント変数にセットする。
     /// </summary>
-    public void ReadyRecovelyStep(int globalSteps)
+    /// <param name="globalSteps">グローバルステップ数</param>
+    /// <param name="rebornManager">復活マネージャ（null時はEnemyRebornManager.Instance）</param>
+    public void PrepareReborn(int globalSteps, IEnemyRebornManager rebornManager = null)
     {
-        EnemyRebornManager.Instance.ReadyRecovelyStep(this, globalSteps);
+        var manager = rebornManager ?? EnemyRebornManager.Instance;
+        manager.PrepareReborn(this, globalSteps);
     }
 
     /// <summary>
     /// "一回死んだ復活可能者"が復活するかどうか　要は今回復活するかまたはそもそも生きてるかどうか
     /// </summary>
-    public bool CanRebornWhatHeWill(int globalSteps)
+    /// <param name="globalSteps">グローバルステップ数</param>
+    /// <param name="rebornManager">復活マネージャ（null時はEnemyRebornManager.Instance）</param>
+    public bool CanRebornWhatHeWill(int globalSteps, IEnemyRebornManager rebornManager = null)
     {
-        return EnemyRebornManager.Instance.CanReborn(this, globalSteps);
+        var manager = rebornManager ?? EnemyRebornManager.Instance;
+        return manager.CanReborn(this, globalSteps);
     }
     /// <summary>
     /// 最後にエンカウントした時の歩数  会ってさえいればとりあえず記録 -1なら初回
@@ -108,9 +116,9 @@ public class NormalEnemy : BaseStates
         {
             skill.OnInitialize(this);
         }
-        if(RecovelySteps <= 0)
+        if(RebornSteps <= 0)
         {
-            if(RecovelySteps != -1) 
+            if(RebornSteps != -1)
             {
                 Debug.LogWarning($"敵キャラの復活歩数が0以下であり、-1でないので、倒しても一発で復活します。\n設定は合ってますか？{CharacterName}");
             }
@@ -263,7 +271,7 @@ public class NormalEnemy : BaseStates
             {
                 if(Reborn && !broken)//復活するタイプであり、壊れてないものだけ
                 {
-                    ReadyRecovelyStep(globalSteps);//復活歩数準備
+                    PrepareReborn(globalSteps);//復活歩数準備
                 }
             }
     }
@@ -282,7 +290,7 @@ public class NormalEnemy : BaseStates
         InitBaseStatesDeepCopy(clone);
 
         // 3. NormalEnemy 独自フィールドをコピー
-        clone.RecovelySteps = this.RecovelySteps;
+        clone.RebornSteps = this.RebornSteps;
         clone._interruptCounterActive = this._interruptCounterActive;//割り込みカウンターActive設定。
         foreach(var skill in this.EnemySkillList)
         {

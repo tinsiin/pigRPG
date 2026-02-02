@@ -16,6 +16,9 @@ public readonly struct EncounterRollResult
     public static EncounterRollResult None => new EncounterRollResult(false, null);
 }
 
+/// <summary>
+/// エンカウント判定を行うクラス
+/// </summary>
 public sealed class EncounterResolver
 {
     private static bool IsLogEnabled(EncounterTableSO table)
@@ -30,6 +33,9 @@ public sealed class EncounterResolver
         Debug.Log($"[Encounter] {message} (table={table.name}, node={nodeId})");
     }
 
+    /// <summary>
+    /// エンカウント判定を実行する
+    /// </summary>
     public EncounterRollResult Resolve(EncounterTableSO table, GameContext context, bool skipRoll, float nodeMultiplier = 1f)
     {
         if (table == null || context == null) return EncounterRollResult.None;
@@ -60,7 +66,7 @@ public sealed class EncounterResolver
             Log(table, context, $"init: grace={state.GraceRemaining} cooldown={state.CooldownRemaining}");
         }
 
-        TickState(table, state);
+        TickState(state);
         if (state.CooldownRemaining > 0 || state.GraceRemaining > 0)
         {
             Log(table, context, $"skip: cooldown={state.CooldownRemaining} grace={state.GraceRemaining} misses={state.Misses}");
@@ -107,7 +113,10 @@ public sealed class EncounterResolver
         return new EncounterRollResult(true, encounter);
     }
 
-    private static void TickState(EncounterTableSO table, EncounterState state)
+    /// <summary>
+    /// 状態のクールダウン/猶予歩数をデクリメントする
+    /// </summary>
+    internal void TickState(EncounterState state)
     {
         if (state.CooldownRemaining > 0)
         {
@@ -119,7 +128,10 @@ public sealed class EncounterResolver
         }
     }
 
-    private static EncounterSO PickEncounter(EncounterTableSO table, GameContext context, out int validCount, out float totalWeight)
+    /// <summary>
+    /// テーブルから有効なエンカウントを抽選する
+    /// </summary>
+    internal EncounterSO PickEncounter(EncounterTableSO table, GameContext context, out int validCount, out float totalWeight)
     {
         validCount = 0;
         totalWeight = 0f;
@@ -162,7 +174,10 @@ public sealed class EncounterResolver
         return valid[valid.Count - 1].Encounter;
     }
 
-    private static bool AreConditionsMet(ConditionSO[] conditions, GameContext context)
+    /// <summary>
+    /// 条件がすべて満たされているか判定する
+    /// </summary>
+    internal static bool AreConditionsMet(ConditionSO[] conditions, GameContext context)
     {
         if (conditions == null || conditions.Length == 0) return true;
         for (var i = 0; i < conditions.Length; i++)

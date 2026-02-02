@@ -446,13 +446,16 @@ public class BattleGroup
     /// <summary>
     /// oursがnormalEnemyの時だけ利用する。リカバリーステップのカウント準備の処理
     /// </summary>
-    public void RecovelyStart(int globalSteps)
+    /// <param name="globalSteps">グローバルステップ数</param>
+    /// <param name="rebornManager">復活マネージャ（null時はEnemyRebornManager.Instance）</param>
+    public void RecovelyStart(int globalSteps, IEnemyRebornManager rebornManager = null)
     {
+        var manager = rebornManager ?? EnemyRebornManager.Instance;
         List<NormalEnemy> enes =  Ours.OfType<NormalEnemy>().ToList();
         if (enes.Count < 1) Debug.LogWarning("恐らくRecovelyStep用の関数を敵じゃないクラスで利用してる");
         else
         {
-            EnemyRebornManager.Instance.OnBattleEnd(enes, globalSteps);
+            manager.OnBattleEnd(enes, globalSteps);
         }
     }
 }
