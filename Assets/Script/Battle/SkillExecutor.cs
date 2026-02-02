@@ -7,32 +7,26 @@ using static CommonCalc;
 public sealed class SkillExecutor
 {
     private readonly BattleManager _manager;
-    private readonly TargetingService _targetingService;
-    private readonly EffectResolver _effectResolver;
-    private readonly Action<string> _appendUniqueTopMessage;
-    private readonly Action<string> _createBattleMessage;
+    private readonly BattleActionContext _context;
+    private readonly BattlePresentation _presentation;
 
     public SkillExecutor(
         BattleManager manager,
-        TargetingService targetingService,
-        EffectResolver effectResolver,
-        Action<string> appendUniqueTopMessage,
-        Action<string> createBattleMessage)
+        BattleActionContext context,
+        BattlePresentation presentation)
     {
         _manager = manager;
-        _targetingService = targetingService;
-        _effectResolver = effectResolver;
-        _appendUniqueTopMessage = appendUniqueTopMessage;
-        _createBattleMessage = createBattleMessage;
+        _context = context;
+        _presentation = presentation;
     }
 
     public async UniTask<TabState> SkillACT()
     {
         Debug.Log("Skill act execution");
-        var acter = _manager.Acter;
+        var acter = _context.Acter;
         var skill = acter.NowUseSkill;
 
-        var singleTarget = _manager.Acts.TryPeek(out var entry) ? entry.SingleTarget : null;
+        var singleTarget = _context.Acts.TryPeek(out var entry) ? entry.SingleTarget : null;
         if (singleTarget != null)
         {
             acter.Target = DirectedWill.One;
@@ -49,13 +43,13 @@ public sealed class SkillExecutor
             acter.RangeWill = SkillZoneTraitNormalizer.NormalizeForInitial(skill.ZoneTrait);
         }
 
-        _targetingService.SelectTargets(
+        _context.Targeting.SelectTargets(
             acter,
-            _manager.CurrentActerFaction,
-            _manager.AllyGroup,
-            _manager.EnemyGroup,
+            _context.ActerFaction,
+            _context.AllyGroup,
+            _context.EnemyGroup,
             _manager.unders,
-            _appendUniqueTopMessage);
+            _presentation.AppendTopMessage);
 
         BeVanguardSkillACT();
 
@@ -64,22 +58,22 @@ public sealed class SkillExecutor
             Debug.LogError("No targets before AttackChara; unders is empty.");
         }
 
-        await _effectResolver.ResolveSkillEffectsAsync(
+        await _context.Effects.ResolveSkillEffectsAsync(
             acter,
-            _manager.CurrentActerFaction,
+            _context.ActerFaction,
             _manager.unders,
-            _manager.AllyGroup,
-            _manager.EnemyGroup,
-            _manager.Acts,
-            _manager.BattleTurnCount,
-            _createBattleMessage);
+            _context.AllyGroup,
+            _context.EnemyGroup,
+            _context.Acts,
+            _context.BattleTurnCount,
+            _presentation.CreateBattleMessage);
 
         if (skill.NextConsecutiveATK())
         {
             if (skill.HasConsecutiveType(SkillConsecutiveType.SameTurnConsecutive))
             {
                 _manager.NextTurn(false);
-                _manager.Acts.Add(acter, _manager.CurrentActerFaction);
+                _context.Acts.Add(acter, _context.ActerFaction);
                 acter.FreezeSkill();
             }
             else if (skill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive))
@@ -106,16 +100,16 @@ public sealed class SkillExecutor
 
     private void BeVanguardSkillACT()
     {
-        var skill = _manager.Acter.NowUseSkill;
+        var skill = _context.Acter.NowUseSkill;
         if (skill != null && skill.IsAggressiveCommit)
         {
-            _manager.BeVanguard(_manager.Acter);
+            _manager.BeVanguard(_context.Acter);
         }
     }
 
     private void DetermineRangeRandomly()
     {
-        var acter = _manager.Acter;
+        var acter = _context.Acter;
         var skill = acter.NowUseSkill;
 
         if (skill.HasZoneTrait(SkillZoneTrait.SelfSkill)) return;

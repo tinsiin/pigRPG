@@ -235,10 +235,6 @@ public class BattleManager : IBattleContext
     }
 
     /// <summary>
-    /// 誰もアクションを取らなかった場合、ネクストターンをスキップする
-    /// </summary>
-    bool ACTSkipACTBecauseNobodyACT = false;
-    /// <summary>
     /// 渡されたキャラクタのbm内での陣営を表す。
     /// </summary>
     public allyOrEnemy GetCharacterFaction(BaseStates chara)
@@ -264,18 +260,26 @@ public class BattleManager : IBattleContext
     private BattleStartSituation firstSituation;
 
 
-    string UniqueTopMessage;//通常メッセージの冠詞？
-    public BaseStates Acter { get; set; }//今回の俳優
+    private readonly BattlePresentation presentation;
+    private readonly BattleActionContext actionContext;
+
+    // ActionContext への委譲プロパティ
+    public BaseStates Acter
+    {
+        get => actionContext.Acter;
+        set => actionContext.Acter = value;
+    }
     /// <summary>
     /// 行動を受ける人 
     /// </summary>
     public UnderActersEntryList unders { get; private set; }
-    List<BaseStates> RatherTargetList;//レイザーアクトの対象リスト
-    float RatherDamageAmount;
-    
-    allyOrEnemy ActerFaction;//陣営
-    internal allyOrEnemy ActerFactionValue { get => ActerFaction; set => ActerFaction = value; }
-    internal allyOrEnemy CurrentActerFaction => ActerFaction;
+    // ActionContext への委譲プロパティ (ActerFaction)
+    internal allyOrEnemy ActerFactionValue
+    {
+        get => actionContext.ActerFaction;
+        set => actionContext.ActerFaction = value;
+    }
+    internal allyOrEnemy CurrentActerFaction => actionContext.ActerFaction;
     private readonly BattleState battleState = new BattleState();
     private readonly BattleStateManager battleStateManager;
     private readonly TurnScheduler turnScheduler;
@@ -288,36 +292,38 @@ public class BattleManager : IBattleContext
     private readonly TurnExecutor turnExecutor;
     private readonly CharacterActExecutor characterActExecutor;
     private readonly ActionSkipExecutor actionSkipExecutor;
+    private readonly BattleFlow battleFlow;
     internal BattleUIBridge UiBridge => uiBridge;
-    internal TurnScheduler TurnScheduler => turnScheduler;
-    internal BattleStateManager StateManager => battleStateManager;
-    internal bool Wipeout { get => battleStateManager.Wipeout; set => battleStateManager.Wipeout = value; }//全滅したかどうか
-    internal bool IsRater = false;//レイザーダメージのターンかどうか
-    internal bool EnemyGroupEmpty { get => battleStateManager.EnemyGroupEmpty; set => battleStateManager.EnemyGroupEmpty = value; }//敵グループが空っぽ
-    internal bool AlliesRunOut { get => battleStateManager.AlliesRunOut; set => battleStateManager.AlliesRunOut = value; }//味方全員逃走
-    internal NormalEnemy VoluntaryRunOutEnemy { get => battleStateManager.VoluntaryRunOutEnemy; set => battleStateManager.VoluntaryRunOutEnemy = value; }//敵一人の逃走
-    /// <summary>
-    /// 連鎖逃走する敵リスト
-    /// </summary>
-    internal List<NormalEnemy> DominoRunOutEnemies => battleStateManager.DominoRunOutEnemies;
-    public bool DoNothing { get; set; } = false;//何もしない
-    public bool PassiveCancel { get; set; } = false;//パッシブキャンセル
-    public bool SkillStock { get; set; } = false;//スキルストック
-    public bool VoidTurn = false;//そのターンは無かったことに
-    internal bool ActSkipBecauseNobodyAct { get => ACTSkipACTBecauseNobodyACT; set => ACTSkipACTBecauseNobodyACT = value; }
+    internal TurnScheduler TurnScheduler => actionContext.TurnScheduler;
+    internal BattleStateManager StateManager => actionContext.StateManager;
+
+    // ActionContext への委譲プロパティ (State flags)
+    internal bool Wipeout { get => actionContext.Wipeout; set => actionContext.Wipeout = value; }
+    internal bool IsRater { get => actionContext.IsRather; set => actionContext.IsRather = value; }
+    internal bool EnemyGroupEmpty { get => actionContext.EnemyGroupEmpty; set => actionContext.EnemyGroupEmpty = value; }
+    internal bool AlliesRunOut { get => actionContext.AlliesRunOut; set => actionContext.AlliesRunOut = value; }
+    internal NormalEnemy VoluntaryRunOutEnemy { get => actionContext.VoluntaryRunOutEnemy; set => actionContext.VoluntaryRunOutEnemy = value; }
+    internal List<NormalEnemy> DominoRunOutEnemies => actionContext.DominoRunOutEnemies;
+
+    // ActionContext への委譲プロパティ (Action flags)
+    public bool DoNothing { get => actionContext.DoNothing; set => actionContext.DoNothing = value; }
+    public bool PassiveCancel { get => actionContext.PassiveCancel; set => actionContext.PassiveCancel = value; }
+    public bool SkillStock { get => actionContext.SkillStock; set => actionContext.SkillStock = value; }
+    public bool VoidTurn { get => actionContext.VoidTurn; set => actionContext.VoidTurn = value; }
+    internal bool ActSkipBecauseNobodyAct { get => actionContext.ActSkipBecauseNobodyAct; set => actionContext.ActSkipBecauseNobodyAct = value; }
     private readonly float stageEscapeRate;
     internal float StageEscapeRate => stageEscapeRate;
 
     /// <summary>
     /// 行動リスト　ここではrecovelyTurnの制約などは存在しません
     /// </summary>
-    public ActionQueue Acts { get; private set; }//行動先約リスト？
+    public ActionQueue Acts => actionContext.Acts;
 
     public int BattleTurnCount
     {
-        get => battleStateManager.TurnCount;
-        private set => battleStateManager.TurnCount = value;
-    }//バトルの経過ターン
+        get => actionContext.BattleTurnCount;
+        private set => actionContext.BattleTurnCount = value;
+    }
 
     /// <summary>
     ///コンストラクタ
@@ -327,9 +333,20 @@ public class BattleManager : IBattleContext
         AllyGroup = allyGroup;
         EnemyGroup = enemyGroup;
         firstSituation = first;
-        Acts = new ActionQueue();
-        turnScheduler = new TurnScheduler(AllyGroup, EnemyGroup, Acts, battleState);
+
+        // ActionContext を先に生成（状態を集約）
+        var acts = new ActionQueue();
+        turnScheduler = new TurnScheduler(AllyGroup, EnemyGroup, acts, battleState);
         battleStateManager = new BattleStateManager(battleState);
+        actionContext = new BattleActionContext(
+            AllyGroup,
+            EnemyGroup,
+            battleStateManager,
+            turnScheduler,
+            acts,
+            targetingService,
+            effectResolver);
+
         unders = new UnderActersEntryList(this);
         // Phase 1: WatchUIUpdate.Instanceはここでのみ使用し、各コントローラーを注入
         var wui = WatchUIUpdate.Instance;
@@ -344,14 +361,16 @@ public class BattleManager : IBattleContext
             BattleSystemArrowManager.Instance);  // Phase 3d: ArrowManager注入
         uiBridge.BindBattleContext(this);
         BattleUIBridge.SetActive(uiBridge);
+        presentation = new BattlePresentation(uiBridge);
         stageEscapeRate = escapeRate;
         BattleContextHub.Set(this);
         this.metaProvider = metaProvider;
         escapeHandler = new EscapeHandler(this);
-        skillExecutor = new SkillExecutor(this, targetingService, effectResolver, AppendUniqueTopMessage, CreateBattleMessage);
-        turnExecutor = new TurnExecutor(this);
+        skillExecutor = new SkillExecutor(this, actionContext, presentation);
+        turnExecutor = new TurnExecutor(this, actionContext, presentation, uiBridge);
         characterActExecutor = new CharacterActExecutor(this);
         actionSkipExecutor = new ActionSkipExecutor(this);
+        battleFlow = new BattleFlow(this, actionContext, presentation, uiBridge, turnExecutor, skillExecutor);
 
         
 
@@ -423,16 +442,11 @@ public class BattleManager : IBattleContext
     /// </summary>
     internal void ResetManagerTemp()
     {
-        UniqueTopMessage = "";
+        presentation.ResetTopMessage();
     }
     internal void SetUniqueTopMessage(string message)
     {
-        UniqueTopMessage = message ?? "";
-    }
-    private void AppendUniqueTopMessage(string message)
-    {
-        if (string.IsNullOrEmpty(message)) return;
-        UniqueTopMessage += message;
+        presentation.SetTopMessage(message);
     }
     internal void ResetUnders()
     {
@@ -440,11 +454,8 @@ public class BattleManager : IBattleContext
     }
     internal void PrepareRatherAct(List<BaseStates> targets, float damage)
     {
-        if (targets == null) return;
-        RatherTargetList.AddRange(targets);
-        RatherDamageAmount = damage;
-        IsRater = true;
-        Debug.Log("レイザーアクト");
+        actionContext.PrepareRatherAct(targets, damage);
+        UnityEngine.Debug.Log("レイザーアクト");
     }
     internal void IncrementBattleTurnCount()
     {
@@ -508,13 +519,7 @@ public class BattleManager : IBattleContext
     /// <returns></returns>
     public TabState RatherACT()
     {
-        //レイザーダメージの処理
-        effectResolver.ApplyRatherDamage(RatherTargetList, RatherDamageAmount);
-        RatherDamageAmount = 0;//レイザー系初期化
-        RatherTargetList.Clear();
-        NextTurn(true);
-        return ACTPop();
-        
+        return battleFlow.RatherAct();
     }
     /// <summary>
     /// メッセージと共に戦闘を終わらせる
@@ -523,7 +528,7 @@ public class BattleManager : IBattleContext
     {
         if (Wipeout)
         {
-            if (ActerFaction == allyOrEnemy.alliy)
+            if (CurrentActerFaction == allyOrEnemy.alliy)
             {
                 uiBridge.PushMessage("死んだ");
                 metaProvider?.OnPlayersLost();
@@ -559,45 +564,16 @@ public class BattleManager : IBattleContext
     /// <summary>
     /// 戦闘系のメッセージ作成
     /// </summary>
-    /// <param name="txt"></param>
     private void CreateBattleMessage(string txt)
     {
-        uiBridge.PushMessage(UniqueTopMessage + txt);
+        presentation.CreateBattleMessage(txt);
     }
-    /// <summary>
-    /// 発動カウント時にTriggerACTでカウントされるスキル以外のスキルの発動カウントが巻き戻る
-    /// </summary>
-    void OtherSkillsTriggerRollBack()
-    {
-        foreach (var skill in Acter.SkillList)
-        {
-            if (skill.IsTriggering)//トリガーされてる最中なら、
-            {
-                skill.RollBackTrigger();//巻き戻す
-            }
-        }
-    }
-
     /// <summary>
     /// 発動カウントを実行
     /// </summary>
     internal TabState TriggerACT(int count)
     {
-        Debug.Log("発動カウント実行");
-        var skill = Acter.NowUseSkill;
-        if (skill != null && skill.CanCancelTrigger == false)//キャンセル不可能の場合。
-        {
-            Acter.FreezeSkill();//このスキルがキャンセル不可能として俳優に凍結される。
-        }
-        BeVanguard_TriggerACT();//前のめりになるかどうか
-        //他のスキルの発動カウントを巻き戻す
-        OtherSkillsTriggerRollBack();
-        //発動カウントのメッセージ
-        CreateBattleMessage($"{skill.SkillName}の発動カウント！残り{count}回。");
-        //発動カウント時はスキルの複数回連続実行がありえないから、普通にターンが進む
-        NextTurn(true);
-
-        return ACTPop();
+        return battleFlow.TriggerAct(count);
     }
     /// <summary>
     /// 前のめりになるかどうか
@@ -614,21 +590,6 @@ public class BattleManager : IBattleContext
                 uiBridge.ApplyVanguardEffect(newVanguard, oldVanguard);
             }
             MyGroup(newVanguard).InstantVanguard = newVanguard;
-        }
-    }
-    /// <summary>
-    /// スキル実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
-    /// </summary>
-
-    /// <summary>
-    /// 発動カウント実行時に踏み込むのなら、俳優がグループ内の前のめり状態になる
-    /// </summary>
-    void BeVanguard_TriggerACT()
-    {
-        var skill = Acter.NowUseSkill;
-        if (skill != null && skill.IsReadyTriggerAgressiveCommit)
-        {
-            BeVanguard(Acter);
         }
     }
     /// <summary>
