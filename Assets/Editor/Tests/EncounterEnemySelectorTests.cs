@@ -53,12 +53,19 @@ public class EncounterEnemySelectorTests
             return enemy.RecovelySteps >= 0;
         }
 
-        public void Reborn(NormalEnemy enemy, int globalSteps)
+        public void OnBattleEnd(IReadOnlyList<NormalEnemy> enemies, int globalSteps)
         {
-            if (enemy != null)
-            {
-                enemy.HP = 1f;
-            }
+            // テスト用: 何もしない
+        }
+
+        public void PrepareReborn(NormalEnemy enemy, int globalSteps)
+        {
+            // テスト用: 何もしない
+        }
+
+        public void Clear(NormalEnemy enemy)
+        {
+            // テスト用: 何もしない
         }
     }
 
