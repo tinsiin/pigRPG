@@ -46,7 +46,7 @@ public sealed class BattleQueryService : IBattleQueryService
                 if (one == chara) return allyOrEnemy.Enemyiy;
             }
         }
-        throw new System.ArgumentException($"Character {chara?.Name ?? "null"} not found in any group", nameof(chara));
+        throw new System.ArgumentException($"Character {chara?.CharacterName ?? "null"} not found in any group", nameof(chara));
     }
 
     public List<BaseStates> GetOtherAlliesAlive(BaseStates chara)
