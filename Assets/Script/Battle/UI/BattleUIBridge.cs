@@ -248,11 +248,11 @@ public sealed class BattleUIBridge
 
     public void ApplyVanguardEffect(BaseStates newVanguard, BaseStates oldVanguard)
     {
-        if (newVanguard != null)
+        if (newVanguard?.UI != null)
         {
             newVanguard.UI.BeVanguardEffect();
         }
-        if (oldVanguard != null)
+        if (oldVanguard?.UI != null)
         {
             oldVanguard.UI.LostVanguardEffect();
         }

@@ -156,7 +156,10 @@ public sealed class TurnExecutor
 
         _context.AllyGroup.VanGuardDeath();
         _context.EnemyGroup.VanGuardDeath();
-        _context.Acter.IsActiveCancelInSkillACT = false;
+        if (_context.Acter != null)
+        {
+            _context.Acter.IsActiveCancelInSkillACT = false;
+        }
     }
 
     private void CharacterAddFromListOrRandom()
