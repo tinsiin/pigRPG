@@ -24,6 +24,11 @@ public sealed class BattleUIBridge
     // Phase 3d: ArrowManager DI注入
     private readonly IArrowManager _arrowManager;
 
+    // Orchestrator（フォールバック付き）
+    private BattleOrchestrator _orchestrator;
+    private BattleOrchestrator Orchestrator => _orchestrator ?? BattleOrchestratorHub.Current;
+    public void BindOrchestrator(BattleOrchestrator orchestrator) => _orchestrator = orchestrator;
+
     public BattleUIBridge(
         MessageDropper messageDropper,
         IPlayersSkillUI skillUi,
@@ -59,7 +64,7 @@ public sealed class BattleUIBridge
 
     public void SetUserUiState(TabState state, bool syncOrchestrator = true)
     {
-        var orchestrator = BattleOrchestratorHub.Current;
+        var orchestrator = Orchestrator;
         if (syncOrchestrator && orchestrator != null)
         {
             orchestrator.SyncFromUiState(state);
@@ -243,11 +248,11 @@ public sealed class BattleUIBridge
 
     public void ApplyVanguardEffect(BaseStates newVanguard, BaseStates oldVanguard)
     {
-        if (newVanguard != null)
+        if (newVanguard?.UI != null)
         {
             newVanguard.UI.BeVanguardEffect();
         }
-        if (oldVanguard != null)
+        if (oldVanguard?.UI != null)
         {
             oldVanguard.UI.LostVanguardEffect();
         }

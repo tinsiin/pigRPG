@@ -147,7 +147,7 @@ public class EnemyRebornManagerTests
 
         var enemy = new NormalEnemy
         {
-            RecovelySteps = recovelySteps,
+            RebornSteps = recovelySteps,
             broken = broken,
             DefaultImpression = SpiritualProperty.doremis,
             MyType = CharacterType.Life

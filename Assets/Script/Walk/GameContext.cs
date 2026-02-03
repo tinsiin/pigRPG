@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RandomExtensions;
 
@@ -252,21 +253,25 @@ public sealed class GameContext
 
     public EncounterOverlayStack EncounterOverlays => encounterOverlays;
 
+    [Obsolete("Use EncounterOverlays.Push() instead")]
     public void PushEncounterOverlay(string id, float multiplier, int steps, bool persistent)
     {
         encounterOverlays.Push(id, multiplier, steps, persistent);
     }
 
+    [Obsolete("Use EncounterOverlays.Remove() instead")]
     public void RemoveEncounterOverlay(string id)
     {
         encounterOverlays.Remove(id);
     }
 
+    [Obsolete("Use EncounterOverlays.AdvanceStep() instead")]
     public void AdvanceEncounterOverlays()
     {
         encounterOverlays.AdvanceStep();
     }
 
+    [Obsolete("Use EncounterOverlays.GetCombinedMultiplier() instead")]
     public float GetEncounterMultiplier()
     {
         return encounterOverlays.GetCombinedMultiplier();

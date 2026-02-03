@@ -10,7 +10,7 @@ public enum EnemyRebornState
     Reborned
 }
 
-public sealed class EnemyRebornManager
+public sealed class EnemyRebornManager : IEnemyRebornManager
 {
     private sealed class RebornInfo
     {
@@ -37,16 +37,16 @@ public sealed class EnemyRebornManager
             if (enemy == null) continue;
             if (!enemy.Death()) continue;
             if (!enemy.Reborn || enemy.broken) continue;
-            ReadyRecovelyStep(enemy, globalSteps);
+            PrepareReborn(enemy, globalSteps);
         }
     }
 
-    public void ReadyRecovelyStep(NormalEnemy enemy, int globalSteps)
+    public void PrepareReborn(NormalEnemy enemy, int globalSteps)
     {
         if (enemy == null) return;
         var info = GetOrCreate(enemy);
         info.LastProgress = globalSteps;
-        info.RemainingSteps = enemy.RecovelySteps;
+        info.RemainingSteps = enemy.RebornSteps;
         info.State = EnemyRebornState.Counting;
     }
 
@@ -56,14 +56,14 @@ public sealed class EnemyRebornManager
 
         if (!_infos.TryGetValue(enemy, out var info))
         {
-            Debug.Log($"{enemy.CharacterName} is eligible to reborn (recovelyStepCount <= 0).");
+            Debug.Log($"{enemy.CharacterName} is eligible to reborn (rebornSteps <= 0).");
             return true;
         }
 
         if (info.RemainingSteps <= 0)
         {
             info.State = EnemyRebornState.Ready;
-            Debug.Log($"{enemy.CharacterName} is eligible to reborn (recovelyStepCount <= 0).");
+            Debug.Log($"{enemy.CharacterName} is eligible to reborn (rebornSteps <= 0).");
             return true;
         }
 

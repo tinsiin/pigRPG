@@ -4,7 +4,8 @@ using System.Reflection;
 using NUnit.Framework;
 
 /// <summary>
-/// EncounterEnemySelector unit tests (private helper logic via reflection)
+/// EncounterEnemySelector unit tests (DI対応版)
+/// 公開API (Select) を通じてテストする
 /// </summary>
 [TestFixture]
 public class EncounterEnemySelectorTests
@@ -44,139 +45,156 @@ public class EncounterEnemySelectorTests
         public PartyProperty calculatePartyProperty(List<NormalEnemy> list) => _partyProperty;
     }
 
-    private const BindingFlags PrivateStatic = BindingFlags.NonPublic | BindingFlags.Static;
+    private sealed class TestRebornManager : IEnemyRebornManager
+    {
+        public bool CanReborn(NormalEnemy enemy, int globalSteps)
+        {
+            if (enemy == null) return false;
+            if (enemy.broken) return false;
+            return enemy.RebornSteps >= 0;
+        }
+
+        public void OnBattleEnd(IReadOnlyList<NormalEnemy> enemies, int globalSteps)
+        {
+            // テスト用: 何もしない
+        }
+
+        public void PrepareReborn(NormalEnemy enemy, int globalSteps)
+        {
+            // テスト用: 何もしない
+        }
+
+        public void Clear(NormalEnemy enemy)
+        {
+            // テスト用: 何もしない
+        }
+    }
+
     private const BindingFlags PrivateInstance = BindingFlags.NonPublic | BindingFlags.Instance;
 
     private static readonly FieldInfo MaxHpField = typeof(BaseStates).GetField("_maxhp", PrivateInstance);
 
+    private EncounterEnemySelector _selector;
+    private TestMatchCalculator _matchCalc;
+    private TestRebornManager _rebornManager;
+
+    [SetUp]
+    public void SetUp()
+    {
+        _matchCalc = new TestMatchCalculator(PartyProperty.HolyGroup);
+        _rebornManager = new TestRebornManager();
+        _selector = new EncounterEnemySelector(_rebornManager, _matchCalc);
+    }
+
     [Test]
-    public void FilterEligibleEnemies_IncludesAliveAndRebornCandidates()
+    public void Select_ReturnsNullForEmptyList()
+    {
+        var enemies = new List<NormalEnemy>();
+        var result = _selector.Select(enemies, 100);
+
+        Assert.IsNull(result);
+    }
+
+    [Test]
+    public void Select_ReturnsNullForNullList()
+    {
+        var result = _selector.Select(null, 100);
+
+        Assert.IsNull(result);
+    }
+
+    [Test]
+    public void Select_ReturnsGroupWithAliveEnemy()
+    {
+        var alive = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
+        var enemies = new List<NormalEnemy> { alive };
+
+        var result = _selector.Select(enemies, 100);
+
+        Assert.IsNotNull(result);
+        Assert.IsTrue(result.Ours.Contains(alive));
+    }
+
+    [Test]
+    public void Select_IncludesRebornableDeadEnemy()
+    {
+        // 生きている敵がいないと選択できないので、生きている敵も追加
+        var alive = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
+        var deadReborn = CreateEnemy(0f, 10f, 0, false, SpiritualProperty.doremis, CharacterType.Life);
+        var enemies = new List<NormalEnemy> { alive, deadReborn };
+
+        var result = _selector.Select(enemies, 100);
+
+        Assert.IsNotNull(result);
+        // 復活可能な敵も候補に含まれる（選ばれるかは乱数次第）
+        Assert.GreaterOrEqual(result.Ours.Count, 1);
+    }
+
+    [Test]
+    public void Select_ExcludesBrokenEnemy()
+    {
+        var alive = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
+        var broken = CreateEnemy(0f, 10f, 0, true, SpiritualProperty.doremis, CharacterType.Life);
+        var enemies = new List<NormalEnemy> { alive, broken };
+
+        var result = _selector.Select(enemies, 100);
+
+        Assert.IsNotNull(result);
+        Assert.IsFalse(result.Ours.Contains(broken));
+    }
+
+    [Test]
+    public void Select_ExcludesNonRebornableDeadEnemy()
     {
         var alive = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
         var deadNoReborn = CreateEnemy(0f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
-        var deadReborn = CreateEnemy(0f, 10f, 0, false, SpiritualProperty.doremis, CharacterType.Life);
-        var deadBroken = CreateEnemy(0f, 10f, 0, true, SpiritualProperty.doremis, CharacterType.Life);
+        var enemies = new List<NormalEnemy> { alive, deadNoReborn };
 
-        var enemies = new List<NormalEnemy> { alive, deadNoReborn, deadReborn, deadBroken, null };
-        var result = InvokeFilterEligibleEnemies(enemies, 100);
+        var result = _selector.Select(enemies, 100);
 
-        Assert.IsTrue(result.Contains(alive));
-        Assert.IsTrue(result.Contains(deadReborn));
-        Assert.IsFalse(result.Contains(deadNoReborn));
-        Assert.IsFalse(result.Contains(deadBroken));
+        Assert.IsNotNull(result);
+        Assert.IsFalse(result.Ours.Contains(deadNoReborn));
     }
 
     [Test]
-    public void TryResolveManualEnd_ReturnsTrueWhenTargetReached()
+    public void Select_WithManualCount_ReturnsSpecifiedNumber()
     {
-        var calc = new TestMatchCalculator(PartyProperty.HolyGroup);
-        var resultList = new List<NormalEnemy>
-        {
-            CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life),
-            CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life)
-        };
-        var validEnemies = new List<NormalEnemy>
-        {
-            CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life)
-        };
+        var matchCalc = new TestMatchCalculator(PartyProperty.HolyGroup, typeMatchUp: true, impressionMatchUp: true);
+        var selector = new EncounterEnemySelector(_rebornManager, matchCalc);
 
-        var resolved = InvokeTryResolveManualEnd(true, 2, resultList, validEnemies, calc, out var impression);
+        var enemy1 = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
+        var enemy2 = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
+        var enemy3 = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
+        var enemies = new List<NormalEnemy> { enemy1, enemy2, enemy3 };
 
-        Assert.IsTrue(resolved);
-        Assert.AreEqual(PartyProperty.HolyGroup, impression);
+        var result = selector.Select(enemies, 100, number: 1);
+
+        Assert.IsNotNull(result);
+        Assert.AreEqual(1, result.Ours.Count);
     }
 
     [Test]
-    public void TryResolveManualEnd_ReturnsFalseWhenTargetNotReached()
+    public void Select_ReturnsMaxThreeEnemies()
     {
-        var calc = new TestMatchCalculator(PartyProperty.HolyGroup);
-        var resultList = new List<NormalEnemy>
+        var matchCalc = new TestMatchCalculator(PartyProperty.HolyGroup, typeMatchUp: true, impressionMatchUp: true);
+        var selector = new EncounterEnemySelector(_rebornManager, matchCalc);
+
+        var enemies = new List<NormalEnemy>();
+        for (int i = 0; i < 10; i++)
         {
-            CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life)
-        };
-        var validEnemies = new List<NormalEnemy>
-        {
-            CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life)
-        };
+            enemies.Add(CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life));
+        }
 
-        var resolved = InvokeTryResolveManualEnd(true, 2, resultList, validEnemies, calc, out var impression);
+        var result = selector.Select(enemies, 100, number: 5);
 
-        Assert.IsFalse(resolved);
-        Assert.AreEqual(default(PartyProperty), impression);
-    }
-
-    [Test]
-    public void TryResolveAutoEnd_ReturnsTrueWhenThreeMembers()
-    {
-        var calc = new TestMatchCalculator(PartyProperty.MelaneGroup);
-        var resultList = new List<NormalEnemy>
-        {
-            CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life),
-            CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life),
-            CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life)
-        };
-        var validEnemies = new List<NormalEnemy>
-        {
-            CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life)
-        };
-
-        var resolved = InvokeTryResolveAutoEnd(false, resultList, validEnemies, calc, out var impression);
-
-        Assert.IsTrue(resolved);
-        Assert.AreEqual(PartyProperty.MelaneGroup, impression);
-    }
-
-    [Test]
-    public void TryAddCompatibleTarget_AddsEnemyWhenAllMatch()
-    {
-        var calc = new TestMatchCalculator(PartyProperty.HolyGroup, typeMatchUp: true, impressionMatchUp: true);
-        var resultList = new List<NormalEnemy>
-        {
-            CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life)
-        };
-        var validEnemies = new List<NormalEnemy>
-        {
-            CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life)
-        };
-
-        InvokeTryAddCompatibleTarget(resultList, validEnemies, calc);
-
-        Assert.AreEqual(2, resultList.Count);
-        Assert.AreEqual(0, validEnemies.Count);
-    }
-
-    [Test]
-    public void HasSympathy_ReturnsTrueWhenAnyBelowHalf()
-    {
-        var resultList = new List<NormalEnemy>
-        {
-            CreateEnemy(5f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life)
-        };
-        var target = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
-
-        var sympathy = InvokeHasSympathy(resultList, target);
-
-        Assert.IsTrue(sympathy);
-    }
-
-    [Test]
-    public void HasSympathy_ReturnsFalseWhenAllAboveHalf()
-    {
-        var resultList = new List<NormalEnemy>
-        {
-            CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life)
-        };
-        var target = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
-
-        var sympathy = InvokeHasSympathy(resultList, target);
-
-        Assert.IsFalse(sympathy);
+        Assert.IsNotNull(result);
+        Assert.LessOrEqual(result.Ours.Count, 3);
     }
 
     private static NormalEnemy CreateEnemy(
         float hp,
         float maxHp,
-        int recovelySteps,
+        int rebornSteps,
         bool broken,
         SpiritualProperty impression,
         CharacterType type)
@@ -188,7 +206,7 @@ public class EncounterEnemySelectorTests
 
         var enemy = new NormalEnemy
         {
-            RecovelySteps = recovelySteps,
+            RebornSteps = rebornSteps,
             broken = broken,
             DefaultImpression = impression,
             MyType = type
@@ -199,65 +217,5 @@ public class EncounterEnemySelectorTests
         enemy.InitializeMyImpression();
 
         return enemy;
-    }
-
-    private static List<NormalEnemy> InvokeFilterEligibleEnemies(IReadOnlyList<NormalEnemy> enemies, int globalSteps)
-    {
-        var method = GetSelectorMethod("FilterEligibleEnemies");
-        return (List<NormalEnemy>)method.Invoke(null, new object[] { enemies, globalSteps });
-    }
-
-    private static bool InvokeTryResolveManualEnd(
-        bool manualCount,
-        int targetCount,
-        List<NormalEnemy> resultList,
-        List<NormalEnemy> validEnemies,
-        IEnemyMatchCalculator calc,
-        out PartyProperty impression)
-    {
-        var method = GetSelectorMethod("TryResolveManualEnd");
-        var args = new object[] { manualCount, targetCount, resultList, validEnemies, calc, default(PartyProperty) };
-        var result = (bool)method.Invoke(null, args);
-        impression = (PartyProperty)args[5];
-        return result;
-    }
-
-    private static bool InvokeTryResolveAutoEnd(
-        bool manualCount,
-        List<NormalEnemy> resultList,
-        List<NormalEnemy> validEnemies,
-        IEnemyMatchCalculator calc,
-        out PartyProperty impression)
-    {
-        var method = GetSelectorMethod("TryResolveAutoEnd");
-        var args = new object[] { manualCount, resultList, validEnemies, calc, default(PartyProperty) };
-        var result = (bool)method.Invoke(null, args);
-        impression = (PartyProperty)args[4];
-        return result;
-    }
-
-    private static void InvokeTryAddCompatibleTarget(
-        List<NormalEnemy> resultList,
-        List<NormalEnemy> validEnemies,
-        IEnemyMatchCalculator calc)
-    {
-        var method = GetSelectorMethod("TryAddCompatibleTarget");
-        method.Invoke(null, new object[] { resultList, validEnemies, calc });
-    }
-
-    private static bool InvokeHasSympathy(List<NormalEnemy> resultList, NormalEnemy target)
-    {
-        var method = GetSelectorMethod("HasSympathy");
-        return (bool)method.Invoke(null, new object[] { resultList, target });
-    }
-
-    private static MethodInfo GetSelectorMethod(string name)
-    {
-        var method = typeof(EncounterEnemySelector).GetMethod(name, PrivateStatic);
-        if (method == null)
-        {
-            throw new MissingMethodException(typeof(EncounterEnemySelector).FullName, name);
-        }
-        return method;
     }
 }

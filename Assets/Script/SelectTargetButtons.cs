@@ -51,6 +51,9 @@ public class SelectTargetButtons : MonoBehaviour
 
     BattleUIBridge uiBridge => BattleUIBridge.Active;
     IBattleContext battle => uiBridge?.BattleContext;
+    private BattleOrchestrator _orchestrator;
+    private BattleOrchestrator Orchestrator => _orchestrator ?? BattleOrchestratorHub.Current;
+    public void Initialize(BattleOrchestrator orchestrator) => _orchestrator = orchestrator;
     int NeedSelectCountAlly;//このneedcountは基本的には対象選択のみ
     int NeedSelectCountEnemy;
     List<Button> AllybuttonList = new List<Button>();
@@ -495,7 +498,7 @@ public class SelectTargetButtons : MonoBehaviour
     /// </summary>
     private void ReturnNextWaitView()
     {
-        var orchestrator = BattleOrchestratorHub.Current;
+        var orchestrator = Orchestrator;
         if (orchestrator == null)
         {
             Debug.LogError("[CRITICAL] SelectTargetButtons.ReturnNextWaitView: BattleOrchestrator is not initialized");

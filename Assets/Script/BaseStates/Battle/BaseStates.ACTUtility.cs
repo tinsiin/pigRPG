@@ -22,6 +22,11 @@ public abstract partial class BaseStates
     /// </summary>
     [NonSerialized]
     public bool _tempVanguard;
+
+    /// <summary>
+    /// 前回ターンが前のめりだったかどうか（_tempVanguardのプロパティアクセス）
+    /// </summary>
+    public bool IsTempVanguard => _tempVanguard;
     /// <summary>
     /// 前回ターンに生きてたかどうかの比較のため
     /// </summary>
