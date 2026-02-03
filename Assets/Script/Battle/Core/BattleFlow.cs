@@ -153,7 +153,10 @@ public sealed class BattleFlow
             _metaProvider?.OnPlayersWin();
         }
 
-        _onBattleEndCallback?.Invoke().Forget();
+        if (_onBattleEndCallback != null)
+        {
+            _onBattleEndCallback.Invoke().Forget();
+        }
         return TabState.walk;
     }
 
