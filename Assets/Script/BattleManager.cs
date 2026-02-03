@@ -148,12 +148,12 @@ public class BattleManager : IBattleContext
     /// <summary>
     ///     プレイヤー側のバトルグループ　ここに味方のバトルグループオブジェクトをリンクする？
     /// </summary>
-    public BattleGroup AllyGroup { get; set; }
+    public BattleGroup AllyGroup { get; private set; }
 
     /// <summary>
     ///     敵側のバトルグループ　ここに敵グループのバトルグループオブジェクトをリンクする？
     /// </summary>
-    public BattleGroup EnemyGroup { get; set; }
+    public BattleGroup EnemyGroup { get; private set; }
     /// <summary>
     ///全キャラクターのリスト
     /// </summary>
@@ -631,6 +631,8 @@ public class BattleManager : IBattleContext
         // ActionMark を表示
         if (!uiBridge.PrepareBattleEnd())
         {
+            // 早期returnでも必ずクリーンアップを実行
+            CleanupBattleState();
             return;
         }
 
@@ -652,7 +654,16 @@ public class BattleManager : IBattleContext
         //schizoLog.DisplayAllAsync().Forget();//ACTPOPが呼ばれないのでここで呼ぶ
         //そもそも戦闘終わりはschizologではなくMessageDropperで行われるのが前提だけど、デバック用にね
 
+        CleanupBattleState();
+    }
+
+    /// <summary>
+    /// 戦闘終了時のクリーンアップ処理
+    /// </summary>
+    private void CleanupBattleState()
+    {
         BattleContextHub.Clear(this);
+        BattleUIBridge.SetActive(null);
     }
 
     private void OnBattleStart()
