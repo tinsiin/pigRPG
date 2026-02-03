@@ -17,7 +17,7 @@ public sealed class FlatRozeEffect : ISkillEffect
         if (acter == null || acter.NowUseSkill == null) return false;
         if (!acter.HasPassive(0)) return false;
         if (!acter.NowUseSkill.HasType(SkillType.Attack)) return false;
-        if (acter._tempVanguard) return false;
+        if (acter.IsTempVanguard) return false;
         if (context.QueryService == null || !context.QueryService.IsVanguard(acter)) return false;
         if (acter.NowUseSkill.RecordDoCount <= 20) return false;
         if (acter.NowUseSkill.NowConsecutiveATKFromTheSecondTimeOnward()) return false;

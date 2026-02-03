@@ -172,14 +172,6 @@ public sealed class BattleActionContext
     }
 
     /// <summary>
-    /// Unders を設定（BattleManager から呼ばれる）
-    /// </summary>
-    public void SetUnders(UnderActersEntryList unders)
-    {
-        Unders = unders;
-    }
-
-    /// <summary>
     /// Unders をリセット
     /// </summary>
     public void ResetUnders()
