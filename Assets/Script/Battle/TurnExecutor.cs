@@ -56,7 +56,7 @@ public sealed class TurnExecutor
         if (_context.VoidTurn)
         {
             _context.VoidTurn = false;
-            _manager.NextTurn(false);
+            NextTurn(false);
             return ACTPop();
         }
 

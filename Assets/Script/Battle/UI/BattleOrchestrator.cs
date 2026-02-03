@@ -15,6 +15,9 @@ public sealed class BattleOrchestrator
     private bool _isAdvancing = false;
     private bool _pendingAdvance = false;
 
+    // ActionContext へのショートカット
+    private BattleActionContext Context => Manager.ActionContext;
+
     public BattleOrchestrator(
         BattleGroup allyGroup,
         BattleGroup enemyGroup,
@@ -162,7 +165,7 @@ public sealed class BattleOrchestrator
 
     private TabState ApplySkillSelect(ActionInput input)
     {
-        var actor = input.Actor ?? Manager.Acter;
+        var actor = input.Actor ?? Context.Acter;
         if (actor == null || input.Skill == null)
         {
             return CurrentUiState;
@@ -177,7 +180,7 @@ public sealed class BattleOrchestrator
             actor.RangeWill = actor.RangeWill.Add(normalizedTrait);
         }
 
-        var nextState = (Manager.Acts.TryPeek(out var entry) && entry.SingleTarget != null)
+        var nextState = (Context.Acts.TryPeek(out var entry) && entry.SingleTarget != null)
             ? TabState.NextWait
             : AllyClass.DetermineNextUIState(actor.NowUseSkill);
 
@@ -187,7 +190,7 @@ public sealed class BattleOrchestrator
 
     private TabState ApplyStockSkill(ActionInput input)
     {
-        var actor = input.Actor ?? Manager.Acter;
+        var actor = input.Actor ?? Context.Acter;
         var skill = input.Skill;
         if (actor == null || skill == null)
         {
@@ -210,21 +213,21 @@ public sealed class BattleOrchestrator
             stockSkill.ForgetStock();
         }
 
-        Manager.SkillStock = true;
+        Context.SkillStock = true;
         UpdateChoiceState(TabState.NextWait);
         return CurrentUiState;
     }
 
     private TabState ApplyDoNothing()
     {
-        Manager.DoNothing = true;
+        Context.DoNothing = true;
         UpdateChoiceState(TabState.NextWait);
         return CurrentUiState;
     }
 
     private TabState ApplyRangeSelect(ActionInput input)
     {
-        var actor = input.Actor ?? Manager.Acter;
+        var actor = input.Actor ?? Context.Acter;
         if (actor == null)
         {
             return CurrentUiState;
@@ -247,7 +250,7 @@ public sealed class BattleOrchestrator
 
     private TabState ApplyTargetSelect(ActionInput input)
     {
-        var actor = input.Actor ?? Manager.Acter;
+        var actor = input.Actor ?? Context.Acter;
         if (actor == null)
         {
             return CurrentUiState;
@@ -257,12 +260,15 @@ public sealed class BattleOrchestrator
 
         if (input.Targets != null && input.Targets.Count > 0)
         {
+            // 分散計算のためにスキルを設定
+            Context.Unders.SetCurrentSkill(actor.NowUseSkill);
+
             var targets = input.Targets.ToArray();
             RandomEx.Shared.Shuffle(targets);
             foreach (var target in targets)
             {
                 ApplyExposureModifier(actor, target);
-                Manager.unders.CharaAdd(target);
+                Context.Unders.CharaAdd(target);
             }
         }
 
@@ -276,7 +282,7 @@ public sealed class BattleOrchestrator
         {
             return;
         }
-        if (Manager.IsFriend(actor, target))
+        if (Context.IsFriend(actor, target))
         {
             return;
         }
@@ -325,12 +331,12 @@ public sealed class BattleOrchestrator
             return;
         }
         _requestSequence++;
-        var hasSingleTargetReservation = Manager.Acts.TryPeek(out var entry) && entry.SingleTarget != null;
+        var hasSingleTargetReservation = Context.Acts.TryPeek(out var entry) && entry.SingleTarget != null;
         CurrentChoiceRequest = new ChoiceRequest
         {
             Kind = kind,
             RequestId = _requestSequence,
-            Actor = Manager.Acter,
+            Actor = Context.Acter,
             HasSingleTargetReservation = hasSingleTargetReservation,
             RangeMask = hasSingleTargetReservation ? SkillFilterPresets.SingleTargetZoneTraitMask : 0,
             TypeMask = hasSingleTargetReservation ? SkillFilterPresets.SingleTargetTypeMask : 0

@@ -18,6 +18,9 @@ public sealed class BattleActionContext
     // Action queue
     public ActionQueue Acts { get; }
 
+    // Target list
+    public UnderActersEntryList Unders { get; private set; }
+
     // Current action state
     public BaseStates Acter { get; set; }
     public allyOrEnemy ActerFaction { get; set; }
@@ -40,6 +43,7 @@ public sealed class BattleActionContext
     private float _ratherDamageAmount;
 
     // Services
+    public IBattleQueryService QueryService { get; }
     public TargetingService Targeting { get; }
     public EffectResolver Effects { get; }
 
@@ -80,6 +84,7 @@ public sealed class BattleActionContext
         StateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
         TurnScheduler = turnScheduler ?? throw new ArgumentNullException(nameof(turnScheduler));
         Acts = acts ?? throw new ArgumentNullException(nameof(acts));
+        QueryService = new BattleQueryService(allyGroup, enemyGroup);
         Targeting = targeting ?? throw new ArgumentNullException(nameof(targeting));
         Effects = effects ?? throw new ArgumentNullException(nameof(effects));
     }
@@ -97,49 +102,32 @@ public sealed class BattleActionContext
     /// <summary>
     /// キャラクターの陣営を取得
     /// </summary>
-    public allyOrEnemy GetCharacterFaction(BaseStates chara)
-    {
-        foreach (var one in AllyGroup.Ours)
-        {
-            if (one == chara) return allyOrEnemy.alliy;
-        }
-        foreach (var one in EnemyGroup.Ours)
-        {
-            if (one == chara) return allyOrEnemy.Enemyiy;
-        }
-        return 0;
-    }
+    public allyOrEnemy GetCharacterFaction(BaseStates chara) => QueryService.GetCharacterFaction(chara);
 
     /// <summary>
     /// 陣営からグループを取得
     /// </summary>
-    public BattleGroup FactionToGroup(allyOrEnemy faction)
-    {
-        return faction switch
-        {
-            allyOrEnemy.alliy => AllyGroup,
-            allyOrEnemy.Enemyiy => EnemyGroup,
-            _ => null
-        };
-    }
+    public BattleGroup FactionToGroup(allyOrEnemy faction) => QueryService.FactionToGroup(faction);
 
     /// <summary>
     /// キャラクターが属するグループを取得
     /// </summary>
-    public BattleGroup GetGroupForCharacter(BaseStates chara)
-    {
-        return FactionToGroup(GetCharacterFaction(chara));
-    }
+    public BattleGroup GetGroupForCharacter(BaseStates chara) => QueryService.GetGroupForCharacter(chara);
 
     /// <summary>
     /// キャラクターが前のめり状態かどうか
     /// </summary>
-    public bool IsVanguard(BaseStates chara)
-    {
-        if (chara == AllyGroup.InstantVanguard) return true;
-        if (chara == EnemyGroup.InstantVanguard) return true;
-        return false;
-    }
+    public bool IsVanguard(BaseStates chara) => QueryService.IsVanguard(chara);
+
+    /// <summary>
+    /// 同じグループの生存している他のキャラクターを取得
+    /// </summary>
+    public List<BaseStates> GetOtherAlliesAlive(BaseStates chara) => QueryService.GetOtherAlliesAlive(chara);
+
+    /// <summary>
+    /// 2つのキャラクターが同じ陣営かどうか
+    /// </summary>
+    public bool IsFriend(BaseStates chara1, BaseStates chara2) => QueryService.IsFriend(chara1, chara2);
 
     /// <summary>
     /// ターンカウントをインクリメント
@@ -181,5 +169,40 @@ public sealed class BattleActionContext
         DoNothing = false;
         PassiveCancel = false;
         SkillStock = false;
+    }
+
+    /// <summary>
+    /// Unders を設定（BattleManager から呼ばれる）
+    /// </summary>
+    public void SetUnders(UnderActersEntryList unders)
+    {
+        Unders = unders;
+    }
+
+    /// <summary>
+    /// Unders をリセット
+    /// </summary>
+    public void ResetUnders()
+    {
+        Unders = new UnderActersEntryList(QueryService);
+    }
+
+    // 前のめり処理のコールバック（BattleManager から設定）
+    private System.Action<BaseStates> _beVanguardHandler;
+
+    /// <summary>
+    /// BeVanguard ハンドラを設定
+    /// </summary>
+    public void SetBeVanguardHandler(System.Action<BaseStates> handler)
+    {
+        _beVanguardHandler = handler;
+    }
+
+    /// <summary>
+    /// 前のめり状態にする
+    /// </summary>
+    public void BeVanguard(BaseStates newVanguard)
+    {
+        _beVanguardHandler?.Invoke(newVanguard);
     }
 }

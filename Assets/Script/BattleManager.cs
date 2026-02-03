@@ -36,7 +36,11 @@ public enum whatModify
     /// </summary>
     public class UnderActersEntryList
     {
-        private readonly IBattleContext _context;
+        private readonly IBattleQueryService _queryService;
+        private BaseSkill _currentSkill;
+        private int _frontIndex;
+        private int _backIndex;
+
         /// <summary>
         /// 対象者キャラクターリスト
         /// </summary>
@@ -46,26 +50,13 @@ public enum whatModify
         /// </summary>
         List<float> spreadPer;
 
-        List<float> _cashSpread;
-        List<float> CashSpread
-        {
-            get
-            {
-                if (_cashSpread == null)
-                {
-                    _cashSpread = _context.Acter.NowUseSkill.PowerSpread.ToList();
-                }
-                return _cashSpread;
-            }
-        }
-
         public int Count => charas.Count;
 
-        public UnderActersEntryList(IBattleContext context)
+        public UnderActersEntryList(IBattleQueryService queryService)
         {
             charas = new List<BaseStates>();
             spreadPer = new List<float>();
-            _context = context;
+            _queryService = queryService;
         }
 
         public BaseStates GetAtCharacter(int index)
@@ -82,7 +73,18 @@ public enum whatModify
         }
 
         /// <summary>
+        /// 現在のスキルを設定（CharaAdd前に呼び出す）
+        /// </summary>
+        public void SetCurrentSkill(BaseSkill skill)
+        {
+            _currentSkill = skill;
+            _frontIndex = 0;
+            _backIndex = 0;
+        }
+
+        /// <summary>
         /// 既にある対象者リストをそのまま処理。
+        /// SetCurrentSkillを先に呼んでおくこと。
         /// </summary>
         public void SetList(List<BaseStates> charas)
         {
@@ -97,89 +99,42 @@ public enum whatModify
         /// </summary>
         public void CharaAdd(BaseStates chara)
         {
-            var skill = _context.Acter.NowUseSkill;
-
-            float item = 1;//分散しなかったらデフォルトで100%
-
-            if (skill.PowerSpread != null && skill.PowerSpread.Length > 0)//スキル分散値配列のサイズがゼロより大きかったら分散する
+            if (_currentSkill == null)
             {
-                //爆発的
-                if (skill.DistributionType == AttackDistributionType.Explosion)
-                {
-                    if (_context.IsVanguard(chara))
-                    {
-                        if (CashSpread.Count > 0)
-                        {
-                            item = CashSpread[0];//前のめりなら前の"0"の分散値
-                        }
-                    }
-                    else
-                    {
-                        if (CashSpread.Count > 1)
-                        {
-                            item = CashSpread[1];//後衛なら後ろの"1"の分散値
-                        }
-                        else if (CashSpread.Count > 0)
-                        {
-                            item = CashSpread[0];
-                        }
-                    }
-                }
-                //放射型、ビーム型
-                if (skill.DistributionType == AttackDistributionType.Beam)
-                {
-                    if (CashSpread.Count > 0)
-                    {
-                        if (_context.IsVanguard(chara))
-                        {
-                            item = CashSpread[0];//最初のを抽出
-                            CashSpread.RemoveAt(0);
-                        }
-                        else
-                        {
-                            var lastIndex = CashSpread.Count - 1;
-                            item = CashSpread[lastIndex];//末尾から抽出
-                            CashSpread.RemoveAt(lastIndex);
-                        }
-                    }
-                }
-                //投げる型
-                if (skill.DistributionType == AttackDistributionType.Throw)
-                {
-                    if (CashSpread.Count > 0)
-                    {
-                        if (_context.IsVanguard(chara))
-                        {
-                            var lastIndex = CashSpread.Count - 1;
-                            item = CashSpread[lastIndex];//末尾から抽出
-                            CashSpread.RemoveAt(lastIndex);
-                        }
-                        else
-                        {
-                            item = CashSpread[0];//最初のを抽出
-                            CashSpread.RemoveAt(0);
-                        }
-                    }
-                }
-                //ランダムの場合
-                if (skill.DistributionType == AttackDistributionType.Random)
-                {
-                    if (CashSpread.Count > 0)
-                    {
-                        var lastIndex = CashSpread.Count - 1;
-                        item = CashSpread[lastIndex];//末尾から抽出
-                        CashSpread.RemoveAt(lastIndex);
-                    }
-                }
-
+                spreadPer.Add(1f);
+                charas.Add(chara);
+                return;
             }
-            spreadPer.Add(item);
-            charas.Add(chara);//追加
 
+            var spreadValues = _currentSkill.PowerSpread;
+            float item = 1f;
+
+            if (spreadValues != null && spreadValues.Length > 0)
+            {
+                var calculator = TargetDistributionService.GetCalculator(_currentSkill.DistributionType);
+                var isVanguard = _queryService?.IsVanguard(chara) ?? false;
+                var (ratio, nextFront, nextBack) = calculator.Calculate(
+                    spreadValues, _frontIndex, _backIndex, isVanguard, charas.Count + 1);
+                item = ratio;
+                _frontIndex = nextFront;
+                _backIndex = nextBack;
+            }
+
+            spreadPer.Add(item);
+            charas.Add(chara);
         }
 
-
-
+        /// <summary>
+        /// リストをクリア
+        /// </summary>
+        public void Clear()
+        {
+            charas.Clear();
+            spreadPer.Clear();
+            _currentSkill = null;
+            _frontIndex = 0;
+            _backIndex = 0;
+        }
     }
 
 
@@ -207,61 +162,38 @@ public class BattleManager : IBattleContext
     /// <summary>
     /// factionのグループを返す
     /// </summary>
-    public BattleGroup FactionToGroup(allyOrEnemy faction)
-    {
-        switch(faction)
-        {
-            case allyOrEnemy.alliy:
-                return AllyGroup;
-            case allyOrEnemy.Enemyiy:
-                return EnemyGroup;
-        }
-        return null;
-    }
+    public BattleGroup FactionToGroup(allyOrEnemy faction) => actionContext.FactionToGroup(faction);
+
     /// <summary>
     /// キャラクターのグループを取得
     /// </summary>
-    public BattleGroup MyGroup(BaseStates chara) => FactionToGroup(GetCharacterFaction(chara));
+    public BattleGroup MyGroup(BaseStates chara) => actionContext.GetGroupForCharacter(chara);
+
     /// <summary>
     /// 同じグループかどうか
     /// </summary>
-    public bool IsFriend(BaseStates chara1, BaseStates chara2)
-    {
-        bool chara1InAlly = AllyGroup.Ours.Contains(chara1);
-        bool chara2InAlly = AllyGroup.Ours.Contains(chara2);
-        
-        // 両方が味方、または両方が敵ならtrue
-        return (chara1InAlly && chara2InAlly) || (!chara1InAlly && !chara2InAlly);
-    }
+    public bool IsFriend(BaseStates chara1, BaseStates chara2) => actionContext.IsFriend(chara1, chara2);
 
     /// <summary>
     /// 渡されたキャラクタのbm内での陣営を表す。
     /// </summary>
-    public allyOrEnemy GetCharacterFaction(BaseStates chara)
-    {
-        foreach(var one in AllyGroup.Ours)
-        {
-            if(one == chara)return allyOrEnemy.alliy;
-        }
-        foreach(var one in EnemyGroup.Ours)
-        {
-            if(one == chara)return allyOrEnemy.Enemyiy;
-        }
-
-        return 0;
-    }
+    public allyOrEnemy GetCharacterFaction(BaseStates chara) => actionContext.GetCharacterFaction(chara);
 
     /// <summary>
     /// そのキャラクターと同じパーティーの生存者のリストを取得(自分自身を除く)
     /// </summary>
-    public List<BaseStates> GetOtherAlliesAlive(BaseStates chara) => 
-    RemoveDeathCharacters(FactionToGroup(GetCharacterFaction(chara)).Ours).Where(x => x != chara).ToList();
+    public List<BaseStates> GetOtherAlliesAlive(BaseStates chara) => actionContext.GetOtherAlliesAlive(chara);
 
     private BattleStartSituation firstSituation;
 
 
     private readonly BattlePresentation presentation;
     private readonly BattleActionContext actionContext;
+
+    /// <summary>
+    /// ActionContext への参照（Orchestrator等からのアクセス用）
+    /// </summary>
+    internal BattleActionContext ActionContext => actionContext;
 
     // ActionContext への委譲プロパティ
     public BaseStates Acter
@@ -270,9 +202,9 @@ public class BattleManager : IBattleContext
         set => actionContext.Acter = value;
     }
     /// <summary>
-    /// 行動を受ける人 
+    /// 行動を受ける人 (actionContext.Unders への委譲)
     /// </summary>
-    public UnderActersEntryList unders { get; private set; }
+    public UnderActersEntryList unders => actionContext.Unders;
     // ActionContext への委譲プロパティ (ActerFaction)
     internal allyOrEnemy ActerFactionValue
     {
@@ -347,7 +279,10 @@ public class BattleManager : IBattleContext
             targetingService,
             effectResolver);
 
-        unders = new UnderActersEntryList(this);
+        // QueryService を EffectResolver に設定
+        effectResolver.SetQueryService(actionContext.QueryService);
+
+        actionContext.ResetUnders();
         // Phase 1: WatchUIUpdate.Instanceはここでのみ使用し、各コントローラーを注入
         var wui = WatchUIUpdate.Instance;
         uiBridge = new BattleUIBridge(
@@ -370,7 +305,17 @@ public class BattleManager : IBattleContext
         turnExecutor = new TurnExecutor(this, actionContext, presentation, uiBridge);
         characterActExecutor = new CharacterActExecutor(this);
         actionSkipExecutor = new ActionSkipExecutor(this);
-        battleFlow = new BattleFlow(this, actionContext, presentation, uiBridge, turnExecutor, skillExecutor);
+        battleFlow = new BattleFlow(
+            actionContext,
+            presentation,
+            uiBridge,
+            turnExecutor,
+            skillExecutor,
+            escapeHandler,
+            characterActExecutor,
+            metaProvider);
+        battleFlow.SetOnBattleEndCallback(OnBattleEnd);
+        actionContext.SetBeVanguardHandler(BeVanguard);
 
         
 
@@ -450,7 +395,7 @@ public class BattleManager : IBattleContext
     }
     internal void ResetUnders()
     {
-        unders = new UnderActersEntryList(this);
+        actionContext.ResetUnders();
     }
     internal void PrepareRatherAct(List<BaseStates> targets, float damage)
     {
@@ -651,17 +596,9 @@ public class BattleManager : IBattleContext
     }
 
     /// <summary>
-    /// スキルの性質が範囲ランダムだった場合、
-    /// 術者の範囲意志として性質通りにランダムで決定させる方法
-    /// <summary>
     /// そのキャラが、敵味方問わずグループにおける前のめり状態かどうかを判別します。
     /// </summary>
-    public bool IsVanguard(BaseStates chara)
-    {
-        if (chara == AllyGroup.InstantVanguard) return true;
-        if (chara == EnemyGroup.InstantVanguard) return true;
-        return false;
-    }
+    public bool IsVanguard(BaseStates chara) => actionContext.IsVanguard(chara);
     
     internal void NextTurn(bool Next)
     {

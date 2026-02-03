@@ -13,24 +13,39 @@ public sealed class BattleFlow
     private readonly BattleUIBridge _uiBridge;
     private readonly TurnExecutor _turnExecutor;
     private readonly SkillExecutor _skillExecutor;
+    private readonly EscapeHandler _escapeHandler;
+    private readonly CharacterActExecutor _characterActExecutor;
+    private readonly IBattleMetaProvider _metaProvider;
 
-    // BattleManager への参照（移行期間用、将来的に削除）
-    private readonly BattleManager _manager;
+    // OnBattleEnd 用のコールバック（BattleManager から設定）
+    private Func<UniTask> _onBattleEndCallback;
 
     public BattleFlow(
-        BattleManager manager,
         BattleActionContext context,
         BattlePresentation presentation,
         BattleUIBridge uiBridge,
         TurnExecutor turnExecutor,
-        SkillExecutor skillExecutor)
+        SkillExecutor skillExecutor,
+        EscapeHandler escapeHandler,
+        CharacterActExecutor characterActExecutor,
+        IBattleMetaProvider metaProvider)
     {
-        _manager = manager;
         _context = context;
         _presentation = presentation;
         _uiBridge = uiBridge;
         _turnExecutor = turnExecutor;
         _skillExecutor = skillExecutor;
+        _escapeHandler = escapeHandler;
+        _characterActExecutor = characterActExecutor;
+        _metaProvider = metaProvider;
+    }
+
+    /// <summary>
+    /// OnBattleEnd コールバックを設定
+    /// </summary>
+    public void SetOnBattleEndCallback(Func<UniTask> callback)
+    {
+        _onBattleEndCallback = callback;
     }
 
     /// <summary>
@@ -85,7 +100,7 @@ public sealed class BattleFlow
     /// </summary>
     public TabState EscapeAct()
     {
-        return _manager.EscapeACT();
+        return _escapeHandler.EscapeACT();
     }
 
     /// <summary>
@@ -93,7 +108,7 @@ public sealed class BattleFlow
     /// </summary>
     public TabState DominoEscapeAct()
     {
-        return _manager.DominoEscapeACT();
+        return _escapeHandler.DominoEscapeACT();
     }
 
     /// <summary>
@@ -112,7 +127,34 @@ public sealed class BattleFlow
     /// </summary>
     public TabState DialogEndAct()
     {
-        return _manager.DialogEndACT();
+        if (_context.Wipeout)
+        {
+            if (_context.ActerFaction == allyOrEnemy.alliy)
+            {
+                _uiBridge.PushMessage("死んだ");
+                _metaProvider?.OnPlayersLost();
+                _context.EnemyGroup.EnemyiesOnWin();
+            }
+            else
+            {
+                _uiBridge.PushMessage("勝ち抜いた");
+                _metaProvider?.OnPlayersWin();
+            }
+        }
+        if (_context.AlliesRunOut)
+        {
+            _uiBridge.PushMessage("我々は逃げた");
+            _metaProvider?.OnPlayersRunOut();
+            _context.EnemyGroup.EnemiesOnAllyRunOut();
+        }
+        if (_context.EnemyGroupEmpty)
+        {
+            _uiBridge.PushMessage("敵はいなくなった");
+            _metaProvider?.OnPlayersWin();
+        }
+
+        _onBattleEndCallback?.Invoke().Forget();
+        return TabState.walk;
     }
 
     /// <summary>
@@ -120,7 +162,7 @@ public sealed class BattleFlow
     /// </summary>
     public async UniTask<TabState> CharacterActBranchingAsync()
     {
-        return await _manager.CharacterActBranching();
+        return await _characterActExecutor.CharacterActBranchingAsync();
     }
 
     // === Private helper methods ===
@@ -130,7 +172,7 @@ public sealed class BattleFlow
         var skill = _context.Acter.NowUseSkill;
         if (skill != null && skill.IsReadyTriggerAgressiveCommit)
         {
-            _manager.BeVanguard(_context.Acter);
+            _context.BeVanguard(_context.Acter);
         }
     }
 

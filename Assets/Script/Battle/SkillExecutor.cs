@@ -26,11 +26,14 @@ public sealed class SkillExecutor
         var acter = _context.Acter;
         var skill = acter.NowUseSkill;
 
+        // 分散計算のためにスキルを設定
+        _context.Unders.SetCurrentSkill(skill);
+
         var singleTarget = _context.Acts.TryPeek(out var entry) ? entry.SingleTarget : null;
         if (singleTarget != null)
         {
             acter.Target = DirectedWill.One;
-            _manager.unders.CharaAdd(singleTarget);
+            _context.Unders.CharaAdd(singleTarget);
         }
 
         if (skill.HasZoneTrait(SkillZoneTrait.RandomRange))
@@ -48,12 +51,12 @@ public sealed class SkillExecutor
             _context.ActerFaction,
             _context.AllyGroup,
             _context.EnemyGroup,
-            _manager.unders,
+            _context.Unders,
             _presentation.AppendTopMessage);
 
         BeVanguardSkillACT();
 
-        if (_manager.unders.Count < 1)
+        if (_context.Unders.Count < 1)
         {
             Debug.LogError("No targets before AttackChara; unders is empty.");
         }
@@ -61,7 +64,7 @@ public sealed class SkillExecutor
         await _context.Effects.ResolveSkillEffectsAsync(
             acter,
             _context.ActerFaction,
-            _manager.unders,
+            _context.Unders,
             _context.AllyGroup,
             _context.EnemyGroup,
             _context.Acts,
@@ -91,7 +94,7 @@ public sealed class SkillExecutor
             _manager.NextTurn(true);
         }
 
-        _manager.ResetUnders();
+        _context.ResetUnders();
         acter.RangeWill = 0;
         acter.Target = 0;
 
@@ -103,7 +106,7 @@ public sealed class SkillExecutor
         var skill = _context.Acter.NowUseSkill;
         if (skill != null && skill.IsAggressiveCommit)
         {
-            _manager.BeVanguard(_context.Acter);
+            _context.BeVanguard(_context.Acter);
         }
     }
 
