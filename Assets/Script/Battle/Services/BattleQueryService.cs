@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 using static CommonCalc;
 
 /// <summary>
@@ -46,7 +47,9 @@ public sealed class BattleQueryService : IBattleQueryService
                 if (one == chara) return allyOrEnemy.Enemyiy;
             }
         }
-        throw new System.ArgumentException($"Character {chara?.CharacterName ?? "null"} not found in any group", nameof(chara));
+        // キャラクターがどのグループにも属していない場合（一時的なリスト外や不正な呼び出し）
+        Debug.LogWarning($"[BattleQueryService] Character {chara?.CharacterName ?? "null"} not found in any group");
+        return allyOrEnemy.alliy; // フォールバック値
     }
 
     public List<BaseStates> GetOtherAlliesAlive(BaseStates chara)
