@@ -56,19 +56,22 @@ public sealed class EffectResolver
         messageCallback?.Invoke(message);
 
         // エフェクトチェーンで派生効果を実行
-        if (_effectChain != null)
+        if (_effectChain == null)
         {
-            var context = new SkillEffectContext(
-                acter,
-                acterFaction,
-                targets,
-                allyGroup,
-                enemyGroup,
-                acts,
-                battleTurnCount,
-                _queryService);
-
-            await _effectChain.ExecuteAll(context);
+            UnityEngine.Debug.LogWarning("[EffectResolver] _effectChain is null. SetQueryService was not called. Skill effects will be skipped.");
+            return;
         }
+
+        var context = new SkillEffectContext(
+            acter,
+            acterFaction,
+            targets,
+            allyGroup,
+            enemyGroup,
+            acts,
+            battleTurnCount,
+            _queryService);
+
+        await _effectChain.ExecuteAll(context);
     }
 }

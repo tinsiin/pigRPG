@@ -260,8 +260,8 @@ public sealed class BattleOrchestrator
 
         if (input.Targets != null && input.Targets.Count > 0)
         {
-            // 分散計算のためにスキルを設定
-            Context.Unders.SetCurrentSkill(actor.NowUseSkill);
+            // 分散計算のためにスキルを設定（再選択時のため既存ターゲットをクリア）
+            Context.Unders.ClearAndSetCurrentSkill(actor.NowUseSkill);
 
             var targets = input.Targets.ToArray();
             RandomEx.Shared.Shuffle(targets);

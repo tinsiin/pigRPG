@@ -74,15 +74,23 @@ public enum whatModify
 
         /// <summary>
         /// 現在のスキルを設定（CharaAdd前に呼び出す）
-        /// 既存のターゲットもクリアする（再選択時の重複防止）
+        /// インデックスのみリセット、ターゲットはクリアしない
         /// </summary>
         public void SetCurrentSkill(BaseSkill skill)
         {
             _currentSkill = skill;
             _frontIndex = 0;
             _backIndex = 0;
+        }
+
+        /// <summary>
+        /// ターゲットリストをクリアしてスキルを設定（UI再選択時用）
+        /// </summary>
+        public void ClearAndSetCurrentSkill(BaseSkill skill)
+        {
             charas.Clear();
             spreadPer.Clear();
+            SetCurrentSkill(skill);
         }
 
         /// <summary>
