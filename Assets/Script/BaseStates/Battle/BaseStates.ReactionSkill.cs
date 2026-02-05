@@ -72,9 +72,9 @@ public abstract partial class BaseStates
         {
             //三分の一で二分の一計算、三分の二ならステータス計算に入ります
             //三分の1でかすりとクリティカルは完全二分の一計算
-            if(RandomEx.Shared.NextFloat(3) < 1)
+            if(RandomSource.NextFloat(3) < 1)
             {
-                if(RandomEx.Shared.NextFloat(2) < 1)
+                if(RandomSource.NextFloat(2) < 1)
                 {
                     minimumHitChanceResult = HitResult.Critical;
                     AddBattleLog("ミニマムヒットチャンスの確率計算-クリティカル", true);
@@ -104,7 +104,7 @@ public abstract partial class BaseStates
                 // atkerCalcEYEAGI == defCalcEYEAGI の場合は、どちらも変更しない（元の確率計算と同じ）
 
                 
-                if(RandomEx.Shared.NextFloat(effectiveAtkerCalc + effectiveDefCalc) < effectiveAtkerCalc)
+                if(RandomSource.NextFloat(effectiveAtkerCalc + effectiveDefCalc) < effectiveAtkerCalc)
                 {
                     minimumHitChanceResult = HitResult.Critical;//攻撃者側のステータスが乱数で出たなら、クリティカル
                     AddBattleLog("ミニマムヒットチャンスのステータス比較計算-クリティカル", true);
@@ -119,7 +119,7 @@ public abstract partial class BaseStates
 
         //術者の命中+被害者の自分の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
         AddBattleLog(Attacker.CharacterName + "の命中率:" + Attacker.EYE().Total + CharacterName + "の回避率:" + EvasionRate(AGI().Total,Attacker), true);
-        if (RandomEx.Shared.NextFloat(Attacker.EYE().Total + EvasionRate(AGI().Total,Attacker)) < Attacker.EYE().Total - minusMyChance || minimumHitChanceResult != HitResult.CompleteEvade)
+        if (RandomSource.NextFloat(Attacker.EYE().Total + EvasionRate(AGI().Total,Attacker)) < Attacker.EYE().Total - minusMyChance || minimumHitChanceResult != HitResult.CompleteEvade)
         {
             var hitResult = minimumHitChanceResult;//ミニマムヒット前提でヒット結果変数に代入
             //ミニマムヒットがなく、かつ、通常の命中率が満たされた場合
@@ -134,7 +134,7 @@ public abstract partial class BaseStates
         }
         //回避されたので、まずは魔法スキルなら魔法かすりする　三分の一で
         //事前魔法かすり判定である。(攻撃性質スキル以外はスキル命中のみで魔法かすり判定をするという違いがある為。)
-        if(skill.IsMagic && RandomEx.Shared.NextFloat(3) < 1)
+        if(skill.IsMagic && RandomSource.NextFloat(3) < 1)
         {
             //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
             return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), HitResult.Graze, true);
@@ -159,7 +159,7 @@ public abstract partial class BaseStates
                 //攻撃者のAGIを1.6倍以上越していると、二分の一で避けられる。
                 if(Attacker.AGI().Total * 1.6 < AGI().Total)
                 {
-                    if(RandomEx.Shared.NextFloat(2) < 1)
+                    if(RandomSource.NextFloat(2) < 1)
                     {
                         hitResult = HitResult.CompleteEvade;
                     }
@@ -301,7 +301,7 @@ public abstract partial class BaseStates
         // _passiveList の中で同じIDを持つパッシブを検索
         // そのパッシブが IsBad == true なら Remove する
         var rndList = skill.canEraceEffectIDs.ToArray();
-        RandomEx.Shared.Shuffle(rndList);
+        RandomSource.Shuffle(rndList);
         var decrement = 0;
         for(var i = 0; i < skill.Now_CanEraceEffectCount; i++)
         {
@@ -337,7 +337,7 @@ public abstract partial class BaseStates
     {
         var done = false;
         var rndList = skill.canEraceVitalLayerIDs.ToArray();
-        RandomEx.Shared.Shuffle(rndList);
+        RandomSource.Shuffle(rndList);
         var decrement = 0;
         for(var i=0; i<skill.Now_CanEraceVitalLayerCount; i++)
         {
@@ -377,7 +377,7 @@ public abstract partial class BaseStates
     {
         var done = false;
         var rndList = skill.canEraceEffectIDs.ToArray();
-        RandomEx.Shared.Shuffle(rndList);
+        RandomSource.Shuffle(rndList);
         var decrement = 0;
         for(var i=0; i<skill.Now_CanEraceEffectCount; i++)
         {
@@ -486,7 +486,7 @@ public abstract partial class BaseStates
     {
         var done = false;
         var rndList = skill.canEraceVitalLayerIDs.ToArray();
-        RandomEx.Shared.Shuffle(rndList);
+        RandomSource.Shuffle(rndList);
         var decrement = 0;
         for(var i=0; i<skill.Now_CanEraceVitalLayerCount; i++)
         {

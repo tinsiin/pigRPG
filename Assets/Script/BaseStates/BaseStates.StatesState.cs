@@ -107,7 +107,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// 落ち着きカウントの最大値算出
     /// </summary>
-    int CalmDownCountMaxRnd => RandomEx.Shared.NextInt(4, 8);
+    int CalmDownCountMaxRnd => RandomSource.NextInt(4, 8);
     /// <summary>
     /// 落ち着きカウントのカウント開始準備
     /// スキル回避率もセット
@@ -1162,7 +1162,7 @@ public abstract partial class BaseStates
                             ResetConditionConsecutiveTurn();//変化なし
                         break;
                         case SpiritualProperty.pysco:
-                            switch(RandomEx.Shared.NextInt(5))
+                            switch(RandomSource.NextInt(5))
                             {
                                 case 0:
                                 NowCondition = HumanConditionCircumstances.Optimistic;
@@ -1291,7 +1291,7 @@ public abstract partial class BaseStates
                             }
                         break;
                         case SpiritualProperty.pysco:
-                            switch(RandomEx.Shared.NextInt(5))
+                            switch(RandomSource.NextInt(5))
                             {
                                 case 0:
                                 NowCondition = HumanConditionCircumstances.Optimistic;

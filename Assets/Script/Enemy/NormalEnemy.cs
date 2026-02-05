@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using RandomExtensions;
-using RandomExtensions.Linq;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -132,6 +130,11 @@ public class NormalEnemy : BaseStates
     {
         _brain.SkillActRun(manager);
     }
+
+    public void BindBrainContext(IBattleContext context)
+    {
+        _brain?.BindBattleContext(context);
+    }
     public virtual async void BattleEndSkillAI()
     {
         await _brain.PostBattleActRun(this, manager);
@@ -153,13 +156,15 @@ public class NormalEnemy : BaseStates
     {
         EnsureGrowthStrategies();
         if (!_growthStrategies.TryGetValue(type, out var strategy)) return;
+        var random = manager?.Random ?? new SystemBattleRandom();
         var context = new EnemyGrowthContext(
             this,
             ResolvedGrowthSettings,
             new TenDayAbilityDictionary(battleGain),
             SkillListNotEnabled,
             AverageSkillTenDays,
-            distanceTraveled);
+            distanceTraveled,
+            random);
         strategy.Apply(context);
     }
 
@@ -171,7 +176,8 @@ public class NormalEnemy : BaseStates
         {
             var rndList = SkillList.Select(s => s.SkillSpiritual).ToList();
             rndList.AddRange(new List<SpiritualProperty>{DefaultImpression,DefaultImpression});
-            that = RandomEx.Shared.GetItem(rndList.ToArray()); //スキルの精神属性を抽出
+            var random = manager?.Random ?? new SystemBattleRandom();
+            that = random.GetItem(rndList); //スキルの精神属性を抽出
             MyImpression = that; //印象にセット
         }
         else

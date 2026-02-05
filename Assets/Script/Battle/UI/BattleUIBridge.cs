@@ -3,7 +3,7 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-public sealed class BattleUIBridge
+public sealed class BattleUIBridge : IBattleUiAdapter
 {
     public static BattleUIBridge Active { get; private set; }
 
@@ -99,6 +99,7 @@ public sealed class BattleUIBridge
         _schizoLog.ClearLogs();
         foreach (var entry in eventHistory.Entries)
         {
+            if (entry.Type != BattleEventType.Log) continue;
             _schizoLog.AddLog(entry.Message, entry.Important);
         }
         _schizoLog.DisplayAllAsync().Forget();
@@ -171,6 +172,11 @@ public sealed class BattleUIBridge
     public void AddLog(string message, bool important)
     {
         eventHistory.Add(message, important);
+        AddLogInternal(message, important);
+    }
+
+    private void AddLogInternal(string message, bool important)
+    {
         _schizoLog?.AddLog(message, important);
     }
 

@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
-using RandomExtensions;
 using UnityEngine;
 using static CommonCalc;
 
-public sealed class BattleOrchestrator
+public sealed class BattleOrchestrator : IBattleLifecycle
 {
     public BattleManager Manager { get; }
+    public IBattleSession Session { get; }
     public BattlePhase Phase { get; private set; } = BattlePhase.Idle;
     public ChoiceRequest CurrentChoiceRequest { get; private set; } = ChoiceRequest.None;
     private int _requestSequence = 0;
@@ -22,25 +22,69 @@ public sealed class BattleOrchestrator
         BattleGroup allyGroup,
         BattleGroup enemyGroup,
         BattleStartSituation first,
-        MessageDropper messageDropper,
+        BattleServices services,
         float escapeRate,
-        IBattleMetaProvider metaProvider,
-        IPlayersSkillUI skillUi,
-        IPlayersRoster roster)
+        IBattleMetaProvider metaProvider)
     {
-        Manager = new BattleManager(allyGroup, enemyGroup, first, messageDropper, escapeRate, metaProvider, skillUi, roster);
+        Manager = new BattleManager(allyGroup, enemyGroup, first, services, escapeRate, metaProvider);
+        Session = new BattleSession(Manager);
     }
 
     public TabState StartBattle()
     {
-        var state = Manager.ACTPop();
+        Session.Start();
+        var state = Session.Advance();
         UpdateChoiceState(state);
         return state;
+    }
+
+    public UniTask ReplayInputsAsync(IReadOnlyList<BattleInputRecord> inputs)
+    {
+        if (inputs == null || inputs.Count == 0)
+        {
+            Debug.LogWarning("BattleOrchestrator.ReplayInputsAsync: inputs が空です");
+            return UniTask.CompletedTask;
+        }
+
+        var snapshot = inputs.ToList();
+        Manager?.EventRecorder?.Stop();
+        return ReplayInputsInternal(snapshot);
+    }
+
+    public UniTask ReplayRecordedInputsAsync()
+    {
+        var recorder = Manager?.EventRecorder;
+        if (recorder == null || recorder.Inputs == null || recorder.Inputs.Count == 0)
+        {
+            Debug.LogWarning("BattleOrchestrator.ReplayRecordedInputsAsync: inputs が空です");
+            return UniTask.CompletedTask;
+        }
+
+        // リプレイ前にスナップショットを取り、記録を停止して重複記録を防ぐ
+        var snapshot = recorder.Inputs.ToList();
+        recorder.Stop();
+        return ReplayInputsInternal(snapshot);
+    }
+
+    private async UniTask ReplayInputsInternal(IReadOnlyList<BattleInputRecord> inputs)
+    {
+        Phase = BattlePhase.Resolving;
+        CurrentChoiceRequest = ChoiceRequest.None;
+        var replayer = new BattleEventReplayer(Session, inputs);
+        await replayer.ReplayAsync();
+        Phase = BattlePhase.Completed;
+        CurrentChoiceRequest = ChoiceRequest.None;
+        _lastTabState = TabState.walk;
     }
 
     public UniTask<TabState> Step()
     {
         return StepInternal();
+    }
+
+    public UniTask<TabState> RequestAdvanceAsync()
+    {
+        return RequestAdvance();
     }
 
     public async UniTask<TabState> RequestAdvance()
@@ -73,12 +117,22 @@ public sealed class BattleOrchestrator
         }
     }
 
+    public UniTask EndAsync()
+    {
+        return EndBattle();
+    }
+
     public UniTask EndBattle()
     {
         Phase = BattlePhase.Completed;
         CurrentChoiceRequest = ChoiceRequest.None;
         BattleOrchestratorHub.Clear(this);
-        return Manager.OnBattleEnd();
+        return Session.EndAsync();
+    }
+
+    public void Cancel()
+    {
+        EndBattle().Forget();
     }
 
     public TabState CurrentUiState => MapChoiceToUiState();
@@ -98,6 +152,7 @@ public sealed class BattleOrchestrator
         {
             return CurrentUiState;
         }
+        RecordActionInput(input);
 
         switch (input.Kind)
         {
@@ -114,6 +169,42 @@ public sealed class BattleOrchestrator
             default:
                 return CurrentUiState;
         }
+    }
+
+    private void RecordActionInput(ActionInput input)
+    {
+        var recorder = Manager?.EventRecorder;
+        if (recorder == null || input == null) return;
+
+        var actor = input.Actor ?? Context.Acter;
+        BattleInput recordInput;
+
+        switch (input.Kind)
+        {
+            case ActionInputKind.SkillSelect:
+                if (actor == null || input.Skill == null) return;
+                recordInput = BattleInput.SelectSkill(actor, input.Skill);
+                break;
+            case ActionInputKind.StockSkill:
+                if (actor == null || input.Skill == null) return;
+                recordInput = BattleInput.StockSkill(actor, input.Skill);
+                break;
+            case ActionInputKind.RangeSelect:
+                if (actor == null) return;
+                recordInput = BattleInput.SelectRange(actor, input.RangeWill, input.IsOption);
+                break;
+            case ActionInputKind.TargetSelect:
+                if (actor == null) return;
+                recordInput = BattleInput.SelectTarget(actor, input.TargetWill, input.Targets);
+                break;
+            case ActionInputKind.DoNothing:
+                recordInput = BattleInput.DoNothing(actor);
+                break;
+            default:
+                return;
+        }
+
+        recorder.RecordInput(recordInput, actor, Context.BattleTurnCount, Manager?.AllCharacters);
     }
 
     private bool CanAcceptInput(ActionInput input)
@@ -264,7 +355,7 @@ public sealed class BattleOrchestrator
             Context.Unders.ClearAndSetCurrentSkill(actor.NowUseSkill);
 
             var targets = input.Targets.ToArray();
-            RandomEx.Shared.Shuffle(targets);
+            Context.Random.Shuffle(targets);
             foreach (var target in targets)
             {
                 ApplyExposureModifier(actor, target);
@@ -297,7 +388,7 @@ public sealed class BattleOrchestrator
     private async UniTask<TabState> StepInternal()
     {
         Phase = BattlePhase.Resolving;
-        var state = await Manager.CharacterActBranching();
+        var state = await Session.ApplyInputAsync(BattleInput.Next());
         UpdateChoiceState(state);
         return state;
     }

@@ -13,6 +13,7 @@ public interface IBattleContext
     bool PassiveCancel { get; set; }
 
     int BattleTurnCount { get; }
+    IBattleRandom Random { get; }
     allyOrEnemy GetCharacterFaction(BaseStates chara);
     BattleGroup FactionToGroup(allyOrEnemy faction);
     BattleGroup MyGroup(BaseStates chara);

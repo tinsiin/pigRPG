@@ -73,7 +73,7 @@ public abstract partial class BaseStates
         for (int i = 0; i < 8; i++)
         {
             // Range(1, 5502) => [1..5501] の整数
-            diceSum += RandomEx.Shared.NextInt(1, 5502);
+            diceSum += RandomSource.NextInt(1, 5502);
         }
 
         // 2) 平均(22008)を引いて、0.00001f を掛ける
@@ -223,12 +223,12 @@ public abstract partial class BaseStates
             var per = 1f;
             if(GetTightenMindCorrectionStage()>=2)per=0.75f;//補正段階が2以上になるまで75%の確率で切り替えます、それ以降は100%で完全対応
 
-           if(RandomEx.Shared.NextFloat(1) < pattern.a)//パターンAなら 
+           if(RandomSource.NextFloat(1) < pattern.a)//パターンAなら 
            {
             skill.DecideNowMoveSet_A0_B1(0);
             skill.SetSingleAimStyle(pattern.aStyle);//攻撃者側スキルにデフォルトの狙い流れを設定
 
-            if(RandomEx.Shared.NextFloat(1)<per){
+            if(RandomSource.NextFloat(1)<per){
                 NowDeffenceStyle =  pattern.aStyle;
                 //攻撃者のAimStyle = 被害者のAimStyle　となるので狙い流れを対応できている。
             }else{
@@ -240,7 +240,7 @@ public abstract partial class BaseStates
             skill.DecideNowMoveSet_A0_B1(1);
             skill.SetSingleAimStyle(pattern.bStyle);//攻撃者側スキルにデフォルトの狙い流れを設定
 
-            if(RandomEx.Shared.NextFloat(1)<per){
+            if(RandomSource.NextFloat(1)<per){
                 NowDeffenceStyle =  pattern.bStyle;
                 
             }else{
@@ -260,7 +260,7 @@ public abstract partial class BaseStates
             {
                 if(atker.NowUseSkill.HasConsecutiveType(SkillConsecutiveType.FreezeConsecutive))
                 {
-                    if(RandomEx.Shared.NextFloat(1)<0.3f)return;
+                    if(RandomSource.NextFloat(1)<0.3f)return;
                 }
                 NowDeffenceStyle = AtkAimStyle;
             }//カウントアップ完了したなら、nowDeffenceStyleに記録されたAimStyleを適用するだけ
@@ -318,7 +318,7 @@ public abstract partial class BaseStates
 
         nightinknightValue /= 10;
         nightinknightValue = Mathf.Floor(nightinknightValue);
-        if(NowPower == ThePower.high && RandomEx.Shared.NextFloat(1) < 0.5f)  nightinknightValue += 1;//パワーが高く、二分の一の確率を当てると、補正段階が1増える
+        if(NowPower == ThePower.high && RandomSource.NextFloat(1) < 0.5f)  nightinknightValue += 1;//パワーが高く、二分の一の確率を当てると、補正段階が1増える
 
         return (int)nightinknightValue;
     }
@@ -374,7 +374,7 @@ public abstract partial class BaseStates
         if(NowPower< ThePower.medium)rndmax -= 1;
         if(tightenStage <2)return 1;//1以下なら基本値のみ
         if(tightenStage>5) rndmin = tightenStage/6;//6以上なら、補正段階の1/6が最小値
-        return 1 + RandomEx.Shared.NextInt(rndmin, rndmax);//2以降なら補正段階分乱数の最大値が増える
+        return 1 + RandomSource.NextInt(rndmin, rndmax);//2以降なら補正段階分乱数の最大値が増える
     }
     /// <summary>
     /// 引き締め段階(tightenStage)と、新AimStyle に応じて必要な最大カウントを算出
@@ -385,7 +385,7 @@ public abstract partial class BaseStates
         var count = DefenseTransformationThresholds[(AttackerStyle, NowDeffenceStyle)];
         if(tightenStage>=2)
         {
-            if(RandomEx.Shared.NextFloat(1)<0.31f + TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight)*0.01f)
+            if(RandomSource.NextFloat(1)<0.31f + TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight)*0.01f)
         {
                 count -= 1;
 
@@ -393,7 +393,7 @@ public abstract partial class BaseStates
         }
         
         if(tightenStage >= 5){
-            if(RandomEx.Shared.NextFloat(1)<0.8f)
+            if(RandomSource.NextFloat(1)<0.8f)
                 {
                     count-=1;
                 }
@@ -864,15 +864,15 @@ public abstract partial class BaseStates
         var minFactor = 1.0f;
         for(int i = 0; i < RandomizeCalcCount; i++)
         {
-            var RandomizeUpper = RandomEx.Shared.NextFloat(0.01f,0.015f);//ランダマイズの上振れ
-            var RandomizeLower = RandomEx.Shared.NextFloat(0.01f,0.03f);//ランダマイズの下振れ
+            var RandomizeUpper = RandomSource.NextFloat(0.01f,0.015f);//ランダマイズの上振れ
+            var RandomizeLower = RandomSource.NextFloat(0.01f,0.03f);//ランダマイズの下振れ
 
             maxFactor += RandomizeUpper;
             minFactor -= RandomizeLower;
         }
         if(minFactor < 0) minFactor = 0;
         if(minFactor > maxFactor) minFactor = maxFactor;//念のため
-        return dmg * RandomEx.Shared.NextFloat(minFactor,maxFactor);
+        return dmg * RandomSource.NextFloat(minFactor,maxFactor);
     }
     /// <summary>
     /// 思えのダメージ処理
@@ -1008,7 +1008,7 @@ public abstract partial class BaseStates
         if(NowCondition == HumanConditionCircumstances.Normal)
         {
             //とりあえず最大値 3~11%ランダム回復ってことで。
-            var HealAmount = ResonanceValue * RandomEx.Shared.NextFloat(0.03f,0.11f);
+            var HealAmount = ResonanceValue * RandomSource.NextFloat(0.03f,0.11f);
             ResonanceHeal(HealAmount);
         }
     }

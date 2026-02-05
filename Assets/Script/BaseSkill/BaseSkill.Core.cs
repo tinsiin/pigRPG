@@ -19,6 +19,8 @@ public partial class BaseSkill
     // Phase 4: Hub依存削減 - 注入優先、フォールバックでHub
     private IBattleContext _battleContext;
     protected IBattleContext manager => _battleContext ?? BattleContextHub.Current;
+    private static readonly IBattleRandom s_fallbackRandom = new SystemBattleRandom();
+    protected IBattleRandom RandomSource => manager?.Random ?? s_fallbackRandom;
 
     public void BindBattleContext(IBattleContext context)
     {

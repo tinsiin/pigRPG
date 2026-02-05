@@ -1,8 +1,5 @@
 using System;
 using UnityEngine;
-using RandomExtensions;
-using RandomExtensions.Linq;
-using RandomExtensions.Collections;
 using Unity.VisualScripting;
 using R3;
 using Cysharp.Threading.Tasks;
@@ -24,7 +21,7 @@ public class SimpleRandomTestAI : BattleAIBrain
         if (availableSkills == null || availableSkills.Count == 0) return;
 
         // 一個適当に有効スキルから選ぶだけ
-        var rndSkill = RandomEx.Shared.GetItem(availableSkills.ToArray());
+        var rndSkill = RandomSource.GetItem(availableSkills);
         if (rndSkill == null) return;
 
         // 結果としてスキルのみ設定（単体先約時はCommitでスキルだけ反映される）

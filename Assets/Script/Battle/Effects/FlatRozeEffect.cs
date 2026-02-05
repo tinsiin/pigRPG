@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-using RandomExtensions;
 using UnityEngine;
 
 /// <summary>
@@ -30,7 +29,7 @@ public sealed class FlatRozeEffect : ISkillEffect
         var acter = context.Acter;
         var chance = Ideal50or60Easing(acter, acter.NowUseSkill.SkillHitPer);
 
-        if (RandomEx.Shared.NextInt(100) >= chance)
+        if (context.Random.NextInt(100) >= chance)
         {
             return UniTask.CompletedTask;
         }

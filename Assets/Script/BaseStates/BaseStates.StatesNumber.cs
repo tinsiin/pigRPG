@@ -1290,7 +1290,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// 思えの値現在値をランダム化する
     /// </summary>
-    public void InitializeNowResonanceValue() { NowResonanceValue = RandomEx.Shared.NextFloat(ResonanceValue * 0.6f, ResonanceValue); }
+    public void InitializeNowResonanceValue() { NowResonanceValue = RandomSource.NextFloat(ResonanceValue * 0.6f, ResonanceValue); }
     const float _resonanceHealingOnWalkingFactor = 1f;
     /// <summary>
     /// 歩行時の思えの値回復

@@ -30,7 +30,7 @@ public partial class BaseSkill
                 NowMoveSetState = new();
                 return;
             }
-            NowMoveSetState = A_MoveSet_Cash[RandomEx.Shared.NextInt(A_MoveSet_Cash.Count)];
+            NowMoveSetState = A_MoveSet_Cash[RandomSource.NextInt(A_MoveSet_Cash.Count)];
         }
         else if(aOrB == 1)
         {
@@ -39,7 +39,7 @@ public partial class BaseSkill
                 NowMoveSetState = new();
                 return;
             }
-            NowMoveSetState = B_MoveSet_Cash[RandomEx.Shared.NextInt(B_MoveSet_Cash.Count)];
+            NowMoveSetState = B_MoveSet_Cash[RandomSource.NextInt(B_MoveSet_Cash.Count)];
         }
     }
 

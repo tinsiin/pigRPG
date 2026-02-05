@@ -13,7 +13,7 @@ public class BattleStateManagerTests
     public void SetUp()
     {
         _state = new BattleState();
-        _manager = new BattleStateManager(_state);
+        _manager = new BattleStateManager(_state, new NoOpBattleLogger());
     }
 
     [Test]

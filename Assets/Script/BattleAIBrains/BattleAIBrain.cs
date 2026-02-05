@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using System;
-using RandomExtensions;
-using NRandom.Collections;
 using Cysharp.Threading.Tasks;
 /// <summary>
 /// EnemyClass等基礎クラスで関数を共通して扱う 付け替え可能なAI用の抽象クラス
@@ -18,6 +16,9 @@ public abstract class BattleAIBrain : ScriptableObject
     [SerializeField]SkillAnalysisPolicy _damageSimulatePolicy;
 
     protected IBattleContext manager;
+    private IBattleContext _battleContext;
+    private IBattleRandom _random = new SystemBattleRandom();
+    protected IBattleRandom RandomSource => manager?.Random ?? _battleContext?.Random ?? _random;
     protected BaseStates user;
     protected List<BaseSkill> availableSkills;
 
@@ -201,12 +202,13 @@ public abstract class BattleAIBrain : ScriptableObject
     public void SkillActRun(IBattleContext context = null)
     {
         // 共通初期化
-        manager = context ?? BattleContextHub.Current;
+        manager = context ?? _battleContext ?? BattleContextHub.Current;
         if (manager == null || manager.Acter == null)
         {
             Debug.LogError("BattleAIBrain.Run: manager または Acter が未設定のため実行を中断します。");
             return;
         }
+        _random = manager.Random ?? _random;
         user = manager.Acter;
 
         // ポリシーの不正値を実行前に検証・矯正（0以下はエラーを出して1に補正）
@@ -383,7 +385,7 @@ public abstract class BattleAIBrain : ScriptableObject
             Debug.Log("消せるパッシブリストに悪いパッシブが存在しません(skillAI)");
             return null;
         }
-        return RandomEx.Shared.GetItem(badPassives.ToArray());//ランダムに一つ入手
+        return RandomSource.GetItem(badPassives);//ランダムに一つ入手
     }
 
 
@@ -437,7 +439,7 @@ public abstract class BattleAIBrain : ScriptableObject
             }
             if(_damageSimulatePolicy.hpType == TargetHPType.Random)//グループから一人をランダム
             {
-                ResultTarget = RandomEx.Shared.GetItem(potentialTargets.ToArray());
+                ResultTarget = RandomSource.GetItem(potentialTargets);
             }
             ResultSkill = SingleBestDamageAnalyzer(availableSkills, ResultTarget);
         }
@@ -488,9 +490,10 @@ public abstract class BattleAIBrain : ScriptableObject
 
         // 新しいロジック：刻み・ブレ段階システムを使用
         return DamageStepAnalysisHelper.SelectWithStepAndVariation(
-            availableSkills, 
-            skill => target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy), 
-            _damageSimulatePolicy
+            availableSkills,
+            skill => target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy),
+            _damageSimulatePolicy,
+            RandomSource
         );
     }   
     /// <summary>
@@ -559,9 +562,10 @@ public abstract class BattleAIBrain : ScriptableObject
 
         // 刻み・ブレ段階システムで最適な組み合わせを選択
         var selectedCombination = DamageStepAnalysisHelper.SelectWithStepAndVariation(
-            combinations, 
-            combination => combination.Damage, 
-            _damageSimulatePolicy
+            combinations,
+            combination => combination.Damage,
+            _damageSimulatePolicy,
+            RandomSource
         );
 
         return selectedCombination ?? combinations.First();
@@ -658,7 +662,7 @@ public abstract class BattleAIBrain : ScriptableObject
         // 実行主体を AI 側にも保持（必要に応じて派生で参照）
         user = self;
         // BM は原則取得可能想定。取得失敗時はログのみ（利他部品側で自分のみへフォールバック）
-        manager = context ?? BattleContextHub.Current;
+        manager = context ?? _battleContext ?? BattleContextHub.Current;
 
         // デフォルトは空プラン。派生で PostBattlePlan(self, decision) を実装して Actions を詰める。
         var decision = new PostBattleDecision();
@@ -755,6 +759,12 @@ public abstract class BattleAIBrain : ScriptableObject
     protected virtual void PostBattlePlan(BaseStates self, PostBattleDecision decision)
     {
         // 何もしない（デフォルト空実装）
+    }
+
+    public void BindBattleContext(IBattleContext context)
+    {
+        _battleContext = context;
+        _random = context?.Random ?? _random;
     }
 
     /// <summary>
@@ -873,7 +883,7 @@ public abstract class BattleAIBrain : ScriptableObject
         }
         else
         {
-            orderedAllies = pairs.OrderBy(_ => RandomEx.Shared.NextFloat(0f, 1f)).ToList();
+            orderedAllies = pairs.OrderBy(_ => RandomSource.NextFloat()).ToList();
         }
 
         bool onlyOthers = Roll(profile.P_OnlyOthers);
@@ -933,7 +943,7 @@ public abstract class BattleAIBrain : ScriptableObject
     protected bool Roll(float p01)
     {
         var p = Mathf.Clamp01(p01);
-        return RandomEx.Shared.NextFloat(0f, 1f) < p;
+        return RandomSource.NextFloat() < p;
     }
 
     // グループ味方列挙ユーティリティ（self は除外）
@@ -1135,7 +1145,7 @@ public static class DamageStepAnalysisHelper
     /// <summary>
     /// スキル候補から刻み・ブレ段階システムに基づいて最適なスキルを選択
     /// </summary>
-    public static T SelectWithStepAndVariation<T>(List<T> candidates, System.Func<T, float> getDamage, SkillAnalysisPolicy policy)
+    public static T SelectWithStepAndVariation<T>(List<T> candidates, System.Func<T, float> getDamage, SkillAnalysisPolicy policy, IBattleRandom random)
     {
         if (candidates == null || candidates.Count == 0) return default(T);
         if (candidates.Count == 1) return candidates[0];
@@ -1172,12 +1182,12 @@ public static class DamageStepAnalysisHelper
         // 5. 重み付き抽選または均等抽選で選択
         if (policy.useWeightedSelection && validSteppedValues.Count > 1)
         {
-            return SelectWithWeights(validCandidates, validSteppedValues, maxSteppedDamage, policy.damageStep);
+            return SelectWithWeights(validCandidates, validSteppedValues, maxSteppedDamage, policy.damageStep, random);
         }
         else
         {
             // 均等抽選
-            return RandomEx.Shared.GetItem(validCandidates.ToArray()).Original;
+            return random.GetItem(validCandidates).Original;
         }
     }
 
@@ -1191,29 +1201,61 @@ public static class DamageStepAnalysisHelper
     }
 
     /// <summary>
-    /// 重み付き抽選による候補選択（NRandomのWeightedListを使用）
+    /// 重み付き抽選による候補選択
     /// </summary>
-    private static T SelectWithWeights<T>(List<CandidateInfo<T>> candidates, List<float> validSteppedValues, float maxSteppedDamage, int step)
+    private static T SelectWithWeights<T>(List<CandidateInfo<T>> candidates, List<float> validSteppedValues, float maxSteppedDamage, int step, IBattleRandom random)
     {
         // 刻み値ごとにグループ化
-        var groups = candidates.GroupBy(x => x.SteppedDamage).ToList();
-        
-        // WeightedListを作成して各グループに重みを設定
-        var weightedGroups = new WeightedList<List<CandidateInfo<T>>>();
-        
-        foreach (var group in groups.OrderByDescending(g => g.Key)) // 降順でソート
+        var groups = candidates
+            .GroupBy(x => x.SteppedDamage)
+            .OrderByDescending(g => g.Key)
+            .ToList();
+
+        var weightedGroups = new List<List<CandidateInfo<T>>>();
+        var weights = new List<float>();
+
+        foreach (var group in groups)
         {
             int stepsFromMax = Mathf.RoundToInt((maxSteppedDamage - group.Key) / step);
             float weight = Mathf.Max(0.1f, 1.0f - (stepsFromMax * 0.3f)); // 上位ほど高い重み
-            
-            weightedGroups.Add(group.ToList(), weight);
+
+            weightedGroups.Add(group.ToList());
+            weights.Add(weight);
         }
-        
-        // NRandomのWeightedListで重み付き抽選
-        var selectedGroup = weightedGroups.GetRandom();
-        
+
+        var selectedGroup = PickWeightedGroup(weightedGroups, weights, random);
+
         // 選択されたグループ内からランダムで1つ選択
-        return RandomEx.Shared.GetItem(selectedGroup.ToArray()).Original;
+        return random.GetItem(selectedGroup).Original;
+    }
+
+    private static List<CandidateInfo<T>> PickWeightedGroup<T>(IReadOnlyList<List<CandidateInfo<T>>> groups, IReadOnlyList<float> weights, IBattleRandom random)
+    {
+        if (groups == null || groups.Count == 0) return new List<CandidateInfo<T>>();
+        var total = 0f;
+        for (var i = 0; i < weights.Count; i++)
+        {
+            var w = weights[i];
+            if (w > 0) total += w;
+        }
+        if (total <= 0f)
+        {
+            return groups[0];
+        }
+
+        var roll = random.NextFloat(total);
+        var cumulative = 0f;
+        for (var i = 0; i < groups.Count; i++)
+        {
+            var w = i < weights.Count ? weights[i] : 1f;
+            if (w <= 0) continue;
+            cumulative += w;
+            if (roll <= cumulative)
+            {
+                return groups[i];
+            }
+        }
+        return groups[groups.Count - 1];
     }
     
     /// <summary>

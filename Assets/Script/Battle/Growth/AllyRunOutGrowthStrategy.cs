@@ -1,5 +1,4 @@
 using System.Linq;
-using RandomExtensions;
 using UnityEngine;
 
 public sealed class AllyRunOutGrowthStrategy : IGrowthStrategy
@@ -20,7 +19,7 @@ public sealed class AllyRunOutGrowthStrategy : IGrowthStrategy
         var growSkills = growSkillsSorted.GetRange(0, growSkillCount);
 
         var allGrowTenDays = context.GrowTenDays.Sum(kvp => kvp.Value);
-        var growAmount = allGrowTenDays * RandomEx.Shared.NextFloat(
+        var growAmount = allGrowTenDays * context.Random.NextFloat(
             context.Settings.allyRunOutMinFactor,
             context.Settings.allyRunOutMaxFactor);
 

@@ -168,10 +168,10 @@ public abstract partial class BaseStates
                     for (int t = 0; t < tries; t++)
                     {
                         // 挿入確率判定
-                        if (RandomEx.Shared.NextDouble() < insertProbability)
+                        if (RandomSource.NextFloat() < insertProbability)
                         {
                             // gap内からランダムに1つ取得
-                            int randomValue = RandomEx.Shared.NextInt(gapStart, gapEnd + 1);
+                            int randomValue = RandomSource.NextInt(gapStart, gapEnd + 1);
 
                             if (!insertedNumbers.Contains(randomValue)) //重複してたら追加しない。
                                 insertedNumbers.Add(randomValue);
@@ -243,7 +243,7 @@ public abstract partial class BaseStates
         //大体70個ほど決定する。hpの大きさに応じて最大間隔が狭まる
         for (var i = 0; i < 70; i++)
         {
-            sum += RandomEx.Shared.NextInt(1, Mathf.RoundToInt(GetKinderGroupingIntervalRndMax()) + 1);
+            sum += RandomSource.NextInt(1, Mathf.RoundToInt(GetKinderGroupingIntervalRndMax()) + 1);
             KinderAdaptToSkillGroupingIntegerList.Add(sum);
         }
 
@@ -746,9 +746,9 @@ public abstract partial class BaseStates
 
             //記憶回数の序列割合を入手
             var MemoryRankRatio = GetMemoryCountRankRatio(AdaptPriorityMemoryToSkill(fo.skillImpression));
-            var mod1 = RandomEx.Shared.NextFloat(2, 4);//2～3
+            var mod1 = RandomSource.NextFloat(2, 4);//2～3
             var rat1 = MemoryRankRatio / mod1;
-            if (RandomEx.Shared.NextFloat(1f) < rat1)//乱数判定　成功したら。
+            if (RandomSource.NextFloat(1f) < rat1)//乱数判定　成功したら。
             {
                 DeathMemoryFloat /= 3;//3分の一に減衰される
             }
@@ -820,7 +820,7 @@ public abstract partial class BaseStates
                         AdaptModify = 1 - (BaseValue * MemoryValue * MemoryPriority);
 
                         // ランダムファクターの生成
-                        float randomFactor = RandomEx.Shared.NextFloat(1.0f - randomVariationRange, 1.0f + randomVariationRange);
+                        float randomFactor = RandomSource.NextFloat(1.0f - randomVariationRange, 1.0f + randomVariationRange);
                         AdaptModify *= randomFactor;
 
                         //下限しきい値の設定
@@ -832,7 +832,7 @@ public abstract partial class BaseStates
                             var chance = (int)(777 - b_EYE.Total * 5);//b_eyeの0~150 0.1~3.7%推移　 以降は5.2%
                             chance = Mathf.Max(19, chance);
 
-                            if (RandomEx.Shared.NextInt(chance) == 0)//瞬きが起きる機会
+                            if (RandomSource.NextInt(chance) == 0)//瞬きが起きる機会
                             {
                                 AdaptModify = EyeBlink(AdaptModify, maxEyeAdaptThreshold, initialAdaptThreshold, 2.111f);
                             }

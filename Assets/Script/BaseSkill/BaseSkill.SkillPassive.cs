@@ -191,7 +191,7 @@ public partial class BaseSkill
                 int selectCount = Math.Min(SkillPassiveEffectCount, candidates.Count);
                 for(int i = 0; i < selectCount; i++)// 絞り込んだスキルリスト からランダム選択
                 {
-                    var  item = RandomEx.Shared.GetItem(candidates.ToArray());
+                    var  item = RandomSource.GetItem(candidates.ToArray());
                     randomSkills.Add(item);
                     candidates.Remove(item);
                 }
@@ -202,7 +202,7 @@ public partial class BaseSkill
                 int selectCount = Math.Min(SkillPassiveEffectCount, targetSkills.Count);
                 for(int i = 0; i < selectCount; i++)
                 {
-                    var  item = RandomEx.Shared.GetItem(targetSkills.ToArray());//ランダムに選んで
+                    var  item = RandomSource.GetItem(targetSkills.ToArray());//ランダムに選んで
                     randomSkills.Add(item);//追加
                     targetSkills.Remove(item);//重複を防ぐため削除
                 }

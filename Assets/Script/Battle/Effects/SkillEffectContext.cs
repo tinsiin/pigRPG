@@ -13,6 +13,7 @@ public sealed class SkillEffectContext
     public ActionQueue Acts { get; }
     public int BattleTurnCount { get; }
     public IBattleQueryService QueryService { get; }
+    public IBattleRandom Random { get; }
 
     /// <summary>
     /// 効果間でデータを受け渡すための辞書
@@ -27,7 +28,8 @@ public sealed class SkillEffectContext
         BattleGroup enemyGroup,
         ActionQueue acts,
         int battleTurnCount,
-        IBattleQueryService queryService)
+        IBattleQueryService queryService,
+        IBattleRandom random)
     {
         Acter = acter;
         ActerFaction = acterFaction;
@@ -37,5 +39,6 @@ public sealed class SkillEffectContext
         Acts = acts;
         BattleTurnCount = battleTurnCount;
         QueryService = queryService;
+        Random = random ?? new SystemBattleRandom();
     }
 }

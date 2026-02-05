@@ -1,8 +1,6 @@
 using System.Linq;
 using Cysharp.Threading.Tasks;
-using RandomExtensions;
 using UnityEngine;
-using static CommonCalc;
 
 /// <summary>
 /// 相性による回復ターン短縮効果。
@@ -63,7 +61,7 @@ public sealed class HelpRecoveryEffect : ISkillEffect
                 var helpRate = damageRate;
                 if (data.IsBadPassiveHit || data.IsBadVitalLayerHit || data.IsGoodPassiveRemove || data.IsGoodVitalLayerRemove)
                 {
-                    helpRate += RandomEx.Shared.NextFloat(0.07f, 0.15f);
+                    helpRate += context.Random.NextFloat(0.07f, 0.15f);
                 }
                 helpRate = Mathf.Clamp01(helpRate);
 
@@ -71,14 +69,14 @@ public sealed class HelpRecoveryEffect : ISkillEffect
                 occurrenceProbability = baseChance * (1f + k * helpRate);
                 occurrenceProbability = Mathf.Min(occurrenceProbability, 1f);
 
-                if (rollper(occurrenceProbability * 100))
+                if (RollPercent(context.Random, occurrenceProbability * 100))
                 {
                     float expectedShorten = occurrenceProbability * 4f;
                     var baseShorten = Mathf.Floor(expectedShorten);
                     var ratio = expectedShorten - baseShorten;
                     var upChance = ratio / 3;
                     float finalShorten = baseShorten;
-                    if (RandomEx.Shared.NextFloat(1) < upChance)
+                    if (context.Random.NextFloat() < upChance)
                     {
                         finalShorten = baseShorten + 1;
                     }
@@ -89,5 +87,11 @@ public sealed class HelpRecoveryEffect : ISkillEffect
         }
 
         return UniTask.CompletedTask;
+    }
+
+    private static bool RollPercent(IBattleRandom random, float percentage)
+    {
+        if (percentage < 0) percentage = 0;
+        return random.NextFloat(100) < percentage;
     }
 }

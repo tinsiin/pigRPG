@@ -1,8 +1,6 @@
 using System.Linq;
 using Cysharp.Threading.Tasks;
-using RandomExtensions;
 using UnityEngine;
-using static CommonCalc;
 
 /// <summary>
 /// リベンジボーナス効果。
@@ -53,13 +51,13 @@ public sealed class RevengeBonusEffect : ISkillEffect
                 float occurrenceProbability = compatibilityFactor * (1f + k * damageRate) * powerFactor;
                 occurrenceProbability = Mathf.Clamp01(occurrenceProbability);
 
-                if (rollper(occurrenceProbability * 100))
+                if (RollPercent(context.Random, occurrenceProbability * 100))
                 {
                     float expectedDuration = occurrenceProbability * 12f;
                     int baseDuration = Mathf.FloorToInt(expectedDuration);
                     float extraChance = expectedDuration - baseDuration;
                     int duration = baseDuration;
-                    if (RandomEx.Shared.NextFloat(1f) < extraChance / 2.3f)
+                    if (context.Random.NextFloat() < extraChance / 2.3f)
                     {
                         duration++;
                     }
@@ -71,5 +69,11 @@ public sealed class RevengeBonusEffect : ISkillEffect
         }
 
         return UniTask.CompletedTask;
+    }
+
+    private static bool RollPercent(IBattleRandom random, float percentage)
+    {
+        if (percentage < 0) percentage = 0;
+        return random.NextFloat(100) < percentage;
     }
 }

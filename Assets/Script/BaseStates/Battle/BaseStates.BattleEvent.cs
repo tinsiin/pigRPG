@@ -136,7 +136,7 @@ public abstract partial class BaseStates
             return false;
         }
         //キーリストをシャッフルする
-        RandomEx.Shared.Shuffle(SuggestionJudgementSkillTenDayKeys);
+        RandomSource.Shuffle(SuggestionJudgementSkillTenDayKeys);
 
         //判定する種類分判定リストに代入
         var JudgementSkillTenDays =new HashSet<TenDayAbility>();
@@ -582,7 +582,7 @@ public abstract partial class BaseStates
             var AtkerBladeRate = AtkerBlade;
             if(Atker.NowPower == ThePower.high) AtkerBladeRate *= 1.5f;
             //生き残りHP
-            var survivalHP = RandomEx.Shared.NextFloat(1,2.8f) + Mathf.Max(0,underBlade - AtkerBladeRate) * RandomEx.Shared.NextFloat(4,5);
+            var survivalHP = RandomSource.NextFloat(1,2.8f) + Mathf.Max(0,underBlade - AtkerBladeRate) * RandomSource.NextFloat(4,5);
 
             HP = survivalHP;//HPに生き残ったHP分を代入
         }
@@ -795,7 +795,7 @@ public abstract partial class BaseStates
         }
 
         //+-20%入れ替わる
-        passRate += RandomEx.Shared.NextFloat(-0.2f,0.2f);
+        passRate += RandomSource.NextFloat(-0.2f,0.2f);
 
         return passRate;
     }
@@ -819,7 +819,7 @@ public abstract partial class BaseStates
             var eneVond = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.Vond);
             var myVond =  TenDayValues(false).GetValueOrZero(TenDayAbility.Vond);
             var plusAtkChance = myVond> eneVond ? myVond - eneVond : 0f;//ヴォンドの差による微加算値
-            if(RandomEx.Shared.NextFloat(1) < skill.DEFATK/3 + plusAtkChance*0.01f)
+            if(RandomSource.NextFloat(1) < skill.DEFATK/3 + plusAtkChance*0.01f)
             {
                 var mypersonDiver = TenDayValues(false).GetValueOrZero(TenDayAbility.PersonaDivergence);
                 var myTentvoid = TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid);
@@ -831,8 +831,8 @@ public abstract partial class BaseStates
                 var attackerValue = Mathf.Max(eneSort - eneRain/3,0)+eneCold;//攻撃者の特定能力値
 
 
-                if(RandomEx.Shared.NextFloat(counterValue+attackerValue) < counterValue &&
-                 RandomEx.Shared.NextFloat(1)<0.5f)
+                if(RandomSource.NextFloat(counterValue+attackerValue) < counterValue &&
+                 RandomSource.NextFloat(1)<0.5f)
                 {
                     //まず連続攻撃の無効化
                     attacker.DeleteConsecutiveATK();

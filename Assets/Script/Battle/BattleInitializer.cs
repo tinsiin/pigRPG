@@ -31,7 +31,10 @@ public class BattleInitializer
         IPlayersTuning playersTuning,
         float escapeRate,
         int enemyNumber = 2,
-        IBattleMetaProvider metaProviderOverride = null)
+        IBattleMetaProvider metaProviderOverride = null,
+        int? randomSeed = null,
+        BattleRuleCatalog ruleCatalogOverride = null,
+        BattleRuleRegistry ruleRegistryOverride = null)
     {
         var enemyGroup = EncounterEnemySelector.SelectGroup(enemies, globalSteps, enemyNumber);
         return InitializeBattleFromGroup(
@@ -42,7 +45,10 @@ public class BattleInitializer
             playersRoster,
             playersTuning,
             escapeRate,
-            metaProviderOverride);
+            metaProviderOverride,
+            randomSeed,
+            ruleCatalogOverride,
+            ruleRegistryOverride);
     }
 
     private async UniTask<BattleSetupResult> InitializeBattleFromGroup(
@@ -53,7 +59,10 @@ public class BattleInitializer
         IPlayersRoster playersRoster,
         IPlayersTuning playersTuning,
         float escapeRate,
-        IBattleMetaProvider metaProviderOverride)
+        IBattleMetaProvider metaProviderOverride,
+        int? randomSeed,
+        BattleRuleCatalog ruleCatalogOverride,
+        BattleRuleRegistry ruleRegistryOverride)
     {
         var result = new BattleSetupResult();
         if (playersParty == null)
@@ -79,20 +88,20 @@ public class BattleInitializer
         BindSkillUi(result.AllyGroup, playersSkillUI);
 
         var metaProvider = metaProviderOverride ?? new WalkBattleMetaProvider(playersParty, playersUIControl);
+        var services = CreateBattleServices(playersSkillUI, playersRoster, randomSeed, ruleCatalogOverride, ruleRegistryOverride);
         result.Orchestrator = new BattleOrchestrator(
             result.AllyGroup,
             result.EnemyGroup,
             BattleStartSituation.Normal,
-            _messageDropper,
+            services,
             escapeRate,
-            metaProvider,
-            playersSkillUI,
-            playersRoster
+            metaProvider
         );
         BattleOrchestratorHub.Set(result.Orchestrator);
         Debug.Assert(BattleOrchestratorHub.Current != null,
             "BattleOrchestrator initialization failed - BattleOrchestratorHub.Current is null after Set()");
         result.BattleContext = result.Orchestrator.Manager;
+        result.Session = result.Orchestrator.Session;
 
         if (playersSkillUI != null)
         {
@@ -150,11 +159,56 @@ public class BattleInitializer
             actor?.BindSkillUI(skillUi);
         }
     }
+
+    private BattleServices CreateBattleServices(
+        IPlayersSkillUI skillUi,
+        IPlayersRoster roster,
+        int? randomSeed,
+        BattleRuleCatalog ruleCatalogOverride,
+        BattleRuleRegistry ruleRegistryOverride)
+    {
+        var actionMark = _watchUIUpdate?.ActionMarkCtrl;
+        var enemyPlacement = _watchUIUpdate?.EnemyPlacementCtrl;
+        var introOrchestrator = _watchUIUpdate?.IntroOrchestrator;
+        IBattleRandom random = randomSeed.HasValue ? new SystemBattleRandom(randomSeed.Value) : new UnityBattleRandom();
+        var ruleCatalog = ruleCatalogOverride;
+        if (ruleCatalog == null)
+        {
+            BattleRuleCatalogIO.TryLoadDefault(out ruleCatalog);
+        }
+
+        var extensionRegistry = BattleExtensionRegistryHub.Current;
+        var extensionPolicy = BattleExtensionRegistryHub.CompatibilityPolicy;
+        TargetingPolicyRegistry targetingPolicies = null;
+        ISkillEffectPipeline effectPipeline = null;
+        if (ruleCatalog != null)
+        {
+            var registry = ruleRegistryOverride ?? BattleRuleRegistry.CreateDefault();
+            extensionRegistry?.ApplyTo(registry, extensionPolicy);
+            targetingPolicies = registry.BuildTargetingPolicies(ruleCatalog);
+            effectPipeline = registry.BuildEffectPipeline(ruleCatalog);
+        }
+
+        return new BattleServices(
+            _messageDropper,
+            skillUi,
+            roster,
+            actionMark,
+            enemyPlacement,
+            introOrchestrator,
+            SchizoLog.Instance,
+            BattleSystemArrowManager.Instance,
+            targetingPolicies: targetingPolicies,
+            effectPipeline: effectPipeline,
+            random: random,
+            logger: new UnityBattleLogger(),
+            randomSeed: randomSeed);
+    }
     
     /// <summary>
     /// 戦闘UI の初期状態を設定
     /// </summary>
-    public TabState SetupInitialBattleUI(BattleOrchestrator orchestrator)
+    public TabState SetupInitialBattleUI(IBattleLifecycle orchestrator)
     {
         if (orchestrator == null)
             return TabState.walk;
@@ -174,4 +228,6 @@ public class BattleSetupResult
     public BattleGroup AllyGroup { get; set; }
     public BattleOrchestrator Orchestrator { get; set; }
     public IBattleContext BattleContext { get; set; }
+    public IBattleSession Session { get; set; }
+    public IBattleLifecycle Lifecycle => Orchestrator;
 }

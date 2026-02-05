@@ -115,7 +115,7 @@ public abstract partial class BaseStates
         
         if(attacker.MyImpression == attacker.MyImpression)
         {
-            resultModifier.RandomMaxPlus(RandomEx.Shared.NextInt(2,8));//スキルの計算でないのでほんのちょっとだけ。
+            resultModifier.RandomMaxPlus(s_fallbackRandom.NextInt(2,8));//スキルの計算でないのでほんのちょっとだけ。
         }
 
         return resultModifier;
@@ -284,7 +284,7 @@ public class FixedOrRandomValue
     {
         float value;
         if (rndMax == -1) value = rndMinOrFixed / 100.0f;//乱数じゃないなら単一の値が返る
-        else value = RandomEx.Shared.NextInt(rndMinOrFixed, rndMax + 1)  / 100.0f;//ランダムなら
+        else value = BaseStates.FallbackRandom.NextInt(rndMinOrFixed, rndMax + 1)  / 100.0f;//ランダムなら
 
         return value * percentage;//割合を掛ける
 

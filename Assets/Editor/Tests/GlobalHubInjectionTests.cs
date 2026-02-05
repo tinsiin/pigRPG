@@ -160,6 +160,7 @@ public class GlobalHubInjectionTests
         public BaseStates Acter => null;
         public UnderActersEntryList unders => null;
         public ActionQueue Acts => null;
+        public IBattleRandom Random => new SystemBattleRandom();
         public bool SkillStock { get; set; }
         public bool DoNothing { get; set; }
         public bool PassiveCancel { get; set; }

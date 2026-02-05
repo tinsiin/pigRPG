@@ -51,8 +51,8 @@ public sealed class UnityBattleRunner : IBattleRunner
 
         if (walking != null)
         {
-            var initialState = initializer.SetupInitialBattleUI(setup.Orchestrator);
-            walking.BeginBattle(setup.Orchestrator, initialState);
+            var initialState = initializer.SetupInitialBattleUI(setup.Lifecycle);
+            walking.BeginBattle(setup.Lifecycle, initialState, setup.BattleContext);
         }
 
         await WaitForBattleEnd(setup.Orchestrator);

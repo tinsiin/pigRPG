@@ -241,24 +241,24 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
     {
         // Kモードがアクティブなら即時解除（アニメなし）
         _kZoom?.ForceExitKImmediate();
-        //USERUI_state.Value = await orchestrator.Step();
-        if (orchestrator == null || orchestrator.Phase == BattlePhase.Completed)
+        if (battleLifecycle == null || battleLifecycle.Phase == BattlePhase.Completed)
         {
             return;
         }
-        await orchestrator.RequestAdvance();
-        USERUI_state.Value = orchestrator.CurrentUiState;
+        await battleLifecycle.RequestAdvanceAsync();
+        USERUI_state.Value = battleLifecycle.CurrentUiState;
     }
 
-    public void BeginBattle(BattleOrchestrator nextOrchestrator, TabState initialState)
+    public void BeginBattle(IBattleLifecycle nextBattle, TabState initialState, IBattleContext context)
     {
-        if (nextOrchestrator == null)
+        if (nextBattle == null)
         {
-            Debug.LogWarning("Walking.BeginBattle: orchestrator is null.");
+            Debug.LogWarning("Walking.BeginBattle: battle lifecycle is null.");
             return;
         }
 
-        orchestrator = nextOrchestrator;
+        battleLifecycle = nextBattle;
+        battleContext = context;
         USERUI_state.Value = initialState;
 
         if (_nextWaitBtn == null)
@@ -271,8 +271,10 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
         _nextWaitBtn.onClick.AddListener(() => OnClickNextWaitBtn().Forget());
     }
 
-    public BattleOrchestrator orchestrator;
-    public IBattleContext BattleContext => orchestrator?.Manager;
+    private IBattleLifecycle battleLifecycle;
+    private IBattleContext battleContext;
+    public IBattleLifecycle BattleLifecycle => battleLifecycle;
+    public IBattleContext BattleContext => battleContext;
     /// <summary>
     ///     次のエリア選択肢のボタンを生成。
     /// </summary>
@@ -324,9 +326,9 @@ public class Walking : MonoBehaviour, IPlayersContextConsumer
             return;
         }
         await walkingSystemManager.RunOneStepAsync();
-        if (orchestrator != null)
+        if (battleLifecycle != null)
         {
-            await orchestrator.EndBattle();
+            await battleLifecycle.EndAsync();
         }
     }
 

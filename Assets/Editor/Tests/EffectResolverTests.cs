@@ -10,28 +10,28 @@ public class EffectResolverTests
 {
     private const BindingFlags PrivateInstance = BindingFlags.NonPublic | BindingFlags.Instance;
 
-    private static readonly FieldInfo EffectChainField =
-        typeof(EffectResolver).GetField("_effectChain", PrivateInstance);
+    private static readonly FieldInfo PipelineField =
+        typeof(EffectResolver).GetField("_pipeline", PrivateInstance);
 
     private static readonly FieldInfo QueryServiceField =
         typeof(EffectResolver).GetField("_queryService", PrivateInstance);
 
     [Test]
-    public void SetQueryService_InitializesEffectChain()
+    public void SetQueryService_InitializesPipeline()
     {
         var resolver = new EffectResolver();
         var queryService = new MockBattleQueryService();
 
         // Before SetQueryService
-        var chainBefore = EffectChainField?.GetValue(resolver);
-        Assert.IsNull(chainBefore, "Effect chain should be null before SetQueryService");
+        var pipelineBefore = PipelineField?.GetValue(resolver);
+        Assert.IsNull(pipelineBefore, "Pipeline should be null before SetQueryService");
 
         // Call SetQueryService
         resolver.SetQueryService(queryService);
 
         // After SetQueryService
-        var chainAfter = EffectChainField?.GetValue(resolver);
-        Assert.IsNotNull(chainAfter, "Effect chain should be initialized after SetQueryService");
+        var pipelineAfter = PipelineField?.GetValue(resolver);
+        Assert.IsNotNull(pipelineAfter, "Pipeline should be initialized after SetQueryService");
     }
 
     [Test]
@@ -47,13 +47,13 @@ public class EffectResolverTests
     }
 
     [Test]
-    public void NewEffectResolver_HasNullEffectChain()
+    public void NewEffectResolver_HasNullPipeline()
     {
         var resolver = new EffectResolver();
 
-        var chain = EffectChainField?.GetValue(resolver);
+        var pipeline = PipelineField?.GetValue(resolver);
 
-        Assert.IsNull(chain, "New EffectResolver should have null effect chain");
+        Assert.IsNull(pipeline, "New EffectResolver should have null pipeline");
     }
 
     [Test]

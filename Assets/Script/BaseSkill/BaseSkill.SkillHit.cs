@@ -69,16 +69,16 @@ public partial class BaseSkill
         if(Doer.HasPassive(1)) return hitResult;
 
         //通常計算
-        var rndMin = RandomEx.Shared.NextInt(3);//ボーナスがある場合ランダムで三パーセント~0パーセント引かれる
+        var rndMin = RandomSource.NextInt(3);//ボーナスがある場合ランダムで三パーセント~0パーセント引かれる
         if(supremacyBonus>rndMin)supremacyBonus -= rndMin;
 
-        var result = RandomEx.Shared.NextInt(100) < supremacyBonus + SkillHitPer ? hitResult : HitResult.CompleteEvade;
+        var result = RandomSource.NextInt(100) < supremacyBonus + SkillHitPer ? hitResult : HitResult.CompleteEvade;
         //schizoLog.AddLog("スキル命中計算式-命中凌駕:" + supremacyBonus + ",スキル命中率:" + SkillHitPer + " " + result,true);
 
         if(result == HitResult.CompleteEvade && IsMagic)//もし発生しなかった場合、魔法スキルなら
         {
             //三分の一の確率でかする
-            if(RandomEx.Shared.NextInt(3) == 0) result = HitResult.Graze;
+            if(RandomSource.NextInt(3) == 0) result = HitResult.Graze;
         }
 
         if(PreliminaryMagicGrazeRoll)//事前魔法かすり判定がIsReactHitで行われていたら

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using RandomExtensions.Linq;
 using UnityEngine;
 
 public sealed class ReEncountGrowthStrategy : IGrowthStrategy
@@ -18,7 +17,7 @@ public sealed class ReEncountGrowthStrategy : IGrowthStrategy
         }
 
         var growSkills = new List<EnemySkill>(context.NotEnabledSkills);
-        growSkills.Shuffle();
+        context.Random.Shuffle(growSkills);
         var growSkillCount = Mathf.Max(1, Mathf.CeilToInt(growSkills.Count * context.Settings.reEncountRate));
         growSkills = growSkills.Take(growSkillCount).ToList();
 

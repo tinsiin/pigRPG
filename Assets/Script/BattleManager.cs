@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using RandomExtensions;
 using System.Linq;
-using RandomExtensions.Linq;
-using RandomExtensions.Collections;
 using Unity.VisualScripting;
 using R3;
 using Cysharp.Threading.Tasks;
@@ -31,124 +28,6 @@ public enum whatModify
 {
     eye, atk, def, agi
 }
-    /// <summary>
-    /// 攻撃対象者の一時処方に耐えうる保持リスト
-    /// </summary>
-    public class UnderActersEntryList
-    {
-        private readonly IBattleQueryService _queryService;
-        private BaseSkill _currentSkill;
-        private int _frontIndex;
-        private int _backIndex;
-
-        /// <summary>
-        /// 対象者キャラクターリスト
-        /// </summary>
-        public List<BaseStates> charas;
-        /// <summary>
-        /// 割り当てられる"当てられる"スキルの分散値
-        /// </summary>
-        List<float> spreadPer;
-
-        public int Count => charas.Count;
-
-        public UnderActersEntryList(IBattleQueryService queryService)
-        {
-            charas = new List<BaseStates>();
-            spreadPer = new List<float>();
-            _queryService = queryService;
-        }
-
-        public BaseStates GetAtCharacter(int index)
-        {
-            return charas[index];
-        }
-        public List<BaseStates> GetCharacterList()
-        {
-            return charas;
-        }
-        public float GetAtSpreadPer(int index)
-        {
-            return spreadPer[index];
-        }
-
-        /// <summary>
-        /// 現在のスキルを設定（CharaAdd前に呼び出す）
-        /// インデックスのみリセット、ターゲットはクリアしない
-        /// </summary>
-        public void SetCurrentSkill(BaseSkill skill)
-        {
-            _currentSkill = skill;
-            _frontIndex = 0;
-            _backIndex = 0;
-        }
-
-        /// <summary>
-        /// ターゲットリストをクリアしてスキルを設定（UI再選択時用）
-        /// </summary>
-        public void ClearAndSetCurrentSkill(BaseSkill skill)
-        {
-            charas.Clear();
-            spreadPer.Clear();
-            SetCurrentSkill(skill);
-        }
-
-        /// <summary>
-        /// 既にある対象者リストをそのまま処理。
-        /// SetCurrentSkillを先に呼んでおくこと。
-        /// </summary>
-        public void SetList(List<BaseStates> charas)
-        {
-            foreach (var chara in charas)
-            {
-                CharaAdd(chara);
-            }
-        }
-
-        /// <summary>
-        /// スキル対象者を追加し整理する関数
-        /// </summary>
-        public void CharaAdd(BaseStates chara)
-        {
-            if (_currentSkill == null)
-            {
-                spreadPer.Add(1f);
-                charas.Add(chara);
-                return;
-            }
-
-            var spreadValues = _currentSkill.PowerSpread;
-            float item = 1f;
-
-            if (spreadValues != null && spreadValues.Length > 0)
-            {
-                var calculator = TargetDistributionService.GetCalculator(_currentSkill.DistributionType);
-                var isVanguard = _queryService?.IsVanguard(chara) ?? false;
-                var (ratio, nextFront, nextBack) = calculator.Calculate(
-                    spreadValues, _frontIndex, _backIndex, isVanguard, charas.Count + 1);
-                item = ratio;
-                _frontIndex = nextFront;
-                _backIndex = nextBack;
-            }
-
-            spreadPer.Add(item);
-            charas.Add(chara);
-        }
-
-        /// <summary>
-        /// リストをクリア
-        /// </summary>
-        public void Clear()
-        {
-            charas.Clear();
-            spreadPer.Clear();
-            _currentSkill = null;
-            _frontIndex = 0;
-            _backIndex = 0;
-        }
-    }
-
-
 
 /// <summary>
 ///     バトルを、管理するクラス
@@ -222,27 +101,28 @@ public class BattleManager : IBattleContext
         get => actionContext.ActerFaction;
         set => actionContext.ActerFaction = value;
     }
-    internal allyOrEnemy CurrentActerFaction => actionContext.ActerFaction;
     private readonly BattleState battleState = new BattleState();
     private readonly BattleStateManager battleStateManager;
     private readonly TurnScheduler turnScheduler;
-    private readonly TargetingService targetingService = new TargetingService();
-    private readonly EffectResolver effectResolver = new EffectResolver();
+    private readonly TargetingPolicyRegistry targetingPolicies;
+    private readonly TargetingService targetingService;
+    private readonly EffectResolver effectResolver;
+    private readonly IBattleRandom random;
+    private readonly BattleServices services;
+    private readonly BattleEventBus eventBus;
     private readonly BattleUIBridge uiBridge;
+    private readonly BattleUiEventAdapter uiEventAdapter;
+    private readonly BattleEventRecorder eventRecorder;
     private readonly IBattleMetaProvider metaProvider;
-    private readonly EscapeHandler escapeHandler;
-    private readonly SkillExecutor skillExecutor;
-    private readonly TurnExecutor turnExecutor;
-    private readonly CharacterActExecutor characterActExecutor;
-    private readonly ActionSkipExecutor actionSkipExecutor;
     private readonly BattleFlow battleFlow;
     internal BattleUIBridge UiBridge => uiBridge;
+    internal BattleEventBus EventBus => eventBus;
+    internal BattleEventRecorder EventRecorder => eventRecorder;
     internal TurnScheduler TurnScheduler => actionContext.TurnScheduler;
     internal BattleStateManager StateManager => actionContext.StateManager;
 
     // ActionContext への委譲プロパティ (State flags)
     internal bool Wipeout { get => actionContext.Wipeout; set => actionContext.Wipeout = value; }
-    internal bool IsRater { get => actionContext.IsRather; set => actionContext.IsRather = value; }
     internal bool EnemyGroupEmpty { get => actionContext.EnemyGroupEmpty; set => actionContext.EnemyGroupEmpty = value; }
     internal bool AlliesRunOut { get => actionContext.AlliesRunOut; set => actionContext.AlliesRunOut = value; }
     internal NormalEnemy VoluntaryRunOutEnemy { get => actionContext.VoluntaryRunOutEnemy; set => actionContext.VoluntaryRunOutEnemy = value; }
@@ -253,9 +133,6 @@ public class BattleManager : IBattleContext
     public bool PassiveCancel { get => actionContext.PassiveCancel; set => actionContext.PassiveCancel = value; }
     public bool SkillStock { get => actionContext.SkillStock; set => actionContext.SkillStock = value; }
     public bool VoidTurn { get => actionContext.VoidTurn; set => actionContext.VoidTurn = value; }
-    internal bool ActSkipBecauseNobodyAct { get => actionContext.ActSkipBecauseNobodyAct; set => actionContext.ActSkipBecauseNobodyAct = value; }
-    private readonly float stageEscapeRate;
-    internal float StageEscapeRate => stageEscapeRate;
 
     /// <summary>
     /// 行動リスト　ここではrecovelyTurnの制約などは存在しません
@@ -267,20 +144,27 @@ public class BattleManager : IBattleContext
         get => actionContext.BattleTurnCount;
         private set => actionContext.BattleTurnCount = value;
     }
+    public IBattleRandom Random => random;
 
     /// <summary>
     ///コンストラクタ
     /// </summary>
-    public BattleManager(BattleGroup allyGroup, BattleGroup enemyGroup, BattleStartSituation first, MessageDropper messageDropper, float escapeRate, IBattleMetaProvider metaProvider, IPlayersSkillUI skillUi, IPlayersRoster roster)
+    public BattleManager(BattleGroup allyGroup, BattleGroup enemyGroup, BattleStartSituation first, BattleServices services, float escapeRate, IBattleMetaProvider metaProvider)
     {
+        this.services = services ?? throw new ArgumentNullException(nameof(services));
         AllyGroup = allyGroup;
         EnemyGroup = enemyGroup;
         firstSituation = first;
 
         // ActionContext を先に生成（状態を集約）
         var acts = new ActionQueue();
-        turnScheduler = new TurnScheduler(AllyGroup, EnemyGroup, acts, battleState);
-        battleStateManager = new BattleStateManager(battleState);
+        random = services.Random;
+        var logger = services.Logger;
+        turnScheduler = new TurnScheduler(AllyGroup, EnemyGroup, acts, battleState, random);
+        battleStateManager = new BattleStateManager(battleState, logger);
+        targetingPolicies = services.TargetingPolicies;
+        targetingService = new TargetingService(false, targetingPolicies, random, logger);
+        effectResolver = new EffectResolver(random, logger);
         actionContext = new BattleActionContext(
             AllyGroup,
             EnemyGroup,
@@ -288,43 +172,50 @@ public class BattleManager : IBattleContext
             turnScheduler,
             acts,
             targetingService,
-            effectResolver);
+            effectResolver,
+            random,
+            logger);
 
+        effectResolver.SetEffectPipeline(services.EffectPipeline);
         // QueryService を EffectResolver に設定
         effectResolver.SetQueryService(actionContext.QueryService);
 
         actionContext.ResetUnders();
-        // Phase 1: WatchUIUpdate.Instanceはここでのみ使用し、各コントローラーを注入
-        var wui = WatchUIUpdate.Instance;
+        // Phase 2: BattleServices 経由でUI/Singleton依存を集約
         uiBridge = new BattleUIBridge(
-            messageDropper,
-            skillUi,
-            roster,
-            wui?.ActionMarkCtrl,
-            wui?.EnemyPlacementCtrl,
-            wui?.IntroOrchestrator,  // Intro Orchestrator Facade（文脈込み）
-            SchizoLog.Instance,  // Phase 3a: SchizoLog注入
-            BattleSystemArrowManager.Instance);  // Phase 3d: ArrowManager注入
+            services.MessageDropper,
+            services.SkillUi,
+            services.Roster,
+            services.ActionMarkController,
+            services.EnemyPlacementController,
+            services.IntroOrchestrator,
+            services.SchizoLog,
+            services.ArrowManager);
         uiBridge.BindBattleContext(this);
-        BattleUIBridge.SetActive(uiBridge);
-        presentation = new BattlePresentation(uiBridge);
-        stageEscapeRate = escapeRate;
-        BattleContextHub.Set(this);
+        services.UiBridgeAccessor?.SetActive(uiBridge);
+        BindRuntimeReferences();
+        eventBus = new BattleEventBus();
+        uiEventAdapter = new BattleUiEventAdapter(uiBridge);
+        eventBus.Register(uiEventAdapter);
+        eventRecorder = new BattleEventRecorder();
+        eventRecorder.Start(services.RandomSeed);
+        eventBus.Register(eventRecorder);
+        presentation = new BattlePresentation(eventBus);
+        services.ContextAccessor?.Set(this);
         this.metaProvider = metaProvider;
-        escapeHandler = new EscapeHandler(this);
-        skillExecutor = new SkillExecutor(this, actionContext, presentation);
-        turnExecutor = new TurnExecutor(this, actionContext, presentation, uiBridge);
-        characterActExecutor = new CharacterActExecutor(this);
-        actionSkipExecutor = new ActionSkipExecutor(this);
+        var turnExecutor = new TurnExecutor(actionContext, presentation, eventBus);
+        var skillExecutor = new SkillExecutor(actionContext, presentation, turnExecutor);
+        var actionSkipExecutor = new ActionSkipExecutor(actionContext, turnExecutor);
+        var escapeHandler = new EscapeHandler(actionContext, turnExecutor, escapeRate);
         battleFlow = new BattleFlow(
             actionContext,
             presentation,
-            uiBridge,
             turnExecutor,
             skillExecutor,
             escapeHandler,
-            characterActExecutor,
-            metaProvider);
+            actionSkipExecutor,
+            metaProvider,
+            eventBus);
         battleFlow.SetOnBattleEndCallback(OnBattleEnd);
         actionContext.SetBeVanguardHandler(BeVanguard);
 
@@ -374,8 +265,8 @@ public class BattleManager : IBattleContext
 
         for (var i = 0; i < group.Count; i++)//グループの人数分
         {
-            var acter = RandomEx.Shared.GetItem(group.ToArray<BaseStates>());
-            if (i == group.Count - 1 && CounterCharas.Count > 0 && RandomEx.Shared.NextInt(100) < 40)
+            var acter = random.GetItem(group);
+            if (i == group.Count - 1 && CounterCharas.Count > 0 && random.NextInt(100) < 40)
             {//もし最後の先手ターンで後手グループにキンダーガーデンかゴッドティアがいて、　40%の確率が当たったら
                 //反撃グループにいるそのどちらかの印象を持ったキャラクターのターンが入る。
                 Acts.Add(acter, _counterGroup.which, "ハンターナイト▼");
@@ -422,7 +313,12 @@ public class BattleManager : IBattleContext
     /// </summary>
     public TabState ACTPop()
     {
-        return turnExecutor.ACTPop();
+        return battleFlow.SelectNextActor();
+    }
+
+    internal void NotifyBattleStarted()
+    {
+        battleFlow.NotifyBattleStarted();
     }
 
 
@@ -431,105 +327,7 @@ public class BattleManager : IBattleContext
     /// </summary>
     public async UniTask<TabState> CharacterActBranching()
     {
-        return await characterActExecutor.CharacterActBranchingAsync();
-    }
-
-    /// <summary>
-    /// パッシブによる発動率判定
-    /// </summary>
-    internal bool CheckPassivesSkillActivation() 
-    {
-        //if(Acter.PassivesSkillActivationRate() >= 100) return true;//別にこの行要らないか
-        return rollper(Acter.PassivesSkillActivationRate());
-    }
-    internal TabState SkillStockACT()
-    {
-        return actionSkipExecutor.SkillStockACT();
-    }
-    internal TabState PassiveCancelACT()
-    {
-        return actionSkipExecutor.PassiveCancelACT();
-    }
-    internal TabState DoNothingACT()
-    {
-        return actionSkipExecutor.DoNothingACT();
-    }
-    /// <summary>
-    /// 逃げるACT
-    /// </summary>
-    /// <returns></returns>
-    public TabState EscapeACT()
-    {
-        return escapeHandler.EscapeACT();
-    }
-    /// <summary>
-    /// 連鎖逃走
-    /// </summary>
-    public TabState DominoEscapeACT()
-    {
-        return escapeHandler.DominoEscapeACT();
-    }
-    /// <summary>
-    /// レイザーダメージのACT
-    /// </summary>
-    /// <returns></returns>
-    public TabState RatherACT()
-    {
-        return battleFlow.RatherAct();
-    }
-    /// <summary>
-    /// メッセージと共に戦闘を終わらせる
-    /// </summary>
-    public TabState DialogEndACT()
-    {
-        if (Wipeout)
-        {
-            if (CurrentActerFaction == allyOrEnemy.alliy)
-            {
-                uiBridge.PushMessage("死んだ");
-                metaProvider?.OnPlayersLost();
-
-                //敵たちの勝利時コールバック。
-                EnemyGroup.EnemyiesOnWin();
-            }
-            else
-            {
-                uiBridge.PushMessage("勝ち抜いた");
-                metaProvider?.OnPlayersWin();
-            }
-        }
-        if (AlliesRunOut) 
-        {
-            uiBridge.PushMessage("我々は逃げた");
-            metaProvider?.OnPlayersRunOut();
-            EnemyGroup.EnemiesOnAllyRunOut();//敵の主人公達が逃げ出した時のコールバック
-        }
-        if (EnemyGroupEmpty)
-        {
-            uiBridge.PushMessage("敵はいなくなった");
-           //敵が逃げたときのはそれぞれコールバックしたのでここで敵のコールバックは行わない。
-
-           //一応主人公達は勝った扱い
-           metaProvider?.OnPlayersWin();
-        }
-
-        OnBattleEnd().Forget();
-        return TabState.walk;
-    }
-    
-    /// <summary>
-    /// 戦闘系のメッセージ作成
-    /// </summary>
-    private void CreateBattleMessage(string txt)
-    {
-        presentation.CreateBattleMessage(txt);
-    }
-    /// <summary>
-    /// 発動カウントを実行
-    /// </summary>
-    internal TabState TriggerACT(int count)
-    {
-        return battleFlow.TriggerAct(count);
+        return await battleFlow.CharacterActBranchingAsync();
     }
     /// <summary>
     /// 前のめりになるかどうか
@@ -595,26 +393,12 @@ public class BattleManager : IBattleContext
 
         // 合計値＝NowVanguardScore+WantBeVanguardScore の範囲で一様乱数を取り、
         // WantBeVanguardScore 以下なら “入れ替え成功”（防止失敗）になる。
-        return RandomEx.Shared.NextFloat(NowVanguardScore + WantBeVanguardScore) <= NowVanguardScore;
+        return random.NextFloat(NowVanguardScore + WantBeVanguardScore) <= NowVanguardScore;
     }
-    /// <summary>
-    /// スキルアクトを実行
-    /// </summary>
-    /// <returns></returns>
-    internal async UniTask<TabState> SkillACT()
-    {
-        return await skillExecutor.SkillACT();
-    }
-
     /// <summary>
     /// そのキャラが、敵味方問わずグループにおける前のめり状態かどうかを判別します。
     /// </summary>
     public bool IsVanguard(BaseStates chara) => actionContext.IsVanguard(chara);
-    
-    internal void NextTurn(bool Next)
-    {
-        turnExecutor.NextTurn(Next);
-    }
 
 
     /// <summary>
@@ -673,8 +457,37 @@ public class BattleManager : IBattleContext
     /// </summary>
     private void CleanupBattleState()
     {
-        BattleContextHub.Clear(this);
-        BattleUIBridge.SetActive(null);
+        BindRuntimeReferencesCore(null, null);
+        uiBridge?.BindBattleContext(null);
+        services.ContextAccessor?.Clear(this);
+        services.UiBridgeAccessor?.SetActive(null);
+    }
+
+    private void BindRuntimeReferences()
+    {
+        BindRuntimeReferencesCore(this, uiBridge as IBattleUiAdapter);
+    }
+
+    private void BindRuntimeReferencesCore(IBattleContext context, IBattleUiAdapter adapter)
+    {
+        foreach (var actor in AllCharacters)
+        {
+            if (actor == null) continue;
+            actor.BindBattleContext(context);
+            actor.BindUiAdapter(adapter);
+            foreach (var skill in actor.SkillList)
+            {
+                skill?.BindBattleContext(context);
+            }
+            foreach (var passive in actor.Passives)
+            {
+                passive?.BindBattleContext(context);
+            }
+            if (actor is NormalEnemy enemy)
+            {
+                enemy.BindBrainContext(context);
+            }
+        }
     }
 
     private void OnBattleStart()

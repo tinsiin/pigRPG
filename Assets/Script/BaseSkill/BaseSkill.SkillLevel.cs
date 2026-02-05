@@ -92,7 +92,7 @@ public partial class BaseSkill
         var skillLevelRandomDivisorMax = EffectiveRivahal /2;
         if(skillLevelRandomDivisorMax < 1) skillLevelRandomDivisorMax = 1;
         //ルート位置算出
-        var root = EffectiveRivahal + _nowSkillLevel / RandomEx.Shared.NextFloat(1, skillLevelRandomDivisorMax);
+        var root = EffectiveRivahal + _nowSkillLevel / RandomSource.NextFloat(1, skillLevelRandomDivisorMax);
 
         //次に調子の範囲を決める
         //まず精神補正値による固定範囲
@@ -111,7 +111,7 @@ public partial class BaseSkill
         }
         //上下レート算出　印象構造対応Doerの十日能力値　÷　スキルの十日能力値の総量　「どのくらいスキルを使いこなしているか」が指標
         var MoodRangeRate = AtkerTenDaySumMatchingSkill / TenDayValuesSum;
-        MoodRangeRate = Mathf.Max(MoodRangeRate - 2,RandomEx.Shared.NextFloat(2));//ランダム　0~2が上下レートの最低値
+        MoodRangeRate = Mathf.Max(MoodRangeRate - 2,RandomSource.NextFloat(2));//ランダム　0~2が上下レートの最低値
 
 
         //ルート位置から、調子の範囲によって上下レートを元にずらす。

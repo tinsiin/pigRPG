@@ -99,7 +99,7 @@ public abstract partial class BaseStates
                 agi = Mathf.Max(agi,attacker.AGI().Total);
             }
 
-            if (RandomEx.Shared.NextFloat(attacker.EYE().Total + agi * evasionRate) < attacker.EYE().Total)
+            if (RandomSource.NextFloat(attacker.EYE().Total + agi * evasionRate) < attacker.EYE().Total)
             {
                 //三分の一でかすり
                 if(rollper(33))return HitResult.Graze;

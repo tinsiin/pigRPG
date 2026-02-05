@@ -55,7 +55,7 @@ public partial class BaseSkill
                 return false;//終わり
             }
 
-            if(RandomEx.Shared.NextFloat(1)<_RandomConsecutivePer)//確率があったら、
+            if(RandomSource.NextFloat(1)<_RandomConsecutivePer)//確率があったら、
             {
                 
                 return true;
