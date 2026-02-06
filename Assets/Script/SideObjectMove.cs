@@ -7,7 +7,6 @@ using LitMotion;
 using LitMotion.Extensions;
 using RandomExtensions;
 using UnityEngine.Serialization;
-using UnityEditor.Rendering;
 
 public class SideObjectMove : MonoBehaviour//エディタ拡張からアクセスされる変数は基本的にはpublicにしなければならない。
 {

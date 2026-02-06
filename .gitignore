@@ -64,6 +64,11 @@ sysinfo.txt
 .serena/
 .claude/
 
+# AI tool setting files
+.agent/
+.codex/
+.mcp.json
+
 
 # Builds
 *.apk
