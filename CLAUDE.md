@@ -13,11 +13,11 @@ pigRPG - Unity製Android向けRPG（日本語プロジェクト）
 **編集可能:**
 - `Assets/Script/**/*.cs`
 - `doc/` フォルダ
+- `*.unity` シーンファイル（Unity MCP経由）
+- `*.prefab` プレハブファイル（Unity MCP経由）
 
 **編集禁止:**
 - `*.meta` ファイル（Unity自動生成）
-- `*.unity` シーンファイル
-- `*.prefab` プレハブファイル
 - `Packages/`, `ProjectSettings/`, `Assets/Plugins/`
 
 ## コードアーキテクチャ
