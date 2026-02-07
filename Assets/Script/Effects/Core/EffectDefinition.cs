@@ -26,6 +26,28 @@ namespace Effects.Core
         [JsonProperty("se")]
         public string Se { get; set; }
 
+        // ===== 配置メタデータ =====
+
+        /// <summary>
+        /// 配置モード: "icon"（アイコン相対）/ "field"（フィールド全体）
+        /// </summary>
+        [JsonProperty("target")]
+        public string Target { get; set; } = "icon";
+
+        /// <summary>
+        /// アイコン参照矩形（target="icon" 時のみ）。
+        /// キャンバス内のどの領域が実際のアイコンに対応するかを定義する。
+        /// null の場合はキャンバス全体がアイコン領域として扱われる。
+        /// </summary>
+        [JsonProperty("icon_rect")]
+        public IconRectDefinition IconRect { get; set; }
+
+        /// <summary>
+        /// フィールドエフェクトの描画レイヤー（target="field" 時のみ）: "back" / "middle" / "front"
+        /// </summary>
+        [JsonProperty("field_layer")]
+        public string FieldLayer { get; set; } = "middle";
+
         [JsonProperty("frames")]
         public List<FrameDefinition> Frames { get; set; } = new List<FrameDefinition>();
 
@@ -280,6 +302,25 @@ namespace Effects.Core
 
         [JsonProperty("angle")]
         public float Angle { get; set; }
+    }
+
+    /// <summary>
+    /// アイコン参照矩形の定義（キャンバス座標系）
+    /// </summary>
+    [Serializable]
+    public class IconRectDefinition
+    {
+        [JsonProperty("x")]
+        public float X { get; set; }
+
+        [JsonProperty("y")]
+        public float Y { get; set; }
+
+        [JsonProperty("width")]
+        public float Width { get; set; }
+
+        [JsonProperty("height")]
+        public float Height { get; set; }
     }
 
     /// <summary>

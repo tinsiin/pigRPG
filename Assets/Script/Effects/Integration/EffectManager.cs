@@ -116,6 +116,40 @@ namespace Effects.Integration
         }
 
         /// <summary>
+        /// フィールドエフェクトを再生
+        /// </summary>
+        /// <param name="effectName">エフェクト名（JSONファイル名、拡張子なし）</param>
+        /// <param name="loop">ループ再生するか</param>
+        /// <returns>再生中のEffectPlayer（エラー時はnull）</returns>
+        public static EffectPlayer PlayField(string effectName, bool loop = false)
+        {
+            if (Instance == null)
+            {
+                Debug.LogError("[EffectManager] Instance is null");
+                return null;
+            }
+            return Instance.PlayFieldInternal(effectName, loop);
+        }
+
+        /// <summary>
+        /// 指定フィールドエフェクトを停止
+        /// </summary>
+        public static void StopField(string effectName)
+        {
+            if (Instance == null) return;
+            Instance.StopFieldInternal(effectName);
+        }
+
+        /// <summary>
+        /// 全フィールドエフェクトを停止
+        /// </summary>
+        public static void StopAllField()
+        {
+            if (Instance == null) return;
+            Instance.StopAllFieldInternal();
+        }
+
+        /// <summary>
         /// キャッシュをクリア
         /// </summary>
         public static void ClearCache()
@@ -127,6 +161,9 @@ namespace Effects.Integration
         #endregion
 
         #region 内部実装
+
+        // フィールドエフェクトレイヤーのキャッシュ（ViewportArea 内に1つ）
+        private EffectLayer _fieldEffectLayer;
 
         private EffectPlayer PlayInternal(string effectName, BattleIconUI battleIconUI, bool loop)
         {
@@ -296,6 +333,61 @@ namespace Effects.Integration
             var effectLayer = layerGo.AddComponent<EffectLayer>();
 
             return effectLayer;
+        }
+
+        private EffectPlayer PlayFieldInternal(string effectName, bool loop)
+        {
+            if (string.IsNullOrEmpty(effectName))
+            {
+                Debug.LogWarning("[EffectManager] Effect name is null or empty");
+                return null;
+            }
+
+            var definition = LoadDefinition(effectName);
+            if (definition == null) return null;
+
+            var layer = GetFieldEffectLayer();
+            if (layer == null)
+            {
+                Debug.LogError("[EffectManager] FieldEffectLayer not found in scene");
+                return null;
+            }
+
+            var existingPlayer = layer.FindPlayer(effectName);
+            bool isExistingLoopReuse = existingPlayer != null && loop && existingPlayer.IsLoop;
+
+            var player = layer.PlayEffect(definition, loop);
+
+            if (!isExistingLoopReuse && player != null)
+            {
+                PlaySe(definition.Se);
+            }
+
+            return player;
+        }
+
+        private void StopFieldInternal(string effectName)
+        {
+            GetFieldEffectLayer()?.StopEffect(effectName);
+        }
+
+        private void StopAllFieldInternal()
+        {
+            GetFieldEffectLayer()?.StopAllEffects();
+        }
+
+        /// <summary>
+        /// フィールドエフェクトレイヤーを取得（遅延検索 + キャッシュ）
+        /// </summary>
+        private EffectLayer GetFieldEffectLayer()
+        {
+            if (_fieldEffectLayer == null)
+            {
+                var go = GameObject.Find("FieldEffectLayer");
+                if (go != null)
+                    _fieldEffectLayer = go.GetComponent<EffectLayer>();
+            }
+            return _fieldEffectLayer;
         }
 
         /// <summary>

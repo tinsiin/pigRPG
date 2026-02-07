@@ -7,13 +7,20 @@ using UnityEngine.UI;
 namespace Effects.Integration
 {
     /// <summary>
-    /// BattleIconUIに追加されるエフェクト表示レイヤー
-    /// 複数のエフェクトを重ねて表示可能
+    /// エフェクト表示レイヤー。
+    /// BattleIconUI の子として使用（icon モード）、または ViewportArea の子として使用（field モード）。
+    /// 複数のエフェクトを重ねて表示可能。
     /// </summary>
     public class EffectLayer : MonoBehaviour
     {
         private RectTransform _rectTransform;
         private readonly List<EffectPlayerEntry> _activePlayers = new List<EffectPlayerEntry>();
+
+        /// <summary>
+        /// field モード時に true を設定。キャンバスを親RectTransform全体に引き延ばす。
+        /// </summary>
+        [HideInInspector]
+        public bool IsFieldLayer;
 
         /// <summary>
         /// エフェクトプレイヤーのエントリ
@@ -67,7 +74,7 @@ namespace Effects.Integration
             container.transform.SetParent(transform, false);
 
             var containerRT = container.AddComponent<RectTransform>();
-            SetupRectTransform(containerRT, definition.Canvas);
+            SetupRectTransform(containerRT, definition);
 
             var rawImage = container.AddComponent<RawImage>();
             rawImage.raycastTarget = false;
@@ -144,26 +151,78 @@ namespace Effects.Integration
         /// </summary>
         public int ActiveEffectCount => _activePlayers.Count;
 
-        private void SetupRectTransform(RectTransform rt, int canvasSize)
+        private void SetupRectTransform(RectTransform rt, EffectDefinition def)
         {
-            // 親のサイズを取得
-            var parentRT = _rectTransform;
-            float parentWidth = parentRT.rect.width;
-            float parentHeight = parentRT.rect.height;
+            int canvas = def.Canvas;
 
-            // 親がまだサイズ未設定の場合はデフォルト値を使用
-            if (parentWidth <= 0) parentWidth = 100;
-            if (parentHeight <= 0) parentHeight = 100;
+            if (IsFieldLayer)
+            {
+                // field モード: 親（ViewportArea）全体に引き延ばし
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.one;
+                rt.offsetMin = Vector2.zero;
+                rt.offsetMax = Vector2.zero;
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                return;
+            }
 
-            // 等比スケール（短辺に合わせる）
-            float shortSide = Mathf.Min(parentWidth, parentHeight);
+            // icon モード: アイコンの実サイズを取得
+            Vector2 iconSize = GetIconActualSize();
 
-            // 中央配置
-            rt.anchorMin = new Vector2(0.5f, 0.5f);
-            rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = Vector2.zero;
-            rt.sizeDelta = new Vector2(shortSide, shortSide);
+            if (def.IconRect != null && def.IconRect.Width > 0 && def.IconRect.Height > 0)
+            {
+                // icon_rect ベースのスケーリング
+                var ir = def.IconRect;
+                float scale = Mathf.Min(iconSize.x / ir.Width, iconSize.y / ir.Height);
+                float displaySize = canvas * scale;
+
+                float canvasCenter = canvas / 2f;
+                float irCenterX = ir.X + ir.Width / 2f;
+                float irCenterY = ir.Y + ir.Height / 2f;
+
+                // キャンバスY下向き → RectTransformY上向き 変換
+                float offsetX = (canvasCenter - irCenterX) * scale;
+                float offsetY = (irCenterY - canvasCenter) * scale;
+
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.sizeDelta = new Vector2(displaySize, displaySize);
+                rt.anchoredPosition = new Vector2(offsetX, offsetY);
+            }
+            else
+            {
+                // icon_rect 省略: アイコン短辺にフィット（従来動作）
+                float shortSide = Mathf.Min(iconSize.x, iconSize.y);
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.sizeDelta = new Vector2(shortSide, shortSide);
+                rt.anchoredPosition = Vector2.zero;
+            }
+        }
+
+        /// <summary>
+        /// 親の BattleIconUI の Icon RectTransform からアイコンの実サイズを取得。
+        /// BattleIconUI が見つからない場合は親 RectTransform のサイズにフォールバック。
+        /// </summary>
+        private Vector2 GetIconActualSize()
+        {
+            // 親階層から BattleIconUI を探す
+            var battleIcon = GetComponentInParent<BattleIconUI>();
+            if (battleIcon != null && battleIcon.Icon != null)
+            {
+                var iconRT = battleIcon.Icon.rectTransform;
+                float w = iconRT.rect.width;
+                float h = iconRT.rect.height;
+                if (w > 0 && h > 0)
+                    return new Vector2(w, h);
+            }
+
+            // フォールバック: 親の EffectLayer 自体のサイズ
+            float parentW = _rectTransform.rect.width;
+            float parentH = _rectTransform.rect.height;
+            if (parentW <= 0) parentW = 100;
+            if (parentH <= 0) parentH = 100;
+            return new Vector2(parentW, parentH);
         }
 
         private void OnEffectComplete(EffectPlayerEntry entry)

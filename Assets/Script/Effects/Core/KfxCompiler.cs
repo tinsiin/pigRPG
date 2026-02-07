@@ -85,6 +85,10 @@ namespace Effects.Core
                 Canvas = kfx.Canvas,
                 Fps = kfx.Fps,
                 Se = kfx.Se,
+                // 配置メタデータのパススルー
+                Target = kfx.Target ?? "icon",
+                IconRect = kfx.IconRect,
+                FieldLayer = kfx.FieldLayer ?? "middle",
                 Frames = new List<FrameDefinition>()
             };
 

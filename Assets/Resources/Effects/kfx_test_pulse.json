@@ -11,28 +11,50 @@
       "blend": "additive",
       "keyframes": [
         {
-          "time": 0.0, "ease": "easeOut",
-          "x": 50, "y": 50, "radius": 3,
-          "brush": { "type": "radial", "center": "#FFFFFF00", "edge": "#FF880000" }
+          "time": 0.0,
+          "ease": "easeOut",
+          "x": 50,
+          "y": 50,
+          "radius": 3,
+          "brush": {
+            "type": "radial",
+            "center": "#FFFFFF00",
+            "edge": "#FF880000"
+          }
         },
         {
-          "time": 0.3, "ease": "easeIn",
+          "time": 0.3,
+          "ease": "easeIn",
           "radius": 20,
-          "brush": { "type": "radial", "center": "#FFFFFFCC", "edge": "#FF880000" }
+          "brush": {
+            "type": "radial",
+            "center": "#FFFFFFCC",
+            "edge": "#FF880000"
+          }
         },
         {
-          "time": 0.8, "ease": "easeOut",
+          "time": 0.8,
+          "ease": "easeOut",
           "radius": 8,
-          "brush": { "type": "radial", "center": "#FFFFFF44", "edge": "#FF880000" }
+          "brush": {
+            "type": "radial",
+            "center": "#FFFFFF44",
+            "edge": "#FF880000"
+          }
         },
         {
           "time": 1.2,
           "radius": 18,
-          "brush": { "type": "radial", "center": "#FFFFFFAA", "edge": "#FF880000" }
+          "brush": {
+            "type": "radial",
+            "center": "#FFFFFFAA",
+            "edge": "#FF880000"
+          }
         },
         {
           "time": 1.5,
-          "radius": 5, "opacity": 0.0
+          "radius": 5,
+          "opacity": 0.0
         }
       ]
     },
@@ -40,36 +62,63 @@
       "id": "ring_burst",
       "type": "ring",
       "blend": "additive",
-      "visible": [0.2, 0.8],
+      "visible": [
+        0.2,
+        0.8
+      ],
       "keyframes": [
         {
-          "time": 0.2, "ease": "easeOut",
-          "x": 50, "y": 50,
-          "radius": 5, "inner_radius": 3,
-          "brush": { "color": "#FFAA4499" }
+          "time": 0.2,
+          "ease": "easeOut",
+          "x": 50,
+          "y": 50,
+          "radius": 5,
+          "inner_radius": 3,
+          "brush": {
+            "color": "#FFAA4499"
+          }
         },
         {
           "time": 0.7,
-          "radius": 40, "inner_radius": 37,
-          "brush": { "color": "#FFAA4400" }
+          "radius": 40,
+          "inner_radius": 37,
+          "brush": {
+            "color": "#FFAA4400"
+          }
         }
       ]
     },
     {
       "id": "sparks",
       "type": "emitter",
-      "x": 50, "y": 50,
+      "x": 50,
+      "y": 50,
       "count": 12,
-      "angle_range": [0, 360],
-      "speed_range": [1.0, 3.5],
+      "angle_range": [
+        0,
+        360
+      ],
+      "speed_range": [
+        1.0,
+        3.5
+      ],
       "gravity": 0.05,
       "drag": 0.96,
       "lifetime": 1.2,
-      "size_range": [1.0, 2.5],
+      "size_range": [
+        1.0,
+        2.5
+      ],
       "color_start": "#FFCC44BB",
       "color_end": "#FF440000",
       "blend": "additive",
       "seed": 42
     }
-  ]
+  ],
+  "icon_rect": {
+    "x": 14.7,
+    "y": 29.1,
+    "width": 71.3,
+    "height": 67.5
+  }
 }

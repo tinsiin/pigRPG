@@ -28,6 +28,17 @@ namespace Effects.Core
         [JsonProperty("se")]
         public string Se { get; set; }
 
+        // ===== 配置メタデータ =====
+
+        [JsonProperty("target")]
+        public string Target { get; set; }
+
+        [JsonProperty("icon_rect")]
+        public IconRectDefinition IconRect { get; set; }
+
+        [JsonProperty("field_layer")]
+        public string FieldLayer { get; set; }
+
         [JsonProperty("layers")]
         public List<KfxLayer> Layers { get; set; } = new List<KfxLayer>();
 
