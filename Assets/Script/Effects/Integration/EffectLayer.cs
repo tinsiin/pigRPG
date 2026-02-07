@@ -180,12 +180,16 @@ namespace Effects.Integration
                 }
                 else
                 {
-                    // field_rect 省略: 親（ViewportArea）全体に引き延ばし（従来動作）
-                    rt.anchorMin = Vector2.zero;
-                    rt.anchorMax = Vector2.one;
-                    rt.offsetMin = Vector2.zero;
-                    rt.offsetMax = Vector2.zero;
+                    // field_rect 省略: キャンバス全体をビューポートにフィット（アスペクト比維持）
+                    Vector2 vpSize = GetViewportSize();
+                    float canvasF = canvas;
+                    float scale = Mathf.Min(vpSize.x / canvasF, vpSize.y / canvasF);
+                    float displaySize = canvas * scale;
+
+                    rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
                     rt.pivot = new Vector2(0.5f, 0.5f);
+                    rt.sizeDelta = new Vector2(displaySize, displaySize);
+                    rt.anchoredPosition = Vector2.zero;
                 }
                 return;
             }

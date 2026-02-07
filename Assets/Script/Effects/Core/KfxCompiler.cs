@@ -89,7 +89,6 @@ namespace Effects.Core
                 Target = kfx.Target ?? "icon",
                 IconRect = kfx.IconRect,
                 FieldRect = kfx.FieldRect,
-                FieldLayer = kfx.FieldLayer ?? "middle",
                 Frames = new List<FrameDefinition>()
             };
 

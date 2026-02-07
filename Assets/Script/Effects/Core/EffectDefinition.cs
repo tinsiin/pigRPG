@@ -45,16 +45,10 @@ namespace Effects.Core
         /// <summary>
         /// フィールド参照矩形（target="field" 時のみ）。
         /// キャンバス内のどの領域がビューポートに対応するかを定義する。
-        /// null の場合はキャンバス全体がビューポートにフィットする。
+        /// null の場合はキャンバス全体がビューポートにアスペクト比を維持してフィットする。
         /// </summary>
         [JsonProperty("field_rect")]
         public IconRectDefinition FieldRect { get; set; }
-
-        /// <summary>
-        /// フィールドエフェクトの描画レイヤー（target="field" 時のみ）: "back" / "middle" / "front"
-        /// </summary>
-        [JsonProperty("field_layer")]
-        public string FieldLayer { get; set; } = "middle";
 
         [JsonProperty("frames")]
         public List<FrameDefinition> Frames { get; set; } = new List<FrameDefinition>();

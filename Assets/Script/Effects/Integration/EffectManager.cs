@@ -194,6 +194,12 @@ namespace Effects.Integration
                 return null;
             }
 
+            // target チェック
+            if (definition.Target == "field")
+            {
+                Debug.LogWarning($"[EffectManager] '{effectName}' has target=\"field\" but was played via Play (icon API). Use PlayField instead.");
+            }
+
             // 既存ループの再呼び出しかを判定（SE重複再生防止のため）
             var existingPlayer = effectLayer.FindPlayer(effectName);
             bool isExistingLoopReuse = existingPlayer != null && loop && existingPlayer.IsLoop;
@@ -345,6 +351,12 @@ namespace Effects.Integration
 
             var definition = LoadDefinition(effectName);
             if (definition == null) return null;
+
+            // target チェック
+            if (definition.Target != null && definition.Target != "field")
+            {
+                Debug.LogWarning($"[EffectManager] '{effectName}' has target=\"{definition.Target}\" but was played via PlayField. Use Play instead.");
+            }
 
             var layer = GetFieldEffectLayer();
             if (layer == null)

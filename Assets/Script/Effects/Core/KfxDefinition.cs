@@ -39,9 +39,6 @@ namespace Effects.Core
         [JsonProperty("field_rect")]
         public IconRectDefinition FieldRect { get; set; }
 
-        [JsonProperty("field_layer")]
-        public string FieldLayer { get; set; }
-
         [JsonProperty("layers")]
         public List<KfxLayer> Layers { get; set; } = new List<KfxLayer>();
 

@@ -1059,8 +1059,6 @@ namespace EffectsEditor
                     jo.Remove("field_rect");
                 }
 
-                jo.Remove("field_layer");
-
                 string output = jo.ToString(Formatting.Indented);
                 File.WriteAllText(path, output);
                 AssetDatabase.Refresh();
@@ -1175,6 +1173,7 @@ namespace EffectsEditor
                 _fieldRectW = canvas;
                 _fieldRectH = canvas;
             }
+
         }
 
         private void RenderCurrentFrame()
