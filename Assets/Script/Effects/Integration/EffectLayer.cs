@@ -256,8 +256,8 @@ namespace Effects.Integration
         {
             float w = _rectTransform.rect.width;
             float h = _rectTransform.rect.height;
-            if (w <= 0) w = 1280;
-            if (h <= 0) h = 720;
+            if (w <= 0) w = 1080;
+            if (h <= 0) h = 1041.4f;
             return new Vector2(w, h);
         }
 

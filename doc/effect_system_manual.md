@@ -235,7 +235,7 @@ emitterはpen/brush不要（color_start/color_endで色を指定）。
 
 #### field_rect（target="field" 時）
 
-キャンバス内のどの領域がビューポート（16:9）に対応するかを定義する。
+キャンバス内のどの領域がビューポート（1080×1041.4）に対応するかを定義する。
 
 - 省略時: キャンバス全体がビューポートにストレッチされる（従来動作）
 - icon_rect と同じ数式で配置計算される
@@ -585,7 +585,7 @@ KFX形式専用のGUIエディタ。UIは日本語。
 
 **icon モード**: 灰色矩形（アイコンモック）を固定表示し、緑枠のエフェクトキャンバスをドラッグで配置調整。icon_rect が自動計算される。
 
-**field モード**: 16:9のビューポート上で緑枠のエフェクトキャンバスをドラッグで配置調整。field_rect が自動計算される。
+**field モード**: ビューポート（1080×1041.4）上で緑枠のエフェクトキャンバスをドラッグで配置調整。field_rect が自動計算される。
 
 ---
 
@@ -723,6 +723,7 @@ Assets/Script/Effects/
 Assets/Editor/Effects/
 ├── EffectPreviewWindow.cs          # Effect Previewer（両形式対応）
 ├── EffectPlacementEditor.cs        # Effect Placement Editor（配置調整）
+├── EffectTesterEditors.cs          # EffectSystemTester / FieldEffectTester カスタムインスペクタ
 ├── FieldEffectLayerSetup.cs        # FieldEffectLayer セットアップユーティリティ
 ├── KfxEditorWindow.cs              # KFX Editor コア（状態管理・ショートカット・Undo）
 └── KfxEditorWindow.Drawing.cs      # KFX Editor 描画（UI描画・プロパティ編集・テンプレート）

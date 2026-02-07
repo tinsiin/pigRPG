@@ -728,7 +728,7 @@ namespace EffectsEditor
             EditorGUILayout.LabelField("フィールドプレビュー", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
                 "緑の矩形（エフェクト）をドラッグで移動、四隅で拡大/縮小（正方形維持）。\n" +
-                "ビューポート（16:9）に対するエフェクトの位置・サイズを調整します。",
+                "ビューポート（EyeArea: 1080×1041）に対するエフェクトの位置・サイズを調整します。",
                 MessageType.Info);
 
             using (new EditorGUILayout.HorizontalScope())
@@ -738,7 +738,7 @@ namespace EffectsEditor
             }
 
             float pw = _canvasPreviewSize;
-            float ph = pw * 9f / 16f; // 16:9 aspect
+            float ph = pw * 1041.4f / 1080f; // EyeArea aspect (1080 x 1041.4)
             int canvas = _definition.Canvas;
 
             // Reserve space
