@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Effects;
 using Effects.Core;
 using Effects.Rendering;
 using Newtonsoft.Json;
@@ -52,6 +51,10 @@ namespace EffectsEditor
         [SerializeField] private float _iconRefRatio = 0.4f;
         [SerializeField] private int _mockIconPreset;
         [SerializeField] private float _resultZoom = 1f;
+
+        // Slider compensation (display-only, never modifies icon_rect)
+        // _iconRefRatio変更時に蓄積し、forward/inverse conversionに適用
+        private float _sliderComp = 1f;
 
         // Drag
         private enum DragMode { None, Move, ResizeTL, ResizeTR, ResizeBL, ResizeBR }
@@ -154,6 +157,7 @@ namespace EffectsEditor
         private void OnGUI()
         {
             _scrollPos = EditorGUILayout.BeginScrollView(_scrollPos);
+            _mockIconPreset = Mathf.Clamp(_mockIconPreset, 0, MockSizes.Length - 1);
 
             DrawEffectSelector();
             EditorGUILayout.Space(6);
@@ -278,20 +282,12 @@ namespace EffectsEditor
             }
 
             // --- Forward conversion: icon_rect → green rect (effect) ---
-            float irW = _iconRectW > 0 ? _iconRectW : canvas;
-            float irH = _iconRectH > 0 ? _iconRectH : canvas;
-            float effScale = Mathf.Min(iconDispW / irW, iconDispH / irH);
-            float gSize = canvas * effScale;
-
-            float irCenterX = _iconRectX + irW / 2f;
-            float irCenterY = _iconRectY + irH / 2f;
-            float canvasC = canvas / 2f;
-            float effOffX = (canvasC - irCenterX) * effScale;
-            float effOffY = (canvasC - irCenterY) * effScale;
+            var pc = CalcPlacement(iconDispW, iconDispH, canvas, _sliderComp);
+            float gSize = pc.DispSize;
 
             // Green rect (effect) in screen coords
-            float gCX = workArea.x + size / 2 + effOffX;
-            float gCY = workArea.y + size / 2 + effOffY;
+            float gCX = workArea.x + size / 2 + pc.OffsetX;
+            float gCY = workArea.y + size / 2 + pc.OffsetY;
             Rect greenScreen = new Rect(gCX - gSize / 2, gCY - gSize / 2, gSize, gSize);
 
             // --- Draw using GUI.BeginGroup for clipping ---
@@ -317,7 +313,7 @@ namespace EffectsEditor
             GUI.Label(
                 new Rect(localIcon.x + 2, localIcon.y + 1, 80, 14),
                 "アイコン",
-                MiniLabel(IconRefBorder));
+                StyleIconRefLabel);
 
             // Green rect overlay (effect)
             EditorGUI.DrawRect(localGreen, PlaceFill);
@@ -333,7 +329,7 @@ namespace EffectsEditor
             GUI.Label(
                 new Rect(localGreen.x, localGreen.yMax + 2, 260, 14),
                 "エフェクト",
-                MiniLabel(PlaceColor));
+                StylePlaceLabel);
 
             GUI.EndGroup();
 
@@ -351,22 +347,14 @@ namespace EffectsEditor
             {
                 EditorGUILayout.LabelField("アイコン表示サイズ:", GUILayout.Width(110));
 
-                // スライダー変更時、icon_rectを補償して緑枠（エフェクト）を安定させる。
-                // _iconRefRatioが変わるとiconDispW/Hが変わり、forward conversionで
-                // 緑枠サイズも変わってしまうため、icon_rectをスケーリングして打ち消す。
+                // スライダー変更時、_sliderCompに補償係数を蓄積して緑枠を安定させる。
+                // icon_rectは一切変更しない（Save時に破損しない）。
                 float prevRatio = _iconRefRatio;
                 EditorGUI.BeginChangeCheck();
                 _iconRefRatio = EditorGUILayout.Slider(_iconRefRatio, IconRefMinRatio, IconRefMaxRatio);
                 if (EditorGUI.EndChangeCheck() && prevRatio > 0.001f)
                 {
-                    float k = _iconRefRatio / prevRatio;
-                    float irCX = _iconRectX + _iconRectW / 2f;
-                    float irCY = _iconRectY + _iconRectH / 2f;
-                    _iconRectW *= k;
-                    _iconRectH *= k;
-                    _iconRectX = irCX - _iconRectW / 2f;
-                    _iconRectY = irCY - _iconRectH / 2f;
-                    // 表示上の補償のみなのでdirtyにしない
+                    _sliderComp *= _iconRefRatio / prevRatio;
                 }
             }
         }
@@ -507,8 +495,9 @@ namespace EffectsEditor
             float scale = newGSize / canvas;
             float canvasCenter = canvas / 2f;
 
-            float newIrW = iconDispW / scale;
-            float newIrH = iconDispH / scale;
+            // _sliderComp の逆補償: forward では irW*comp を使ったので、逆変換では /comp
+            float newIrW = iconDispW / scale / _sliderComp;
+            float newIrH = iconDispH / scale / _sliderComp;
 
             float gCenterX = newGx + newGSize / 2;
             float gCenterY = newGy + newGSize / 2;
@@ -581,10 +570,10 @@ namespace EffectsEditor
                 }
                 if (EditorGUI.EndChangeCheck())
                 {
-                    _iconRectX = Mathf.Clamp(_iconRectX, 0, canvas);
-                    _iconRectY = Mathf.Clamp(_iconRectY, 0, canvas);
-                    _iconRectW = Mathf.Clamp(_iconRectW, 1, canvas);
-                    _iconRectH = Mathf.Clamp(_iconRectH, 1, canvas);
+                    // 位置は制約なし（ドラッグと同じくキャンバス外も許容）
+                    // サイズのみ最小値を保持
+                    _iconRectW = Mathf.Max(_iconRectW, 1);
+                    _iconRectH = Mathf.Max(_iconRectH, 1);
                     _isDirty = true;
                 }
 
@@ -638,16 +627,9 @@ namespace EffectsEditor
                 int canvas = _definition.Canvas;
                 Vector2 mockSize = MockSizes[_mockIconPreset];
 
-                float irW = _iconRectW > 0 ? _iconRectW : canvas;
-                float irH = _iconRectH > 0 ? _iconRectH : canvas;
-                float effScale = Mathf.Min(mockSize.x / irW, mockSize.y / irH);
-                float dispSize = canvas * effScale;
-
-                float canvasC = canvas / 2f;
-                float irCX = _iconRectX + irW / 2f;
-                float irCY = _iconRectY + irH / 2f;
-                float offX = (canvasC - irCX) * effScale;
-                float offYui = (irCY - canvasC) * effScale; // Unity UI Y-up
+                var rpc = CalcPlacement(mockSize.x, mockSize.y, canvas);
+                float effScale = rpc.EffScale;
+                float dispSize = rpc.DispSize;
 
                 using (new EditorGUILayout.HorizontalScope())
                 {
@@ -702,24 +684,20 @@ namespace EffectsEditor
                 {
                     float ew = dispSize * finalScale;
                     float eh = dispSize * finalScale;
-                    float eox = offX * finalScale;
-                    float eoy = -offYui * finalScale;
+                    float eox = rpc.OffsetX * finalScale;
+                    float eoy = rpc.OffsetY * finalScale;
 
                     Rect effRect = new Rect(cx - ew / 2 + eox, cy - eh / 2 + eoy, ew, eh);
                     GUI.DrawTexture(effRect, _previewTexture, ScaleMode.StretchToFill);
                 }
 
                 // Label on mock icon
-                GUI.Label(mockRect, "アイコン", new GUIStyle(EditorStyles.miniLabel)
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                    normal = { textColor = new Color(0.7f, 0.7f, 0.7f, 0.5f) }
-                });
+                GUI.Label(mockRect, "アイコン", StyleIconOverlay);
 
                 GUI.EndGroup();
 
                 EditorGUILayout.LabelField(
-                    $"スケール: {effScale:F2}x  エフェクト: {dispSize:F0}x{dispSize:F0}px  offset: ({offX:F0}, {offYui:F0})",
+                    $"スケール: {effScale:F2}x  エフェクト: {dispSize:F0}x{dispSize:F0}px  offset: ({rpc.OffsetX:F0}, {-rpc.OffsetY:F0})",
                     EditorStyles.centeredGreyMiniLabel);
             }
         }
@@ -749,7 +727,7 @@ namespace EffectsEditor
                 if (_previewTexture != null)
                     GUI.DrawTexture(rect, _previewTexture, ScaleMode.ScaleToFit);
                 else
-                    GUI.Label(rect, "エフェクト未読込", CenteredGrayStyle());
+                    GUI.Label(rect, "エフェクト未読込", StyleCenteredGray);
             }
         }
 
@@ -829,7 +807,6 @@ namespace EffectsEditor
                                 RenderCurrentFrame();
                                 Repaint();
                             }
-                            Debug.Log($"[Placement] Play: {_selectedEffectName} frames={total} fps={_definition.Fps} tex={_previewTexture != null}");
                         }
                     }
 
@@ -971,6 +948,7 @@ namespace EffectsEditor
             _isPlaying = false;
             _currentFrame = 0;
             _isDirty = false;
+            _sliderComp = 1f;
 
             string path = $"Assets/Resources/Effects/{effectName}.json";
             if (!File.Exists(path))
@@ -1085,19 +1063,61 @@ namespace EffectsEditor
             return new Rect(cx - halfSize, cy - halfSize, halfSize * 2, halfSize * 2);
         }
 
-        private static GUIStyle MiniLabel(Color color)
+        /// <summary>
+        /// Forward conversion: icon_rect → エフェクト表示パラメータ。
+        /// refW/refH = 表示先のアイコンサイズ。irComp = スライダー補償係数（省略時1）。
+        /// </summary>
+        private struct PlacementCalc
         {
-            return new GUIStyle(EditorStyles.miniLabel) { normal = { textColor = color } };
+            public float EffScale;
+            public float DispSize;
+            public float OffsetX;
+            public float OffsetY; // canvas座標系（Y-down）
         }
 
-        private static GUIStyle CenteredGrayStyle()
+        private PlacementCalc CalcPlacement(float refW, float refH, int canvas, float irComp = 1f)
         {
-            return new GUIStyle(GUI.skin.label)
+            float irW = (_iconRectW > 0 ? _iconRectW : canvas) * irComp;
+            float irH = (_iconRectH > 0 ? _iconRectH : canvas) * irComp;
+            float effScale = Mathf.Min(refW / irW, refH / irH);
+            float canvasC = canvas / 2f;
+            float rawIrW = _iconRectW > 0 ? _iconRectW : canvas;
+            float rawIrH = _iconRectH > 0 ? _iconRectH : canvas;
+            float irCX = _iconRectX + rawIrW / 2f;
+            float irCY = _iconRectY + rawIrH / 2f;
+            return new PlacementCalc
+            {
+                EffScale = effScale,
+                DispSize = canvas * effScale,
+                OffsetX = (canvasC - irCX) * effScale,
+                OffsetY = (canvasC - irCY) * effScale
+            };
+        }
+
+        // Cached GUIStyles (lazy init to avoid EditorStyles access at static init)
+        private static GUIStyle _styleIconRefLabel;
+        private static GUIStyle StyleIconRefLabel => _styleIconRefLabel ??=
+            new GUIStyle(EditorStyles.miniLabel) { normal = { textColor = IconRefBorder } };
+
+        private static GUIStyle _stylePlaceLabel;
+        private static GUIStyle StylePlaceLabel => _stylePlaceLabel ??=
+            new GUIStyle(EditorStyles.miniLabel) { normal = { textColor = PlaceColor } };
+
+        private static GUIStyle _styleIconOverlay;
+        private static GUIStyle StyleIconOverlay => _styleIconOverlay ??=
+            new GUIStyle(EditorStyles.miniLabel)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = new Color(0.7f, 0.7f, 0.7f, 0.5f) }
+            };
+
+        private static GUIStyle _styleCenteredGray;
+        private static GUIStyle StyleCenteredGray => _styleCenteredGray ??=
+            new GUIStyle(EditorStyles.label)
             {
                 alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = Color.gray }
             };
-        }
 
         #endregion
     }
