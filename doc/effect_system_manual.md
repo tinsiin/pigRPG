@@ -2,7 +2,7 @@
 
 ## 1. 概要
 
-pigRPGのエフェクトシステムは、バトル中のキャラクターアイコン上にプログラマティックな視覚効果を描画する。
+pigRPGのエフェクトシステムは、バトル中のキャラクターアイコン上やフィールド全体にプログラマティックな視覚効果を描画する。
 エフェクトの制作方法として**2つの形式**が並存し、どちらも同じランタイムで再生される。
 
 ```
@@ -176,6 +176,85 @@ emitterはpen/brush不要（color_start/color_endで色を指定）。
 - エフェクト再生開始時に1回だけ再生（ループでも1回）
 - WAVファイルは16bit PCM形式が必須（非標準形式はFFmpegで変換が必要）
 
+### 4.9 配置モード（target）
+
+エフェクトは2つの配置モードを持つ。ルートの `"target"` フィールドで指定する。
+
+| 値 | 説明 | デフォルト |
+|----|------|-----------|
+| `"icon"` | キャラクターアイコン（BattleIconUI）相対で表示 | o |
+| `"field"` | バトルフィールド（ViewportArea）全体に表示 |  |
+
+```json
+{
+  "name": "slash_effect",
+  "target": "icon",
+  "icon_rect": { "x": 10, "y": 10, "width": 80, "height": 80 },
+  ...
+}
+```
+
+```json
+{
+  "name": "earthquake",
+  "target": "field",
+  "field_rect": { "x": 0, "y": 20, "width": 100, "height": 60 },
+  ...
+}
+```
+
+### 4.10 配置矩形（icon_rect / field_rect）
+
+キャンバス座標系で「参照領域」を定義する矩形。エフェクトのキャンバス内のどの領域が表示先にマッピングされるかを決定する。
+
+```
+┌───────────────── キャンバス (100×100) ─────────────────┐
+│                                                         │
+│    ┌─── icon_rect / field_rect ───┐                    │
+│    │   この領域がアイコン/VPに     │                    │
+│    │   フィットするようスケール    │                    │
+│    └──────────────────────────────┘                    │
+│          はみ出し部分も描画される                        │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### icon_rect（target="icon" 時）
+
+キャンバス内のどの領域が実際のアイコンに対応するかを定義する。
+
+| フィールド | 型 | 説明 |
+|-----------|-----|------|
+| `x` | float | 矩形左上のX座標（キャンバス座標） |
+| `y` | float | 矩形左上のY座標（キャンバス座標） |
+| `width` | float | 矩形の幅 |
+| `height` | float | 矩形の高さ |
+
+- 省略時: キャンバス全体がアイコン領域として扱われる（従来動作: アイコン短辺にフィット）
+- 矩形をキャンバスより小さくすると、エフェクトがアイコンからはみ出して表示される
+- 矩形をキャンバスより大きくすると、エフェクトがアイコンより小さく表示される
+
+#### field_rect（target="field" 時）
+
+キャンバス内のどの領域がビューポート（16:9）に対応するかを定義する。
+
+- 省略時: キャンバス全体がビューポートにストレッチされる（従来動作）
+- icon_rect と同じ数式で配置計算される
+
+### 4.11 配置の計算式
+
+icon_rect / field_rect ともに同じ計算式でスケーリングされる:
+
+```
+refW, refH = 表示先の実サイズ（アイコンまたはビューポート）
+rectW, rectH = 参照矩形のサイズ
+
+scale = min(refW / rectW, refH / rectH)
+displaySize = canvas × scale
+
+offsetX = (canvas/2 - rectCenterX) × scale
+offsetY = (rectCenterY - canvas/2) × scale  // Y軸反転
+```
+
 ---
 
 ## 5. フレームベース形式（形式A）
@@ -194,6 +273,8 @@ emitterはpen/brush不要（color_start/color_endで色を指定）。
   "canvas": 100,
   "fps": 30,
   "se": "sound_name",
+  "target": "icon",
+  "icon_rect": { "x": 10, "y": 10, "width": 80, "height": 80 },
   "frames": [
     {
       "shapes": [
@@ -221,6 +302,9 @@ emitterはpen/brush不要（color_start/color_endで色を指定）。
 | `canvas` | int | 100 | キャンバスサイズ（1〜512） |
 | `fps` | int | 12 | フレームレート（1〜120） |
 | `se` | string | null | 効果音ファイル名（拡張子なし） |
+| `target` | string | `"icon"` | 配置モード（§4.9参照） |
+| `icon_rect` | object | null | アイコン参照矩形（§4.10参照） |
+| `field_rect` | object | null | フィールド参照矩形（§4.10参照） |
 | `frames` | array | (必須) | フレーム配列 |
 
 ### 5.4 フレーム構造
@@ -262,6 +346,8 @@ emitterはpen/brush不要（color_start/color_endで色を指定）。
   "fps": 30,
   "duration": 1.5,
   "se": "sound_name",
+  "target": "icon",
+  "icon_rect": { "x": 10, "y": 10, "width": 80, "height": 80 },
   "layers": [
     {
       "id": "glow",
@@ -315,6 +401,9 @@ emitterはpen/brush不要（color_start/color_endで色を指定）。
 | `fps` | int | 30 | フレームレート（1〜120） |
 | `duration` | float | 1.0 | エフェクト全体の長さ（秒） |
 | `se` | string | null | 効果音ファイル名（拡張子なし） |
+| `target` | string | `"icon"` | 配置モード（§4.9参照） |
+| `icon_rect` | object | null | アイコン参照矩形（§4.10参照） |
+| `field_rect` | object | null | フィールド参照矩形（§4.10参照） |
 | `layers` | array | (必須) | レイヤー配列 |
 
 ### 6.4 レイヤー
@@ -476,9 +565,35 @@ KFX形式専用のGUIエディタ。UIは日本語。
 **部分キーフレームの編集:**
 最初のキーフレームでは全プロパティが常に有効。2番目以降のキーフレームでは各プロパティにチェックボックスがあり、チェックを入れたプロパティのみ上書き、チェックなしは前のキーフレームから継承される。
 
+### 7.3 Effect Placement Editor
+
+**メニュー**: Window → Effects → Effect Placement Editor（Ctrl+Shift+P）
+
+エフェクトの `icon_rect` / `field_rect` をインタラクティブに編集するツール。
+
+| 機能 | 説明 |
+|------|------|
+| Effect選択 | ドロップダウンでJSONを選択 |
+| target切替 | icon / field モードの切り替え |
+| キャンバスプレビュー | エフェクトの生描画。緑枠（エフェクトキャンバス）をドラッグ移動・四隅リサイズ |
+| 結果プレビュー | icon_rect/field_rect 適用後の最終表示をプレビュー |
+| 数値入力 | X / Y / Width / Height を直接入力 |
+| プリセットボタン | フィット / ×2 / ×1.3 / 中央寄せ |
+| モックアイコン | 味方(170×257) / 小敵(100×100) / 中敵(200×200) / 大敵(400×300) |
+| 再生制御 | Play / Pause / Stop / Loop / Speed |
+| Save / Reload | JSONへの書き込み / 読み込み |
+
+**icon モード**: 灰色矩形（アイコンモック）を固定表示し、緑枠のエフェクトキャンバスをドラッグで配置調整。icon_rect が自動計算される。
+
+**field モード**: 16:9のビューポート上で緑枠のエフェクトキャンバスをドラッグで配置調整。field_rect が自動計算される。
+
 ---
 
 ## 8. ランタイムAPI
+
+### 8.1 アイコンモード（target="icon"）
+
+BattleIconUI 上にエフェクトを表示する。
 
 ```csharp
 using Effects.Integration;
@@ -501,6 +616,65 @@ bool playing = EffectManager.IsPlaying(target.BattleIcon, "effect_name");
 // キャッシュクリア（JSONを編集した場合）
 EffectManager.ClearCache();
 ```
+
+### 8.2 フィールドモード（target="field"）
+
+バトルフィールド全体にエフェクトを表示する。BattleIconUI は不要。
+
+```csharp
+using Effects.Integration;
+
+// フィールドエフェクト再生
+EffectPlayer player = EffectManager.PlayField("effect_name");
+
+// ループ再生
+EffectPlayer player = EffectManager.PlayField("effect_name", loop: true);
+
+// 指定エフェクトを停止
+EffectManager.StopField("effect_name");
+
+// 全フィールドエフェクトを停止
+EffectManager.StopAllField();
+```
+
+**前提条件**: シーン内に `FieldEffectLayer` が必要（§8.3参照）。
+
+### 8.3 FieldEffectLayer のセットアップ
+
+フィールドエフェクトを再生するには、シーン内に FieldEffectLayer が必要。
+
+**メニュー**: Tools → Effects → Setup Field Effect Layer
+
+このメニューを実行すると `AlwaysCanvas/EyeArea/ViewportArea` 配下に `FieldEffectLayer` が自動生成される。`EffectLayer` コンポーネント（`IsFieldLayer = true`）を持つ RectTransform で、ビューポート全体をカバーする。
+
+### 8.4 テスターコンポーネント
+
+Play モード中にエフェクトを手軽に確認するためのコンポーネント。
+
+#### EffectSystemTester（アイコンモード用）
+
+BattleIconUI を持つ GameObject にアタッチして使用。
+
+| Inspector | 説明 |
+|-----------|------|
+| `targetIcon` | 対象の BattleIconUI（未指定なら自身から取得） |
+| `effectName` | エフェクト名 |
+| `loop` | ループ再生 |
+| `playOnStart` | Start() で自動再生 |
+
+コンテキストメニュー: Play Effect / Stop Effect / Stop All Effects / Check Is Playing
+
+#### FieldEffectTester（フィールドモード用）
+
+任意の GameObject にアタッチして使用（BattleIconUI 不要）。
+
+| Inspector | 説明 |
+|-----------|------|
+| `effectName` | エフェクト名 |
+| `loop` | ループ再生 |
+| `playOnStart` | Start() で自動再生 |
+
+コンテキストメニュー: Play Field Effect / Stop Field Effect / Stop All Field Effects
 
 ---
 
@@ -529,6 +703,8 @@ EffectManager.ClearCache();
 ```
 Assets/Script/Effects/
 ├── EffectConstants.cs              # 定数定義
+├── EffectSystemTester.cs           # アイコンモード テスター（§8.4）
+├── FieldEffectTester.cs            # フィールドモード テスター（§8.4）
 ├── Core/
 │   ├── EffectDefinition.cs         # フレームベースのデータモデル
 │   ├── KfxDefinition.cs            # KFXのデータモデル
@@ -539,13 +715,15 @@ Assets/Script/Effects/
 │   ├── ShapeDrawer.cs              # 図形描画プリミティブ
 │   └── EffectColorUtility.cs       # 色パース・ブラシコンテキスト生成
 ├── Playback/
-│   ├── EffectPlayer.cs             # 再生制御（フレーム進行・ループ）
-│   └── EffectLayer.cs              # BattleIconUI上のエフェクト管理
+│   └── EffectPlayer.cs             # 再生制御（フレーム進行・ループ）
 └── Integration/
-    └── EffectManager.cs            # 統合API（ロード・キャッシュ・SE再生）
+    ├── EffectManager.cs            # 統合API（ロード・キャッシュ・SE再生）
+    └── EffectLayer.cs              # エフェクト表示レイヤー（icon/field両対応）
 
 Assets/Editor/Effects/
 ├── EffectPreviewWindow.cs          # Effect Previewer（両形式対応）
+├── EffectPlacementEditor.cs        # Effect Placement Editor（配置調整）
+├── FieldEffectLayerSetup.cs        # FieldEffectLayer セットアップユーティリティ
 ├── KfxEditorWindow.cs              # KFX Editor コア（状態管理・ショートカット・Undo）
 └── KfxEditorWindow.Drawing.cs      # KFX Editor 描画（UI描画・プロパティ編集・テンプレート）
 
