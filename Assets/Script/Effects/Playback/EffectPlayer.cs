@@ -121,7 +121,10 @@ namespace Effects.Playback
         {
             if (!_isPlaying || _definition == null) return;
 
-            _frameTimer += Time.deltaTime;
+            // ラグスパイク（ContextMenuや一時停止等）時のフレームスキップを防止
+            // 1回のUpdateで最大2フレーム分のキャッチアップに制限
+            float maxDeltaTime = 2f / Mathf.Max(1, _definition.Fps);
+            _frameTimer += Mathf.Min(Time.deltaTime, maxDeltaTime);
 
             var currentFrame = _definition.Frames[_currentFrameIndex];
             float frameDuration = currentFrame.Duration > 0 ? currentFrame.Duration : (1f / _definition.Fps);
