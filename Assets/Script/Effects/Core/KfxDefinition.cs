@@ -36,6 +36,9 @@ namespace Effects.Core
         [JsonProperty("icon_rect")]
         public IconRectDefinition IconRect { get; set; }
 
+        [JsonProperty("field_rect")]
+        public IconRectDefinition FieldRect { get; set; }
+
         [JsonProperty("field_layer")]
         public string FieldLayer { get; set; }
 

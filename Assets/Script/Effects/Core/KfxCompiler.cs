@@ -88,6 +88,7 @@ namespace Effects.Core
                 // 配置メタデータのパススルー
                 Target = kfx.Target ?? "icon",
                 IconRect = kfx.IconRect,
+                FieldRect = kfx.FieldRect,
                 FieldLayer = kfx.FieldLayer ?? "middle",
                 Frames = new List<FrameDefinition>()
             };

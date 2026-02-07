@@ -37,6 +37,7 @@ namespace EffectsEditor
         // Placement（SerializeFieldでリコンパイル後も値を保持）
         [SerializeField] private int _targetMode; // 0=icon, 1=field
         [SerializeField] private float _iconRectX, _iconRectY, _iconRectW, _iconRectH;
+        [SerializeField] private float _fieldRectX, _fieldRectY, _fieldRectW, _fieldRectH;
 
         // Playback
         private int _currentFrame;
@@ -119,6 +120,7 @@ namespace EffectsEditor
                 // 未保存の配置変更がある場合はplacement上書きをスキップ
                 bool hadDirty = _isDirty;
                 float sx = _iconRectX, sy = _iconRectY, sw = _iconRectW, sh = _iconRectH;
+                float sfx = _fieldRectX, sfy = _fieldRectY, sfw = _fieldRectW, sfh = _fieldRectH;
                 int st = _targetMode;
 
                 LoadEffect(_selectedEffectName);
@@ -127,6 +129,7 @@ namespace EffectsEditor
                 {
                     // 未保存の編集値を復元
                     _iconRectX = sx; _iconRectY = sy; _iconRectW = sw; _iconRectH = sh;
+                    _fieldRectX = sfx; _fieldRectY = sfy; _fieldRectW = sfw; _fieldRectH = sfh;
                     _targetMode = st;
                     _isDirty = true;
                 }
@@ -282,7 +285,8 @@ namespace EffectsEditor
             }
 
             // --- Forward conversion: icon_rect → green rect (effect) ---
-            var pc = CalcPlacement(iconDispW, iconDispH, canvas, _sliderComp);
+            var pc = CalcPlacement(_iconRectX, _iconRectY, _iconRectW, _iconRectH,
+                                   iconDispW, iconDispH, canvas, _sliderComp);
             float gSize = pc.DispSize;
 
             // Green rect (effect) in screen coords
@@ -439,7 +443,8 @@ namespace EffectsEditor
             float iconDispW = _dragStartIconDispW;
             float iconDispH = _dragStartIconDispH;
             Vector2 previewCenter = _dragStartPreviewCenter;
-            float minGSize = Mathf.Max(iconDispW, iconDispH);
+            // icon: アイコンより小さくしない。field: 小さいエフェクトも許容
+            float minGSize = _targetMode == 0 ? Mathf.Max(iconDispW, iconDispH) : 20f;
 
             float newGx, newGy, newGSize;
 
@@ -495,9 +500,10 @@ namespace EffectsEditor
             float scale = newGSize / canvas;
             float canvasCenter = canvas / 2f;
 
-            // _sliderComp の逆補償: forward では irW*comp を使ったので、逆変換では /comp
-            float newIrW = iconDispW / scale / _sliderComp;
-            float newIrH = iconDispH / scale / _sliderComp;
+            // _sliderComp の逆補償（icon モードのみ）
+            float comp = _targetMode == 0 ? _sliderComp : 1f;
+            float newIrW = iconDispW / scale / comp;
+            float newIrH = iconDispH / scale / comp;
 
             float gCenterX = newGx + newGSize / 2;
             float gCenterY = newGy + newGSize / 2;
@@ -516,10 +522,20 @@ namespace EffectsEditor
             newIrW = Mathf.Max(newIrW, 1);
             newIrH = Mathf.Max(newIrH, 1);
 
-            _iconRectX = newIrX;
-            _iconRectY = newIrY;
-            _iconRectW = newIrW;
-            _iconRectH = newIrH;
+            if (_targetMode == 0)
+            {
+                _iconRectX = newIrX;
+                _iconRectY = newIrY;
+                _iconRectW = newIrW;
+                _iconRectH = newIrH;
+            }
+            else
+            {
+                _fieldRectX = newIrX;
+                _fieldRectY = newIrY;
+                _fieldRectW = newIrW;
+                _fieldRectH = newIrH;
+            }
         }
 
         private static void DrawDimmedOutside(Rect outer, Rect inner)
@@ -627,7 +643,8 @@ namespace EffectsEditor
                 int canvas = _definition.Canvas;
                 Vector2 mockSize = MockSizes[_mockIconPreset];
 
-                var rpc = CalcPlacement(mockSize.x, mockSize.y, canvas);
+                var rpc = CalcPlacement(_iconRectX, _iconRectY, _iconRectW, _iconRectH,
+                                       mockSize.x, mockSize.y, canvas);
                 float effScale = rpc.EffScale;
                 float dispSize = rpc.DispSize;
 
@@ -709,26 +726,129 @@ namespace EffectsEditor
         private void DrawFieldPreview()
         {
             EditorGUILayout.LabelField("フィールドプレビュー", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "緑の矩形（エフェクト）をドラッグで移動、四隅で拡大/縮小（正方形維持）。\n" +
+                "ビューポート（16:9）に対するエフェクトの位置・サイズを調整します。",
+                MessageType.Info);
 
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("表示サイズ:", GUILayout.Width(65));
+                _canvasPreviewSize = EditorGUILayout.IntSlider(_canvasPreviewSize, 150, 500);
+            }
+
+            float pw = _canvasPreviewSize;
+            float ph = pw * 9f / 16f; // 16:9 aspect
+            int canvas = _definition.Canvas;
+
+            // Reserve space
+            Rect reserved = GUILayoutUtility.GetRect(pw, ph + 18, GUILayout.ExpandWidth(false));
+            float centerX = (EditorGUIUtility.currentViewWidth - pw) / 2;
+            Rect workArea = new Rect(centerX, reserved.y, pw, ph);
+
+            // Forward conversion: field_rect → green rect
+            var pc = CalcPlacement(_fieldRectX, _fieldRectY, _fieldRectW, _fieldRectH,
+                                   pw, ph, canvas);
+            float gSize = pc.DispSize;
+
+            // Green rect in screen coords
+            float gCX = workArea.x + pw / 2 + pc.OffsetX;
+            float gCY = workArea.y + ph / 2 + pc.OffsetY;
+            Rect greenScreen = new Rect(gCX - gSize / 2, gCY - gSize / 2, gSize, gSize);
+
+            // --- Draw using GUI.BeginGroup for clipping ---
+            GUI.BeginGroup(workArea);
+
+            Rect localWork = new Rect(0, 0, pw, ph);
+            Rect localGreen = new Rect(greenScreen.x - workArea.x, greenScreen.y - workArea.y, gSize, gSize);
+
+            // Background
+            EditorGUI.DrawRect(localWork, DarkBg);
+
+            // Dim outside green rect
+            DrawDimmedOutside(localWork, localGreen);
+
+            // Effect texture inside green rect
+            if (_previewTexture != null)
+                GUI.DrawTexture(localGreen, _previewTexture, ScaleMode.StretchToFill);
+
+            // Green rect overlay
+            EditorGUI.DrawRect(localGreen, PlaceFill);
+            DrawBorder(localGreen, PlaceColor, 2f);
+
+            // Corner handles
+            DrawHandle(localGreen.x, localGreen.y);
+            DrawHandle(localGreen.xMax, localGreen.y);
+            DrawHandle(localGreen.x, localGreen.yMax);
+            DrawHandle(localGreen.xMax, localGreen.yMax);
+
+            // Label
+            GUI.Label(
+                new Rect(localGreen.x, localGreen.yMax + 2, 260, 14),
+                "エフェクト",
+                StylePlaceLabel);
+
+            GUI.EndGroup();
+
+            // Drag interaction (screen coords)
+            HandleDrag(workArea, greenScreen, pw, ph, canvas);
+
+            // Numerical input
+            EditorGUILayout.Space(18);
+            DrawFieldRectControls();
+        }
+
+        private void DrawFieldRectControls()
+        {
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.HelpBox(
-                    "field モード: ViewportArea 全体にエフェクトを描画。\n" +
-                    "画面フラッシュ、天候、全体攻撃演出等に使用。",
-                    MessageType.Info);
+                EditorGUILayout.LabelField("field_rect 数値入力（詳細）", EditorStyles.miniBoldLabel);
+                int canvas = _definition.Canvas;
 
-                float pw = _canvasPreviewSize;
-                float ph = pw * 9f / 16f;
-                Rect rect = GUILayoutUtility.GetRect(pw, ph, GUILayout.ExpandWidth(false));
-                float cx = (EditorGUIUtility.currentViewWidth - pw) / 2;
-                rect = new Rect(cx, rect.y, pw, ph);
+                EditorGUI.BeginChangeCheck();
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    GUILayout.Label("X", GUILayout.Width(14));
+                    _fieldRectX = EditorGUILayout.FloatField(_fieldRectX, GUILayout.Width(50));
+                    GUILayout.Label("Y", GUILayout.Width(14));
+                    _fieldRectY = EditorGUILayout.FloatField(_fieldRectY, GUILayout.Width(50));
+                    GUILayout.Label("W", GUILayout.Width(14));
+                    _fieldRectW = EditorGUILayout.FloatField(_fieldRectW, GUILayout.Width(50));
+                    GUILayout.Label("H", GUILayout.Width(14));
+                    _fieldRectH = EditorGUILayout.FloatField(_fieldRectH, GUILayout.Width(50));
+                }
+                if (EditorGUI.EndChangeCheck())
+                {
+                    _fieldRectW = Mathf.Max(_fieldRectW, 1);
+                    _fieldRectH = Mathf.Max(_fieldRectH, 1);
+                    _isDirty = true;
+                }
 
-                EditorGUI.DrawRect(rect, DarkBg);
-                if (_previewTexture != null)
-                    GUI.DrawTexture(rect, _previewTexture, ScaleMode.ScaleToFit);
-                else
-                    GUI.Label(rect, "エフェクト未読込", StyleCenteredGray);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("フィット"))
+                        SetFieldRect(0, 0, canvas, canvas);
+                    if (GUILayout.Button("×2"))
+                    {
+                        float q = canvas * 0.25f;
+                        SetFieldRect(q, q, canvas * 0.5f, canvas * 0.5f);
+                    }
+                    if (GUILayout.Button("×1.3"))
+                    {
+                        float q = canvas * 0.125f;
+                        SetFieldRect(q, q, canvas * 0.75f, canvas * 0.75f);
+                    }
+                    if (GUILayout.Button("中央寄せ"))
+                        SetFieldRect((canvas - _fieldRectW) / 2, (canvas - _fieldRectH) / 2,
+                                     _fieldRectW, _fieldRectH);
+                }
             }
+        }
+
+        private void SetFieldRect(float x, float y, float w, float h)
+        {
+            _fieldRectX = x; _fieldRectY = y; _fieldRectW = w; _fieldRectH = h;
+            _isDirty = true;
         }
 
         #endregion
@@ -910,6 +1030,35 @@ namespace EffectsEditor
                     jo.Remove("icon_rect");
                 }
 
+                // field_rect
+                if (_targetMode == 1)
+                {
+                    int fCanvas = _definition.Canvas;
+                    bool fieldDefault = Mathf.Approximately(_fieldRectX, 0) &&
+                                        Mathf.Approximately(_fieldRectY, 0) &&
+                                        Mathf.Approximately(_fieldRectW, fCanvas) &&
+                                        Mathf.Approximately(_fieldRectH, fCanvas);
+
+                    if (fieldDefault)
+                    {
+                        jo.Remove("field_rect");
+                    }
+                    else
+                    {
+                        jo["field_rect"] = new JObject
+                        {
+                            ["x"] = Math.Round(_fieldRectX, 1),
+                            ["y"] = Math.Round(_fieldRectY, 1),
+                            ["width"] = Math.Round(_fieldRectW, 1),
+                            ["height"] = Math.Round(_fieldRectH, 1)
+                        };
+                    }
+                }
+                else
+                {
+                    jo.Remove("field_rect");
+                }
+
                 jo.Remove("field_layer");
 
                 string output = jo.ToString(Formatting.Indented);
@@ -1009,6 +1158,23 @@ namespace EffectsEditor
                 _iconRectW = canvas;
                 _iconRectH = canvas;
             }
+
+            // field_rect
+            if (_definition.FieldRect != null &&
+                _definition.FieldRect.Width > 0 && _definition.FieldRect.Height > 0)
+            {
+                _fieldRectX = _definition.FieldRect.X;
+                _fieldRectY = _definition.FieldRect.Y;
+                _fieldRectW = _definition.FieldRect.Width;
+                _fieldRectH = _definition.FieldRect.Height;
+            }
+            else
+            {
+                _fieldRectX = 0;
+                _fieldRectY = 0;
+                _fieldRectW = canvas;
+                _fieldRectH = canvas;
+            }
         }
 
         private void RenderCurrentFrame()
@@ -1075,22 +1241,24 @@ namespace EffectsEditor
             public float OffsetY; // canvas座標系（Y-down）
         }
 
-        private PlacementCalc CalcPlacement(float refW, float refH, int canvas, float irComp = 1f)
+        private static PlacementCalc CalcPlacement(
+            float rectX, float rectY, float rectW, float rectH,
+            float refW, float refH, int canvas, float comp = 1f)
         {
-            float irW = (_iconRectW > 0 ? _iconRectW : canvas) * irComp;
-            float irH = (_iconRectH > 0 ? _iconRectH : canvas) * irComp;
+            float irW = (rectW > 0 ? rectW : canvas) * comp;
+            float irH = (rectH > 0 ? rectH : canvas) * comp;
             float effScale = Mathf.Min(refW / irW, refH / irH);
             float canvasC = canvas / 2f;
-            float rawIrW = _iconRectW > 0 ? _iconRectW : canvas;
-            float rawIrH = _iconRectH > 0 ? _iconRectH : canvas;
-            float irCX = _iconRectX + rawIrW / 2f;
-            float irCY = _iconRectY + rawIrH / 2f;
+            float rawW = rectW > 0 ? rectW : canvas;
+            float rawH = rectH > 0 ? rectH : canvas;
+            float cx = rectX + rawW / 2f;
+            float cy = rectY + rawH / 2f;
             return new PlacementCalc
             {
                 EffScale = effScale,
                 DispSize = canvas * effScale,
-                OffsetX = (canvasC - irCX) * effScale,
-                OffsetY = (canvasC - irCY) * effScale
+                OffsetX = (canvasC - cx) * effScale,
+                OffsetY = (canvasC - cy) * effScale
             };
         }
 

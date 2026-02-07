@@ -157,12 +157,36 @@ namespace Effects.Integration
 
             if (IsFieldLayer)
             {
-                // field モード: 親（ViewportArea）全体に引き延ばし
-                rt.anchorMin = Vector2.zero;
-                rt.anchorMax = Vector2.one;
-                rt.offsetMin = Vector2.zero;
-                rt.offsetMax = Vector2.zero;
-                rt.pivot = new Vector2(0.5f, 0.5f);
+                if (def.FieldRect != null && def.FieldRect.Width > 0 && def.FieldRect.Height > 0)
+                {
+                    // field_rect ベースのスケーリング（icon_rect と同じ数式、参照サイズがビューポート）
+                    Vector2 vpSize = GetViewportSize();
+                    var fr = def.FieldRect;
+                    float scale = Mathf.Min(vpSize.x / fr.Width, vpSize.y / fr.Height);
+                    float displaySize = canvas * scale;
+
+                    float canvasCenter = canvas / 2f;
+                    float frCenterX = fr.X + fr.Width / 2f;
+                    float frCenterY = fr.Y + fr.Height / 2f;
+
+                    // キャンバスY下向き → RectTransformY上向き 変換
+                    float offsetX = (canvasCenter - frCenterX) * scale;
+                    float offsetY = (frCenterY - canvasCenter) * scale;
+
+                    rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+                    rt.pivot = new Vector2(0.5f, 0.5f);
+                    rt.sizeDelta = new Vector2(displaySize, displaySize);
+                    rt.anchoredPosition = new Vector2(offsetX, offsetY);
+                }
+                else
+                {
+                    // field_rect 省略: 親（ViewportArea）全体に引き延ばし（従来動作）
+                    rt.anchorMin = Vector2.zero;
+                    rt.anchorMax = Vector2.one;
+                    rt.offsetMin = Vector2.zero;
+                    rt.offsetMax = Vector2.zero;
+                    rt.pivot = new Vector2(0.5f, 0.5f);
+                }
                 return;
             }
 
@@ -223,6 +247,18 @@ namespace Effects.Integration
             if (parentW <= 0) parentW = 100;
             if (parentH <= 0) parentH = 100;
             return new Vector2(parentW, parentH);
+        }
+
+        /// <summary>
+        /// 親の ViewportArea の RectTransform からビューポートサイズを取得。
+        /// </summary>
+        private Vector2 GetViewportSize()
+        {
+            float w = _rectTransform.rect.width;
+            float h = _rectTransform.rect.height;
+            if (w <= 0) w = 1280;
+            if (h <= 0) h = 720;
+            return new Vector2(w, h);
         }
 
         private void OnEffectComplete(EffectPlayerEntry entry)
