@@ -12,13 +12,14 @@ using UnityEngine;
 namespace EffectsEditor
 {
     /// <summary>
-    /// エフェクト配置エディタ（v2）。
-    /// キャンバス上でicon_rectをドラッグ操作し、実機プレビューで表示結果を確認できる。
+    /// エフェクト配置エディタ（v3 — 逆転版）。
+    /// アイコン（灰色中央固定）を基準にエフェクト位置（緑枠）をドラッグ操作し、
+    /// 実機プレビューで表示結果を確認できる。
     ///
     /// 操作モデル:
-    /// - キャンバス: エフェクトを表示する固定領域
-    /// - アイコン参照: 中央に表示される非操作の参照矩形（スライダーでサイズ変更可）
-    /// - icon_rect: 自由にドラッグ/リサイズできる緑の矩形。アイコンに対応するキャンバス領域を定義
+    /// - アイコン: 中央固定の灰色矩形（モックプリセットのアスペクト比を反映）
+    /// - エフェクト: ドラッグ/リサイズできる緑の正方形枠。エフェクトキャンバスの位置・サイズを示す
+    /// - icon_rect: 内部データ。緑枠とアイコンの関係から自動算出され、JSONに保存される
     /// </summary>
     public class EffectPlacementEditor : EditorWindow
     {
@@ -57,6 +58,8 @@ namespace EffectsEditor
         private DragMode _dragMode;
         private Vector2 _dragStart;
         private Rect _dragStartRect;
+        private float _dragStartIconDispW, _dragStartIconDispH;
+        private Vector2 _dragStartPreviewCenter;
 
         private Vector2 _scrollPos;
         [SerializeField] private bool _isDirty;
@@ -240,8 +243,8 @@ namespace EffectsEditor
         {
             EditorGUILayout.LabelField("キャンバスプレビュー", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "緑の矩形（icon_rect）をドラッグで移動、四隅ハンドルでリサイズ。\n" +
-                "明るい領域 = アイコンに対応する部分。暗い領域 = アイコン外にはみ出す部分。",
+                "緑の矩形（エフェクト）をドラッグで移動、四隅で拡大/縮小（正方形維持）。\n" +
+                "灰色 = アイコン基準（中央固定）。緑の中にエフェクトが描画されます。",
                 MessageType.Info);
 
             using (new EditorGUILayout.HorizontalScope())
@@ -255,68 +258,116 @@ namespace EffectsEditor
 
             // Reserve space (extra 18px for label below)
             Rect reserved = GUILayoutUtility.GetRect(size, size + 18, GUILayout.ExpandWidth(false));
-            float cx = (EditorGUIUtility.currentViewWidth - size) / 2;
-            Rect texRect = new Rect(cx, reserved.y, size, size);
+            float centerX = (EditorGUIUtility.currentViewWidth - size) / 2;
+            Rect workArea = new Rect(centerX, reserved.y, size, size);
+
+            // --- Compute icon display size (with mock aspect ratio) ---
+            Vector2 mockSize = MockSizes[_mockIconPreset];
+            float iconMaxDim = size * _iconRefRatio;
+            float mockAspect = mockSize.x / mockSize.y;
+            float iconDispW, iconDispH;
+            if (mockAspect >= 1f) // 横長 or 正方形
+            {
+                iconDispW = iconMaxDim;
+                iconDispH = iconMaxDim / mockAspect;
+            }
+            else // 縦長
+            {
+                iconDispH = iconMaxDim;
+                iconDispW = iconMaxDim * mockAspect;
+            }
+
+            // --- Forward conversion: icon_rect → green rect (effect) ---
+            float irW = _iconRectW > 0 ? _iconRectW : canvas;
+            float irH = _iconRectH > 0 ? _iconRectH : canvas;
+            float effScale = Mathf.Min(iconDispW / irW, iconDispH / irH);
+            float gSize = canvas * effScale;
+
+            float irCenterX = _iconRectX + irW / 2f;
+            float irCenterY = _iconRectY + irH / 2f;
+            float canvasC = canvas / 2f;
+            float effOffX = (canvasC - irCenterX) * effScale;
+            float effOffY = (canvasC - irCenterY) * effScale;
+
+            // Green rect (effect) in screen coords
+            float gCX = workArea.x + size / 2 + effOffX;
+            float gCY = workArea.y + size / 2 + effOffY;
+            Rect greenScreen = new Rect(gCX - gSize / 2, gCY - gSize / 2, gSize, gSize);
+
+            // --- Draw using GUI.BeginGroup for clipping ---
+            GUI.BeginGroup(workArea);
+
+            Rect localWork = new Rect(0, 0, size, size);
+            Rect localGreen = new Rect(greenScreen.x - workArea.x, greenScreen.y - workArea.y, gSize, gSize);
+            Rect localIcon = new Rect((size - iconDispW) / 2, (size - iconDispH) / 2, iconDispW, iconDispH);
 
             // Background
-            EditorGUI.DrawRect(texRect, DarkBg);
+            EditorGUI.DrawRect(localWork, DarkBg);
 
-            // Effect texture
+            // Dim outside green rect (effect canvas)
+            DrawDimmedOutside(localWork, localGreen);
+
+            // Effect texture inside green rect
             if (_previewTexture != null)
-                GUI.DrawTexture(texRect, _previewTexture, ScaleMode.StretchToFill);
+                GUI.DrawTexture(localGreen, _previewTexture, ScaleMode.StretchToFill);
 
-            float ppu = size / canvas; // pixels per unit
-
-            // icon_rect in screen coords
-            Rect placeScreen = new Rect(
-                texRect.x + _iconRectX * ppu,
-                texRect.y + _iconRectY * ppu,
-                _iconRectW * ppu,
-                _iconRectH * ppu
-            );
-
-            // Dim outside icon_rect
-            DrawDimmedOutside(texRect, placeScreen);
-
-            // Icon reference (centered, non-interactive)
-            float refSize = size * _iconRefRatio;
-            Rect iconRef = new Rect(
-                texRect.x + (size - refSize) / 2,
-                texRect.y + (size - refSize) / 2,
-                refSize, refSize
-            );
-            EditorGUI.DrawRect(iconRef, IconRefFill);
-            DrawBorder(iconRef, IconRefBorder, 1f);
+            // Icon (gray, centered, with mock aspect ratio)
+            EditorGUI.DrawRect(localIcon, IconRefFill);
+            DrawBorder(localIcon, IconRefBorder, 1f);
             GUI.Label(
-                new Rect(iconRef.x + 2, iconRef.y + 1, 80, 14),
-                "アイコン参照",
+                new Rect(localIcon.x + 2, localIcon.y + 1, 80, 14),
+                "アイコン",
                 MiniLabel(IconRefBorder));
 
-            // icon_rect overlay
-            EditorGUI.DrawRect(placeScreen, PlaceFill);
-            DrawBorder(placeScreen, PlaceColor, 2f);
+            // Green rect overlay (effect)
+            EditorGUI.DrawRect(localGreen, PlaceFill);
+            DrawBorder(localGreen, PlaceColor, 2f);
 
             // Corner handles
-            DrawHandle(placeScreen.x, placeScreen.y);
-            DrawHandle(placeScreen.xMax, placeScreen.y);
-            DrawHandle(placeScreen.x, placeScreen.yMax);
-            DrawHandle(placeScreen.xMax, placeScreen.yMax);
+            DrawHandle(localGreen.x, localGreen.y);
+            DrawHandle(localGreen.xMax, localGreen.y);
+            DrawHandle(localGreen.x, localGreen.yMax);
+            DrawHandle(localGreen.xMax, localGreen.yMax);
 
             // Label
             GUI.Label(
-                new Rect(placeScreen.x, placeScreen.yMax + 2, 260, 14),
-                $"icon_rect ({_iconRectX:F0}, {_iconRectY:F0}, {_iconRectW:F0}, {_iconRectH:F0})",
+                new Rect(localGreen.x, localGreen.yMax + 2, 260, 14),
+                "エフェクト",
                 MiniLabel(PlaceColor));
 
-            // Drag interaction
-            HandleDrag(texRect, canvas, ppu);
+            GUI.EndGroup();
 
-            // Icon ref slider
+            // Drag interaction (screen coords)
+            HandleDrag(workArea, greenScreen, iconDispW, iconDispH, canvas);
+
+            // Sliders
             EditorGUILayout.Space(18);
             using (new EditorGUILayout.HorizontalScope())
             {
-                EditorGUILayout.LabelField("アイコン参照サイズ:", GUILayout.Width(110));
+                EditorGUILayout.LabelField("アイコン:", GUILayout.Width(50));
+                _mockIconPreset = EditorGUILayout.Popup(_mockIconPreset, MockNames);
+            }
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("アイコン表示サイズ:", GUILayout.Width(110));
+
+                // スライダー変更時、icon_rectを補償して緑枠（エフェクト）を安定させる。
+                // _iconRefRatioが変わるとiconDispW/Hが変わり、forward conversionで
+                // 緑枠サイズも変わってしまうため、icon_rectをスケーリングして打ち消す。
+                float prevRatio = _iconRefRatio;
+                EditorGUI.BeginChangeCheck();
                 _iconRefRatio = EditorGUILayout.Slider(_iconRefRatio, IconRefMinRatio, IconRefMaxRatio);
+                if (EditorGUI.EndChangeCheck() && prevRatio > 0.001f)
+                {
+                    float k = _iconRefRatio / prevRatio;
+                    float irCX = _iconRectX + _iconRectW / 2f;
+                    float irCY = _iconRectY + _iconRectH / 2f;
+                    _iconRectW *= k;
+                    _iconRectH *= k;
+                    _iconRectX = irCX - _iconRectW / 2f;
+                    _iconRectY = irCY - _iconRectH / 2f;
+                    // 表示上の補償のみなのでdirtyにしない
+                }
             }
         }
 
@@ -327,30 +378,23 @@ namespace EffectsEditor
             DrawBorder(r, PlaceColor, 1f);
         }
 
-        private void HandleDrag(Rect texRect, int canvas, float ppu)
+        private void HandleDrag(Rect workArea, Rect greenScreen, float iconDispW, float iconDispH, int canvas)
         {
             Event e = Event.current;
             int ctrlId = GUIUtility.GetControlID(FocusType.Passive);
 
-            Rect ps = new Rect(
-                texRect.x + _iconRectX * ppu,
-                texRect.y + _iconRectY * ppu,
-                _iconRectW * ppu,
-                _iconRectH * ppu
-            );
-
             float hr = HandleR + 2;
-            Rect hTL = CenteredRect(ps.x, ps.y, hr);
-            Rect hTR = CenteredRect(ps.xMax, ps.y, hr);
-            Rect hBL = CenteredRect(ps.x, ps.yMax, hr);
-            Rect hBR = CenteredRect(ps.xMax, ps.yMax, hr);
+            Rect hTL = CenteredRect(greenScreen.x, greenScreen.y, hr);
+            Rect hTR = CenteredRect(greenScreen.xMax, greenScreen.y, hr);
+            Rect hBL = CenteredRect(greenScreen.x, greenScreen.yMax, hr);
+            Rect hBR = CenteredRect(greenScreen.xMax, greenScreen.yMax, hr);
 
             EditorGUIUtility.AddCursorRect(hTL, MouseCursor.ResizeUpLeft);
             EditorGUIUtility.AddCursorRect(hBR, MouseCursor.ResizeUpLeft);
             EditorGUIUtility.AddCursorRect(hTR, MouseCursor.ResizeUpRight);
             EditorGUIUtility.AddCursorRect(hBL, MouseCursor.ResizeUpRight);
             if (_dragMode == DragMode.None)
-                EditorGUIUtility.AddCursorRect(ps, MouseCursor.MoveArrow);
+                EditorGUIUtility.AddCursorRect(greenScreen, MouseCursor.MoveArrow);
 
             switch (e.type)
             {
@@ -361,13 +405,18 @@ namespace EffectsEditor
                     else if (hTR.Contains(e.mousePosition)) mode = DragMode.ResizeTR;
                     else if (hBL.Contains(e.mousePosition)) mode = DragMode.ResizeBL;
                     else if (hBR.Contains(e.mousePosition)) mode = DragMode.ResizeBR;
-                    else if (ps.Contains(e.mousePosition)) mode = DragMode.Move;
+                    else if (greenScreen.Contains(e.mousePosition)) mode = DragMode.Move;
 
                     if (mode != DragMode.None)
                     {
                         _dragMode = mode;
                         _dragStart = e.mousePosition;
-                        _dragStartRect = new Rect(_iconRectX, _iconRectY, _iconRectW, _iconRectH);
+                        _dragStartRect = greenScreen;
+                        _dragStartIconDispW = iconDispW;
+                        _dragStartIconDispH = iconDispH;
+                        _dragStartPreviewCenter = new Vector2(
+                            workArea.x + workArea.width / 2,
+                            workArea.y + workArea.height / 2);
                         GUIUtility.hotControl = ctrlId;
                         e.Use();
                     }
@@ -377,7 +426,7 @@ namespace EffectsEditor
                 case EventType.MouseDrag when _dragMode != DragMode.None:
                 {
                     Vector2 delta = e.mousePosition - _dragStart;
-                    ApplyDrag(delta.x / ppu, delta.y / ppu, canvas);
+                    ApplyDrag(delta.x, delta.y, canvas);
                     _isDirty = true;
                     e.Use();
                     Repaint();
@@ -392,50 +441,96 @@ namespace EffectsEditor
             }
         }
 
+        /// <summary>
+        /// 緑枠（エフェクト）のドラッグを適用し、逆変換でicon_rectを更新する。
+        /// dx/dy は画面ピクセル単位のドラッグ量。
+        /// </summary>
         private void ApplyDrag(float dx, float dy, int canvas)
         {
-            var s = _dragStartRect;
+            Rect gs = _dragStartRect; // ドラッグ開始時の緑枠（screen coords）
+            float iconDispW = _dragStartIconDispW;
+            float iconDispH = _dragStartIconDispH;
+            Vector2 previewCenter = _dragStartPreviewCenter;
+            float minGSize = Mathf.Max(iconDispW, iconDispH);
+
+            float newGx, newGy, newGSize;
+
             switch (_dragMode)
             {
                 case DragMode.Move:
-                    _iconRectX = Mathf.Clamp(s.x + dx, 0, canvas - s.width);
-                    _iconRectY = Mathf.Clamp(s.y + dy, 0, canvas - s.height);
+                    newGx = gs.x + dx;
+                    newGy = gs.y + dy;
+                    newGSize = gs.width;
                     break;
 
-                case DragMode.ResizeTL:
+                case DragMode.ResizeBR: // 左上アンカー
                 {
-                    float nx = Mathf.Clamp(s.x + dx, 0, s.xMax - 1);
-                    float ny = Mathf.Clamp(s.y + dy, 0, s.yMax - 1);
-                    _iconRectX = nx;
-                    _iconRectY = ny;
-                    _iconRectW = s.xMax - nx;
-                    _iconRectH = s.yMax - ny;
+                    float ds = (dx + dy) / 2;
+                    newGSize = Mathf.Max(gs.width + ds, minGSize);
+                    newGx = gs.x;
+                    newGy = gs.y;
                     break;
                 }
 
-                case DragMode.ResizeTR:
+                case DragMode.ResizeTL: // 右下アンカー
                 {
-                    float ny = Mathf.Clamp(s.y + dy, 0, s.yMax - 1);
-                    _iconRectY = ny;
-                    _iconRectW = Mathf.Clamp(s.width + dx, 1, canvas - s.x);
-                    _iconRectH = s.yMax - ny;
+                    float ds = -(dx + dy) / 2;
+                    newGSize = Mathf.Max(gs.width + ds, minGSize);
+                    newGx = gs.xMax - newGSize;
+                    newGy = gs.yMax - newGSize;
                     break;
                 }
 
-                case DragMode.ResizeBL:
+                case DragMode.ResizeTR: // 左下アンカー
                 {
-                    float nx = Mathf.Clamp(s.x + dx, 0, s.xMax - 1);
-                    _iconRectX = nx;
-                    _iconRectW = s.xMax - nx;
-                    _iconRectH = Mathf.Clamp(s.height + dy, 1, canvas - s.y);
+                    float ds = (dx - dy) / 2;
+                    newGSize = Mathf.Max(gs.width + ds, minGSize);
+                    newGx = gs.x;
+                    newGy = gs.yMax - newGSize;
                     break;
                 }
 
-                case DragMode.ResizeBR:
-                    _iconRectW = Mathf.Clamp(s.width + dx, 1, canvas - s.x);
-                    _iconRectH = Mathf.Clamp(s.height + dy, 1, canvas - s.y);
+                case DragMode.ResizeBL: // 右上アンカー
+                {
+                    float ds = (-dx + dy) / 2;
+                    newGSize = Mathf.Max(gs.width + ds, minGSize);
+                    newGx = gs.xMax - newGSize;
+                    newGy = gs.y;
                     break;
+                }
+
+                default:
+                    return;
             }
+
+            // --- Inverse conversion: green rect → icon_rect ---
+            float scale = newGSize / canvas;
+            float canvasCenter = canvas / 2f;
+
+            float newIrW = iconDispW / scale;
+            float newIrH = iconDispH / scale;
+
+            float gCenterX = newGx + newGSize / 2;
+            float gCenterY = newGy + newGSize / 2;
+
+            float effOffX = gCenterX - previewCenter.x;
+            float effOffY = gCenterY - previewCenter.y;
+
+            float irCenterX = canvasCenter - effOffX / scale;
+            float irCenterY = canvasCenter - effOffY / scale;
+
+            float newIrX = irCenterX - newIrW / 2;
+            float newIrY = irCenterY - newIrH / 2;
+
+            // サイズの最小値のみ制約。位置はキャンバス外も許容
+            // （エフェクトがアイコンの一部のみカバーするケース）
+            newIrW = Mathf.Max(newIrW, 1);
+            newIrH = Mathf.Max(newIrH, 1);
+
+            _iconRectX = newIrX;
+            _iconRectY = newIrY;
+            _iconRectW = newIrW;
+            _iconRectH = newIrH;
         }
 
         private static void DrawDimmedOutside(Rect outer, Rect inner)
@@ -469,7 +564,7 @@ namespace EffectsEditor
         {
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField("icon_rect 数値入力", EditorStyles.miniBoldLabel);
+                EditorGUILayout.LabelField("icon_rect 数値入力（詳細）", EditorStyles.miniBoldLabel);
                 int canvas = _definition.Canvas;
 
                 EditorGUI.BeginChangeCheck();
@@ -495,14 +590,14 @@ namespace EffectsEditor
 
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    if (GUILayout.Button("全体"))
+                    if (GUILayout.Button("フィット"))
                         SetRect(0, 0, canvas, canvas);
-                    if (GUILayout.Button("中央50%"))
+                    if (GUILayout.Button("×2"))
                     {
                         float q = canvas * 0.25f;
                         SetRect(q, q, canvas * 0.5f, canvas * 0.5f);
                     }
-                    if (GUILayout.Button("中央75%"))
+                    if (GUILayout.Button("×1.3"))
                     {
                         float q = canvas * 0.125f;
                         SetRect(q, q, canvas * 0.75f, canvas * 0.75f);

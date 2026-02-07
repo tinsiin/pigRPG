@@ -114,11 +114,5 @@
       "blend": "additive",
       "seed": 42
     }
-  ],
-  "icon_rect": {
-    "x": 14.7,
-    "y": 29.1,
-    "width": 71.3,
-    "height": 67.5
-  }
+  ]
 }
