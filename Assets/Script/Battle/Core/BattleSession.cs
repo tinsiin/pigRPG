@@ -147,6 +147,10 @@ public sealed class BattleSession : IBattleSession
             return TabState.NextWait;
         }
 
+        // 掛け合わせチェック: 武器装備中に非武器スキルを選択した場合、
+        // 武器との掛け合わせスキルに差し替える
+        skill = ResolveCombination(actor, skill);
+
         actor.SKillUseCall(skill);
 
         if (!skill.HasZoneTrait(SkillZoneTrait.CanSelectRange))
@@ -225,6 +229,34 @@ public sealed class BattleSession : IBattleSession
         }
 
         return TabState.NextWait;
+    }
+
+    /// <summary>
+    /// 掛け合わせ解決: 武器装備中に非武器スキルを使った場合、
+    /// 掛け合わせスキルが定義されていれば差し替える。
+    /// </summary>
+    private static BaseSkill ResolveCombination(BaseStates actor, BaseSkill skill)
+    {
+        var weapon = actor.NowUseWeapon;
+        if (weapon == null || weapon.CombinationEntries == null || weapon.CombinationEntries.Count == 0)
+            return skill;
+
+        // 武器スキルそのものを選択した場合は掛け合わせしない
+        if (ReferenceEquals(skill, weapon.WeaponSkill))
+            return skill;
+
+        // AllySkillの場合のみIDで掛け合わせ検索
+        if (skill is AllySkill allySkill)
+        {
+            var combined = weapon.GetCombinedSkill(allySkill.ID);
+            if (combined != null)
+            {
+                UnityEngine.Debug.Log($"掛け合わせ発動: {weapon.name} × {skill.SkillName} → {combined.SkillName}");
+                return combined;
+            }
+        }
+
+        return skill;
     }
 
     private void ApplyExposureModifier(BattleActionContext context, BaseStates actor, BaseStates target)

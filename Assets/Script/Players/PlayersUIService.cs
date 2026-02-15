@@ -8,6 +8,7 @@ public sealed class PlayersUIService
     private readonly PlayersRoster roster;
     private readonly SkillPassiveSelectionUI skillPassiveSelectionUI;
     private readonly EmotionalAttachmentUI emotionalAttachmentUI;
+    private readonly WeaponSelectArea weaponSelectArea;
 
     /// <summary>
     /// CharacterUIRegistryへのアクセス。
@@ -18,11 +19,13 @@ public sealed class PlayersUIService
     public PlayersUIService(
         PlayersRoster roster,
         SkillPassiveSelectionUI skillPassiveSelectionUI,
-        EmotionalAttachmentUI emotionalAttachmentUI)
+        EmotionalAttachmentUI emotionalAttachmentUI,
+        WeaponSelectArea weaponSelectArea)
     {
         this.roster = roster;
         this.skillPassiveSelectionUI = skillPassiveSelectionUI;
         this.emotionalAttachmentUI = emotionalAttachmentUI;
+        this.weaponSelectArea = weaponSelectArea;
 
         // CharacterUIRegistryはシーンに配置されたMonoBehaviourを使用
         if (CharacterUIRegistry.Instance == null)
@@ -78,11 +81,28 @@ public sealed class PlayersUIService
                 button.AddButtonFunc(actor.OnSkillStockBtnCallBack);
             }
 
-            // ラジオボタン: ToggleGroupController.AddListener 内でクリアされる
-            foreach (var radio in uiSet.SkillUILists.aggressiveCommitRadios)
+            // 前のめりトグルボタン（実行時）
+            foreach (var toggle in uiSet.SkillUILists.aggressiveCommitToggles)
             {
-                radio.AddRadioFunc(actor.OnSkillSelectAgressiveCommitBtnCallBack);
+                toggle.AddToggleFunc(actor.OnSkillSelectAggressiveCommitBtnCallBack);
             }
+            // 前のめりトグルボタン（トリガー時）
+            foreach (var toggle in uiSet.SkillUILists.aggressiveTriggerToggles)
+            {
+                toggle.AddToggleFunc(actor.OnSkillAggressiveTriggerBtnCallBack);
+            }
+            // 前のめりトグルボタン（ストック時）
+            foreach (var toggle in uiSet.SkillUILists.aggressiveStockToggles)
+            {
+                toggle.AddToggleFunc(actor.OnSkillAggressiveStockBtnCallBack);
+            }
+        }
+
+        // 武器スキルボタン: クリアしてから追加
+        if (uiSet.WeaponSkillButton != null)
+        {
+            uiSet.WeaponSkillButton.onClick.RemoveAllListeners();
+            uiSet.WeaponSkillButton.onClick.AddListener(actor.OnWeaponSkillBtnCallBack);
         }
 
         // DoNothingボタン: クリアしてから追加
@@ -150,9 +170,20 @@ public sealed class PlayersUIService
             {
                 hold.button.interactable = activeSkillIds.Contains(hold.skillID);
             }
-            foreach (var hold in uiSet.SkillUILists.aggressiveCommitRadios)
+            foreach (var hold in uiSet.SkillUILists.aggressiveCommitToggles)
             {
-                hold.Interactable(activeSkillIds.Contains(hold.skillID));
+                var skill = actor.SkillList[hold.skillID];
+                hold.Interactable(activeSkillIds.Contains(hold.skillID) && (skill?.AggressiveOnExecute.canSelect ?? false));
+            }
+            foreach (var hold in uiSet.SkillUILists.aggressiveTriggerToggles)
+            {
+                var skill = actor.SkillList[hold.skillID];
+                hold.Interactable(activeSkillIds.Contains(hold.skillID) && (skill?.AggressiveOnTrigger.canSelect ?? false));
+            }
+            foreach (var hold in uiSet.SkillUILists.aggressiveStockToggles)
+            {
+                var skill = actor.SkillList[hold.skillID];
+                hold.Interactable(activeSkillIds.Contains(hold.skillID) && (skill?.AggressiveOnStock.canSelect ?? false));
             }
         }
     }
@@ -177,9 +208,20 @@ public sealed class PlayersUIService
         {
             hold.button.interactable = activeSkillIds.Contains(hold.skillID);
         }
-        foreach (var hold in uiSet.SkillUILists.aggressiveCommitRadios)
+        foreach (var hold in uiSet.SkillUILists.aggressiveCommitToggles)
         {
-            hold.Interactable(activeSkillIds.Contains(hold.skillID));
+            var skill = actor.SkillList[hold.skillID];
+            hold.Interactable(activeSkillIds.Contains(hold.skillID) && (skill?.AggressiveOnExecute.canSelect ?? false));
+        }
+        foreach (var hold in uiSet.SkillUILists.aggressiveTriggerToggles)
+        {
+            var skill = actor.SkillList[hold.skillID];
+            hold.Interactable(activeSkillIds.Contains(hold.skillID) && (skill?.AggressiveOnTrigger.canSelect ?? false));
+        }
+        foreach (var hold in uiSet.SkillUILists.aggressiveStockToggles)
+        {
+            var skill = actor.SkillList[hold.skillID];
+            hold.Interactable(activeSkillIds.Contains(hold.skillID) && (skill?.AggressiveOnStock.canSelect ?? false));
         }
     }
 
@@ -205,6 +247,7 @@ public sealed class PlayersUIService
     public void OnBattleStart()
     {
         emotionalAttachmentUI.OnBattleStart();
+        if (weaponSelectArea != null) weaponSelectArea.Close();
     }
 
     private bool ZoneTraitAndTypeSkillMatchesUIFilter(BaseSkill skill, SkillZoneTrait traitMask, SkillType typeMask)
@@ -234,11 +277,26 @@ public sealed class PlayersUIService
         var uiSet = UIRegistry.GetUISet(id);
         if (uiSet?.SkillUILists == null) return;
 
-        foreach (var radio in uiSet.SkillUILists.aggressiveCommitRadios.Where(rad => ally.ValidSkillIDList.Contains(rad.skillID)))
+        foreach (var toggle in uiSet.SkillUILists.aggressiveCommitToggles.Where(t => ally.ValidSkillIDList.Contains(t.skillID)))
         {
-            BaseSkill skill = ally.SkillList[radio.skillID];
-            if (skill == null) Debug.LogError("スキルがありません");
-            radio.Controller.SetOnWithoutNotify(skill.IsAggressiveCommit ? 0 : 1);
+            BaseSkill skill = ally.SkillList[toggle.skillID];
+            if (skill == null) { Debug.LogError("スキルがありません"); continue; }
+            if (!skill.AggressiveOnExecute.canSelect) { toggle.Interactable(false); continue; }
+            toggle.Controller.SetOnWithoutNotify(skill.AggressiveOnExecute.isAggressiveCommit);
+        }
+        foreach (var toggle in uiSet.SkillUILists.aggressiveTriggerToggles.Where(t => ally.ValidSkillIDList.Contains(t.skillID)))
+        {
+            BaseSkill skill = ally.SkillList[toggle.skillID];
+            if (skill == null) { Debug.LogError("スキルがありません"); continue; }
+            if (!skill.AggressiveOnTrigger.canSelect) { toggle.Interactable(false); continue; }
+            toggle.Controller.SetOnWithoutNotify(skill.AggressiveOnTrigger.isAggressiveCommit);
+        }
+        foreach (var toggle in uiSet.SkillUILists.aggressiveStockToggles.Where(t => ally.ValidSkillIDList.Contains(t.skillID)))
+        {
+            BaseSkill skill = ally.SkillList[toggle.skillID];
+            if (skill == null) { Debug.LogError("スキルがありません"); continue; }
+            if (!skill.AggressiveOnStock.canSelect) { toggle.Interactable(false); continue; }
+            toggle.Controller.SetOnWithoutNotify(skill.AggressiveOnStock.isAggressiveCommit);
         }
     }
 
@@ -272,6 +330,16 @@ public sealed class PlayersUIService
                 }
             }
         }
+        // 武器スキルボタンのinteractable制御
+        // 武器ボタンは専用アクションなのでZoneTrait/SkillTypeフィルタの対象外
+        if (uiSet.WeaponSkillButton != null)
+        {
+            var weaponSkill = ally.NowUseWeapon?.WeaponSkill;
+            uiSet.WeaponSkillButton.interactable = weaponSkill != null
+                && !ally.HasCanCancelCantACTPassive
+                && CanCastNow(ally, weaponSkill);
+        }
+
         if (uiSet.CancelPassiveButtonField == null) Debug.LogError("CancelPassiveButtonFieldがnullです");
         uiSet.CancelPassiveButtonField?.ShowPassiveButtons(ally);
     }

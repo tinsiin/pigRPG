@@ -267,14 +267,14 @@ public abstract partial class BaseStates
                 }
             }
 
-            // プロトコル排他係数の適用
+            // プロトコル排他係数の適用（適応ラグによる適応率を乗算）
             var excl = AttackPowerConfig.GetExclusiveATK(NowBattleProtocol);
             foreach (var kv in excl)
             {
                 float td = TenDayValues(false).GetValueOrZero(kv.Key);
                 if (td != 0f && kv.Value != 0f)
                 {
-                    breakdown.TenDayAdd(kv.Key, td * kv.Value);
+                    breakdown.TenDayAdd(kv.Key, td * kv.Value * _adaptationRate);
                 }
             }
             
@@ -817,9 +817,9 @@ public abstract partial class BaseStates
         //現在の精神属性を構成する十日能力の中で最も大きいものを算出
         float topTenDayValue = 0f;
         Debug.Log($"(スキル成長)精神属性のチェック : {MyImpression},キャラ:{CharacterName}");
-        if(MyImpression == SpiritualProperty.none)
+        if(MyImpression == SpiritualProperty.none || !SpritualTenDayAbilitysMap.ContainsKey(MyImpression))
         {
-            Debug.Log($"キャラクター{CharacterName}の精神属性がnoneなので成長できません。、");
+            Debug.Log($"キャラクター{CharacterName}の精神属性({MyImpression})が未設定またはnoneなので成長できません。");
             return;
         }
         foreach(var ten in SpritualTenDayAbilitysMap[MyImpression])
@@ -864,7 +864,7 @@ public abstract partial class BaseStates
             float growthFactor = TenDayAbilityPosition.GetLinearAttenuation(averageDistance, distanceAttenuationLimit); // 15は最大距離の目安
 
             //グラデーション係数のデフォルト精神属性による救済処理
-            if(growthFactor < 0.3f)
+            if(growthFactor < 0.3f && SpritualTenDayAbilitysMap.ContainsKey(DefaultImpression))
             {
                 var isHelp = true;
                 foreach(var ten in SpritualTenDayAbilitysMap[DefaultImpression])//デフォルト精神属性の構成する十日能力で回す.
@@ -942,6 +942,7 @@ public abstract partial class BaseStates
         //ブーストする十日能力を敵のデフォルト精神属性を構成する一番大きいの達から取得
 
         //デフォルト精神属性の十日能力たちを候補リストにする
+        if(!SpritualTenDayAbilitysMap.ContainsKey(target.DefaultImpression)) return;
         var candidateAbilitiesList = SpritualTenDayAbilitysMap[target.DefaultImpression];
         //倒したキャラの十日能力値と合わせたリストにする。
         var candidateAbilitiyValuesList = new List<(TenDayAbility ability , float value)>();
@@ -1193,24 +1194,35 @@ public abstract partial class BaseStates
     [NonSerialized]
     public float Rivahal;
     /// <summary>
+    /// 馴化定数: Rivahalが蓄積するほど新しい刺激の加算割合が減る速度を制御
+    /// </summary>
+    const float RIVAHAL_HABITUATION_K = 1.0f;
+    /// <summary>
     /// TLOAスキルからのダメージ時、ライバハルの増える処理
+    /// 総量方式 + 馴化式
     /// </summary>
     public void RivahalDream(BaseStates Atker,BaseSkill skill)
     {
-        //スキルの印象構造で回す
-        var baseValue = 0f;
-        foreach(var tenDay in skill.TenDayValues())
+        // 総量方式: スキル印象構造に一致する攻撃者十日能力の合計 / スキル印象構造の合計
+        var attackerMatchSum = 0f;
+        var skillSum = 0f;
+        foreach(var tenDay in skill.TenDayValues(actor: Atker))
         {
-            var attackerValue = 0f;
-            if(tenDay.Value > 0)//ゼロ除算対策
-            {
-                attackerValue = Atker.TenDayValues(true).GetValueOrZero(tenDay.Key) / tenDay.Value;
-            }
-            baseValue += attackerValue;
+            attackerMatchSum += Atker.TenDayValues(true).GetValueOrZero(tenDay.Key);
+            skillSum += tenDay.Value;
         }
-        //精神補正100%を適用
-        var AtkerTLOAValue = baseValue * GetSkillVsCharaSpiritualModifier(skill.SkillSpiritual,Atker).GetValue();
-        Rivahal += AtkerTLOAValue;
+        var baseValue = attackerMatchSum / Mathf.Max(1f, skillSum);
+
+        // 精神補正100%を適用
+        var raw = baseValue * GetSkillVsCharaSpiritualModifier(skill.SkillSpiritual,Atker).GetValue();
+
+        // 馴化式: raw² / (raw + Rivahal × K)
+        // 蓄積が多いほど新しい刺激の加算割合が減る
+        if(raw > 0f)
+        {
+            var habituation = raw * raw / (raw + Rivahal * RIVAHAL_HABITUATION_K);
+            Rivahal += habituation;
+        }
     }
     //  ==============================================================================================================================
     //                                             思えの値

@@ -84,6 +84,40 @@ DynamicCanvas
         └── UIBlocker ← タブ単位のブロック制御
 ```
 
+### 起動時の初期化
+
+#### 要件
+
+- タブボタンの画像は **Default（未選択）のまま**にする（どのタブも選ばれていない見た目）
+- コンテンツは **PlayerContent だけを表示**し、CharaConfigContent・ConfigContent は非表示にする
+- Editモードで各タブのGameObjectをONにしていても、Play開始時に正しい初期状態になること
+
+#### 実装箇所
+
+`ToggleButtons.Start()`（`Assets/Script/Toggle/ToggleButtons.cs`）
+
+```csharp
+// _tabContentsChanger.Initialize() と OnChangeStateAsObservable 購読の後に実行
+
+foreach (var content in _tabContentsChanger.Contents)
+{
+    bool isDefault = content.Kind.Equals(TabContentsKind.Players);
+    content.View.SetActive(isDefault);
+}
+```
+
+#### 動作の流れ
+
+1. `ToggleButtonGroup.Awake()` → タブボタン初期化、画像を `ButtonRole.Default` にセット
+2. `ToggleButtons.Start()` → `_tabContentsChanger.Initialize()` でボタンクリック→コンテンツ切替を接続
+3. **初期化ループ**: Playersだけ `SetActive(true)`、他は `SetActive(false)`
+4. この時点ではタブボタンの `Select()` は呼ばない → タブ画像はDefaultのまま
+
+#### 注意点
+
+- `_tabContentsChanger.Select(0)` は意図的にコメントアウトしている。呼ぶとタブボタンが選択状態になり、Default画像ではなくなる
+- `TabContentsChanger.Select()` は内部で `_onChangeStateSubject.OnNext()` を発火するため、タブ画像の変更なしにコンテンツだけ切り替えたい場合は `View.SetActive()` を直接呼ぶ必要がある
+
 ### UIBlocker: タブ単位の操作ブロック
 
 USERUIには**UIBlocker**による操作ブロック機構がある。
@@ -336,3 +370,4 @@ currentState = EyeAreaState.Walk | EyeAreaState.Novel;
 | 2026-01-25 | 決定: 階層軸（案A）採用。レビュー完了 |
 | 2026-01-27 | 設計原則追加: 全イベントでUSERUI/EyeArea使用、Stateは大枠のみ |
 | 2026-01-27 | USERUI: 3タブ構造の説明追加、UIBlockerセクション追加 |
+| 2026-02-12 | USERUI: 3タブ起動時初期化の仕様追加（Editmode表示状態に依存しない初期化） |

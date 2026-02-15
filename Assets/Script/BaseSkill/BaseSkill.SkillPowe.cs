@@ -14,8 +14,13 @@ public partial class BaseSkill
     /// スキルのパワー　
     /// ゆりかご効果によるスキルレベルを参照するか、そうでないか。
     /// </summary>
-    protected virtual float _skillPower(bool IsCradle)
+    protected virtual float _skillPower(bool IsCradle, BaseStates actor = null)
     {
+        if (FixedSkillLevelData == null || FixedSkillLevelData.Count == 0)
+        {
+            Debug.LogError($"スキル「{SkillName}」のFixedSkillLevelDataが空です。Inspectorで最低1つのスキルレベルデータを設定してください");
+            return 0f;
+        }
         var Level = _nowSkillLevel;
         var powerMultiplier = SkillPassiveSkillPowerRate();//スキルパワーに乗算する値
         if(IsCradle)
@@ -45,11 +50,11 @@ public partial class BaseSkill
     /// <summary>
     /// スキルのパワー
     /// </summary>
-    public float GetSkillPower(bool IsCradle = false) => _skillPower(IsCradle) * (1.0f - MentalDamageRatio);
+    public float GetSkillPower(bool IsCradle = false, BaseStates actor = null) => _skillPower(IsCradle, actor) * (1.0f - MentalDamageRatio);
     /// <summary>
     /// 精神HPへのスキルのパワー
     /// </summary>
-    public float GetSkillPowerForMental(bool IsCradle = false) => _skillPower(IsCradle) * MentalDamageRatio;
+    public float GetSkillPowerForMental(bool IsCradle = false, BaseStates actor = null) => _skillPower(IsCradle, actor) * MentalDamageRatio;
     /// <summary>
     /// スキルパッシブ由来のスキルパワー百分率
     /// </summary>
@@ -67,18 +72,18 @@ public partial class BaseSkill
     /// <summary>
     /// スキルパワーの計算
     /// </summary>
-    public virtual float SkillPowerCalc(bool IsCradle = false)
+    public virtual float SkillPowerCalc(bool IsCradle = false, BaseStates actor = null)
     {
-        var pwr = GetSkillPower(IsCradle);//基礎パワー
+        var pwr = GetSkillPower(IsCradle, actor);//基礎パワー
 
 
 
 
         return pwr;
     }
-    public virtual float SkillPowerForMentalCalc(bool IsCradle = false)
+    public virtual float SkillPowerForMentalCalc(bool IsCradle = false, BaseStates actor = null)
     {
-        var pwr = GetSkillPowerForMental(IsCradle);//基礎パワー
+        var pwr = GetSkillPowerForMental(IsCradle, actor);//基礎パワー
 
 
         return pwr;

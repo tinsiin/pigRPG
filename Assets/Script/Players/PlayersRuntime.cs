@@ -59,7 +59,8 @@ public sealed class PlayersRuntime
         uiService = new PlayersUIService(
             roster,
             skillPassiveSelectionUI,
-            emotionalAttachmentUI);
+            emotionalAttachmentUI,
+            refs.WeaponSelectArea);
         uiFacade = new PlayersUIFacade();
         uiEventRouter = new PlayersUIEventRouter(uiFacade, uiService);
 

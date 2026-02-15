@@ -7,7 +7,7 @@ public class AchillesAndTurtle : BaseSkill//アキレスと亀- 混沌時間
 {
 
 
-    public override void ManualSkillEffect(BaseStates target,HitResult hitResult)//命中成功して、実行時の効果の本体
+    public override void ManualSkillEffect(BaseStates actor, BaseStates target,HitResult hitResult)//命中成功して、実行時の効果の本体
     {
         //相手がTLOAの種別なら発生しない
         if(target.MyType == CharacterType.TLOA) return;
@@ -18,16 +18,16 @@ public class AchillesAndTurtle : BaseSkill//アキレスと亀- 混沌時間
         //かすりならば、4.8割の確率で発生 = 5.2割で発生しない
         if(hitResult == HitResult.Graze && rollper(52)) return;
         //クリティカルとHItに何の違いもない。
-        
+
         const int TurtleID =22;
         const int AchillesID = 23;
         //自分に亀を付与
-        Doer.ApplyPassiveBufferInBattleByID(TurtleID);
+        actor.ApplyPassiveBufferInBattleByID(TurtleID);
         //相手にアキレスを付与
         target.ApplyPassiveBufferInBattleByID(AchillesID);
 
         //パッシブリンクさせる。
-        var turtlePas = Doer.GetBufferPassiveByID(TurtleID);
+        var turtlePas = actor.GetBufferPassiveByID(TurtleID);
         var achillesPas = target.GetBufferPassiveByID(AchillesID);
         turtlePas.SetPassiveLink(new LinkedPassive(achillesPas, true));
         achillesPas.SetPassiveLink(new LinkedPassive(turtlePas, true));

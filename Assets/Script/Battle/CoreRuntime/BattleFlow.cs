@@ -255,7 +255,7 @@ public sealed class BattleFlow
     private void BeVanguardTriggerAct()
     {
         var skill = _context.Acter.NowUseSkill;
-        if (skill != null && skill.IsReadyTriggerAgressiveCommit)
+        if (skill != null && skill.AggressiveOnTrigger.isAggressiveCommit)
         {
             _context.BeVanguard(_context.Acter);
         }

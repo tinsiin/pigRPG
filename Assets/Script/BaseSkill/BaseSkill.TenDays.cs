@@ -13,14 +13,14 @@ public partial class BaseSkill
     /// スキルの印象構造　十日能力値
     /// ゆりかごするかどうかは引数で
     /// </summary>
-    public TenDayAbilityDictionary TenDayValues(bool IsCradle = false)
+    public TenDayAbilityDictionary TenDayValues(bool IsCradle = false, BaseStates actor = null)
     {
-        if(Doer == null)
+        if (FixedSkillLevelData == null || FixedSkillLevelData.Count == 0)
         {
-            Debug.LogError("Doerがnullです-" + SkillName);
-            return null;
+            Debug.LogError($"スキル「{SkillName}」のFixedSkillLevelDataが空です。Inspectorで最低1つのスキルレベルデータを設定してください");
+            return new TenDayAbilityDictionary();
         }
-        Debug.Log($"スキル印象構造の取得 : スキル有限レベルリストの数:{FixedSkillLevelData.Count},キャラ:{Doer.CharacterName}");
+        Debug.Log($"スキル印象構造の取得 : スキル有限レベルリストの数:{FixedSkillLevelData.Count}" + (actor != null ? $",キャラ:{actor.CharacterName}" : ""));
         var Level = _nowSkillLevel;
         if(IsCradle)
         {

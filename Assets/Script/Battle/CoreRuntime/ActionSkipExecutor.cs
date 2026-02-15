@@ -14,7 +14,7 @@ public sealed class ActionSkipExecutor
     public TabState SkillStockACT()
     {
         var skill = _context.Acter?.NowUseSkill;
-        if (skill != null && skill.IsStockAgressiveCommit)
+        if (skill != null && skill.AggressiveOnStock.isAggressiveCommit)
         {
             _context.BeVanguard(_context.Acter);
         }

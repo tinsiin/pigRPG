@@ -26,6 +26,14 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
     //[SerializeField] private Button m_OpenTenDayAbilityButton;
     [SerializeField] private TenDaysMordaleAreaController m_TenDaysArea;
 
+    [Header("Weapon Select (Characonfig)")]
+    [SerializeField] private Button m_OpenWeaponSelectButton;
+    [SerializeField] private WeaponSelectArea m_WeaponSelectArea;
+
+    [Header("Protocol Cycle (Characonfig)")]
+    [SerializeField] private Button m_ProtocolCycleButton;
+    [SerializeField] private TextMeshProUGUI m_ProtocolCycleLabel;
+
     [Header("Shared Buttons (Characonfig)")]
     [SerializeField] private Button m_OpenEmotionalAttachmentButton;
     [SerializeField] private Button m_StopFreezeConsecutiveButton;
@@ -73,6 +81,48 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
         ToggleButtons.OnCharaConfigSelectAsObservable
             .Subscribe(_ => RefreshUI())
             .AddTo(this);
+
+        // 武器選択ボタンのバインド
+        if (m_OpenWeaponSelectButton != null)
+        {
+            BindSharedButtonWithIndex(m_OpenWeaponSelectButton, i =>
+            {
+                if (BattleContextHub.IsInBattle) return;
+                var actor = GetActor(i);
+                if (actor == null || m_WeaponSelectArea == null) return;
+
+                m_WeaponSelectArea.Open();
+                m_WeaponSelectArea.ShowWeapons(
+                    WeaponManager.Instance.AllWeapons,
+                    actor.NowUseWeapon?.id ?? -1,
+                    actor.BaseTenDayValues,
+                    weaponId =>
+                    {
+                        actor.ApplyWeapon(weaponId);
+                        m_StatesBanner.Bind(actor);
+                    });
+            });
+        }
+
+        // 規格サイクルボタンのバインド
+        if (m_ProtocolCycleButton != null)
+        {
+            BindSharedButtonWithIndex(m_ProtocolCycleButton, i =>
+            {
+                if (BattleContextHub.IsInBattle) return;
+                var actor = GetActor(i);
+                if (actor == null || actor.NowUseWeapon == null) return;
+                if (!actor.NowUseWeapon.HasMultipleProtocols) return;
+
+                var protocols = actor.NowUseWeapon.protocols;
+                int currentIdx = protocols.IndexOf(actor.NowBattleProtocol);
+                int nextIdx = (currentIdx + 1) % protocols.Count;
+                actor.SwitchProtocol(protocols[nextIdx]);
+
+                UpdateProtocolCycleUI(actor);
+                m_StatesBanner.Bind(actor);
+            });
+        }
 
         // 共有ボタンの一度だけのバインド（現在の index をキャプチャ）
         if (m_OpenEmotionalAttachmentButton != null)
@@ -258,6 +308,14 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
 
     private void RefreshUI()
     {
+        // キャラ切替時に武器選択パネルが開いていたら閉じる
+        if (m_WeaponSelectArea != null && m_WeaponSelectArea.gameObject.activeSelf)
+            m_WeaponSelectArea.Close();
+
+        // 武器ボタンの戦闘中グレーアウト
+        if (m_OpenWeaponSelectButton != null)
+            m_OpenWeaponSelectButton.interactable = !BattleContextHub.IsInBattle;
+
         // パーティー編成が変わっている可能性があるため、毎回リフレッシュ
         RefreshPartyMemberIds();
 
@@ -278,6 +336,9 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
 
         // パッシブ一覧の表示更新（複数フィールドに分割。各フィールド自身のRectに収める）
         UpdatePassivesTexts(actor);
+
+        // 規格サイクルボタンの表示更新
+        UpdateProtocolCycleUI(actor);
 
         // 割り込みカウンターActive（単独UI）のラジオを、現在インデックスのキャラにバインド
         if (m_InterruptCounterToggle != null)
@@ -539,6 +600,26 @@ public class CharaconfigController : MonoBehaviour, IPlayersContextConsumer
         btn.interactable = hasActualPassiveData;
         
         UnityEngine.Debug.Log($"[UpdatePassiveButtonInteractable] hasActualPassiveData: {hasActualPassiveData} button.interactable: {btn.interactable}");
+    }
+
+    /// <summary>
+    /// 規格サイクルボタンの表示/非表示・ラベルを更新
+    /// </summary>
+    private void UpdateProtocolCycleUI(BaseStates actor)
+    {
+        if (m_ProtocolCycleButton == null) return;
+
+        bool show = actor != null
+            && actor.NowUseWeapon != null
+            && actor.NowUseWeapon.HasMultipleProtocols
+            && !BattleContextHub.IsInBattle;
+
+        m_ProtocolCycleButton.gameObject.SetActive(show);
+
+        if (show && m_ProtocolCycleLabel != null)
+        {
+            m_ProtocolCycleLabel.text = actor.NowBattleProtocol.ToDisplayText();
+        }
     }
 
     private void OpenPassivesModalForCurrent()

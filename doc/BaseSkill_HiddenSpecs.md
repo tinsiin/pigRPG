@@ -251,8 +251,8 @@ const float NOT_TLOA_LEVEL_DIVIDER = ...;  // 通常スキル用
 ### アグレッシブコミット関連
 ```csharp
 public bool IsAggressiveCommit;           // アグレッシブコミット状態
-public bool IsReadyTriggerAgressiveCommit; // アグレッシブコミット準備完了
-public bool IsStockAgressiveCommit;       // ストックアグレッシブコミット
+public bool IsReadyTriggerAggressiveCommit; // アグレッシブコミット準備完了
+public bool IsStockAggressiveCommit;       // ストックアグレッシブコミット
 public bool CanSelectAggressiveCommit;    // アグレッシブコミット選択可能
 ```
 

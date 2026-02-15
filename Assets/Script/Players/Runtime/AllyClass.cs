@@ -162,7 +162,7 @@ public class AllyClass : BaseStates
             return;
         }
         oldSkill.ApplyEmotionalAttachmentSkillQuantityChangeSkillWeakeningPassive//弱体化スキルパッシブ専用の付与関数
-        (tuning.EmotionalAttachmentSkillWeakeningPassiveRef);
+        (tuning.EmotionalAttachmentSkillWeakeningPassiveRef, this);
     }
     
     /// <summary>
@@ -354,6 +354,43 @@ public class AllyClass : BaseStates
         }
     }
     /// <summary>
+    /// 武器スキルボタンから装備中の武器スキルを発動する
+    /// </summary>
+    public void OnWeaponSkillBtnCallBack()
+    {
+        var weapon = NowUseWeapon;
+        if (weapon?.WeaponSkill == null)
+        {
+            Debug.LogWarning("AllyClass.OnWeaponSkillBtnCallBack: 武器スキルが設定されていません");
+            return;
+        }
+
+        var orchestrator = Orchestrator;
+        if (orchestrator == null)
+        {
+            Debug.LogError("[CRITICAL] AllyClass.OnWeaponSkillBtnCallBack: BattleOrchestrator is not initialized");
+            return;
+        }
+
+        var input = new ActionInput
+        {
+            Kind = ActionInputKind.SkillSelect,
+            RequestId = orchestrator.CurrentChoiceRequest.RequestId,
+            Actor = this,
+            Skill = weapon.WeaponSkill
+        };
+        var state = orchestrator.ApplyInput(input);
+        var uiBridge = BattleUIBridge.Active;
+        if (uiBridge != null)
+        {
+            uiBridge.SetUserUiState(state, false);
+        }
+        else
+        {
+            Debug.LogError("AllyClass.OnWeaponSkillBtnCallBack: BattleUIBridge が null です");
+        }
+    }
+    /// <summary>
     /// スキル攻撃回数ストックボタンからはそのまま次のターンへ移行する(対象者選択や範囲選択などはない。)
     /// </summary>
     /// <param name="skillListIndex"></param>
@@ -387,24 +424,36 @@ public class AllyClass : BaseStates
     }
 
     /// <summary>
-    /// 前のめりを選択できるスキルで選択したときのコールバック関数
+    /// 前のめり（実行時）を選択できるスキルで選択したときのコールバック関数
     /// </summary>
-    public void OnSkillSelectAgressiveCommitBtnCallBack(int toggleIndex, int skillID)
+    public void OnSkillSelectAggressiveCommitBtnCallBack(int toggleIndex, int skillID)
     {
-        bool isAgrresiveCommit;
         var skill = SkillList[skillID];
-        
-        if(toggleIndex == 0) 
-        {
-            isAgrresiveCommit = true;
-            Debug.Log("前のめりして攻撃する" );
-        }
-        else
-        {
-            isAgrresiveCommit = false;
-            Debug.Log("そのままの位置から攻撃" );
-        }
-        skill.IsAggressiveCommit = isAgrresiveCommit;//スキルの前のめり性に代入すべ
+        if (!skill.AggressiveOnExecute.canSelect) return;
+        skill.AggressiveOnExecute.isAggressiveCommit = (toggleIndex == 0);
+        Debug.Log(toggleIndex == 0 ? "前のめりして攻撃する" : "そのままの位置から攻撃");
+    }
+
+    /// <summary>
+    /// 前のめり（トリガー時）を選択できるスキルで選択したときのコールバック関数
+    /// </summary>
+    public void OnSkillAggressiveTriggerBtnCallBack(int toggleIndex, int skillID)
+    {
+        var skill = SkillList[skillID];
+        if (!skill.AggressiveOnTrigger.canSelect) return;
+        skill.AggressiveOnTrigger.isAggressiveCommit = (toggleIndex == 0);
+        Debug.Log(toggleIndex == 0 ? "トリガー中に前のめりする" : "トリガー中はそのまま");
+    }
+
+    /// <summary>
+    /// 前のめり（ストック時）を選択できるスキルで選択したときのコールバック関数
+    /// </summary>
+    public void OnSkillAggressiveStockBtnCallBack(int toggleIndex, int skillID)
+    {
+        var skill = SkillList[skillID];
+        if (!skill.AggressiveOnStock.canSelect) return;
+        skill.AggressiveOnStock.isAggressiveCommit = (toggleIndex == 0);
+        Debug.Log(toggleIndex == 0 ? "ストック中に前のめりする" : "ストック中はそのまま");
     }
     /// <summary>
     /// UI処理用の割り込みカウンターのオンオフのbool

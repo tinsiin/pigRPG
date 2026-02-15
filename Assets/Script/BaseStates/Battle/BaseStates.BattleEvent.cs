@@ -152,6 +152,7 @@ public abstract partial class BaseStates
         foreach(var skillTen in JudgementSkillTenDays)//スキルの判定印象構造で回す
         {
             var AllBetweenSkillTenAndDefaultImpressionDistance = 0f;
+            if(!SpritualTenDayAbilitysMap.ContainsKey(DefaultImpression)) return false;
             foreach(var defaultImpTen in SpritualTenDayAbilitysMap[DefaultImpression])//デフォルト精神属性互換の精神属性全てで回す
             {
                 //距離を足す
@@ -725,7 +726,8 @@ public abstract partial class BaseStates
                 flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.SpringNap) - TenDayValues(true).GetValueOrZero(TenDayAbility.ElementFaithPower); 
                 break;
             case SpiritualProperty.none:
-                //noneならそもそも最大余剰ダメージ発生せず
+            case (SpiritualProperty)0: // 未設定のデフォルト値
+                //noneや未設定ならそもそも最大余剰ダメージ発生せず
                 break;
             default:
                 //他の未実装の精神属性を追加し忘れた場合に気づける

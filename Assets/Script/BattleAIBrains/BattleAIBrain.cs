@@ -1000,13 +1000,13 @@ public abstract class BattleAIBrain : ScriptableObject
         if (skill.HasType(SkillType.Heal))
         {
             // 概算: SkillPowerCalc をそのまま加点（詳細補正は派生で）
-            hpScore = Mathf.Max(0f, skill.SkillPowerCalc(skill.IsTLOA));
+            hpScore = Mathf.Max(0f, skill.SkillPowerCalc(skill.IsTLOA, self));
         }
 
         float mentalScore = 0f;
         if (skill.HasType(SkillType.MentalHeal))
         {
-            mentalScore = Mathf.Max(0f, skill.SkillPowerForMentalCalc(skill.IsTLOA)) * 0.5f;
+            mentalScore = Mathf.Max(0f, skill.SkillPowerForMentalCalc(skill.IsTLOA, self)) * 0.5f;
         }
 
         float deathBonus = (skill.HasType(SkillType.DeathHeal) && self.Death()) ? 100000f : 0f;

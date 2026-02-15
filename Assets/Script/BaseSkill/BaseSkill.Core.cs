@@ -26,8 +26,11 @@ public partial class BaseSkill
     {
         _battleContext = context;
     }
+    /// <summary>
+    /// OnInitialize済みかどうか（旧Doer nullチェックの代替）
+    /// </summary>
     [NonSerialized]
-    public BaseStates Doer;//行使者
+    public bool IsInitialized;
 
     //  ==============================================================================================================================
     //                                              基本プロパティ
@@ -125,7 +128,7 @@ public partial class BaseSkill
     /// <summary>
     /// 実行したキャラに付与される追加硬直値
     /// </summary>
-    public int SKillDidWaitCount;//スキルを行使した後の硬直時間。 Doer、行使者のRecovelyTurnに一時的に加算される？
+    public int SKillDidWaitCount;//スキルを行使した後の硬直時間。 行使者のRecovelyTurnに一時的に加算される？
 
 
     [Header("戦闘時補正率")]
@@ -166,8 +169,9 @@ public partial class BaseSkill
         dst._stockPower = _stockPower;
         dst._stockForgetPower = _stockForgetPower;
         dst.CanCancelTrigger = CanCancelTrigger;
-        dst.IsAggressiveCommit = IsAggressiveCommit;
-        dst.CanSelectAggressiveCommit = CanSelectAggressiveCommit;
+        dst.AggressiveOnExecute = AggressiveOnExecute.Clone();
+        dst.AggressiveOnTrigger = AggressiveOnTrigger.Clone();
+        dst.AggressiveOnStock = AggressiveOnStock.Clone();
         dst.SKillDidWaitCount = SKillDidWaitCount;
         dst.SkillName = SkillName;
         dst.SpecialFlags = SpecialFlags;//特殊判別性質
@@ -229,7 +233,28 @@ public partial class BaseSkill
 
     }
 
+    //  ==============================================================================================================================
+    //                                              デフォルト値
+    //  ==============================================================================================================================
 
+    /// <summary>
+    /// Unityがコンポーネント追加時・Inspector右クリック→Reset時に自動呼出。
+    /// 設定しないと実行時に例外でクラッシュするフィールドのみを初期化する。
+    /// </summary>
+    void Reset()
+    {
+        // FixedSkillLevelData — 空だと_skillPower(), TenDayValues()等でArgumentOutOfRangeException
+        if (FixedSkillLevelData == null || FixedSkillLevelData.Count == 0)
+            FixedSkillLevelData = new List<SkillLevelData> { new SkillLevelData() };
+
+        // _powerSpread — nullだとPowerSpreadプロパティ経由でNullReferenceException
+        if (_powerSpread == null)
+            _powerSpread = new float[0];
+
+        // ムーブセット — nullだとDecideNowMoveSet_A0_B1()でNullReferenceException
+        if (_a_moveset == null) _a_moveset = new List<MoveSet>();
+        if (_b_moveset == null) _b_moveset = new List<MoveSet>();
+    }
 
 }
 

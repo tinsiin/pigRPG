@@ -104,3 +104,6 @@ crashlytics-build.properties
 
 # 空フォルダ保持用のファイルは除外しない
 !/**/.gitkeep
+
+# Windows予約デバイス名（誤生成防止）
+nul

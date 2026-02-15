@@ -14,8 +14,8 @@ public partial class BaseSkill
     /// </summary>
     public void OnInitialize(BaseStates owner)
     {
-        Debug.Log("スキル" + SkillName + "の初期化" + owner.CharacterName + "をDoerとして記録");
-        Doer = owner;//管理者を記録
+        Debug.Log($"スキル{SkillName}の初期化 (owner: {owner?.CharacterName})");
+        IsInitialized = true;
         ResetStock();//_nowstockは最初は0になってるので、初期化でdefaultstockと同じ数にする。
     }
     /// <summary>

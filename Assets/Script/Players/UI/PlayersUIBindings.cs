@@ -31,29 +31,30 @@ public class ButtonAndSkillIDHold
     }
 }
 /// <summary>
-/// スキルIDが必要なラジオボタン処理用のコントローラー
-/// スキルIDなどが必要のない、例えば「キャラ自体の設定用」などは直接ToggleGroupControllerを使う。
+/// スキルIDと紐づくトグルボタン用のラッパー。
+/// スキルIDが不要な場面（キャラ単位の設定等）は直接ToggleSingleControllerを使う。
 /// </summary>
 [Serializable]
-public class RadioButtonsAndSkillIDHold
+public class ToggleSingleAndSkillIDHold
 {
-    public ToggleGroupController Controller;
+    public ToggleSingleController Controller;
     public int skillID;
 
-    // UnityAction<int, int>に変更 - 第1引数：どのトグルが選ばれたか、第2引数：skillID
-    public void AddRadioFunc(UnityAction<int, int> call)
+    /// <summary>
+    /// コールバックを設定。第1引数: 0(ON)/1(OFF)、第2引数: skillID
+    /// </summary>
+    public void AddToggleFunc(UnityAction<int, int> call)
     {
-        // nullチェック
         if (Controller == null)
         {
-            Debug.LogError("toggleGroupがnullです！ skillID: " + skillID);
+            Debug.LogError("ToggleSingleControllerがnullです！ skillID: " + skillID);
+            return;
         }
-
         if (call == null)
         {
             Debug.LogError("callがnullです！ skillID: " + skillID);
+            return;
         }
-        // 両方の情報を渡す
         Controller.AddListener((int toggleIndex) => call(toggleIndex, skillID));
     }
 
@@ -78,11 +79,23 @@ public class AllySkillUILists
     /// ストックボタンリスト
     /// </summary>
     public List<ButtonAndSkillIDHold> stockButtons = new();
-    [Header("前のめり選択が可能なスキル用に選択できるラジオボタン用リスト")]
+    [Header("前のめり選択トグルボタンリスト（実行時）")]
     /// <summary>
-    /// 前のめり選択ラジオリスト
+    /// 前のめり選択トグルリスト・実行時（スキルIDとToggleSingleControllerのペア）
     /// </summary>
-    public List<RadioButtonsAndSkillIDHold> aggressiveCommitRadios = new();
+    public List<ToggleSingleAndSkillIDHold> aggressiveCommitToggles = new();
+
+    [Header("前のめり選択トグルボタンリスト（トリガー時）")]
+    /// <summary>
+    /// 前のめり選択トグルリスト・トリガー時（スキルIDとToggleSingleControllerのペア）
+    /// </summary>
+    public List<ToggleSingleAndSkillIDHold> aggressiveTriggerToggles = new();
+
+    [Header("前のめり選択トグルボタンリスト（ストック時）")]
+    /// <summary>
+    /// 前のめり選択トグルリスト・ストック時（スキルIDとToggleSingleControllerのペア）
+    /// </summary>
+    public List<ToggleSingleAndSkillIDHold> aggressiveStockToggles = new();
 }
 
 /// <summary>
@@ -94,6 +107,8 @@ public class AllyUISet
     public AllySkillUILists SkillUILists;
     public GameObject DefaultButtonArea;
     public Button DoNothingButton;
+    [Header("武器スキルボタン")]
+    public Button WeaponSkillButton;
     public SelectCancelPassiveButtons CancelPassiveButtonField;
     public Button GoToCancelPassiveFieldButton;
     public Button ReturnCancelPassiveToDefaultAreaButton;

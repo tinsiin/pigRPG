@@ -271,7 +271,7 @@ public class EncounterEnemySelector
         {
             var skill = skills[i];
             if (skill == null) continue;
-            if (skill.Doer == null)
+            if (!skill.IsInitialized)
             {
                 enemy.OnInitializeSkillsAndChara();
                 return;

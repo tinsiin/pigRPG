@@ -101,7 +101,7 @@ public sealed class SkillExecutor
     private void BeVanguardSkillACT()
     {
         var skill = _context.Acter.NowUseSkill;
-        if (skill != null && skill.IsAggressiveCommit)
+        if (skill != null && skill.AggressiveOnExecute.isAggressiveCommit)
         {
             _context.BeVanguard(_context.Acter);
         }

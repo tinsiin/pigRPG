@@ -75,148 +75,103 @@ public partial class BaseSkill
     /// </summary>
     int _cradleSkillLevel = -1;
     /// <summary>
-    /// TLOAスキルをゆりかご計算する。
-    /// Doer = 攻撃者だよ　スキルは攻撃だし、攻撃者が呼び出す関数だし
+    /// TLOAスキルをゆりかご計算する（カトレア案）。
+    /// ゆりかごレベル = max(0, スキルレベル + 揺れ)
+    /// 揺れ = 感情強度 × 使いこなし × 戦闘増幅
+    /// actor = 攻撃者、underAtker = 被害者
     /// </summary>
-    public void CalcCradleSkillLevel(BaseStates underAtker)
+    public void CalcCradleSkillLevel(BaseStates underAtker, BaseStates actor)
     {
-        if(!IsTLOA) return;//TLOAスキルでなければ計算しない
+        if(!IsTLOA) return;
+        if(actor == null) { Debug.LogError($"CalcCradleSkillLevel: actorがnullです (skill: {SkillName})"); return; }
 
-        //まずゆりかごのルート位置から決める
-        //強さ　　　　　　　　　//TLOAも気持ちの問題なのでスキルの十日能力補正は当然かかる(TLOAスキルを参照)
-        var TendayAdvantage = Doer.TenDayValuesSum(true)/underAtker.TenDayValuesSum(false);
-        //実効ライバハル　= ライバハル　÷　敵に対する強さ　
-        //相手より弱いほどライバハルが増えたら変なので、1クランプする。
-        var EffectiveRivahal = Doer.Rivahal / Mathf.Max(1, TendayAdvantage);
-        //ルート位置補正計算式についてはobsidianのスキルレベルを参照して
-        var skillLevelRandomDivisorMax = EffectiveRivahal /2;
-        if(skillLevelRandomDivisorMax < 1) skillLevelRandomDivisorMax = 1;
-        //ルート位置算出
-        var root = EffectiveRivahal + _nowSkillLevel / RandomSource.NextFloat(1, skillLevelRandomDivisorMax);
+        // === 1. 調子（連続値 -1.0 ~ +1.0） ===
+        const float ratio = 0.7f;
+        const float center = 100f * ratio; // = 70
+        const float moodSpread = 3.5f;
+        float spiritualValue = BaseStates.GetOffensiveSpiritualModifier(actor, underAtker).GetValue(ratio);
+        float mood = Mathf.Clamp((spiritualValue - center) / moodSpread, -1f, 1f);
 
-        //次に調子の範囲を決める
-        //まず精神補正値による固定範囲
-        var ratio = 0.7f;
-        var BaseMoodRange = GetEstablishSpiritualMoodRange(BaseStates.GetOffensiveSpiritualModifier(Doer,underAtker).GetValue(ratio),ratio);
-        //次にパーティ属性と自分の属性相性による調子の範囲の補正
-        var MoodRange = ModifyMoodByAttributeCompatibility(BaseMoodRange,Doer.MyImpression,manager.MyGroup(Doer).OurImpression);
+        // パーティ属性補正（±0.3）
+        mood = ModifyMoodContinuous(mood, actor.MyImpression, manager.MyGroup(actor).OurImpression);
 
-        //今度は調子の範囲で使う上下レートを決める
-        //スキルの印象構造と同じ攻撃者の(Doer)十日能力値の総量を取得
-        var AtkerTenDaySumMatchingSkill  = 0f;
-        foreach(var tenDay in TenDayValues())//スキルの印象構造で回す
+        // === 2. 使いこなし（素の十日能力でスキル印象構造との一致度） ===
+        float attackerMatchSum = 0f;
+        foreach(var tenDay in TenDayValues(actor: actor))
+            attackerMatchSum += actor.BaseTenDayValues.GetValueOrZero(tenDay.Key);
+        float mastery = (TenDayValuesSum > 0f) ? attackerMatchSum / TenDayValuesSum : 1f;
+
+        // === 3. 戦闘増幅（ライバハルの漸近的増幅） ===
+        const float K = 30f;
+        const float R = 2f;
+        float rivahalFactor = actor.Rivahal / (actor.Rivahal + K);
+        float battleAmp = 1f + rivahalFactor * R;
+
+        // === 4. フリーハンド感情転換 ===
+        float emotionIntensity = mood;
+        var freehand = WeaponManager.Instance?.GetFreehandWeapon();
+        if(freehand != null && actor.NowUseWeapon == freehand)
         {
-            //蓄積変数にスキルの印象構造と同じ攻撃者Doerの十日能力値を足していくｐ！
-            AtkerTenDaySumMatchingSkill += Doer.TenDayValues(true).GetValueOrZero(tenDay.Key);
+            const float F = 0.75f;
+            emotionIntensity = Mathf.Lerp(mood, Mathf.Abs(mood), F);
         }
-        //上下レート算出　印象構造対応Doerの十日能力値　÷　スキルの十日能力値の総量　「どのくらいスキルを使いこなしているか」が指標
-        var MoodRangeRate = AtkerTenDaySumMatchingSkill / TenDayValuesSum;
-        MoodRangeRate = Mathf.Max(MoodRangeRate - 2,RandomSource.NextFloat(2));//ランダム　0~2が上下レートの最低値
 
-
-        //ルート位置から、調子の範囲によって上下レートを元にずらす。
-        _cradleSkillLevel = (int)(root + MoodRange * MoodRangeRate);
+        // === 5. 最終合成 ===
+        float swing = emotionIntensity * mastery * battleAmp;
+        _cradleSkillLevel = Mathf.Max(0, (int)(_nowSkillLevel + swing));
     }
-    /// <summary>
-    /// 調子の範囲を決める
-    /// 後で上下レートと掛けるので、-1,0,1の範囲の、下がるか上がるかそのままかで返す。
-    /// これは精神補正に掛ける補正率によって精神補正による分布範囲の前提が崩れるので、
-    /// 精神補正に掛ける率と同じ値を範囲指定に掛ける。
-    /// </summary>
-    int GetEstablishSpiritualMoodRange(float value,float ratio)
-    {
-        // 精神補正値に基づいて調子の範囲を決定
-        if (value <= 95 *ratio)
-        {
-            return -1;
-        }
-        else if (value <= 100 *ratio)
-        {
-            return 0;
-        }
-        else
-        {
-            return 1; //78以上
-        }    
-    }
-    /// <summary>
-    /// 調子の範囲を追加補正
-    /// </summary>
-    int ModifyMoodByAttributeCompatibility(int BaseValue, SpiritualProperty MyImpression,PartyProperty partyProperty)
-    {
-        // キャラクターの精神属性がnoneの場合は変化なし
-        if (MyImpression == SpiritualProperty.none)
-            return BaseValue;
 
-        // 相性表に基づいて調整
-        bool increase = false;
-        bool decrease = false;
-        
-        switch (Doer.MyImpression)
+    /// <summary>
+    /// パーティ属性相性による調子の連続補正（±0.3）
+    /// </summary>
+    float ModifyMoodContinuous(float mood, SpiritualProperty impression, PartyProperty partyProperty)
+    {
+        if (impression == SpiritualProperty.none) return mood;
+        float bonus = GetPartyCompatibilityBonus(impression, partyProperty);
+        return Mathf.Clamp(mood + bonus, -1f, 1f);
+    }
+
+    /// <summary>
+    /// 精神属性×パーティ属性の相性ボーナス（-0.3 / 0 / +0.3）
+    /// </summary>
+    float GetPartyCompatibilityBonus(SpiritualProperty impression, PartyProperty partyProperty)
+    {
+        switch (impression)
         {
             case SpiritualProperty.liminalwhitetile:
-                if (partyProperty == PartyProperty.Flowerees)
-                    decrease = true;
-                else if (partyProperty == PartyProperty.Odradeks)
-                    increase = true;
+                if (partyProperty == PartyProperty.Flowerees) return -0.3f;
+                if (partyProperty == PartyProperty.Odradeks) return 0.3f;
                 break;
-                
             case SpiritualProperty.kindergarden:
-                if (partyProperty == PartyProperty.Flowerees)
-                    decrease = true;
-                else if (partyProperty == PartyProperty.TrashGroup)
-                    increase = true;
+                if (partyProperty == PartyProperty.Flowerees) return -0.3f;
+                if (partyProperty == PartyProperty.TrashGroup) return 0.3f;
                 break;
-                
             case SpiritualProperty.sacrifaith:
-                if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.HolyGroup)
-                    increase = true;
+                if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.HolyGroup) return 0.3f;
                 break;
-                
             case SpiritualProperty.cquiest:
-                if (partyProperty == PartyProperty.TrashGroup)
-                    decrease = true;
-                else if (partyProperty == PartyProperty.HolyGroup || partyProperty == PartyProperty.Odradeks)
-                    increase = true;
+                if (partyProperty == PartyProperty.TrashGroup) return -0.3f;
+                if (partyProperty == PartyProperty.HolyGroup || partyProperty == PartyProperty.Odradeks) return 0.3f;
                 break;
-                
             case SpiritualProperty.devil:
-                if (partyProperty == PartyProperty.Odradeks)
-                    decrease = true;
-                else if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.TrashGroup)
-                    increase = true;
+                if (partyProperty == PartyProperty.Odradeks) return -0.3f;
+                if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.TrashGroup) return 0.3f;
                 break;
-                
             case SpiritualProperty.doremis:
-                if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.HolyGroup)
-                    increase = true;
+                if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.HolyGroup) return 0.3f;
                 break;
-                
             case SpiritualProperty.godtier:
-                if (partyProperty == PartyProperty.TrashGroup)
-                    increase = true;
+                if (partyProperty == PartyProperty.TrashGroup) return 0.3f;
                 break;
-                
             case SpiritualProperty.baledrival:
-                if (partyProperty == PartyProperty.Odradeks)
-                    decrease = true;
-                else if (partyProperty == PartyProperty.TrashGroup || partyProperty == PartyProperty.HolyGroup)
-                    increase = true;
+                if (partyProperty == PartyProperty.Odradeks) return -0.3f;
+                if (partyProperty == PartyProperty.TrashGroup || partyProperty == PartyProperty.HolyGroup) return 0.3f;
                 break;
-                
             case SpiritualProperty.pysco:
-                if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.MelaneGroup)
-                    increase = true;
+                if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.MelaneGroup) return 0.3f;
                 break;
         }
-        
-        // 上昇または下降の適用（-1から1の間に制限）
-        if (increase)
-            return Math.Min(1, BaseValue + 1);
-        else if (decrease)
-            return Math.Max(-1, BaseValue - 1);
-        else
-            return BaseValue;
+        return 0f;
     }
 
 
@@ -285,12 +240,23 @@ public class SkillLevelData
         //MoveSetのディープコピー
         if(this.OptionA_MoveSet != null)
         {
+            copy.OptionA_MoveSet = new List<MoveSet>();
             foreach(var moveSet in this.OptionA_MoveSet)
             {
-                copy.OptionA_MoveSet.Add(moveSet.DeepCopy());
+                if(moveSet != null)
+                    copy.OptionA_MoveSet.Add(moveSet.DeepCopy());
             }
         }
-        
+        if(this.OptionB_MoveSet != null)
+        {
+            copy.OptionB_MoveSet = new List<MoveSet>();
+            foreach(var moveSet in this.OptionB_MoveSet)
+            {
+                if(moveSet != null)
+                    copy.OptionB_MoveSet.Add(moveSet.DeepCopy());
+            }
+        }
+
         return copy;
     }
 }

@@ -36,6 +36,14 @@ public class ToggleButtons : MonoBehaviour //カスタマイズしやすいTabCo
                 }).AddTo(this);
         //_tabContentsChanger.Select(0);//選んだ状態に予めする奴だから消しとく。
 
+        // 起動時のタブ内容初期化: タブボタンは未選択(Default画像)のまま、
+        // Playersだけ表示して他は非表示にする（Editmodeの表示状態に依存しないように）
+        foreach (var content in _tabContentsChanger.Contents)
+        {
+            bool isDefault = content.Kind.Equals(TabContentsKind.Players);
+            content.View.SetActive(isDefault);
+        }
+
         // SelectedCharacterIdを購読（新キャラクターにも対応）
         var selectedCharacterId = UIStateHub.SelectedCharacterId;
         if (selectedCharacterId != null)

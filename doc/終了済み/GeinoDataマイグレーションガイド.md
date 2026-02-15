@@ -138,8 +138,8 @@ CharacterDataSO
 | ZoneTrait | 1 | **CanPerfectSelectSingleTarget** |
 | ConsecutiveType | 0 | |
 | IsAggressiveCommit | 1 (true) | アグレッシブコミット有効 |
-| IsReadyTriggerAgressiveCommit | 0 (false) | |
-| IsStockAgressiveCommit | 0 (false) | |
+| IsReadyTriggerAggressiveCommit | 0 (false) | |
+| IsStockAggressiveCommit | 0 (false) | |
 | CanSelectAggressiveCommit | 0 (false) | |
 | _defaultStockCount | 1 | |
 | _stockPower | 1 | |
@@ -172,8 +172,8 @@ CharacterDataSO
 | ZoneTrait | 1 | **CanPerfectSelectSingleTarget** |
 | ConsecutiveType | 0 | |
 | IsAggressiveCommit | 0 (false) | **リアクティブ型** |
-| IsReadyTriggerAgressiveCommit | 0 (false) | |
-| IsStockAgressiveCommit | 0 (false) | |
+| IsReadyTriggerAggressiveCommit | 0 (false) | |
+| IsStockAggressiveCommit | 0 (false) | |
 | CanSelectAggressiveCommit | 0 (false) | |
 | _defaultStockCount | 1 | |
 | _stockPower | 1 | |

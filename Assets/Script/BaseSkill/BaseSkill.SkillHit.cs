@@ -58,15 +58,10 @@ public partial class BaseSkill
     /// スキル命中onlyならデフォルトで普通のHitが指定されるので渡さなくてOK
     /// </summary>
     /// <param name="supremacyBonus">命中ボーナス　主に命中凌駕用途</param>>
-    public virtual HitResult SkillHitCalc(BaseStates target,float supremacyBonus = 0,HitResult hitResult = HitResult.Hit,bool PreliminaryMagicGrazeRoll = false)
+    public virtual HitResult SkillHitCalc(BaseStates target,float supremacyBonus = 0,HitResult hitResult = HitResult.Hit,bool PreliminaryMagicGrazeRoll = false, BaseStates actor = null)
     {
-        /*schizoLog.AddLog("スキル命中計算が呼ばれた",true);
-        // 関数の先頭で一時的に
-        Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.Full);
-        Debug.Log($"スキル命中計算が呼ばれた.\n{new System.Diagnostics.StackTrace(1, true)}");*/
-
         //割り込みカウンターなら確実
-        if(Doer.HasPassive(1)) return hitResult;
+        if(actor != null && actor.HasPassive(1)) return hitResult;
 
         //通常計算
         var rndMin = RandomSource.NextInt(3);//ボーナスがある場合ランダムで三パーセント~0パーセント引かれる
@@ -93,9 +88,9 @@ public partial class BaseSkill
     /// Manual系のスキルでの用いるスキルごとの独自効果
     /// </summary>
     /// <param name="target"></param>
-    public virtual void ManualSkillEffect(BaseStates target,HitResult hitResult)
+    public virtual void ManualSkillEffect(BaseStates actor, BaseStates target, HitResult hitResult)
     {
-        
+
     }
 
 }

@@ -92,7 +92,7 @@ public partial class BaseSkill
     /// <summary>
     /// スキルパッシブの付与対象となるスキルを対象者のスキルリストから選ぶ。
     /// </summary>
-    public async UniTask<List<BaseSkill>> SelectSkillPassiveAddTarget(BaseStates target)
+    public async UniTask<List<BaseSkill>> SelectSkillPassiveAddTarget(BaseStates actor, BaseStates target)
     {
         var targetSkills = target.SkillList.ToList();//ターゲットの現在解放されてるスキル
         if(targetSkills.Count == 0)
@@ -104,13 +104,13 @@ public partial class BaseSkill
         if(TargetSelection == SkillPassiveTargetSelection.Select)
         {
             //敵ならAIで 未実装
-            if(manager.GetCharacterFaction(Doer) == allyOrEnemy.Enemyiy)
+            if(manager.GetCharacterFaction(actor) == allyOrEnemy.Enemyiy)
             {
-                
+
             }
 
             //味方はUI選択
-            if(manager.GetCharacterFaction(Doer) == allyOrEnemy.alliy)
+            if(manager.GetCharacterFaction(actor) == allyOrEnemy.alliy)
             {
                 if(_skillPassiveGibeSkill_SkillFilter != null && _skillPassiveGibeSkill_SkillFilter.HasAnyCondition)//フィルタ条件があるなら絞り込む
                 {
@@ -125,7 +125,7 @@ public partial class BaseSkill
                 }
 
                 //選択ボタンエリア生成と受け取り
-                var skillUi = Doer?.SkillUI;
+                var skillUi = actor?.SkillUI;
                 if (skillUi == null)
                 {
                     Debug.LogError("BaseSkill.SkillPassive: SkillUI が null です");

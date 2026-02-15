@@ -12,6 +12,9 @@ public class PlayersUIRefs : MonoBehaviour
     [Header("思い入れスキル選択UI")]
     public SelectEmotionalAttachmentSkillButtons EmotionalAttachmentSkillSelectUIArea;
 
+    [Header("武器選択UI")]
+    public WeaponSelectArea WeaponSelectArea;
+
     [Header("EyeArea / ActionMark")]
     public GameObject EyeArea;
     public ActionMarkUI ActionMar;

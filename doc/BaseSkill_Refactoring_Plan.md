@@ -164,8 +164,8 @@ BaseSkill.csは現在約2000行のコードを含む大規模なファイルで�
 - **アグレッシブコミット管理**
   - IsAggressiveCommit
   - CanSelectAggressiveCommit
-  - IsReadyTriggerAgressiveCommit
-  - IsStockAgressiveCommit
+  - IsReadyTriggerAggressiveCommit
+  - IsStockAggressiveCommit
 
 ### 16. スキル待機機能
 - **待機カウント**

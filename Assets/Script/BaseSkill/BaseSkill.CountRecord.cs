@@ -41,7 +41,7 @@ public partial class BaseSkill
     /// <summary>
     /// 永続的なものと一時的な物両方のスキル使用回数をカウントアップ
     /// </summary>
-    public virtual void DoSkillCountUp()
+    public virtual void DoSkillCountUp(BaseStates actor = null)
     {
         _doCount++;
         _recordDoCount++;

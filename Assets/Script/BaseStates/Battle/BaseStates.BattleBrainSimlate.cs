@@ -31,8 +31,8 @@ public abstract partial class BaseStates
         // AIポリシーで精神補正を無効化したい場合は、素の威力へリセット（完全に精神補正を排除）
         if(!policy.spiritualModifier)
         {
-            skillPower = skill.SkillPowerCalc(skill.IsTLOA);
-            skillPowerForMental = skill.SkillPowerForMentalCalc(skill.IsTLOA);
+            skillPower = skill.SkillPowerCalc(skill.IsTLOA, attacker);
+            skillPowerForMental = skill.SkillPowerForMentalCalc(skill.IsTLOA, attacker);
         }
 
         //防御力（ポリシーに応じた簡易/完全シミュレーション）
@@ -82,7 +82,7 @@ public abstract partial class BaseStates
         //物理耐性による減衰(オプション)
         if(policy.physicalResistance)
         {
-            dmg = ApplyPhysicalResistance(dmg,skill);
+            dmg = ApplyPhysicalResistance(dmg, skill, attacker);
         }
 
         //追加HP（バリア層）のシミュレート処理（オプション）

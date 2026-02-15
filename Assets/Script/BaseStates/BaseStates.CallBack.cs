@@ -86,7 +86,7 @@ public abstract partial class BaseStates
     void OnAttackerOneSkillActStart(BaseStates UnderAtker)
     {
         ApplyExtraPassivesToSkill(UnderAtker);//攻撃者にスキルの追加パッシブ性質を適用
-        NowUseSkill.CalcCradleSkillLevel(UnderAtker);//「攻撃者の」スキルのゆりかご計算
+        NowUseSkill.CalcCradleSkillLevel(UnderAtker, this);//「攻撃者の」スキルのゆりかご計算
         NowUseSkill.RefilCanEraceCount();//除去スキル用の消せるカウント回数の補充
     }
 
@@ -196,6 +196,7 @@ public abstract partial class BaseStates
         NowUseSkill = null;//現在何のスキルも使っていない。
         TempDamageTurn = 0;
         DeleteConsecutiveATK();
+        RecoverAdaptation();//適応ラグの回復（規格/武器切替後、1戦ごとに排他ATK適応率が回復）
         DecayOfPersistentAdaptation();//恒常的な慣れ補正の減衰　　持ち越しの前に行われる　じゃないと記憶された瞬間に忘れてしまうし
         AdaptCarryOver();//慣れ補正持ち越しの処理
         battleGain.Clear();//勝利ブーストの値をクリアしてメモリをよくする

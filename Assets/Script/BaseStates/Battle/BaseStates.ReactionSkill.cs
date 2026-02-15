@@ -27,8 +27,8 @@ public abstract partial class BaseStates
         var modifierForSkillPower = modifier.GetValue(SpiritualModifierPercentage);//精神補正値
         if (attacker.NowUseWeapon.IsBlade) modifierForSkillPower = 1.0f; // 刃物武器なら精神補正なし
 
-        skillPower = skill.SkillPowerCalc(skill.IsTLOA) * modifierForSkillPower * spread;
-        skillPowerForMental = skill.SkillPowerForMentalCalc(skill.IsTLOA) * modifier.GetValue() * spread; // 精神は100%
+        skillPower = skill.SkillPowerCalc(skill.IsTLOA, attacker) * modifierForSkillPower * spread;
+        skillPowerForMental = skill.SkillPowerForMentalCalc(skill.IsTLOA, attacker) * modifier.GetValue() * spread; // 精神は100%
     }
 
 
@@ -56,7 +56,7 @@ public abstract partial class BaseStates
         if (!manager.IsVanguard(Attacker))
         {
             //スキルのその場DontMove性の担保のため、前のめりの選択がないスキルは後衛でも命中低下しない
-            if(skill.CanSelectAggressiveCommit)
+            if(skill.AggressiveOnExecute.canSelect)
             {//だから前のめり選べるスキルの場合のみ命中低下する。
                 minusMyChance += AGI().Total * 0.2f;//チャンス計算だけだからTotal    
             }
@@ -130,14 +130,14 @@ public abstract partial class BaseStates
             }
             AddBattleLog("通常Hitにより更なるスキル命中計算を実行", true);
             //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
-            return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult);
+            return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult, actor: Attacker);
         }
         //回避されたので、まずは魔法スキルなら魔法かすりする　三分の一で
         //事前魔法かすり判定である。(攻撃性質スキル以外はスキル命中のみで魔法かすり判定をするという違いがある為。)
         if(skill.IsMagic && RandomSource.NextFloat(3) < 1)
         {
             //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
-            return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), HitResult.Graze, true);
+            return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), HitResult.Graze, true, actor: Attacker);
         }
 
 
@@ -167,7 +167,7 @@ public abstract partial class BaseStates
             }
 
             //爆破型なのでかすりだが、そもそものスキル命中の計算をする介する
-            return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult);
+            return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult, actor: Attacker);
         }
 
 
@@ -395,13 +395,13 @@ public abstract partial class BaseStates
     /// <summary>
     /// 良いスキルパッシブ付与処理
     /// </summary>
-    async UniTask<bool> GoodSkillPassiveHit(BaseSkill skill)
+    async UniTask<bool> GoodSkillPassiveHit(BaseSkill skill, BaseStates actor)
     {
         var hit = false;
         foreach (var pas in skill.AggressiveSkillPassiveList.Where(pas => !pas.IsBad))//スキルパッシブスキルに装弾されたスキルパッシブ
         {
             //スキルパッシブ付与対象のスキル
-            var targetedSkill =  await skill.SelectSkillPassiveAddTarget(this);
+            var targetedSkill =  await skill.SelectSkillPassiveAddTarget(actor, this);
             if(targetedSkill == null)continue;//付与対象のスキルがなかったら、次のループへ
             //付与対象のスキルで回す
             foreach(var targetSkill in targetedSkill)
@@ -417,13 +417,13 @@ public abstract partial class BaseStates
     /// <summary>
     /// 悪いスキルパッシブ付与処理
     /// </summary>
-    async UniTask<bool> BadSkillPassiveHit(BaseSkill skill)
+    async UniTask<bool> BadSkillPassiveHit(BaseSkill skill, BaseStates actor)
     {
         var hit = false;
         foreach (var pas in skill.AggressiveSkillPassiveList.Where(pas => pas.IsBad))//スキルパッシブスキルに装弾されたスキルパッシブ
         {
             //スキルパッシブ付与対象のスキル
-            var targetedSkill = await skill.SelectSkillPassiveAddTarget(this);
+            var targetedSkill = await skill.SelectSkillPassiveAddTarget(actor, this);
             if(targetedSkill == null)continue;//付与対象のスキルがなかったら、次のループへ
             //付与対象のスキルで回す
             foreach(var targetSkill in targetedSkill)
@@ -529,7 +529,7 @@ public abstract partial class BaseStates
     async UniTask<bool> ExecuteAddSkillPassiveFriendlyCore(BaseStates attacker, BaseSkill skill, HitResult hitResult)
     {
         if (hitResult != HitResult.Hit) return false;
-        return await this.GoodSkillPassiveHit(skill);
+        return await this.GoodSkillPassiveHit(skill, attacker);
     }
     /// <summary>
     /// 友好系: 良いパッシブ除去のコア（命中結果に従って適用）
@@ -665,7 +665,7 @@ public abstract partial class BaseStates
             if (rollper(rndFrequency))
             {
                 //悪いスキルパッシブを付与しようとしてるのなら、命中回避計算
-                badSkillPassiveHit = await BadSkillPassiveHit(skill);
+                badSkillPassiveHit = await BadSkillPassiveHit(skill, Atker);
             }else
             {
                 Debug.Log("悪い「スキル」パッシブを付与が上手く発動しなかった。");
@@ -755,11 +755,11 @@ public abstract partial class BaseStates
         //Manual1
         if(skill.HasType(SkillType.Manual1_GoodHitCalc))//良い攻撃
         {
-            var hitResult = skill.SkillHitCalc(this);//良い攻撃なのでスキル命中のみ
+            var hitResult = skill.SkillHitCalc(this, actor: attacker);//良い攻撃なのでスキル命中のみ
             hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
             AccumulateHitResult(hitResult);
 
-            skill.ManualSkillEffect(this,hitResult);//効果
+            skill.ManualSkillEffect(attacker, this, hitResult);//効果
         }
         if(skill.HasType(SkillType.Manual1_BadHitCalc))//悪い攻撃
         {
@@ -767,7 +767,7 @@ public abstract partial class BaseStates
             hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
             AccumulateHitResult(hitResult);
 
-            skill.ManualSkillEffect(this,hitResult);//効果
+            skill.ManualSkillEffect(attacker, this, hitResult);//効果
         }
 
         if (skill.HasType(SkillType.Attack))
@@ -844,7 +844,7 @@ public abstract partial class BaseStates
         if(skill.HasType(SkillType.DeathHeal))
         {
             //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
+            var hitResult = skill.SkillHitCalc(this, actor: attacker);
             hitResult = MixAllyEvade(hitResult,attacker);
             AccumulateHitResult(hitResult);
             ExecuteDeathHealFriendlyOnBattle(attacker, hitResult, ref isHeal);
@@ -852,7 +852,7 @@ public abstract partial class BaseStates
 
         if (skill.HasType(SkillType.Heal))
         {
-            var hitResult = skill.SkillHitCalc(this);
+            var hitResult = skill.SkillHitCalc(this, actor: attacker);
             hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
             AccumulateHitResult(hitResult);
             healAmount += ExecuteHealFriendlyCore(skillPower, hitResult, ref isHeal);
@@ -861,7 +861,7 @@ public abstract partial class BaseStates
         if (skill.HasType(SkillType.MentalHeal))
         {
             //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
+            var hitResult = skill.SkillHitCalc(this, actor: attacker);
             hitResult = MixAllyEvade(hitResult,attacker);
             AccumulateHitResult(hitResult);
             ExecuteMentalHealFriendlyCore(skillPower, hitResult, ref isHeal);
@@ -873,7 +873,7 @@ public abstract partial class BaseStates
         if (skill.HasType(SkillType.addPassive))
         {
             //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
+            var hitResult = skill.SkillHitCalc(this, actor: attacker);
             hitResult = MixAllyEvade(hitResult,attacker);
             AccumulateHitResult(hitResult);
             GoodPassiveHit = ExecuteAddPassiveFriendlyCore(attacker, skill, hitResult);
@@ -881,7 +881,7 @@ public abstract partial class BaseStates
         if (skill.HasType(SkillType.AddVitalLayer))
         {
             //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
+            var hitResult = skill.SkillHitCalc(this, actor: attacker);
             hitResult = MixAllyEvade(hitResult,attacker);
             AccumulateHitResult(hitResult);
             GoodVitalLayerHit = ExecuteAddVitalLayerFriendlyCore(attacker, skill, hitResult);
@@ -889,7 +889,7 @@ public abstract partial class BaseStates
         if (skill.HasType(SkillType.addSkillPassive))
         {
             //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
+            var hitResult = skill.SkillHitCalc(this, actor: attacker);
             hitResult = MixAllyEvade(hitResult,attacker);
             AccumulateHitResult(hitResult);
             GoodSkillPassiveHit = await ExecuteAddSkillPassiveFriendlyCore(attacker, skill, hitResult);
@@ -897,7 +897,7 @@ public abstract partial class BaseStates
         if (skill.HasType(SkillType.removeBadSkillPassive))
         {
             //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
+            var hitResult = skill.SkillHitCalc(this, actor: attacker);
             hitResult = MixAllyEvade(hitResult,attacker);
             AccumulateHitResult(hitResult);
             if (hitResult == HitResult.Hit)//スキル命中率の計算だけ行う
@@ -911,7 +911,7 @@ public abstract partial class BaseStates
         if(skill.HasType(SkillType.RemovePassive))
         {
             //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
+            var hitResult = skill.SkillHitCalc(this, actor: attacker);
             hitResult = MixAllyEvade(hitResult,attacker);
             AccumulateHitResult(hitResult);
             BadPassiveRemove = ExecuteRemovePassiveFriendlyCore(attacker, skill, hitResult);
@@ -919,7 +919,7 @@ public abstract partial class BaseStates
         if (skill.HasType(SkillType.RemoveVitalLayer))
         {
             //味方別口回避の発生と回避判定
-            var hitResult = skill.SkillHitCalc(this);
+            var hitResult = skill.SkillHitCalc(this, actor: attacker);
             hitResult = MixAllyEvade(hitResult,attacker);
             AccumulateHitResult(hitResult);
             BadVitalLayerRemove = ExecuteRemoveVitalLayerFriendlyCore(attacker, skill, hitResult);
@@ -962,7 +962,7 @@ public abstract partial class BaseStates
             float clampedRatio = attacker.CalculateClampedStrengthRatio(TenDayValuesSum(false));
 
             //攻撃者のHIT分の成長を記録
-            attacker.TenDayGrowthListByHIT.Add((growRate * clampedRatio, skill.TenDayValues(skill.IsTLOA)));//成長量にTLOAならゆりかごを考慮
+            attacker.TenDayGrowthListByHIT.Add((growRate * clampedRatio, skill.TenDayValues(skill.IsTLOA, actor: attacker)));//成長量にTLOAならゆりかごを考慮
 
             arrowThicknessDamagePercent = 0.2f;//ヒットしたら矢印の太さちょっと増やしとく
 
@@ -1128,7 +1128,7 @@ public abstract partial class BaseStates
                 {
                     if(pas.RemoveOnDamage)//RemoveOnDamageが有効なら
                     {
-                        hitResult = atkSkill.SkillHitCalc(this);//一個でも条件を満たせば善意攻撃なのでループを抜けていい
+                        hitResult = atkSkill.SkillHitCalc(this, actor: attacker);//一個でも条件を満たせば善意攻撃なのでループを抜けていい
                         HitResultSet = true;
                         break;
                     }
@@ -1136,7 +1136,7 @@ public abstract partial class BaseStates
 
                     if(pas.HasRemainingSurvivalVitalLayer(this))//生存条件としてのVitalLayerを今持っているかどうか
                     {
-                        hitResult = atkSkill.SkillHitCalc(this);//一個でも条件を満たせば善意攻撃なのでループを抜けていい
+                        hitResult = atkSkill.SkillHitCalc(this, actor: attacker);//一個でも条件を満たせば善意攻撃なのでループを抜けていい
                         HitResultSet = true;
                         break;
                     }
@@ -1262,7 +1262,7 @@ public abstract partial class BaseStates
         // ・除去回数の補充（Remove/Erase 系の動作を有効化）
         // ・ゆりかご計算（威力計算の整合）
         skill.RefilCanEraceCount();
-        skill.CalcCradleSkillLevel(attacker);
+        skill.CalcCradleSkillLevel(attacker, this);
 
         // 攻撃
         if (skill.HasType(SkillType.Attack))
@@ -1322,7 +1322,7 @@ public abstract partial class BaseStates
                 var ok = false;
                 if (!policy.GateFriendlyByHit || SkillHitPassed(attacker, skill, policy))
                 {
-                    ok = await GoodSkillPassiveHit(skill);
+                    ok = await GoodSkillPassiveHit(skill, attacker);
                 }
                 outcome.DidAddSkillPassive = ok;
                 any = any || ok;
@@ -1401,7 +1401,7 @@ public abstract partial class BaseStates
     private bool SkillHitPassed(BaseStates attacker, BaseSkill skill, SkillApplyPolicy policy)
     {
         if (!policy.UseHitEvade) return true;
-        var hr = skill.SkillHitCalc(this);
+        var hr = skill.SkillHitCalc(this, actor: attacker);
         if (policy.UseAllyEvade)
         {
             hr = MixAllyEvade(hr, attacker);

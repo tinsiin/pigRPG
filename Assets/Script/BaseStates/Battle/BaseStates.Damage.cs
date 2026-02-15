@@ -115,23 +115,45 @@ public abstract partial class BaseStates
     }
 
     /// <summary>
-    /// ダメージを物理耐性で減衰
+    /// ダメージを物理耐性で減衰。
+    /// 武器×スキルの物理属性ルール:
+    /// - スキルに物理属性あり＋武器と一致 → 耐性2回適用（物理2）
+    /// - スキルに物理属性あり＋武器と不一致 → スキル優先、耐性1回
+    /// - スキルがnone → 武器の物理属性で耐性1回（物理1）
     /// </summary>
-    StatesPowerBreakdown ApplyPhysicalResistance(StatesPowerBreakdown dmg, BaseSkill skill)
+    StatesPowerBreakdown ApplyPhysicalResistance(StatesPowerBreakdown dmg, BaseSkill skill, BaseStates attacker)
     {
-        switch(skill.SkillPhysical)
+        var effectivePhysical = skill.SkillPhysical;
+        int applyCount = 1;
+        var weapon = attacker.NowUseWeapon;
+
+        if (effectivePhysical == PhysicalProperty.none)
         {
-            case PhysicalProperty.dishSmack:
-                dmg *= DishSmackRsistance;
-                break;
-            case PhysicalProperty.heavy:
-                dmg *= HeavyResistance;
-                break;
-            case PhysicalProperty.volten:
-                dmg *= voltenResistance;
-                break;
-            //noneは物理耐性の計算無し
-        }        
+            // スキルに物理属性なし → 武器の物理属性を使用（物理1）
+            if (weapon != null)
+                effectivePhysical = weapon.ToPhysicalProperty();
+        }
+        else if (weapon != null && effectivePhysical == weapon.ToPhysicalProperty())
+        {
+            // スキルと武器の物理属性が一致 → 耐性2回適用（物理2）
+            applyCount = 2;
+        }
+
+        for (int i = 0; i < applyCount; i++)
+        {
+            switch (effectivePhysical)
+            {
+                case PhysicalProperty.dishSmack:
+                    dmg *= DishSmackRsistance;
+                    break;
+                case PhysicalProperty.heavy:
+                    dmg *= HeavyResistance;
+                    break;
+                case PhysicalProperty.volten:
+                    dmg *= voltenResistance;
+                    break;
+            }
+        }
         return dmg;
     }
     /// <summary>
@@ -175,19 +197,26 @@ public abstract partial class BaseStates
         return;
     }
     /// <summary>
-    /// 連続攻撃時、狙い流れの物理属性適正とスキルの物理属性の一致による1.1倍ブーストがあるかどうかを判定し行使する関数です
+    /// 連続攻撃時、狙い流れの物理属性適性と武器の物理属性の一致による1.3倍ブーストがあるかどうかを判定し行使する関数です
     /// </summary>
     void CheckPhysicsConsecutiveAimBoost(BaseStates attacker, BaseSkill skill)
     {
-        if(!skill.NowConsecutiveATKFromTheSecondTimeOnward())return;//連続攻撃でないなら何もしない
+        // 連続3回目以降でなければ何もしない
+        if (skill.ATKCountUP < 2) return;
 
-        if((skill.NowAimStyle() ==AimStyle.Doublet && skill.SkillPhysical == PhysicalProperty.volten) ||
-            ( skill.NowAimStyle() ==AimStyle.PotanuVolf && skill.SkillPhysical == PhysicalProperty.volten) ||
-            (skill.NowAimStyle() ==AimStyle.Duster) && skill.SkillPhysical == PhysicalProperty.dishSmack)
-            {
-                attacker.SetSpecialModifier("連続攻撃時、狙い流れの物理属性適正とスキルの物理属性の一致による1.1倍ブースト",
-                whatModify.atk, 1.1f);
-            }
+        // 武器の物理属性を取得（武器なしなら適用しない）
+        var weapon = attacker.NowUseWeapon;
+        if (weapon == null) return;
+        var weaponPhysical = weapon.ToPhysicalProperty();
+
+        if ((skill.NowAimStyle() == AimStyle.Doublet && weaponPhysical == PhysicalProperty.volten) ||
+            (skill.NowAimStyle() == AimStyle.PotanuVolf && weaponPhysical == PhysicalProperty.volten) ||
+            (skill.NowAimStyle() == AimStyle.Duster && weaponPhysical == PhysicalProperty.dishSmack))
+        {
+            attacker.SetSpecialModifier(
+                "連続攻撃時、狙い流れの物理属性適性と武器の物理属性の一致による1.3倍ブースト",
+                whatModify.atk, 1.3f);
+        }
     }
 
 
@@ -221,7 +250,7 @@ public abstract partial class BaseStates
         if(!skill.NowConsecutiveATKFromTheSecondTimeOnward()){//単回攻撃または初回攻撃なら  (戦闘規格noneが入ることを想定)
 
             var per = 1f;
-            if(GetTightenMindCorrectionStage()>=2)per=0.75f;//補正段階が2以上になるまで75%の確率で切り替えます、それ以降は100%で完全対応
+            if(GetTightenMindCorrectionStage()<2)per=0.75f;//補正段階が2未満なら75%の確率で外す、2以上なら100%で完全対応
 
            if(RandomSource.NextFloat(1) < pattern.a)//パターンAなら 
            {
@@ -461,8 +490,8 @@ public abstract partial class BaseStates
             isdisturbed = GetBaseCalcDamageWithPlusMinus22Percent(ref dmg);//基礎山型補正
         }
 
-        //物理耐性による減衰
-        dmg = ApplyPhysicalResistance(dmg,skill);
+        //物理耐性による減衰（武器×スキルの物理属性ルール適用）
+        dmg = ApplyPhysicalResistance(dmg, skill, Atker);
 
         //パッシブによるダメージの減衰率による絶対削減
         PassivesDamageReductionEffect(ref dmg);
@@ -644,7 +673,7 @@ public abstract partial class BaseStates
 
         // 物理耐性による減衰
         if(o.PhysicalResistance)
-            dmg = ApplyPhysicalResistance(dmg,skill);
+            dmg = ApplyPhysicalResistance(dmg, skill, Atker);
 
         // パッシブによるダメージの減衰率による絶対削減
         if(o.PassivesReduction)

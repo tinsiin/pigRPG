@@ -5,10 +5,10 @@ using static CommonCalc;
 
 public class RabitCat : BaseSkill
 {
-    public override HitResult SkillHitCalc(BaseStates target,float supremacyBonus = 0,HitResult hitResult = HitResult.Hit,bool PreliminaryMagicGrazeRoll = false)
+    public override HitResult SkillHitCalc(BaseStates target,float supremacyBonus = 0,HitResult hitResult = HitResult.Hit,bool PreliminaryMagicGrazeRoll = false, BaseStates actor = null)
     {
-        var calculatedValue = CalculateRabitCatEffectiveness(Doer, target);
-        if(calculatedValue > 0) return base.SkillHitCalc(target,supremacyBonus,hitResult,PreliminaryMagicGrazeRoll);
+        var calculatedValue = CalculateRabitCatEffectiveness(actor, target);
+        if(calculatedValue > 0) return base.SkillHitCalc(target,supremacyBonus,hitResult,PreliminaryMagicGrazeRoll, actor);
         return HitResult.CompleteEvade;//ラビットキャットの効果ターンが0以下、ないのなら、発動しなかったとして完全回避
     }
     /// <summary>
@@ -31,7 +31,7 @@ public class RabitCat : BaseSkill
         return (int)RabitCatTurn;
     }
     
-    public override void ManualSkillEffect(BaseStates target,HitResult hitResult)//命中成功して、実行時の効果の本体
+    public override void ManualSkillEffect(BaseStates actor, BaseStates target,HitResult hitResult)//命中成功して、実行時の効果の本体
     {
         //相手が機械の種別なら発生しない
         if(target.MyType == CharacterType.Machine) return;
@@ -40,16 +40,16 @@ public class RabitCat : BaseSkill
         //かすりならば、1.3割の確率で発生 = 8.7割で発生しない
         if(hitResult == HitResult.Graze && rollper(87)) return;
         //クリティカルとHItに何の違いもない。
-        
+
         const int CatID =21;
         const int RabitID = 20;
         //自分にキャットを付与
-        Doer.ApplyPassiveBufferInBattleByID(CatID);
+        actor.ApplyPassiveBufferInBattleByID(CatID);
         //相手にラビットを付与
         target.ApplyPassiveBufferInBattleByID(RabitID);
 
         //パッシブリンクさせる。
-        var catPas = Doer.GetBufferPassiveByID(CatID);
+        var catPas = actor.GetBufferPassiveByID(CatID);
         var rabitPas = target.GetBufferPassiveByID(RabitID);
         catPas.SetPassiveLink(new LinkedPassive(rabitPas, true));//実行者側は兎側にダメージを通さないが、
         rabitPas.SetPassiveLink(new LinkedPassive(catPas, true,0.7f));//相手側は実行者にダメージがリンクする。
