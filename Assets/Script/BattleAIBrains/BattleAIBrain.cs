@@ -1059,7 +1059,7 @@ public abstract class BattleAIBrain : ScriptableObject
         }
         catch { goodPassiveCount = skill.SubEffects?.Count ?? 0; }
 
-        int vitalCount = skill.subVitalLayers?.Count ?? 0;
+        int vitalCount = skill.SubVitalLayers?.Count ?? 0;
         int skillPassiveCount = skill.AggressiveSkillPassiveList?.Count ?? 0;
         return goodPassiveCount * 1.0f + vitalCount * 0.8f + skillPassiveCount * 0.6f;
     }

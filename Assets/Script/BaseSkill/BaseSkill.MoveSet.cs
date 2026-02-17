@@ -43,22 +43,10 @@ public partial class BaseSkill
         }
     }
 
-    [Header("ムーブセットの数そのものが二回目以降の連続攻撃となる\naとbは必ず同じ数分設定しなければいけない\nAimStyleとDEFATKを連続攻撃の手数分設定する感じ\n外側のインデックス = ランダム候補、内側のインデックス = 連続攻撃のindexに対応")]
-    [Header("ムーブセット設定ガイド\n【外側 List<MoveSet>】= 候補パターン群（A/Bは同数に）\n- 1回の発動ごとに1つ選択（DecideNowMoveSet_A0_B1 → NowMoveSetState）\n- CashMoveSet() がスキルレベルで A/B の候補群を差し替え\n【内側 MoveSet】= 2発目以降の手順\n- States[i] は (i+2)発目の AimStyle\n- DEFATKList[i] は (i+2)発目の防御係数（両リストは同じ長さ）\n【初回(1発目)】MoveSetは使わず SetSingleAimStyle() で設定した値を使用\n【総ヒット数】= 1(初回) + States.Count\n【注意】A/Bでパターン数と手数(States.Count)を揃えること")]
-    /// <summary>
-    /// 設定用 スキルごとのムーブセット 戦闘規格ごとのaに対応するもの。
-    /// </summary>
-    [SerializeField]
-    List<MoveSet> _a_moveset = new();
     /// <summary>
     /// キャッシュ用(スキルレベルのメモ参照)
     /// </summary>
     List<MoveSet> A_MoveSet_Cash = new();
-    /// <summary>
-    /// 設定用 スキルごとのムーブセット 戦闘規格ごとのbに対応するもの。
-    /// </summary>
-    [SerializeField]
-    List<MoveSet> _b_moveset = new();
     /// <summary>
     /// キャッシュ用(スキルレベルのメモ参照)
     /// </summary>
@@ -66,65 +54,20 @@ public partial class BaseSkill
     /// <summary>
     /// 連続攻撃中にスキルレベル成長によるムーブセット変更を防ぐために、
     /// 連続攻撃開始時にムーブセットをキャッシュし使い続ける
+    /// Phase 2: SkillLevelDataから直接読み取り
     /// </summary>
     public void CashMoveSet()
     {
-        var A_cash = _a_moveset;//
-        var B_cash = _b_moveset;
-
-        //スキルレベルが有限範囲なら
-            if(FixedSkillLevelData.Count > _nowSkillLevel)
-            {
-                for(int i = _nowSkillLevel ; i>=0; i --)
-                {
-                    if(FixedSkillLevelData[i].OptionA_MoveSet != null)//nullでないならあるので返す
-                    {
-                        A_cash = FixedSkillLevelData[i].OptionA_MoveSet;
-                        break;//レベルを下げてって一致した物だけを返し、ループを抜ける。
-                    }
-                }
-                for(int i = _nowSkillLevel ; i>=0; i --)
-                {
-                    if(FixedSkillLevelData[i].OptionB_MoveSet != null)
-                    {
-                        B_cash = FixedSkillLevelData[i].OptionB_MoveSet;
-                        break;
-                    }
-                }
-            }else
-            {
-                //当然有限リストは絶対に存在するので、
-                //有限範囲以降なら、その最終値から後ろまで回して、でオプションで指定されてるならそれを返す
-                for(int i = FixedSkillLevelData.Count - 1 ; i>=0; i --)
-                {
-                    if(FixedSkillLevelData[i].OptionA_MoveSet != null)
-                    {
-                        A_cash = FixedSkillLevelData[i].OptionA_MoveSet;
-                        break;
-                    }
-                }
-                for(int i = FixedSkillLevelData.Count - 1 ; i>=0; i --)
-                {
-                    if(FixedSkillLevelData[i].OptionB_MoveSet != null)
-                    {
-                        B_cash = FixedSkillLevelData[i].OptionB_MoveSet;
-                        break;
-                    }
-                }
-            }
-
-            //キャッシュする。
-            A_MoveSet_Cash = A_cash;
-            B_MoveSet_Cash = B_cash;
-           
-        }
+        A_MoveSet_Cash = FixedSkillLevelData[_levelIndex].A_MoveSet ?? new();
+        B_MoveSet_Cash = FixedSkillLevelData[_levelIndex].B_MoveSet ?? new();
+    }
 
 
 }
 
 
 /// <summary>
-/// インスペクタで表示可能なAimStyleのリストの一つのステータスとDEFATKのペア
+/// インスペクタで表示可能なAimStyleのリストの一つのステータスとDEFATKのペア
 /// </summary>
 [Serializable]
 public class MoveSet: ISerializationCallbackReceiver

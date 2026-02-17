@@ -10,45 +10,10 @@ using Cysharp.Threading.Tasks;
 
 public partial class BaseSkill
 {
-    [Header("命中補正")]
-    /// <summary>
-    /// 通常の命中補正
-    /// </summary>
-    [SerializeField]
-    int _skillHitPer;
     /// <summary>
     /// スキルの命中補正 int 百分率
     /// </summary>
-    public int SkillHitPer
-    {
-        get
-        {
-            //スキルレベルが有限範囲なら
-            if(FixedSkillLevelData.Count > _nowSkillLevel)
-            {
-                //-1でないならあるので返す
-                if(FixedSkillLevelData[_nowSkillLevel].OptionSkillHitPer != -1)
-                {
-                    // 現在のレベルから逆向きに検索して最初に有効な値を見つける
-                    for(int i = _nowSkillLevel; i >= 0; i--) {
-                        if(FixedSkillLevelData[i].OptionSkillHitPer != -1) {
-                            return FixedSkillLevelData[i].OptionSkillHitPer;
-                        }
-                    }
-                }
-            }
-            //当然有限リストは絶対に存在するので、
-            //有限範囲以降なら、その最終値でオプションで指定されてるならそれを返す
-            //有限リスト外の場合、最後の要素から逆向きに検索
-            for(int i = FixedSkillLevelData.Count - 1; i >= 0; i--) {
-                if(FixedSkillLevelData[i].OptionSkillHitPer != -1) {
-                    return FixedSkillLevelData[i].OptionSkillHitPer;
-                }
-            }
-            //そうでないなら設定値を返す
-            return _skillHitPer;
-        }
-    }
+    public int SkillHitPer => FixedSkillLevelData[_levelIndex].SkillHitPer;
 
     /// <summary>
     /// スキルにより補正された最終命中率
@@ -68,7 +33,6 @@ public partial class BaseSkill
         if(supremacyBonus>rndMin)supremacyBonus -= rndMin;
 
         var result = RandomSource.NextInt(100) < supremacyBonus + SkillHitPer ? hitResult : HitResult.CompleteEvade;
-        //schizoLog.AddLog("スキル命中計算式-命中凌駕:" + supremacyBonus + ",スキル命中率:" + SkillHitPer + " " + result,true);
 
         if(result == HitResult.CompleteEvade && IsMagic)//もし発生しなかった場合、魔法スキルなら
         {
@@ -80,7 +44,6 @@ public partial class BaseSkill
         {
             result = hitResult;//かすりを入れる
         }
-        //schizoLog.AddLog("SkillHitCalc-" + result,true);
 
         return result;
     }

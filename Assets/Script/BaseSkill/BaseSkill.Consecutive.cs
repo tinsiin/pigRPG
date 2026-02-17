@@ -14,20 +14,19 @@ public partial class BaseSkill
     //                                             連続攻撃用関数、フィールド
     //  ==============================================================================================================================
 
-    [Header("SkillConsecutiveTypeがRandomPercentなら、ここで設定した確率で、連続攻撃が続く。")]
-    [SerializeField]
-    private float _RandomConsecutivePer;//連続実行の確率判定のパーセント
+    float RandomConsecutivePer => FixedSkillLevelData[_levelIndex].RandomConsecutivePer;
+
     /// <summary>
     /// オーバライド可能な攻撃回数
     /// </summary>
     public virtual int ATKCount
     {
-        get { 
+        get {
             if(HasConsecutiveType(SkillConsecutiveType.Stockpile))
             {
                 return _nowStockCount;//stockpileの場合は現在ストック数を参照する
             }
-            return DefaultAtkCount; 
+            return DefaultAtkCount;
             }
 
     }
@@ -55,9 +54,9 @@ public partial class BaseSkill
                 return false;//終わり
             }
 
-            if(RandomSource.NextFloat(1)<_RandomConsecutivePer)//確率があったら、
+            if(RandomSource.NextFloat(1)<RandomConsecutivePer)//確率があったら、
             {
-                
+
                 return true;
             }
             return false;
@@ -78,14 +77,18 @@ public partial class BaseSkill
     }
     /// <summary>
     /// 単回攻撃かどうか(連続攻撃性がないわけじゃない。(連続攻撃のメモ参照))
+    /// キャッシュ優先、未設定時はレベルデータにフォールバック
     /// </summary>
     bool IsSingleHitAtk
     {
         get
         {
-            return _a_moveset.Count <= 0;//movesetのリストが空なら単体攻撃(二回目以降が設定されていないので)
+            if (A_MoveSet_Cash.Count > 0) return false;
+            var levelMoveSet = FixedSkillLevelData[_levelIndex].A_MoveSet;
+            return levelMoveSet == null || levelMoveSet.Count <= 0;
         }
     }
+
     //  ==============================================================================================================================
     //                                             連続攻撃用カウント管理
     //  ==============================================================================================================================
@@ -123,34 +126,31 @@ public partial class BaseSkill
     //                  最大値はランダム確率の連続攻撃と同じように、ATKCountを参照する。
     //  ==============================================================================================================================
     private int _nowStockCount;//現在のストック数
-    /// <summary>
-    /// デフォルトのストック数
-    /// </summary>
-    [SerializeField]
-    private int _defaultStockCount = 1;
-    ///<summary> ストックデフォルト値。DefaultAtkCount を超えないように調整された値を返す</summary> ///
-    int DefaultStockCount => _defaultStockCount > DefaultAtkCount ? DefaultAtkCount : _defaultStockCount;
 
-    [SerializeField]
-    private int _stockPower = 1;//ストック単位
+    ///<summary> ストックデフォルト値。DefaultAtkCount を超えないように調整された値を返す</summary>
+    int DefaultStockCount {
+        get {
+            int resolved = FixedSkillLevelData[_levelIndex].DefaultStockCount;
+            return resolved > DefaultAtkCount ? DefaultAtkCount : resolved;
+        }
+    }
+
     /// <summary>
     /// ストック単位を手に入れる
     /// </summary>
     protected virtual int GetStcokPower()
     {
-        return _stockPower;
+        return FixedSkillLevelData[_levelIndex].StockPower;
     }
-    [SerializeField]
-    private int _stockForgetPower = 1;//ストック忘れ単位
     /// <summary>
     /// ストック忘れ単位を手に入れる
     /// </summary>
     protected virtual int GetStcokForgetPower()
     {
-        return _stockForgetPower;
+        return FixedSkillLevelData[_levelIndex].StockForgetPower;
     }
 
- 
+
     /// <summary>
     /// ストック数をデフォルトにリセット
     /// </summary>
@@ -166,7 +166,7 @@ public partial class BaseSkill
 
         _nowStockCount += GetStcokPower();
         if(_nowStockCount > DefaultAtkCount)_nowStockCount = DefaultAtkCount;//想定される最大値を超えないようにする
-        
+
     }
     /// <summary>
     /// ストックを忘れる
@@ -177,11 +177,11 @@ public partial class BaseSkill
         if(_nowStockCount < DefaultStockCount)_nowStockCount = DefaultStockCount;//ストック数はデフォルト値を下回らないようにする
     }
     /// <summary>
-    /// ストックが満杯かどうか
+    /// ストックが満杯かどうか
     /// </summary>
     public bool IsFullStock()
     {
-        return _nowStockCount >= DefaultAtkCount;//最大値以上ならばストックが満杯とする
+        return _nowStockCount >= DefaultAtkCount;//最大値以上ならばストックが満杯とする
     }
 
     /// <summary>
@@ -205,7 +205,7 @@ public enum SkillConsecutiveType
 
     /// <summary>CanOprateの対局的なもの、つまり最初しかZoneTraitでできることを選べない
     /// 要は普通の連続攻撃の挙動です。
-    CantOprate = 1 << 1, 
+    CantOprate = 1 << 1,
 
     /// <summary>
     /// ターンをまたいだ連続的攻撃　連続攻撃回数分だけ単体攻撃が無理やり進む感じ
@@ -220,14 +220,14 @@ public enum SkillConsecutiveType
     /// <summary>
     /// ランダムな百分率でスキル実行が連続されるかどうか
     /// </summary>
-    RandomPercentConsecutive = 1 << 4, 
+    RandomPercentConsecutive = 1 << 4,
     /// <summary>
     /// _atkCountの値に応じて連続攻撃が行われるかどうか
     /// </summary>
     FixedConsecutive = 1 << 5,
 
     /// <summary>
-    /// スキル保存性質　
+    /// スキル保存性質
     /// **意図的に実行とは別に攻撃保存を選べて**、
     ///その攻撃保存を**選んだ分だけ連続攻撃回数として発動**
     ///Randomな場合はパーセント補正が変わる？

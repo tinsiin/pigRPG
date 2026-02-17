@@ -297,10 +297,10 @@ public abstract partial class BaseStates
     {
         var done = false;
 
-        // skill.canEraceEffectIDs のIDを順にチェックして、
+        // skill.CanEraceEffectIDs のIDを順にチェックして、
         // _passiveList の中で同じIDを持つパッシブを検索
         // そのパッシブが IsBad == true なら Remove する
-        var rndList = skill.canEraceEffectIDs.ToArray();
+        var rndList = skill.CanEraceEffectIDs.ToArray();
         RandomSource.Shuffle(rndList);
         var decrement = 0;
         for(var i = 0; i < skill.Now_CanEraceEffectCount; i++)
@@ -323,7 +323,7 @@ public abstract partial class BaseStates
     bool BadVitalLayerHit(BaseSkill skill)
     {
         var done = false;
-        foreach (var id in skill.subVitalLayers.Where(id => VitalLayerManager.Instance.GetAtID(id).IsBad))
+        foreach (var id in skill.SubVitalLayers.Where(id => VitalLayerManager.Instance.GetAtID(id).IsBad))
         {
             ApplyVitalLayer(id);
             done = true;
@@ -336,7 +336,7 @@ public abstract partial class BaseStates
     bool BadVitalLayerRemove(BaseSkill skill)
     {
         var done = false;
-        var rndList = skill.canEraceVitalLayerIDs.ToArray();
+        var rndList = skill.CanEraceVitalLayerIDs.ToArray();
         RandomSource.Shuffle(rndList);
         var decrement = 0;
         for(var i=0; i<skill.Now_CanEraceVitalLayerCount; i++)
@@ -376,7 +376,7 @@ public abstract partial class BaseStates
     bool GoodPassiveRemove(BaseSkill skill)
     {
         var done = false;
-        var rndList = skill.canEraceEffectIDs.ToArray();
+        var rndList = skill.CanEraceEffectIDs.ToArray();
         RandomSource.Shuffle(rndList);
         var decrement = 0;
         for(var i=0; i<skill.Now_CanEraceEffectCount; i++)
@@ -471,7 +471,7 @@ public abstract partial class BaseStates
     bool GoodVitalLayerHit(BaseSkill skill)
     {
         var done = false;
-        foreach (var id in skill.subVitalLayers.Where(id => !VitalLayerManager.Instance.GetAtID(id).IsBad))
+        foreach (var id in skill.SubVitalLayers.Where(id => !VitalLayerManager.Instance.GetAtID(id).IsBad))
         {
             ApplyVitalLayer(id);
             done = true;
@@ -485,7 +485,7 @@ public abstract partial class BaseStates
     bool GoodVitalLayerRemove(BaseSkill skill)
     {
         var done = false;
-        var rndList = skill.canEraceVitalLayerIDs.ToArray();
+        var rndList = skill.CanEraceVitalLayerIDs.ToArray();
         RandomSource.Shuffle(rndList);
         var decrement = 0;
         for(var i=0; i<skill.Now_CanEraceVitalLayerCount; i++)

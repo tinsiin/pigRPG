@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
+
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 public partial class BaseSkill
@@ -13,39 +14,26 @@ public partial class BaseSkill
     //                                            スキルのパッシブ効果のインスペクタ上フィールド部分
     //  ==============================================================================================================================
 
-    [Header("パッシブ付与スキルの付与パッシブ")]
-    /// <summary>
-    /// SubEffectsの基本的な奴
-    /// </summary>
-    [SerializeField] List<int> subEffects;
-    [Header("追加HP付与スキルの付与追加HP")]
     /// <summary>
     /// スキル実行時に付与する追加HP(Passive由来でない)　ID指定
     /// </summary>
-    public List<int> subVitalLayers;
-    [Header("除去スキルとして消せるパッシブ")]
+    public List<int> SubVitalLayers => FixedSkillLevelData[_levelIndex].SubVitalLayers;
     /// <summary>
     /// 除去スキルとして消せるパッシブのID範囲
     /// </summary>
-    public List<int> canEraceEffectIDs;
-    [Header("消せる数")]
+    public List<int> CanEraceEffectIDs => FixedSkillLevelData[_levelIndex].CanEraceEffectIDs;
     /// <summary>
     /// 除去スキルとして使用する際に指定する消せるパッシブの数
-    /// 除去スキルでないと参照されない
     /// </summary>
-    public int CanEraceEffectCount;
-
-    [Header("除去スキルとして消せる追加HP")]
+    public int CanEraceEffectCount => FixedSkillLevelData[_levelIndex].CanEraceEffectCount;
     /// <summary>
     /// 除去スキルとして消せる追加HPのID範囲
     /// </summary>
-    public List<int> canEraceVitalLayerIDs;
-    [Header("消せる数")]
+    public List<int> CanEraceVitalLayerIDs => FixedSkillLevelData[_levelIndex].CanEraceVitalLayerIDs;
     /// <summary>
     /// 除去スキルとして使用する際に指定する消せる追加HPの数
-    /// 除去スキルでないと参照されない
     /// </summary>
-    public int CanEraceVitalLayerCount;
+    public int CanEraceVitalLayerCount => FixedSkillLevelData[_levelIndex].CanEraceVitalLayerCount;
 
     //  ==============================================================================================================================
     //                                            スキルのパッシブ効果の処理関数など
@@ -74,11 +62,11 @@ public partial class BaseSkill
 
 
     /// <summary>
-    /// スキル実行時に付与する状態異常とか ID指定
+    /// スキル実行時に付与する状態異常とか ID指定（レベルデータ + バッファ合成）
     /// </summary>
     public List<int> SubEffects
     {
-        get { return (subEffects ?? Enumerable.Empty<int>())
+        get { return (FixedSkillLevelData[_levelIndex].SubEffects ?? Enumerable.Empty<int>())
                         .Concat(bufferSubEffects ?? Enumerable.Empty<int>()).ToList(); }
     }
 
@@ -92,7 +80,7 @@ public partial class BaseSkill
     /// </summary>
     List<int> bufferSubEffects = new();
     /// <summary>
-    /// スキルのパッシブ付与効果に追加適用する。　
+    /// スキルのパッシブ付与効果に追加適用する。
     /// バッファーのリストに追加する。
     /// </summary>
     /// <param name="subEffects"></param>

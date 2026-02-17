@@ -5,15 +5,15 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
+
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 public partial class BaseSkill
 {
-    [Header("スキルパッシブ設定")]
-    
     /// <summary>
     /// スキルに掛ってるパッシブリスト
     /// このスキルが感染してる病気ってこと
+    /// （ランタイム用。BaseSkillDrawerが描画を管理するため[Header]不要）
     /// </summary>
     public List<BaseSkillPassive> ReactiveSkillPassiveList = new();
     /// <summary>
@@ -69,25 +69,25 @@ public partial class BaseSkill
     }
 
 
-
     /// <summary>
     /// 付与するスキルを選択する方式。
     /// </summary>
-    public SkillPassiveTargetSelection TargetSelection;
+    public SkillPassiveTargetSelection TargetSelection => FixedSkillLevelData[_levelIndex].TargetSelection;
 
     /// <summary>
     /// スキルパッシブ付与スキルである際の、反応式の対象キャラとスキル
     /// </summary>
-    public List<SkillPassiveReactionCharaAndSkill> ReactionCharaAndSkillList = new();
+    public List<SkillPassiveReactionCharaAndSkill> ReactionCharaAndSkillList
+        => FixedSkillLevelData[_levelIndex].ReactionCharaAndSkillList;
 
     /// <summary>
     /// スキルパッシブ付与スキルだとして、何個まで付与できるか。
     /// </summary>
-    public int SkillPassiveEffectCount = 1;
+    public int SkillPassiveEffectCount => FixedSkillLevelData[_levelIndex].SkillPassiveEffectCount;
     /// <summary>
     /// スキルパッシブ付与スキルのスキルの区別フィルター
     /// </summary>
-    [SerializeField] SkillFilter _skillPassiveGibeSkill_SkillFilter = new();
+    SkillFilter SkillPassiveGibeSkillFilter => FixedSkillLevelData[_levelIndex].SkillPassiveGibeSkillFilter;
 
     /// <summary>
     /// スキルパッシブの付与対象となるスキルを対象者のスキルリストから選ぶ。
@@ -112,10 +112,10 @@ public partial class BaseSkill
             //味方はUI選択
             if(manager.GetCharacterFaction(actor) == allyOrEnemy.alliy)
             {
-                if(_skillPassiveGibeSkill_SkillFilter != null && _skillPassiveGibeSkill_SkillFilter.HasAnyCondition)//フィルタ条件があるなら絞り込む
+                if(SkillPassiveGibeSkillFilter != null && SkillPassiveGibeSkillFilter.HasAnyCondition)//フィルタ条件があるなら絞り込む
                 {
                     //フィルタで絞り込む
-                    targetSkills = targetSkills.Where(s => s.MatchFilter(_skillPassiveGibeSkill_SkillFilter)).ToList();
+                    targetSkills = targetSkills.Where(s => s.MatchFilter(SkillPassiveGibeSkillFilter)).ToList();
                     // 絞り込み後に候補が0件の場合
                     if(targetSkills.Count == 0)
                     {
@@ -156,7 +156,7 @@ public partial class BaseSkill
                 {
                     //そもそもキャラ名が違っていたら、飛ばす
                     if(target.CharacterName != hold.CharaName) continue;
-                    
+
                     if(targetSkill.SkillName == hold.SkillName)//スキル名まで一致したら
                     {
                         correctReactSkills.Add(targetSkill);//今回のターゲットスキルを入れる。
@@ -178,16 +178,16 @@ public partial class BaseSkill
         {
             var randomSkills = new List<BaseSkill>();
 
-            if(_skillPassiveGibeSkill_SkillFilter != null && _skillPassiveGibeSkill_SkillFilter.HasAnyCondition)
+            if(SkillPassiveGibeSkillFilter != null && SkillPassiveGibeSkillFilter.HasAnyCondition)
             {
                 // フィルタ条件がある場合：絞り込んでから抽選
-                var candidates = targetSkills.Where(s => s.MatchFilter(_skillPassiveGibeSkill_SkillFilter)).ToList();
+                var candidates = targetSkills.Where(s => s.MatchFilter(SkillPassiveGibeSkillFilter)).ToList();
                 if(candidates.Count == 0)
                 {
                     Debug.LogWarning("フィルタ条件に合致するスキルがありませんでした。");
                     return null;
                 }
-                
+
                 int selectCount = Math.Min(SkillPassiveEffectCount, candidates.Count);
                 for(int i = 0; i < selectCount; i++)// 絞り込んだスキルリスト からランダム選択
                 {
@@ -231,23 +231,23 @@ public partial class BaseSkill
 
         // b方式の判定
         //十日能力
-        if (filter.TenDayAbilities.Count > 0 && 
+        if (filter.TenDayAbilities.Count > 0 &&
             !SkillFilterUtil.CheckContain(EnumerateTenDayAbilities(), filter.TenDayAbilities, filter.TenDayMode))
             return false;
 
         //スキルの攻撃性質
-        if (filter.SkillTypes.Count > 0 && 
+        if (filter.SkillTypes.Count > 0 &&
             !SkillFilterUtil.CheckContain(EnumerateSkillTypes(), filter.SkillTypes, filter.SkillTypeMode))
             return false;
 
         //スキル特殊判別性質
-        if (filter.SpecialFlags.Count > 0 && 
+        if (filter.SpecialFlags.Count > 0 &&
             !SkillFilterUtil.CheckContain(EnumerateSpecialFlags(), filter.SpecialFlags, filter.SpecialFlagMode))
             return false;
 
         return true;
     }
-        
+
         /// <summary>
         /// SkillTypeを列挙可能にする
         /// </summary>
@@ -257,7 +257,7 @@ public partial class BaseSkill
         }
 
         /// <summary>
-        /// SpecialFlagを列挙可能にする  
+        /// SpecialFlagを列挙可能にする
         /// </summary>
         public IEnumerable<SkillSpecialFlag> EnumerateSpecialFlags()
         {
@@ -287,12 +287,12 @@ public partial class BaseSkill
         }
 
         // 条件判定
-        public static bool CheckContain<T>(IEnumerable<T> skillValues, 
-                                        List<T> filterValues, 
+        public static bool CheckContain<T>(IEnumerable<T> skillValues,
+                                        List<T> filterValues,
                                         ContainMode mode)
         {
             var filterSet = new HashSet<T>(filterValues);
-            return mode == ContainMode.Any 
+            return mode == ContainMode.Any
                 ? skillValues.Any(filterSet.Contains)
                 : filterSet.All(skillValues.Contains);
         }
@@ -305,7 +305,7 @@ public partial class BaseSkill
     [Serializable]
     public class SkillFilter
     {
-        // —— 基本方式 ——            
+        // —— 基本方式 ——
     /// <summary>スキル印象の区切り</summary>
         public List<SkillImpression> Impressions = new();
     /// <summary>動作的雰囲気の区切り</summary>
@@ -328,7 +328,7 @@ public partial class BaseSkill
         public List<SkillSpecialFlag> SpecialFlags = new();
         public ContainMode SpecialFlagMode = ContainMode.Any;
 
-        
+
 
         /// <summary>
         /// 条件が 1 つもセットされていない場合は「フィルタ無し」とみなす
@@ -337,3 +337,4 @@ public partial class BaseSkill
             Impressions.Count + MotionFlavors.Count + MentalAttrs.Count + PhysicalAttrs.Count +
             AttackTypes.Count + TenDayAbilities.Count + SkillTypes.Count + SpecialFlags.Count > 0;
     }
+

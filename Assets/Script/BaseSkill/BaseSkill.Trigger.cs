@@ -5,26 +5,16 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
+
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 public partial class BaseSkill
 {
-    [Header("トリガーに必要なカウント数")]
-    [SerializeField]
-    private int _triggerCountMax;//発動への−カウント　の指標
+    int TriggerCountMax => FixedSkillLevelData[_levelIndex].TriggerCountMax;
 
-    [Header("triggerCountが0以上の複数ターン実行が必要なスキルの場合、複数ターンに跨る発動カウント実行中に中断出来るかどうか。")]
-    /// <summary>
-    /// triggerCountが0以上の複数ターン実行が必要なスキルの場合、複数ターンに跨る発動カウント実行中に中断出来るかどうか。
-    /// </summary>
-    public bool CanCancelTrigger = true;
+    public bool CanCancelTrigger => FixedSkillLevelData[_levelIndex].CanCancelTrigger;
 
-    [Header("発動カウント中に他のスキルを選んだ際に巻き戻るカウントの量")]
-    /// <summary>
-    /// 発動カウント中に他のスキルを選んだ際に巻き戻るカウントの量
-    /// </summary>
-    [SerializeField]
-    private int _triggerRollBackCount;
+    int TriggerRollBackCount => FixedSkillLevelData[_levelIndex].TriggerRollBackCount;
 
 
     private int _triggerCount;//発動への−カウント　このカウント分連続でやらないと発動しなかったりする　重要なのは連続でやらなくても　一気にまたゼロからになるかはスキル次第
@@ -35,7 +25,7 @@ public partial class BaseSkill
     /// </summary>
     public virtual int TrigerCount()
     {
-        if (_triggerCountMax > 0)//1回以上設定されてたら
+        if (TriggerCountMax > 0)//1回以上設定されてたら
         {
             _triggerCount--;
             return _triggerCount;
@@ -49,8 +39,8 @@ public partial class BaseSkill
     /// </summary>
     public void RollBackTrigger()
     {
-        _triggerCount += _triggerRollBackCount;
-        if (_triggerCount > _triggerCountMax)_triggerCount = _triggerCountMax;//最大値を超えないようにする
+        _triggerCount += TriggerRollBackCount;
+        if (_triggerCount > TriggerCountMax)_triggerCount = TriggerCountMax;//最大値を超えないようにする
     }
 
     /// <summary>
@@ -61,12 +51,12 @@ public partial class BaseSkill
     {
         get{
             // 発動カウントが0以下の場合は即時実行なのでfalse
-            if (_triggerCountMax <= 0) return false;
-            
+            if (TriggerCountMax <= 0) return false;
+
             // カウントが開始されていない場合はfalse
-            // カウントが開始されると_triggerCountは_triggerCountMaxより小さくなる
-            if (_triggerCount >= _triggerCountMax) return false;
-            
+            // カウントが開始されると_triggerCountはTriggerCountMaxより小さくなる
+            if (_triggerCount >= TriggerCountMax) return false;
+
             // カウントが開始済みで、まだカウントが残っている場合はtrue
             return _triggerCount  > -1;
         }
@@ -77,7 +67,7 @@ public partial class BaseSkill
     /// </summary>
     public virtual void ReturnTrigger()
     {
-        _triggerCount = _triggerCountMax;//基本的にもう一回最初から
+        _triggerCount = TriggerCountMax;//基本的にもう一回最初から
     }
 
 }

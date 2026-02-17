@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+
 /// <summary>
 /// フェーズ別の前のめり設定。
 /// デフォルト状態とプレイヤー選択権を1フェーズ分保持する。
@@ -40,19 +41,18 @@ public class PhaseAggressiveSetting
 
 public partial class BaseSkill
 {
-    [Header("前のめり設定")]
     /// <summary>
-    /// スキル実行時の前のめり設定（デフォルト: 前のめりする、選択不可）
+    /// スキル実行時の前のめり設定
     /// </summary>
-    public PhaseAggressiveSetting AggressiveOnExecute = new(true, false);
+    public PhaseAggressiveSetting AggressiveOnExecute => FixedSkillLevelData[_levelIndex].AggressiveOnExecute;
 
     /// <summary>
-    /// トリガーカウント中の前のめり設定（デフォルト: 前のめりしない、選択不可）
+    /// トリガーカウント中の前のめり設定
     /// </summary>
-    public PhaseAggressiveSetting AggressiveOnTrigger = new(false, false);
+    public PhaseAggressiveSetting AggressiveOnTrigger => FixedSkillLevelData[_levelIndex].AggressiveOnTrigger;
 
     /// <summary>
-    /// ストック中の前のめり設定（デフォルト: 前のめりしない、選択不可）
+    /// ストック中の前のめり設定
     /// </summary>
-    public PhaseAggressiveSetting AggressiveOnStock = new(false, false);
+    public PhaseAggressiveSetting AggressiveOnStock => FixedSkillLevelData[_levelIndex].AggressiveOnStock;
 }

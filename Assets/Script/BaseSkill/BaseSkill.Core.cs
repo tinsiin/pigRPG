@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
+
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 
@@ -33,117 +34,45 @@ public partial class BaseSkill
     public bool IsInitialized;
 
     //  ==============================================================================================================================
-    //                                              基本プロパティ
+    //                                              基本プロパティ（Phase 2: SkillLevelData直接読み取り）
     //  ==============================================================================================================================
 
-    [Header("基本プロパティ")]
+    // ─── プロパティ（Phase 2: FixedSkillLevelData[_levelIndex] 直接読み取り） ───
 
-    public string SkillName = "ここに名前を入れてください";
+    public string SkillName => FixedSkillLevelData[_levelIndex].SkillName;
+    public SpiritualProperty SkillSpiritual => FixedSkillLevelData[_levelIndex].SkillSpiritual;
+    public SkillImpression Impression => FixedSkillLevelData[_levelIndex].Impression;
+    public MotionFlavorTag MotionFlavor => FixedSkillLevelData[_levelIndex].MotionFlavor;
+    public PhysicalProperty SkillPhysical => FixedSkillLevelData[_levelIndex].SkillPhysical;
+    public SkillSpecialFlag SpecialFlags => FixedSkillLevelData[_levelIndex].SpecialFlags;
 
-    [Header("スキルの精神属性 Flagsの列挙体なので複数指定できるが、必ず一つの値のみを指定して")]
-    /// <summary>
-    ///     スキルの精神属性
-    /// </summary>
-    public SpiritualProperty SkillSpiritual;
-    /// <summary>
-    /// スキル印象　タグや慣れ補正で使う
-    /// </summary>
-    public SkillImpression Impression;
-    /// <summary>
-    /// 動作的雰囲気　スキル印象の裏バージョン
-    /// </summary>
-    public MotionFlavorTag MotionFlavor;// 空なら「唯一無二」のユニークスキルであるということ。
-    /// <summary>
-    ///     スキルの物理属性
-    /// </summary>
-    public PhysicalProperty SkillPhysical;
-    /// <summary>
-    /// スキルの特殊判別性質
-    /// </summary>
-    public SkillSpecialFlag SpecialFlags;
-
-    [Header("スキルの攻撃性質は必ず設定")]
-    /// <summary>
-    /// スキルの攻撃性質　基本的な奴
-    /// </summary>
-    [SerializeField]
-    SkillType _baseSkillType;
     /// <summary>
     /// スキルの攻撃性質　バッファ用フィールド
     /// </summary>
     SkillType bufferSkillType;
     /// <summary>
-    /// スキルの攻撃性質
+    /// スキルの攻撃性質（ベース + バッファ合成）
     /// </summary>
     public SkillType SkillType
-    {
-        get => _baseSkillType | bufferSkillType;
-    }
-    // ⑤ バッファのセット／クリア用メソッド
+        => FixedSkillLevelData[_levelIndex].BaseSkillType | bufferSkillType;
     /// <summary>一時的に追加する SkillType を設定</summary>
     public void SetBufferSkillType(SkillType skill)
         => bufferSkillType = skill;
-
     /// <summary>バッファをクリア</summary>
     public void EraseBufferSkillType()
         => bufferSkillType = 0;
-    [Header("スキルの連続性質も必ず設定")]
-    /// <summary>
-    /// スキルの連撃性質
-    /// </summary>
-    public SkillConsecutiveType ConsecutiveType;
-    [Header("スキルの範囲性質も必ず設定")]
-    /// <summary>
-    /// スキルの範囲性質
-    /// 初期値は0
-    /// </summary>
-    public SkillZoneTrait ZoneTrait = 0;//初期値
 
+    public SkillConsecutiveType ConsecutiveType => FixedSkillLevelData[_levelIndex].ConsecutiveType;
+    public SkillZoneTrait ZoneTrait => FixedSkillLevelData[_levelIndex].ZoneTrait;
 
-    /// <summary>
-    /// スキルの実行に必要なポイント設定
-    /// </summary>
-    [Header("スキル実行コスト")]
-    /// <summary>
-    /// スキル実行に必要なノーマルポイント。
-    /// 0ならノーマルP消費なし。
-    /// </summary>
-    public int RequiredNormalP = 0;
-    /// <summary>
-    /// スキル実行に必要な属性ポイント内訳。
-    /// キー: SpiritualProperty, 値: 必要ポイント。
-    /// 空なら属性P消費なし。
-    /// </summary>
-    public SerializableDictionary<SpiritualProperty, int> RequiredAttrP = new SerializableDictionary<SpiritualProperty, int>();
-    [Header("スキル実行に必要な残りHP割合（0〜100）。0で制限なし。")]
-    [Tooltip("行使者の現在HPが最大HPに対してこの割合未満の場合は使用不可。")]
-    [Range(0f, 100f)]
-    public float RequiredRemainingHPPercent = 0f;
-    /// <summary>
-    /// 殺せないスキルかどうか
-    /// 1残る
-    /// </summary>
-    public bool Cantkill = false;
-    [Header("実行したキャラに付与される追加硬直値 バトルで")]
-    /// <summary>
-    /// 実行したキャラに付与される追加硬直値
-    /// </summary>
-    public int SKillDidWaitCount;//スキルを行使した後の硬直時間。 行使者のRecovelyTurnに一時的に加算される？
-
-
-    [Header("戦闘時補正率")]
-    /// <summary>
-    /// このスキルを実行することにより影響させる使い手の回避率でAGIに掛けられる回避補正率
-    /// 一番最後に掛けられる。
-    /// </summary>
-    public float EvasionModifier = 1f;
-    /// <summary>
-    /// このスキルを実行することにより影響させる使い手の攻撃力としてATKに掛けられる攻撃補正率
-    /// 一番最初の素の攻撃力に掛けられる。
-    /// </summary>
-    public float AttackModifier = 1f;
-    [Tooltip("攻撃時に精神HPを回復させる百分率。80なら攻撃力の80%分回復、負値で減少。")]
-    public float AttackMentalHealPercent = 80f;
+    public int RequiredNormalP => FixedSkillLevelData[_levelIndex].RequiredNormalP;
+    public SerializableDictionary<SpiritualProperty, int> RequiredAttrP => FixedSkillLevelData[_levelIndex].RequiredAttrP;
+    public float RequiredRemainingHPPercent => FixedSkillLevelData[_levelIndex].RequiredRemainingHPPercent;
+    public bool Cantkill => FixedSkillLevelData[_levelIndex].Cantkill;
+    public int SKillDidWaitCount => FixedSkillLevelData[_levelIndex].SkillDidWaitCount;
+    public float EvasionModifier => FixedSkillLevelData[_levelIndex].EvasionModifier;
+    public float AttackModifier => FixedSkillLevelData[_levelIndex].AttackModifier;
+    public float AttackMentalHealPercent => FixedSkillLevelData[_levelIndex].AttackMentalHealPercent;
 
     //  ==============================================================================================================================
     //                                              ディープコピー
@@ -152,85 +81,20 @@ public partial class BaseSkill
 
     /// <summary>
     /// ランタイム用にスキルをディープコピーする関数
+    /// Phase 2: SkillLevelDataが全値を持つため、レベルリストのディープコピーが中心
     /// </summary>
     public void InitDeepCopy(BaseSkill dst)
     {
-        dst.SkillSpiritual = SkillSpiritual;
-        dst.SkillPhysical = SkillPhysical;
-        dst.Impression = Impression;
-        /*foreach(var tenDay in TenDayValues)
-        {
-            dst.TenDayValues.Add(tenDay.Key,tenDay.Value);
-        }*///十日能力は有限スキルレベルリストから参照する
-        dst._triggerCountMax = _triggerCountMax;
-        dst._triggerRollBackCount = _triggerRollBackCount;
-        dst._RandomConsecutivePer = _RandomConsecutivePer;
-        dst._defaultStockCount = _defaultStockCount;
-        dst._stockPower = _stockPower;
-        dst._stockForgetPower = _stockForgetPower;
-        dst.CanCancelTrigger = CanCancelTrigger;
-        dst.AggressiveOnExecute = AggressiveOnExecute.Clone();
-        dst.AggressiveOnTrigger = AggressiveOnTrigger.Clone();
-        dst.AggressiveOnStock = AggressiveOnStock.Clone();
-        dst.SKillDidWaitCount = SKillDidWaitCount;
-        dst.SkillName = SkillName;
-        dst.SpecialFlags = SpecialFlags;//特殊判別性質
-        dst._powerSpread = _powerSpread;//通常の分散割合
-        dst._mentalDamageRatio = _mentalDamageRatio;//通常の精神攻撃率
-        dst._infiniteSkillPowerUnit = _infiniteSkillPowerUnit;//無限スキルの威力単位
-        dst._infiniteSkillTenDaysUnit = _infiniteSkillTenDaysUnit;//無限スキルの10日単位
-        dst.FixedSkillLevelData = FixedSkillLevelData;//固定スキルレベルデータ
-        //有限スキルレベルリストのディープコピー
+        // --- スキルレベル（有限リストのディープコピー + 無限単位） ---
         dst.FixedSkillLevelData = new();
         foreach(var levelData in FixedSkillLevelData)
-        {
             dst.FixedSkillLevelData.Add(levelData.Clone());
-        }
-        
-        dst.subEffects = new List<int>(subEffects);
-        dst.subVitalLayers = new List<int>(subVitalLayers);
-        foreach(var moveSet in A_MoveSet_Cash)
-        {
-            dst.A_MoveSet_Cash.Add(moveSet.DeepCopy());
-        }
-        foreach(var moveSet in B_MoveSet_Cash)
-        {
-            dst.B_MoveSet_Cash.Add(moveSet.DeepCopy());
-        }
-        dst._defAtk = _defAtk;
-        dst._skillHitPer = _skillHitPer;//基本スキル命中率
-        dst._baseSkillType = _baseSkillType;
-        dst.ConsecutiveType = ConsecutiveType;
-        dst.ZoneTrait = ZoneTrait;
-        dst.DistributionType = DistributionType;
-        dst.PowerRangePercentageDictionary = PowerRangePercentageDictionary;
-        foreach (var pair in PowerRangePercentageDictionary)
-        {
-            dst.PowerRangePercentageDictionary.Add(pair.Key, pair.Value);
-        }
-        dst.HitRangePercentageDictionary = HitRangePercentageDictionary;
-        foreach (var pair in HitRangePercentageDictionary)
-        {
-            dst.HitRangePercentageDictionary.Add(pair.Key, pair.Value);
-        }
+        dst._infiniteSkillPowerUnit = _infiniteSkillPowerUnit;
+        dst._infiniteSkillTenDaysUnit = _infiniteSkillTenDaysUnit;
 
-        dst.canEraceEffectIDs = new(canEraceEffectIDs);
-        dst.canEraceVitalLayerIDs = new(canEraceVitalLayerIDs);
-        dst.CanEraceEffectCount = CanEraceEffectCount;
-        dst.CanEraceVitalLayerCount = CanEraceVitalLayerCount;
-        dst.ReactiveSkillPassiveList = new(ReactiveSkillPassiveList);
-        dst.RequiredNormalP = RequiredNormalP;//スキルの必要ポインント
-        dst.RequiredAttrP = new SerializableDictionary<SpiritualProperty, int>();
-        if (RequiredAttrP != null)
-        {
-            foreach (var kv in RequiredAttrP)
-            {
-                dst.RequiredAttrP.Add(kv.Key, kv.Value);
-            }
-        }
-
-        dst.AttackMentalHealPercent = AttackMentalHealPercent;
-
+        // bufferSkillType, bufferSubEffects等: 非シリアライズのランタイム一時値なのでデフォルト(0/空)のままでOK
+        // A/B_MoveSet_Cash: CashMoveSet()で戦闘開始時にレベルデータから詰められるためコピー不要
+        // ReactiveSkillPassiveList / AggressiveSkillPassiveList: 戦闘中に動的に追加されるためコピー不要
     }
 
     //  ==============================================================================================================================
@@ -246,18 +110,9 @@ public partial class BaseSkill
         // FixedSkillLevelData — 空だと_skillPower(), TenDayValues()等でArgumentOutOfRangeException
         if (FixedSkillLevelData == null || FixedSkillLevelData.Count == 0)
             FixedSkillLevelData = new List<SkillLevelData> { new SkillLevelData() };
-
-        // _powerSpread — nullだとPowerSpreadプロパティ経由でNullReferenceException
-        if (_powerSpread == null)
-            _powerSpread = new float[0];
-
-        // ムーブセット — nullだとDecideNowMoveSet_A0_B1()でNullReferenceException
-        if (_a_moveset == null) _a_moveset = new List<MoveSet>();
-        if (_b_moveset == null) _b_moveset = new List<MoveSet>();
     }
 
 }
-
 
 
 
@@ -431,7 +286,7 @@ public enum SkillImpression
     /// </summary>
     Assault_Machine,
     /// <summary>
-    /// サブアサルト機械　
+    /// サブアサルト機械
     /// </summary>
     SubAssult_Machine,
 }
