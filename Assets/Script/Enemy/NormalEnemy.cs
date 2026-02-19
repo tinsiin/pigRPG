@@ -374,7 +374,7 @@ public class EnemySkill : BaseSkill
     {
         get
         {
-            if(IsTLOA)
+            if(IsTloaDirect)
             {
                 return _recordDoCount / TLOA_LEVEL_DIVIDER + _initSkillLevel;
             }

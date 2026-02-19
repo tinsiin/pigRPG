@@ -1,5 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
+using Effects.Integration;
 
 public sealed class SkillExecutor
 {
@@ -58,6 +59,8 @@ public sealed class SkillExecutor
             _context.Logger.LogError("No targets before AttackChara; unders is empty.");
         }
 
+        PlaySkillVisualEffects(skill);
+
         await _context.Effects.ResolveSkillEffectsAsync(
             acter,
             _context.ActerFaction,
@@ -96,6 +99,31 @@ public sealed class SkillExecutor
         acter.Target = 0;
 
         return _turnExecutor.ACTPop();
+    }
+
+    private void PlaySkillVisualEffects(BaseSkill skill)
+    {
+        if (!string.IsNullOrEmpty(skill.CasterEffectName))
+        {
+            var casterIcon = _context.Acter.BattleIcon;
+            if (casterIcon != null)
+                EffectManager.Play(skill.CasterEffectName, casterIcon);
+        }
+
+        if (!string.IsNullOrEmpty(skill.TargetEffectName))
+        {
+            for (int i = 0; i < _context.Unders.Count; i++)
+            {
+                var targetIcon = _context.Unders.GetAtCharacter(i).BattleIcon;
+                if (targetIcon != null)
+                    EffectManager.Play(skill.TargetEffectName, targetIcon);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(skill.FieldEffectName))
+        {
+            EffectManager.PlayField(skill.FieldEffectName);
+        }
     }
 
     private void BeVanguardSkillACT()

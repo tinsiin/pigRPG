@@ -16,7 +16,7 @@ public class SkillLevelDataDrawer : PropertyDrawer
 {
     static readonly float LINE = EditorGUIUtility.singleLineHeight;
     const float PAD = 2f;
-    const int SECTION_COUNT = 8;
+    const int SECTION_COUNT = 9;
     const float BTN_W = 20f;
 
     static readonly Color DIFF_COLOR = new Color(1f, 0.85f, 0.3f, 0.15f);
@@ -31,7 +31,8 @@ public class SkillLevelDataDrawer : PropertyDrawer
         "\u2464 連撃・ストック・トリガー",
         "\u2465 前のめり",
         "\u2466 ムーブセット",
-        "\u2467 エフェクト・パッシブ付与",
+        "\u2467 ビジュアルエフェクト",
+        "\u2468 エフェクト・パッシブ付与",
     };
 
     static readonly string[][] s_sectionFields = new[]
@@ -50,7 +51,9 @@ public class SkillLevelDataDrawer : PropertyDrawer
         new[] { "AggressiveOnExecute", "AggressiveOnTrigger", "AggressiveOnStock" },
         // ⑦ ムーブセット
         new[] { "A_MoveSet", "B_MoveSet" },
-        // ⑧ エフェクト・パッシブ付与
+        // ⑧ ビジュアルエフェクト
+        new[] { "CasterEffectName", "TargetEffectName", "FieldEffectName" },
+        // ⑨ エフェクト・パッシブ付与
         new[] { "SubEffects", "SubVitalLayers", "CanEraceEffectIDs", "CanEraceEffectCount", "CanEraceVitalLayerIDs", "CanEraceVitalLayerCount",
                 "TargetSelection", "ReactionCharaAndSkillList", "SkillPassiveEffectCount", "SkillPassiveGibeSkillFilter" },
     };
@@ -96,6 +99,9 @@ public class SkillLevelDataDrawer : PropertyDrawer
         { "AggressiveOnStock", "前のめり設定（ストック時）" },
         { "A_MoveSet", "戦闘規格A ムーブセット" },
         { "B_MoveSet", "戦闘規格B ムーブセット" },
+        { "CasterEffectName", "術者エフェクト名" },
+        { "TargetEffectName", "対象エフェクト名" },
+        { "FieldEffectName", "フィールドエフェクト名" },
         { "SubEffects", "付与パッシブID" },
         { "SubVitalLayers", "付与追加HP ID" },
         { "CanEraceEffectIDs", "除去可能パッシブID範囲" },
@@ -247,6 +253,7 @@ public class SkillLevelDataDrawer : PropertyDrawer
             float fieldW = showBtn ? pos.width - BTN_W - 4f : pos.width;
             var fieldRect = new Rect(pos.x, y, fieldW, h);
             string lbl = s_fieldLabels.TryGetValue(fieldName, out var l) ? l : prop.displayName;
+
             EditorGUI.PropertyField(fieldRect, prop, new GUIContent(lbl), true);
 
             // ── 一括コピーボタン ──

@@ -30,6 +30,14 @@ public partial class BaseSkill
     //  ==============================================================================================================================
 
     /// <summary>
+    /// _levelIndex を経由せずに TLOA かどうかを判定するヘルパー。
+    /// _levelIndex → _nowSkillLevel → IsTLOA → SpecialFlags → _levelIndex → ∞ の循環参照を回避する。
+    /// </summary>
+    protected bool IsTloaDirect
+        => FixedSkillLevelData != null && FixedSkillLevelData.Count > 0
+        && (FixedSkillLevelData[0].SpecialFlags & SkillSpecialFlag.TLOA) == SkillSpecialFlag.TLOA;
+
+    /// <summary>
     /// スキルレベル
     /// 永続実行回数をTLOAスキルかそうでないかで割る数が変わる。
     /// </summary>
@@ -37,7 +45,7 @@ public partial class BaseSkill
     {
         get
         {
-            if(IsTLOA)
+            if(IsTloaDirect)
             {
                 return _recordDoCount / TLOA_LEVEL_DIVIDER;
             }
@@ -257,6 +265,11 @@ public class SkillLevelData
     public List<MoveSet> A_MoveSet;
     public List<MoveSet> B_MoveSet;
 
+    // ─── ⑧ ビジュアルエフェクト ───
+    [EffectName("icon")] public string CasterEffectName;
+    [EffectName("icon")] public string TargetEffectName;
+    [EffectName("field")] public string FieldEffectName;
+
     // ─── ⑨ エフェクト・パッシブ付与 ───
     public List<int> SubEffects = new();
     public List<int> SubVitalLayers = new();
@@ -306,6 +319,10 @@ public class SkillLevelData
             TriggerCountMax = this.TriggerCountMax,
             CanCancelTrigger = this.CanCancelTrigger,
             TriggerRollBackCount = this.TriggerRollBackCount,
+            // ⑧ ビジュアルエフェクト
+            CasterEffectName = this.CasterEffectName,
+            TargetEffectName = this.TargetEffectName,
+            FieldEffectName = this.FieldEffectName,
             // ⑨ エフェクト・パッシブ付与
             CanEraceEffectCount = this.CanEraceEffectCount,
             CanEraceVitalLayerCount = this.CanEraceVitalLayerCount,

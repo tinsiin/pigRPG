@@ -185,6 +185,8 @@ emitterはpen/brush不要（color_start/color_endで色を指定）。
 | `"icon"` | キャラクターアイコン（BattleIconUI）相対で表示 | o |
 | `"field"` | バトルフィールド（ViewportArea）全体に表示 |  |
 
+**Inspector でのフィルタリング**: `[EffectName("icon")]` / `[EffectName("field")]` 属性を使うと、ドロップダウンに対応する target のエフェクトのみ表示される。スキルの3スロット（§8.5参照）で使用。
+
 ```json
 {
   "name": "slash_effect",
@@ -676,6 +678,29 @@ BattleIconUI を持つ GameObject にアタッチして使用。
 
 コンテキストメニュー: Play Field Effect / Stop Field Effect / Stop All Field Effects
 
+### 8.5 スキル連携（3スロット方式）
+
+スキル発動時にエフェクトを自動再生する仕組み。`SkillLevelData` に3つのスロットを持つ。
+
+| スロット | フィールド | target | 再生先 | Inspector属性 |
+|---------|-----------|--------|--------|--------------|
+| 術者エフェクト | `CasterEffectName` | `"icon"` | 術者の BattleIconUI | `[EffectName("icon")]` |
+| 対象エフェクト | `TargetEffectName` | `"icon"` | 各ターゲットの BattleIconUI | `[EffectName("icon")]` |
+| フィールドエフェクト | `FieldEffectName` | `"field"` | ViewportArea 全体 | `[EffectName("field")]` |
+
+- 全て `string` 型（エフェクトJSON名、拡張子なし）
+- null / 空文字 → そのスロットはスキップ
+- `[EffectName]` 属性のフィルタにより、Inspector上で対応するtargetのエフェクトのみ選択可能
+- 再生タイミング: ダメージ計算と同時（fire-and-forget）
+
+```csharp
+// SkillExecutor.cs 内
+PlaySkillVisualEffects(skill);
+  → EffectManager.Play(skill.CasterEffectName, acter.BattleIcon)
+  → EffectManager.Play(skill.TargetEffectName, target.BattleIcon) × 各対象
+  → EffectManager.PlayField(skill.FieldEffectName)
+```
+
 ---
 
 ## 9. 形式の使い分けガイド
@@ -723,10 +748,14 @@ Assets/Script/Effects/
 Assets/Editor/Effects/
 ├── EffectPreviewWindow.cs          # Effect Previewer（両形式対応）
 ├── EffectPlacementEditor.cs        # Effect Placement Editor（配置調整）
+├── EffectNameDrawer.cs             # [EffectName] 属性の PropertyDrawer（targetフィルタ対応）
 ├── EffectTesterEditors.cs          # EffectSystemTester / FieldEffectTester カスタムインスペクタ
 ├── FieldEffectLayerSetup.cs        # FieldEffectLayer セットアップユーティリティ
 ├── KfxEditorWindow.cs              # KFX Editor コア（状態管理・ショートカット・Undo）
 └── KfxEditorWindow.Drawing.cs      # KFX Editor 描画（UI描画・プロパティ編集・テンプレート）
+
+Assets/Script/BaseSkill/
+└── EffectNameAttribute.cs          # [EffectName] PropertyAttribute（targetフィルタパラメータ付き）
 
 Assets/Resources/Effects/           # エフェクトJSON（両形式混在可）
 Assets/Resources/Audio/             # 効果音WAVファイル

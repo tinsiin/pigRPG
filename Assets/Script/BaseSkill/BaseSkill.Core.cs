@@ -74,6 +74,11 @@ public partial class BaseSkill
     public float AttackModifier => FixedSkillLevelData[_levelIndex].AttackModifier;
     public float AttackMentalHealPercent => FixedSkillLevelData[_levelIndex].AttackMentalHealPercent;
 
+    // ─── ビジュアルエフェクト ───
+    public string CasterEffectName => FixedSkillLevelData[_levelIndex].CasterEffectName;
+    public string TargetEffectName => FixedSkillLevelData[_levelIndex].TargetEffectName;
+    public string FieldEffectName  => FixedSkillLevelData[_levelIndex].FieldEffectName;
+
     //  ==============================================================================================================================
     //                                              ディープコピー
     //  ==============================================================================================================================
