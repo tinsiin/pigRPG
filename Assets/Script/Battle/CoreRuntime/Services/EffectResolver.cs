@@ -59,7 +59,7 @@ public sealed class EffectResolver
 
     public async UniTask ResolveSkillEffectsAsync(
         BaseStates acter,
-        allyOrEnemy acterFaction,
+        Faction acterFaction,
         UnderActersEntryList targets,
         BattleGroup allyGroup,
         BattleGroup enemyGroup,

@@ -101,7 +101,7 @@ public abstract partial class BaseStates
     /// </summary>
     float CalcMentalMaxHP()
     {
-        if(NowPower == ThePower.high)
+        if(NowPower == PowerLevel.High)
         {
             return _hp * 1.3f + _maxhp *0.08f;
         }else
@@ -140,26 +140,26 @@ public abstract partial class BaseStates
     {
             switch (MyImpression)
         {
-            case SpiritualProperty.liminalwhitetile:
+            case SpiritualProperty.LiminalWhiteTile:
                 // そのまま（変化なし）
                 break;
-            case SpiritualProperty.kindergarden:
+            case SpiritualProperty.Kindergarten:
                 // 10割回復
                 MentalHP = MentalMaxHP;
                 break;
-            case SpiritualProperty.sacrifaith:
+            case SpiritualProperty.Sacrifaith:
                 // 10割回復　犠牲になって満足した
                 MentalHP = MentalMaxHP;
                 break;
-            case SpiritualProperty.cquiest:
+            case SpiritualProperty.Cquiest:
                 // 10%加算 + 元素信仰力
                 MentalHP += MentalMaxHP * 0.1f + TenDayValues(false).GetValueOrZero(TenDayAbility.ElementFaithPower) / 3;
                 break;
-            case SpiritualProperty.devil:
+            case SpiritualProperty.Devil:
                 // 10%減る
                 MentalHP -= MentalMaxHP * 0.1f;
                 break;
-            case SpiritualProperty.doremis:
+            case SpiritualProperty.Doremis:
                 // 春仮眠の夜暗黒に対する多さ 割
                 var darkNight = TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness);
                 var springNap = TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap);
@@ -168,19 +168,19 @@ public abstract partial class BaseStates
                     MentalHP = MentalMaxHP * (springNap / darkNight);
                 }
                 break;
-            case SpiritualProperty.pillar:
+            case SpiritualProperty.Pillar:
                 // 8割固定
                 MentalHP = MentalMaxHP * 0.8f;
                 break;
-            case SpiritualProperty.godtier:
+            case SpiritualProperty.GodTier:
                 // 35%加算
                 MentalHP += MentalMaxHP * 0.35f;
                 break;
-            case SpiritualProperty.baledrival:
+            case SpiritualProperty.BaleDrival:
                 // 7割回復
                 MentalHP = MentalMaxHP * 0.7f;
                 break;
-            case SpiritualProperty.pysco:
+            case SpiritualProperty.Psycho:
                 // 20%加算
                 MentalHP += MentalMaxHP * 0.2f;
                 break;
@@ -457,9 +457,9 @@ public abstract partial class BaseStates
     {
         StatesPowerBreakdown eye = b_EYE;//基礎命中率
 
-        eye *= GetSpecialPercentModifier(whatModify.eye);//命中率補正。リスト内がゼロならちゃんと1.0fが返る。
-        PassivesPercentageModifier(whatModify.eye, ref eye);//パッシブの乗算補正
-        eye += GetSpecialFixedModifier(whatModify.eye);//命中率固定値補正
+        eye *= GetSpecialPercentModifier(StatModifier.Eye);//命中率補正。リスト内がゼロならちゃんと1.0fが返る。
+        PassivesPercentageModifier(StatModifier.Eye, ref eye);//パッシブの乗算補正
+        eye += GetSpecialFixedModifier(StatModifier.Eye);//命中率固定値補正
 
         if(NowUseSkill != null)//スキルがある、攻撃時限定処理
         {
@@ -514,9 +514,9 @@ public abstract partial class BaseStates
     {
         StatesPowerBreakdown agi = b_AGI;//基礎回避率
 
-        agi *= GetSpecialPercentModifier(whatModify.agi);//回避率補正。リスト内がゼロならちゃんと1.0fが返る。
-        PassivesPercentageModifier(whatModify.agi, ref agi);//パッシブの乗算補正
-        agi += GetSpecialFixedModifier(whatModify.agi);//回避率固定値補正
+        agi *= GetSpecialPercentModifier(StatModifier.Agi);//回避率補正。リスト内がゼロならちゃんと1.0fが返る。
+        PassivesPercentageModifier(StatModifier.Agi, ref agi);//パッシブの乗算補正
+        agi += GetSpecialFixedModifier(StatModifier.Agi);//回避率固定値補正
 
         if(manager == null)
         {
@@ -544,9 +544,9 @@ public abstract partial class BaseStates
     {
         StatesPowerBreakdown atk = b_ATK;//基礎攻撃力
 
-        atk *= GetSpecialPercentModifier(whatModify.atk);//攻撃力補正
-        PassivesPercentageModifier(whatModify.atk, ref atk);
-        atk += GetSpecialFixedModifier(whatModify.atk);//攻撃力固定値補正
+        atk *= GetSpecialPercentModifier(StatModifier.Atk);//攻撃力補正
+        PassivesPercentageModifier(StatModifier.Atk, ref atk);
+        atk += GetSpecialFixedModifier(StatModifier.Atk);//攻撃力固定値補正
 
         atk *= AttackModifier;//攻撃補正  実際の攻撃時のみに参照される。
 
@@ -592,9 +592,9 @@ public abstract partial class BaseStates
             def = b_DEF(SimulateAimStyle);//b_defをシミュレート
         }
 
-        def *= GetSpecialPercentModifier(whatModify.def);//防御力補正
-        PassivesPercentageModifier(whatModify.def, ref def);//パッシブの乗算補正
-        def += GetSpecialFixedModifier(whatModify.def);//防御力固定値補正
+        def *= GetSpecialPercentModifier(StatModifier.Def);//防御力補正
+        PassivesPercentageModifier(StatModifier.Def, ref def);//パッシブの乗算補正
+        def += GetSpecialFixedModifier(StatModifier.Def);//防御力固定値補正
 
         def *= PassivesDefencePercentageModifierByAttacker();//パッシブ由来の攻撃者を限定する補正
 
@@ -619,10 +619,10 @@ public abstract partial class BaseStates
     {
         return b_DEF() * 0.7f * NowPower switch
         {
-            ThePower.high => 1.4f,
-            ThePower.medium => 1f,
-            ThePower.low => 0.7f,
-            ThePower.lowlow => 0.4f,
+            PowerLevel.High => 1.4f,
+            PowerLevel.Medium => 1f,
+            PowerLevel.Low => 0.7f,
+            PowerLevel.VeryLow => 0.4f,
             _ => -4444444,//エラーだ
         };
     }
@@ -817,7 +817,7 @@ public abstract partial class BaseStates
         //現在の精神属性を構成する十日能力の中で最も大きいものを算出
         float topTenDayValue = 0f;
         Debug.Log($"(スキル成長)精神属性のチェック : {MyImpression},キャラ:{CharacterName}");
-        if(MyImpression == SpiritualProperty.none || !SpritualTenDayAbilitysMap.ContainsKey(MyImpression))
+        if(MyImpression == SpiritualProperty.None || !SpritualTenDayAbilitysMap.ContainsKey(MyImpression))
         {
             Debug.Log($"キャラクター{CharacterName}の精神属性({MyImpression})が未設定またはnoneなので成長できません。");
             return;

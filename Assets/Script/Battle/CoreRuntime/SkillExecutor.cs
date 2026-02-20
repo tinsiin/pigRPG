@@ -1,12 +1,18 @@
 using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Effects.Integration;
+using UnityEngine;
 
 public sealed class SkillExecutor
 {
     private readonly BattleActionContext _context;
     private readonly BattlePresentation _presentation;
     private readonly TurnExecutor _turnExecutor;
+
+    // キャッシュ（毎回Find/FindFirstObjectByTypeを呼ばないように）
+    private RectTransform _cachedViewportRT;
+    private PlayersUIRefs _cachedUIRefs;
 
     public SkillExecutor(
         BattleActionContext context,
@@ -59,6 +65,7 @@ public sealed class SkillExecutor
             _context.Logger.LogError("No targets before AttackChara; unders is empty.");
         }
 
+        TryPlayWeaponSlash(skill);
         PlaySkillVisualEffects(skill);
 
         await _context.Effects.ResolveSkillEffectsAsync(
@@ -124,6 +131,61 @@ public sealed class SkillExecutor
         {
             EffectManager.PlayField(skill.FieldEffectName);
         }
+    }
+
+    private void TryPlayWeaponSlash(BaseSkill skill)
+    {
+        if (_context.ActerFaction != Faction.Ally) return;
+
+        var weapon = _context.Acter.NowUseWeapon;
+        if (weapon == null || !weapon.IsBlade) return;
+
+        // 武器スキルまたは掛け合わせスキルか判定
+        bool isWeaponSkill = weapon.WeaponSkill != null
+            && ReferenceEquals(skill, weapon.WeaponSkill);
+        bool isCombinationSkill = !isWeaponSkill
+            && weapon.CombinationEntries != null
+            && weapon.CombinationEntries.Exists(e =>
+                e?.combinedSkill != null && ReferenceEquals(skill, e.combinedSkill));
+
+        if (!isWeaponSkill && !isCombinationSkill) return;
+
+        // ViewportArea を取得（FieldEffectLayer の親）— キャッシュ活用
+        if (_cachedViewportRT == null)
+        {
+            var fieldLayerGo = GameObject.Find("FieldEffectLayer");
+            if (fieldLayerGo == null) return;
+            _cachedViewportRT = fieldLayerGo.transform.parent as RectTransform;
+        }
+        if (_cachedViewportRT == null) return;
+
+        // ターゲット位置を viewport ローカル座標で収集
+        var targetPositions = new List<Vector2>();
+        for (int i = 0; i < _context.Unders.Count; i++)
+        {
+            var icon = _context.Unders.GetAtCharacter(i).BattleIcon;
+            if (icon == null) continue;
+            var iconRT = icon.GetComponent<RectTransform>();
+            if (iconRT == null) continue;
+            Vector2 localPos = _cachedViewportRT.InverseTransformPoint(iconRT.position);
+            targetPositions.Add(localPos);
+        }
+
+        if (targetPositions.Count == 0) return;
+
+        float slashScale = 1f;
+        float slashSpeed = 1f;
+        if (_cachedUIRefs == null)
+            _cachedUIRefs = UnityEngine.Object.FindFirstObjectByType<PlayersUIRefs>();
+        if (_cachedUIRefs != null)
+        {
+            slashScale = _cachedUIRefs.WeaponSlashScale;
+            slashSpeed = _cachedUIRefs.WeaponSlashSpeed;
+        }
+
+        WeaponSlashAnimator.PlayAsync(
+            _cachedViewportRT, targetPositions, weapon.SlashColor, slashScale, slashSpeed
+        ).Forget();
     }
 
     private void BeVanguardSkillACT()

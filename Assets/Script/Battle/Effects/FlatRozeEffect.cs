@@ -38,14 +38,14 @@ public sealed class FlatRozeEffect : ISkillEffect
         {
             new(
                 "ロゼ瞳",
-                whatModify.atk,
+                StatModifier.Atk,
                 1.6f + GetCoolnesFlatRozePower(acter),
                 null,
                 false
             ),
             new(
                 "ロゼ威力半減",
-                whatModify.atk,
+                StatModifier.Atk,
                 0.5f,
                 null,
                 false

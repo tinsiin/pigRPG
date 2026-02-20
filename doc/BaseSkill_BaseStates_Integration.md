@@ -98,15 +98,15 @@ var TendayAdvantage = Doer.TenDayValuesSum(true) / underAtker.TenDayValuesSum(fa
 // BaseStates_Analysis.md より
 public enum SpiritualProperty
 {
-    liminalwhitetile,  // リミナルホワイトタイル
-    kindergarden,      // 幼稚園
-    sacrifaith,        // 自己犠牲
-    cquiest,          // シークイエスト
+    LiminalWhiteTile,  // リミナルホワイトタイル
+    Kindergarten,      // 幼稚園
+    Sacrifaith,        // 自己犠牲
+    Cquiest,          // シークイエスト
     devil,            // デビル
-    doremis,          // ドレミス
-    godtier,          // ゴッドティア
-    baledrival,       // ベイルドライバル
-    pysco,            // サイコ
+    Doremis,          // ドレミス
+    GodTier,          // ゴッドティア
+    BaleDrival,       // ベイルドライバル
+    Psycho,            // サイコ
 }
 
 // キャラクターの精神属性

@@ -82,7 +82,7 @@ public class SelectTargetButtons : MonoBehaviour
         BaseStates target,
         string text,
         DirectedWill will,
-        allyOrEnemy faction,
+        Faction faction,
         ref float currentX,
         ref float currentY,
         List<Button> targetButtonList)
@@ -328,7 +328,7 @@ public class SelectTargetButtons : MonoBehaviour
                     }
 
                     ene.UI.SetActiveSetNumber_NumberEffect(true, i+1);
-                    CreateTargetButton(ene, txt, DirectedWill.One, allyOrEnemy.Enemyiy, ref currentX, ref currentY, EnemybuttonList);
+                    CreateTargetButton(ene, txt, DirectedWill.One, Faction.Enemy, ref currentX, ref currentY, EnemybuttonList);
                 }
             }
         }
@@ -363,7 +363,7 @@ public class SelectTargetButtons : MonoBehaviour
                 chara.UI.SetActiveSetNumber_NumberEffect(true, i+11);
                 var txt = chara.CharacterName + $"「{i+11}」";
                 // 味方ボタンはAllybuttonListに追加（OnClickSelectTargetの終了判定と整合性を保つ）
-                CreateTargetButton(chara, txt, DirectedWill.One, allyOrEnemy.alliy, ref currentX, ref currentY, AllybuttonList);
+                CreateTargetButton(chara, txt, DirectedWill.One, Faction.Ally, ref currentX, ref currentY, AllybuttonList);
             }
 
         }
@@ -426,12 +426,12 @@ public class SelectTargetButtons : MonoBehaviour
     /// <summary>
     /// "人物を対象として選ぶクリック関数"
     /// </summary>
-    void OnClickSelectTarget(BaseStates target, Button thisBtn, allyOrEnemy faction,DirectedWill will)
+    void OnClickSelectTarget(BaseStates target, Button thisBtn, Faction faction,DirectedWill will)
     {
         CashUnders.Add(target);
         selectedTargetWill = will;
 
-        if (AllybuttonList.Count > 0 && faction == allyOrEnemy.Enemyiy)///敵のボタンで主人公達のボタンが一つ以上あったら
+        if (AllybuttonList.Count > 0 && faction == Faction.Enemy)///敵のボタンで主人公達のボタンが一つ以上あったら
         {
             foreach (var button in AllybuttonList)
             {
@@ -439,7 +439,7 @@ public class SelectTargetButtons : MonoBehaviour
             }
         }
 
-        if (EnemybuttonList.Count > 0 && faction == allyOrEnemy.alliy)///主人公達のボタンで敵のボタンが一つ以上あったら
+        if (EnemybuttonList.Count > 0 && faction == Faction.Ally)///主人公達のボタンで敵のボタンが一つ以上あったら
         {
             foreach (var button in EnemybuttonList)
             {
@@ -448,17 +448,17 @@ public class SelectTargetButtons : MonoBehaviour
         }
 
         //人物セレクトカウントをデクリメント
-        if (faction == allyOrEnemy.alliy)
+        if (faction == Faction.Ally)
             NeedSelectCountAlly--;
-        if (faction == allyOrEnemy.Enemyiy)
+        if (faction == Faction.Enemy)
             NeedSelectCountEnemy--;
 
         // ボタンをリストから削除してDestroy（リストのCountを正確に保つ、同一キャラの重複選択を防ぐ）
-        if (faction == allyOrEnemy.alliy)
+        if (faction == Faction.Ally)
         {
             AllybuttonList.Remove(thisBtn);
         }
-        else if (faction == allyOrEnemy.Enemyiy)
+        else if (faction == Faction.Enemy)
         {
             EnemybuttonList.Remove(thisBtn);
         }
@@ -468,7 +468,7 @@ public class SelectTargetButtons : MonoBehaviour
         // - ボタンが二つ以上残っていないなら選択の余地がないので終了
         // - 必要選択数に達した（NeedSelectCount <= 0）なら終了
         // ※対象が最初から1人しかいない場合は、OnCreated()でボタンを作らずReturnNextWaitView()している
-        if (faction == allyOrEnemy.alliy)
+        if (faction == Faction.Ally)
         {//味方ボタンなら
             if (AllybuttonList.Count < 1 || NeedSelectCountAlly <= 0)
             {
@@ -480,7 +480,7 @@ public class SelectTargetButtons : MonoBehaviour
                 SelectEndBtn.gameObject.SetActive(true);
             }
         }
-        else if (faction == allyOrEnemy.Enemyiy)
+        else if (faction == Faction.Enemy)
         {//敵ボタンなら
             if (EnemybuttonList.Count < 1 || NeedSelectCountEnemy <= 0)
             {

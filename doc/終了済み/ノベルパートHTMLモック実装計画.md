@@ -111,10 +111,10 @@
 ### 9. 選択肢と精神属性
 
 ```html
-<div class="choice" data-spirit="kindergarden">
+<div class="choice" data-spirit="Kindergarten">
   「まあいいか」 [幼稚園]
 </div>
-<div class="choice" data-spirit="sacrifaith">
+<div class="choice" data-spirit="Sacrifaith">
   「俺がやる」 [自己犠牲]
 </div>
 ```
@@ -189,9 +189,9 @@ const scenario = [
   {
     type: "choice",
     choices: [
-      { text: "近づいてみる", spirit: "kindergarden" },
-      { text: "様子を見る", spirit: "cquiest" },
-      { text: "俺が確認する", spirit: "sacrifaith" }
+      { text: "近づいてみる", spirit: "Kindergarten" },
+      { text: "様子を見る", spirit: "Cquiest" },
+      { text: "俺が確認する", spirit: "Sacrifaith" }
     ]
   },
   {

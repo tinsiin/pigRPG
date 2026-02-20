@@ -104,13 +104,13 @@ public partial class BaseSkill
         if(TargetSelection == SkillPassiveTargetSelection.Select)
         {
             //敵ならAIで 未実装
-            if(manager.GetCharacterFaction(actor) == allyOrEnemy.Enemyiy)
+            if(manager.GetCharacterFaction(actor) == Faction.Enemy)
             {
 
             }
 
             //味方はUI選択
-            if(manager.GetCharacterFaction(actor) == allyOrEnemy.alliy)
+            if(manager.GetCharacterFaction(actor) == Faction.Ally)
             {
                 if(SkillPassiveGibeSkillFilter != null && SkillPassiveGibeSkillFilter.HasAnyCondition)//フィルタ条件があるなら絞り込む
                 {

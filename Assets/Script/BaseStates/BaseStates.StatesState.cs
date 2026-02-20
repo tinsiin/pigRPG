@@ -145,7 +145,7 @@ public abstract partial class BaseStates
     [Space]
     [Header("パワー")]
     [Tooltip("キャラクターの現在のパワー段階（初期値: medium）")]
-    public ThePower NowPower = ThePower.medium;//初期値は中
+    public PowerLevel NowPower = PowerLevel.Medium;//初期値は中
 
     /// <summary>
     /// NowPowerが一段階上がる。
@@ -154,10 +154,10 @@ public abstract partial class BaseStates
     {
         NowPower = NowPower switch
             {
-                ThePower.lowlow => ThePower.low,
-                ThePower.low => ThePower.medium,
-                ThePower.medium => ThePower.high,
-                ThePower.high => ThePower.high, // 既に最高値の場合は変更なし
+                PowerLevel.VeryLow => PowerLevel.Low,
+                PowerLevel.Low => PowerLevel.Medium,
+                PowerLevel.Medium => PowerLevel.High,
+                PowerLevel.High => PowerLevel.High, // 既に最高値の場合は変更なし
                 _ => NowPower//ここはdefault句らしい
             };
 
@@ -170,10 +170,10 @@ public abstract partial class BaseStates
     {
         NowPower = NowPower switch
             {
-                ThePower.high => ThePower.medium,
-                ThePower.medium => ThePower.low,
-                ThePower.low => ThePower.lowlow,
-                ThePower.lowlow => ThePower.lowlow, // 既に最低値の場合は変更なし
+                PowerLevel.High => PowerLevel.Medium,
+                PowerLevel.Medium => PowerLevel.Low,
+                PowerLevel.Low => PowerLevel.VeryLow,
+                PowerLevel.VeryLow => PowerLevel.VeryLow, // 既に最低値の場合は変更なし
                 _ => NowPower//ここはdefault句らしい
             };
     }
@@ -205,8 +205,8 @@ public abstract partial class BaseStates
         // 基礎確率を設定
         float baseChance = MyImpression switch
         {
-            SpiritualProperty.kindergarden => 40f,
-            SpiritualProperty.liminalwhitetile => 30f,
+            SpiritualProperty.Kindergarten => 40f,
+            SpiritualProperty.LiminalWhiteTile => 30f,
             _ => 20f
         };
 
@@ -226,364 +226,364 @@ public abstract partial class BaseStates
     {
         switch(MyImpression)
         {
-            case SpiritualProperty.doremis:
+            case SpiritualProperty.Doremis:
                 switch(NowPower)
                 {
-                    case ThePower.high:
+                    case PowerLevel.High:
                         if(rollper(35))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
                         break;
-                    case ThePower.medium:
+                    case PowerLevel.Medium:
                         if(rollper(25))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         if(rollper(6))
                         {
-                            NowPower = ThePower.high;
+                            NowPower = PowerLevel.High;
                         }
                         break;
-                    case ThePower.low:
+                    case PowerLevel.Low:
                         if(rollper(6))
                         {
-                            NowPower = ThePower.lowlow;
+                            NowPower = PowerLevel.VeryLow;
                         }
                         if(rollper(2.7f))
                         {
-                            NowPower = ThePower.high;
+                            NowPower = PowerLevel.High;
                         }
                         break;
-                    case ThePower.lowlow:
+                    case PowerLevel.VeryLow:
                         if(rollper(7.55f))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
                         break;
                 }
                 break;
-            case SpiritualProperty.pillar:
+            case SpiritualProperty.Pillar:
                 switch(NowPower)
                 {
-                    case ThePower.high:
+                    case PowerLevel.High:
                         if(rollper(2.23f))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
                         break;
-                    case ThePower.medium:
+                    case PowerLevel.Medium:
                         if(rollper(5))
                         {
-                            NowPower = ThePower.high;
+                            NowPower = PowerLevel.High;
                         }
                         if(rollper(20))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         break;
-                    case ThePower.low:
+                    case PowerLevel.Low:
                         if(rollper(6.09f))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
                         if(rollper(15))
                         {
-                            NowPower = ThePower.lowlow;
+                            NowPower = PowerLevel.VeryLow;
                         }
                         break;
-                    case ThePower.lowlow:
+                    case PowerLevel.VeryLow:
                         if(rollper(8))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         break;
                 }
 
                 break;
-            case SpiritualProperty.kindergarden:
+            case SpiritualProperty.Kindergarten:
                 switch(NowPower)
                 {
-                    case ThePower.high:
+                    case PowerLevel.High:
                         if(rollper(25))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
                         break;
-                    case ThePower.medium:
+                    case PowerLevel.Medium:
                         if(rollper(31))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         if(rollper(28))
                         {
-                            NowPower = ThePower.high;
+                            NowPower = PowerLevel.High;
                         }
                         break;
-                    case ThePower.low:
+                    case PowerLevel.Low:
                         if(rollper(25))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
 
                         if(rollper(20))
                         {
-                            NowPower = ThePower.lowlow;
+                            NowPower = PowerLevel.VeryLow;
                         }
                         break;
-                    case ThePower.lowlow:
+                    case PowerLevel.VeryLow:
                         if(rollper(30))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         break;
                 }
                 break;
-            case SpiritualProperty.liminalwhitetile:
+            case SpiritualProperty.LiminalWhiteTile:
                 switch(NowPower)
                 {
-                    case ThePower.high:
+                    case PowerLevel.High:
                         if(rollper(17))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
                         break;
-                    case ThePower.medium:
+                    case PowerLevel.Medium:
                         if(rollper(3))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         if(rollper(3.1f))
                         {
-                            NowPower = ThePower.high;
+                            NowPower = PowerLevel.High;
                         }
                         break;
-                    case ThePower.low:
+                    case PowerLevel.Low:
                         if(rollper(13))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
 
                         if(rollper(2))
                         {
-                            NowPower = ThePower.lowlow;
+                            NowPower = PowerLevel.VeryLow;
                         }
                         break;
-                    case ThePower.lowlow:
+                    case PowerLevel.VeryLow:
                         if(rollper(40))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         break;
                 }
                 break;
-            case SpiritualProperty.sacrifaith:
+            case SpiritualProperty.Sacrifaith:
                 switch(NowPower)
                 {
-                    case ThePower.high:
+                    case PowerLevel.High:
                         //不変
-                    case ThePower.medium:
+                    case PowerLevel.Medium:
                         if(rollper(14))
                         {
-                            NowPower = ThePower.high;
+                            NowPower = PowerLevel.High;
                         }
                         break;
-                    case ThePower.low:
+                    case PowerLevel.Low:
                         if(rollper(20))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
                         break;
-                    case ThePower.lowlow:
+                    case PowerLevel.VeryLow:
                         if(rollper(26))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         break;
                 }
                 break;
-            case SpiritualProperty.cquiest:
+            case SpiritualProperty.Cquiest:
                 switch(NowPower)
                 {
-                    case ThePower.high:
+                    case PowerLevel.High:
                         if(rollper(14))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
                         break;
-                    case ThePower.medium:
+                    case PowerLevel.Medium:
                         if(rollper(3))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         if(rollper(3.1f))
                         {
-                            NowPower = ThePower.high;
+                            NowPower = PowerLevel.High;
                         }
                         break;
-                    case ThePower.low:
+                    case PowerLevel.Low:
                         if(rollper(13))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
 
                         break;
-                    case ThePower.lowlow:
+                    case PowerLevel.VeryLow:
                         if(rollper(4.3f))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         break;
                 }
                 break;
-            case SpiritualProperty.pysco:
+            case SpiritualProperty.Psycho:
                 switch(NowPower)
                 {
-                    case ThePower.high:
+                    case PowerLevel.High:
                         if(rollper(77.77f))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
                         break;
-                    case ThePower.medium:
+                    case PowerLevel.Medium:
                         if(rollper(6.7f))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         if(rollper(3))
                         {
-                            NowPower = ThePower.high;
+                            NowPower = PowerLevel.High;
                         }
                         break;
-                    case ThePower.low:
+                    case PowerLevel.Low:
                         if(rollper(90))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
 
                         if(rollper(10))
                         {
-                            NowPower = ThePower.lowlow;
+                            NowPower = PowerLevel.VeryLow;
                         }
                         break;
-                    case ThePower.lowlow:
+                    case PowerLevel.VeryLow:
                         if(rollper(80))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         break;
                 }
                 break;
-            case SpiritualProperty.godtier:
+            case SpiritualProperty.GodTier:
                 switch(NowPower)
                 {
-                    case ThePower.high:
+                    case PowerLevel.High:
                         if(rollper(4.26f))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
                         break;
-                    case ThePower.medium:
+                    case PowerLevel.Medium:
                         if(rollper(3))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         if(rollper(30))
                         {
-                            NowPower = ThePower.high;
+                            NowPower = PowerLevel.High;
                         }
                         break;
-                    case ThePower.low:
+                    case PowerLevel.Low:
                         if(rollper(28))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
 
                         if(rollper(8))
                         {
-                            NowPower = ThePower.lowlow;
+                            NowPower = PowerLevel.VeryLow;
                         }
                         break;
-                    case ThePower.lowlow:
+                    case PowerLevel.VeryLow:
                         if(rollper(100))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         break;
                 }
                 break;
-            case SpiritualProperty.baledrival:
+            case SpiritualProperty.BaleDrival:
                 switch(NowPower)
                 {
-                    case ThePower.high:
+                    case PowerLevel.High:
                         if(rollper(9))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
                         break;
-                    case ThePower.medium:
+                    case PowerLevel.Medium:
                         if(rollper(25))
                         {
-                            NowPower = ThePower.high;
+                            NowPower = PowerLevel.High;
                         }
                         if(rollper(11))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         break;
-                    case ThePower.low:
+                    case PowerLevel.Low:
                         if(rollper(26.5f))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
 
                         if(rollper(8))
                         {
-                            NowPower = ThePower.lowlow;
+                            NowPower = PowerLevel.VeryLow;
                         }
                         break;
-                    case ThePower.lowlow:
+                    case PowerLevel.VeryLow:
                         if(rollper(50))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         break;
                 }
                 break;
-            case SpiritualProperty.devil:
+            case SpiritualProperty.Devil:
                 switch(NowPower)
                 {
-                    case ThePower.high:
+                    case PowerLevel.High:
                         if(rollper(5))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
                         break;
-                    case ThePower.medium:
+                    case PowerLevel.Medium:
                         if(rollper(6))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         if(rollper(4.1f))
                         {
-                            NowPower = ThePower.high;
+                            NowPower = PowerLevel.High;
                         }
                         break;
-                    case ThePower.low:
+                    case PowerLevel.Low:
                         if(rollper(15))
                         {
-                            NowPower = ThePower.medium;
+                            NowPower = PowerLevel.Medium;
                         }
 
                         if(rollper(7))
                         {
-                            NowPower = ThePower.lowlow;
+                            NowPower = PowerLevel.VeryLow;
                         }
                         break;
-                    case ThePower.lowlow:
+                    case PowerLevel.VeryLow:
                         if(rollper(22))
                         {
-                            NowPower = ThePower.low;
+                            NowPower = PowerLevel.Low;
                         }
                         break;
                 }
@@ -597,11 +597,11 @@ public abstract partial class BaseStates
     /// <summary>
     /// 現在のこのキャラの人間状況
     /// </summary>
-    HumanConditionCircumstances NowCondition;
+    Demeanor NowCondition;
     /// <summary>
     /// 前回の人間状況　同じのが続いてるかの判断要
     /// </summary>
-    HumanConditionCircumstances PreviousCondition;
+    Demeanor PreviousCondition;
     /// <summary>
     /// 人間状況の続いてるターン　想定連続ターン
     /// </summary>
@@ -669,143 +669,143 @@ public abstract partial class BaseStates
             ? 999999f // 敵が0なら自分が勝ってる扱い(∞倍勝ち)
             : myTenDays / eneTenDays;
 
-        // パワー(NowPower)は ThePower 型 (lowlow, low, medium, high など)
+        // パワー(NowPower)は PowerLevel 型 (VeryLow, low, medium, high など)
         // MyImpression は精神属性
 
         // 初期値はとりあえず普調にしておいて、後で条件を満たせば上書きする
-        NowCondition = HumanConditionCircumstances.Normal;
+        NowCondition = Demeanor.Normal;
 
         switch (MyImpression)
         {
             //--------------------------------
-            // 1) ベール (baledrival)
+            // 1) ベール (BaleDrival)
             //--------------------------------
-            case SpiritualProperty.baledrival:
+            case SpiritualProperty.BaleDrival:
                 // 「高揚」：パワーが高 && 2倍負け( ratio <= 0.5 )
-                if (NowPower == ThePower.high && ratio <= 0.5f)
+                if (NowPower == PowerLevel.High && ratio <= 0.5f)
                 {
-                    NowCondition = HumanConditionCircumstances.Elated;
+                    NowCondition = Demeanor.Elated;
                 }
                 else
                 {
                     // それ以外は「楽観的」
-                    NowCondition = HumanConditionCircumstances.Optimistic;
+                    NowCondition = Demeanor.Optimistic;
                 }
                 break;
 
             //--------------------------------
-            // 2) デビル (devil)
+            // 2) デビル (Devil)
             //--------------------------------
-            case SpiritualProperty.devil:
+            case SpiritualProperty.Devil:
                 // 「高揚」：1.8倍勝ち ( ratio >= 1.8 )
                 if (ratio >= 1.8f)
                 {
-                    NowCondition = HumanConditionCircumstances.Elated;
+                    NowCondition = Demeanor.Elated;
                 }
                 else
                 {
                     // それ以外 => 「普調」 (疑念にはならない)
-                    NowCondition = HumanConditionCircumstances.Normal;
+                    NowCondition = Demeanor.Normal;
                 }
                 break;
 
             //--------------------------------
-            // 3) 自己犠牲 (sacrifaith)
+            // 3) 自己犠牲 (Sacrifaith)
             //--------------------------------
-            case SpiritualProperty.sacrifaith:
+            case SpiritualProperty.Sacrifaith:
                 // 覚悟：パワーが low より上(=low以上) かつ 2倍負け( ratio <= 0.5 )
                 //   ※「パワーがlow“以上”」= (low, medium, highのいずれか)
-                if (NowPower >= ThePower.low && ratio <= 0.5f)
+                if (NowPower >= PowerLevel.Low && ratio <= 0.5f)
                 {
-                    NowCondition = HumanConditionCircumstances.Resolved;
+                    NowCondition = Demeanor.Resolved;
                 }
-                // 疑念：パワーがlowlow && 1.6倍負け( ratio <= 1/1.6≒0.625 )
-                else if (NowPower == ThePower.lowlow && ratio <= 0.625f)
+                // 疑念：パワーがVeryLow && 1.6倍負け( ratio <= 1/1.6≒0.625 )
+                else if (NowPower == PowerLevel.VeryLow && ratio <= 0.625f)
                 {
-                    NowCondition = HumanConditionCircumstances.Doubtful;
+                    NowCondition = Demeanor.Doubtful;
                 }
                 else
                 {
                     // それ以外 => 普調
-                    NowCondition = HumanConditionCircumstances.Normal;
+                    NowCondition = Demeanor.Normal;
                 }
                 break;
 
             //--------------------------------
-            // 4) ゴッドティア (godtier)
+            // 4) ゴッドティア (GodTier)
             //--------------------------------
-            case SpiritualProperty.godtier:
+            case SpiritualProperty.GodTier:
                 // 「楽観的」: 総量2.5倍勝ち( ratio >= 2.5 )
                 if (ratio >= 2.5f)
                 {
-                    NowCondition = HumanConditionCircumstances.Optimistic;
+                    NowCondition = Demeanor.Optimistic;
                 }
                 // 「覚悟」 : パワーがmedium以上 && 2倍負け( ratio <= 0.5 )
-                else if (NowPower >= ThePower.medium && ratio <= 0.5f)
+                else if (NowPower >= PowerLevel.Medium && ratio <= 0.5f)
                 {
-                    NowCondition = HumanConditionCircumstances.Resolved;
+                    NowCondition = Demeanor.Resolved;
                 }
                 else
                 {
                     // それ以外 => 普調
-                    NowCondition = HumanConditionCircumstances.Normal;
+                    NowCondition = Demeanor.Normal;
                 }
                 break;
 
             //--------------------------------
-            // 5) リーミナルホワイトタイル (liminalwhitetile)
+            // 5) リーミナルホワイトタイル (LiminalWhiteTile)
             //--------------------------------
-            case SpiritualProperty.liminalwhitetile:
+            case SpiritualProperty.LiminalWhiteTile:
                 // 「楽観的」: 総量2倍勝ち( ratio >= 2.0 )
                 if (ratio >= 2.0f)
                 {
-                    NowCondition = HumanConditionCircumstances.Optimistic;
+                    NowCondition = Demeanor.Optimistic;
                 }
                 // 「疑念」 : 2倍負け( ratio <= 0.5 )
                 else if (ratio <= 0.5f)
                 {
-                    NowCondition = HumanConditionCircumstances.Doubtful;
+                    NowCondition = Demeanor.Doubtful;
                 }
                 else
                 {
-                    NowCondition = HumanConditionCircumstances.Normal;
+                    NowCondition = Demeanor.Normal;
                 }
                 break;
 
             //--------------------------------
-            // 6) キンダーガーデン (kindergarden)
+            // 6) キンダーガーデン (Kindergarten)
             //--------------------------------
-            case SpiritualProperty.kindergarden:
+            case SpiritualProperty.Kindergarten:
                 // 「楽観的」: 1.7倍勝ち
                 if (ratio >= 1.7f)
                 {
-                    NowCondition = HumanConditionCircumstances.Optimistic;
+                    NowCondition = Demeanor.Optimistic;
                 }
                 // 「疑念」 : 1.5倍負け ( ratio <= 2/3 = 0.6667 )
                 else if (ratio <= 0.6667f)
                 {
-                    NowCondition = HumanConditionCircumstances.Doubtful;
+                    NowCondition = Demeanor.Doubtful;
                 }
                 else
                 {
-                    NowCondition = HumanConditionCircumstances.Normal;
+                    NowCondition = Demeanor.Normal;
                 }
                 break;
 
             //--------------------------------
-            // 7) 支柱 (pillar) 
+            // 7) 支柱 (Pillar) 
             //    戦闘開始時は「普調」だけ
             //--------------------------------
-            case SpiritualProperty.pillar:
-                NowCondition = HumanConditionCircumstances.Normal;
+            case SpiritualProperty.Pillar:
+                NowCondition = Demeanor.Normal;
                 break;
 
             //--------------------------------
-            // 8) サイコパス (pysco)
+            // 8) サイコパス (Psycho)
             //    戦闘開始時は常に落ち着く => 普調
             //--------------------------------
-            case SpiritualProperty.pysco:
-                NowCondition = HumanConditionCircumstances.Normal;
+            case SpiritualProperty.Psycho:
+                NowCondition = Demeanor.Normal;
                 break;
 
             //--------------------------------
@@ -813,7 +813,7 @@ public abstract partial class BaseStates
             //    仕様外 or 未指定なら一旦「普調」にする
             //--------------------------------
             default:
-                NowCondition = HumanConditionCircumstances.Normal;
+                NowCondition = Demeanor.Normal;
                 break;
         }
     }
@@ -826,74 +826,74 @@ public abstract partial class BaseStates
 
         switch (NowCondition)
         {
-            case HumanConditionCircumstances.Resolved:
+            case Demeanor.Resolved:
                 // 覚悟 → 高揚 (想定17)
                 if (ConditionConsecutiveTurn >= 17)
                 {
-                    NowCondition = HumanConditionCircumstances.Elated;
+                    NowCondition = Demeanor.Elated;
                     changed = true;
                 }
                 break;
 
-            case HumanConditionCircumstances.Angry:
+            case Demeanor.Angry:
                 // 怒り → 普調 (想定10)
                 if (ConditionConsecutiveTurn >= 10)
                 {
-                    NowCondition = HumanConditionCircumstances.Normal;
+                    NowCondition = Demeanor.Normal;
                     changed = true;
                 }
                 // 怒り → 高揚 (累積23)
                 else if (TotalTurnsInSameCondition >= 23)
                 {
-                    NowCondition = HumanConditionCircumstances.Elated;
+                    NowCondition = Demeanor.Elated;
                     changed = true;
                 }
                 break;
 
-            case HumanConditionCircumstances.Doubtful:
+            case Demeanor.Doubtful:
                 // 疑念 → 楽観的 (想定11)
                 if (ConditionConsecutiveTurn >= 11)
                 {
-                    NowCondition = HumanConditionCircumstances.Optimistic;
+                    NowCondition = Demeanor.Optimistic;
                     changed = true;
                 }
                 // 疑念 → 混乱 (累積19)
                 else if (TotalTurnsInSameCondition >= 19)
                 {
-                    NowCondition = HumanConditionCircumstances.Confused;
+                    NowCondition = Demeanor.Confused;
                     changed = true;
                 }
                 break;
 
-            case HumanConditionCircumstances.Confused:
+            case Demeanor.Confused:
                 // 混乱 → 普調 (想定11)
                 if (ConditionConsecutiveTurn >= 11)
                 {
-                    NowCondition = HumanConditionCircumstances.Normal;
+                    NowCondition = Demeanor.Normal;
                     changed = true;
                 }
                 // 混乱 → 高揚 (累積22)
                 else if (TotalTurnsInSameCondition >= 22)
                 {
-                    NowCondition = HumanConditionCircumstances.Elated;
+                    NowCondition = Demeanor.Elated;
                     changed = true;
                 }
                 break;
 
-            case HumanConditionCircumstances.Elated:
+            case Demeanor.Elated:
                 // 高揚 → 普調 (想定13)
                 if (ConditionConsecutiveTurn >= 13)
                 {
-                    NowCondition = HumanConditionCircumstances.Normal;
+                    NowCondition = Demeanor.Normal;
                     changed = true;
                 }
                 break;
 
-            case HumanConditionCircumstances.Painful:
+            case Demeanor.Painful:
                 // 辛い → 普調 (想定14)
                 if (ConditionConsecutiveTurn >= 14)
                 {
-                    NowCondition = HumanConditionCircumstances.Normal;
+                    NowCondition = Demeanor.Normal;
                     changed = true;
                 }
                 break;
@@ -918,26 +918,26 @@ public abstract partial class BaseStates
         {
             switch (NowCondition)//死によって、どの状況からどの状況へ変化するか
             {
-                case HumanConditionCircumstances.Painful://辛い
-                    NowCondition = HumanConditionCircumstances.Confused;//辛いと誰でも混乱する
+                case Demeanor.Painful://辛い
+                    NowCondition = Demeanor.Confused;//辛いと誰でも混乱する
                     break;
-                case HumanConditionCircumstances.Optimistic://楽観的
+                case Demeanor.Optimistic://楽観的
                     switch(MyImpression)
                     {
-                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.Kindergarten:
                             if(rollper(36))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }
                         break;
-                        case SpiritualProperty.pysco:
+                        case SpiritualProperty.Psycho:
                             if(deathCount > 1)
                             {//二人なら危機感を感じて普調になる
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }
                             else
                             {
@@ -945,10 +945,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                         break;
-                        case SpiritualProperty.baledrival:
+                        case SpiritualProperty.BaleDrival:
                             if(deathCount > 1)
                             {//二人なら怒り
-                                NowCondition = HumanConditionCircumstances.Angry;
+                                NowCondition = Demeanor.Angry;
                             }
                             else
                             {
@@ -956,61 +956,61 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                         break;
-                        case SpiritualProperty.devil:
-                        case SpiritualProperty.sacrifaith:
-                        case SpiritualProperty.cquiest:
-                        case SpiritualProperty.godtier:
-                        case SpiritualProperty.pillar:
-                        case SpiritualProperty.doremis:
-                            NowCondition = HumanConditionCircumstances.Angry;
+                        case SpiritualProperty.Devil:
+                        case SpiritualProperty.Sacrifaith:
+                        case SpiritualProperty.Cquiest:
+                        case SpiritualProperty.GodTier:
+                        case SpiritualProperty.Pillar:
+                        case SpiritualProperty.Doremis:
+                            NowCondition = Demeanor.Angry;
                         break;
-                        case SpiritualProperty.liminalwhitetile:
+                        case SpiritualProperty.LiminalWhiteTile:
                             if(deathCount>1 && rollper(10))
                             {
                                 //変化なし
                                 ResetConditionConsecutiveTurn();
                             }else
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }
                         break;
                     }
                     break;
-                case HumanConditionCircumstances.Elated:
+                case Demeanor.Elated:
                     switch(MyImpression)
                     {
-                        case SpiritualProperty.liminalwhitetile:
+                        case SpiritualProperty.LiminalWhiteTile:
                             if(deathCount>1)
                             {//二人なら混乱
-                                NowCondition = HumanConditionCircumstances.Confused;
+                                NowCondition = Demeanor.Confused;
                             }else
                             {
                                 //変化なし
                                 ResetConditionConsecutiveTurn();
                             }
                         break;
-                        case SpiritualProperty.kindergarden:
-                            NowCondition = HumanConditionCircumstances.Confused;
+                        case SpiritualProperty.Kindergarten:
+                            NowCondition = Demeanor.Confused;
                         break;
-                        case SpiritualProperty.doremis:
+                        case SpiritualProperty.Doremis:
                             if(deathCount == 1)
                             {//一人なら混乱する
-                                NowCondition = HumanConditionCircumstances.Confused;
+                                NowCondition = Demeanor.Confused;
                             }else
                             {
                                 //変化なし
                                 ResetConditionConsecutiveTurn();
                             }
                         break;
-                        case SpiritualProperty.sacrifaith:
-                        case SpiritualProperty.godtier:
-                        case SpiritualProperty.devil:
-                            NowCondition = HumanConditionCircumstances.Normal;
+                        case SpiritualProperty.Sacrifaith:
+                        case SpiritualProperty.GodTier:
+                        case SpiritualProperty.Devil:
+                            NowCondition = Demeanor.Normal;
                         break;
-                        case SpiritualProperty.baledrival:
+                        case SpiritualProperty.BaleDrival:
                             if(deathCount == 1)
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }
                             else
                             {
@@ -1018,10 +1018,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                         break;
-                        case SpiritualProperty.pillar:
+                        case SpiritualProperty.Pillar:
                             if(deathCount > 1)
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }
                             else
                             {
@@ -1030,19 +1030,19 @@ public abstract partial class BaseStates
                             }
                         break;
                         //シークイエストとサイコパスは変化なし
-                        case SpiritualProperty.cquiest:
-                        case SpiritualProperty.pysco:
+                        case SpiritualProperty.Cquiest:
+                        case SpiritualProperty.Psycho:
                             ResetConditionConsecutiveTurn();//変化なし
                             break;
                     }
                     break;
-                case HumanConditionCircumstances.Resolved:
+                case Demeanor.Resolved:
                     switch(MyImpression)
                     {
-                        case SpiritualProperty.devil:
+                        case SpiritualProperty.Devil:
                             if(deathCount>1)
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }
                             else
                             {
@@ -1050,10 +1050,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                         break;
-                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.Kindergarten:
                             if(rollper(44))
                             {
-                                NowCondition =HumanConditionCircumstances.Optimistic;
+                                NowCondition =Demeanor.Optimistic;
                             }
                             else
                             {
@@ -1067,13 +1067,13 @@ public abstract partial class BaseStates
                             break;
                     }
                     break;
-                case HumanConditionCircumstances.Angry:
+                case Demeanor.Angry:
                     switch(MyImpression)
                     {
-                        case SpiritualProperty.devil:
+                        case SpiritualProperty.Devil:
                             if(rollper(66.66f))
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }
                             else
                             {
@@ -1081,10 +1081,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                         break;
-                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.Kindergarten:
                             if(rollper(28))
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }
                             else
                             {
@@ -1092,8 +1092,8 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                         break;
-                        case SpiritualProperty.sacrifaith:
-                            NowCondition = HumanConditionCircumstances.Resolved;
+                        case SpiritualProperty.Sacrifaith:
+                            NowCondition = Demeanor.Resolved;
                         break;
                         //後は全て変化なし
                         default:
@@ -1102,103 +1102,103 @@ public abstract partial class BaseStates
                     }
                     break;
 
-                case HumanConditionCircumstances.Doubtful:
+                case Demeanor.Doubtful:
                     switch(MyImpression)
                     {
-                        case SpiritualProperty.sacrifaith:
+                        case SpiritualProperty.Sacrifaith:
                             if(deathCount == 1)
                             {
-                                NowCondition = HumanConditionCircumstances.Angry;
+                                NowCondition = Demeanor.Angry;
                             }
                             else if(deathCount > 1)
                             {
-                                NowCondition = HumanConditionCircumstances.Resolved;
+                                NowCondition = Demeanor.Resolved;
                             }
                         break;
-                        case SpiritualProperty.liminalwhitetile:
+                        case SpiritualProperty.LiminalWhiteTile:
                             if(deathCount > 1 && rollper(40))
                             {
-                                NowCondition = HumanConditionCircumstances.Angry;
+                                NowCondition = Demeanor.Angry;
                             }
                             else
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }
                         break; 
-                        case SpiritualProperty.devil:  
+                        case SpiritualProperty.Devil:  
                             if(deathCount > 1 && rollper(21.666f))
                             {
-                                NowCondition = HumanConditionCircumstances.Angry;
+                                NowCondition = Demeanor.Angry;
                             }
                             else
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }
                         break;
-                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.Kindergarten:
                             if(rollper(20))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }
                             else
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }
                         break;
-                        case SpiritualProperty.baledrival:
+                        case SpiritualProperty.BaleDrival:
                             if(deathCount > 1)
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }
                             else
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }
                         break;
-                        case SpiritualProperty.godtier:
-                            NowCondition = HumanConditionCircumstances.Resolved;
+                        case SpiritualProperty.GodTier:
+                            NowCondition = Demeanor.Resolved;
                         break;
-                        case SpiritualProperty.doremis:
+                        case SpiritualProperty.Doremis:
                             ResetConditionConsecutiveTurn();//変化なし
                         break;
-                        case SpiritualProperty.pysco:
+                        case SpiritualProperty.Psycho:
                             switch(RandomSource.NextInt(5))
                             {
                                 case 0:
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                                 break;
                                 case 1:
-                                NowCondition = HumanConditionCircumstances.Resolved;
+                                NowCondition = Demeanor.Resolved;
                                 break;
                                 case 2:
                                 //変化なし
                                 ResetConditionConsecutiveTurn();
                                 break;
                                 case 3:
-                                NowCondition = HumanConditionCircumstances.Doubtful;
+                                NowCondition = Demeanor.Doubtful;
                                 break;
                                 case 4:
-                                NowCondition = HumanConditionCircumstances.Angry;
+                                NowCondition = Demeanor.Angry;
                                 break;
                             }
                         break;
-                        case SpiritualProperty.pillar:
-                        case SpiritualProperty.cquiest:
-                            NowCondition = HumanConditionCircumstances.Normal;
+                        case SpiritualProperty.Pillar:
+                        case SpiritualProperty.Cquiest:
+                            NowCondition = Demeanor.Normal;
                         break;
                     }
                     break;
-                case HumanConditionCircumstances.Confused:
+                case Demeanor.Confused:
                     switch(MyImpression)
                     {
-                        case SpiritualProperty.cquiest:
-                        case SpiritualProperty.pillar:
-                            NowCondition = HumanConditionCircumstances.Resolved;
+                        case SpiritualProperty.Cquiest:
+                        case SpiritualProperty.Pillar:
+                            NowCondition = Demeanor.Resolved;
                         break;   
-                        case SpiritualProperty.devil:
+                        case SpiritualProperty.Devil:
                             if(deathCount > 1)
                             {
-                                NowCondition = HumanConditionCircumstances.Resolved;
+                                NowCondition = Demeanor.Resolved;
                             }
                             else
                             {
@@ -1206,10 +1206,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                         break;
-                        case SpiritualProperty.godtier:
+                        case SpiritualProperty.GodTier:
                             if(deathCount == 1)
                             {
-                                NowCondition = HumanConditionCircumstances.Resolved;
+                                NowCondition = Demeanor.Resolved;
                             }
                             else
                             {
@@ -1223,66 +1223,66 @@ public abstract partial class BaseStates
                             break;
                     }
                     break;
-                case HumanConditionCircumstances.Normal:
+                case Demeanor.Normal:
                     switch(MyImpression)
                     {
-                        case SpiritualProperty.sacrifaith:
+                        case SpiritualProperty.Sacrifaith:
                             if(deathCount == 1)
                             {
-                                NowCondition = HumanConditionCircumstances.Angry;
+                                NowCondition = Demeanor.Angry;
                             }
                             else if(deathCount > 1)
                             {
-                                NowCondition = HumanConditionCircumstances.Resolved;
+                                NowCondition = Demeanor.Resolved;
                             }
                         break;
-                        case SpiritualProperty.liminalwhitetile:
+                        case SpiritualProperty.LiminalWhiteTile:
                             if(deathCount > 1 && rollper(40))
                             {
-                                NowCondition = HumanConditionCircumstances.Angry;
+                                NowCondition = Demeanor.Angry;
                             }
                             else
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }
                         break; 
-                        case SpiritualProperty.devil:  
+                        case SpiritualProperty.Devil:  
                             if(deathCount > 1 && rollper(21.666f))
                             {
-                                NowCondition = HumanConditionCircumstances.Angry;
+                                NowCondition = Demeanor.Angry;
                             }
                             else
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }
                         break;
-                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.Kindergarten:
                             if(rollper(20))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }
                             else
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }
                         break;
-                        case SpiritualProperty.baledrival:
+                        case SpiritualProperty.BaleDrival:
                             if(deathCount > 1)
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }
                             else
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }
                         break;
-                        case SpiritualProperty.godtier:
-                            NowCondition = HumanConditionCircumstances.Resolved;
+                        case SpiritualProperty.GodTier:
+                            NowCondition = Demeanor.Resolved;
                         break;
-                        case SpiritualProperty.doremis:
+                        case SpiritualProperty.Doremis:
                             if(deathCount > 1)
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }
                             else
                             {
@@ -1290,29 +1290,29 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                         break;
-                        case SpiritualProperty.pysco:
+                        case SpiritualProperty.Psycho:
                             switch(RandomSource.NextInt(5))
                             {
                                 case 0:
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                                 break;
                                 case 1:
-                                NowCondition = HumanConditionCircumstances.Resolved;
+                                NowCondition = Demeanor.Resolved;
                                 break;
                                 case 2:
                                 //変化なし
                                 ResetConditionConsecutiveTurn();
                                 break;
                                 case 3:
-                                NowCondition = HumanConditionCircumstances.Doubtful;
+                                NowCondition = Demeanor.Doubtful;
                                 break;
                                 case 4:
-                                NowCondition = HumanConditionCircumstances.Angry;
+                                NowCondition = Demeanor.Angry;
                                 break;
                             }
                         break;
-                        case SpiritualProperty.cquiest:
-                        case SpiritualProperty.pillar:
+                        case SpiritualProperty.Cquiest:
+                        case SpiritualProperty.Pillar:
                             ResetConditionConsecutiveTurn();//変化なし
                             break;
                     }
@@ -1333,21 +1333,21 @@ public abstract partial class BaseStates
         {
             switch (NowCondition)
             {
-                case HumanConditionCircumstances.Painful:
+                case Demeanor.Painful:
                     switch (imp)
                     {
-                        case SpiritualProperty.liminalwhitetile:
+                        case SpiritualProperty.LiminalWhiteTile:
                             if(rollper(66))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }
                             else if(rollper(10))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }
                             else if(rollper(10))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1355,16 +1355,16 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.Kindergarten:
                             if(rollper(33))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(57))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(33))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1372,7 +1372,7 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.sacrifaith:
+                        case SpiritualProperty.Sacrifaith:
                             var OptimisticPer = 0;//楽観的に行く確率
                             var eneKereKere = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.KereKere);
                             var eneWif = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.FlameBreathingWife);
@@ -1384,13 +1384,13 @@ public abstract partial class BaseStates
                             }
                             if(rollper(40))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(OptimisticPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(30))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1398,7 +1398,7 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.pysco:
+                        case SpiritualProperty.Psycho:
                             var NormalPer = 0;
                             var EneLeisure = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure);
                             var Leisure = TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure);
@@ -1408,13 +1408,13 @@ public abstract partial class BaseStates
                             }
                             if(rollper(90 + NormalPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(15))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(9))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1422,16 +1422,16 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.baledrival:
+                        case SpiritualProperty.BaleDrival:
                             if(rollper(40))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(30))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(50))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1439,16 +1439,16 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.devil:
+                        case SpiritualProperty.Devil:
                             if(rollper(35))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(50))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(7))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1456,7 +1456,7 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.cquiest:
+                        case SpiritualProperty.Cquiest:
                             var C_NormalEndWarPer = 0;
                             var C_NormalNightPer = 0;
                             var C_EneEndWar = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.HeavenAndEndWar);
@@ -1474,13 +1474,13 @@ public abstract partial class BaseStates
 
                             if(rollper(80 + C_NormalEndWarPer + C_NormalNightPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(20))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(22))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1488,16 +1488,16 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.godtier:
+                        case SpiritualProperty.GodTier:
                             if(rollper(78))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(75))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(5))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1505,7 +1505,7 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.pillar:
+                        case SpiritualProperty.Pillar:
                             var VondPer = 0;
                             var Vond = TenDayValues(true).GetValueOrZero(TenDayAbility.Vond);
                             var EneVond = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Vond);
@@ -1515,10 +1515,10 @@ public abstract partial class BaseStates
                             }
                             if(rollper(97 + VondPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(4))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1526,16 +1526,16 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.doremis:
+                        case SpiritualProperty.Doremis:
                             if(rollper(40))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(30))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(25))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1546,13 +1546,13 @@ public abstract partial class BaseStates
                     }
                     break;
 
-                case HumanConditionCircumstances.Optimistic:
+                case Demeanor.Optimistic:
                     switch (imp)
                     {
-                        case SpiritualProperty.liminalwhitetile:
+                        case SpiritualProperty.LiminalWhiteTile:
                             if(rollper(11))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1560,12 +1560,12 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.Kindergarten:
                             var KinderOptimToElated_PersonaPer = TenDayValues(true).GetValueOrZero(TenDayAbility.PersonaDivergence);
                             if(KinderOptimToElated_PersonaPer> 776)KinderOptimToElated_PersonaPer = 776;//最低でも1%残るようにする
                             if(rollper(777 - KinderOptimToElated_PersonaPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1573,11 +1573,11 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.sacrifaith:
+                        case SpiritualProperty.Sacrifaith:
                             var SacrifaithOptimToElated_HumanKillerPer = TenDayValues(true).GetValueOrZero(TenDayAbility.HumanKiller);
                             if(rollper(-50 + SacrifaithOptimToElated_HumanKillerPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1585,10 +1585,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.pysco:
+                        case SpiritualProperty.Psycho:
                             if(rollper(5))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1596,11 +1596,11 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.baledrival:
+                        case SpiritualProperty.BaleDrival:
                             var baledrivalOptimToElated_HumanKillerPer = TenDayValues(true).GetValueOrZero(TenDayAbility.HumanKiller);
                             if(rollper(3 + baledrivalOptimToElated_HumanKillerPer*2))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1608,11 +1608,11 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.devil:
+                        case SpiritualProperty.Devil:
                             var DevilOptimToElatedPer = TenDayValues(true).GetValueOrZero(TenDayAbility.TentVoid) - TenDayValues(true).GetValueOrZero(TenDayAbility.Enokunagi);
                             if(rollper(60 - DevilOptimToElatedPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1620,10 +1620,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.cquiest:
+                        case SpiritualProperty.Cquiest:
                             if(rollper(1))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1631,10 +1631,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.godtier:
+                        case SpiritualProperty.GodTier:
                             if(rollper(6))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1642,10 +1642,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.pillar:
+                        case SpiritualProperty.Pillar:
                             if(rollper(2))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }
                             else
                             {
@@ -1653,12 +1653,12 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.doremis:
+                        case SpiritualProperty.Doremis:
                             if(rollper(4))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(38)){
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1671,12 +1671,12 @@ public abstract partial class BaseStates
                     }
                     break;
 
-                case HumanConditionCircumstances.Elated:
+                case Demeanor.Elated:
                     //変わらない
                     ResetConditionConsecutiveTurn();
                     break;
 
-                case HumanConditionCircumstances.Resolved:
+                case Demeanor.Resolved:
                     var ResolvedToOptimisticPer = TenDayValues(true).GetValueOrZero(TenDayAbility.FlameBreathingWife) - ene.TenDayValues(false).GetValueOrZero(TenDayAbility.FlameBreathingWife);
                     if(ResolvedToOptimisticPer < 0)
                     {
@@ -1685,10 +1685,10 @@ public abstract partial class BaseStates
                     ResolvedToOptimisticPer = Mathf.Sqrt(ResolvedToOptimisticPer) * 2;
                     switch (imp)
                     {
-                        case SpiritualProperty.liminalwhitetile:
+                        case SpiritualProperty.LiminalWhiteTile:
                             if(rollper(11 + ResolvedToOptimisticPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }
                             else
                             {
@@ -1696,11 +1696,11 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.Kindergarten:
                             var ResolvedToOptimisticKinder_luck = TenDayValues(true).GetValueOrZero(TenDayAbility.Lucky);
                             if(rollper(77 + ResolvedToOptimisticKinder_luck + ResolvedToOptimisticPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }
                             else
                             {
@@ -1708,11 +1708,11 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.sacrifaith:
+                        case SpiritualProperty.Sacrifaith:
                             var ResolvedToOptimisticSacrifaith_UnextinguishedPath = TenDayValues(true).GetValueOrZero(TenDayAbility.UnextinguishedPath);
                             if(rollper(15 -ResolvedToOptimisticSacrifaith_UnextinguishedPath + ResolvedToOptimisticPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }
                             else
                             {
@@ -1720,10 +1720,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.pysco:
+                        case SpiritualProperty.Psycho:
                             if(rollper(10 + TenDayValues(true).GetValueOrZero(TenDayAbility.StarTersi) * 0.9f + ResolvedToOptimisticPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }
                             else
                             {
@@ -1731,10 +1731,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.baledrival:
+                        case SpiritualProperty.BaleDrival:
                             if(rollper(40 + ResolvedToOptimisticPer + TenDayValues(true).GetValueOrZero(TenDayAbility.SpringWater)))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }
                             else
                             {
@@ -1742,12 +1742,12 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.devil:
+                        case SpiritualProperty.Devil:
                             var ResolvedToOptimisticDevil_BalePer= TenDayValues(true).GetValueOrZero(TenDayAbility.Vail) - ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Vail);
                             var ResolvedToOptimisticDevil_FaceToHandPer= TenDayValues(true).GetValueOrZero(TenDayAbility.FaceToHand) - ene.TenDayValues(false).GetValueOrZero(TenDayAbility.FaceToHand);
                             if(rollper(40 + ResolvedToOptimisticPer + (ResolvedToOptimisticDevil_BalePer - ResolvedToOptimisticDevil_FaceToHandPer)))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }
                             else
                             {
@@ -1755,10 +1755,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.cquiest:
+                        case SpiritualProperty.Cquiest:
                             if(rollper(12 + (TenDayValues(true).GetValueOrZero(TenDayAbility.SpringWater) - TenDayValues(true).GetValueOrZero(TenDayAbility.Taraiton)) + ResolvedToOptimisticPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }
                             else
                             {
@@ -1766,10 +1766,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.godtier:
+                        case SpiritualProperty.GodTier:
                             if(rollper(4 + ResolvedToOptimisticPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }
                             else
                             {
@@ -1777,14 +1777,14 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.pillar:
+                        case SpiritualProperty.Pillar:
                             // 変化なし
                             ResetConditionConsecutiveTurn();
                             break;
-                        case SpiritualProperty.doremis:
+                        case SpiritualProperty.Doremis:
                             if(rollper(7 + ResolvedToOptimisticPer))
                             {
-                                NowCondition =HumanConditionCircumstances.Optimistic;
+                                NowCondition =Demeanor.Optimistic;
                             }
                             else
                             {
@@ -1795,13 +1795,13 @@ public abstract partial class BaseStates
                     }
                     break;
 
-                case HumanConditionCircumstances.Angry:
+                case Demeanor.Angry:
                     switch (imp)
                     {
-                        case SpiritualProperty.liminalwhitetile:
+                        case SpiritualProperty.LiminalWhiteTile:
                             if(rollper(10))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1809,7 +1809,7 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.Kindergarten:
                             var AngryEneVail = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Vail);
                             var AngryVail = TenDayValues(true).GetValueOrZero(TenDayAbility.Vail);
                             var AngryEneWaterThunder = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve);
@@ -1817,7 +1817,7 @@ public abstract partial class BaseStates
                             var AngryToElated_KinderPer = AngryVail - AngryEneVail + (AngryWaterThunder - AngryEneWaterThunder);
                             if(rollper(50 + AngryToElated_KinderPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1825,10 +1825,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.sacrifaith:
+                        case SpiritualProperty.Sacrifaith:
                             if(rollper(30 - TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire)))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1836,10 +1836,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.pysco:
+                        case SpiritualProperty.Psycho:
                             if(rollper(TenDayValues(true).GetValueOrZero(TenDayAbility.HumanKiller)))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1847,14 +1847,14 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.baledrival:
+                        case SpiritualProperty.BaleDrival:
                             const float Threshold = 37.5f;
                             var AngryToElated_BaledrivalPer = Threshold;
                             var AngryToElated_Baledrival_VailValue = TenDayValues(true).GetValueOrZero(TenDayAbility.Vail)/2;
                             if(AngryToElated_Baledrival_VailValue >Threshold)AngryToElated_BaledrivalPer = AngryToElated_Baledrival_VailValue;
                             if(rollper(AngryToElated_BaledrivalPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1862,10 +1862,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.devil:
+                        case SpiritualProperty.Devil:
                             if(rollper(40 + (20 - TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire))))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1873,10 +1873,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.cquiest:
+                        case SpiritualProperty.Cquiest:
                             if(rollper(19))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1884,10 +1884,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.godtier:
+                        case SpiritualProperty.GodTier:
                             if(rollper(14))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1895,10 +1895,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.pillar:
+                        case SpiritualProperty.Pillar:
                             if(rollper(2))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1906,10 +1906,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.doremis:
+                        case SpiritualProperty.Doremis:
                             if(rollper(27))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -1920,16 +1920,16 @@ public abstract partial class BaseStates
                     }
                     break;
 
-                case HumanConditionCircumstances.Doubtful:
+                case Demeanor.Doubtful:
                     switch (imp)
                     {
-                        case SpiritualProperty.liminalwhitetile:
+                        case SpiritualProperty.LiminalWhiteTile:
                             if(rollper(30 + TenDayValues(true).GetValueOrZero(TenDayAbility.SpringNap)))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(46))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }
                             else
                             {
@@ -1937,13 +1937,13 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.Kindergarten:
                             if(rollper(30))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(77))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }
                             else
                             {
@@ -1951,16 +1951,16 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.sacrifaith:
+                        case SpiritualProperty.Sacrifaith:
                             if(rollper(10))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(50))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(1 + TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) + TenDayValues(true).GetValueOrZero(TenDayAbility.Smiler)))
                             {
-                                NowCondition = HumanConditionCircumstances.Resolved;
+                                NowCondition = Demeanor.Resolved;
                             }
                             else
                             {
@@ -1968,15 +1968,15 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.pysco:
+                        case SpiritualProperty.Psycho:
                             var eneRainCoat = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Raincoat);
                             var EndWar = TenDayValues(true).GetValueOrZero(TenDayAbility.HeavenAndEndWar);
                             if(rollper(40 - (EndWar - eneRainCoat)))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(44))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }
                             else
                             {
@@ -1984,16 +1984,16 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.baledrival:
+                        case SpiritualProperty.BaleDrival:
                             if(rollper(80 + TenDayValues(true).GetValueOrZero(TenDayAbility.Rain)))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(90 + TenDayValues(true).GetValueOrZero(TenDayAbility.ColdHeartedCalm) / 4))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) * 1.2f))
                             {
-                                NowCondition = HumanConditionCircumstances.Resolved;
+                                NowCondition = Demeanor.Resolved;
                             }
                             else
                             {
@@ -2001,16 +2001,16 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.devil:
+                        case SpiritualProperty.Devil:
                             if(rollper(32 + TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure)))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(50))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper((TenDayValues(true).GetValueOrZero(TenDayAbility.UnextinguishedPath)-2) / 5))
                             {
-                                NowCondition = HumanConditionCircumstances.Resolved;
+                                NowCondition = Demeanor.Resolved;
                             }
                             else
                             {
@@ -2018,7 +2018,7 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.cquiest:
+                        case SpiritualProperty.Cquiest:
                             var DoubtfulToOptimistic_CPer = 0f;
                             if(ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure) < TenDayValues(true).GetValueOrZero(TenDayAbility.NightInkKnight) * 0.3f)
                             {
@@ -2027,13 +2027,13 @@ public abstract partial class BaseStates
 
                             if(rollper(38 + DoubtfulToOptimistic_CPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(33))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper((TenDayValues(true).GetValueOrZero(TenDayAbility.HeavenAndEndWar) - 6) / 2))
                             {
-                                NowCondition = HumanConditionCircumstances.Resolved;
+                                NowCondition = Demeanor.Resolved;
                             }
                             else
                             {
@@ -2041,13 +2041,13 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.godtier:
+                        case SpiritualProperty.GodTier:
                             if(rollper(27 - TenDayValues(true).GetValueOrZero(TenDayAbility.NightInkKnight)))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(85))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }
                             else
                             {
@@ -2055,13 +2055,13 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.pillar:
+                        case SpiritualProperty.Pillar:
                             if(rollper(70))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(20))
                             {
-                                NowCondition = HumanConditionCircumstances.Resolved;
+                                NowCondition = Demeanor.Resolved;
                             }
                             else
                             {
@@ -2069,20 +2069,20 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.doremis:
+                        case SpiritualProperty.Doremis:
                             const float Threshold = 49f;
                             var DoubtfulToNorml_Doremis_nightDarknessAndVoidValue = TenDayValues(true).GetValueOrZero(TenDayAbility.NightDarkness) + TenDayValues(true).GetValueOrZero(TenDayAbility.TentVoid);
                             var DoubtfulToNorml_DoremisPer = Threshold;
                             if(DoubtfulToNorml_Doremis_nightDarknessAndVoidValue < Threshold) DoubtfulToNorml_DoremisPer = DoubtfulToNorml_Doremis_nightDarknessAndVoidValue;
                             if(rollper(TenDayValues(true).GetValueOrZero(TenDayAbility.NightDarkness) + 30))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(DoubtfulToNorml_DoremisPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(TenDayValues(true).GetValueOrZero(TenDayAbility.StarTersi) / 1.7f))
                             {
-                                NowCondition = HumanConditionCircumstances.Resolved;
+                                NowCondition = Demeanor.Resolved;
                             }
                             else
                             {
@@ -2093,16 +2093,16 @@ public abstract partial class BaseStates
                     }
                     break;
 
-                case HumanConditionCircumstances.Confused:
+                case Demeanor.Confused:
                     switch (imp)
                     {
-                        case SpiritualProperty.liminalwhitetile:
+                        case SpiritualProperty.LiminalWhiteTile:
                             if(rollper(70))
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }else if(rollper(44))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }
                             else
                             {
@@ -2110,18 +2110,18 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.Kindergarten:
                             var ConfusedToPainful_Kindergarden_DokumamusiAndRainCoatAverage = 
-                            (TenDayValues(true).GetValueOrZero(TenDayAbility.dokumamusi) + TenDayValues(true).GetValueOrZero(TenDayAbility.Raincoat)) / 2;
+                            (TenDayValues(true).GetValueOrZero(TenDayAbility.Dokumamusi) + TenDayValues(true).GetValueOrZero(TenDayAbility.Raincoat)) / 2;
                             if(rollper(20))
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }else if(rollper(80 - (ConfusedToPainful_Kindergarden_DokumamusiAndRainCoatAverage - TenDayValues(true).GetValueOrZero(TenDayAbility.ColdHeartedCalm))))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
-                            }else if(rollper(20 + TenDayValues(true).GetValueOrZero(TenDayAbility.Raincoat) * 0.4f + TenDayValues(true).GetValueOrZero(TenDayAbility.dokumamusi) * 0.6f))
+                                NowCondition = Demeanor.Normal;
+                            }else if(rollper(20 + TenDayValues(true).GetValueOrZero(TenDayAbility.Raincoat) * 0.4f + TenDayValues(true).GetValueOrZero(TenDayAbility.Dokumamusi) * 0.6f))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2129,16 +2129,16 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.sacrifaith:
+                        case SpiritualProperty.Sacrifaith:
                             if(rollper(40))
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }else if(rollper(70 + (TenDayValues(true).GetValueOrZero(TenDayAbility.Sort)-4)))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(60))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2146,13 +2146,13 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.pysco:
+                        case SpiritualProperty.Psycho:
                             if(rollper(80))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(11))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2160,16 +2160,16 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.baledrival:
+                        case SpiritualProperty.BaleDrival:
                             if(rollper(34))
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }else if(rollper(40))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(75))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2177,16 +2177,16 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.devil:
+                        case SpiritualProperty.Devil:
                             if(rollper(6))
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }else if(rollper(27))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(20))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2194,16 +2194,16 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.cquiest:
+                        case SpiritualProperty.Cquiest:
                             if(rollper(40))
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }else if(rollper(64))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(2))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2211,16 +2211,16 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.godtier:
+                        case SpiritualProperty.GodTier:
                             if(rollper(50))
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }else if(rollper(50))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(7))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2228,16 +2228,16 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.pillar:
+                        case SpiritualProperty.Pillar:
                             if(rollper(60))
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }else if(rollper(60))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(3 - TenDayValues(true).GetValueOrZero(TenDayAbility.SpringWater)))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2245,16 +2245,16 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.doremis:
+                        case SpiritualProperty.Doremis:
                             if(rollper(90))
                             {
-                                NowCondition = HumanConditionCircumstances.Painful;
+                                NowCondition = Demeanor.Painful;
                             }else if(rollper(50))
                             {
-                                NowCondition = HumanConditionCircumstances.Normal;
+                                NowCondition = Demeanor.Normal;
                             }else if(rollper(67))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2265,17 +2265,17 @@ public abstract partial class BaseStates
                     }
                     break;
 
-                case HumanConditionCircumstances.Normal:
+                case Demeanor.Normal:
                     var y = TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure) - ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure);//余裕の差
                     switch (imp)
                     {
-                        case SpiritualProperty.liminalwhitetile:
+                        case SpiritualProperty.LiminalWhiteTile:
                             if(rollper(30 + y*0.8f))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(20 - y))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2283,13 +2283,13 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.kindergarden:
+                        case SpiritualProperty.Kindergarten:
                             if(rollper(40 + y*2))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(70))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2297,10 +2297,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.sacrifaith:
+                        case SpiritualProperty.Sacrifaith:
                             if(rollper(50))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2308,13 +2308,13 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.pysco:
+                        case SpiritualProperty.Psycho:
                             if(rollper(14))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(2))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2322,13 +2322,13 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.baledrival:
+                        case SpiritualProperty.BaleDrival:
                             if(rollper(30 +y))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(80))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2336,13 +2336,13 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.devil:
+                        case SpiritualProperty.Devil:
                             if(rollper(35 + y*1.1f))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(50))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2350,13 +2350,13 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.cquiest:
+                        case SpiritualProperty.Cquiest:
                             if(rollper(30 + y*0.1f))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(20))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2364,13 +2364,13 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.godtier:
+                        case SpiritualProperty.GodTier:
                             if(rollper(20 + y/4))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(15 + y * 0.95f))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2378,10 +2378,10 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.pillar:
+                        case SpiritualProperty.Pillar:
                             if(rollper(12))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }
                             else
                             {
@@ -2389,15 +2389,15 @@ public abstract partial class BaseStates
                                 ResetConditionConsecutiveTurn();
                             }
                             break;
-                        case SpiritualProperty.doremis:
+                        case SpiritualProperty.Doremis:
                             var NormalToElated_DoremisPer = 0f;
                             if(y > 0) NormalToElated_DoremisPer = TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) + TenDayValues(true).GetValueOrZero(TenDayAbility.Miza);
                             if(rollper(38 + y/2))
                             {
-                                NowCondition = HumanConditionCircumstances.Optimistic;
+                                NowCondition = Demeanor.Optimistic;
                             }else if(rollper(20 + NormalToElated_DoremisPer))
                             {
-                                NowCondition = HumanConditionCircumstances.Elated;
+                                NowCondition = Demeanor.Elated;
                             }
                             else
                             {
@@ -2419,37 +2419,37 @@ public abstract partial class BaseStates
         {
             switch (NowCondition)
             {
-                case HumanConditionCircumstances.Painful:
+                case Demeanor.Painful:
                     switch (MyImpression)
                     {
-                        case SpiritualProperty.kindergarden:
-                        case SpiritualProperty.sacrifaith:
-                        case SpiritualProperty.baledrival:
-                            NowCondition = HumanConditionCircumstances.Elated;
+                        case SpiritualProperty.Kindergarten:
+                        case SpiritualProperty.Sacrifaith:
+                        case SpiritualProperty.BaleDrival:
+                            NowCondition = Demeanor.Elated;
                             break;
-                        case SpiritualProperty.pysco:
-                        case SpiritualProperty.liminalwhitetile:
-                        case SpiritualProperty.cquiest:
-                        case SpiritualProperty.pillar:
-                        case SpiritualProperty.doremis:
-                            NowCondition = HumanConditionCircumstances.Normal;
+                        case SpiritualProperty.Psycho:
+                        case SpiritualProperty.LiminalWhiteTile:
+                        case SpiritualProperty.Cquiest:
+                        case SpiritualProperty.Pillar:
+                        case SpiritualProperty.Doremis:
+                            NowCondition = Demeanor.Normal;
                             break;
-                        case SpiritualProperty.godtier:
-                        case SpiritualProperty.devil:
-                            NowCondition = HumanConditionCircumstances.Optimistic;
+                        case SpiritualProperty.GodTier:
+                        case SpiritualProperty.Devil:
+                            NowCondition = Demeanor.Optimistic;
                             break;
                     }
                     break;
 
-                case HumanConditionCircumstances.Optimistic:
+                case Demeanor.Optimistic:
                     switch (MyImpression)
                     {
-                        case SpiritualProperty.godtier:
-                            NowCondition = HumanConditionCircumstances.Elated;
+                        case SpiritualProperty.GodTier:
+                            NowCondition = Demeanor.Elated;
                             break;
-                        case SpiritualProperty.pillar:
-                        case SpiritualProperty.baledrival:
-                            NowCondition = HumanConditionCircumstances.Normal;
+                        case SpiritualProperty.Pillar:
+                        case SpiritualProperty.BaleDrival:
+                            NowCondition = Demeanor.Normal;
                             break;
                         default:
                         ResetConditionConsecutiveTurn();
@@ -2457,18 +2457,18 @@ public abstract partial class BaseStates
                     }
                     break;
 
-                case HumanConditionCircumstances.Elated:
+                case Demeanor.Elated:
                     switch (MyImpression)
                     {
-                        case SpiritualProperty.pillar:
-                        case SpiritualProperty.devil:
-                        case SpiritualProperty.baledrival:
-                        case SpiritualProperty.kindergarden:
-                            NowCondition = HumanConditionCircumstances.Optimistic;
+                        case SpiritualProperty.Pillar:
+                        case SpiritualProperty.Devil:
+                        case SpiritualProperty.BaleDrival:
+                        case SpiritualProperty.Kindergarten:
+                            NowCondition = Demeanor.Optimistic;
                             break;
-                        case SpiritualProperty.doremis:
-                        case SpiritualProperty.cquiest:
-                            NowCondition = HumanConditionCircumstances.Normal;
+                        case SpiritualProperty.Doremis:
+                        case SpiritualProperty.Cquiest:
+                            NowCondition = Demeanor.Normal;
                             break;
                         default:
                         ResetConditionConsecutiveTurn();
@@ -2476,16 +2476,16 @@ public abstract partial class BaseStates
                     }
                     break;
 
-                case HumanConditionCircumstances.Resolved:
+                case Demeanor.Resolved:
                     switch (MyImpression)
                     {
-                        case SpiritualProperty.kindergarden:
-                        case SpiritualProperty.liminalwhitetile:
-                            NowCondition = HumanConditionCircumstances.Normal;
+                        case SpiritualProperty.Kindergarten:
+                        case SpiritualProperty.LiminalWhiteTile:
+                            NowCondition = Demeanor.Normal;
                             break;
-                        case SpiritualProperty.doremis:
-                        case SpiritualProperty.baledrival:
-                            NowCondition = HumanConditionCircumstances.Optimistic;
+                        case SpiritualProperty.Doremis:
+                        case SpiritualProperty.BaleDrival:
+                            NowCondition = Demeanor.Optimistic;
                             break;
                         default:
                         ResetConditionConsecutiveTurn();
@@ -2493,21 +2493,21 @@ public abstract partial class BaseStates
                     }
                     break;
 
-                case HumanConditionCircumstances.Angry:
+                case Demeanor.Angry:
                     switch (MyImpression)
                     {
-                        case SpiritualProperty.devil:
-                        case SpiritualProperty.baledrival:
-                        case SpiritualProperty.liminalwhitetile:
-                            NowCondition = HumanConditionCircumstances.Elated;
+                        case SpiritualProperty.Devil:
+                        case SpiritualProperty.BaleDrival:
+                        case SpiritualProperty.LiminalWhiteTile:
+                            NowCondition = Demeanor.Elated;
                             break;
-                        case SpiritualProperty.cquiest:
-                        case SpiritualProperty.pysco:
-                        case SpiritualProperty.kindergarden:
-                        case SpiritualProperty.godtier:
-                        case SpiritualProperty.pillar:
-                        case SpiritualProperty.doremis:
-                            NowCondition = HumanConditionCircumstances.Normal;
+                        case SpiritualProperty.Cquiest:
+                        case SpiritualProperty.Psycho:
+                        case SpiritualProperty.Kindergarten:
+                        case SpiritualProperty.GodTier:
+                        case SpiritualProperty.Pillar:
+                        case SpiritualProperty.Doremis:
+                            NowCondition = Demeanor.Normal;
                             break;
                         default:
                         ResetConditionConsecutiveTurn();
@@ -2515,35 +2515,35 @@ public abstract partial class BaseStates
                     }
                     break;
 
-                case HumanConditionCircumstances.Doubtful:
+                case Demeanor.Doubtful:
                     switch (MyImpression)
                     {
-                        case SpiritualProperty.kindergarden:
-                        case SpiritualProperty.baledrival:
-                        case SpiritualProperty.cquiest:
-                            NowCondition = HumanConditionCircumstances.Optimistic;
+                        case SpiritualProperty.Kindergarten:
+                        case SpiritualProperty.BaleDrival:
+                        case SpiritualProperty.Cquiest:
+                            NowCondition = Demeanor.Optimistic;
                             break;
                         default:
-                            NowCondition = HumanConditionCircumstances.Normal;
+                            NowCondition = Demeanor.Normal;
                             break;
                     }
                     break;
 
-                case HumanConditionCircumstances.Confused:
+                case Demeanor.Confused:
                     switch (MyImpression)
                     {
-                        case SpiritualProperty.liminalwhitetile:
-                        case SpiritualProperty.kindergarden:
-                        case SpiritualProperty.sacrifaith:
-                        case SpiritualProperty.baledrival:
-                        case SpiritualProperty.devil:
-                        case SpiritualProperty.cquiest:
-                        case SpiritualProperty.godtier:
-                        case SpiritualProperty.pillar:
-                            NowCondition = HumanConditionCircumstances.Normal;
+                        case SpiritualProperty.LiminalWhiteTile:
+                        case SpiritualProperty.Kindergarten:
+                        case SpiritualProperty.Sacrifaith:
+                        case SpiritualProperty.BaleDrival:
+                        case SpiritualProperty.Devil:
+                        case SpiritualProperty.Cquiest:
+                        case SpiritualProperty.GodTier:
+                        case SpiritualProperty.Pillar:
+                            NowCondition = Demeanor.Normal;
                             break;
-                        case SpiritualProperty.doremis:
-                            NowCondition = HumanConditionCircumstances.Optimistic;
+                        case SpiritualProperty.Doremis:
+                            NowCondition = Demeanor.Optimistic;
                             break;
                         default:
                         ResetConditionConsecutiveTurn();
@@ -2551,17 +2551,17 @@ public abstract partial class BaseStates
                     }
                     break;
 
-                case HumanConditionCircumstances.Normal:
+                case Demeanor.Normal:
                     switch (MyImpression)
                     {
-                        case SpiritualProperty.pysco:
-                        case SpiritualProperty.liminalwhitetile:
-                        case SpiritualProperty.godtier:
-                            NowCondition = HumanConditionCircumstances.Optimistic;
+                        case SpiritualProperty.Psycho:
+                        case SpiritualProperty.LiminalWhiteTile:
+                        case SpiritualProperty.GodTier:
+                            NowCondition = Demeanor.Optimistic;
                             break;
-                        case SpiritualProperty.kindergarden:
-                        case SpiritualProperty.devil:
-                            NowCondition = HumanConditionCircumstances.Elated;
+                        case SpiritualProperty.Kindergarten:
+                        case SpiritualProperty.Devil:
+                            NowCondition = Demeanor.Elated;
                             break;
                         default:
                         ResetConditionConsecutiveTurn();
@@ -2582,11 +2582,11 @@ public abstract partial class BaseStates
             //------------------------------
             // 辛い (Painful)
             //------------------------------
-            case HumanConditionCircumstances.Painful:
+            case Demeanor.Painful:
                 // 普調 (一律50%)
                 if (rollper(50))
                 {
-                    NowCondition = HumanConditionCircumstances.Normal;
+                    NowCondition = Demeanor.Normal;
                 }
                 else
                 {
@@ -2598,28 +2598,28 @@ public abstract partial class BaseStates
             //------------------------------
             // 楽観的 (Optimistic)
             //------------------------------
-            case HumanConditionCircumstances.Optimistic:
+            case Demeanor.Optimistic:
                 switch (MyImpression)
                 {
                     // 楽観的 → 辛い
-                    case SpiritualProperty.devil:
-                    case SpiritualProperty.sacrifaith:
-                        NowCondition = HumanConditionCircumstances.Painful;
+                    case SpiritualProperty.Devil:
+                    case SpiritualProperty.Sacrifaith:
+                        NowCondition = Demeanor.Painful;
                         break;
 
                     // 楽観的 → 普調
-                    case SpiritualProperty.pillar:
-                    case SpiritualProperty.godtier:
-                    case SpiritualProperty.liminalwhitetile:
-                    case SpiritualProperty.kindergarden:
-                        NowCondition = HumanConditionCircumstances.Normal;
+                    case SpiritualProperty.Pillar:
+                    case SpiritualProperty.GodTier:
+                    case SpiritualProperty.LiminalWhiteTile:
+                    case SpiritualProperty.Kindergarten:
+                        NowCondition = Demeanor.Normal;
                         break;
 
-                    case SpiritualProperty.pysco:
+                    case SpiritualProperty.Psycho:
                         // サイコパスは 50% 普調 / 50% 変化なし
                         if (rollper(50))
                         {
-                            NowCondition = HumanConditionCircumstances.Normal;
+                            NowCondition = Demeanor.Normal;
                         }
                         else
                         {
@@ -2629,9 +2629,9 @@ public abstract partial class BaseStates
                         break;
 
                     // 楽観的 → 変化なし
-                    case SpiritualProperty.baledrival:
-                    case SpiritualProperty.cquiest:
-                    case SpiritualProperty.doremis:
+                    case SpiritualProperty.BaleDrival:
+                    case SpiritualProperty.Cquiest:
+                    case SpiritualProperty.Doremis:
                         ResetConditionConsecutiveTurn();
                         break;
 
@@ -2645,29 +2645,29 @@ public abstract partial class BaseStates
             //------------------------------
             // 高揚 (Elated)
             //------------------------------
-            case HumanConditionCircumstances.Elated:
+            case Demeanor.Elated:
                 switch (MyImpression)
                 {
                     // 変化なし
-                    case SpiritualProperty.sacrifaith:
-                    case SpiritualProperty.godtier:
-                    case SpiritualProperty.devil:
+                    case SpiritualProperty.Sacrifaith:
+                    case SpiritualProperty.GodTier:
+                    case SpiritualProperty.Devil:
                         ResetConditionConsecutiveTurn();
                         break;
 
                     // 普調
-                    case SpiritualProperty.cquiest:
-                    case SpiritualProperty.liminalwhitetile:
-                    case SpiritualProperty.pillar:
-                    case SpiritualProperty.kindergarden:
-                    case SpiritualProperty.doremis:
-                    case SpiritualProperty.pysco:
-                        NowCondition = HumanConditionCircumstances.Normal;
+                    case SpiritualProperty.Cquiest:
+                    case SpiritualProperty.LiminalWhiteTile:
+                    case SpiritualProperty.Pillar:
+                    case SpiritualProperty.Kindergarten:
+                    case SpiritualProperty.Doremis:
+                    case SpiritualProperty.Psycho:
+                        NowCondition = Demeanor.Normal;
                         break;
 
                     // 楽観的
-                    case SpiritualProperty.baledrival:
-                        NowCondition = HumanConditionCircumstances.Optimistic;
+                    case SpiritualProperty.BaleDrival:
+                        NowCondition = Demeanor.Optimistic;
                         break;
 
                     // 辛いにはいかなそう => default で変化なし
@@ -2680,33 +2680,33 @@ public abstract partial class BaseStates
             //------------------------------
             // 覚悟 (Resolved)
             //------------------------------
-            case HumanConditionCircumstances.Resolved:
+            case Demeanor.Resolved:
                 switch (MyImpression)
                 {
                     // 変化なし => ベール
-                    case SpiritualProperty.baledrival:
+                    case SpiritualProperty.BaleDrival:
                         ResetConditionConsecutiveTurn();
                         break;
 
                     // 普調 => シークイエスト, ドレミス, デビル, ゴッドティア, キンダー
-                    case SpiritualProperty.cquiest:
-                    case SpiritualProperty.doremis:
-                    case SpiritualProperty.devil:
-                    case SpiritualProperty.godtier:
-                    case SpiritualProperty.kindergarden:
-                        NowCondition = HumanConditionCircumstances.Normal;
+                    case SpiritualProperty.Cquiest:
+                    case SpiritualProperty.Doremis:
+                    case SpiritualProperty.Devil:
+                    case SpiritualProperty.GodTier:
+                    case SpiritualProperty.Kindergarten:
+                        NowCondition = Demeanor.Normal;
                         break;
 
                     // 辛い => 支柱, リーミナル
-                    case SpiritualProperty.pillar:
-                    case SpiritualProperty.liminalwhitetile:
-                        NowCondition = HumanConditionCircumstances.Painful;
+                    case SpiritualProperty.Pillar:
+                    case SpiritualProperty.LiminalWhiteTile:
+                        NowCondition = Demeanor.Painful;
                         break;
 
                     // 疑念 => 自己犠牲, サイコ
-                    case SpiritualProperty.sacrifaith:
-                    case SpiritualProperty.pysco:
-                        NowCondition = HumanConditionCircumstances.Doubtful;
+                    case SpiritualProperty.Sacrifaith:
+                    case SpiritualProperty.Psycho:
+                        NowCondition = Demeanor.Doubtful;
                         break;
 
                     default:
@@ -2719,23 +2719,23 @@ public abstract partial class BaseStates
             //------------------------------
             // 怒り (Angry)
             //------------------------------
-            case HumanConditionCircumstances.Angry:
+            case Demeanor.Angry:
                 switch (MyImpression)
                 {
                     // 変化なし => リーミナル, 自己犠牲
-                    case SpiritualProperty.liminalwhitetile:
-                    case SpiritualProperty.sacrifaith:
+                    case SpiritualProperty.LiminalWhiteTile:
+                    case SpiritualProperty.Sacrifaith:
                         ResetConditionConsecutiveTurn();
                         break;
 
                     // 楽観的 => サイコ
-                    case SpiritualProperty.pysco:
-                        NowCondition = HumanConditionCircumstances.Optimistic;
+                    case SpiritualProperty.Psycho:
+                        NowCondition = Demeanor.Optimistic;
                         break;
 
                     // 普調 => else
                     default:
-                        NowCondition = HumanConditionCircumstances.Normal;
+                        NowCondition = Demeanor.Normal;
                         break;
                 }
                 break;
@@ -2743,29 +2743,29 @@ public abstract partial class BaseStates
             //------------------------------
             // 疑念 (Doubtful)
             //------------------------------
-            case HumanConditionCircumstances.Doubtful:
+            case Demeanor.Doubtful:
                 switch (MyImpression)
                 {
                     // 怒り => 自己犠牲, ベール, デビル
-                    case SpiritualProperty.sacrifaith:
-                    case SpiritualProperty.baledrival:
-                    case SpiritualProperty.devil:
-                        NowCondition = HumanConditionCircumstances.Angry;
+                    case SpiritualProperty.Sacrifaith:
+                    case SpiritualProperty.BaleDrival:
+                    case SpiritualProperty.Devil:
+                        NowCondition = Demeanor.Angry;
                         break;
 
                     // 普調 => サイコ, リーミナル, 支柱
-                    case SpiritualProperty.pysco:
-                    case SpiritualProperty.liminalwhitetile:
-                    case SpiritualProperty.pillar:
-                        NowCondition = HumanConditionCircumstances.Normal;
+                    case SpiritualProperty.Psycho:
+                    case SpiritualProperty.LiminalWhiteTile:
+                    case SpiritualProperty.Pillar:
+                        NowCondition = Demeanor.Normal;
                         break;
 
                     // 楽観的 => ドレミス, シークイエスト, キンダー, ゴッドティア
-                    case SpiritualProperty.doremis:
-                    case SpiritualProperty.cquiest:
-                    case SpiritualProperty.kindergarden:
-                    case SpiritualProperty.godtier:
-                        NowCondition = HumanConditionCircumstances.Optimistic;
+                    case SpiritualProperty.Doremis:
+                    case SpiritualProperty.Cquiest:
+                    case SpiritualProperty.Kindergarten:
+                    case SpiritualProperty.GodTier:
+                        NowCondition = Demeanor.Optimistic;
                         break;
 
                     // 辛いにはいかない => default => 変化なし
@@ -2778,23 +2778,23 @@ public abstract partial class BaseStates
             //------------------------------
             // 混乱 (Confused)
             //------------------------------
-            case HumanConditionCircumstances.Confused:
+            case Demeanor.Confused:
                 switch (MyImpression)
                 {
                     // 変化なし => キンダー
-                    case SpiritualProperty.kindergarden:
+                    case SpiritualProperty.Kindergarten:
                         ResetConditionConsecutiveTurn();
                         break;
 
                     // 高揚 => ベール, リーミナル
-                    case SpiritualProperty.baledrival:
-                    case SpiritualProperty.liminalwhitetile:
-                        NowCondition = HumanConditionCircumstances.Elated;
+                    case SpiritualProperty.BaleDrival:
+                    case SpiritualProperty.LiminalWhiteTile:
+                        NowCondition = Demeanor.Elated;
                         break;
 
                     // 普調 => else
                     default:
-                        NowCondition = HumanConditionCircumstances.Normal;
+                        NowCondition = Demeanor.Normal;
                         break;
                 }
                 break;
@@ -2802,32 +2802,32 @@ public abstract partial class BaseStates
             //------------------------------
             // 普調 (Normal)
             //------------------------------
-            case HumanConditionCircumstances.Normal:
+            case Demeanor.Normal:
                 switch (MyImpression)
                 {
                     // 変化なし => 支柱, サイコ
-                    case SpiritualProperty.pillar:
-                    case SpiritualProperty.pysco:
+                    case SpiritualProperty.Pillar:
+                    case SpiritualProperty.Psycho:
                         ResetConditionConsecutiveTurn();
                         break;
 
                     // 楽観的 => ゴッドティア
-                    case SpiritualProperty.godtier:
-                        NowCondition = HumanConditionCircumstances.Optimistic;
+                    case SpiritualProperty.GodTier:
+                        NowCondition = Demeanor.Optimistic;
                         break;
 
                     // 疑念 => リーミナル, キンダー, デビル
-                    case SpiritualProperty.liminalwhitetile:
-                    case SpiritualProperty.kindergarden:
-                    case SpiritualProperty.devil:
-                        NowCondition = HumanConditionCircumstances.Doubtful;
+                    case SpiritualProperty.LiminalWhiteTile:
+                    case SpiritualProperty.Kindergarten:
+                    case SpiritualProperty.Devil:
+                        NowCondition = Demeanor.Doubtful;
                         break;
 
                     // 怒り => 自己犠牲, シークイエスト, ベール
-                    case SpiritualProperty.sacrifaith:
-                    case SpiritualProperty.cquiest:
-                    case SpiritualProperty.baledrival:
-                        NowCondition = HumanConditionCircumstances.Angry;
+                    case SpiritualProperty.Sacrifaith:
+                    case SpiritualProperty.Cquiest:
+                    case SpiritualProperty.BaleDrival:
+                        NowCondition = Demeanor.Angry;
                         break;
 
                     default:
@@ -2884,23 +2884,23 @@ public abstract partial class BaseStates
 /// <summary>
 /// パワー、元気、気力値　歩行やその他イベントなどで短期的に上げ下げし、
 /// 狙い流れ等の防ぎ方切り替え処理などで、さらに上下する値として導入されたりする。
-/// ThePowerExtensionsで日本語に変更可能
+/// PowerLevelExtensionsで日本語に変更可能
 /// </summary>
-public enum ThePower
+public enum PowerLevel
 {
-        /// <summary>たるい</summary>
-    lowlow,
-        /// <summary>低い</summary>
-    low,
+    /// <summary>たるい</summary>
+    VeryLow,
+    /// <summary>低い</summary>
+    Low,
     /// <summary>普通</summary>
-    medium,
+    Medium,
     /// <summary>高い</summary>
-    high
+    High
 }
 /// <summary>
 /// 人間状況　全員持つけど例えばLife以外なんかは固定されてたりしたりする。
 /// </summary>
-public enum HumanConditionCircumstances
+public enum Demeanor
 {
     /// <summary>
     /// 辛い状態を表します。
@@ -2952,21 +2952,21 @@ public enum CharacterType
 [Flags]
 public enum SpiritualProperty
 {
-    doremis = 1 << 0,   // ビットパターン: 0000 0001  (1)
-    pillar = 1 << 1,   // ビットパターン: 0000 0010  (2)
-    kindergarden = 1 << 2,   // ビットパターン: 0000 0100  (4)
-    liminalwhitetile = 1 << 3,   // ビットパターン: 0000 1000  (8)
-    sacrifaith = 1 << 4,   // ビットパターン: 0001 0000  (16)
-    cquiest = 1 << 5,   // ビットパターン: 0010 0000  (32)
-    pysco = 1 << 6,   // ビットパターン: 0100 0000  (64)
-    godtier = 1 << 7,   // ビットパターン: 1000 0000  (128)
-    baledrival = 1 << 8,   // ビットパターン: 0001 0000 0000  (256)
-    devil = 1 << 9,    // ビットパターン: 0010 0000 0000  (512)
-    none = 1 << 10,    // ビットパターン: 0100 0000 0000  (1024)
-    mvoid = 1 << 11,
-    Galvanize = 1 << 12,
-    air = 1 << 13,
-    memento = 1 << 14
+    Doremis = 1 << 0,           // ドレミス
+    Pillar = 1 << 1,            // ピラー
+    Kindergarten = 1 << 2,      // キンダーガーデン
+    LiminalWhiteTile = 1 << 3,  // リミナルホワイトタイル
+    Sacrifaith = 1 << 4,        // サクリフェイス
+    Cquiest = 1 << 5,           // シークイエスト
+    Psycho = 1 << 6,            // サイコ
+    GodTier = 1 << 7,           // ゴッドティア
+    BaleDrival = 1 << 8,        // ベイルドライバル
+    Devil = 1 << 9,             // デビル
+    None = 1 << 10,             // なし
+    Mvoid = 1 << 11,            // ムヴォイド
+    Galvanize = 1 << 12,        // ガルヴァナイズ
+    Air = 1 << 13,              // エア
+    Memento = 1 << 14           // メメント
 }
 
 

@@ -74,8 +74,8 @@ public class BattleContextHubTests
         public bool DoNothing { get; set; }
         public bool PassiveCancel { get; set; }
         public int BattleTurnCount => 0;
-        public allyOrEnemy GetCharacterFaction(BaseStates chara) => allyOrEnemy.alliy;
-        public BattleGroup FactionToGroup(allyOrEnemy faction) => null;
+        public Faction GetCharacterFaction(BaseStates chara) => Faction.Ally;
+        public BattleGroup FactionToGroup(Faction faction) => null;
         public BattleGroup MyGroup(BaseStates chara) => null;
         public bool IsFriend(BaseStates chara1, BaseStates chara2) => false;
         public bool IsVanguard(BaseStates chara) => false;

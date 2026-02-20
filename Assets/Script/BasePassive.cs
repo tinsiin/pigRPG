@@ -761,20 +761,20 @@ public class BasePassive
     /// <summary>
     /// パッシブの四大ステの固定補正値をセットする。
     /// </summary>
-    public void SetFixedValue(whatModify what, float value)
+    public void SetFixedValue(StatModifier what, float value)
 {
     switch (what)
     {
-        case whatModify.atk:
+        case StatModifier.Atk:
             _atkFixedValue = value;
             break;
-        case whatModify.def:
+        case StatModifier.Def:
             _defFixedValue = value;
             break;
-        case whatModify.eye:
+        case StatModifier.Eye:
             _eyeFixedValue = value;
             break;
-        case whatModify.agi:
+        case StatModifier.Agi:
             _agiFixedValue = value;
             break;
     }
@@ -819,20 +819,20 @@ public class BasePassive
     /// <summary>
     /// パッシブの四大ステの倍率補正値をセットする。
     /// </summary>
-    public void SetPercentageModifier(whatModify what, float value)
+    public void SetPercentageModifier(StatModifier what, float value)
     {
         switch (what)
         {
-            case whatModify.atk:
+            case StatModifier.Atk:
                 _atkPercentageModifier = value;
                 break;
-            case whatModify.def:
+            case StatModifier.Def:
                 _defPercentageModifier = value;
                 break;
-            case whatModify.eye:
+            case StatModifier.Eye:
                 _eyePercentageModifier = value;
                 break;
-            case whatModify.agi:
+            case StatModifier.Agi:
                 _agiPercentageModifier = value;
                 break;
         }

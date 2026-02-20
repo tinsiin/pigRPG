@@ -26,7 +26,7 @@ public sealed class ActionQueue
         {
             Type = ActionType.Rather,
             Actor = null,
-            Faction = allyOrEnemy.alliy,
+            Faction = Faction.Ally,
             Message = mes,
             Modifiers = null,
             Freeze = false,
@@ -37,7 +37,7 @@ public sealed class ActionQueue
         });
     }
 
-    public void Add(BaseStates chara, allyOrEnemy charasFac, string mes = "", List<ModifierPart> modifys = null,
+    public void Add(BaseStates chara, Faction charasFac, string mes = "", List<ModifierPart> modifys = null,
         bool isfreeze = false, BaseStates SingleTarget = null, float ExCounterDEFATK = -1)
     {
         _entries.Add(new ActionEntry

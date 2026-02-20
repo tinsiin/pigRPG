@@ -22,4 +22,22 @@ public class PlayersUIRefs : MonoBehaviour
     [Header("バトルアイコンUIスロット")]
     [Tooltip("スロット順: Left(0), Center(1), Right(2)")]
     public BattleIconUI[] BattleIconSlots = new BattleIconUI[3];
+
+    [Header("武器スラッシュ")]
+    [Tooltip("スラッシュエフェクトの表示倍率（1.0 = 等倍）")]
+    [Range(0.5f, 3f)]
+    public float WeaponSlashScale = 1f;
+
+    [Tooltip("スラッシュの速度（1.0 = 最速＝現在速度、0.05 = 非常にゆっくり）")]
+    [Range(0.05f, 1f)]
+    public float WeaponSlashSpeed = 1f;
+
+    [Header("被弾点滅")]
+    [Tooltip("点滅の合計時間（秒）")]
+    [Range(0.2f, 1.5f)]
+    public float DamageBlinkDuration = 0.5f;
+
+    [Tooltip("点滅回数")]
+    [Range(2, 8)]
+    public int DamageBlinkCount = 4;
 }

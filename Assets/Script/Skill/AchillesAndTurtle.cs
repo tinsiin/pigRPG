@@ -12,7 +12,7 @@ public class AchillesAndTurtle : BaseSkill//アキレスと亀- 混沌時間
         //相手がTLOAの種別なら発生しない
         if(target.MyType == CharacterType.TLOA) return;
         //相手が精神属性デビルなら、熱血的理由(ベールとキンダーはそれぞれ幼稚すぎ、はっちゃけ過ぎの理由で省かれる)で発生しない
-        if(target.MyImpression == SpiritualProperty.devil) return;
+        if(target.MyImpression == SpiritualProperty.Devil) return;
         //完全回避ならなし
         if(hitResult == HitResult.CompleteEvade) return;
         //かすりならば、4.8割の確率で発生 = 5.2割で発生しない

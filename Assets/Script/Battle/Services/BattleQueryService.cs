@@ -31,25 +31,25 @@ public sealed class BattleQueryService : IBattleQueryService
         return null;
     }
 
-    public allyOrEnemy GetCharacterFaction(BaseStates chara)
+    public Faction GetCharacterFaction(BaseStates chara)
     {
         if (_allyGroup != null)
         {
             foreach (var one in _allyGroup.Ours)
             {
-                if (one == chara) return allyOrEnemy.alliy;
+                if (one == chara) return Faction.Ally;
             }
         }
         if (_enemyGroup != null)
         {
             foreach (var one in _enemyGroup.Ours)
             {
-                if (one == chara) return allyOrEnemy.Enemyiy;
+                if (one == chara) return Faction.Enemy;
             }
         }
         // キャラクターがどのグループにも属していない場合（一時的なリスト外や不正な呼び出し）
         Debug.LogWarning($"[BattleQueryService] Character {chara?.CharacterName ?? "null"} not found in any group");
-        return allyOrEnemy.alliy; // フォールバック値
+        return Faction.Ally; // フォールバック値
     }
 
     public List<BaseStates> GetOtherAlliesAlive(BaseStates chara)
@@ -66,12 +66,12 @@ public sealed class BattleQueryService : IBattleQueryService
         return chara1InAlly == chara2InAlly;
     }
 
-    public BattleGroup FactionToGroup(allyOrEnemy faction)
+    public BattleGroup FactionToGroup(Faction faction)
     {
         return faction switch
         {
-            allyOrEnemy.alliy => _allyGroup,
-            allyOrEnemy.Enemyiy => _enemyGroup,
+            Faction.Ally => _allyGroup,
+            Faction.Enemy => _enemyGroup,
             _ => null
         };
     }

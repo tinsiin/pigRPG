@@ -25,35 +25,35 @@ public abstract partial class BaseStates
         //終了時の精神属性による発生確率の分岐
         switch(MyImpression)
         {
-            case SpiritualProperty.liminalwhitetile:
+            case SpiritualProperty.LiminalWhiteTile:
                 // リーミナルホワイトタイル 0%
                 return; // 常に発生しない
                 
-            case SpiritualProperty.kindergarden:
+            case SpiritualProperty.Kindergarten:
                 // キンダーガーデン 95%
                 if(!rollper(95f)) return;
                 break;
                 
-            case SpiritualProperty.sacrifaith:
-            case SpiritualProperty.cquiest:
-            case SpiritualProperty.devil:
-            case SpiritualProperty.doremis:
-            case SpiritualProperty.pillar:
+            case SpiritualProperty.Sacrifaith:
+            case SpiritualProperty.Cquiest:
+            case SpiritualProperty.Devil:
+            case SpiritualProperty.Doremis:
+            case SpiritualProperty.Pillar:
                 // 自己犠牲・シークイエスト・デビル・ドレミス・支柱は全て100%
                 // 100%発生するので何もしない（returnしない）
                 break;
                 
-            case SpiritualProperty.godtier:
+            case SpiritualProperty.GodTier:
                 // ゴッドティア 50%
                 if(!rollper(50f)) return;
                 break;
                 
-            case SpiritualProperty.baledrival:
+            case SpiritualProperty.BaleDrival:
                 // ベールドライヴァル 70%
                 if(!rollper(70f)) return;
                 break;
                 
-            case SpiritualProperty.pysco:
+            case SpiritualProperty.Psycho:
                 // サイコパス 20%
                 if(!rollper(20f)) return;
                 break;
@@ -115,7 +115,7 @@ public abstract partial class BaseStates
     /// </summary>
     public bool GetIsSkillDivergence()
     {
-        if(DefaultImpression == SpiritualProperty.none) 
+        if(DefaultImpression == SpiritualProperty.None) 
         {
             Debug.Log($"{CharacterName}の{NowUseSkill.SkillName}-"
             +"「DefaultImpressionがnoneなら乖離判定は行われません。」none精神属性互換の十日能力とかないからね");
@@ -187,21 +187,21 @@ public abstract partial class BaseStates
         var EnokunagiValue = TenDayValues(false).GetValueOrZero(TenDayAbility.Enokunagi) * 0.005f;
         switch (NowCondition)
         {
-            case HumanConditionCircumstances.Angry:
+            case Demeanor.Angry:
                 return 0.47f + ExtraValue;
-            case HumanConditionCircumstances.Elated:
+            case Demeanor.Elated:
                 return 2.6f+ ExtraValue;
-            case HumanConditionCircumstances.Painful:
+            case Demeanor.Painful:
                 return 0.6f+ ExtraValue;
-            case HumanConditionCircumstances.Confused:
+            case Demeanor.Confused:
                 return 0.3f+ ExtraValue;
-            case HumanConditionCircumstances.Resolved:
+            case Demeanor.Resolved:
                 return 1.2f+ ExtraValue;
-            case HumanConditionCircumstances.Optimistic:
+            case Demeanor.Optimistic:
                 return 1.4f+ ExtraValue;
-            case HumanConditionCircumstances.Normal:
+            case Demeanor.Normal:
                 return 0.9f+ ExtraValue;
-            case HumanConditionCircumstances.Doubtful:
+            case Demeanor.Doubtful:
                 return 0.7f+ ExtraValue - EnokunagiValue;//疑念だとエノクナギの影響で乖離しやすくなっちゃうよ
             default:
                 return 0f;
@@ -390,50 +390,50 @@ public abstract partial class BaseStates
     /// <summary>
     /// 属性ごとの「パワー条件」をチェックし、満たしていればtrue、ダメならfalseを返す。
     /// </summary>
-    private bool CheckPowerCondition(SpiritualProperty property, ThePower power)
+    private bool CheckPowerCondition(SpiritualProperty property, PowerLevel power)
     {
         switch (property)
         {
-            case SpiritualProperty.liminalwhitetile:
+            case SpiritualProperty.LiminalWhiteTile:
                 // パワーが普通以上 (>= medium)
-                return (power >= ThePower.medium);
+                return (power >= PowerLevel.Medium);
 
-            case SpiritualProperty.kindergarden:
+            case SpiritualProperty.Kindergarten:
                 // パワーが高い (== high)
-                return (power == ThePower.high);
+                return (power == PowerLevel.High);
 
-            case SpiritualProperty.sacrifaith:
+            case SpiritualProperty.Sacrifaith:
                 // パワーが普通以上 (>= medium)
-                return (power >= ThePower.medium);
+                return (power >= PowerLevel.Medium);
 
-            case SpiritualProperty.cquiest:
+            case SpiritualProperty.Cquiest:
                 // 「低い以上」と書かれていたため (>= low)
-                // 低い(low), 普通(medium), 高い(high) はOK。 たるい(lowlow)はNG
-                return (power >= ThePower.low);
+                // 低い(low), 普通(medium), 高い(high) はOK。 たるい(VeryLow)はNG
+                return (power >= PowerLevel.Low);
 
-            case SpiritualProperty.devil:
+            case SpiritualProperty.Devil:
                 // 本文に「パワーが高いと」としか書かれていない→ここでは「高いでないとダメ」と仮定
-                return (power == ThePower.high);
+                return (power == PowerLevel.High);
 
-            case SpiritualProperty.doremis:
+            case SpiritualProperty.Doremis:
                 // パワーが普通以上
-                return (power >= ThePower.medium);
+                return (power >= PowerLevel.Medium);
 
-            case SpiritualProperty.pillar:
+            case SpiritualProperty.Pillar:
                 // パワーが普通以上
-                return (power >= ThePower.medium);
+                return (power >= PowerLevel.Medium);
 
-            case SpiritualProperty.godtier:
+            case SpiritualProperty.GodTier:
                 // 「パワー条件なし」
                 return true;
 
-            case SpiritualProperty.baledrival:
-                // 「パワーが低い以上」→ ここでは (power >= ThePower.low) と解釈
-                return (power >= ThePower.low);
+            case SpiritualProperty.BaleDrival:
+                // 「パワーが低い以上」→ ここでは (power >= PowerLevel.Low) と解釈
+                return (power >= PowerLevel.Low);
 
-            case SpiritualProperty.pysco:
+            case SpiritualProperty.Psycho:
                 // パワーが普通以上
-                return (power >= ThePower.medium);
+                return (power >= PowerLevel.Medium);
 
             default:
                 // それ以外( none など) は特に定義されていない場合、0%扱い
@@ -445,23 +445,23 @@ public abstract partial class BaseStates
     /// <summary>
     /// 人間状況ごとの「基本値」を返す。
     /// </summary>
-    private int GetBaseChanceByCondition(HumanConditionCircumstances condition)
+    private int GetBaseChanceByCondition(Demeanor condition)
     {
         switch (condition)
         {
-            case HumanConditionCircumstances.Angry:
-            case HumanConditionCircumstances.Elated:
-            case HumanConditionCircumstances.Painful:
-            case HumanConditionCircumstances.Confused:
+            case Demeanor.Angry:
+            case Demeanor.Elated:
+            case Demeanor.Painful:
+            case Demeanor.Confused:
                 return 0;
 
-            case HumanConditionCircumstances.Resolved:
+            case Demeanor.Resolved:
                 return 7;
-            case HumanConditionCircumstances.Optimistic:
+            case Demeanor.Optimistic:
                 return 2;
-            case HumanConditionCircumstances.Normal:
+            case Demeanor.Normal:
                 return 4;
-            case HumanConditionCircumstances.Doubtful:
+            case Demeanor.Doubtful:
                 return 1;
 
             default:
@@ -476,73 +476,73 @@ public abstract partial class BaseStates
     /// </summary>
     private int OverrideByPropertyAndCondition(
         SpiritualProperty property,
-        HumanConditionCircumstances condition,
+        Demeanor condition,
         int baseChance
     )
     {
         switch (property)
         {
             //=======================================
-            // ■ゴッドティア (godtier)
+            // ■ゴッドティア (GodTier)
             //=======================================
-            case SpiritualProperty.godtier:
+            case SpiritualProperty.GodTier:
                 // 楽観的なら 12% (通常2%を上書き)
-                if (condition == HumanConditionCircumstances.Optimistic)
+                if (condition == Demeanor.Optimistic)
                 {
                     return 12;
                 }
                 break;
 
             //=======================================
-            // ■デビル (devil)
+            // ■デビル (Devil)
             //=======================================
-            case SpiritualProperty.devil:
+            case SpiritualProperty.Devil:
                 // 楽観的なら 0% (通常2% => 0% 上書き)
-                if (condition == HumanConditionCircumstances.Optimistic)
+                if (condition == Demeanor.Optimistic)
                 {
                     return 0;
                 }
                 break;
 
             //=======================================
-            // ■自己犠牲 (sacrifaith)
+            // ■自己犠牲 (Sacrifaith)
             //=======================================
-            case SpiritualProperty.sacrifaith:
+            case SpiritualProperty.Sacrifaith:
                 // 怒り => 6% (通常 怒りは0% => 6%で上書き)
-                if (condition == HumanConditionCircumstances.Angry)
+                if (condition == Demeanor.Angry)
                 {
                     return 6;
                 }
                 break;
 
             //=======================================
-            // ■ドレミス (doremis)
+            // ■ドレミス (Doremis)
             //=======================================
-            case SpiritualProperty.doremis:
+            case SpiritualProperty.Doremis:
                 // 疑念 => 14% (通常1% => 14%)
-                if (condition == HumanConditionCircumstances.Doubtful)
+                if (condition == Demeanor.Doubtful)
                 {
                     return 14;
                 }
                 break;
 
             //=======================================
-            // ■支柱 (pillar)
+            // ■支柱 (Pillar)
             //=======================================
-            case SpiritualProperty.pillar:
+            case SpiritualProperty.Pillar:
                 // 辛い => 6% (通常0% => 6%)
-                if (condition == HumanConditionCircumstances.Painful)
+                if (condition == Demeanor.Painful)
                 {
                     return 6;
                 }
                 break;
 
             //=======================================
-            // ■ベールドライヴァル (baledrival)
+            // ■ベールドライヴァル (BaleDrival)
             //=======================================
-            case SpiritualProperty.baledrival:
+            case SpiritualProperty.BaleDrival:
                 // 高揚 => 11% (通常0% => 11%)
-                if (condition == HumanConditionCircumstances.Elated)
+                if (condition == Demeanor.Elated)
                 {
                     return 11;
                 }
@@ -572,7 +572,7 @@ public abstract partial class BaseStates
     /// </summary>
     void CalculateBladeDeathCriticalSurvivalChance(BaseStates Atker)
     {
-        if(NowPower < ThePower.high)return;//パワーが高くないなら発生しないって感じに
+        if(NowPower < PowerLevel.High)return;//パワーが高くないなら発生しないって感じに
 
         var underBlade = TenDayValues(false).GetValueOrZero(TenDayAbility.Blades);
         var AtkerBlade = Atker.TenDayValues(true).GetValueOrZero(TenDayAbility.Blades);
@@ -581,7 +581,7 @@ public abstract partial class BaseStates
         if(rollComparison(underBlade,AtkerBlade))
         {   
             var AtkerBladeRate = AtkerBlade;
-            if(Atker.NowPower == ThePower.high) AtkerBladeRate *= 1.5f;
+            if(Atker.NowPower == PowerLevel.High) AtkerBladeRate *= 1.5f;
             //生き残りHP
             var survivalHP = RandomSource.NextFloat(1,2.8f) + Mathf.Max(0,underBlade - AtkerBladeRate) * RandomSource.NextFloat(4,5);
 
@@ -640,20 +640,20 @@ public abstract partial class BaseStates
 
             if(Atker.MyType == CharacterType.Life)//攻撃者が生命なら
             {
-                if(Atker.MyImpression != SpiritualProperty.pysco) return;//サイコパスでないなら終わり
+                if(Atker.MyImpression != SpiritualProperty.Psycho) return;//サイコパスでないなら終わり
             }
             if(Atker.MyType == CharacterType.Machine)//攻撃者が機械なら
             {
                 var im = Atker.MyImpression;
                 var hc = Atker.NowCondition;
                 // サイコパスならOK
-                bool isPsyco = im == SpiritualProperty.pysco;
+                bool isPsyco = im == SpiritualProperty.Psycho;
 
-                // ベイルの怒り ⇒ baledrival + Angry 状態
-                bool isBaleRivalAngry = im == SpiritualProperty.baledrival && hc == HumanConditionCircumstances.Angry;
+                // ベイルの怒り ⇒ BaleDrival + Angry 状態
+                bool isBaleRivalAngry = im == SpiritualProperty.BaleDrival && hc == Demeanor.Angry;
 
-                // キンダーの高揚 ⇒ kindergarden + Elated 状態
-                bool isKindergardenElated = im == SpiritualProperty.kindergarden && hc == HumanConditionCircumstances.Elated;
+                // キンダーの高揚 ⇒ Kindergarten + Elated 状態
+                bool isKindergardenElated = im == SpiritualProperty.Kindergarten && hc == Demeanor.Elated;
 
                 // 上記3パターンのいずれにも当てはまらない場合は発生しない
                 if (!(isPsyco || isBaleRivalAngry || isKindergardenElated))
@@ -683,49 +683,49 @@ public abstract partial class BaseStates
         var flowmax = 0f;
 
         //基本値
-        flowmax = TenDayValues(true).GetValueOrZero(TenDayAbility.HumanKiller) * 2 + TenDayValues(true).GetValueOrZero(TenDayAbility.dokumamusi) * 0.4f;
+        flowmax = TenDayValues(true).GetValueOrZero(TenDayAbility.HumanKiller) * 2 + TenDayValues(true).GetValueOrZero(TenDayAbility.Dokumamusi) * 0.4f;
 
         switch(MyImpression)//精神属性で分岐　
         {
-            case SpiritualProperty.liminalwhitetile:
+            case SpiritualProperty.LiminalWhiteTile:
                 flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.8f;
                 break;
-            case SpiritualProperty.kindergarden:
+            case SpiritualProperty.Kindergarten:
                 flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) * 2;
                 break;
                 
-            case SpiritualProperty.sacrifaith:
+            case SpiritualProperty.Sacrifaith:
                 flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) * 0.5f + TenDayValues(true).GetValueOrZero(TenDayAbility.NightInkKnight);
                 break;
                 
-            case SpiritualProperty.pysco:
+            case SpiritualProperty.Psycho:
                 flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.Raincoat) * 6 * TenDayValues(true).GetValueOrZero(TenDayAbility.UnextinguishedPath);
                 break;
                 
-            case SpiritualProperty.baledrival:
+            case SpiritualProperty.BaleDrival:
                 flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure) * 3;
                 break;
                 
-            case SpiritualProperty.devil:
+            case SpiritualProperty.Devil:
                 flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.NightDarkness) + TenDayValues(true).GetValueOrZero(TenDayAbility.ColdHeartedCalm);
                 break;
                 
-            case SpiritualProperty.cquiest:
+            case SpiritualProperty.Cquiest:
                 flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.JoeTeeth) * 1.7f - TenDayValues(true).GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.11f;
                 break;
                 
-            case SpiritualProperty.godtier:
+            case SpiritualProperty.GodTier:
                 flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.CryoniteQuality);
                 break;
                 
-            case SpiritualProperty.pillar:
+            case SpiritualProperty.Pillar:
                 flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.PersonaDivergence) - TenDayValues(true).GetValueOrZero(TenDayAbility.Pilmagreatifull);
                 break;
                 
-            case SpiritualProperty.doremis:
+            case SpiritualProperty.Doremis:
                 flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.SpringNap) - TenDayValues(true).GetValueOrZero(TenDayAbility.ElementFaithPower); 
                 break;
-            case SpiritualProperty.none:
+            case SpiritualProperty.None:
             case (SpiritualProperty)0: // 未設定のデフォルト値
                 //noneや未設定ならそもそも最大余剰ダメージ発生せず
                 break;
@@ -745,33 +745,33 @@ public abstract partial class BaseStates
         var passRate = 0f;
         switch(NowCondition)
         {
-            case HumanConditionCircumstances.Painful:
-                if(MyImpression == SpiritualProperty.devil)
+            case Demeanor.Painful:
+                if(MyImpression == SpiritualProperty.Devil)
                 {
                     passRate = 2;
                 }else{
                     passRate = 0.43f;
                 }
                 break;
-            case HumanConditionCircumstances.Optimistic:
-                if(MyImpression == SpiritualProperty.cquiest)
+            case Demeanor.Optimistic:
+                if(MyImpression == SpiritualProperty.Cquiest)
                 {
                     passRate = 1.1f;
                 }else{
                     passRate = 1.01f;
                 }
                 break;
-            case HumanConditionCircumstances.Elated:
+            case Demeanor.Elated:
                 passRate = 1.2f;
                 break;
-            case HumanConditionCircumstances.Resolved:
+            case Demeanor.Resolved:
                 passRate = 1.0f;
                 break;
-            case HumanConditionCircumstances.Angry:
-                if(MyImpression == SpiritualProperty.sacrifaith)
+            case Demeanor.Angry:
+                if(MyImpression == SpiritualProperty.Sacrifaith)
                 {
                     passRate = 1.5f;
-                }else if(MyImpression == SpiritualProperty.devil)
+                }else if(MyImpression == SpiritualProperty.Devil)
                 {
                     passRate = 1.0f;
                 }else
@@ -779,18 +779,18 @@ public abstract partial class BaseStates
                     passRate = 1.3f;
                 }
                 break;
-            case HumanConditionCircumstances.Doubtful:
-                if(MyImpression == SpiritualProperty.doremis)
+            case Demeanor.Doubtful:
+                if(MyImpression == SpiritualProperty.Doremis)
                 {
                     passRate = 0.93f;
                 }else{
                     passRate = 0.77f;
                 }
                 break;
-            case HumanConditionCircumstances.Confused:
+            case Demeanor.Confused:
                 passRate = 0.7f;
                 break;
-            case HumanConditionCircumstances.Normal:
+            case Demeanor.Normal:
                 passRate = 0.8f;
                 break;
                 
@@ -816,7 +816,7 @@ public abstract partial class BaseStates
         if(!IsInterruptCounterActive)return false;//割り込みカウンターActiveがfalseなら発動しない
 
         var skill = attacker.NowUseSkill;
-        if(NowPower >= ThePower.medium)//普通のパワー以上で
+        if(NowPower >= PowerLevel.Medium)//普通のパワー以上で
         {//割り込みカウンターは
             var eneVond = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.Vond);
             var myVond =  TenDayValues(false).GetValueOrZero(TenDayAbility.Vond);

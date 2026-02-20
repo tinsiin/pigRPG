@@ -73,7 +73,7 @@ MonoBehaviour:
   shakeAmplitude: 10
   shakeFrequency: 1
   bornPosRange: {x: 33, y: 80}
-  sideObject_Type: 1
+  sideObjectType: 1
 --- !u!114 &7470618897537686000
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -19,7 +19,7 @@ public class ForcedDowner : BasePassive
         base.OnApply(user, grantor);
 
         //ベールの精神属性ならば、
-        if(_owner.MyImpression == SpiritualProperty.baledrival)
+        if(_owner.MyImpression == SpiritualProperty.BaleDrival)
         {
             //ランダムな十日能力が下降する。
             var randomTenDayAbility = _owner.GetRandomTenDayAbility();

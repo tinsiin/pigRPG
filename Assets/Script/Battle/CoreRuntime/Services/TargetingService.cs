@@ -24,7 +24,7 @@ public sealed class TargetingService
 
     public void SelectTargets(
         BaseStates acter,
-        allyOrEnemy acterFaction,
+        Faction acterFaction,
         BattleGroup allyGroup,
         BattleGroup enemyGroup,
         UnderActersEntryList unders,
@@ -85,7 +85,7 @@ public sealed class TargetingService
     private sealed class TargetingContext
     {
         public BaseStates Acter { get; }
-        public allyOrEnemy ActerFaction { get; }
+        public Faction ActerFaction { get; }
         public BattleGroup AllyGroup { get; }
         public BattleGroup EnemyGroup { get; }
         public UnderActersEntryList Unders { get; }
@@ -95,7 +95,7 @@ public sealed class TargetingService
 
         public TargetingContext(
             BaseStates acter,
-            allyOrEnemy acterFaction,
+            Faction acterFaction,
             BattleGroup allyGroup,
             BattleGroup enemyGroup,
             UnderActersEntryList unders,
@@ -125,7 +125,7 @@ public sealed class TargetingService
         var acter = context.Acter;
         var canSelectMyself = acter.HasRangeWill(SkillZoneTrait.CanSelectMyself);
 
-        if (context.ActerFaction == allyOrEnemy.alliy)
+        if (context.ActerFaction == Faction.Ally)
         {
             if (acter.HasRangeWill(SkillZoneTrait.SelectOnlyAlly))
             {
@@ -276,7 +276,7 @@ public sealed class TargetingService
                 List<BaseStates> backLines = new List<BaseStates>(selectGroup.Ours.Where(member => member != selectGroup.InstantVanguard));
 
                 targets.AddRange(TargetSelectionHelper.SelectByPassiveAndRandom(backLines, 1, _random, _logger, debugSelectLog: debugSelectLog));
-                acter.SetSpecialModifier("少し遠いよ", whatModify.eye, 0.7f);
+                acter.SetSpecialModifier("少し遠いよ", StatModifier.Eye, 0.7f);
                 _logger.Log(acter.CharacterName + "は後衛を狙った");
             }
         }
@@ -374,7 +374,7 @@ public sealed class TargetingService
                 List<BaseStates> backLines = new List<BaseStates>(selectGroup.Ours.Where(member => member != selectGroup.InstantVanguard));
 
                 targets.AddRange(backLines);
-                acter.SetSpecialModifier("ほんの少し狙いにくい", whatModify.eye, 0.9f);
+                acter.SetSpecialModifier("ほんの少し狙いにくい", StatModifier.Eye, 0.9f);
                 _logger.Log(acter.CharacterName + "は後衛を狙った");
             }
         }

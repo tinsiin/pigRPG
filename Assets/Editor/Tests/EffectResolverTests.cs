@@ -73,9 +73,9 @@ public class EffectResolverTests
     {
         public bool IsVanguard(BaseStates chara) => false;
         public BattleGroup GetGroupForCharacter(BaseStates chara) => null;
-        public allyOrEnemy GetCharacterFaction(BaseStates chara) => allyOrEnemy.alliy;
+        public Faction GetCharacterFaction(BaseStates chara) => Faction.Ally;
         public List<BaseStates> GetOtherAlliesAlive(BaseStates chara) => new List<BaseStates>();
         public bool IsFriend(BaseStates chara1, BaseStates chara2) => true;
-        public BattleGroup FactionToGroup(allyOrEnemy faction) => null;
+        public BattleGroup FactionToGroup(Faction faction) => null;
     }
 }

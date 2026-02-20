@@ -276,7 +276,7 @@
 ## 人間状況システム
 
 ### 状況定義
-- **現在状況**: 行3708-3709 - `public HumanConditionCircumstances NowCondition;`
+- **現在状況**: 行3708-3709 - `public Demeanor NowCondition;`
 - **連続ターン**: 行3714-3715
 - **累積ターン**: 行3720-3721
 
@@ -297,7 +297,7 @@
 ## その他の機能
 
 ### パワーシステム
-- **現在パワー**: 行922 - `public ThePower NowPower = ThePower.medium;`
+- **現在パワー**: 行922 - `public PowerLevel NowPower = PowerLevel.Medium;`
 - **パワー上昇**: 行927-938
 - **パワー下降**: 行943-953
 - **歩行時変化**: 行957-1248
@@ -391,7 +391,7 @@
   {
       dream,      // 夢うつつ
       raincoat,   // レインコート
-      cquiest,    // シークイエスト
+      Cquiest,    // シークイエスト
       dokumamushi, // 独身毒虫
       kindergarten,// 幼稚園の男の子
       nothing,    // 属性なし

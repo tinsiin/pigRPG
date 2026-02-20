@@ -7,8 +7,11 @@ using Cysharp.Threading.Tasks;
 using System.Linq;
 using static TenDayAbilityPosition;
 
-public abstract partial class BaseStates    
+public abstract partial class BaseStates
 {
+    // PlayersUIRefs のキャッシュ（被弾点滅パラメータ取得用）
+    private static PlayersUIRefs s_cachedUIRefs;
+
     //  ==============================================================================================================================
     //                                              スキルパワー計算など
     //  ==============================================================================================================================
@@ -240,7 +243,7 @@ public abstract partial class BaseStates
         {
             m_BattleDeathProcessed = false;
             HP = float.Epsilon;//生きてるか生きてないか=Angel
-            if(NowPower == ThePower.high)
+            if(NowPower == PowerLevel.High)
             {
                 HP = 30;//気力が高いと多少回復
             }
@@ -805,6 +808,21 @@ public abstract partial class BaseStates
                     damageAmount = DamageOnBattle(attacker, skillPower,skillPowerForMental,hitResult,ref isdisturbed);
                     isAtkHit = true;//攻撃をしたからtrue
 
+                    // 被弾点滅（ダメージが実際に発生した場合のみ）
+                    if (damageAmount.Total > 0 && BattleIcon != null)
+                    {
+                        float blinkDuration = 0.5f;
+                        int blinkCount = 4;
+                        if (s_cachedUIRefs == null)
+                            s_cachedUIRefs = UnityEngine.Object.FindFirstObjectByType<PlayersUIRefs>();
+                        if (s_cachedUIRefs != null)
+                        {
+                            blinkDuration = s_cachedUIRefs.DamageBlinkDuration;
+                            blinkCount = s_cachedUIRefs.DamageBlinkCount;
+                        }
+                        BattleIcon.PlayDamageBlink(blinkDuration, blinkCount).Forget();
+                    }
+
                     var result = await ApplyNonDamageHostileEffects(attacker,skill,hitResult);
                     BadPassiveHit = result.BadPassiveHit;
                     BadVitalLayerHit = result.BadVitalLayerHit;
@@ -1014,20 +1032,20 @@ public abstract partial class BaseStates
     {
         switch(skillImp)
         {
-            case SpiritualProperty.mvoid:
+            case SpiritualProperty.Mvoid:
                 MyImpression = attacker.MyImpression;
                 break;
             case SpiritualProperty.Galvanize:
                 MyImpression = attacker.MyImpression;
                 break;
-            case SpiritualProperty.air:
+            case SpiritualProperty.Air:
                 //noneでも変化なし
                 break;
-            case SpiritualProperty.memento:
+            case SpiritualProperty.Memento:
                 //被害者には変化なし
                 break;
             default:
-                if(MyImpression == SpiritualProperty.none)
+                if(MyImpression == SpiritualProperty.None)
                 {
                     MyImpression = skillImp;
                 }
@@ -1043,15 +1061,15 @@ public abstract partial class BaseStates
         SpiritualProperty imp;
         switch (skillSpiritual)
         {
-            case SpiritualProperty.mvoid:
-            case SpiritualProperty.air:
+            case SpiritualProperty.Mvoid:
+            case SpiritualProperty.Air:
                 //精神補正無し
-                imp = SpiritualProperty.none;//noneなら補正無しなので
+                imp = SpiritualProperty.None;//noneなら補正無しなので
                 break;
             case SpiritualProperty.Galvanize:
                 imp = attacker.MyImpression;
                 break;
-            case SpiritualProperty.memento:
+            case SpiritualProperty.Memento:
                 imp = attacker.DefaultImpression;
                 break;
             default://基本的に精神属性をそのまま補正に渡す
@@ -1069,7 +1087,7 @@ public abstract partial class BaseStates
     {
         var castSkillImp = GetCastImpressionToModifier(skillImp,attacker);//補正に投げる特殊スキル属性を純正な精神属性に変換
 
-        if(castSkillImp == SpiritualProperty.none) return new FixedOrRandomValue(100);//noneなら補正なし(100%なので無変動)
+        if(castSkillImp == SpiritualProperty.None) return new FixedOrRandomValue(100);//noneなら補正なし(100%なので無変動)
 
         var key = (castSkillImp, MyImpression);
         if (!SpiritualModifier.ContainsKey(key))

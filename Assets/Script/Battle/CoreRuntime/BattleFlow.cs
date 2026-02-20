@@ -143,7 +143,7 @@ public sealed class BattleFlow
     {
         if (_context.Wipeout)
         {
-            if (_context.ActerFaction == allyOrEnemy.alliy)
+            if (_context.ActerFaction == Faction.Ally)
             {
                 _eventBus?.Publish(BattleEvent.MessageOnly("死んだ", true, _context.BattleTurnCount));
                 _metaProvider?.OnPlayersLost();

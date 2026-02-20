@@ -232,7 +232,7 @@ public abstract partial class BaseStates
         var AllKillDmg = DamageDealtToEnemyUntilKill[target];
         DamageDealtToEnemyUntilKill.Remove(target);//殺したので消す(angelしたらもう一回最初から記録する)
 
-        HighNessChance(target);//ハイネスチャンス(ThePowerの増加判定)
+        HighNessChance(target);//ハイネスチャンス(PowerLevelの増加判定)
         ApplyConditionChangeOnKillEnemy(target);//人間状況の変化
 
         RecordConfidenceBoost(target,AllKillDmg);

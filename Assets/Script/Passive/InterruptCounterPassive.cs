@@ -44,11 +44,11 @@ public class InterruptCounterPassive : BasePassive
     {
         // 攻撃力乗算値を半減（1.0未満にはならない）
         var curATK = ATKPercentageModifier();
-        SetPercentageModifier(whatModify.atk, Mathf.Max(1.0f, curATK / 2f));
+        SetPercentageModifier(StatModifier.Atk, Mathf.Max(1.0f, curATK / 2f));
         
         // 命中率ボーナスを半減
         var curEye = EYEFixedValueEffect();
-        SetFixedValue(whatModify.eye, Mathf.Max(0f, curEye / 2f));
+        SetFixedValue(StatModifier.Eye, Mathf.Max(0f, curEye / 2f));
     }
 
     public override void OnAfterAttack()

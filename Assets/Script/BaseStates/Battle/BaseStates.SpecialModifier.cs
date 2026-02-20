@@ -28,7 +28,7 @@ public abstract partial class BaseStates
     /// 特別補正をセットする。
     /// オプション変数部分が固定値
     /// </summary>
-    public void SetSpecialModifier(string memo,whatModify whatstate,float value = 1, StatesPowerBreakdown fixedModifier = null, bool isFixed = false)
+    public void SetSpecialModifier(string memo,StatModifier whatstate,float value = 1, StatesPowerBreakdown fixedModifier = null, bool isFixed = false)
     {
         if (_specialModifiers == null) _specialModifiers = new List<ModifierPart>();//nullチェック、処理
         _specialModifiers.Add(new ModifierPart(memo, whatstate, value, fixedModifier, isFixed));
@@ -45,7 +45,7 @@ public abstract partial class BaseStates
     /// 特別な補正を利用  パーセンテージ補正用  戦闘の状況で要所要所で傾くイメージなので平均化　
     /// パッシブの乗算補正の積とブレンドとは違う(CalculateBlendedPercentageModifier)
     /// </summary>
-    public float GetSpecialPercentModifier(whatModify mod)
+    public float GetSpecialPercentModifier(StatModifier mod)
     {
         return _specialModifiers.Where(m => m.IsFixedOrPercent == false && m.whatStates == mod)
             .Aggregate(1.0f, (total, m) => total * m.Modifier);//指定したステータスとパーセンテージ補正のリスト内全ての値を乗算
@@ -53,7 +53,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// 特別な補正を利用  固定値補正用
     /// </summary>
-    public StatesPowerBreakdown GetSpecialFixedModifier(whatModify mod)
+    public StatesPowerBreakdown GetSpecialFixedModifier(StatModifier mod)
     {
         var calculateList =_specialModifiers.Where(m => m.IsFixedOrPercent == true && m.whatStates == mod).ToList();
         return CalculateFixedModifierTotal(calculateList);
@@ -113,7 +113,7 @@ public abstract partial class BaseStates
     /// キャラ限定補正を追加
     /// </summary>
     public void SetCharaConditionalModifierList(BaseStates target, string memo, 
-    whatModify whatstate,float value, StatesPowerBreakdown fixedModifier = null, bool isFixed = false)
+    StatModifier whatstate,float value, StatesPowerBreakdown fixedModifier = null, bool isFixed = false)
     {
         if (_charaConditionalMods == null)
             _charaConditionalMods = new List<CharacterConditionalModifier>();
@@ -166,7 +166,7 @@ public class ModifierPart
     /// </summary>
     public string memo;
 
-    public whatModify whatStates;
+    public StatModifier whatStates;
 
     /// <summary>
     /// trueならfixed、falseならpercent
@@ -184,7 +184,7 @@ public class ModifierPart
     public StatesPowerBreakdown FixedModifier;
 
 
-    public ModifierPart(string memo, whatModify whatStates, float value, StatesPowerBreakdown fixedModifier = null, bool isFixedOrPercent = false)
+    public ModifierPart(string memo, StatModifier whatStates, float value, StatesPowerBreakdown fixedModifier = null, bool isFixedOrPercent = false)
     {
         this.memo = memo;
         Modifier = value;

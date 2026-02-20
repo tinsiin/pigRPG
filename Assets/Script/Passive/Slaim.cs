@@ -31,8 +31,8 @@ public class Slaim : BasePassive
             {
                 live.ApplyPassiveBufferInBattleByID(13,_owner);
                 var pas = live.GetBufferPassiveByID(13);
-                pas.SetPercentageModifier(whatModify.agi, 1.04f);//4%上げる
-                pas.SetFixedValue(whatModify.agi,_owner.TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton)/3 *
+                pas.SetPercentageModifier(StatModifier.Agi, 1.04f);//4%上げる
+                pas.SetFixedValue(StatModifier.Agi,_owner.TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton)/3 *
                 live.TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining));//支援対象の味方のサイレント練度　×　付与者の盥豚÷3
 
                 ApplyTaktbruch(Atker);//タクトブルフの攻撃者への付与
@@ -81,12 +81,12 @@ public class Slaim : BasePassive
         //逆に言うと　防衛者(付与対象者)の方が付与者より能力値が高いほど　付与対象者は100%の発動率を維持する。　つまり「ノーダメージ」
 
         //パワーによる調整
-        if(AtkerButPassiveDefender.NowPower == ThePower.lowlow)//たるいなら　あえて調子の破断もくそもないので、むしろ効果が減る(発動率上昇)
+        if(AtkerButPassiveDefender.NowPower == PowerLevel.VeryLow)//たるいなら　あえて調子の破断もくそもないので、むしろ効果が減る(発動率上昇)
         {
             rate *= 3;
             rate = Mathf.Clamp(rate, 0f, 100f);//100超えそうだしクランプ　　発動率の計算とrollperで対応されてるから別に無理にしなくていいけどね
         }
-        if(AtkerButPassiveDefender.NowPower == ThePower.high)//高いなら　出鼻をくじかれるイメージで　もっと発動率が減る
+        if(AtkerButPassiveDefender.NowPower == PowerLevel.High)//高いなら　出鼻をくじかれるイメージで　もっと発動率が減る
         {
             rate /= 1.9f;
             rate = Mathf.Clamp(rate, 0f, 100f);
@@ -120,7 +120,7 @@ public class Slaim : BasePassive
     {
         //ジーノのスレーム側でパワー条件が変わる
         //通常スレームでは高いと使用できる
-        if(_owner.NowPower == ThePower.high)
+        if(_owner.NowPower == PowerLevel.High)
         {
             EasterNoshiir();
         }

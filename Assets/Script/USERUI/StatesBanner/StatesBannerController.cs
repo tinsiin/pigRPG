@@ -98,7 +98,7 @@ public class StatesBannerController : MonoBehaviour
         float attrMaxP = actor.CombinedAttrPMax;
         SpiritualProperty impression = actor.MyImpression;
         SpiritualProperty DefaultImpression = actor.DefaultImpression;
-        ThePower power = actor.NowPower;
+        PowerLevel power = actor.NowPower;
         BaseWeapon weapon = actor.NowUseWeapon;
 
         // 四大ステ・排他/防御

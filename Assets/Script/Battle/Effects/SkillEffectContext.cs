@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public sealed class SkillEffectContext
 {
     public BaseStates Acter { get; }
-    public allyOrEnemy ActerFaction { get; }
+    public Faction ActerFaction { get; }
     public UnderActersEntryList Targets { get; }
     public BattleGroup AllyGroup { get; }
     public BattleGroup EnemyGroup { get; }
@@ -22,7 +22,7 @@ public sealed class SkillEffectContext
 
     public SkillEffectContext(
         BaseStates acter,
-        allyOrEnemy acterFaction,
+        Faction acterFaction,
         UnderActersEntryList targets,
         BattleGroup allyGroup,
         BattleGroup enemyGroup,

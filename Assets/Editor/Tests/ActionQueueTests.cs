@@ -26,7 +26,7 @@ public class ActionQueueTests
     {
         var queue = new ActionQueue();
         queue.RatherAdd("first");
-        queue.Add(null, allyOrEnemy.alliy, "second");
+        queue.Add(null, Faction.Ally, "second");
 
         var result = queue.TryPeek(out var entry);
 
@@ -43,13 +43,13 @@ public class ActionQueueTests
         var queue = new ActionQueue();
         var actor = CreateEnemy(10f, 10f);
 
-        queue.Add(actor, allyOrEnemy.Enemyiy, "test message");
+        queue.Add(actor, Faction.Enemy, "test message");
 
         Assert.AreEqual(1, queue.Count);
         queue.TryPeek(out var entry);
         Assert.AreEqual(ActionType.Act, entry.Type);
         Assert.AreSame(actor, entry.Actor);
-        Assert.AreEqual(allyOrEnemy.Enemyiy, entry.Faction);
+        Assert.AreEqual(Faction.Enemy, entry.Faction);
         Assert.AreEqual("test message", entry.Message);
     }
 
@@ -106,9 +106,9 @@ public class ActionQueueTests
         var alive = CreateEnemy(10f, 10f);
         var dead = CreateEnemy(0f, 10f);
 
-        queue.Add(alive, allyOrEnemy.alliy, "alive");
-        queue.Add(dead, allyOrEnemy.alliy, "dead");
-        queue.Add(alive, allyOrEnemy.alliy, "alive2");
+        queue.Add(alive, Faction.Ally, "alive");
+        queue.Add(dead, Faction.Ally, "dead");
+        queue.Add(alive, Faction.Ally, "alive2");
 
         queue.RemoveDeathCharacters();
 
@@ -124,7 +124,7 @@ public class ActionQueueTests
         var dead = CreateEnemy(0f, 10f);
 
         queue.RatherAdd("rather");
-        queue.Add(dead, allyOrEnemy.alliy, "dead");
+        queue.Add(dead, Faction.Ally, "dead");
 
         queue.RemoveDeathCharacters();
 
@@ -143,7 +143,7 @@ public class ActionQueueTests
         queue.RatherAdd("a");
         Assert.AreEqual(1, queue.Count);
 
-        queue.Add(null, allyOrEnemy.alliy, "b");
+        queue.Add(null, Faction.Ally, "b");
         Assert.AreEqual(2, queue.Count);
 
         queue.RemoveAt(0);
@@ -154,7 +154,7 @@ public class ActionQueueTests
     {
         var enemy = new NormalEnemy
         {
-            DefaultImpression = SpiritualProperty.doremis,
+            DefaultImpression = SpiritualProperty.Doremis,
             MyType = CharacterType.Life
         };
         MaxHpField?.SetValue(enemy, maxHp);

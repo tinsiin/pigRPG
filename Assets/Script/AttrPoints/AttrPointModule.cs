@@ -621,16 +621,16 @@ public sealed class AttrPointModule
             throw new ArgumentOutOfRangeException(nameof(attr), $"Unsupported SpiritualProperty for conversion: {attr}");
         switch (attr)
         {
-            case SpiritualProperty.liminalwhitetile: return 0.999f;
-            case SpiritualProperty.kindergarden: return 0.2f;
-            case SpiritualProperty.sacrifaith: return 0f;
-            case SpiritualProperty.cquiest: return 0f;
-            case SpiritualProperty.devil: return 0.2f;
-            case SpiritualProperty.doremis: return 0f;
-            case SpiritualProperty.pillar: return 0.7f;
-            case SpiritualProperty.godtier: return 0.3f;
-            case SpiritualProperty.baledrival: return 0.4f;
-            case SpiritualProperty.pysco: return 0f;
+            case SpiritualProperty.LiminalWhiteTile: return 0.999f;
+            case SpiritualProperty.Kindergarten: return 0.2f;
+            case SpiritualProperty.Sacrifaith: return 0f;
+            case SpiritualProperty.Cquiest: return 0f;
+            case SpiritualProperty.Devil: return 0.2f;
+            case SpiritualProperty.Doremis: return 0f;
+            case SpiritualProperty.Pillar: return 0.7f;
+            case SpiritualProperty.GodTier: return 0.3f;
+            case SpiritualProperty.BaleDrival: return 0.4f;
+            case SpiritualProperty.Psycho: return 0f;
         }
         throw new ArgumentOutOfRangeException(nameof(attr), $"Unsupported SpiritualProperty for conversion: {attr}");
     }
@@ -644,23 +644,23 @@ public sealed class AttrPointModule
 
         float baseCap = skillAttr switch
         {
-            SpiritualProperty.liminalwhitetile => 0f,
-            SpiritualProperty.kindergarden => 1.3f,
-            SpiritualProperty.sacrifaith => 0f,
-            SpiritualProperty.cquiest => 0.3f,
-            SpiritualProperty.devil => 0.2f,
-            SpiritualProperty.doremis => 0.8f,
-            SpiritualProperty.pillar => 0.1f,
-            SpiritualProperty.godtier => 0.4f,
-            SpiritualProperty.baledrival => 0.0889f,
-            SpiritualProperty.pysco => 0f,
+            SpiritualProperty.LiminalWhiteTile => 0f,
+            SpiritualProperty.Kindergarten => 1.3f,
+            SpiritualProperty.Sacrifaith => 0f,
+            SpiritualProperty.Cquiest => 0.3f,
+            SpiritualProperty.Devil => 0.2f,
+            SpiritualProperty.Doremis => 0.8f,
+            SpiritualProperty.Pillar => 0.1f,
+            SpiritualProperty.GodTier => 0.4f,
+            SpiritualProperty.BaleDrival => 0.0889f,
+            SpiritualProperty.Psycho => 0f,
             _ => throw new ArgumentOutOfRangeException(nameof(skillAttr), $"Unsupported SpiritualProperty for conversion: {skillAttr}")
         };
 
-        if (skillAttr == SpiritualProperty.pysco && fromAttr == SpiritualProperty.kindergarden) return 2.0f;
-        if (skillAttr == SpiritualProperty.cquiest && fromAttr == SpiritualProperty.devil) return 0.0f;
-        if (skillAttr == SpiritualProperty.devil && fromAttr == SpiritualProperty.cquiest) return 0.6f;
-        if (skillAttr == SpiritualProperty.devil && fromAttr == SpiritualProperty.pysco) return 0.0f;
+        if (skillAttr == SpiritualProperty.Psycho && fromAttr == SpiritualProperty.Kindergarten) return 2.0f;
+        if (skillAttr == SpiritualProperty.Cquiest && fromAttr == SpiritualProperty.Devil) return 0.0f;
+        if (skillAttr == SpiritualProperty.Devil && fromAttr == SpiritualProperty.Cquiest) return 0.6f;
+        if (skillAttr == SpiritualProperty.Devil && fromAttr == SpiritualProperty.Psycho) return 0.0f;
         return baseCap;
     }
 
@@ -668,30 +668,30 @@ public sealed class AttrPointModule
     {
         switch (attr)
         {
-            case SpiritualProperty.liminalwhitetile:
-            case SpiritualProperty.kindergarden:
-            case SpiritualProperty.sacrifaith:
-            case SpiritualProperty.cquiest:
-            case SpiritualProperty.devil:
-            case SpiritualProperty.doremis:
-            case SpiritualProperty.pillar:
-            case SpiritualProperty.godtier:
-            case SpiritualProperty.baledrival:
-            case SpiritualProperty.pysco:
+            case SpiritualProperty.LiminalWhiteTile:
+            case SpiritualProperty.Kindergarten:
+            case SpiritualProperty.Sacrifaith:
+            case SpiritualProperty.Cquiest:
+            case SpiritualProperty.Devil:
+            case SpiritualProperty.Doremis:
+            case SpiritualProperty.Pillar:
+            case SpiritualProperty.GodTier:
+            case SpiritualProperty.BaleDrival:
+            case SpiritualProperty.Psycho:
                 return true;
             default:
                 return false;
         }
     }
 
-    private float GetAttrCombinedCapMultiplier(ThePower p)
+    private float GetAttrCombinedCapMultiplier(PowerLevel p)
     {
         switch (p)
         {
-            case ThePower.lowlow: return 0.60f;
-            case ThePower.low: return 0.90f;
-            case ThePower.medium: return 1.22f;
-            case ThePower.high: return 2.00f;
+            case PowerLevel.VeryLow: return 0.60f;
+            case PowerLevel.Low: return 0.90f;
+            case PowerLevel.Medium: return 1.22f;
+            case PowerLevel.High: return 2.00f;
             default: return 1.00f;
         }
     }

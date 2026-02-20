@@ -38,14 +38,14 @@ public sealed class RevengeBonusEffect : ISkillEffect
 
             foreach (var ally in liveAllyGroupList)
             {
-                if (ally.NowPower < ThePower.medium) continue;
+                if (ally.NowPower < PowerLevel.Medium) continue;
 
                 float compatibility = helpGroup.CharaCompatibility[(ally, chara)];
                 float compatibilityFactor = Mathf.Clamp01((compatibility - 86f) / (130f - 86f));
                 compatibilityFactor = Mathf.Clamp01(compatibilityFactor) * 0.7f;
 
                 float powerFactor = 0.5f;
-                if (ally.NowPower > ThePower.medium) powerFactor = 1f;
+                if (ally.NowPower > PowerLevel.Medium) powerFactor = 1f;
 
                 float k = 1.5f;
                 float occurrenceProbability = compatibilityFactor * (1f + k * damageRate) * powerFactor;

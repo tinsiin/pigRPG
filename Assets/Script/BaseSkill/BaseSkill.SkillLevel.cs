@@ -150,7 +150,7 @@ public partial class BaseSkill
     /// </summary>
     float ModifyMoodContinuous(float mood, SpiritualProperty impression, PartyProperty partyProperty)
     {
-        if (impression == SpiritualProperty.none) return mood;
+        if (impression == SpiritualProperty.None) return mood;
         float bonus = GetPartyCompatibilityBonus(impression, partyProperty);
         return Mathf.Clamp(mood + bonus, -1f, 1f);
     }
@@ -162,36 +162,36 @@ public partial class BaseSkill
     {
         switch (impression)
         {
-            case SpiritualProperty.liminalwhitetile:
+            case SpiritualProperty.LiminalWhiteTile:
                 if (partyProperty == PartyProperty.Flowerees) return -0.3f;
                 if (partyProperty == PartyProperty.Odradeks) return 0.3f;
                 break;
-            case SpiritualProperty.kindergarden:
+            case SpiritualProperty.Kindergarten:
                 if (partyProperty == PartyProperty.Flowerees) return -0.3f;
                 if (partyProperty == PartyProperty.TrashGroup) return 0.3f;
                 break;
-            case SpiritualProperty.sacrifaith:
+            case SpiritualProperty.Sacrifaith:
                 if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.HolyGroup) return 0.3f;
                 break;
-            case SpiritualProperty.cquiest:
+            case SpiritualProperty.Cquiest:
                 if (partyProperty == PartyProperty.TrashGroup) return -0.3f;
                 if (partyProperty == PartyProperty.HolyGroup || partyProperty == PartyProperty.Odradeks) return 0.3f;
                 break;
-            case SpiritualProperty.devil:
+            case SpiritualProperty.Devil:
                 if (partyProperty == PartyProperty.Odradeks) return -0.3f;
                 if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.TrashGroup) return 0.3f;
                 break;
-            case SpiritualProperty.doremis:
+            case SpiritualProperty.Doremis:
                 if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.HolyGroup) return 0.3f;
                 break;
-            case SpiritualProperty.godtier:
+            case SpiritualProperty.GodTier:
                 if (partyProperty == PartyProperty.TrashGroup) return 0.3f;
                 break;
-            case SpiritualProperty.baledrival:
+            case SpiritualProperty.BaleDrival:
                 if (partyProperty == PartyProperty.Odradeks) return -0.3f;
                 if (partyProperty == PartyProperty.TrashGroup || partyProperty == PartyProperty.HolyGroup) return 0.3f;
                 break;
-            case SpiritualProperty.pysco:
+            case SpiritualProperty.Psycho:
                 if (partyProperty == PartyProperty.Flowerees || partyProperty == PartyProperty.MelaneGroup) return 0.3f;
                 break;
         }

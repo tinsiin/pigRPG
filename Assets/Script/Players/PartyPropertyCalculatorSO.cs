@@ -96,16 +96,16 @@ public class PartyPropertyCalculatorSO : ScriptableObject, IPartyPropertyCalcula
     {
         return impression switch
         {
-            SpiritualProperty.doremis => PartyProperty.Flowerees,
-            SpiritualProperty.pillar => PartyProperty.Odradeks,
-            SpiritualProperty.kindergarden => PartyProperty.TrashGroup,
-            SpiritualProperty.liminalwhitetile => PartyProperty.MelaneGroup,
-            SpiritualProperty.sacrifaith => PartyProperty.HolyGroup,
-            SpiritualProperty.cquiest => PartyProperty.MelaneGroup,
-            SpiritualProperty.pysco => GetRandomPartyProperty(), // サイコのみランダム
-            SpiritualProperty.godtier => PartyProperty.Flowerees,
-            SpiritualProperty.baledrival => PartyProperty.TrashGroup,
-            SpiritualProperty.devil => PartyProperty.HolyGroup,
+            SpiritualProperty.Doremis => PartyProperty.Flowerees,
+            SpiritualProperty.Pillar => PartyProperty.Odradeks,
+            SpiritualProperty.Kindergarten => PartyProperty.TrashGroup,
+            SpiritualProperty.LiminalWhiteTile => PartyProperty.MelaneGroup,
+            SpiritualProperty.Sacrifaith => PartyProperty.HolyGroup,
+            SpiritualProperty.Cquiest => PartyProperty.MelaneGroup,
+            SpiritualProperty.Psycho => GetRandomPartyProperty(), // サイコのみランダム
+            SpiritualProperty.GodTier => PartyProperty.Flowerees,
+            SpiritualProperty.BaleDrival => PartyProperty.TrashGroup,
+            SpiritualProperty.Devil => PartyProperty.HolyGroup,
             _ => PartyProperty.MelaneGroup
         };
     }

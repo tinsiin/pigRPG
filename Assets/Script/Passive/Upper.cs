@@ -13,7 +13,7 @@ public class Upper : BasePassive//アッパー  精神HPの上の乖離の基本
 
     public override float AGIFixedValueEffect()
     {
-        var clamp = Mathf.Max(_owner.TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) / 2.5f - _owner.TenDayValues(false).GetValueOrZero(TenDayAbility.dokumamusi), 0);
+        var clamp = Mathf.Max(_owner.TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) / 2.5f - _owner.TenDayValues(false).GetValueOrZero(TenDayAbility.Dokumamusi), 0);
         return Mathf.Min(-(_owner.TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire) - clamp), 0);
     }
 
@@ -27,7 +27,7 @@ public class Upper : BasePassive//アッパー  精神HPの上の乖離の基本
         base.OnApply(user, grantor);
 
         //キンダーの精神属性ならば、
-        if(_owner.MyImpression == SpiritualProperty.kindergarden)
+        if(_owner.MyImpression == SpiritualProperty.Kindergarten)
         {
             //ランダムな十日能力が上昇する。
             var randomTenDayAbility = _owner.GetRandomTenDayAbility();

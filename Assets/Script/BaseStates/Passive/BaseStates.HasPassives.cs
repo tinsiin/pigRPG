@@ -317,22 +317,22 @@ public abstract partial class BaseStates
     /// パッシブのパーセンテージ補正を返す  特別補正と違い一個一個掛ける
     ///  特別補正と違い、積と平均の中間を取る（ブレンド方式）　CalculateBlendedModifierのconstで操作
     /// </summary>
-    public void PassivesPercentageModifier(whatModify mod,ref StatesPowerBreakdown value)
+    public void PassivesPercentageModifier(StatModifier mod,ref StatesPowerBreakdown value)
     {
         // 1) モディファイアを収集
         var factors = new List<float>();
         switch (mod)
         {
-            case whatModify.atk:
+            case StatModifier.Atk:
                 foreach (var pas in _passiveList) factors.Add(pas.ATKPercentageModifier());
                 break;
-            case whatModify.def:
+            case StatModifier.Def:
                 foreach (var pas in _passiveList) factors.Add(pas.DEFPercentageModifier());
                 break;
-            case whatModify.eye:
+            case StatModifier.Eye:
                 foreach (var pas in _passiveList) factors.Add(pas.EYEPercentageModifier());
                 break;
-            case whatModify.agi:
+            case StatModifier.Agi:
                 foreach (var pas in _passiveList) factors.Add(pas.AGIPercentageModifier());
                 break;
             default:

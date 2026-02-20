@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using RandomExtensions;
 
-public enum SideObject_Type
+public enum SideObjectType
 {
     Chaos,Normal
 }
@@ -42,7 +42,7 @@ public class UILineRenderer : Graphic
 
     //生成時にランダムにずれる。(サイドオブジェクトのノイズ性を高めるため　ドリームリアリティってやつ)
     [SerializeField] private Vector2 bornPosRange;
-    public SideObject_Type sideObject_Type;
+    public SideObjectType sideObjectType;
 
     protected override void Awake()
     {
@@ -98,7 +98,7 @@ public class UILineRenderer : Graphic
     {
 
         // 生成時にランダムにずらす処理　　タイプにより場合分け
-        if(sideObject_Type == SideObject_Type.Chaos)
+        if(sideObjectType == SideObjectType.Chaos)
         {
             foreach (var line in lines)//この場合は全ての線がそれぞれずれる
             {
@@ -110,7 +110,7 @@ public class UILineRenderer : Graphic
                 circle.center += new Vector2(RandomEx.Shared.NextFloat(-bornPosRange.x, bornPosRange.x), RandomEx.Shared.NextFloat(-bornPosRange.y, bornPosRange.y));
             }
         }
-        else if(sideObject_Type == SideObject_Type.Normal)//この場合は全ての線が同じずれを持つ
+        else if(sideObjectType == SideObjectType.Normal)//この場合は全ての線が同じずれを持つ
         {
             // 一度だけ乱数を生成
             Vector2 randomOffset = new Vector2(

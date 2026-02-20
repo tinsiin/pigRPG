@@ -60,8 +60,8 @@ CharacterDataSO
 
 | フィールド | 数値 | enum名 |
 |-----------|------|--------|
-| _myImpression | 2 | **pillar** |
-| DefaultImpression | 256 | **baledrival** |
+| _myImpression | 2 | **Pillar** |
+| DefaultImpression | 256 | **BaleDrival** |
 | NowPower | 1 | **medium** |
 
 ### その他
@@ -85,11 +85,11 @@ CharacterDataSO
 | 数値 | enum名 |
 |------|--------|
 | 0 | none |
-| 1 | doremis |
-| 2 | pillar |
-| 8 | liminalwhitetile |
-| 16 | sacrifaith |
-| 256 | baledrival |
+| 1 | Doremis |
+| 2 | Pillar |
+| 8 | LiminalWhiteTile |
+| 16 | Sacrifaith |
+| 256 | BaleDrival |
 
 #### SkillImpression（スキルのImpression用 - SpiritualPropertyとは別のenum！）
 | 数値 | enum名 |
@@ -131,7 +131,7 @@ CharacterDataSO
 |-----------|------|-------------|
 | _iD | 0 | |
 | SkillName | "ラビットキャット" | |
-| SkillSpiritual | 1 | **doremis** |
+| SkillSpiritual | 1 | **Doremis** |
 | Impression | 2 | **Assault_Machine** (SkillImpression) |
 | SkillPhysical | 3 | **none** |
 | _baseSkillType | 512 | **Manual1_BadHitCalc** |
@@ -165,7 +165,7 @@ CharacterDataSO
 |-----------|------|-------------|
 | _iD | 1 | |
 | SkillName | "アキレスと亀-混沌時間" | |
-| SkillSpiritual | 8 | **liminalwhitetile** |
+| SkillSpiritual | 8 | **LiminalWhiteTile** |
 | Impression | 2 | **Assault_Machine** (SkillImpression) |
 | SkillPhysical | 3 | **none** |
 | _baseSkillType | 512 | **Manual1_BadHitCalc** |
@@ -198,7 +198,7 @@ CharacterDataSO
 |-----------|------|-------------|
 | _iD | 2 | |
 | SkillName | "テストシンプル攻撃スキル" | |
-| SkillSpiritual | 8 | **liminalwhitetile** |
+| SkillSpiritual | 8 | **LiminalWhiteTile** |
 | Impression | 0 | **TLOA_PHANTOM** (SkillImpression) |
 | SkillPhysical | 0 | **heavy** |
 | _baseSkillType | 1 | **Attack** |
@@ -227,7 +227,7 @@ CharacterDataSO
 |-----------|------|-------------|
 | _iD | 3 | |
 | SkillName | "テスト完全単体選択スキル" | |
-| SkillSpiritual | 1 | **doremis** |
+| SkillSpiritual | 1 | **Doremis** |
 | Impression | 0 | **TLOA_PHANTOM** (SkillImpression) |
 | SkillPhysical | 0 | **heavy** |
 | _baseSkillType | 1 | **Attack** |
@@ -257,7 +257,7 @@ CharacterDataSO
 |-----------|------|-------------|
 | _iD | 4 | |
 | SkillName | "テストシンプル攻撃スキル" | |
-| SkillSpiritual | 16 | **sacrifaith** |
+| SkillSpiritual | 16 | **Sacrifaith** |
 | Impression | 0 | **TLOA_PHANTOM** (SkillImpression) |
 | SkillPhysical | 0 | **heavy** |
 | _baseSkillType | 1 | **Attack** |
@@ -295,6 +295,6 @@ CharacterDataSO
 - PlayersBootstrapper.CharacterRegistry が設定されているか
 - CharacterDataRegistry._characters に GeinoData があるか
 - GeinoData._isInitialPartyMember が true になっているか
-- GeinoData._template._myImpression が **pillar** になっているか
-- GeinoData._template.DefaultImpression が **baledrival** になっているか
+- GeinoData._template._myImpression が **Pillar** になっているか
+- GeinoData._template.DefaultImpression が **BaleDrival** になっているか
 - スキルリストに5つのスキルがあるか

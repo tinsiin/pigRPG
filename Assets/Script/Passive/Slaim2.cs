@@ -68,7 +68,7 @@ public class Slaim2 : BasePassive
 
         var RainSmile = Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.Raincoat) + Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.Smiler);
         var KagerouTarai = Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.HeatHaze) + Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton);
-        var FaceHandDoku = Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.FaceToHand) + Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.dokumamusi);
+        var FaceHandDoku = Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.FaceToHand) + Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.Dokumamusi);
 
         var eneRain = Attacker.TenDayValues(false).GetValueOrZero(TenDayAbility.Rain);
         //各通常比較、実行者側が多ければ発生ということで

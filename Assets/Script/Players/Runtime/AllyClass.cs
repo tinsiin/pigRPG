@@ -190,16 +190,16 @@ public class AllyClass : BaseStates
 
         var SpiritualMatchCounts = new Dictionary<SpiritualProperty,int>()//一時保存用データ
         {
-            {SpiritualProperty.doremis, 0},
-            {SpiritualProperty.pillar, 0},
-            {SpiritualProperty.kindergarden, 0},
-            {SpiritualProperty.liminalwhitetile, 0},
-            {SpiritualProperty.sacrifaith, 0},
-            {SpiritualProperty.cquiest, 0},
-            {SpiritualProperty.pysco, 0},
-            {SpiritualProperty.godtier, 0},
-            {SpiritualProperty.baledrival, 0},
-            {SpiritualProperty.devil, 0}
+            {SpiritualProperty.Doremis, 0},
+            {SpiritualProperty.Pillar, 0},
+            {SpiritualProperty.Kindergarten, 0},
+            {SpiritualProperty.LiminalWhiteTile, 0},
+            {SpiritualProperty.Sacrifaith, 0},
+            {SpiritualProperty.Cquiest, 0},
+            {SpiritualProperty.Psycho, 0},
+            {SpiritualProperty.GodTier, 0},
+            {SpiritualProperty.BaleDrival, 0},
+            {SpiritualProperty.Devil, 0}
         };
         TenDayAbility selectedAbility;//重み付き抽選リストから抜き出す"恐らく多い順に"出てくるであろうキャラクターの十日能力変数
         
@@ -209,7 +209,7 @@ public class AllyClass : BaseStates
         {
             if(AbilityList.Count <= 0)//十日能力の重み付き抽選リストが空　つまり十日能力がないなら
             {
-                DefaultImpression = SpiritualProperty.none;
+                DefaultImpression = SpiritualProperty.None;
                 Debug.Log($"{CharacterName}のDefaultImpressionが決定:{DefaultImpression}\n(十日能力がないため-DecideDefaultMyImpression)");
                 if(loopCount>0)Debug.Log($"十日能力がないわけではなく、尽きるまでにデフォルト精神属性が決まり切らなかったため、noneとなった。\n(DecideDefaultMyImpression)");
                 break;
@@ -262,7 +262,7 @@ public class AllyClass : BaseStates
     /// </summary>
     public float GetExposureAccuracyPercentageBonus(float EneTargetProbability)
     {
-        if(NowPower == ThePower.lowlow)return -1f;//パワーがたるい　だとそもそも発生しない。
+        if(NowPower == PowerLevel.VeryLow)return -1f;//パワーがたるい　だとそもそも発生しない。
 
         //ジョー歯÷4による基礎能力係数
         var BaseCoefficient = TenDayValues(false).GetValueOrZero(TenDayAbility.JoeTeeth) / 4;
@@ -275,11 +275,11 @@ public class AllyClass : BaseStates
         //レインコートと馬鹿烈火補正はパワーによって分岐
         switch(NowPower)
         {
-            case ThePower.low://低いとなし
+            case PowerLevel.Low://低いとなし
                 BakaBlazeFireCoef = 0;
                 RaincoatCoef = 0;
                 break;
-            case ThePower.medium://普通なら0.5倍
+            case PowerLevel.Medium://普通なら0.5倍
                 BakaBlazeFireCoef *= 0.5f;
                 RaincoatCoef *= 0.5f;
                 break;
@@ -290,16 +290,16 @@ public class AllyClass : BaseStates
         //精神属性で分岐する
         switch(MyImpression)
         {
-            case SpiritualProperty.pysco://サイコパス、キンダー、リーミナルホワイトはレインコート
-            case SpiritualProperty.liminalwhitetile:
-            case SpiritualProperty.kindergarden:
+            case SpiritualProperty.Psycho://サイコパス、キンダー、リーミナルホワイトはレインコート
+            case SpiritualProperty.LiminalWhiteTile:
+            case SpiritualProperty.Kindergarten:
                 finalTenDaysCoef += RaincoatCoef;
                 break;
-            case SpiritualProperty.doremis://ドレミスは二つとも
+            case SpiritualProperty.Doremis://ドレミスは二つとも
                 finalTenDaysCoef += BakaBlazeFireCoef + RaincoatCoef;
                 break;
-            case SpiritualProperty.pillar:
-            case SpiritualProperty.none:
+            case SpiritualProperty.Pillar:
+            case SpiritualProperty.None:
                 //加算なし
                 break;
             default:
@@ -699,67 +699,67 @@ public class AllyClass : BaseStates
     {
         switch(MyImpression)
         {
-            case SpiritualProperty.doremis:
+            case SpiritualProperty.Doremis:
                 switch(NowPower)
                 {
-                    case ThePower.lowlow:
-                        NowPower = ThePower.medium;
+                    case PowerLevel.VeryLow:
+                        NowPower = PowerLevel.Medium;
                         break;
                 }
                 break;
-            case SpiritualProperty.pillar:
+            case SpiritualProperty.Pillar:
                 switch(NowPower)
                 {
-                    case ThePower.low:
-                        NowPower =ThePower.medium;
+                    case PowerLevel.Low:
+                        NowPower =PowerLevel.Medium;
                         break;
                     default:
-                        NowPower = ThePower.high;
+                        NowPower = PowerLevel.High;
                         break;
                 }
                 break;
-            case SpiritualProperty.kindergarden:
-                NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.medium,ThePower.low,ThePower.lowlow,
-                ThePower.high, ThePower.medium,ThePower.low,});//←三つは、lowlowの確率を下げるため
+            case SpiritualProperty.Kindergarten:
+                NowPower = RandomEx.Shared.GetItem(new PowerLevel[]{PowerLevel.High, PowerLevel.Medium,PowerLevel.Low,PowerLevel.VeryLow,
+                PowerLevel.High, PowerLevel.Medium,PowerLevel.Low,});//←三つは、VeryLowの確率を下げるため
                 break;
-            case SpiritualProperty.liminalwhitetile:
-            case SpiritualProperty.sacrifaith:
-            case SpiritualProperty.cquiest:
+            case SpiritualProperty.LiminalWhiteTile:
+            case SpiritualProperty.Sacrifaith:
+            case SpiritualProperty.Cquiest:
                 switch(NowPower)
                 {
-                    case ThePower.low:
-                        NowPower = ThePower.medium;
+                    case PowerLevel.Low:
+                        NowPower = PowerLevel.Medium;
                         break;
-                    case ThePower.lowlow:
-                        NowPower = ThePower.low;
+                    case PowerLevel.VeryLow:
+                        NowPower = PowerLevel.Low;
                         break;
                 }
                 break;
-            case SpiritualProperty.godtier:
+            case SpiritualProperty.GodTier:
                 switch(NowPower)
                 {
-                    case ThePower.lowlow:
-                        NowPower = ThePower.medium;
+                    case PowerLevel.VeryLow:
+                        NowPower = PowerLevel.Medium;
                         break;
                     default:
-                        NowPower = ThePower.high;
+                        NowPower = PowerLevel.High;
                     break;
                 }
                 break;
-            case SpiritualProperty.baledrival:
-                NowPower = ThePower.high;
+            case SpiritualProperty.BaleDrival:
+                NowPower = PowerLevel.High;
                 break;
-            case SpiritualProperty.devil:
+            case SpiritualProperty.Devil:
                 switch(NowPower)
                 {
-                    case ThePower.medium:
-                        NowPower = ThePower.high;
+                    case PowerLevel.Medium:
+                        NowPower = PowerLevel.High;
                         break;
-                    case ThePower.low:
-                        NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.medium});
+                    case PowerLevel.Low:
+                        NowPower = RandomEx.Shared.GetItem(new PowerLevel[]{PowerLevel.High, PowerLevel.Medium});
                         break;
-                    case ThePower.lowlow:
-                        NowPower = ThePower.medium;
+                    case PowerLevel.VeryLow:
+                        NowPower = PowerLevel.Medium;
                         break;
                 }
                 break;
@@ -772,59 +772,59 @@ public class AllyClass : BaseStates
     {
         switch(MyImpression)
         {
-            case SpiritualProperty.pillar:
-                if (NowPower != ThePower.low)
+            case SpiritualProperty.Pillar:
+                if (NowPower != PowerLevel.Low)
                 {
-                    NowPower = ThePower.high;
+                    NowPower = PowerLevel.High;
                 }
                 break;
-            case SpiritualProperty.kindergarden:
-                NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.medium,ThePower.low,ThePower.lowlow,
-                ThePower.high, ThePower.medium,ThePower.low,});//←三つは、lowlowの確率を下げるため
+            case SpiritualProperty.Kindergarten:
+                NowPower = RandomEx.Shared.GetItem(new PowerLevel[]{PowerLevel.High, PowerLevel.Medium,PowerLevel.Low,PowerLevel.VeryLow,
+                PowerLevel.High, PowerLevel.Medium,PowerLevel.Low,});//←三つは、VeryLowの確率を下げるため
                 break;
-            case SpiritualProperty.liminalwhitetile:
+            case SpiritualProperty.LiminalWhiteTile:
                 switch(NowPower)
                 {
-                    case ThePower.high:
-                    case ThePower.medium:
-                        NowPower = ThePower.low;
+                    case PowerLevel.High:
+                    case PowerLevel.Medium:
+                        NowPower = PowerLevel.Low;
                         break;
-                    case ThePower.low:
-                        NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.lowlow, ThePower.low});
+                    case PowerLevel.Low:
+                        NowPower = RandomEx.Shared.GetItem(new PowerLevel[]{PowerLevel.VeryLow, PowerLevel.Low});
                         break;
-                    case ThePower.lowlow:
-                        NowPower = ThePower.low;
+                    case PowerLevel.VeryLow:
+                        NowPower = PowerLevel.Low;
                     break;
                 }
                 break;
-            case SpiritualProperty.sacrifaith:
-                NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.medium});
+            case SpiritualProperty.Sacrifaith:
+                NowPower = RandomEx.Shared.GetItem(new PowerLevel[]{PowerLevel.High, PowerLevel.Medium});
                 break;
-            case SpiritualProperty.cquiest:
+            case SpiritualProperty.Cquiest:
                 switch(NowPower)
                 {
-                    case ThePower.high:
-                        NowPower = ThePower.lowlow;
+                    case PowerLevel.High:
+                        NowPower = PowerLevel.VeryLow;
                         break;
                 }
                 break;
-            case SpiritualProperty.baledrival:
-                NowPower = ThePower.lowlow;
+            case SpiritualProperty.BaleDrival:
+                NowPower = PowerLevel.VeryLow;
                 break;
-            case SpiritualProperty.devil:
+            case SpiritualProperty.Devil:
                 switch(NowPower)
                 {
-                    case ThePower.high:
-                        NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.medium});
+                    case PowerLevel.High:
+                        NowPower = RandomEx.Shared.GetItem(new PowerLevel[]{PowerLevel.High, PowerLevel.Medium});
                         break;
-                    case ThePower.medium:
-                        NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.low, ThePower.medium,ThePower.lowlow});
+                    case PowerLevel.Medium:
+                        NowPower = RandomEx.Shared.GetItem(new PowerLevel[]{PowerLevel.Low, PowerLevel.Medium,PowerLevel.VeryLow});
                         break;
-                    case ThePower.low:
-                        NowPower = ThePower.lowlow;
+                    case PowerLevel.Low:
+                        NowPower = PowerLevel.VeryLow;
                         break;
-                    case ThePower.lowlow:
-                        NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.lowlow});
+                    case PowerLevel.VeryLow:
+                        NowPower = RandomEx.Shared.GetItem(new PowerLevel[]{PowerLevel.High, PowerLevel.VeryLow});
                         break;
                 }
                 break;
@@ -837,38 +837,38 @@ public class AllyClass : BaseStates
     {
         switch(MyImpression)
         {
-            case SpiritualProperty.pillar:
-                NowPower =ThePower.medium;
+            case SpiritualProperty.Pillar:
+                NowPower =PowerLevel.Medium;
                 break;
-            case SpiritualProperty.kindergarden:
-                NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.medium,ThePower.low,ThePower.lowlow,
-                ThePower.high, ThePower.medium,ThePower.low,});//←三つは、lowlowの確率を下げるため
+            case SpiritualProperty.Kindergarten:
+                NowPower = RandomEx.Shared.GetItem(new PowerLevel[]{PowerLevel.High, PowerLevel.Medium,PowerLevel.Low,PowerLevel.VeryLow,
+                PowerLevel.High, PowerLevel.Medium,PowerLevel.Low,});//←三つは、VeryLowの確率を下げるため
                 break;
-            case SpiritualProperty.sacrifaith:
-                NowPower = ThePower.high;
+            case SpiritualProperty.Sacrifaith:
+                NowPower = PowerLevel.High;
                 break;
-            case SpiritualProperty.godtier:
+            case SpiritualProperty.GodTier:
                 switch(NowPower)
                 {
-                    case ThePower.medium:
-                        NowPower = ThePower.low;
+                    case PowerLevel.Medium:
+                        NowPower = PowerLevel.Low;
                         break;
-                    case ThePower.low:
-                        NowPower = ThePower.lowlow;
+                    case PowerLevel.Low:
+                        NowPower = PowerLevel.VeryLow;
                         break;
                 }
                 break;
-            case SpiritualProperty.devil:
+            case SpiritualProperty.Devil:
                 switch(NowPower)
                 {
-                    case ThePower.medium:
-                        NowPower = ThePower.high;
+                    case PowerLevel.Medium:
+                        NowPower = PowerLevel.High;
                         break;
-                    case ThePower.low:
-                        NowPower = RandomEx.Shared.GetItem(new ThePower[]{ThePower.high, ThePower.medium});
+                    case PowerLevel.Low:
+                        NowPower = RandomEx.Shared.GetItem(new PowerLevel[]{PowerLevel.High, PowerLevel.Medium});
                         break;
-                    case ThePower.lowlow:
-                        NowPower = ThePower.medium;
+                    case PowerLevel.VeryLow:
+                        NowPower = PowerLevel.Medium;
                         break;
                 }
                 break;

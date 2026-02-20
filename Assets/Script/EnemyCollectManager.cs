@@ -50,30 +50,30 @@ public class EnemyCollectManager : MonoBehaviour, IEnemyMatchCalculator
 
             EnemyLonelyPartyImpression = new Dictionary<SpiritualProperty, PartyProperty> //一人の場合の属性をパーティー属性に変換する辞書データ
             {
-                { SpiritualProperty.doremis, PartyProperty.Flowerees },
-                { SpiritualProperty.pillar, PartyProperty.Odradeks },
-                { SpiritualProperty.kindergarden, PartyProperty.TrashGroup },
-                { SpiritualProperty.liminalwhitetile, PartyProperty.MelaneGroup },
-                { SpiritualProperty.sacrifaith, PartyProperty.HolyGroup },
-                { SpiritualProperty.cquiest, PartyProperty.MelaneGroup },
-                { SpiritualProperty.pysco, GetRandomPartyProperty() }, //サイコのみランダムな値が出るようにする。 
-                { SpiritualProperty.godtier, PartyProperty.Flowerees },
-                { SpiritualProperty.baledrival, PartyProperty.TrashGroup },
-                { SpiritualProperty.devil, PartyProperty.HolyGroup }
+                { SpiritualProperty.Doremis, PartyProperty.Flowerees },
+                { SpiritualProperty.Pillar, PartyProperty.Odradeks },
+                { SpiritualProperty.Kindergarten, PartyProperty.TrashGroup },
+                { SpiritualProperty.LiminalWhiteTile, PartyProperty.MelaneGroup },
+                { SpiritualProperty.Sacrifaith, PartyProperty.HolyGroup },
+                { SpiritualProperty.Cquiest, PartyProperty.MelaneGroup },
+                { SpiritualProperty.Psycho, GetRandomPartyProperty() }, //サイコのみランダムな値が出るようにする。 
+                { SpiritualProperty.GodTier, PartyProperty.Flowerees },
+                { SpiritualProperty.BaleDrival, PartyProperty.TrashGroup },
+                { SpiritualProperty.Devil, PartyProperty.HolyGroup }
             };
 
             LonelyMatchImpression = new Dictionary<SpiritualProperty, int> //一人で終わる確率の辞書データ
             {
-                { SpiritualProperty.doremis, 30 },
-                { SpiritualProperty.pillar, 30 },
-                { SpiritualProperty.kindergarden, 20 },
-                { SpiritualProperty.liminalwhitetile, 30 },
-                { SpiritualProperty.sacrifaith, 70 },
-                { SpiritualProperty.cquiest, 30 },
-                { SpiritualProperty.pysco, 30 },
-                { SpiritualProperty.godtier, 30 },
-                { SpiritualProperty.baledrival, 30 },
-                { SpiritualProperty.devil, 30 }
+                { SpiritualProperty.Doremis, 30 },
+                { SpiritualProperty.Pillar, 30 },
+                { SpiritualProperty.Kindergarten, 20 },
+                { SpiritualProperty.LiminalWhiteTile, 30 },
+                { SpiritualProperty.Sacrifaith, 70 },
+                { SpiritualProperty.Cquiest, 30 },
+                { SpiritualProperty.Psycho, 30 },
+                { SpiritualProperty.GodTier, 30 },
+                { SpiritualProperty.BaleDrival, 30 },
+                { SpiritualProperty.Devil, 30 }
             };
 
             TypeMatchupTable = new Dictionary<(CharacterType, CharacterType), int> //種別同士の相性値データ
@@ -88,7 +88,7 @@ public class EnemyCollectManager : MonoBehaviour, IEnemyMatchCalculator
                 //listの{}内に順不同の組み合わせでキーを指定できる。
                 {
                     NormalizeSpiritualKey(new List<SpiritualProperty>
-                        { SpiritualProperty.baledrival, SpiritualProperty.pysco, SpiritualProperty.sacrifaith }),
+                        { SpiritualProperty.BaleDrival, SpiritualProperty.Psycho, SpiritualProperty.Sacrifaith }),
                     PartyProperty.HolyGroup
                 }
                 //ベールドライヴァル、サイコパス、自己犠牲の組み合わせは聖戦
@@ -121,16 +121,16 @@ public class EnemyCollectManager : MonoBehaviour, IEnemyMatchCalculator
         var SpiritualCsvArray = new[]
         {
             //スプレッドシートでの行と列での属性に対応するような順番で配列に格納。
-            SpiritualProperty.liminalwhitetile,
-            SpiritualProperty.kindergarden,
-            SpiritualProperty.sacrifaith,
-            SpiritualProperty.cquiest,
-            SpiritualProperty.devil,
-            SpiritualProperty.doremis,
-            SpiritualProperty.pillar,
-            SpiritualProperty.godtier,
-            SpiritualProperty.baledrival,
-            SpiritualProperty.pysco
+            SpiritualProperty.LiminalWhiteTile,
+            SpiritualProperty.Kindergarten,
+            SpiritualProperty.Sacrifaith,
+            SpiritualProperty.Cquiest,
+            SpiritualProperty.Devil,
+            SpiritualProperty.Doremis,
+            SpiritualProperty.Pillar,
+            SpiritualProperty.GodTier,
+            SpiritualProperty.BaleDrival,
+            SpiritualProperty.Psycho
         };
         var rows = textHandle.text //そのままテキストを渡す
             .Split("\n")//改行ごとに分割

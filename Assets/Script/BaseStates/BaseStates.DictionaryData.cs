@@ -21,16 +21,16 @@ public abstract partial class BaseStates
     public static readonly Dictionary<SpiritualProperty, List<TenDayAbility>> SpritualTenDayAbilitysMap = 
     new()
     {
-        {SpiritualProperty.doremis, new List<TenDayAbility>(){TenDayAbility.Enokunagi, TenDayAbility.PersonaDivergence, TenDayAbility.KereKere, TenDayAbility.Rain, TenDayAbility.BlazingFire}},
-        {SpiritualProperty.pillar, new List<TenDayAbility>(){TenDayAbility.JoeTeeth, TenDayAbility.Sort, TenDayAbility.SilentTraining, TenDayAbility.Leisure, TenDayAbility.Vond}},
-        {SpiritualProperty.kindergarden, new List<TenDayAbility>(){TenDayAbility.dokumamusi, TenDayAbility.Baka, TenDayAbility.TentVoid, TenDayAbility.SpringNap, TenDayAbility.WaterThunderNerve}},
-        {SpiritualProperty.liminalwhitetile, new List<TenDayAbility>(){TenDayAbility.FlameBreathingWife, TenDayAbility.NightDarkness, TenDayAbility.StarTersi, TenDayAbility.FaceToHand, TenDayAbility.Pilmagreatifull}},
-        {SpiritualProperty.sacrifaith, new List<TenDayAbility>(){TenDayAbility.UnextinguishedPath, TenDayAbility.Miza, TenDayAbility.JoeTeeth, TenDayAbility.SpringNap}},
-        {SpiritualProperty.cquiest, new List<TenDayAbility>(){TenDayAbility.ColdHeartedCalm, TenDayAbility.NightDarkness, TenDayAbility.NightInkKnight, TenDayAbility.Glory, TenDayAbility.SpringNap}},
-        {SpiritualProperty.pysco, new List<TenDayAbility>(){TenDayAbility.Raincoat, TenDayAbility.TentVoid, TenDayAbility.Blades, TenDayAbility.Smiler, TenDayAbility.StarTersi}},
-        {SpiritualProperty.godtier, new List<TenDayAbility>(){TenDayAbility.HeavenAndEndWar, TenDayAbility.Vail, TenDayAbility.BlazingFire, TenDayAbility.FlameBreathingWife, TenDayAbility.SpringWater}},
-        {SpiritualProperty.baledrival, new List<TenDayAbility>(){TenDayAbility.Smiler, TenDayAbility.Miza, TenDayAbility.HeatHaze, TenDayAbility.Vail}},
-        {SpiritualProperty.devil, new List<TenDayAbility>(){TenDayAbility.CryoniteQuality, TenDayAbility.HumanKiller, TenDayAbility.HeatHaze, TenDayAbility.FaceToHand}},
+        {SpiritualProperty.Doremis, new List<TenDayAbility>(){TenDayAbility.Enokunagi, TenDayAbility.PersonaDivergence, TenDayAbility.KereKere, TenDayAbility.Rain, TenDayAbility.BlazingFire}},
+        {SpiritualProperty.Pillar, new List<TenDayAbility>(){TenDayAbility.JoeTeeth, TenDayAbility.Sort, TenDayAbility.SilentTraining, TenDayAbility.Leisure, TenDayAbility.Vond}},
+        {SpiritualProperty.Kindergarten, new List<TenDayAbility>(){TenDayAbility.Dokumamusi, TenDayAbility.Baka, TenDayAbility.TentVoid, TenDayAbility.SpringNap, TenDayAbility.WaterThunderNerve}},
+        {SpiritualProperty.LiminalWhiteTile, new List<TenDayAbility>(){TenDayAbility.FlameBreathingWife, TenDayAbility.NightDarkness, TenDayAbility.StarTersi, TenDayAbility.FaceToHand, TenDayAbility.Pilmagreatifull}},
+        {SpiritualProperty.Sacrifaith, new List<TenDayAbility>(){TenDayAbility.UnextinguishedPath, TenDayAbility.Miza, TenDayAbility.JoeTeeth, TenDayAbility.SpringNap}},
+        {SpiritualProperty.Cquiest, new List<TenDayAbility>(){TenDayAbility.ColdHeartedCalm, TenDayAbility.NightDarkness, TenDayAbility.NightInkKnight, TenDayAbility.Glory, TenDayAbility.SpringNap}},
+        {SpiritualProperty.Psycho, new List<TenDayAbility>(){TenDayAbility.Raincoat, TenDayAbility.TentVoid, TenDayAbility.Blades, TenDayAbility.Smiler, TenDayAbility.StarTersi}},
+        {SpiritualProperty.GodTier, new List<TenDayAbility>(){TenDayAbility.HeavenAndEndWar, TenDayAbility.Vail, TenDayAbility.BlazingFire, TenDayAbility.FlameBreathingWife, TenDayAbility.SpringWater}},
+        {SpiritualProperty.BaleDrival, new List<TenDayAbility>(){TenDayAbility.Smiler, TenDayAbility.Miza, TenDayAbility.HeatHaze, TenDayAbility.Vail}},
+        {SpiritualProperty.Devil, new List<TenDayAbility>(){TenDayAbility.CryoniteQuality, TenDayAbility.HumanKiller, TenDayAbility.HeatHaze, TenDayAbility.FaceToHand}},
     };
 
 
@@ -109,7 +109,7 @@ public abstract partial class BaseStates
     public static FixedOrRandomValue GetOffensiveSpiritualModifier(BaseStates attacker,BaseStates Defer)
     {
 
-        if(attacker.MyImpression == SpiritualProperty.none) return new FixedOrRandomValue(100);//noneなら補正なし(100%なので無変動)
+        if(attacker.MyImpression == SpiritualProperty.None) return new FixedOrRandomValue(100);//noneなら補正なし(100%なので無変動)
         
         var resultModifier = SpiritualModifier[(attacker.MyImpression, Defer.MyImpression)];//攻撃的な人の放つ精神属性と被害者の精神属性による補正
         
@@ -158,32 +158,32 @@ public abstract partial class BaseStates
         var SpiritualCsvArrayRows = new[]
         {
             //精神攻撃の相性の　行の属性並び順
-            SpiritualProperty.liminalwhitetile,
-            SpiritualProperty.kindergarden,
-            SpiritualProperty.sacrifaith,
-            SpiritualProperty.cquiest,
-            SpiritualProperty.devil,
-            SpiritualProperty.devil,//乱数のmax
-            SpiritualProperty.doremis,
-            SpiritualProperty.pillar,
-            SpiritualProperty.godtier,
-            SpiritualProperty.baledrival,
-            SpiritualProperty.pysco
+            SpiritualProperty.LiminalWhiteTile,
+            SpiritualProperty.Kindergarten,
+            SpiritualProperty.Sacrifaith,
+            SpiritualProperty.Cquiest,
+            SpiritualProperty.Devil,
+            SpiritualProperty.Devil,//乱数のmax
+            SpiritualProperty.Doremis,
+            SpiritualProperty.Pillar,
+            SpiritualProperty.GodTier,
+            SpiritualProperty.BaleDrival,
+            SpiritualProperty.Psycho
         };
         var SpiritualCsvArrayColumn = new[]
         {
             //精神攻撃の相性の　列の属性並び順
-            SpiritualProperty.liminalwhitetile,
-            SpiritualProperty.kindergarden,
-            SpiritualProperty.sacrifaith,
-            SpiritualProperty.cquiest,
-            SpiritualProperty.devil,
-            SpiritualProperty.doremis,
-            SpiritualProperty.pillar,
-            SpiritualProperty.godtier,
-            SpiritualProperty.baledrival,
-            SpiritualProperty.baledrival,//乱数のmax
-            SpiritualProperty.pysco
+            SpiritualProperty.LiminalWhiteTile,
+            SpiritualProperty.Kindergarten,
+            SpiritualProperty.Sacrifaith,
+            SpiritualProperty.Cquiest,
+            SpiritualProperty.Devil,
+            SpiritualProperty.Doremis,
+            SpiritualProperty.Pillar,
+            SpiritualProperty.GodTier,
+            SpiritualProperty.BaleDrival,
+            SpiritualProperty.BaleDrival,//乱数のmax
+            SpiritualProperty.Psycho
         };
 
 

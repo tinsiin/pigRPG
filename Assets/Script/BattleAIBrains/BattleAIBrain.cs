@@ -44,16 +44,16 @@ public abstract class BattleAIBrain : ScriptableObject
 
     private static readonly Dictionary<SpiritualProperty, HelpBehaviorProfile> s_AltruismHelpProfiles = new()
     {
-        { SpiritualProperty.doremis,           new HelpBehaviorProfile{ P_ExtraOthers=0.6f, P_OnlyOthers=0.10f, P_GroupHelp=0.5f, P_FriendFirst=0.7f, FavorAffinityRate=0.7f, MaxOthers=3 } },
-        { SpiritualProperty.pillar,            new HelpBehaviorProfile{ P_ExtraOthers=0.4f, P_OnlyOthers=0.05f, P_GroupHelp=0.35f, P_FriendFirst=0.5f, FavorAffinityRate=0.6f, MaxOthers=2 } },
-        { SpiritualProperty.kindergarden,      new HelpBehaviorProfile{ P_ExtraOthers=0.5f, P_OnlyOthers=0.10f, P_GroupHelp=0.45f, P_FriendFirst=0.6f, FavorAffinityRate=0.6f, MaxOthers=2 } },
-        { SpiritualProperty.liminalwhitetile,  new HelpBehaviorProfile{ P_ExtraOthers=0.3f, P_OnlyOthers=0.05f, P_GroupHelp=0.25f, P_FriendFirst=0.4f, FavorAffinityRate=0.5f, MaxOthers=1 } },
-        { SpiritualProperty.sacrifaith,        new HelpBehaviorProfile{ P_ExtraOthers=0.7f, P_OnlyOthers=0.20f, P_GroupHelp=0.6f,  P_FriendFirst=0.8f, FavorAffinityRate=0.8f, MaxOthers=3 } },
-        { SpiritualProperty.cquiest,           new HelpBehaviorProfile{ P_ExtraOthers=0.4f, P_OnlyOthers=0.05f, P_GroupHelp=0.35f, P_FriendFirst=0.5f, FavorAffinityRate=0.5f, MaxOthers=2 } },
-        { SpiritualProperty.pysco,             new HelpBehaviorProfile{ P_ExtraOthers=0.2f, P_OnlyOthers=0.05f, P_GroupHelp=0.2f,  P_FriendFirst=0.3f, FavorAffinityRate=0.3f, MaxOthers=1 } },
-        { SpiritualProperty.godtier,           new HelpBehaviorProfile{ P_ExtraOthers=0.6f, P_OnlyOthers=0.10f, P_GroupHelp=0.5f,  P_FriendFirst=0.7f, FavorAffinityRate=0.7f, MaxOthers=3 } },
-        { SpiritualProperty.baledrival,        new HelpBehaviorProfile{ P_ExtraOthers=0.3f, P_OnlyOthers=0.05f, P_GroupHelp=0.25f, P_FriendFirst=0.4f, FavorAffinityRate=0.5f, MaxOthers=1 } },
-        { SpiritualProperty.devil,             new HelpBehaviorProfile{ P_ExtraOthers=0.2f, P_OnlyOthers=0.05f, P_GroupHelp=0.15f, P_FriendFirst=0.3f, FavorAffinityRate=0.3f, MaxOthers=1 } },
+        { SpiritualProperty.Doremis,           new HelpBehaviorProfile{ P_ExtraOthers=0.6f, P_OnlyOthers=0.10f, P_GroupHelp=0.5f, P_FriendFirst=0.7f, FavorAffinityRate=0.7f, MaxOthers=3 } },
+        { SpiritualProperty.Pillar,            new HelpBehaviorProfile{ P_ExtraOthers=0.4f, P_OnlyOthers=0.05f, P_GroupHelp=0.35f, P_FriendFirst=0.5f, FavorAffinityRate=0.6f, MaxOthers=2 } },
+        { SpiritualProperty.Kindergarten,      new HelpBehaviorProfile{ P_ExtraOthers=0.5f, P_OnlyOthers=0.10f, P_GroupHelp=0.45f, P_FriendFirst=0.6f, FavorAffinityRate=0.6f, MaxOthers=2 } },
+        { SpiritualProperty.LiminalWhiteTile,  new HelpBehaviorProfile{ P_ExtraOthers=0.3f, P_OnlyOthers=0.05f, P_GroupHelp=0.25f, P_FriendFirst=0.4f, FavorAffinityRate=0.5f, MaxOthers=1 } },
+        { SpiritualProperty.Sacrifaith,        new HelpBehaviorProfile{ P_ExtraOthers=0.7f, P_OnlyOthers=0.20f, P_GroupHelp=0.6f,  P_FriendFirst=0.8f, FavorAffinityRate=0.8f, MaxOthers=3 } },
+        { SpiritualProperty.Cquiest,           new HelpBehaviorProfile{ P_ExtraOthers=0.4f, P_OnlyOthers=0.05f, P_GroupHelp=0.35f, P_FriendFirst=0.5f, FavorAffinityRate=0.5f, MaxOthers=2 } },
+        { SpiritualProperty.Psycho,             new HelpBehaviorProfile{ P_ExtraOthers=0.2f, P_OnlyOthers=0.05f, P_GroupHelp=0.2f,  P_FriendFirst=0.3f, FavorAffinityRate=0.3f, MaxOthers=1 } },
+        { SpiritualProperty.GodTier,           new HelpBehaviorProfile{ P_ExtraOthers=0.6f, P_OnlyOthers=0.10f, P_GroupHelp=0.5f,  P_FriendFirst=0.7f, FavorAffinityRate=0.7f, MaxOthers=3 } },
+        { SpiritualProperty.BaleDrival,        new HelpBehaviorProfile{ P_ExtraOthers=0.3f, P_OnlyOthers=0.05f, P_GroupHelp=0.25f, P_FriendFirst=0.4f, FavorAffinityRate=0.5f, MaxOthers=1 } },
+        { SpiritualProperty.Devil,             new HelpBehaviorProfile{ P_ExtraOthers=0.2f, P_OnlyOthers=0.05f, P_GroupHelp=0.15f, P_FriendFirst=0.3f, FavorAffinityRate=0.3f, MaxOthers=1 } },
     };
 
     protected static HelpBehaviorProfile GetAltruismHelpProfile(SpiritualProperty sp)

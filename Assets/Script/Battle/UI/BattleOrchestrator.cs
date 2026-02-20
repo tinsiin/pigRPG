@@ -381,7 +381,7 @@ public sealed class BattleOrchestrator : IBattleLifecycle
         var exposureModifier = allyActer.GetExposureAccuracyPercentageBonus(target.PassivesTargetProbability());
         if (exposureModifier > 0)
         {
-            allyActer.SetCharaConditionalModifierList(target, "隙だらけ", whatModify.eye, exposureModifier);
+            allyActer.SetCharaConditionalModifierList(target, "隙だらけ", StatModifier.Eye, exposureModifier);
         }
     }
 

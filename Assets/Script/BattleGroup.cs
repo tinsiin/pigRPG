@@ -34,7 +34,7 @@ public class BattleGroup
     /// <summary>
     ///     コンストラクタ
     /// </summary>
-    public BattleGroup(List<BaseStates> ours, PartyProperty ourImpression,allyOrEnemy _which,Dictionary<(BaseStates,BaseStates),int> CompatibilityData = null)
+    public BattleGroup(List<BaseStates> ours, PartyProperty ourImpression,Faction _which,Dictionary<(BaseStates,BaseStates),int> CompatibilityData = null)
     {
         Ours = ours;
         OurImpression = ourImpression;
@@ -213,7 +213,7 @@ public class BattleGroup
             if (gePas == null
                 || gePas.EasterNoshiirLockKey
                 || (noPas != null && noPas.EasterNoshiirLockKey)
-                || chara.NowPower  < ThePower.low)   
+                || chara.NowPower  < PowerLevel.Low)   
                 continue; // 未所持、ロック中、またはパワー条件未満ならスキップ
 
             id   = geinoSlaimID;
@@ -231,7 +231,7 @@ public class BattleGroup
                 if (noPas == null
                     || noPas.EasterNoshiirLockKey
                     || (gePas != null && gePas.EasterNoshiirLockKey)
-                    || chara.NowPower  < ThePower.high)   
+                    || chara.NowPower  < PowerLevel.High)   
                     continue; // 未所持、ロック中、またはパワー条件未満ならスキップ
 
                 id   = slaimID;
@@ -278,7 +278,7 @@ public class BattleGroup
             handle.DurationTurn = backFacingTurn;
             handle.AddDefensePercentageModifierByAttacker(Doer, 0.7f);//付与者からの攻撃の際防御力が30%低下
             //付与者のピルマグレイトフルを分、攻撃者(対象者)の回避率を減らす。
-            handle.SetFixedValue(whatModify.agi, -Doer.TenDayValues(false).GetValueOrZero(TenDayAbility.Pilmagreatifull));
+            handle.SetFixedValue(StatModifier.Agi, -Doer.TenDayValues(false).GetValueOrZero(TenDayAbility.Pilmagreatifull));
         }
         
     }
@@ -374,7 +374,7 @@ public class BattleGroup
     /// <summary>
     /// 陣営
     /// </summary>
-    public allyOrEnemy which;
+    public Faction which;
 
     /// <summary>
     /// このグループには指定したどれかの精神印象を持った奴が"一人でも"いるかどうか　

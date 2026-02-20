@@ -24,29 +24,29 @@ public sealed class TurnScheduler
         actionQueue.RemoveDeathCharacters();
     }
 
-    public BaseStates SelectRandomActer(out allyOrEnemy acterFaction)
+    public BaseStates SelectRandomActer(out Faction acterFaction)
     {
         BaseStates chara;
 
         List<BaseStates> charas;
         List<BaseStates> primary;
         List<BaseStates> secondary;
-        allyOrEnemy primaryFaction;
-        allyOrEnemy secondaryFaction;
+        Faction primaryFaction;
+        Faction secondaryFaction;
 
         if (_random.NextBool())
         {
             primary = allyGroup.Ours;
-            primaryFaction = allyOrEnemy.alliy;
+            primaryFaction = Faction.Ally;
             secondary = enemyGroup.Ours;
-            secondaryFaction = allyOrEnemy.Enemyiy;
+            secondaryFaction = Faction.Enemy;
         }
         else
         {
             primary = enemyGroup.Ours;
-            primaryFaction = allyOrEnemy.Enemyiy;
+            primaryFaction = Faction.Enemy;
             secondary = allyGroup.Ours;
-            secondaryFaction = allyOrEnemy.alliy;
+            secondaryFaction = Faction.Ally;
         }
 
         var primaryCandidates = RetainActionableCharacters(RemoveDeathCharacters(primary));
@@ -60,7 +60,7 @@ public sealed class TurnScheduler
             var secondaryCandidates = RetainActionableCharacters(RemoveDeathCharacters(secondary));
             if (secondaryCandidates.Count == 0)
             {
-                acterFaction = allyOrEnemy.alliy;
+                acterFaction = Faction.Ally;
                 return null;
             }
             charas = secondaryCandidates;

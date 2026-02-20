@@ -9,7 +9,7 @@ public interface ITargetingPolicy
 public sealed class TargetingPolicyContext
 {
     public BaseStates Acter { get; }
-    public allyOrEnemy ActerFaction { get; }
+    public Faction ActerFaction { get; }
     public BattleGroup AllyGroup { get; }
     public BattleGroup EnemyGroup { get; }
     public UnderActersEntryList Unders { get; }
@@ -22,7 +22,7 @@ public sealed class TargetingPolicyContext
 
     public TargetingPolicyContext(
         BaseStates acter,
-        allyOrEnemy acterFaction,
+        Faction acterFaction,
         BattleGroup allyGroup,
         BattleGroup enemyGroup,
         UnderActersEntryList unders,

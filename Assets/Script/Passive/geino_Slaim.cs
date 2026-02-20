@@ -12,7 +12,7 @@ public class geino_Slaim : Slaim
     public override void OnBeforeDamage(BaseStates Atker)
     {
         //パワーが普通以上なら、ライティスティニを追加
-        if(_owner.NowPower >= ThePower.medium)
+        if(_owner.NowPower >= PowerLevel.Medium)
         {
             _owner.ApplyPassiveBufferInBattleByID(10);
         }

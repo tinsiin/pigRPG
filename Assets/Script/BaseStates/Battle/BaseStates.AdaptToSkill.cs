@@ -385,37 +385,37 @@ public abstract partial class BaseStates
         if (index < 0) return -1;//負の値が優先序列として渡されたらエラー
         switch (MyImpression)//自分の印象によってスキルのグループ分けが変わる。
         {
-            case SpiritualProperty.liminalwhitetile:
+            case SpiritualProperty.LiminalWhiteTile:
                 groupIndex = GetLiminalAdaptToSkillGrouping(index);
                 break;
-            case SpiritualProperty.kindergarden:
+            case SpiritualProperty.Kindergarten:
                 // キンダーガーデン用の素数による慣れ補正の"-スキル優先順位-"のグルーピング方式
                 // 引数の整数が何番目のグループに属するかを返す
                 // 最大HPが多ければ多いほど、乱数の間隔が狭まりやすい　= ダメージ格差による技への慣れの忘れやすさと慣れやすさが低段階化しやすい
                 groupIndex = GetAdaptToSkillGroupingFromList(index, KinderAdaptToSkillGroupingIntegerList);
                 break;
-            case SpiritualProperty.sacrifaith:
+            case SpiritualProperty.Sacrifaith:
                 //自己犠牲は素数の間に　素数間隔 / 2.5　回　その間の数の乱数を入れる。
                 //つまり素数と乱数の混じった優先順位のグループ分けがされる
                 groupIndex = GetAdaptToSkillGroupingFromList(index, SacrifaithAdaptToSkillGroupingIntegerList);
                 break;
-            case SpiritualProperty.cquiest:
+            case SpiritualProperty.Cquiest:
                 //シークイエストは十ごとに区分けする。
                 groupIndex = GetCquiestAdaptToSkillGrouping(index);
                 break;
-            case SpiritualProperty.baledrival:
+            case SpiritualProperty.BaleDrival:
                 //ベールドライヴァルは三位以降以前に区分けする。
                 groupIndex = GetBaleAdaptToSkillGrouping(index);
                 break;
-            case SpiritualProperty.godtier:
+            case SpiritualProperty.GodTier:
                 //ゴッドティアは六つごとに区分けする
                 groupIndex = GetGodtierAdaptToSkillGrouping(index);
                 break;
-            case SpiritualProperty.pillar:
+            case SpiritualProperty.Pillar:
                 //支柱は六つごとに区分けする
                 groupIndex = GetPillarAdaptToSkillGrouping(index);
                 break;
-            case SpiritualProperty.doremis:
+            case SpiritualProperty.Doremis:
                 //ドレミスは六つ固定　以降七つ区切り
                 groupIndex = GetDoremisAdaptToSkillGrouping(index);
                 break;
@@ -511,49 +511,49 @@ public abstract partial class BaseStates
         List<MemoryDensity> rl;
         switch (MyImpression)//左から降順に入ってくる　一番左が最初の、一番上の値ってこと
         {
-            case SpiritualProperty.doremis:
+            case SpiritualProperty.Doremis:
                 rl = new List<MemoryDensity> { MemoryDensity.High, MemoryDensity.Medium, MemoryDensity.Medium };
                 break;//しっかりと　普通　普通
 
-            case SpiritualProperty.pillar:
+            case SpiritualProperty.Pillar:
                 rl = new List<MemoryDensity> { MemoryDensity.Medium, MemoryDensity.Medium, MemoryDensity.Medium,
                 MemoryDensity.Medium,MemoryDensity.Medium,MemoryDensity.Medium,};
                 break;//普通　×6
 
-            case SpiritualProperty.kindergarden:
+            case SpiritualProperty.Kindergarten:
                 rl = new List<MemoryDensity> { MemoryDensity.Low };
                 break;//薄い
 
-            case SpiritualProperty.liminalwhitetile:
+            case SpiritualProperty.LiminalWhiteTile:
                 rl = new List<MemoryDensity> { MemoryDensity.Medium,MemoryDensity.Medium,
                     MemoryDensity.Low,MemoryDensity.Low, MemoryDensity.Low};
                 break;//普通×2 薄い×3
 
-            case SpiritualProperty.sacrifaith:
+            case SpiritualProperty.Sacrifaith:
                 rl = new List<MemoryDensity> { MemoryDensity.High, MemoryDensity.Low };
                 break;//ハイアンドロー
 
-            case SpiritualProperty.cquiest:
+            case SpiritualProperty.Cquiest:
                 rl = new List<MemoryDensity> { MemoryDensity.High, MemoryDensity.High,MemoryDensity.High,MemoryDensity.High, MemoryDensity.High,
                 MemoryDensity.Low};//しっかりと×5 //薄い1
                 break;
 
-            case SpiritualProperty.pysco:
+            case SpiritualProperty.Psycho:
                 rl = new List<MemoryDensity> { MemoryDensity.High, MemoryDensity.Low };
                 break;//ハイアンドロー
 
-            case SpiritualProperty.godtier:
+            case SpiritualProperty.GodTier:
                 rl = new List<MemoryDensity> { MemoryDensity.High,MemoryDensity.High,MemoryDensity.Medium,
                 MemoryDensity.Medium,MemoryDensity.Medium,MemoryDensity.Low,MemoryDensity.Low,MemoryDensity.Low};
                 break;//しっかりと×2 普通×3 薄く×3
 
-            case SpiritualProperty.baledrival:
+            case SpiritualProperty.BaleDrival:
                 rl = new List<MemoryDensity> { MemoryDensity.High,MemoryDensity.High,MemoryDensity.High,MemoryDensity.High,
                 MemoryDensity.Low,MemoryDensity.Low,MemoryDensity.Low,
                 MemoryDensity.Low,MemoryDensity.Low,MemoryDensity.Low,MemoryDensity.Low,MemoryDensity.Low};
                 break;//しっかりと×4 薄く　×8
 
-            case SpiritualProperty.devil:
+            case SpiritualProperty.Devil:
                 rl = new List<MemoryDensity> { MemoryDensity.Medium,MemoryDensity.Medium,
                 MemoryDensity.Low,MemoryDensity.Low,MemoryDensity.Low};
                 break;//普通×2 薄く×3
@@ -784,13 +784,13 @@ public abstract partial class BaseStates
                     {
                         switch (MyImpression)
                         {//ドレミス　ゴッドティア　キンダー　シークイエストは戸惑わない
-                            case SpiritualProperty.doremis:
+                            case SpiritualProperty.Doremis:
                                 IsConfused = false; break;
-                            case SpiritualProperty.godtier:
+                            case SpiritualProperty.GodTier:
                                 IsConfused = false; break;
-                            case SpiritualProperty.kindergarden:
+                            case SpiritualProperty.Kindergarten:
                                 IsConfused = false; break;
-                            case SpiritualProperty.cquiest:
+                            case SpiritualProperty.Cquiest:
                                 IsConfused = false; break;
                             default:
                                 IsConfused = true; break;//それ以外で初見人なら戸惑う
@@ -966,26 +966,26 @@ public abstract partial class BaseStates
     {
         switch(NowCondition)
         {
-            case HumanConditionCircumstances.Painful:
-                if(DefaultImpression == SpiritualProperty.devil) return 0.8f;
+            case Demeanor.Painful:
+                if(DefaultImpression == SpiritualProperty.Devil) return 0.8f;
                 return 0.75f;
-            case HumanConditionCircumstances.Optimistic:
+            case Demeanor.Optimistic:
                 return 0.95f;
-            case HumanConditionCircumstances.Elated:
-                if(DefaultImpression == SpiritualProperty.baledrival) return 0.91f;
+            case Demeanor.Elated:
+                if(DefaultImpression == SpiritualProperty.BaleDrival) return 0.91f;
                 return 0.7f;
-            case HumanConditionCircumstances.Resolved:
+            case Demeanor.Resolved:
                 return 1.0f;
-            case HumanConditionCircumstances.Angry:
-                if(DefaultImpression == SpiritualProperty.doremis) return 1.2f;
+            case Demeanor.Angry:
+                if(DefaultImpression == SpiritualProperty.Doremis) return 1.2f;
                 return 0.6f;
-            case HumanConditionCircumstances.Doubtful:
-                if(DefaultImpression == SpiritualProperty.pillar) return 0.9f;
-                if(DefaultImpression == SpiritualProperty.cquiest) return 1.1f;
+            case Demeanor.Doubtful:
+                if(DefaultImpression == SpiritualProperty.Pillar) return 0.9f;
+                if(DefaultImpression == SpiritualProperty.Cquiest) return 1.1f;
                 return 0.75f;
-            case HumanConditionCircumstances.Confused:
+            case Demeanor.Confused:
                 return 0.5f;
-            case HumanConditionCircumstances.Normal:
+            case Demeanor.Normal:
                 return 0.9f;
             default:
                 return 0.7f;//念のためのデフォルト値

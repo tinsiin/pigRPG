@@ -14,8 +14,8 @@ public interface IBattleContext
 
     int BattleTurnCount { get; }
     IBattleRandom Random { get; }
-    allyOrEnemy GetCharacterFaction(BaseStates chara);
-    BattleGroup FactionToGroup(allyOrEnemy faction);
+    Faction GetCharacterFaction(BaseStates chara);
+    BattleGroup FactionToGroup(Faction faction);
     BattleGroup MyGroup(BaseStates chara);
     bool IsFriend(BaseStates chara1, BaseStates chara2);
     bool IsVanguard(BaseStates chara);

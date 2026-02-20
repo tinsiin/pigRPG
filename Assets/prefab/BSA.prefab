@@ -101,7 +101,7 @@ MonoBehaviour:
   shakeAmplitude: 0
   shakeFrequency: 0
   bornPosRange: {x: 0, y: 0}
-  sideObject_Type: 1
+  sideObjectType: 1
 --- !u!225 &2265532821940866569
 CanvasGroup:
   m_ObjectHideFlags: 0

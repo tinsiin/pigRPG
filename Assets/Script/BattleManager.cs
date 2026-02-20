@@ -12,21 +12,21 @@ using static CommonCalc;
 /// </summary>
 public enum BattleStartSituation
 {
-    alliFirst, EnemyFirst, Normal//味方先手、敵先手、ノーマル
+    AllyFirst, EnemyFirst, Normal//味方先手、敵先手、ノーマル
 }
 /// <summary>
 /// 敵味方どっち
 /// </summary>
-public enum allyOrEnemy
+public enum Faction
 {
-    alliy, Enemyiy
+    Ally, Enemy
 }
 /// <summary>
 /// 行動先約リストでのステータス補正予約時の識別用
 /// </summary>
-public enum whatModify
+public enum StatModifier
 {
-    eye, atk, def, agi
+    Eye, Atk, Def, Agi
 }
 
 /// <summary>
@@ -52,7 +52,7 @@ public class BattleManager : IBattleContext
     /// <summary>
     /// factionのグループを返す
     /// </summary>
-    public BattleGroup FactionToGroup(allyOrEnemy faction) => actionContext.FactionToGroup(faction);
+    public BattleGroup FactionToGroup(Faction faction) => actionContext.FactionToGroup(faction);
 
     /// <summary>
     /// キャラクターのグループを取得
@@ -67,7 +67,7 @@ public class BattleManager : IBattleContext
     /// <summary>
     /// 渡されたキャラクタのbm内での陣営を表す。
     /// </summary>
-    public allyOrEnemy GetCharacterFaction(BaseStates chara) => actionContext.GetCharacterFaction(chara);
+    public Faction GetCharacterFaction(BaseStates chara) => actionContext.GetCharacterFaction(chara);
 
     /// <summary>
     /// そのキャラクターと同じパーティーの生存者のリストを取得(自分自身を除く)
@@ -96,7 +96,7 @@ public class BattleManager : IBattleContext
     /// </summary>
     public UnderActersEntryList unders => actionContext.Unders;
     // ActionContext への委譲プロパティ (ActerFaction)
-    internal allyOrEnemy ActerFactionValue
+    internal Faction ActerFactionValue
     {
         get => actionContext.ActerFaction;
         set => actionContext.ActerFaction = value;
@@ -222,7 +222,7 @@ public class BattleManager : IBattleContext
         
 
         //敵か味方どちらかが先手を取ったかによって、
-        if (first == BattleStartSituation.alliFirst)
+        if (first == BattleStartSituation.AllyFirst)
         {
             AddFirstBattleGroupTurn(allyGroup, enemyGroup);
             //味方が先手
@@ -261,7 +261,7 @@ public class BattleManager : IBattleContext
         var group = RemoveDeathCharacters(_group.Ours);//死者を取り除く
 
         //死者を取り除く　先手に対する切り返しであるハンターナイトが実行できる可能性のあるキャラクターを選別する
-        List<BaseStates> CounterCharas = RemoveDeathCharacters(_counterGroup.GetCharactersFromImpression(SpiritualProperty.kindergarden, SpiritualProperty.godtier));
+        List<BaseStates> CounterCharas = RemoveDeathCharacters(_counterGroup.GetCharactersFromImpression(SpiritualProperty.Kindergarten, SpiritualProperty.GodTier));
 
         for (var i = 0; i < group.Count; i++)//グループの人数分
         {

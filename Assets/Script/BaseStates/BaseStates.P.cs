@@ -52,14 +52,14 @@ public abstract partial class BaseStates
     /// </summary>
     void InitPByNowPower()
     {
-        var lowlowMinus = 3;
-        if (rollper(37))lowlowMinus = 0;
+        var VeryLowMinus = 3;
+        if (rollper(37))VeryLowMinus = 0;
         P = NowPower switch
         {
-            ThePower.lowlow => 3 - lowlowMinus,
-            ThePower.low => (int)(MAXP * 0.15),
-            ThePower.medium => (int)(MAXP * 0.5),
-            ThePower.high => (int)(MAXP * 0.7),
+            PowerLevel.VeryLow => 3 - VeryLowMinus,
+            PowerLevel.Low => (int)(MAXP * 0.15),
+            PowerLevel.Medium => (int)(MAXP * 0.5),
+            PowerLevel.High => (int)(MAXP * 0.7),
             _ => 0
         };
     }

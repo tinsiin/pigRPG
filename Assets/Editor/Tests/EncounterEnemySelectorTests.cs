@@ -32,8 +32,8 @@ public class EncounterEnemySelectorTests
             _matchPercent = matchPercent;
             EnemyLonelyPartyImpression = new Dictionary<SpiritualProperty, PartyProperty>
             {
-                { SpiritualProperty.doremis, partyProperty },
-                { SpiritualProperty.pillar, partyProperty }
+                { SpiritualProperty.Doremis, partyProperty },
+                { SpiritualProperty.Pillar, partyProperty }
             };
         }
 
@@ -106,7 +106,7 @@ public class EncounterEnemySelectorTests
     [Test]
     public void Select_ReturnsGroupWithAliveEnemy()
     {
-        var alive = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
+        var alive = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.Doremis, CharacterType.Life);
         var enemies = new List<NormalEnemy> { alive };
 
         var result = _selector.Select(enemies, 100);
@@ -119,8 +119,8 @@ public class EncounterEnemySelectorTests
     public void Select_IncludesRebornableDeadEnemy()
     {
         // 生きている敵がいないと選択できないので、生きている敵も追加
-        var alive = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
-        var deadReborn = CreateEnemy(0f, 10f, 0, false, SpiritualProperty.doremis, CharacterType.Life);
+        var alive = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.Doremis, CharacterType.Life);
+        var deadReborn = CreateEnemy(0f, 10f, 0, false, SpiritualProperty.Doremis, CharacterType.Life);
         var enemies = new List<NormalEnemy> { alive, deadReborn };
 
         var result = _selector.Select(enemies, 100);
@@ -133,8 +133,8 @@ public class EncounterEnemySelectorTests
     [Test]
     public void Select_ExcludesBrokenEnemy()
     {
-        var alive = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
-        var broken = CreateEnemy(0f, 10f, 0, true, SpiritualProperty.doremis, CharacterType.Life);
+        var alive = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.Doremis, CharacterType.Life);
+        var broken = CreateEnemy(0f, 10f, 0, true, SpiritualProperty.Doremis, CharacterType.Life);
         var enemies = new List<NormalEnemy> { alive, broken };
 
         var result = _selector.Select(enemies, 100);
@@ -146,8 +146,8 @@ public class EncounterEnemySelectorTests
     [Test]
     public void Select_ExcludesNonRebornableDeadEnemy()
     {
-        var alive = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
-        var deadNoReborn = CreateEnemy(0f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
+        var alive = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.Doremis, CharacterType.Life);
+        var deadNoReborn = CreateEnemy(0f, 10f, -1, false, SpiritualProperty.Doremis, CharacterType.Life);
         var enemies = new List<NormalEnemy> { alive, deadNoReborn };
 
         var result = _selector.Select(enemies, 100);
@@ -162,9 +162,9 @@ public class EncounterEnemySelectorTests
         var matchCalc = new TestMatchCalculator(PartyProperty.HolyGroup, typeMatchUp: true, impressionMatchUp: true);
         var selector = new EncounterEnemySelector(_rebornManager, matchCalc);
 
-        var enemy1 = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
-        var enemy2 = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
-        var enemy3 = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life);
+        var enemy1 = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.Doremis, CharacterType.Life);
+        var enemy2 = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.Doremis, CharacterType.Life);
+        var enemy3 = CreateEnemy(10f, 10f, -1, false, SpiritualProperty.Doremis, CharacterType.Life);
         var enemies = new List<NormalEnemy> { enemy1, enemy2, enemy3 };
 
         var result = selector.Select(enemies, 100, number: 1);
@@ -182,7 +182,7 @@ public class EncounterEnemySelectorTests
         var enemies = new List<NormalEnemy>();
         for (int i = 0; i < 10; i++)
         {
-            enemies.Add(CreateEnemy(10f, 10f, -1, false, SpiritualProperty.doremis, CharacterType.Life));
+            enemies.Add(CreateEnemy(10f, 10f, -1, false, SpiritualProperty.Doremis, CharacterType.Life));
         }
 
         var result = selector.Select(enemies, 100, number: 5);

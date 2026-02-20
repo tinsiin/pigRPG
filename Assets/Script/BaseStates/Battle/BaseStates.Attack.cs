@@ -44,7 +44,7 @@ public abstract partial class BaseStates
                 if((index = TargetBonusDatas.DoIHaveTargetBonusAny_ReturnListIndex(Unders.GetCharacterList())) != -1)//対象者ボーナスを持っていれば = 選んだ敵が対象者ボーナスならば。
                 {
                     //適用
-                    SetSpecialModifier("対象者ボーナス", whatModify.atk,TargetBonusDatas.GetAtPowerBonusPercentage(index));
+                    SetSpecialModifier("対象者ボーナス", StatModifier.Atk,TargetBonusDatas.GetAtPowerBonusPercentage(index));
 
                     //適用した対象者ボーナスの削除　該当インデックスのclear関数の制作
                     TargetBonusDatas.BonusClear(index);
@@ -56,14 +56,14 @@ public abstract partial class BaseStates
         if(HasRangeWill(SkillZoneTrait.AllTarget))
         {
             //undersに含まれる陣営を全て抽出し、その陣営グループのコールバックを呼び出す
-            var EneFaction = Unders.charas.Any(x=>manager.GetCharacterFaction(x) == allyOrEnemy.Enemyiy);
-            var AllyFaction = Unders.charas.Any(x=>manager.GetCharacterFaction(x) == allyOrEnemy.alliy);
+            var EneFaction = Unders.charas.Any(x=>manager.GetCharacterFaction(x) == Faction.Enemy);
+            var AllyFaction = Unders.charas.Any(x=>manager.GetCharacterFaction(x) == Faction.Ally);
 
             //それぞれの陣営のコールバック
             if(EneFaction)
-            manager.FactionToGroup(allyOrEnemy.Enemyiy).PartyPassivesOnBeforeAllAlliesDamage(this,ref Unders);
+            manager.FactionToGroup(Faction.Enemy).PartyPassivesOnBeforeAllAlliesDamage(this,ref Unders);
             if(AllyFaction)
-            manager.FactionToGroup(allyOrEnemy.alliy).PartyPassivesOnBeforeAllAlliesDamage(this,ref Unders);
+            manager.FactionToGroup(Faction.Ally).PartyPassivesOnBeforeAllAlliesDamage(this,ref Unders);
         }
 
         //キャラクターに対して実行
@@ -202,16 +202,16 @@ public abstract partial class BaseStates
 
         switch(NextImpression)//スキルの精神属性で特殊な分岐かそうでないかで
         {
-            case SpiritualProperty.mvoid:
-                MyImpression = SpiritualProperty.none;
+            case SpiritualProperty.Mvoid:
+                MyImpression = SpiritualProperty.None;
                 break;
             case SpiritualProperty.Galvanize:
                 //変化なし
                 break;
-            case SpiritualProperty.air:
+            case SpiritualProperty.Air:
                 //変化なし
                 break;
-            case SpiritualProperty.memento:
+            case SpiritualProperty.Memento:
                 MyImpression = DefaultImpression;
                 break;
             default:

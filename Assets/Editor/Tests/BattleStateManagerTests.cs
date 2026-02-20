@@ -45,7 +45,7 @@ public class BattleStateManagerTests
     {
         var enemy = new NormalEnemy
         {
-            DefaultImpression = SpiritualProperty.doremis,
+            DefaultImpression = SpiritualProperty.Doremis,
             MyType = CharacterType.Life
         };
 
@@ -68,7 +68,7 @@ public class BattleStateManagerTests
     {
         var enemy = new NormalEnemy
         {
-            DefaultImpression = SpiritualProperty.doremis,
+            DefaultImpression = SpiritualProperty.Doremis,
             MyType = CharacterType.Life
         };
         _manager.AddDominoRunOutEnemy(enemy);
@@ -91,7 +91,7 @@ public class BattleStateManagerTests
     {
         var enemy = new NormalEnemy
         {
-            DefaultImpression = SpiritualProperty.doremis,
+            DefaultImpression = SpiritualProperty.Doremis,
             MyType = CharacterType.Life
         };
 

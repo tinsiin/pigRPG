@@ -19,7 +19,7 @@ public interface IBattleQueryService
     /// <summary>
     /// キャラクターの陣営を取得
     /// </summary>
-    allyOrEnemy GetCharacterFaction(BaseStates chara);
+    Faction GetCharacterFaction(BaseStates chara);
 
     /// <summary>
     /// 同じグループの生存している他のキャラクターを取得
@@ -34,5 +34,5 @@ public interface IBattleQueryService
     /// <summary>
     /// 陣営からグループを取得
     /// </summary>
-    BattleGroup FactionToGroup(allyOrEnemy faction);
+    BattleGroup FactionToGroup(Faction faction);
 }

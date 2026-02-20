@@ -172,7 +172,7 @@ public class BattleSystemArrow : MonoBehaviour
         // 演出揺れはデフォルト無効（狙い位置に正確に描画）
         _line.shakeAmplitude = 0f;
         _line.shakeFrequency = 0f;
-        _line.sideObject_Type = SideObject_Type.Normal;
+        _line.sideObjectType = SideObjectType.Normal;
     }
 
     public void Clear()

@@ -59,7 +59,7 @@ public enum TenDayAbility
     /// <summary>クリオネ質</summary>
     CryoniteQuality,
     /// <summary>ドクマムシ</summary>
-    dokumamusi,
+    Dokumamusi,
     /// <summary>ジョー歯</summary>
     JoeTeeth,
     /// <summary>ピルマグレイトフル</summary>
@@ -123,7 +123,7 @@ public static class TenDayAbilityPosition
         { TenDayAbility.Leisure,             new Vector2(5,  6) },
         { TenDayAbility.ElementFaithPower,   new Vector2(11, 6) },
         { TenDayAbility.CryoniteQuality,     new Vector2(13, 6) },
-        { TenDayAbility.dokumamusi,          new Vector2(4,  7) },
+        { TenDayAbility.Dokumamusi,          new Vector2(4,  7) },
         { TenDayAbility.JoeTeeth,            new Vector2(7,  7) },
         { TenDayAbility.Pilmagreatifull,     new Vector2(8,  7) },
         { TenDayAbility.Blades,              new Vector2(9,  7) },

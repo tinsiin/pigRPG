@@ -16,7 +16,7 @@ public sealed class EscapeHandler
 
     public TabState EscapeACT()
     {
-        if (_context.ActerFaction == allyOrEnemy.alliy)
+        if (_context.ActerFaction == Faction.Ally)
         {
             var rate = _stageEscapeRate;
             switch (_context.AllyGroup.Ours.Count)
@@ -102,17 +102,17 @@ public sealed class EscapeHandler
     {
         return property switch
         {
-            SpiritualProperty.liminalwhitetile => 55,
-            SpiritualProperty.kindergarden => 80,
-            SpiritualProperty.sacrifaith => 5,
-            SpiritualProperty.cquiest => 25,
-            SpiritualProperty.devil => 40,
-            SpiritualProperty.doremis => 40,
-            SpiritualProperty.pillar => 10,
-            SpiritualProperty.godtier => 50,
-            SpiritualProperty.baledrival => 60,
-            SpiritualProperty.pysco => 100,
-            SpiritualProperty.none => 0,
+            SpiritualProperty.LiminalWhiteTile => 55,
+            SpiritualProperty.Kindergarten => 80,
+            SpiritualProperty.Sacrifaith => 5,
+            SpiritualProperty.Cquiest => 25,
+            SpiritualProperty.Devil => 40,
+            SpiritualProperty.Doremis => 40,
+            SpiritualProperty.Pillar => 10,
+            SpiritualProperty.GodTier => 50,
+            SpiritualProperty.BaleDrival => 60,
+            SpiritualProperty.Psycho => 100,
+            SpiritualProperty.None => 0,
             _ => 0
         };
     }

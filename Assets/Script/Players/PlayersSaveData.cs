@@ -29,7 +29,7 @@ public sealed class PlayersAllySaveData
     public float HP;
     public float MentalHP;
     public int P;
-    public ThePower NowPower;
+    public PowerLevel NowPower;
     public SpiritualProperty MyImpression;
     public SpiritualProperty DefaultImpression;
     public float NowResonanceValue;

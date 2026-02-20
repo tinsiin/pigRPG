@@ -192,10 +192,10 @@ public abstract partial class BaseStates
     /// </summary>
     void ApplyExtraPassivesToSkill(BaseStates ene)
     {
-        var AllyOrEnemy = allyOrEnemy.Enemyiy;//基本は敵攻撃
+        var AllyOrEnemy = Faction.Enemy;//基本は敵攻撃
         if(manager.IsFriend(ene, this))//もし味方なら
         {
-            AllyOrEnemy = allyOrEnemy.alliy;
+            AllyOrEnemy = Faction.Ally;
         };
         // 追加付与パッシブIDの取得（null 安全）
         var baseExtra = ExtraPassivesIdOnSkillACT(AllyOrEnemy);
@@ -228,7 +228,7 @@ public abstract partial class BaseStates
     /// 指定された対象範囲のパッシブIDリストを返す
     /// スキル実行時に追加適用される。
     /// </summary>
-    public List<int> ExtraPassivesIdOnSkillACT(allyOrEnemy whichAllyOrEnemy)
+    public List<int> ExtraPassivesIdOnSkillACT(Faction whichAllyOrEnemy)
     {
         var result = new List<int>();
         foreach (var pas in _passiveList)
@@ -245,13 +245,13 @@ public abstract partial class BaseStates
                 //敵味方の区別があるなら
                 switch(whichAllyOrEnemy)
                 {
-                    case allyOrEnemy.alliy:
+                    case Faction.Ally:
                         if(bind.TargetScope == PassiveTargetScope.Allies)
                         {
                             result.Add(bind.PassiveId);
                         }
                         break;
-                    case allyOrEnemy.Enemyiy:
+                    case Faction.Enemy:
                         if(bind.TargetScope == PassiveTargetScope.Enemies)
                         {
                             result.Add(bind.PassiveId);

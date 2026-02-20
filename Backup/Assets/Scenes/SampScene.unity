@@ -44532,37 +44532,83 @@ MonoBehaviour:
           _powerSpread: []
           _skillHitPer: 0
           FixedSkillLevelData:
-          - TenDayValues:
+          - SkillName: "\u63B4\u3093\u3067\u6295\u3052\u308B"
+            SkillSpiritual: 0
+            SkillPhysical: 0
+            Impression: 0
+            MotionFlavor: {fileID: 0}
+            SpecialFlags: 0
+            BaseSkillType: 1
+            ConsecutiveType: 0
+            ZoneTrait: 16448
+            DistributionType: 0
+            PowerRangePercentageDictionary:
+              _list: []
+            HitRangePercentageDictionary:
+              _list: []
+            SkillPower: 2
+            TenDayValues:
               _list:
               - key: 8
                 value: 2
-            SkillPower: 2
-            OptionMentalDamageRatio: 0
-            OptionPowerSpread: []
-            OptionSkillHitPer: 0
-            OptionA_MoveSet: []
-            OptionB_MoveSet: []
+            SkillHitPer: 0
+            MentalDamageRatio: 0
+            DefAtk: 0
+            PowerSpread: []
+            Cantkill: 0
+            RequiredNormalP: 0
+            RequiredAttrP:
+              _list: []
+            RequiredRemainingHPPercent: 0
+            EvasionModifier: 1
+            AttackModifier: 1
+            AttackMentalHealPercent: 80
+            SkillDidWaitCount: 0
+            RandomConsecutivePer: 0
+            DefaultStockCount: 1
+            StockPower: 1
+            StockForgetPower: 1
+            TriggerCountMax: 0
+            CanCancelTrigger: 1
+            TriggerRollBackCount: 0
+            AggressiveOnExecute:
+              isAggressiveCommit: 1
+              canSelect: 0
+            AggressiveOnTrigger:
+              isAggressiveCommit: 0
+              canSelect: 0
+            AggressiveOnStock:
+              isAggressiveCommit: 0
+              canSelect: 0
+            A_MoveSet: []
+            B_MoveSet: []
+            CasterEffectName:
+            TargetEffectName:
+            FieldEffectName:
+            SubEffects:
+            SubVitalLayers:
+            CanEraceEffectIDs:
+            CanEraceEffectCount: 0
+            CanEraceVitalLayerIDs:
+            CanEraceVitalLayerCount: 0
+            TargetSelection: 0
+            SkillPassiveEffectCount: 1
+            SkillPassiveGibeSkillFilter:
+              Impressions:
+              MotionFlavors: []
+              MentalAttrs:
+              PhysicalAttrs:
+              AttackTypes:
+              TenDayAbilities:
+              TenDayMode: 0
+              SkillTypes:
+              SkillTypeMode: 0
+              SpecialFlags:
+              SpecialFlagMode: 0
           _infiniteSkillPowerUnit: 0
           _infiniteSkillTenDaysUnit: 0
           ReactiveSkillPassiveList: []
           AggressiveSkillPassiveList: []
-          TargetSelection: 0
-          SkillPassiveEffectCount: 1
-          _skillPassiveGibeSkill_SkillFilter:
-            Impressions: 
-            MotionFlavors: []
-            MentalAttrs: 
-            PhysicalAttrs: 
-            AttackTypes: 
-            TenDayAbilities: 
-            TenDayMode: 0
-            SkillTypes: 
-            SkillTypeMode: 0
-            SpecialFlags: 
-            SpecialFlagMode: 0
-          _triggerCountMax: 0
-          CanCancelTrigger: 1
-          _triggerRollBackCount: 0
         TenDayBonusData:
           TLOAData:
             _list: []

@@ -35,7 +35,7 @@ public static class TenDayAbilityExtensions
             case TenDayAbility.Leisure: return "余裕";
             case TenDayAbility.ElementFaithPower: return "元素";
             case TenDayAbility.CryoniteQuality: return "クリ";
-            case TenDayAbility.dokumamusi: return "毒マ";
+            case TenDayAbility.Dokumamusi: return "毒マ";
             case TenDayAbility.JoeTeeth: return "歯";
             case TenDayAbility.Pilmagreatifull: return "ピル";
             case TenDayAbility.Blades: return "刃";
@@ -69,7 +69,7 @@ public static class TenDayAbilityExtensions
             case TenDayAbility.StarTersi: return "星テルシ";
             case TenDayAbility.Vond: return "ヴォンド";
             case TenDayAbility.SpringWater: return "泉水";
-            case TenDayAbility.dokumamusi: return "ドクマムシ";
+            case TenDayAbility.Dokumamusi: return "ドクマムシ";
             case TenDayAbility.HeatHaze: return "陽炎";
             case TenDayAbility.WaterThunderNerve: return "水雷神経";
             case TenDayAbility.Leisure: return "余裕";

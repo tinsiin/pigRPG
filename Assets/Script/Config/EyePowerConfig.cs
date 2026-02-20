@@ -17,7 +17,7 @@ public static class EyePowerConfig
         { TenDayAbility.Vail, 0.25f },
         { TenDayAbility.StarTersi, 0.6f },
         { TenDayAbility.SpringWater, 0.04f },
-        { TenDayAbility.dokumamusi, 0.1f },
+        { TenDayAbility.Dokumamusi, 0.1f },
         { TenDayAbility.WaterThunderNerve, 1.0f },
         { TenDayAbility.Leisure, 0.1f },
         { TenDayAbility.PersonaDivergence, 0.02f },

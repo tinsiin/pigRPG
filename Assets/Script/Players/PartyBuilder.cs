@@ -89,7 +89,7 @@ public sealed class PartyBuilder
             }
         }
 
-        return new BattleGroup(members, nowOurImpression, allyOrEnemy.alliy, compatibilityData);
+        return new BattleGroup(members, nowOurImpression, Faction.Ally, compatibilityData);
     }
 
     /// <summary>

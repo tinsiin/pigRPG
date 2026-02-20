@@ -215,7 +215,7 @@ public abstract partial class BaseStates
         {
             attacker.SetSpecialModifier(
                 "連続攻撃時、狙い流れの物理属性適性と武器の物理属性の一致による1.3倍ブースト",
-                whatModify.atk, 1.3f);
+                StatModifier.Atk, 1.3f);
         }
     }
 
@@ -314,7 +314,7 @@ public abstract partial class BaseStates
         {
             var MatchedMaxClampDef = DEF(skill.DEFATK, skill.NowAimStyle())*0.7f;//適切な防御力の0.7倍がクランプ最大値
 
-            if(NowPower>ThePower.medium)//パワーが高い場合は 「適切な防御力をこしてた場合のみ」適切防御力の0.7倍にクランプ
+            if(NowPower>PowerLevel.Medium)//パワーが高い場合は 「適切な防御力をこしてた場合のみ」適切防御力の0.7倍にクランプ
             {
                 //まず比較する、超していた場合にクランプ
                 if(DEF()>DEF(0,skill.NowAimStyle()))//今回の防御力が適切な防御力を超してた場合、
@@ -347,7 +347,7 @@ public abstract partial class BaseStates
 
         nightinknightValue /= 10;
         nightinknightValue = Mathf.Floor(nightinknightValue);
-        if(NowPower == ThePower.high && RandomSource.NextFloat(1) < 0.5f)  nightinknightValue += 1;//パワーが高く、二分の一の確率を当てると、補正段階が1増える
+        if(NowPower == PowerLevel.High && RandomSource.NextFloat(1) < 0.5f)  nightinknightValue += 1;//パワーが高く、二分の一の確率を当てると、補正段階が1増える
 
         return (int)nightinknightValue;
     }
@@ -400,7 +400,7 @@ public abstract partial class BaseStates
     {
         var rndmin = 0;
         var rndmax = tightenStage;
-        if(NowPower< ThePower.medium)rndmax -= 1;
+        if(NowPower< PowerLevel.Medium)rndmax -= 1;
         if(tightenStage <2)return 1;//1以下なら基本値のみ
         if(tightenStage>5) rndmin = tightenStage/6;//6以上なら、補正段階の1/6が最小値
         return 1 + RandomSource.NextInt(rndmin, rndmax);//2以降なら補正段階分乱数の最大値が増える
@@ -485,7 +485,7 @@ public abstract partial class BaseStates
         }
         
         isdisturbed = false;//攻撃が乱れたかどうか　　受けた攻撃としての視点から乱れていたかどうか
-        if(NowPower > ThePower.lowlow)//たるくなければ基礎山形補正がある。
+        if(NowPower > PowerLevel.VeryLow)//たるくなければ基礎山形補正がある。
         {
             isdisturbed = GetBaseCalcDamageWithPlusMinus22Percent(ref dmg);//基礎山型補正
         }
@@ -666,7 +666,7 @@ public abstract partial class BaseStates
         }
 
         isdisturbed = false;//攻撃が乱れたかどうか　　受けた攻撃としての視点から乱れていたかどうか
-        if(o.BaseRandomVariance && NowPower > ThePower.lowlow)//たるくなければ基礎山形補正がある。
+        if(o.BaseRandomVariance && NowPower > PowerLevel.VeryLow)//たるくなければ基礎山形補正がある。
         {
             isdisturbed = GetBaseCalcDamageWithPlusMinus22Percent(ref dmg);//基礎山型補正
         }
@@ -932,85 +932,85 @@ public abstract partial class BaseStates
         //人間状況による分岐
         switch(NowCondition)
         {
-            case HumanConditionCircumstances.Painful:
+            case Demeanor.Painful:
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.UnextinguishedPath);
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.FlameBreathingWife);
 
-                if(skill.SkillSpiritual == SpiritualProperty.devil || skill.SkillSpiritual == SpiritualProperty.liminalwhitetile)
+                if(skill.SkillSpiritual == SpiritualProperty.Devil || skill.SkillSpiritual == SpiritualProperty.LiminalWhiteTile)
                 {
                     BaseDmg *= SPIRITUAL_MODIFIER;
                 }
-                if(Atker.MyImpression == SpiritualProperty.devil || Atker.MyImpression == SpiritualProperty.liminalwhitetile)
+                if(Atker.MyImpression == SpiritualProperty.Devil || Atker.MyImpression == SpiritualProperty.LiminalWhiteTile)
                 {
                     BaseDmg *= SPIRITUAL_MODIFIER;
                 }
                 break;
-            case HumanConditionCircumstances.Optimistic:
+            case Demeanor.Optimistic:
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.NightDarkness);
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.StarTersi);
 
-                if(skill.SkillSpiritual == SpiritualProperty.doremis)
+                if(skill.SkillSpiritual == SpiritualProperty.Doremis)
                 {
                     BaseDmg *= SPIRITUAL_MODIFIER;
                 }
-                if(Atker.MyImpression == SpiritualProperty.doremis)
+                if(Atker.MyImpression == SpiritualProperty.Doremis)
                 {
                     BaseDmg *= SPIRITUAL_MODIFIER;
                 }
                 break;
-            case HumanConditionCircumstances.Elated:
-                BaseDmg += dmg.GetTenDayValue(TenDayAbility.dokumamusi);
+            case Demeanor.Elated:
+                BaseDmg += dmg.GetTenDayValue(TenDayAbility.Dokumamusi);
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.SpringWater);
                 //どの精神属性も効かない
                 break;
-            case HumanConditionCircumstances.Resolved:
+            case Demeanor.Resolved:
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.TentVoid);
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.Vond);
-                if(skill.SkillSpiritual == SpiritualProperty.pysco)
+                if(skill.SkillSpiritual == SpiritualProperty.Psycho)
                 {
                     BaseDmg *= SPIRITUAL_MODIFIER;
                 }
-                if(Atker.MyImpression == SpiritualProperty.pysco)
+                if(Atker.MyImpression == SpiritualProperty.Psycho)
                 {
                     BaseDmg *= SPIRITUAL_MODIFIER;
                 }
                 break;
-            case HumanConditionCircumstances.Angry:
+            case Demeanor.Angry:
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.HeatHaze);
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.Rain);
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.ColdHeartedCalm);
-                if(skill.SkillSpiritual == SpiritualProperty.liminalwhitetile)
+                if(skill.SkillSpiritual == SpiritualProperty.LiminalWhiteTile)
                 {
                     BaseDmg *= SPIRITUAL_MODIFIER;
                 }
-                if(Atker.MyImpression == SpiritualProperty.liminalwhitetile)
+                if(Atker.MyImpression == SpiritualProperty.LiminalWhiteTile)
                 {
                     BaseDmg *= SPIRITUAL_MODIFIER;
                 }
                 break;
-            case HumanConditionCircumstances.Doubtful:
+            case Demeanor.Doubtful:
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.HumanKiller);
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.PersonaDivergence);
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.Enokunagi);
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.Blades);
-                if(skill.SkillSpiritual == SpiritualProperty.doremis || skill.SkillSpiritual == SpiritualProperty.pysco)
+                if(skill.SkillSpiritual == SpiritualProperty.Doremis || skill.SkillSpiritual == SpiritualProperty.Psycho)
                 {
                     BaseDmg *= SPIRITUAL_MODIFIER;
                 }
-                if(Atker.MyImpression == SpiritualProperty.doremis || Atker.MyImpression == SpiritualProperty.pysco)
+                if(Atker.MyImpression == SpiritualProperty.Doremis || Atker.MyImpression == SpiritualProperty.Psycho)
                 {
                     BaseDmg *= SPIRITUAL_MODIFIER;
                 }
                 break;
-            case HumanConditionCircumstances.Confused:
+            case Demeanor.Confused:
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.SilentTraining);
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.Miza);
                 BaseDmg += dmg.GetTenDayValue(TenDayAbility.Raincoat);
-                if(skill.SkillSpiritual == SpiritualProperty.doremis || skill.SkillSpiritual == SpiritualProperty.sacrifaith)
+                if(skill.SkillSpiritual == SpiritualProperty.Doremis || skill.SkillSpiritual == SpiritualProperty.Sacrifaith)
                 {
                     BaseDmg *= SPIRITUAL_MODIFIER;
                 }
-                if(Atker.MyImpression == SpiritualProperty.doremis || Atker.MyImpression == SpiritualProperty.sacrifaith)
+                if(Atker.MyImpression == SpiritualProperty.Doremis || Atker.MyImpression == SpiritualProperty.Sacrifaith)
                 {
                     BaseDmg *= SPIRITUAL_MODIFIER;
                 }
@@ -1034,7 +1034,7 @@ public abstract partial class BaseStates
     /// </summary>
     public void ResonanceHealingOnBattle()
     {
-        if(NowCondition == HumanConditionCircumstances.Normal)
+        if(NowCondition == Demeanor.Normal)
         {
             //とりあえず最大値 3~11%ランダム回復ってことで。
             var HealAmount = ResonanceValue * RandomSource.NextFloat(0.03f,0.11f);

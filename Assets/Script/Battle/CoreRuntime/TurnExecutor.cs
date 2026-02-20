@@ -25,13 +25,13 @@ public sealed class TurnExecutor
 
         if (_context.AllyGroup.PartyDeathOnBattle())
         {
-            _context.ActerFaction = allyOrEnemy.alliy;
+            _context.ActerFaction = Faction.Ally;
             _context.StateManager.MarkWipeout();
             return TabState.NextWait;
         }
         if (_context.EnemyGroup.PartyDeathOnBattle())
         {
-            _context.ActerFaction = allyOrEnemy.Enemyiy;
+            _context.ActerFaction = Faction.Enemy;
             _context.StateManager.MarkWipeout();
             return TabState.NextWait;
         }
@@ -72,7 +72,7 @@ public sealed class TurnExecutor
         var isFreezeByPassives = _context.Acter.IsFreezeByPassives;
         var hasCanCancelCantACTPassive = _context.Acter.HasCanCancelCantACTPassive;
 
-        if (_context.ActerFaction == allyOrEnemy.alliy)
+        if (_context.ActerFaction == Faction.Ally)
         {
             _context.Logger.Log(_context.Acter.CharacterName + "(主人公キャラ)は行動する");
             _eventBus?.Publish(BattleEvent.UiSetSelectedActor(_context.Acter));
@@ -113,7 +113,7 @@ public sealed class TurnExecutor
             }
         }
 
-        if (_context.ActerFaction == allyOrEnemy.Enemyiy)
+        if (_context.ActerFaction == Faction.Enemy)
         {
             var ene = _context.Acter as NormalEnemy;
             if (isFreezeByPassives && !hasCanCancelCantACTPassive)
@@ -167,7 +167,7 @@ public sealed class TurnExecutor
         {
             _presentation.SetTopMessage(entry?.Message ?? "");
             _context.Acter = entry?.Actor;
-            _context.ActerFaction = entry != null ? entry.Faction : allyOrEnemy.alliy;
+            _context.ActerFaction = entry != null ? entry.Faction : Faction.Ally;
 
             var modList = entry?.Modifiers;
             if (modList != null)

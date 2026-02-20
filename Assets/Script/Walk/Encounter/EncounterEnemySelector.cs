@@ -282,7 +282,7 @@ public class EncounterEnemySelector
     private BattleGroup CreateBattleGroup(List<NormalEnemy> resultList, PartyProperty ourImpression)
     {
         var compatibilityData = BuildCompatibilityData(resultList);
-        return new BattleGroup(resultList.Cast<BaseStates>().ToList(), ourImpression, allyOrEnemy.Enemyiy, compatibilityData);
+        return new BattleGroup(resultList.Cast<BaseStates>().ToList(), ourImpression, Faction.Enemy, compatibilityData);
     }
 
     private Dictionary<(BaseStates, BaseStates), int> BuildCompatibilityData(List<NormalEnemy> resultList)

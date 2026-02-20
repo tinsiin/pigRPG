@@ -23,7 +23,7 @@ public sealed class BattleActionContext
 
     // Current action state
     public BaseStates Acter { get; set; }
-    public allyOrEnemy ActerFaction { get; set; }
+    public Faction ActerFaction { get; set; }
     public int BattleTurnCount
     {
         get => StateManager.TurnCount;
@@ -108,12 +108,12 @@ public sealed class BattleActionContext
     /// <summary>
     /// キャラクターの陣営を取得
     /// </summary>
-    public allyOrEnemy GetCharacterFaction(BaseStates chara) => QueryService.GetCharacterFaction(chara);
+    public Faction GetCharacterFaction(BaseStates chara) => QueryService.GetCharacterFaction(chara);
 
     /// <summary>
     /// 陣営からグループを取得
     /// </summary>
-    public BattleGroup FactionToGroup(allyOrEnemy faction) => QueryService.FactionToGroup(faction);
+    public BattleGroup FactionToGroup(Faction faction) => QueryService.FactionToGroup(faction);
 
     /// <summary>
     /// キャラクターが属するグループを取得

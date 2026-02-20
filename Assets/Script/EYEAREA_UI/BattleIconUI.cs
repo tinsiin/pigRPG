@@ -298,5 +298,36 @@ public class BattleIconUI : MonoBehaviour, IPointerClickHandler
         Debug.Log($"[K/UI] TestOnClickLog called on {name}", this);
     }
 
+    /// <summary>
+    /// 被弾時の点滅エフェクト（fire-and-forget）。
+    /// Icon の alpha を 0↔1 にトグルして点滅させる。
+    /// </summary>
+    public async UniTaskVoid PlayDamageBlink(float duration = 0.5f, int count = 4)
+    {
+        if (Icon == null) return;
+
+        float halfCycle = duration / (count * 2f);
+        int halfCycleMs = Mathf.Max(1, (int)(halfCycle * 1000f));
+        var originalColor = Icon.color;
+
+        try
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if (Icon == null) return;
+                Icon.color = new Color(originalColor.r, originalColor.g, originalColor.b, 0f);
+                await UniTask.Delay(halfCycleMs);
+
+                if (Icon == null) return;
+                Icon.color = new Color(originalColor.r, originalColor.g, originalColor.b, 1f);
+                await UniTask.Delay(halfCycleMs);
+            }
+        }
+        finally
+        {
+            if (Icon != null)
+                Icon.color = new Color(originalColor.r, originalColor.g, originalColor.b, 1f);
+        }
+    }
 
 }

@@ -17,7 +17,7 @@ public static class AttackPowerConfig
         { TenDayAbility.Rain, 0.058f },
         { TenDayAbility.FaceToHand, 0.01f },
         { TenDayAbility.StarTersi, 0.02f },
-        { TenDayAbility.dokumamusi, 0.4f },
+        { TenDayAbility.Dokumamusi, 0.4f },
         { TenDayAbility.HeatHaze, 0.0666f },
         { TenDayAbility.Leisure, 0.01f },
         { TenDayAbility.SilentTraining, 0.2f },

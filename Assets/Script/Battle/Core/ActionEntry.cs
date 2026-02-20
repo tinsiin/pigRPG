@@ -12,7 +12,7 @@ public sealed class ActionEntry
 {
     public ActionType Type;
     public BaseStates Actor;
-    public allyOrEnemy Faction;
+    public Faction Faction;
     public string Message;
     public List<ModifierPart> Modifiers;
     public bool Freeze;

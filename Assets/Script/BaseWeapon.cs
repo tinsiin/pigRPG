@@ -40,6 +40,11 @@ public class BaseWeapon
 
 
     /// <summary>
+    /// 武器スラッシュアニメーションの色
+    /// </summary>
+    public Color SlashColor = Color.white;
+
+    /// <summary>
     /// 刃物武器かどうか
     /// </summary>
     public bool IsBlade;

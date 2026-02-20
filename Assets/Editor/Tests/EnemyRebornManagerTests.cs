@@ -149,7 +149,7 @@ public class EnemyRebornManagerTests
         {
             RebornSteps = recovelySteps,
             broken = broken,
-            DefaultImpression = SpiritualProperty.doremis,
+            DefaultImpression = SpiritualProperty.Doremis,
             MyType = CharacterType.Life
         };
 
