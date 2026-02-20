@@ -49,8 +49,8 @@ public class Slaim2 : BasePassive
     /// </summary>
     bool IsFullShuffleByTenDay(BaseStates Attacker,BaseStates Slaimer)
     {
-        var eneRain = Attacker.TenDayValues(false).GetValueOrZero(TenDayAbility.Rain);
-        var SlaimerSort = Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.Sort);
+        var eneRain = Attacker.TenDayValuesBase().GetValueOrZero(TenDayAbility.Rain);
+        var SlaimerSort = Slaimer.TenDayValuesBase().GetValueOrZero(TenDayAbility.Sort);
         
         return SlaimerSort > eneRain;//ソートが攻撃者に勝ってたら、全てかく乱できる。
     }
@@ -61,16 +61,16 @@ public class Slaim2 : BasePassive
     bool TenDayCalc(BaseStates Attacker,BaseStates Slaimer)
     {
         //まず水雷神経で相手を凌駕しすぎているのなら
-        if(Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) > Attacker.TenDayValuesSum(true)/2)
+        if(Slaimer.TenDayValuesBase().GetValueOrZero(TenDayAbility.WaterThunderNerve) > Attacker.TenDayValuesSumForSkill()/2)
         {
             return true;
         }
 
-        var RainSmile = Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.Raincoat) + Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.Smiler);
-        var KagerouTarai = Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.HeatHaze) + Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton);
-        var FaceHandDoku = Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.FaceToHand) + Slaimer.TenDayValues(false).GetValueOrZero(TenDayAbility.Dokumamusi);
+        var RainSmile = Slaimer.TenDayValuesBase().GetValueOrZero(TenDayAbility.Raincoat) + Slaimer.TenDayValuesBase().GetValueOrZero(TenDayAbility.Smiler);
+        var KagerouTarai = Slaimer.TenDayValuesBase().GetValueOrZero(TenDayAbility.HeatHaze) + Slaimer.TenDayValuesBase().GetValueOrZero(TenDayAbility.Taraiton);
+        var FaceHandDoku = Slaimer.TenDayValuesBase().GetValueOrZero(TenDayAbility.FaceToHand) + Slaimer.TenDayValuesBase().GetValueOrZero(TenDayAbility.Dokumamusi);
 
-        var eneRain = Attacker.TenDayValues(false).GetValueOrZero(TenDayAbility.Rain);
+        var eneRain = Attacker.TenDayValuesBase().GetValueOrZero(TenDayAbility.Rain);
         //各通常比較、実行者側が多ければ発生ということで
         if(RainSmile > eneRain)return true;
         if(KagerouTarai > eneRain)return true;

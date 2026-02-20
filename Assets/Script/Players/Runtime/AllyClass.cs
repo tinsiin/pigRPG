@@ -177,7 +177,7 @@ public class AllyClass : BaseStates
         //キャラクターの持つ十日能力を多い順に重み付き抽選リストに入れ、処理をする。
         var AbilityList = new WeightedList<TenDayAbility>();
         //linqで値の多い順にゲット
-        foreach(var ability in TenDayValues(false).OrderByDescending(x => x.Value))
+        foreach(var ability in TenDayValuesBase().OrderByDescending(x => x.Value))
         {
             // 重みは整数として扱う前提のため、小数は切り上げし、0はスキップ
             var weight = Mathf.CeilToInt(ability.Value);
@@ -265,12 +265,12 @@ public class AllyClass : BaseStates
         if(NowPower == PowerLevel.VeryLow)return -1f;//パワーがたるい　だとそもそも発生しない。
 
         //ジョー歯÷4による基礎能力係数
-        var BaseCoefficient = TenDayValues(false).GetValueOrZero(TenDayAbility.JoeTeeth) / 4;
+        var BaseCoefficient = TenDayValuesBase().GetValueOrZero(TenDayAbility.JoeTeeth) / 4;
         //馬鹿と烈火の乗算　された補正要素
-        var BakaBlazeFireCoef = TenDayValues(false).GetValueOrZero(TenDayAbility.Baka) * 
-        TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire) / 30;
+        var BakaBlazeFireCoef = TenDayValuesBase().GetValueOrZero(TenDayAbility.Baka) * 
+        TenDayValuesBase().GetValueOrZero(TenDayAbility.BlazingFire) / 30;
         //レインコートによる補正要素
-        var RaincoatCoef = TenDayValues(false).GetValueOrZero(TenDayAbility.Raincoat) / 20;
+        var RaincoatCoef = TenDayValuesBase().GetValueOrZero(TenDayAbility.Raincoat) / 20;
 
         //レインコートと馬鹿烈火補正はパワーによって分岐
         switch(NowPower)
@@ -597,7 +597,7 @@ public class AllyClass : BaseStates
     {
         if(MentalHP < MentalMaxHP)
         {
-            MentalHP += TenDayValues(false).GetValueOrZero(TenDayAbility.Rain) + MentalMaxHP * 0.16f;
+            MentalHP += TenDayValuesBase().GetValueOrZero(TenDayAbility.Rain) + MentalMaxHP * 0.16f;
         }
         //ポイント回復用で結局は戦闘開始時にmaxになるんだし、こんぐらいの割合で丁度いいと思う
     }
@@ -685,7 +685,7 @@ public class AllyClass : BaseStates
         //まず主人公グループと敵グループの強さの倍率
         var battle = BattleUIBridge.Active?.BattleContext;
         if (battle == null) return;
-        var ratio = battle.EnemyGroup.OurTenDayPowerSum(false) / battle.AllyGroup.OurTenDayPowerSum(false);
+        var ratio = battle.EnemyGroup.OurTenDayPowerSum() / battle.AllyGroup.OurTenDayPowerSum();
         VictoryBoost(ratio);
 
     }

@@ -44,12 +44,12 @@ public abstract partial class BaseStates
         get
         {
             // テント空洞と夜暗黒の基本値計算
-            var tentVoidValue = TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid) * 2;
-            var nightDarknessValue = TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) * 1.6f;
+            var tentVoidValue = TenDayValuesBase().GetValueOrZero(TenDayAbility.TentVoid) * 2;
+            var nightDarknessValue = TenDayValuesBase().GetValueOrZero(TenDayAbility.NightDarkness) * 1.6f;
             
             // ミザとスマイラー、元素信仰力の減算値計算
-            var mizaValue = TenDayValues(false).GetValueOrZero(TenDayAbility.Miza) / 4f * TenDayValues(false).GetValueOrZero(TenDayAbility.Smiler);
-            var elementFaithValue = TenDayValues(false).GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.7f;
+            var mizaValue = TenDayValuesBase().GetValueOrZero(TenDayAbility.Miza) / 4f * TenDayValuesBase().GetValueOrZero(TenDayAbility.Smiler);
+            var elementFaithValue = TenDayValuesBase().GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.7f;
         
             // 最終計算
             var finalValue = (int)(tentVoidValue + nightDarknessValue - (mizaValue + elementFaithValue));

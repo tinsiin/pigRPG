@@ -442,9 +442,9 @@ public sealed class TargetingService
 
     private bool ComparePressureAndRedirect(BaseStates attacker, BaseStates vanguard)
     {
-        var vanguardPressure = vanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.Glory);
-        var attackerResilience = attacker.TenDayValues(false).GetValueOrZero(TenDayAbility.JoeTeeth)
-                                 + attacker.TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.5f;
+        var vanguardPressure = vanguard.TenDayValuesBase().GetValueOrZero(TenDayAbility.Glory);
+        var attackerResilience = attacker.TenDayValuesBase().GetValueOrZero(TenDayAbility.JoeTeeth)
+                                 + attacker.TenDayValuesBase().GetValueOrZero(TenDayAbility.WaterThunderNerve) * 0.5f;
 
         return vanguardPressure > _random.NextFloat(vanguardPressure + attackerResilience);
     }

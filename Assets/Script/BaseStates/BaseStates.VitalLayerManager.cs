@@ -104,7 +104,7 @@ public abstract partial class BaseStates
                 _vitalLayerList.RemoveAt(i);
                 // リストを削除したので、 i はインクリメントしない（要注意）
                 //破壊慣れまたは破壊負け
-                var kerekere = atker.TenDayValues(true).GetValueOrZero(TenDayAbility.KereKere);
+                var kerekere = atker.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.KereKere);
                 if (skillPhy == PhysicalProperty.heavy)//暴断なら破壊慣れ
                 {
                     dmg += dmg * 0.015f * kerekere;

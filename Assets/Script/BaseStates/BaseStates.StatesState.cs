@@ -663,7 +663,7 @@ public abstract partial class BaseStates
     /// </summary>
     public void ApplyConditionOnBattleStart(float eneTenDays)
     {
-        var myTenDays = TenDayValuesSum(false);
+        var myTenDays = TenDayValuesSumBase();
         // 安全策として、0除算を避ける
         float ratio = (eneTenDays == 0) 
             ? 999999f // 敵が0なら自分が勝ってる扱い(∞倍勝ち)
@@ -1374,10 +1374,10 @@ public abstract partial class BaseStates
                             break;
                         case SpiritualProperty.Sacrifaith:
                             var OptimisticPer = 0;//楽観的に行く確率
-                            var eneKereKere = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.KereKere);
-                            var eneWif = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.FlameBreathingWife);
-                            var KereKere = TenDayValues(true).GetValueOrZero(TenDayAbility.KereKere);
-                            var Wif = TenDayValues(true).GetValueOrZero(TenDayAbility.FlameBreathingWife);
+                            var eneKereKere = ene.TenDayValuesBase().GetValueOrZero(TenDayAbility.KereKere);
+                            var eneWif = ene.TenDayValuesBase().GetValueOrZero(TenDayAbility.FlameBreathingWife);
+                            var KereKere = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.KereKere);
+                            var Wif = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.FlameBreathingWife);
                             if(KereKere >= eneKereKere && Wif > eneWif)
                             {
                                 OptimisticPer = (int)(Wif - eneWif);
@@ -1400,8 +1400,8 @@ public abstract partial class BaseStates
                             break;
                         case SpiritualProperty.Psycho:
                             var NormalPer = 0;
-                            var EneLeisure = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure);
-                            var Leisure = TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure);
+                            var EneLeisure = ene.TenDayValuesBase().GetValueOrZero(TenDayAbility.Leisure);
+                            var Leisure = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Leisure);
                             if(Leisure > EneLeisure)
                             {
                                 NormalPer = (int)(Leisure - EneLeisure);
@@ -1459,10 +1459,10 @@ public abstract partial class BaseStates
                         case SpiritualProperty.Cquiest:
                             var C_NormalEndWarPer = 0;
                             var C_NormalNightPer = 0;
-                            var C_EneEndWar = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.HeavenAndEndWar);
-                            var C_EneNight = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight);
-                            var C_EndWar = TenDayValues(true).GetValueOrZero(TenDayAbility.HeavenAndEndWar);
-                            var C_Night = TenDayValues(true).GetValueOrZero(TenDayAbility.NightInkKnight);
+                            var C_EneEndWar = ene.TenDayValuesBase().GetValueOrZero(TenDayAbility.HeavenAndEndWar);
+                            var C_EneNight = ene.TenDayValuesBase().GetValueOrZero(TenDayAbility.NightInkKnight);
+                            var C_EndWar = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.HeavenAndEndWar);
+                            var C_Night = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.NightInkKnight);
                             if(C_EndWar > C_EneEndWar)
                             {
                                 C_NormalEndWarPer = (int)(C_EndWar - C_EneEndWar);
@@ -1507,8 +1507,8 @@ public abstract partial class BaseStates
                             break;
                         case SpiritualProperty.Pillar:
                             var VondPer = 0;
-                            var Vond = TenDayValues(true).GetValueOrZero(TenDayAbility.Vond);
-                            var EneVond = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Vond);
+                            var Vond = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Vond);
+                            var EneVond = ene.TenDayValuesBase().GetValueOrZero(TenDayAbility.Vond);
                             if(Vond > EneVond)
                             {
                                 VondPer = (int)(Vond - EneVond);
@@ -1561,7 +1561,7 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.Kindergarten:
-                            var KinderOptimToElated_PersonaPer = TenDayValues(true).GetValueOrZero(TenDayAbility.PersonaDivergence);
+                            var KinderOptimToElated_PersonaPer = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.PersonaDivergence);
                             if(KinderOptimToElated_PersonaPer> 776)KinderOptimToElated_PersonaPer = 776;//最低でも1%残るようにする
                             if(rollper(777 - KinderOptimToElated_PersonaPer))
                             {
@@ -1574,7 +1574,7 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.Sacrifaith:
-                            var SacrifaithOptimToElated_HumanKillerPer = TenDayValues(true).GetValueOrZero(TenDayAbility.HumanKiller);
+                            var SacrifaithOptimToElated_HumanKillerPer = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.HumanKiller);
                             if(rollper(-50 + SacrifaithOptimToElated_HumanKillerPer))
                             {
                                 NowCondition = Demeanor.Elated;
@@ -1597,7 +1597,7 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.BaleDrival:
-                            var baledrivalOptimToElated_HumanKillerPer = TenDayValues(true).GetValueOrZero(TenDayAbility.HumanKiller);
+                            var baledrivalOptimToElated_HumanKillerPer = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.HumanKiller);
                             if(rollper(3 + baledrivalOptimToElated_HumanKillerPer*2))
                             {
                                 NowCondition = Demeanor.Elated;
@@ -1609,7 +1609,7 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.Devil:
-                            var DevilOptimToElatedPer = TenDayValues(true).GetValueOrZero(TenDayAbility.TentVoid) - TenDayValues(true).GetValueOrZero(TenDayAbility.Enokunagi);
+                            var DevilOptimToElatedPer = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.TentVoid) - TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Enokunagi);
                             if(rollper(60 - DevilOptimToElatedPer))
                             {
                                 NowCondition = Demeanor.Elated;
@@ -1677,7 +1677,7 @@ public abstract partial class BaseStates
                     break;
 
                 case Demeanor.Resolved:
-                    var ResolvedToOptimisticPer = TenDayValues(true).GetValueOrZero(TenDayAbility.FlameBreathingWife) - ene.TenDayValues(false).GetValueOrZero(TenDayAbility.FlameBreathingWife);
+                    var ResolvedToOptimisticPer = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.FlameBreathingWife) - ene.TenDayValuesBase().GetValueOrZero(TenDayAbility.FlameBreathingWife);
                     if(ResolvedToOptimisticPer < 0)
                     {
                         ResolvedToOptimisticPer = 0;
@@ -1697,7 +1697,7 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.Kindergarten:
-                            var ResolvedToOptimisticKinder_luck = TenDayValues(true).GetValueOrZero(TenDayAbility.Lucky);
+                            var ResolvedToOptimisticKinder_luck = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Lucky);
                             if(rollper(77 + ResolvedToOptimisticKinder_luck + ResolvedToOptimisticPer))
                             {
                                 NowCondition = Demeanor.Optimistic;
@@ -1709,7 +1709,7 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.Sacrifaith:
-                            var ResolvedToOptimisticSacrifaith_UnextinguishedPath = TenDayValues(true).GetValueOrZero(TenDayAbility.UnextinguishedPath);
+                            var ResolvedToOptimisticSacrifaith_UnextinguishedPath = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.UnextinguishedPath);
                             if(rollper(15 -ResolvedToOptimisticSacrifaith_UnextinguishedPath + ResolvedToOptimisticPer))
                             {
                                 NowCondition = Demeanor.Optimistic;
@@ -1721,7 +1721,7 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.Psycho:
-                            if(rollper(10 + TenDayValues(true).GetValueOrZero(TenDayAbility.StarTersi) * 0.9f + ResolvedToOptimisticPer))
+                            if(rollper(10 + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.StarTersi) * 0.9f + ResolvedToOptimisticPer))
                             {
                                 NowCondition = Demeanor.Optimistic;
                             }
@@ -1732,7 +1732,7 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.BaleDrival:
-                            if(rollper(40 + ResolvedToOptimisticPer + TenDayValues(true).GetValueOrZero(TenDayAbility.SpringWater)))
+                            if(rollper(40 + ResolvedToOptimisticPer + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.SpringWater)))
                             {
                                 NowCondition = Demeanor.Optimistic;
                             }
@@ -1743,8 +1743,8 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.Devil:
-                            var ResolvedToOptimisticDevil_BalePer= TenDayValues(true).GetValueOrZero(TenDayAbility.Vail) - ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Vail);
-                            var ResolvedToOptimisticDevil_FaceToHandPer= TenDayValues(true).GetValueOrZero(TenDayAbility.FaceToHand) - ene.TenDayValues(false).GetValueOrZero(TenDayAbility.FaceToHand);
+                            var ResolvedToOptimisticDevil_BalePer= TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Vail) - ene.TenDayValuesBase().GetValueOrZero(TenDayAbility.Vail);
+                            var ResolvedToOptimisticDevil_FaceToHandPer= TenDayValuesForSkill().GetValueOrZero(TenDayAbility.FaceToHand) - ene.TenDayValuesBase().GetValueOrZero(TenDayAbility.FaceToHand);
                             if(rollper(40 + ResolvedToOptimisticPer + (ResolvedToOptimisticDevil_BalePer - ResolvedToOptimisticDevil_FaceToHandPer)))
                             {
                                 NowCondition = Demeanor.Optimistic;
@@ -1756,7 +1756,7 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.Cquiest:
-                            if(rollper(12 + (TenDayValues(true).GetValueOrZero(TenDayAbility.SpringWater) - TenDayValues(true).GetValueOrZero(TenDayAbility.Taraiton)) + ResolvedToOptimisticPer))
+                            if(rollper(12 + (TenDayValuesForSkill().GetValueOrZero(TenDayAbility.SpringWater) - TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Taraiton)) + ResolvedToOptimisticPer))
                             {
                                 NowCondition = Demeanor.Optimistic;
                             }
@@ -1810,10 +1810,10 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.Kindergarten:
-                            var AngryEneVail = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Vail);
-                            var AngryVail = TenDayValues(true).GetValueOrZero(TenDayAbility.Vail);
-                            var AngryEneWaterThunder = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.WaterThunderNerve);
-                            var AngryWaterThunder = TenDayValues(true).GetValueOrZero(TenDayAbility.WaterThunderNerve);
+                            var AngryEneVail = ene.TenDayValuesBase().GetValueOrZero(TenDayAbility.Vail);
+                            var AngryVail = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Vail);
+                            var AngryEneWaterThunder = ene.TenDayValuesBase().GetValueOrZero(TenDayAbility.WaterThunderNerve);
+                            var AngryWaterThunder = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.WaterThunderNerve);
                             var AngryToElated_KinderPer = AngryVail - AngryEneVail + (AngryWaterThunder - AngryEneWaterThunder);
                             if(rollper(50 + AngryToElated_KinderPer))
                             {
@@ -1826,7 +1826,7 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.Sacrifaith:
-                            if(rollper(30 - TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire)))
+                            if(rollper(30 - TenDayValuesForSkill().GetValueOrZero(TenDayAbility.BlazingFire)))
                             {
                                 NowCondition = Demeanor.Elated;
                             }
@@ -1837,7 +1837,7 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.Psycho:
-                            if(rollper(TenDayValues(true).GetValueOrZero(TenDayAbility.HumanKiller)))
+                            if(rollper(TenDayValuesForSkill().GetValueOrZero(TenDayAbility.HumanKiller)))
                             {
                                 NowCondition = Demeanor.Elated;
                             }
@@ -1850,7 +1850,7 @@ public abstract partial class BaseStates
                         case SpiritualProperty.BaleDrival:
                             const float Threshold = 37.5f;
                             var AngryToElated_BaledrivalPer = Threshold;
-                            var AngryToElated_Baledrival_VailValue = TenDayValues(true).GetValueOrZero(TenDayAbility.Vail)/2;
+                            var AngryToElated_Baledrival_VailValue = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Vail)/2;
                             if(AngryToElated_Baledrival_VailValue >Threshold)AngryToElated_BaledrivalPer = AngryToElated_Baledrival_VailValue;
                             if(rollper(AngryToElated_BaledrivalPer))
                             {
@@ -1863,7 +1863,7 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.Devil:
-                            if(rollper(40 + (20 - TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire))))
+                            if(rollper(40 + (20 - TenDayValuesForSkill().GetValueOrZero(TenDayAbility.BlazingFire))))
                             {
                                 NowCondition = Demeanor.Elated;
                             }
@@ -1924,7 +1924,7 @@ public abstract partial class BaseStates
                     switch (imp)
                     {
                         case SpiritualProperty.LiminalWhiteTile:
-                            if(rollper(30 + TenDayValues(true).GetValueOrZero(TenDayAbility.SpringNap)))
+                            if(rollper(30 + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.SpringNap)))
                             {
                                 NowCondition = Demeanor.Optimistic;
                             }else if(rollper(46))
@@ -1958,7 +1958,7 @@ public abstract partial class BaseStates
                             }else if(rollper(50))
                             {
                                 NowCondition = Demeanor.Normal;
-                            }else if(rollper(1 + TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) + TenDayValues(true).GetValueOrZero(TenDayAbility.Smiler)))
+                            }else if(rollper(1 + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.BlazingFire) + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Smiler)))
                             {
                                 NowCondition = Demeanor.Resolved;
                             }
@@ -1969,8 +1969,8 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.Psycho:
-                            var eneRainCoat = ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Raincoat);
-                            var EndWar = TenDayValues(true).GetValueOrZero(TenDayAbility.HeavenAndEndWar);
+                            var eneRainCoat = ene.TenDayValuesBase().GetValueOrZero(TenDayAbility.Raincoat);
+                            var EndWar = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.HeavenAndEndWar);
                             if(rollper(40 - (EndWar - eneRainCoat)))
                             {
                                 NowCondition = Demeanor.Optimistic;
@@ -1985,13 +1985,13 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.BaleDrival:
-                            if(rollper(80 + TenDayValues(true).GetValueOrZero(TenDayAbility.Rain)))
+                            if(rollper(80 + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Rain)))
                             {
                                 NowCondition = Demeanor.Optimistic;
-                            }else if(rollper(90 + TenDayValues(true).GetValueOrZero(TenDayAbility.ColdHeartedCalm) / 4))
+                            }else if(rollper(90 + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.ColdHeartedCalm) / 4))
                             {
                                 NowCondition = Demeanor.Normal;
-                            }else if(rollper(TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) * 1.2f))
+                            }else if(rollper(TenDayValuesForSkill().GetValueOrZero(TenDayAbility.BlazingFire) * 1.2f))
                             {
                                 NowCondition = Demeanor.Resolved;
                             }
@@ -2002,13 +2002,13 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.Devil:
-                            if(rollper(32 + TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure)))
+                            if(rollper(32 + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Leisure)))
                             {
                                 NowCondition = Demeanor.Optimistic;
                             }else if(rollper(50))
                             {
                                 NowCondition = Demeanor.Normal;
-                            }else if(rollper((TenDayValues(true).GetValueOrZero(TenDayAbility.UnextinguishedPath)-2) / 5))
+                            }else if(rollper((TenDayValuesForSkill().GetValueOrZero(TenDayAbility.UnextinguishedPath)-2) / 5))
                             {
                                 NowCondition = Demeanor.Resolved;
                             }
@@ -2020,9 +2020,9 @@ public abstract partial class BaseStates
                             break;
                         case SpiritualProperty.Cquiest:
                             var DoubtfulToOptimistic_CPer = 0f;
-                            if(ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure) < TenDayValues(true).GetValueOrZero(TenDayAbility.NightInkKnight) * 0.3f)
+                            if(ene.TenDayValuesBase().GetValueOrZero(TenDayAbility.Leisure) < TenDayValuesForSkill().GetValueOrZero(TenDayAbility.NightInkKnight) * 0.3f)
                             {
-                                DoubtfulToOptimistic_CPer = TenDayValues(true).GetValueOrZero(TenDayAbility.ElementFaithPower);
+                                DoubtfulToOptimistic_CPer = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.ElementFaithPower);
                             }
 
                             if(rollper(38 + DoubtfulToOptimistic_CPer))
@@ -2031,7 +2031,7 @@ public abstract partial class BaseStates
                             }else if(rollper(33))
                             {
                                 NowCondition = Demeanor.Normal;
-                            }else if(rollper((TenDayValues(true).GetValueOrZero(TenDayAbility.HeavenAndEndWar) - 6) / 2))
+                            }else if(rollper((TenDayValuesForSkill().GetValueOrZero(TenDayAbility.HeavenAndEndWar) - 6) / 2))
                             {
                                 NowCondition = Demeanor.Resolved;
                             }
@@ -2042,7 +2042,7 @@ public abstract partial class BaseStates
                             }
                             break;
                         case SpiritualProperty.GodTier:
-                            if(rollper(27 - TenDayValues(true).GetValueOrZero(TenDayAbility.NightInkKnight)))
+                            if(rollper(27 - TenDayValuesForSkill().GetValueOrZero(TenDayAbility.NightInkKnight)))
                             {
                                 NowCondition = Demeanor.Optimistic;
                             }else if(rollper(85))
@@ -2071,16 +2071,16 @@ public abstract partial class BaseStates
                             break;
                         case SpiritualProperty.Doremis:
                             const float Threshold = 49f;
-                            var DoubtfulToNorml_Doremis_nightDarknessAndVoidValue = TenDayValues(true).GetValueOrZero(TenDayAbility.NightDarkness) + TenDayValues(true).GetValueOrZero(TenDayAbility.TentVoid);
+                            var DoubtfulToNorml_Doremis_nightDarknessAndVoidValue = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.NightDarkness) + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.TentVoid);
                             var DoubtfulToNorml_DoremisPer = Threshold;
                             if(DoubtfulToNorml_Doremis_nightDarknessAndVoidValue < Threshold) DoubtfulToNorml_DoremisPer = DoubtfulToNorml_Doremis_nightDarknessAndVoidValue;
-                            if(rollper(TenDayValues(true).GetValueOrZero(TenDayAbility.NightDarkness) + 30))
+                            if(rollper(TenDayValuesForSkill().GetValueOrZero(TenDayAbility.NightDarkness) + 30))
                             {
                                 NowCondition = Demeanor.Optimistic;
                             }else if(rollper(DoubtfulToNorml_DoremisPer))
                             {
                                 NowCondition = Demeanor.Normal;
-                            }else if(rollper(TenDayValues(true).GetValueOrZero(TenDayAbility.StarTersi) / 1.7f))
+                            }else if(rollper(TenDayValuesForSkill().GetValueOrZero(TenDayAbility.StarTersi) / 1.7f))
                             {
                                 NowCondition = Demeanor.Resolved;
                             }
@@ -2112,14 +2112,14 @@ public abstract partial class BaseStates
                             break;
                         case SpiritualProperty.Kindergarten:
                             var ConfusedToPainful_Kindergarden_DokumamusiAndRainCoatAverage = 
-                            (TenDayValues(true).GetValueOrZero(TenDayAbility.Dokumamusi) + TenDayValues(true).GetValueOrZero(TenDayAbility.Raincoat)) / 2;
+                            (TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Dokumamusi) + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Raincoat)) / 2;
                             if(rollper(20))
                             {
                                 NowCondition = Demeanor.Painful;
-                            }else if(rollper(80 - (ConfusedToPainful_Kindergarden_DokumamusiAndRainCoatAverage - TenDayValues(true).GetValueOrZero(TenDayAbility.ColdHeartedCalm))))
+                            }else if(rollper(80 - (ConfusedToPainful_Kindergarden_DokumamusiAndRainCoatAverage - TenDayValuesForSkill().GetValueOrZero(TenDayAbility.ColdHeartedCalm))))
                             {
                                 NowCondition = Demeanor.Normal;
-                            }else if(rollper(20 + TenDayValues(true).GetValueOrZero(TenDayAbility.Raincoat) * 0.4f + TenDayValues(true).GetValueOrZero(TenDayAbility.Dokumamusi) * 0.6f))
+                            }else if(rollper(20 + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Raincoat) * 0.4f + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Dokumamusi) * 0.6f))
                             {
                                 NowCondition = Demeanor.Elated;
                             }
@@ -2133,7 +2133,7 @@ public abstract partial class BaseStates
                             if(rollper(40))
                             {
                                 NowCondition = Demeanor.Painful;
-                            }else if(rollper(70 + (TenDayValues(true).GetValueOrZero(TenDayAbility.Sort)-4)))
+                            }else if(rollper(70 + (TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Sort)-4)))
                             {
                                 NowCondition = Demeanor.Normal;
                             }else if(rollper(60))
@@ -2235,7 +2235,7 @@ public abstract partial class BaseStates
                             }else if(rollper(60))
                             {
                                 NowCondition = Demeanor.Normal;
-                            }else if(rollper(3 - TenDayValues(true).GetValueOrZero(TenDayAbility.SpringWater)))
+                            }else if(rollper(3 - TenDayValuesForSkill().GetValueOrZero(TenDayAbility.SpringWater)))
                             {
                                 NowCondition = Demeanor.Elated;
                             }
@@ -2266,7 +2266,7 @@ public abstract partial class BaseStates
                     break;
 
                 case Demeanor.Normal:
-                    var y = TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure) - ene.TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure);//余裕の差
+                    var y = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Leisure) - ene.TenDayValuesBase().GetValueOrZero(TenDayAbility.Leisure);//余裕の差
                     switch (imp)
                     {
                         case SpiritualProperty.LiminalWhiteTile:
@@ -2391,7 +2391,7 @@ public abstract partial class BaseStates
                             break;
                         case SpiritualProperty.Doremis:
                             var NormalToElated_DoremisPer = 0f;
-                            if(y > 0) NormalToElated_DoremisPer = TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) + TenDayValues(true).GetValueOrZero(TenDayAbility.Miza);
+                            if(y > 0) NormalToElated_DoremisPer = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.BlazingFire) + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Miza);
                             if(rollper(38 + y/2))
                             {
                                 NowCondition = Demeanor.Optimistic;

@@ -57,13 +57,13 @@ public sealed class FlatRozeEffect : ISkillEffect
 
     private static float GetCoolnessFlatRozeChance(BaseStates acter)
     {
-        var coolPower = acter.TenDayValues(false).GetValueOrZero(TenDayAbility.SpringWater);
+        var coolPower = acter.TenDayValuesBase().GetValueOrZero(TenDayAbility.SpringWater);
         return Mathf.Floor(coolPower / 16.7f) * 0.01f;
     }
 
     private static float GetCoolnesFlatRozePower(BaseStates acter)
     {
-        var coolPower = acter.TenDayValues(true).GetValueOrZero(TenDayAbility.SpringWater);
+        var coolPower = acter.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.SpringWater);
         return coolPower * 0.005f;
     }
 

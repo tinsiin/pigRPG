@@ -10,7 +10,7 @@ using UnityEditor;
 /// <summary>
 /// 十日能力用の横棒グラフビュー。
 /// - TMP の各行中心にバーを縦位置合わせ（TenDayAbility の列挙順とテキスト行順が一致している前提）
-/// - 値は actor.TenDayValues(false)（通常武器補正あり・非特判）を使用
+/// - 値は actor.TenDayValuesBase()（通常武器補正あり・非特判）を使用
 /// - 生成時に自動スケール（最大値が表示幅の約70%になる）
 /// - スライダー等からユーザースケール倍率を外部指定可能（SetUserScale）
 /// - テキストや軸は描画しない。バー矩形のみ。
@@ -148,7 +148,7 @@ public class TenDayAbilityHorizontalBarsView : MonoBehaviour
             return;
         }
 
-        var dict = actor.TenDayValues(false);
+        var dict = actor.TenDayValuesBase();
         var abilities = (TenDayAbility[])Enum.GetValues(typeof(TenDayAbility));
         var vals = new float[abilities.Length];
         for (int i = 0; i < abilities.Length; i++)

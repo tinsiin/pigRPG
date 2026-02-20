@@ -40,9 +40,9 @@ public abstract partial class BaseStates
     bool BladeCriticalCalculation(ref StatesPowerBreakdown dmg, ref StatesPowerBreakdown resonanceDmg, BaseStates Atker, BaseSkill skill)
     {
         var LiveHP = HP - dmg.Total;//もし即死が発生したときに、ダメージに加算される即死に足りないfloat
-        var atkerBlade = Atker.TenDayValues(true).GetValueOrZero(TenDayAbility.Blades);
-        var UnderBlade = TenDayValues(false).GetValueOrZero(TenDayAbility.Blades);
-        var UnderPower = TenDayValuesSum(false);
+        var atkerBlade = Atker.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Blades);
+        var UnderBlade = TenDayValuesBase().GetValueOrZero(TenDayAbility.Blades);
+        var UnderPower = TenDayValuesSumBase();
 
         //まずしきい値発生から
         var CriticalHPThreshold = Mathf.Min(atkerBlade/150f,1f) * (5/12) *100;
@@ -343,7 +343,7 @@ public abstract partial class BaseStates
     /// <returns>補正段階 は増えていく。/returns>
     int GetTightenMindCorrectionStage()
     {
-        float nightinknightValue = TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight);
+        float nightinknightValue = TenDayValuesBase().GetValueOrZero(TenDayAbility.NightInkKnight);
 
         nightinknightValue /= 10;
         nightinknightValue = Mathf.Floor(nightinknightValue);
@@ -414,7 +414,7 @@ public abstract partial class BaseStates
         var count = DefenseTransformationThresholds[(AttackerStyle, NowDeffenceStyle)];
         if(tightenStage>=2)
         {
-            if(RandomSource.NextFloat(1)<0.31f + TenDayValues(false).GetValueOrZero(TenDayAbility.NightInkKnight)*0.01f)
+            if(RandomSource.NextFloat(1)<0.31f + TenDayValuesBase().GetValueOrZero(TenDayAbility.NightInkKnight)*0.01f)
         {
                 count -= 1;
 
@@ -469,7 +469,7 @@ public abstract partial class BaseStates
         def = ClampDefenseByAimStyle(skill,def);//防ぎ方(AimStyle)の不一致がある場合、クランプする
 
         StatesPowerBreakdown dmg, mentalDmg;
-        var mentalATKBoost = Mathf.Max(Atker.TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure) - TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure),0)
+        var mentalATKBoost = Mathf.Max(Atker.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Leisure) - TenDayValuesBase().GetValueOrZero(TenDayAbility.Leisure),0)
         * Atker.MentalHP * 0.2f;//相手との余裕の差と精神HPの0.2倍を掛ける 
 
         //下の魔法スキル以外の計算式を基本計算式と考えましょう
@@ -650,8 +650,8 @@ public abstract partial class BaseStates
             def = ClampDefenseByAimStyle(skill,def);
 
         StatesPowerBreakdown dmg, mentalDmg;
-        var mentalATKBoost = Mathf.Max(Atker.TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure) - TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure),0)
-        * Atker.MentalHP * 0.2f;//相手との余裕の差と精神HPの0.2倍を掛ける 
+        var mentalATKBoost = Mathf.Max(Atker.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Leisure) - TenDayValuesBase().GetValueOrZero(TenDayAbility.Leisure),0)
+        * Atker.MentalHP * 0.2f;//相手との余裕の差と精神HPの0.2倍を掛ける
 
         // 下の魔法スキル以外の計算式を基本計算式と考えましょう
         if(skill.IsMagic)//魔法スキルのダメージ計算
@@ -910,7 +910,7 @@ public abstract partial class BaseStates
     public void ResonanceDamage(StatesPowerBreakdown dmg, BaseSkill skill, BaseStates Atker)
     {   
         //攻撃者がこちらに対してどれだけ強いか
-        var powerRatio = Atker.TenDayValuesSum(false) / TenDayValuesSum(false);//思えダメージはスキルの十日能力補正なし
+        var powerRatio = Atker.TenDayValuesSumBase() / TenDayValuesSumBase();//思えダメージはスキルの十日能力補正なし
         //相手が自分より定数倍強いとダメージが発生する
         if(powerRatio < RESONANCE_POWER_THRESHOLD) return;
 

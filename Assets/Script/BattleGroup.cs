@@ -48,24 +48,24 @@ public class BattleGroup
     /// <summary>
     /// グループの十日能力の総量の平均値を返す　強さの指標
     /// </summary>
-    public float OurAvarageTenDayPower(bool IsSkillEffect)
+    public float OurAvarageTenDayPower()
     {
         float sum = 0f;
         foreach(var chara in Ours)
         {
-            sum += chara.TenDayValuesSum(IsSkillEffect);
+            sum += chara.TenDayValuesSumBase();
         }
         return sum / Ours.Count;
     }
     /// <summary>
     ///グループの十日能力の総量
     /// </summary>
-    public float OurTenDayPowerSum(bool IsSkillEffect)
+    public float OurTenDayPowerSum()
     {
         float sum = 0f;
         foreach(var chara in Ours)
         {
-            sum += chara.TenDayValuesSum(IsSkillEffect);
+            sum += chara.TenDayValuesSumBase();
         }
         return sum;
     }
@@ -165,11 +165,11 @@ public class BattleGroup
     /// </summary>
     void DecideNoshiirTurnByAbilityComparison(ref int noshiirTurn,ref int backFacingTurn,BaseStates target,BaseStates attacker)
     {
-        var targetSilent = target.TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining);//対象者のサイレント練度
-        var attackerPilmagreatifull = attacker.TenDayValues(false).GetValueOrZero(TenDayAbility.Pilmagreatifull);//付与者のピルマグレイトフル
-        var targetStar = target.TenDayValues(false).GetValueOrZero(TenDayAbility.StarTersi);//対象者の星テルシ
-        var attackerStar = attacker.TenDayValues(false).GetValueOrZero(TenDayAbility.StarTersi);//付与者の星テルシ
-        var targetHeavenAndEndWar = target.TenDayValues(false).GetValueOrZero(TenDayAbility.HeavenAndEndWar);//対象者の天と終戦
+        var targetSilent = target.TenDayValuesBase().GetValueOrZero(TenDayAbility.SilentTraining);//対象者のサイレント練度
+        var attackerPilmagreatifull = attacker.TenDayValuesBase().GetValueOrZero(TenDayAbility.Pilmagreatifull);//付与者のピルマグレイトフル
+        var targetStar = target.TenDayValuesBase().GetValueOrZero(TenDayAbility.StarTersi);//対象者の星テルシ
+        var attackerStar = attacker.TenDayValuesBase().GetValueOrZero(TenDayAbility.StarTersi);//付与者の星テルシ
+        var targetHeavenAndEndWar = target.TenDayValuesBase().GetValueOrZero(TenDayAbility.HeavenAndEndWar);//対象者の天と終戦
 
         //星テルシが26以上で、尚且つ相手に対して多ければ、それぞれのピグマ、サイレント練度比較用の値を1.1倍する
         if(attackerStar>=26 && attackerStar >targetStar)
@@ -278,7 +278,7 @@ public class BattleGroup
             handle.DurationTurn = backFacingTurn;
             handle.AddDefensePercentageModifierByAttacker(Doer, 0.7f);//付与者からの攻撃の際防御力が30%低下
             //付与者のピルマグレイトフルを分、攻撃者(対象者)の回避率を減らす。
-            handle.SetFixedValue(StatModifier.Agi, -Doer.TenDayValues(false).GetValueOrZero(TenDayAbility.Pilmagreatifull));
+            handle.SetFixedValue(StatModifier.Agi, -Doer.TenDayValuesBase().GetValueOrZero(TenDayAbility.Pilmagreatifull));
         }
         
     }

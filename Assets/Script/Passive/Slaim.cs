@@ -13,7 +13,7 @@ public class Slaim : BasePassive
     public override void OnApply(BaseStates user,BaseStates grantor)
     {
         //サイレント練度により、ターン数加算
-        var silentTrain = user.TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining);
+        var silentTrain = user.TenDayValuesBase().GetValueOrZero(TenDayAbility.SilentTraining);
         var AddTurn = Mathf.Min(4,silentTrain / 11); //加算限界は　4ターン　　サイレント練度÷ 11分ね
         DurationTurn += (int)AddTurn;//int変換して小数省いて加算
 
@@ -32,8 +32,8 @@ public class Slaim : BasePassive
                 live.ApplyPassiveBufferInBattleByID(13,_owner);
                 var pas = live.GetBufferPassiveByID(13);
                 pas.SetPercentageModifier(StatModifier.Agi, 1.04f);//4%上げる
-                pas.SetFixedValue(StatModifier.Agi,_owner.TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton)/3 *
-                live.TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining));//支援対象の味方のサイレント練度　×　付与者の盥豚÷3
+                pas.SetFixedValue(StatModifier.Agi,_owner.TenDayValuesBase().GetValueOrZero(TenDayAbility.Taraiton)/3 *
+                live.TenDayValuesBase().GetValueOrZero(TenDayAbility.SilentTraining));//支援対象の味方のサイレント練度　×　付与者の盥豚÷3
 
                 ApplyTaktbruch(Atker);//タクトブルフの攻撃者への付与
             }
@@ -49,14 +49,14 @@ public class Slaim : BasePassive
     void ApplyTaktbruch(BaseStates AtkerButPassiveDefender)
     {
         //計算要素の十日能力
-        var AtkerTraiton = AtkerButPassiveDefender.TenDayValues(false).GetValueOrZero(TenDayAbility.Taraiton);//術者の盥豚
-        var defenderCool = _owner.TenDayValues(false).GetValueOrZero(TenDayAbility.ColdHeartedCalm);//食らい者の冷酷冷静
-        var AtkerVoid = AtkerButPassiveDefender.TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid);//術者のテント空虚
-        var AtkerSmiler = AtkerButPassiveDefender.TenDayValues(false).GetValueOrZero(TenDayAbility.Smiler);//術者のスマイラー
-        var defenderSmiler = _owner.TenDayValues(false).GetValueOrZero(TenDayAbility.Smiler);//食らい者のスマイラー
-        var AtkerFaceToHand = AtkerButPassiveDefender.TenDayValues(false).GetValueOrZero(TenDayAbility.FaceToHand);//術者の顔から手
-        var AtkerSilentTrain = AtkerButPassiveDefender.TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining);//術者のサイレント練度
-        var defenderSilentTrain = _owner.TenDayValues(false).GetValueOrZero(TenDayAbility.SilentTraining);//食らい者のサイレント練度
+        var AtkerTraiton = AtkerButPassiveDefender.TenDayValuesBase().GetValueOrZero(TenDayAbility.Taraiton);//術者の盥豚
+        var defenderCool = _owner.TenDayValuesBase().GetValueOrZero(TenDayAbility.ColdHeartedCalm);//食らい者の冷酷冷静
+        var AtkerVoid = AtkerButPassiveDefender.TenDayValuesBase().GetValueOrZero(TenDayAbility.TentVoid);//術者のテント空虚
+        var AtkerSmiler = AtkerButPassiveDefender.TenDayValuesBase().GetValueOrZero(TenDayAbility.Smiler);//術者のスマイラー
+        var defenderSmiler = _owner.TenDayValuesBase().GetValueOrZero(TenDayAbility.Smiler);//食らい者のスマイラー
+        var AtkerFaceToHand = AtkerButPassiveDefender.TenDayValuesBase().GetValueOrZero(TenDayAbility.FaceToHand);//術者の顔から手
+        var AtkerSilentTrain = AtkerButPassiveDefender.TenDayValuesBase().GetValueOrZero(TenDayAbility.SilentTraining);//術者のサイレント練度
+        var defenderSilentTrain = _owner.TenDayValuesBase().GetValueOrZero(TenDayAbility.SilentTraining);//食らい者のサイレント練度
 
 
         //攻撃者にタクトブルフを付与

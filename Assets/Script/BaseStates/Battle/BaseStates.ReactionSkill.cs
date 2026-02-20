@@ -213,7 +213,7 @@ public abstract partial class BaseStates
         {
             if(AtkerKerenRate > KerenACTRateDefault)//偶然の定数を上回っていたら
             {
-                var AtkerKereKere = Attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.KereKere);
+                var AtkerKereKere = Attacker.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.KereKere);
                 MinimumHitChanceRate += AtkerKereKere * KereKereModifier_per;
             }
         }
@@ -221,7 +221,7 @@ public abstract partial class BaseStates
         {
             if(DefenderKerenRate > KerenACTRateDefault)//偶然の定数を上回っていたら
             {
-                var DefenderKereKere = Defender.TenDayValues(true).GetValueOrZero(TenDayAbility.KereKere);
+                var DefenderKereKere = Defender.TenDayValuesBase().GetValueOrZero(TenDayAbility.KereKere);
                 MinimumHitChanceRate += DefenderKereKere * KereKereModifier_per;
             }
         }
@@ -977,7 +977,7 @@ public abstract partial class BaseStates
                 growRate = 0.9f;
             }
             // 攻撃者とと攻撃相手の総量の比率を使用して比率を計算
-            float clampedRatio = attacker.CalculateClampedStrengthRatio(TenDayValuesSum(false));
+            float clampedRatio = attacker.CalculateClampedStrengthRatio(TenDayValuesSumBase());
 
             //攻撃者のHIT分の成長を記録
             attacker.TenDayGrowthListByHIT.Add((growRate * clampedRatio, skill.TenDayValues(skill.IsTLOA, actor: attacker)));//成長量にTLOAならゆりかごを考慮
@@ -1114,7 +1114,7 @@ public abstract partial class BaseStates
     private float CalculateClampedStrengthRatio(float targetSum)
         {
         // 自分のTenDayValuesSumとの比率を計算（自分の値が0の場合は1とする）
-        float strengthRatio = TenDayValuesSum(true) > 0 ? targetSum / TenDayValuesSum(true) : 1f;
+        float strengthRatio = TenDayValuesSumForSkill() > 0 ? targetSum / TenDayValuesSumForSkill() : 1f;
         
         return strengthRatio;
     }

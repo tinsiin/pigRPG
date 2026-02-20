@@ -504,7 +504,7 @@ public class TenDaysMordaleAreaController : MonoBehaviour
         {
             // BaseStates.GetTenDayDisplayRows() と同様の辞書群を用いて差分を算出。
             // ただし UI 側では全列挙（Enum）で回し、ゼロ値も含めて行を生成する。
-            var baseWithNormal = actor.TenDayValues(false);
+            var baseWithNormal = actor.TenDayValuesBase();
 
             // Normal と各特判のフル(=Normal+特判)
             TenDayAbilityDictionary normalDict = null;
@@ -685,9 +685,9 @@ public class TenDaysMordaleAreaController : MonoBehaviour
 
     private static string BuildDefenseText(BaseStates actor)
     {
-        // 共通防御力のみ（TenDayValues(false) × CommonDEF の総和）
+        // 共通防御力のみ（TenDayValuesBase() × CommonDEF の総和）
         float common = 0f;
-        var baseWithNormal = actor.TenDayValues(false);
+        var baseWithNormal = actor.TenDayValuesBase();
         foreach (var kv in global::DefensePowerConfig.CommonDEF)
         {
             float td = baseWithNormal.GetValueOrZero(kv.Key);

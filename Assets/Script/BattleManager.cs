@@ -239,11 +239,11 @@ public class BattleManager : IBattleContext
         //AllCharactersを使うよりもallyとenemygroupを使うほうが引数として渡すためのロジックが分かりやすい気がする
         foreach (var chara in AllyGroup.Ours)
         {
-            chara.ApplyConditionOnBattleStart(EnemyGroup.OurAvarageTenDayPower(false));
+            chara.ApplyConditionOnBattleStart(EnemyGroup.OurAvarageTenDayPower());
         }
         foreach (var chara in EnemyGroup.Ours)
         {
-            chara.ApplyConditionOnBattleStart(AllyGroup.OurAvarageTenDayPower(false));
+            chara.ApplyConditionOnBattleStart(AllyGroup.OurAvarageTenDayPower());
         }
         //初期化コールバックで変化判定用にConditionTransitionが実行され記録されるので、初期化コールバックの前に呼ばなければなりません。
 
@@ -366,23 +366,23 @@ public class BattleManager : IBattleContext
 
         // 前のめり引き留め側合算
         float defendSum =
-            nowVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.Leisure) +
-            nowVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap) +
-            nowVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.SpringWater) +
-            nowVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.FlameBreathingWife);
+            nowVanguard.TenDayValuesBase().GetValueOrZero(TenDayAbility.Leisure) +
+            nowVanguard.TenDayValuesBase().GetValueOrZero(TenDayAbility.SpringNap) +
+            nowVanguard.TenDayValuesBase().GetValueOrZero(TenDayAbility.SpringWater) +
+            nowVanguard.TenDayValuesBase().GetValueOrZero(TenDayAbility.FlameBreathingWife);
 
         // 前のめりになろうとする側取得
-        float blaze = newVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.BlazingFire);
-        float pilma = newVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.Pilmagreatifull);
-        float miza  = newVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.Miza);
+        float blaze = newVanguard.TenDayValuesBase().GetValueOrZero(TenDayAbility.BlazingFire);
+        float pilma = newVanguard.TenDayValuesBase().GetValueOrZero(TenDayAbility.Pilmagreatifull);
+        float miza  = newVanguard.TenDayValuesBase().GetValueOrZero(TenDayAbility.Miza);
 
         // 冷酷冷静による個別減算
-        float coldCalm = newVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.ColdHeartedCalm);
+        float coldCalm = newVanguard.TenDayValuesBase().GetValueOrZero(TenDayAbility.ColdHeartedCalm);
         blaze = Mathf.Max(blaze - coldCalm * 0.8f, 0f);
         pilma = Mathf.Max(pilma - coldCalm * 0.2f, 0f);
 
         // エノクナギによる全体減算
-        float enok = newVanguard.TenDayValues(false).GetValueOrZero(TenDayAbility.Enokunagi);
+        float enok = newVanguard.TenDayValuesBase().GetValueOrZero(TenDayAbility.Enokunagi);
 
         float attackSum = blaze + pilma + miza - enok;
         attackSum = Mathf.Max(attackSum, 0f);

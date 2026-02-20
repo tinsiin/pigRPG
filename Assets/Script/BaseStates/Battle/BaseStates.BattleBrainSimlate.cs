@@ -48,7 +48,7 @@ public abstract partial class BaseStates
             var basic = new StatesPowerBreakdown(new TenDayAbilityDictionary(), b_b_def);
             foreach (var kv in DefensePowerConfig.CommonDEF)
             {
-                float td = TenDayValues(false).GetValueOrZero(kv.Key);
+                float td = TenDayValuesBase().GetValueOrZero(kv.Key);
                 if (td != 0f && kv.Value != 0f)
                 {
                     basic.TenDayAdd(kv.Key, td * kv.Value);
@@ -138,7 +138,7 @@ public abstract partial class BaseStates
                 // リストを削除したので、 i はインクリメントしない
                 
                 //破壊慣れまたは破壊負け
-                var kerekere = atker.TenDayValues(true).GetValueOrZero(TenDayAbility.KereKere);
+                var kerekere = atker.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.KereKere);
                 if (skillPhy == PhysicalProperty.heavy)//暴断なら破壊慣れ
                 {
                     dmg += dmg * 0.015f * kerekere;

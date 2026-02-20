@@ -188,7 +188,7 @@ public class NormalEnemy : BaseStates
     void EneVictoryBoost()
     {
         //まず主人公グループと敵グループの強さの倍率(敵視点でね)
-        var ratio = manager.AllyGroup.OurTenDayPowerSum(false) / manager.EnemyGroup.OurTenDayPowerSum(false);        
+        var ratio = manager.AllyGroup.OurTenDayPowerSum() / manager.EnemyGroup.OurTenDayPowerSum();
         VictoryBoost(ratio);       
     }
     public void OnWin()

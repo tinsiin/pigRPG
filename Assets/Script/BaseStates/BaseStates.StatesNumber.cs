@@ -131,7 +131,7 @@ public abstract partial class BaseStates
     }
     void MentalHPHealOnTurn()
     {
-        MentalHP += TenDayValues(false).GetValueOrZero(TenDayAbility.Rain);
+        MentalHP += TenDayValuesBase().GetValueOrZero(TenDayAbility.Rain);
     }
     /// <summary>
     /// 死亡時の精神HP
@@ -153,7 +153,7 @@ public abstract partial class BaseStates
                 break;
             case SpiritualProperty.Cquiest:
                 // 10%加算 + 元素信仰力
-                MentalHP += MentalMaxHP * 0.1f + TenDayValues(false).GetValueOrZero(TenDayAbility.ElementFaithPower) / 3;
+                MentalHP += MentalMaxHP * 0.1f + TenDayValuesBase().GetValueOrZero(TenDayAbility.ElementFaithPower) / 3;
                 break;
             case SpiritualProperty.Devil:
                 // 10%減る
@@ -161,8 +161,8 @@ public abstract partial class BaseStates
                 break;
             case SpiritualProperty.Doremis:
                 // 春仮眠の夜暗黒に対する多さ 割
-                var darkNight = TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness);
-                var springNap = TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap);
+                var darkNight = TenDayValuesBase().GetValueOrZero(TenDayAbility.NightDarkness);
+                var springNap = TenDayValuesBase().GetValueOrZero(TenDayAbility.SpringNap);
                 if (springNap > 0)
                 {
                     MentalHP = MentalMaxHP * (springNap / darkNight);
@@ -236,7 +236,7 @@ public abstract partial class BaseStates
             // 共通係数の適用（AgiPowerConfig）
             foreach (var kv in global::AgiPowerConfig.CommonAGI)
             {
-                float td = TenDayValues(false).GetValueOrZero(kv.Key);
+                float td = TenDayValuesBase().GetValueOrZero(kv.Key);
                 if (td != 0f && kv.Value != 0f)
                 {
                     breakdown.TenDayAdd(kv.Key, td * kv.Value);
@@ -260,7 +260,7 @@ public abstract partial class BaseStates
             // 共通係数の適用（AttackPowerConfig）
             foreach (var kv in AttackPowerConfig.CommonATK)
             {
-                float td = TenDayValues(false).GetValueOrZero(kv.Key);
+                float td = TenDayValuesBase().GetValueOrZero(kv.Key);
                 if (td != 0f && kv.Value != 0f)
                 {
                     breakdown.TenDayAdd(kv.Key, td * kv.Value);
@@ -271,7 +271,7 @@ public abstract partial class BaseStates
             var excl = AttackPowerConfig.GetExclusiveATK(NowBattleProtocol);
             foreach (var kv in excl)
             {
-                float td = TenDayValues(false).GetValueOrZero(kv.Key);
+                float td = TenDayValuesBase().GetValueOrZero(kv.Key);
                 if (td != 0f && kv.Value != 0f)
                 {
                     breakdown.TenDayAdd(kv.Key, td * kv.Value * _adaptationRate);
@@ -317,7 +317,7 @@ public abstract partial class BaseStates
             // 共通係数の適用（EyePowerConfig）
             foreach (var kv in global::EyePowerConfig.CommonEYE)
             {
-                float td = TenDayValues(false).GetValueOrZero(kv.Key);
+                float td = TenDayValuesBase().GetValueOrZero(kv.Key);
                 if (td != 0f && kv.Value != 0f)
                 {
                     breakdown.TenDayAdd(kv.Key, td * kv.Value);
@@ -340,7 +340,7 @@ public abstract partial class BaseStates
         // 共通係数の適用（AttackPowerConfig）
         foreach (var kv in AttackPowerConfig.CommonATK)
         {
-            float td = TenDayValues(false).GetValueOrZero(kv.Key);
+            float td = TenDayValuesBase().GetValueOrZero(kv.Key);
             if (td != 0f && kv.Value != 0f)
             {
                 breakdown.TenDayAdd(kv.Key, td * kv.Value);
@@ -351,7 +351,7 @@ public abstract partial class BaseStates
         var excl = AttackPowerConfig.GetExclusiveATK(simulateProtocol);
         foreach (var kv in excl)
         {
-            float td = TenDayValues(false).GetValueOrZero(kv.Key);
+            float td = TenDayValuesBase().GetValueOrZero(kv.Key);
             if (td != 0f && kv.Value != 0f)
             {
                 breakdown.TenDayAdd(kv.Key, td * kv.Value);
@@ -370,7 +370,7 @@ public abstract partial class BaseStates
         var excl = AttackPowerConfig.GetExclusiveATK(protocol);
         foreach (var kv in excl)
         {
-            float td = TenDayValues(false).GetValueOrZero(kv.Key);
+            float td = TenDayValuesBase().GetValueOrZero(kv.Key);
             if (td != 0f && kv.Value != 0f)
             {
                 breakdown.TenDayAdd(kv.Key, td * kv.Value);
@@ -397,7 +397,7 @@ public abstract partial class BaseStates
         // 共通係数の適用（DefensePowerConfig）
         foreach (var kv in DefensePowerConfig.CommonDEF)
         {
-            float td = TenDayValues(false).GetValueOrZero(kv.Key);
+            float td = TenDayValuesBase().GetValueOrZero(kv.Key);
             if (td != 0f && kv.Value != 0f)
             {
                 breakdown.TenDayAdd(kv.Key, td * kv.Value);
@@ -408,7 +408,7 @@ public abstract partial class BaseStates
         var excl = DefensePowerConfig.GetExclusiveDEF(style);
         foreach (var kv in excl)
         {
-            float td = TenDayValues(false).GetValueOrZero(kv.Key);
+            float td = TenDayValuesBase().GetValueOrZero(kv.Key);
             if (td != 0f && kv.Value != 0f)
             {
                 breakdown.TenDayAdd(kv.Key, td * kv.Value);
@@ -428,7 +428,7 @@ public abstract partial class BaseStates
         var excl = global::DefensePowerConfig.GetExclusiveDEF(style);
         foreach (var kv in excl)
         {
-            float td = TenDayValues(false).GetValueOrZero(kv.Key);
+            float td = TenDayValuesBase().GetValueOrZero(kv.Key);
             if (td != 0f && kv.Value != 0f)
             {
                 breakdown.TenDayAdd(kv.Key, td * kv.Value);
@@ -676,12 +676,10 @@ public abstract partial class BaseStates
         }
     }
     /// <summary>
-    /// 読み取り専用の十日能力値、直接代入しないで
-    /// スキル専属十日値を参照するかは引数で指定する
+    /// 十日能力値の内部実装。IsSkillEffect=true ならスキル種別ボーナス込み。
     /// </summary>
-    public ReadOnlyIndexTenDayAbilityDictionary TenDayValues(bool IsSkillEffect)
+    private ReadOnlyIndexTenDayAbilityDictionary TenDayValuesInternal(bool IsSkillEffect)
     {
-        //武器ボーナスを参照する。
         var IsBladeSkill = false;
         var IsMagicSkill = false;
         var IsTLOASkill = false;
@@ -699,22 +697,45 @@ public abstract partial class BaseStates
         {
             Debug.LogError($"NowUseWeapon is null 武器にデフォルトで設定されるはずのIDが設定されてない。{CharacterName}");
         }
-        // 素の十日能力（武器ボーナスなし）の合計値を出力
-        //Debug.Log($"{CharacterName}の素の十日能力の合計値:{_baseTenDayValues.Values.Sum()}");
         var result = _baseTenDayValues + weaponBonus;
-        //Debug.Log($"{CharacterName}の武器ボーナスを加えた十日能力の合計値:{result.Values.Sum()}");
         return new ReadOnlyIndexTenDayAbilityDictionary(result);
     }
+
     /// <summary>
-    /// 十日能力の総量
+    /// 素の十日能力値（武器NormalDataのみ、スキル種別ボーナスなし）。
+    /// 防御側の値、パッシブ条件、UI表示など、スキル行使と無関係な文脈で使用する。
     /// </summary>
-    public float TenDayValuesSum(bool IsSkillEffect) => TenDayValues(IsSkillEffect).Values.Sum();
+    public ReadOnlyIndexTenDayAbilityDictionary TenDayValuesBase()
+    {
+        return TenDayValuesInternal(false);
+    }
+
+    /// <summary>
+    /// スキル行使中の十日能力値（武器NormalData + 現在スキルの種別ボーナス込み）。
+    /// 攻撃側のダメージ計算、自分の精神状態遷移など、スキル実行中の文脈で使用する。
+    /// NowUseSkill がセットされている前提。
+    /// </summary>
+    public ReadOnlyIndexTenDayAbilityDictionary TenDayValuesForSkill()
+    {
+        return TenDayValuesInternal(true);
+    }
+
+    /// <summary>
+    /// 素の十日能力の総量
+    /// </summary>
+    public float TenDayValuesSumBase() => TenDayValuesBase().Values.Sum();
+
+    /// <summary>
+    /// スキル行使中の十日能力の総量
+    /// </summary>
+    public float TenDayValuesSumForSkill() => TenDayValuesForSkill().Values.Sum();
+
     /// <summary>
     /// 所持してる十日能力の中から、ランダムに一つ選ぶ
     /// </summary>
     public TenDayAbility GetRandomTenDayAbility()
     {
-        return TenDayValues(true).Keys.ToArray().RandomElement();
+        return TenDayValuesBase().Keys.ToArray().RandomElement();
     }
     /* ---------------------------------
      * 成長システム
@@ -824,14 +845,14 @@ public abstract partial class BaseStates
         }
         foreach(var ten in SpritualTenDayAbilitysMap[MyImpression])
         {
-            topTenDayValue = TenDayValues(true).GetValueOrZero(ten) > topTenDayValue ? TenDayValues(true).GetValueOrZero(ten) : topTenDayValue;
+            topTenDayValue = TenDayValuesForSkill().GetValueOrZero(ten) > topTenDayValue ? TenDayValuesForSkill().GetValueOrZero(ten) : topTenDayValue;
         }
 
         //トップ能力の60%以内の「十日能力の列挙体と値」を該当スキルの該当能力値との距離比較用にピックアップ
         List<(TenDayAbility,float)> pickupSpiritualTenDays = new List<(TenDayAbility,float)>();
         foreach(var ten in SpritualTenDayAbilitysMap[MyImpression])
         {
-            var value = TenDayValues(true).GetValueOrZero(ten);
+            var value = TenDayValuesForSkill().GetValueOrZero(ten);
             if(value > topTenDayValue * topValueThresholdRate)
             {
                 pickupSpiritualTenDays.Add((ten,value));
@@ -883,7 +904,7 @@ public abstract partial class BaseStates
             var confidenceBoost = 1.0f;
             if(ConfidenceBoosts.ContainsKey(GrowSkillTenDayValue.Key))//自信ブーストの辞書に今回の能力値が含まれていたら
             {
-                confidenceBoost = 1.3f + TenDayValues(true).GetValueOrZero(TenDayAbility.Baka) * 0.01f;
+                confidenceBoost = 1.3f + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Baka) * 0.01f;
             }
             
             // 成長量を計算（スキルの該当能力値と減衰係数から）
@@ -933,7 +954,7 @@ public abstract partial class BaseStates
     void RecordConfidenceBoost(BaseStates target,float allkilldmg)
     {
         // 相手との強さの比率を計算
-        float opponentStrengthRatio = target.TenDayValuesSum(false) / TenDayValuesSum(true);
+        float opponentStrengthRatio = target.TenDayValuesSumBase() / TenDayValuesSumForSkill();
         //自分より1.7倍以上強い敵かどうか そうじゃないならreturn
         if(opponentStrengthRatio < 1.7f)return;
         //与えたダメージが敵の最大HPの半分以上与えてるかどうか、そうじゃないならreturn
@@ -948,7 +969,7 @@ public abstract partial class BaseStates
         var candidateAbilitiyValuesList = new List<(TenDayAbility ability , float value)>();
         foreach(var ability in candidateAbilitiesList)
         {
-            candidateAbilitiyValuesList.Add((ability, TenDayValues(false).GetValueOrZero(ability)));//列挙体と能力値を持つタプルのリストに変換
+            candidateAbilitiyValuesList.Add((ability, TenDayValuesBase().GetValueOrZero(ability)));//列挙体と能力値を持つタプルのリストに変換
         }
 
         //複数ある場合は最大から降順で　何個ブーストされるかはパッシブや何かしらで補正されます。
@@ -1085,10 +1106,10 @@ public abstract partial class BaseStates
 
     /// <summary>
     /// UI表示用: 基本値と各スキル特判の「追加分のみ」を行データとして返す。
-    /// - 基本値: TenDayValues(false) の値 = 素の値 + Normal武器補正
+    /// - 基本値: TenDayValuesBase() の値 = 素の値 + Normal武器補正
     /// - Normal武器補正: GetTenDayAbilityDictionary(false,false,false) から該当キーの値
     /// - 各スキル特判補正: (Normal+該当特判) - Normal の差分のみ
-    /// 返却順は TenDayValues(false) の列挙順を維持する。
+    /// 返却順は TenDayValuesBase() の列挙順を維持する。
     /// </summary>
     public struct TenDayDisplayRow
     {
@@ -1104,8 +1125,8 @@ public abstract partial class BaseStates
     {
         var rows = new List<TenDayDisplayRow>();
 
-        // 表示順は TenDayValues(false) に従う
-        var baseWithNormal = TenDayValues(false);
+        // 表示順は TenDayValuesBase() に従う
+        var baseWithNormal = TenDayValuesBase();
 
         // Normal と各特判のフル(=Normal+特判)を用意
         var normalDict = (NowUseWeapon != null)
@@ -1208,7 +1229,7 @@ public abstract partial class BaseStates
         var skillSum = 0f;
         foreach(var tenDay in skill.TenDayValues(actor: Atker))
         {
-            attackerMatchSum += Atker.TenDayValues(true).GetValueOrZero(tenDay.Key);
+            attackerMatchSum += Atker.TenDayValuesForSkill().GetValueOrZero(tenDay.Key);
             skillSum += tenDay.Value;
         }
         var baseValue = attackerMatchSum / Mathf.Max(1f, skillSum);
@@ -1243,13 +1264,13 @@ public abstract partial class BaseStates
         get 
         { 
             //基本値
-            var baseValue = TenDayValuesSum(false) * 0.56f;
+            var baseValue = TenDayValuesSumBase() * 0.56f;
             //スキル数による微小スケーリング
             baseValue = CalculateResonanceSkillCountMicroScaling(SkillList.Count, baseValue);
             //思慮係数によるスケーリング
             baseValue = CalculateResonanceThinkingScaling(baseValue, 11f);
 
-            return baseValue + TenDayValues(false).GetValueOrZero(TenDayAbility.Baka) * 1.3f;//馬鹿を加算する 
+            return baseValue + TenDayValuesBase().GetValueOrZero(TenDayAbility.Baka) * 1.3f;//馬鹿を加算する 
         }
     }
     /// <summary>
@@ -1309,7 +1330,7 @@ public abstract partial class BaseStates
     /// </summary>
     public void ResonanceHealingOnWalking() 
     { 
-        ResonanceHeal(_resonanceHealingOnWalkingFactor + TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap) * 1.5f);
+        ResonanceHeal(_resonanceHealingOnWalkingFactor + TenDayValuesBase().GetValueOrZero(TenDayAbility.SpringNap) * 1.5f);
     }
 
     //                 [[[[[[[[[[[[[[[                            ーーーー

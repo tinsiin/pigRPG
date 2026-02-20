@@ -182,9 +182,9 @@ public abstract partial class BaseStates
     /// <returns></returns>
     public float GetMentalDivergenceThreshold()
     {
-        var ExtraValue = (TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness) -
-         TenDayValues(false).GetValueOrZero(TenDayAbility.KereKere)) * 0.01f;//0クランプいらない
-        var EnokunagiValue = TenDayValues(false).GetValueOrZero(TenDayAbility.Enokunagi) * 0.005f;
+        var ExtraValue = (TenDayValuesBase().GetValueOrZero(TenDayAbility.NightDarkness) -
+         TenDayValuesBase().GetValueOrZero(TenDayAbility.KereKere)) * 0.01f;//0クランプいらない
+        var EnokunagiValue = TenDayValuesBase().GetValueOrZero(TenDayAbility.Enokunagi) * 0.005f;
         switch (NowCondition)
         {
             case Demeanor.Angry:
@@ -212,9 +212,9 @@ public abstract partial class BaseStates
     /// </summary>
     int GetMentalDivergenceMaxCount()
     {
-        if(TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness)> 0)//ゼロ除算対策
+        if(TenDayValuesBase().GetValueOrZero(TenDayAbility.NightDarkness)> 0)//ゼロ除算対策
         {
-            var maxCount = (int)((TenDayValues(false).GetValueOrZero(TenDayAbility.SpringNap) - TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid ) / 2) / TenDayValues(false).GetValueOrZero(TenDayAbility.NightDarkness));
+            var maxCount = (int)((TenDayValuesBase().GetValueOrZero(TenDayAbility.SpringNap) - TenDayValuesBase().GetValueOrZero(TenDayAbility.TentVoid ) / 2) / TenDayValuesBase().GetValueOrZero(TenDayAbility.NightDarkness));
             if(maxCount > 0)return maxCount;//0より大きければ返す
         }
         return 0 ;
@@ -258,7 +258,7 @@ public abstract partial class BaseStates
     /// </summary>
     int GetMentalDivergenceRefulMaxCount()
     {
-        var refil = TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid) * 3 - TenDayValues(false).GetValueOrZero(TenDayAbility.Miza) / 4 * TenDayValues(false).GetValueOrZero(TenDayAbility.Smiler);
+        var refil = TenDayValuesBase().GetValueOrZero(TenDayAbility.TentVoid) * 3 - TenDayValuesBase().GetValueOrZero(TenDayAbility.Miza) / 4 * TenDayValuesBase().GetValueOrZero(TenDayAbility.Smiler);
         if(refil < 0)return 0;
         return (int)refil;
     }
@@ -322,7 +322,7 @@ public abstract partial class BaseStates
         //ダメージの大きさからして絶対に死んでるからDeath判定は要らず、だからDeath辺りでの判定がいらない。(DeathCallBackが起こらない)
         if(LiveHP >= _maxhp*0.2f)//HPが二割以上の時に、
         {
-            if(atker.TenDayValuesSum(true) <= TenDayValuesSum(false) * 1.6f)//自分の十日能力の総量の1.6倍以下なら
+            if(atker.TenDayValuesSumForSkill() <= TenDayValuesSumBase() * 1.6f)//自分の十日能力の総量の1.6倍以下なら
             {
                 if (dmg >= _maxhp * 0.34f && dmg <= _maxhp * 0.66f )//大体半分くらいの攻撃なら  
                 {
@@ -574,8 +574,8 @@ public abstract partial class BaseStates
     {
         if(NowPower < PowerLevel.High)return;//パワーが高くないなら発生しないって感じに
 
-        var underBlade = TenDayValues(false).GetValueOrZero(TenDayAbility.Blades);
-        var AtkerBlade = Atker.TenDayValues(true).GetValueOrZero(TenDayAbility.Blades);
+        var underBlade = TenDayValuesBase().GetValueOrZero(TenDayAbility.Blades);
+        var AtkerBlade = Atker.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Blades);
 
         //刃物能力を乱数比較して被害者の方のが出たなら、
         if(rollComparison(underBlade,AtkerBlade))
@@ -683,47 +683,47 @@ public abstract partial class BaseStates
         var flowmax = 0f;
 
         //基本値
-        flowmax = TenDayValues(true).GetValueOrZero(TenDayAbility.HumanKiller) * 2 + TenDayValues(true).GetValueOrZero(TenDayAbility.Dokumamusi) * 0.4f;
+        flowmax = TenDayValuesForSkill().GetValueOrZero(TenDayAbility.HumanKiller) * 2 + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Dokumamusi) * 0.4f;
 
         switch(MyImpression)//精神属性で分岐　
         {
             case SpiritualProperty.LiminalWhiteTile:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.8f;
+                flowmax += TenDayValuesForSkill().GetValueOrZero(TenDayAbility.FlameBreathingWife) * 0.8f;
                 break;
             case SpiritualProperty.Kindergarten:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) * 2;
+                flowmax += TenDayValuesForSkill().GetValueOrZero(TenDayAbility.BlazingFire) * 2;
                 break;
                 
             case SpiritualProperty.Sacrifaith:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.BlazingFire) * 0.5f + TenDayValues(true).GetValueOrZero(TenDayAbility.NightInkKnight);
+                flowmax += TenDayValuesForSkill().GetValueOrZero(TenDayAbility.BlazingFire) * 0.5f + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.NightInkKnight);
                 break;
                 
             case SpiritualProperty.Psycho:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.Raincoat) * 6 * TenDayValues(true).GetValueOrZero(TenDayAbility.UnextinguishedPath);
+                flowmax += TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Raincoat) * 6 * TenDayValuesForSkill().GetValueOrZero(TenDayAbility.UnextinguishedPath);
                 break;
                 
             case SpiritualProperty.BaleDrival:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.Leisure) * 3;
+                flowmax += TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Leisure) * 3;
                 break;
                 
             case SpiritualProperty.Devil:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.NightDarkness) + TenDayValues(true).GetValueOrZero(TenDayAbility.ColdHeartedCalm);
+                flowmax += TenDayValuesForSkill().GetValueOrZero(TenDayAbility.NightDarkness) + TenDayValuesForSkill().GetValueOrZero(TenDayAbility.ColdHeartedCalm);
                 break;
                 
             case SpiritualProperty.Cquiest:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.JoeTeeth) * 1.7f - TenDayValues(true).GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.11f;
+                flowmax += TenDayValuesForSkill().GetValueOrZero(TenDayAbility.JoeTeeth) * 1.7f - TenDayValuesForSkill().GetValueOrZero(TenDayAbility.ElementFaithPower) * 0.11f;
                 break;
                 
             case SpiritualProperty.GodTier:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.CryoniteQuality);
+                flowmax += TenDayValuesForSkill().GetValueOrZero(TenDayAbility.CryoniteQuality);
                 break;
                 
             case SpiritualProperty.Pillar:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.PersonaDivergence) - TenDayValues(true).GetValueOrZero(TenDayAbility.Pilmagreatifull);
+                flowmax += TenDayValuesForSkill().GetValueOrZero(TenDayAbility.PersonaDivergence) - TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Pilmagreatifull);
                 break;
                 
             case SpiritualProperty.Doremis:
-                flowmax += TenDayValues(true).GetValueOrZero(TenDayAbility.SpringNap) - TenDayValues(true).GetValueOrZero(TenDayAbility.ElementFaithPower); 
+                flowmax += TenDayValuesForSkill().GetValueOrZero(TenDayAbility.SpringNap) - TenDayValuesForSkill().GetValueOrZero(TenDayAbility.ElementFaithPower); 
                 break;
             case SpiritualProperty.None:
             case (SpiritualProperty)0: // 未設定のデフォルト値
@@ -818,16 +818,16 @@ public abstract partial class BaseStates
         var skill = attacker.NowUseSkill;
         if(NowPower >= PowerLevel.Medium)//普通のパワー以上で
         {//割り込みカウンターは
-            var eneVond = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.Vond);
-            var myVond =  TenDayValues(false).GetValueOrZero(TenDayAbility.Vond);
+            var eneVond = attacker.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Vond);
+            var myVond =  TenDayValuesBase().GetValueOrZero(TenDayAbility.Vond);
             var plusAtkChance = myVond> eneVond ? myVond - eneVond : 0f;//ヴォンドの差による微加算値
             if(RandomSource.NextFloat(1) < skill.DEFATK/3 + plusAtkChance*0.01f)
             {
-                var mypersonDiver = TenDayValues(false).GetValueOrZero(TenDayAbility.PersonaDivergence);
-                var myTentvoid = TenDayValues(false).GetValueOrZero(TenDayAbility.TentVoid);
-                var eneSort = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.Sort);
-                var eneRain = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.Rain);
-                var eneCold = attacker.TenDayValues(true).GetValueOrZero(TenDayAbility.ColdHeartedCalm);
+                var mypersonDiver = TenDayValuesBase().GetValueOrZero(TenDayAbility.PersonaDivergence);
+                var myTentvoid = TenDayValuesBase().GetValueOrZero(TenDayAbility.TentVoid);
+                var eneSort = attacker.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Sort);
+                var eneRain = attacker.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Rain);
+                var eneCold = attacker.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.ColdHeartedCalm);
                 var ExVoid = Tuning?.ExplosionVoidValue ?? 10f;
                 var counterValue = (myVond + mypersonDiver/(myTentvoid-ExVoid)) * 0.9f;//カウンターする側の特定能力値
                 var attackerValue = Mathf.Max(eneSort - eneRain/3,0)+eneCold;//攻撃者の特定能力値
