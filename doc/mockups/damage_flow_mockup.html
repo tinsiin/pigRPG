@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ダメージフロー数字 - 演出案モック</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a2e; color: #eee; font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }
+
+  h1 { text-align: center; padding: 20px; font-size: 20px; color: #aaa; }
+
+  .demos { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; max-width: 1000px; margin: 0 auto; }
+
+  .demo-box {
+    background: #16213e;
+    border: 1px solid #334;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .demo-box h2 { font-size: 15px; color: #7ec8e3; margin-bottom: 4px; }
+  .demo-box p { font-size: 11px; color: #888; margin-bottom: 12px; text-align: center; line-height: 1.4; }
+
+  .stage {
+    width: 280px;
+    height: 200px;
+    background: #0f0f23;
+    border: 1px solid #333;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* icons */
+  .icon {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    position: absolute;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: bold;
+  }
+  .icon.attacker { background: #2a5298; border: 2px solid #5b8def; left: 40px; top: 80px; }
+  .icon.target   { background: #8b2252; border: 2px solid #e05588; right: 40px; top: 80px; }
+
+  /* arrow */
+  .arrow {
+    position: absolute;
+    top: 98px;
+    left: 82px;
+    width: 116px;
+    height: 4px;
+    background: linear-gradient(90deg, #5b8def88, #e0558888);
+    opacity: 0.5;
+  }
+  .arrow::after {
+    content: '';
+    position: absolute;
+    right: -6px; top: -4px;
+    border: 6px solid transparent;
+    border-left: 8px solid #e0558888;
+  }
+
+  /* damage number base */
+  .dmg {
+    position: absolute;
+    font-family: 'Courier New', monospace;
+    font-weight: 900;
+    font-size: 22px;
+    color: #ffdd57;
+    text-shadow: 0 0 6px #ff880088, 1px 1px 0 #000;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .dmg.crit { color: #ff6b6b; }
+  .dmg.graze { color: #aabbcc; }
+
+  /* button */
+  .btn {
+    margin-top: 12px;
+    padding: 6px 20px;
+    background: #2a5298;
+    color: #fff;
+    border: 1px solid #5b8def;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.1s;
+  }
+  .btn:hover { background: #3a6ac8; }
+  .btn:active { background: #1a3a78; }
+
+  .label-row { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; justify-content: center; }
+  .label-tag {
+    font-size: 10px; padding: 2px 6px; border-radius: 3px;
+    background: #334; color: #aaa;
+  }
+  .label-tag.green { background: #1a4a2a; color: #6fca7a; }
+  .label-tag.yellow { background: #4a3a1a; color: #caaa4a; }
+  .label-tag.red { background: #4a1a1a; color: #ca5a5a; }
+</style>
+</head>
+<body>
+
+<h1>ダメージフロー数字 — 5つの演出案</h1>
+
+<div class="demos">
+
+  <!-- Plan A -->
+  <div class="demo-box">
+    <h2>案A: 即出現 → 横引き伸び消滅</h2>
+    <p>出現は即表示。消滅時にscaleXが伸びながらフェードアウト</p>
+    <div class="stage" id="stageA">
+      <div class="arrow"></div>
+      <div class="icon attacker">味方</div>
+      <div class="icon target">敵</div>
+    </div>
+    <button class="btn" onclick="playA()">再生</button>
+    <div class="label-row">
+      <span class="label-tag green">実装コスト: 低</span>
+      <span class="label-tag green">連打耐性: 高</span>
+    </div>
+  </div>
+
+  <!-- Plan B -->
+  <div class="demo-box">
+    <h2>案B: 小ポップ → 文字バラけ消滅</h2>
+    <p>小さくポップイン。消滅時に各文字が個別にランダム方向へ散る</p>
+    <div class="stage" id="stageB">
+      <div class="arrow"></div>
+      <div class="icon attacker">味方</div>
+      <div class="icon target">敵</div>
+    </div>
+    <button class="btn" onclick="playB()">再生</button>
+    <div class="label-row">
+      <span class="label-tag red">実装コスト: 高</span>
+      <span class="label-tag yellow">連打耐性: 中</span>
+    </div>
+  </div>
+
+  <!-- Plan C -->
+  <div class="demo-box">
+    <h2>案C: 即出現 → 左右分裂消滅</h2>
+    <p>即出現。消滅時に中央から左右に割れてフェード</p>
+    <div class="stage" id="stageC">
+      <div class="arrow"></div>
+      <div class="icon attacker">味方</div>
+      <div class="icon target">敵</div>
+    </div>
+    <button class="btn" onclick="playC()">再生</button>
+    <div class="label-row">
+      <span class="label-tag yellow">実装コスト: 中</span>
+      <span class="label-tag green">連打耐性: 高</span>
+    </div>
+  </div>
+
+  <!-- Plan E -->
+  <div class="demo-box">
+    <h2>案E: 小ポップ → 文字が穏やかに左右へ流れて消滅</h2>
+    <p>Bの落ち着き版。各文字がY軸はほぼ動かず、左右にゆるやかに広がりながらフェード</p>
+    <div class="stage" id="stageE">
+      <div class="arrow"></div>
+      <div class="icon attacker">味方</div>
+      <div class="icon target">敵</div>
+    </div>
+    <button class="btn" onclick="playE()">再生</button>
+    <div class="label-row">
+      <span class="label-tag yellow">実装コスト: 中</span>
+      <span class="label-tag green">連打耐性: 高</span>
+    </div>
+  </div>
+
+  <!-- Plan D -->
+  <div class="demo-box">
+    <h2>案D: 矢印方向スライドイン → 横伸び消滅</h2>
+    <p>攻撃者側からスライドして登場。消滅は案Aと同じ横伸び</p>
+    <div class="stage" id="stageD">
+      <div class="arrow"></div>
+      <div class="icon attacker">味方</div>
+      <div class="icon target">敵</div>
+    </div>
+    <button class="btn" onclick="playD()">再生</button>
+    <div class="label-row">
+      <span class="label-tag green">実装コスト: 低</span>
+      <span class="label-tag yellow">連打耐性: 中</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function randDmg() {
+  const types = [
+    { val: Math.floor(Math.random()*200+50), sym: '!', cls: 'crit' },
+    { val: Math.floor(Math.random()*200+50), sym: '',  cls: '' },
+    { val: Math.floor(Math.random()*100+20), sym: '?', cls: 'graze' },
+    { val: Math.floor(Math.random()*150+80), sym: '^', cls: '' },
+  ];
+  return types[Math.floor(Math.random()*types.length)];
+}
+
+// ============ Plan A: instant → stretch fade ============
+function playA() {
+  const stage = document.getElementById('stageA');
+  const d = randDmg();
+  const el = document.createElement('div');
+  el.className = 'dmg ' + d.cls;
+  el.textContent = d.val + d.sym;
+  el.style.right = '50px';
+  el.style.top = (55 + Math.random()*15) + 'px';
+  el.style.opacity = '1';
+  el.style.transform = 'scaleX(1)';
+  el.style.transformOrigin = 'center';
+  stage.appendChild(el);
+
+  // hold 300ms, then stretch+fade 300ms
+  setTimeout(() => {
+    el.style.transition = 'transform 0.3s ease-in, opacity 0.3s ease-in';
+    el.style.transform = 'scaleX(2.5)';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 320);
+  }, 300);
+}
+
+// ============ Plan B: pop → scatter chars ============
+function playB() {
+  const stage = document.getElementById('stageB');
+  const d = randDmg();
+  const text = d.val + d.sym;
+
+  const container = document.createElement('div');
+  container.style.cssText = 'position:absolute; right:50px; top:'+(55+Math.random()*15)+'px; white-space:nowrap; pointer-events:none;';
+  container.style.transform = 'scale(0.7)';
+  container.style.transition = 'transform 0.05s ease-out';
+
+  for (const ch of text) {
+    const span = document.createElement('span');
+    span.textContent = ch;
+    span.style.cssText = 'display:inline-block; font-family:"Courier New",monospace; font-weight:900; font-size:22px; color:'+(d.cls==='crit'?'#ff6b6b':d.cls==='graze'?'#aabbcc':'#ffdd57')+'; text-shadow:0 0 6px #ff880088,1px 1px 0 #000; transition: transform 0.4s ease-in, opacity 0.4s ease-in;';
+    container.appendChild(span);
+  }
+  stage.appendChild(container);
+
+  // pop in
+  requestAnimationFrame(() => { container.style.transform = 'scale(1)'; });
+
+  // hold 200ms, then scatter
+  setTimeout(() => {
+    const spans = container.querySelectorAll('span');
+    spans.forEach(s => {
+      const dx = (Math.random() - 0.5) * 120;
+      const dy = (Math.random() - 0.5) * 40;
+      s.style.transform = `translate(${dx}px, ${dy}px)`;
+      s.style.opacity = '0';
+    });
+    setTimeout(() => container.remove(), 420);
+  }, 200);
+}
+
+// ============ Plan E: pop → gentle horizontal drift ============
+function playE() {
+  const stage = document.getElementById('stageE');
+  const d = randDmg();
+  const text = d.val + d.sym;
+  const baseColor = d.cls==='crit'?'#ff6b6b':d.cls==='graze'?'#aabbcc':'#ffdd57';
+
+  const container = document.createElement('div');
+  container.style.cssText = 'position:absolute; right:50px; top:'+(55+Math.random()*15)+'px; white-space:nowrap; pointer-events:none;';
+  container.style.transform = 'scale(0.8)';
+  container.style.transition = 'transform 0.05s ease-out';
+
+  const mid = text.length / 2;
+  for (let i = 0; i < text.length; i++) {
+    const span = document.createElement('span');
+    span.textContent = text[i];
+    span.style.cssText = 'display:inline-block; font-family:"Courier New",monospace; font-weight:900; font-size:22px; color:'+baseColor+'; text-shadow:0 0 6px #ff880088,1px 1px 0 #000; transition: transform 0.5s ease-out, opacity 0.45s ease-in;';
+    span.dataset.idx = i;
+    container.appendChild(span);
+  }
+  stage.appendChild(container);
+
+  // pop in
+  requestAnimationFrame(() => { container.style.transform = 'scale(1)'; });
+
+  // hold 300ms, then gently drift each char left/right based on position from center
+  setTimeout(() => {
+    const spans = container.querySelectorAll('span');
+    spans.forEach(s => {
+      const i = parseInt(s.dataset.idx);
+      // chars left of center go left, right of center go right, proportional to distance from center
+      const distFromCenter = i - mid + 0.5;
+      const dx = distFromCenter * 18;
+      const dy = (Math.random() - 0.5) * 12;
+      s.style.transform = `translate(${dx}px, ${dy}px)`;
+      s.style.opacity = '0';
+    });
+    setTimeout(() => container.remove(), 520);
+  }, 300);
+}
+
+// ============ Plan C: instant → split L/R ============
+function playC() {
+  const stage = document.getElementById('stageC');
+  const d = randDmg();
+  const text = d.val + d.sym;
+  const mid = Math.ceil(text.length / 2);
+  const leftText = text.slice(0, mid);
+  const rightText = text.slice(mid);
+  const baseColor = d.cls==='crit'?'#ff6b6b':d.cls==='graze'?'#aabbcc':'#ffdd57';
+  const baseTop = (55+Math.random()*15);
+
+  const container = document.createElement('div');
+  container.style.cssText = 'position:absolute; right:30px; top:'+baseTop+'px; white-space:nowrap; pointer-events:none; display:flex;';
+
+  const makeHalf = (txt) => {
+    const span = document.createElement('span');
+    span.textContent = txt;
+    span.style.cssText = 'display:inline-block; font-family:"Courier New",monospace; font-weight:900; font-size:22px; color:'+baseColor+'; text-shadow:0 0 6px #ff880088,1px 1px 0 #000; transition: transform 0.35s ease-in, opacity 0.35s ease-in;';
+    return span;
+  };
+
+  const leftEl = makeHalf(leftText);
+  const rightEl = makeHalf(rightText);
+  container.appendChild(leftEl);
+  container.appendChild(rightEl);
+  stage.appendChild(container);
+
+  // hold 300ms
+  setTimeout(() => {
+    leftEl.style.transform = 'translateX(-40px)';
+    leftEl.style.opacity = '0';
+    rightEl.style.transform = 'translateX(40px)';
+    rightEl.style.opacity = '0';
+    setTimeout(() => container.remove(), 370);
+  }, 300);
+}
+
+// ============ Plan D: slide from attacker → stretch fade ============
+function playD() {
+  const stage = document.getElementById('stageD');
+  const d = randDmg();
+  const el = document.createElement('div');
+  el.className = 'dmg ' + d.cls;
+  el.textContent = d.val + d.sym;
+
+  // start from attacker side
+  el.style.left = '70px';
+  el.style.top = (85 + Math.random()*10) + 'px';
+  el.style.opacity = '1';
+  el.style.transform = 'scaleX(1)';
+  el.style.transformOrigin = 'center';
+  el.style.transition = 'left 0.1s ease-out';
+  stage.appendChild(el);
+
+  // slide to target
+  requestAnimationFrame(() => {
+    el.style.left = '170px';
+  });
+
+  // hold 200ms after slide, then stretch+fade
+  setTimeout(() => {
+    el.style.transition = 'transform 0.3s ease-in, opacity 0.3s ease-in';
+    el.style.transform = 'scaleX(2.5)';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 320);
+  }, 300);
+}
+</script>
+
+</body>
+</html>

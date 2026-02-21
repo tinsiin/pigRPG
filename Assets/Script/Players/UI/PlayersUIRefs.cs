@@ -48,6 +48,10 @@ public class PlayersUIRefs : MonoBehaviour
         _audioSource.PlayOneShot(WeaponSlashSE);
     }
 
+    [Header("ダメージフロー数字")]
+    [Tooltip("ダメージ数字ポップアップのプレハブ")]
+    public DamageFlowNumber DamageFlowPrefab;
+
     [Header("被弾点滅")]
     [Tooltip("点滅の合計時間（秒）")]
     [Range(0.2f, 1.5f)]

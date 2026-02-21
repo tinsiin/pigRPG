@@ -299,6 +299,36 @@ public class BattleIconUI : MonoBehaviour, IPointerClickHandler
     }
 
     /// <summary>
+    /// ダメージフロー数字を生成する。プレハブを受け取り、自身の子としてインスタンス化する。
+    /// </summary>
+    public void SpawnDamageFlow(int damage, HitResult hitResult, DamageFlowNumber prefab, bool isDisturbed = false)
+    {
+        if (prefab == null) return;
+        var instance = Instantiate(prefab, transform);
+        instance.Play(damage, hitResult, isDisturbed);
+    }
+
+    /// <summary>
+    /// レイザーダメージのフロー数字を生成する。
+    /// </summary>
+    public void SpawnRatherDamageFlow(int damage, DamageFlowNumber prefab)
+    {
+        if (prefab == null) return;
+        var instance = Instantiate(prefab, transform);
+        instance.Play(damage, category: DamageFlowNumber.Category.RatherDamage);
+    }
+
+    /// <summary>
+    /// 回復のフロー数字を生成する。
+    /// </summary>
+    public void SpawnHealFlow(int amount, DamageFlowNumber prefab)
+    {
+        if (prefab == null) return;
+        var instance = Instantiate(prefab, transform);
+        instance.Play(amount, category: DamageFlowNumber.Category.Heal);
+    }
+
+    /// <summary>
     /// 被弾時の点滅エフェクト（fire-and-forget）。
     /// Icon の alpha を 0↔1 にトグルして点滅させる。
     /// </summary>

@@ -756,6 +756,14 @@ public abstract partial class BaseStates
 
         // 純粋に本体HPを減算（スキル依存のクランプ等は適用しない）
         HP -= damage.Total;
+
+        // レイザーダメージのフロー数字
+        if (damage.Total > 0 && BattleIcon != null)
+        {
+            var uiRefs = GetCachedUIRefs();
+            if (uiRefs != null && uiRefs.DamageFlowPrefab != null)
+                BattleIcon.SpawnRatherDamageFlow((int)damage.Total, uiRefs.DamageFlowPrefab);
+        }
     }
 
     //  ==============================================================================================================================

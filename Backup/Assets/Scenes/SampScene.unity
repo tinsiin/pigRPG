@@ -24225,7 +24225,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.94963527, g: 0.21518749, b: 0.93891543, a: 0.815175}
+  m_Color: {r: 0.98588395, g: 0.060312007, b: 0.9828794, a: 0.9481979}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -44420,7 +44420,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _maxLines: 6
   _charInterval: 0.04
-  _outputDebugEntries: 1
   LogText: {fileID: 853315685}
   _bridgeCollection: {fileID: 11400000, guid: 782162687aafcb4418e284d36df1ca2e, type: 2}
   _testSentences:
@@ -44577,7 +44576,7 @@ MonoBehaviour:
             _list: []
         TenDayValues:
           _list: []
-        SlashColor: {r: 0, g: 0, b: 0, a: 1}
+        SlashColor: {r: 1, g: 0, b: 0, a: 1}
         IsBlade: 0
         WeaponPhysical: 0
         CombinationEntries: []
@@ -45927,6 +45926,7 @@ MonoBehaviour:
   WeaponSlashScale: 3
   WeaponSlashSpeed: 0.413
   WeaponSlashSE: {fileID: 8300000, guid: 1cdcfe3f9e1e8fe4d856c4206ca8c149, type: 3}
+  DamageFlowPrefab: {fileID: 45165240003982768, guid: e25737f1b87fefd4fa9441db3a6ba8d4, type: 3}
   DamageBlinkDuration: 0.5
   DamageBlinkCount: 4
 --- !u!114 &1195921984

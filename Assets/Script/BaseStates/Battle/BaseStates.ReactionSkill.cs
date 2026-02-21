@@ -9,8 +9,18 @@ using static TenDayAbilityPosition;
 
 public abstract partial class BaseStates
 {
-    // PlayersUIRefs のキャッシュ（被弾点滅パラメータ取得用）
+    // PlayersUIRefs のキャッシュ（被弾点滅パラメータ・ダメージフロープレハブ取得用）
     private static PlayersUIRefs s_cachedUIRefs;
+
+    /// <summary>
+    /// PlayersUIRefs のキャッシュを取得する。未キャッシュなら FindFirstObjectByType で解決する。
+    /// </summary>
+    private static PlayersUIRefs GetCachedUIRefs()
+    {
+        if (s_cachedUIRefs == null)
+            s_cachedUIRefs = UnityEngine.Object.FindFirstObjectByType<PlayersUIRefs>();
+        return s_cachedUIRefs;
+    }
 
     //  ==============================================================================================================================
     //                                              スキルパワー計算など
@@ -803,14 +813,17 @@ public abstract partial class BaseStates
                     {
                         float blinkDuration = 0.5f;
                         int blinkCount = 4;
-                        if (s_cachedUIRefs == null)
-                            s_cachedUIRefs = UnityEngine.Object.FindFirstObjectByType<PlayersUIRefs>();
-                        if (s_cachedUIRefs != null)
+                        var uiRefs = GetCachedUIRefs();
+                        if (uiRefs != null)
                         {
-                            blinkDuration = s_cachedUIRefs.DamageBlinkDuration;
-                            blinkCount = s_cachedUIRefs.DamageBlinkCount;
+                            blinkDuration = uiRefs.DamageBlinkDuration;
+                            blinkCount = uiRefs.DamageBlinkCount;
                         }
                         BattleIcon.PlayDamageBlink(blinkDuration, blinkCount).Forget();
+
+                        // ダメージフロー数字
+                        if (uiRefs != null && uiRefs.DamageFlowPrefab != null)
+                            BattleIcon.SpawnDamageFlow((int)damageAmount.Total, hitResult, uiRefs.DamageFlowPrefab, isdisturbed);
                     }
 
                     var result = await ApplyNonDamageHostileEffects(attacker,skill,hitResult);
@@ -863,7 +876,16 @@ public abstract partial class BaseStates
             var hitResult = skill.SkillHitCalc(this, actor: attacker);
             hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
             AccumulateHitResult(hitResult);
-            healAmount += ExecuteHealFriendlyCore(skillPower, hitResult, ref isHeal);
+            var healed = ExecuteHealFriendlyCore(skillPower, hitResult, ref isHeal);
+            healAmount += healed;
+
+            // 回復フロー数字
+            if (healed > 0 && BattleIcon != null)
+            {
+                var uiRefs = GetCachedUIRefs();
+                if (uiRefs != null && uiRefs.DamageFlowPrefab != null)
+                    BattleIcon.SpawnHealFlow((int)healed, uiRefs.DamageFlowPrefab);
+            }
         }
 
         if (skill.HasType(SkillType.MentalHeal))
