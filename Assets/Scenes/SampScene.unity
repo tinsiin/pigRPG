@@ -24225,7 +24225,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.96548516, g: 0.14746757, b: 0.9581389, a: 0.8733398}
+  m_Color: {r: 0.99937737, g: 0.0026603322, b: 0.9992448, a: 0.99771506}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -44488,49 +44488,6 @@ MonoBehaviour:
         name: "\u30D5\u30EA\u30FC\u30CF\u30F3\u30C9"
         protocols: 03000000010000000200000000000000
         WeaponSkill:
-          IsAggressiveCommit: 1
-          IsReadyTriggerAgressiveCommit: 0
-          IsStockAgressiveCommit: 0
-          CanSelectAggressiveCommit: 0
-          _RandomConsecutivePer: 0
-          _defaultStockCount: 1
-          _stockPower: 1
-          _stockForgetPower: 1
-          SkillName: "\u63B4\u3093\u3067\u6295\u3052\u308B"
-          SkillSpiritual: 0
-          Impression: 0
-          MotionFlavor: {fileID: 0}
-          SkillPhysical: 0
-          SpecialFlags: 0
-          _baseSkillType: 1
-          ConsecutiveType: 0
-          ZoneTrait: 16448
-          RequiredNormalP: 0
-          RequiredAttrP:
-            _list: []
-          RequiredRemainingHPPercent: 0
-          Cantkill: 0
-          SKillDidWaitCount: 0
-          EvasionModifier: 1
-          AttackModifier: 1
-          AttackMentalHealPercent: 80
-          _defAtk: 0
-          DistributionType: 0
-          PowerRangePercentageDictionary:
-            _list: []
-          HitRangePercentageDictionary:
-            _list: []
-          subEffects: 
-          subVitalLayers: 
-          canEraceEffectIDs: 
-          CanEraceEffectCount: 0
-          canEraceVitalLayerIDs: 
-          CanEraceVitalLayerCount: 0
-          _mentalDamageRatio: 0
-          _a_moveset: []
-          _b_moveset: []
-          _powerSpread: []
-          _skillHitPer: 0
           FixedSkillLevelData:
           - SkillName: "\u63B4\u3093\u3067\u6295\u3052\u308B"
             SkillSpiritual: 0
@@ -44582,28 +44539,28 @@ MonoBehaviour:
               canSelect: 0
             A_MoveSet: []
             B_MoveSet: []
-            CasterEffectName:
-            TargetEffectName:
-            FieldEffectName:
-            SubEffects:
-            SubVitalLayers:
-            CanEraceEffectIDs:
+            CasterEffectName: 
+            TargetEffectName: 
+            FieldEffectName: 
+            SubEffects: 
+            SubVitalLayers: 
+            CanEraceEffectIDs: 
             CanEraceEffectCount: 0
-            CanEraceVitalLayerIDs:
+            CanEraceVitalLayerIDs: 
             CanEraceVitalLayerCount: 0
             TargetSelection: 0
             SkillPassiveEffectCount: 1
             SkillPassiveGibeSkillFilter:
-              Impressions:
+              Impressions: 
               MotionFlavors: []
-              MentalAttrs:
-              PhysicalAttrs:
-              AttackTypes:
-              TenDayAbilities:
+              MentalAttrs: 
+              PhysicalAttrs: 
+              AttackTypes: 
+              TenDayAbilities: 
               TenDayMode: 0
-              SkillTypes:
+              SkillTypes: 
               SkillTypeMode: 0
-              SpecialFlags:
+              SpecialFlags: 
               SpecialFlagMode: 0
           _infiniteSkillPowerUnit: 0
           _infiniteSkillTenDaysUnit: 0
@@ -44620,6 +44577,7 @@ MonoBehaviour:
             _list: []
         TenDayValues:
           _list: []
+        SlashColor: {r: 1, g: 0, b: 0, a: 1}
         IsBlade: 0
         WeaponPhysical: 0
         CombinationEntries: []
@@ -45966,6 +45924,11 @@ MonoBehaviour:
   - {fileID: 1845692092}
   - {fileID: 1393269996}
   - {fileID: 340528245}
+  WeaponSlashScale: 3
+  WeaponSlashSpeed: 0.413
+  WeaponSlashSE: {fileID: 8300000, guid: 1cdcfe3f9e1e8fe4d856c4206ca8c149, type: 3}
+  DamageBlinkDuration: 0.5
+  DamageBlinkCount: 4
 --- !u!114 &1195921984
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -45992,6 +45955,8 @@ MonoBehaviour:
           skillID: 3
         stockButtons: []
         aggressiveCommitToggles: []
+        aggressiveTriggerToggles: []
+        aggressiveStockToggles: []
       DefaultButtonArea: {fileID: 770666932}
       DoNothingButton: {fileID: 1568280088}
       WeaponSkillButton: {fileID: 286152241}

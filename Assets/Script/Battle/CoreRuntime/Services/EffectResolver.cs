@@ -64,8 +64,7 @@ public sealed class EffectResolver
         BattleGroup allyGroup,
         BattleGroup enemyGroup,
         ActionQueue acts,
-        int battleTurnCount,
-        Action<string> messageCallback)
+        int battleTurnCount)
     {
         if (acter == null || targets == null) return;
 
@@ -73,8 +72,7 @@ public sealed class EffectResolver
         if (skill == null) return;
 
         skill.SetDeltaTurn(battleTurnCount);
-        var message = await acter.AttackChara(targets);
-        messageCallback?.Invoke(message);
+        await acter.AttackChara(targets);
 
         // エフェクトパイプラインで派生効果を実行
         if (_pipeline == null)

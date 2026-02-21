@@ -203,7 +203,6 @@ public sealed class BattleFlow
 
         if (_context.Wipeout || _context.AlliesRunOut || _context.EnemyGroupEmpty)
         {
-            _eventBus?.Publish(BattleEvent.LogOnly("全滅か主人公達逃走かでダイアログ終了アクトへ", true, _context.BattleTurnCount));
             return DialogEndAct();
         }
         if (_context.DominoRunOutEnemies.Count > 0)

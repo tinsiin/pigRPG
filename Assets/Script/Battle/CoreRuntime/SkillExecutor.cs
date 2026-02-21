@@ -75,8 +75,7 @@ public sealed class SkillExecutor
             _context.AllyGroup,
             _context.EnemyGroup,
             _context.Acts,
-            _context.BattleTurnCount,
-            _presentation.CreateBattleMessage);
+            _context.BattleTurnCount);
 
         if (skill.NextConsecutiveATK())
         {
@@ -181,6 +180,12 @@ public sealed class SkillExecutor
         {
             slashScale = _cachedUIRefs.WeaponSlashScale;
             slashSpeed = _cachedUIRefs.WeaponSlashSpeed;
+        }
+
+        // 共通スラッシュSE再生
+        if (_cachedUIRefs != null)
+        {
+            _cachedUIRefs.PlayWeaponSlashSE();
         }
 
         WeaponSlashAnimator.PlayAsync(

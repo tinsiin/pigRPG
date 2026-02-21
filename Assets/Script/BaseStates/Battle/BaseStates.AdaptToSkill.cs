@@ -1027,122 +1027,6 @@ public abstract partial class BaseStates
     /// <summary>
     /// 慣れ補正（慣れ記憶）のデバッグ用サマリ文字列を返す。
     /// - 印象ごとの記憶回数（永続分込み/床関数値と実数値）
-    /// - 最大被ダメージ
-    /// - 使用者数
-    /// - 合計記憶量と永続記憶の詳細
-    /// - しきい値（初期・EYE基準・maxEye）
-    /// </summary>
-    public string GetAdaptationDebugText(int topN = 8)
-    {
-        try
-        {
-            var sb = new System.Text.StringBuilder();
-            // しきい値
-            float eyeThreshold = CalculateEYEBasedAdaptThreshold();
-            sb.AppendLine($"慣れ下限: 初期={initialAdaptThreshold:0.###}, EYE={eyeThreshold:0.###}, 下限={maxEyeAdaptThreshold:0.###}");
-
-            if (FocusSkillImpressionList == null || FocusSkillImpressionList.Count == 0)
-            {
-                sb.Append("記憶なし");
-                return sb.ToString();
-            }
-
-            // 精神属性の段階配列と基礎量を取得（推定軽減率計算用）
-            var rl = MemoryStageStructure();
-            float baseV = GetBaseAdaptValue();
-
-            // まず記憶回数で降順に並べて「段階インデックス」を決める（副作用回避）
-            var preOrdered = FocusSkillImpressionList
-                .Select(fo => new
-                {
-                    Impression = fo.skillImpression,
-                    MemFloor = Mathf.Floor(fo.MemoryCount(PersistentAdaptSkillImpressionMemories)),
-                    MemRaw = fo.MemoryCount(PersistentAdaptSkillImpressionMemories),
-                    TopDmg = fo.TopDmg,
-                    Users = (fo.User != null) ? fo.User.Count : 0
-                })
-                .OrderByDescending(x => x.MemFloor)
-                .ThenByDescending(x => x.TopDmg)
-                .ToList();
-
-            // 段階・推定慣れ補正(Adapt)・推定軽減率を付与
-            var enriched = preOrdered
-                .Select((x, idx) =>
-                {
-                    bool inRange = idx < rl.Count;
-                    string stageLabel = "範囲外";
-                    float prio = 0f;
-                    if (inRange)
-                    {
-                        switch (rl[idx])
-                        {
-                            case MemoryDensity.Low:
-                                stageLabel = "Low"; prio = 1.42f; break;
-                            case MemoryDensity.Medium:
-                                stageLabel = "Medium"; prio = 3.75f; break;
-                            case MemoryDensity.High:
-                                stageLabel = "High"; prio = 10f; break;
-                        }
-                    }
-
-                    float estAdapt = 1f;
-                    if (prio > 0f)
-                    {
-                        float mem = x.MemFloor;
-                        float tmp = 1f - (baseV * mem * prio);
-                        if (tmp < eyeThreshold) tmp = eyeThreshold; // EYE下限でクランプ
-                        estAdapt = tmp;
-                    }
-                    float reduction = Mathf.Clamp01(1f - estAdapt); // 軽減率（大きいほどダメ軽減が強い）
-
-                    return new
-                    {
-                        x.Impression,
-                        x.MemFloor,
-                        x.MemRaw,
-                        x.TopDmg,
-                        x.Users,
-                        Stage = stageLabel,
-                        EstAdapt = estAdapt,
-                        Reduction = reduction
-                    };
-                })
-                .ToList();
-
-            // 推定軽減率の大きい順に並び替え。タイブレークは記憶量→最大DMG
-            var ordered = enriched
-                .OrderByDescending(x => x.Reduction)
-                .ThenByDescending(x => x.MemFloor)
-                .ThenByDescending(x => x.TopDmg)
-                .ToList();
-
-            int limit = Mathf.Min(topN, ordered.Count);
-            for (int i = 0; i < limit; i++)
-            {
-                var x = ordered[i];
-                sb.AppendLine($"{i + 1}. {x.Impression} 記憶={x.MemFloor:0.##}({x.MemRaw:0.##}) 最大DMG={x.TopDmg:0.#} 使用者数={x.Users} 推定軽減={(x.Reduction * 100f):0.#}% 段階={x.Stage}");
-            }
-
-            // 合計記憶量
-            float totalMem = FocusSkillImpressionList.Sum(fo => fo.MemoryCount(PersistentAdaptSkillImpressionMemories));
-            sb.AppendLine($"総記憶={totalMem:0.##}");
-
-            // 永続記憶の詳細
-            if (PersistentAdaptSkillImpressionMemories != null && PersistentAdaptSkillImpressionMemories.Count > 0)
-            {
-                var pairs = PersistentAdaptSkillImpressionMemories
-                    .Select(kv => $"{kv.Key}:{kv.Value:0.##}");
-                sb.AppendLine("永続: " + string.Join(", ", pairs));
-            }
-
-            return sb.ToString();
-        }
-        catch (Exception ex)
-        {
-            return $"Adaptation Debug Error: {ex.Message}";
-        }
-    }
-
     //  ==============================================================================================================================
     //                                              UI用
     //  ==============================================================================================================================
@@ -1150,7 +1034,6 @@ public abstract partial class BaseStates
     /// <summary>
     /// StatesBanner向けの簡易版：現在の慣れ（推定軽減率大→小）を
     /// "Impression:xx.x%" のコンマ区切りで返す。しきい値行や番号付与は行わない。
-    /// GetAdaptationDebugText() と同じ決定論的ロジックを使用。
     /// </summary>
     public string GetAdaptationBannerText(int topN = 8)
     {

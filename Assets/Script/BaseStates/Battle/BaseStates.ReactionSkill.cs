@@ -49,7 +49,6 @@ public abstract partial class BaseStates
     /// </summary>
     private HitResult IsReactHIT(BaseStates Attacker)
     {
-        AddBattleLog("IsReactHITが呼ばれた", true);
         var skill = Attacker.NowUseSkill;
         var minusMyChance = 0f;
         var minimumHitChancePer = CalcMinimumHitChancePer(Attacker,this);//ミニマムヒットチャンスの発生確率
@@ -80,12 +79,10 @@ public abstract partial class BaseStates
                 if(RandomSource.NextFloat(2) < 1)
                 {
                     minimumHitChanceResult = HitResult.Critical;
-                    AddBattleLog("ミニマムヒットチャンスの確率計算-クリティカル", true);
                 }
                 else
                 {
                     minimumHitChanceResult = HitResult.Graze;
-                    AddBattleLog("ミニマムヒットチャンスの確率計算-かすり", true);
                 }
             }else
             {//残り三分の二で、ステータス比較の計算
@@ -110,18 +107,15 @@ public abstract partial class BaseStates
                 if(RandomSource.NextFloat(effectiveAtkerCalc + effectiveDefCalc) < effectiveAtkerCalc)
                 {
                     minimumHitChanceResult = HitResult.Critical;//攻撃者側のステータスが乱数で出たなら、クリティカル
-                    AddBattleLog("ミニマムヒットチャンスのステータス比較計算-クリティカル", true);
                 }
                 else
                 {
                     minimumHitChanceResult = HitResult.Graze;//そうでなければかすり
-                    AddBattleLog("ミニマムヒットチャンスのステータス比較計算-かすり", true);
                 }
             }
         }
 
         //術者の命中+被害者の自分の回避率　をMAXに　ランダム値が術者の命中に収まったら　命中。
-        AddBattleLog(Attacker.CharacterName + "の命中率:" + Attacker.EYE().Total + CharacterName + "の回避率:" + EvasionRate(AGI().Total,Attacker), true);
         if (RandomSource.NextFloat(Attacker.EYE().Total + EvasionRate(AGI().Total,Attacker)) < Attacker.EYE().Total - minusMyChance || minimumHitChanceResult != HitResult.CompleteEvade)
         {
             var hitResult = minimumHitChanceResult;//ミニマムヒット前提でヒット結果変数に代入
@@ -129,9 +123,7 @@ public abstract partial class BaseStates
             if(minimumHitChanceResult == HitResult.CompleteEvade)
             {
                 hitResult = HitResult.Hit;//スキル命中に渡すヒット結果に通常のHitを代入
-                AddBattleLog("IsReactHit-Hit", true);
             }
-            AddBattleLog("通常Hitにより更なるスキル命中計算を実行", true);
             //スキルそのものの命中率 スキル命中率は基本独立させて、スキル自体の熟練度系ステータスで補正する？
             return skill.SkillHitCalc(this,AccuracySupremacy(Attacker.EYE().Total, AGI().Total), hitResult, actor: Attacker);
         }
@@ -694,7 +686,7 @@ public abstract partial class BaseStates
     /// </summary>
     /// <param name="skill"></param>
     /// <param name="UnderIndex">攻撃される人の順番　スキルのPowerSpreadの順番に同期している</param>
-    public virtual async UniTask<string> ReactionSkillOnBattle(BaseStates attacker, float spread)
+    public virtual async UniTask ReactionSkillOnBattle(BaseStates attacker, float spread)
     {
         // ポイント精算用: 最も強いヒット結果を保持
         HitResult bestHitOutcome = HitResult.none;
@@ -724,8 +716,6 @@ public abstract partial class BaseStates
         ComputeSkillPowers(attacker, skill, spread, out var skillPower, out var skillPowerForMental);
         //Debug.Log($"{attacker.CharacterName}の{skill.SkillName}のスキルパワー = {skillPower} ,精神用スキルパワー = {skillPowerForMental} (ComputeSkillPowers)\n-スキルパワーの準備終了(ReactionSkill)");
 
-        //メッセージテキスト用
-        var txt = "";
 
         //発動するかどうか
         var thisAtkTurn = true;
@@ -1019,7 +1009,6 @@ public abstract partial class BaseStates
         var arrowMgr = ArrowManager ?? BattleSystemArrowManager.Instance;
         arrowMgr?.Enqueue(attacker,this,arrowThicknessDamagePercent);
 
-        return txt;
     }
     //  ==============================================================================================================================
     //                                              バトル用処理関数
@@ -1163,7 +1152,6 @@ public abstract partial class BaseStates
         }
         if(!HitResultSet)
         {
-            AddBattleLog("攻撃スキルヒット判定でisreactHitが呼ばれた。", true);
             hitResult = IsReactHIT(attacker);//善意ヒット判定が未代入なら通常のヒット判定
         }
 

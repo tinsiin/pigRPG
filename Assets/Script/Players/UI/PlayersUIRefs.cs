@@ -32,6 +32,22 @@ public class PlayersUIRefs : MonoBehaviour
     [Range(0.05f, 1f)]
     public float WeaponSlashSpeed = 1f;
 
+    [Tooltip("スラッシュ発動時に再生する共通効果音（未設定なら無音）")]
+    public AudioClip WeaponSlashSE;
+
+    private AudioSource _audioSource;
+
+    public void PlayWeaponSlashSE()
+    {
+        if (WeaponSlashSE == null) return;
+        if (_audioSource == null)
+        {
+            _audioSource = gameObject.AddComponent<AudioSource>();
+            _audioSource.playOnAwake = false;
+        }
+        _audioSource.PlayOneShot(WeaponSlashSE);
+    }
+
     [Header("被弾点滅")]
     [Tooltip("点滅の合計時間（秒）")]
     [Range(0.2f, 1.5f)]

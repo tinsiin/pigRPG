@@ -445,10 +445,6 @@ public class BattleManager : IBattleContext
             UIStateHub.EyeState.Value = EyeAreaState.Walk;
         }
 
-        //schizoLog.AddLog("戦闘を終わらせた",true);
-        //schizoLog.DisplayAllAsync().Forget();//ACTPOPが呼ばれないのでここで呼ぶ
-        //そもそも戦闘終わりはschizologではなくMessageDropperで行われるのが前提だけど、デバック用にね
-
         CleanupBattleState();
     }
 

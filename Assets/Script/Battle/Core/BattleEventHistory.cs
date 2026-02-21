@@ -3,8 +3,20 @@ using System.Collections.Generic;
 public sealed class BattleEventHistory
 {
     private readonly List<BattleEventEntry> entries = new();
+    private int _displayedUpTo = 0;
 
     public IReadOnlyList<BattleEventEntry> Entries => entries;
+
+    /// <summary>
+    /// 前回呼び出し以降に追加されたエントリの開始インデックスと件数を返す
+    /// </summary>
+    public (int start, int count) AdvanceDisplayCursor()
+    {
+        int start = _displayedUpTo;
+        int count = entries.Count - start;
+        _displayedUpTo = entries.Count;
+        return (start, count);
+    }
 
     public void Add(string message, bool important)
     {
@@ -27,6 +39,7 @@ public sealed class BattleEventHistory
     public void Clear()
     {
         entries.Clear();
+        _displayedUpTo = 0;
     }
 }
 

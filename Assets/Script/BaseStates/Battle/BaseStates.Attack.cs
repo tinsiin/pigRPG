@@ -15,7 +15,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// クラスを通じて相手を攻撃する
     /// </summary>
-    public virtual async UniTask<string> AttackChara(UnderActersEntryList Unders)
+    public virtual async UniTask AttackChara(UnderActersEntryList Unders)
     {
         TenDayGrowthListByHIT = new();//ヒット分成長リストを初期化する。
 
@@ -28,7 +28,6 @@ public abstract partial class BaseStates
         }
 
         SkillUseConsecutiveCountUp(NowUseSkill);//連続カウントアップ
-        string txt = "";
 
        
 
@@ -72,8 +71,7 @@ public abstract partial class BaseStates
         {
             var ene = Unders.GetAtCharacter(i);
             ApplyCharaConditionalToSpecial(ene);//キャラ限定補正を通常の特別補正リストに追加　キャラが合ってればね
-            AddBattleLog($"{ene.CharacterName}のReactionSkillが始まった-Undersのカウント数:{Unders.Count}", true);
-            txt += await ene.ReactionSkillOnBattle(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
+            await ene.ReactionSkillOnBattle(this, Unders.GetAtSpreadPer(i));//敵がスキルにリアクション
         }
         // 対象処理が完了したのでキャスト単位でポイント精算
         var overallHit = EndSkillHitAggregation();
@@ -107,7 +105,6 @@ public abstract partial class BaseStates
         //アクション単位での行動記録
         var isdivergence = GetIsSkillDivergence();
         DidActionSkillDatas.Add(new ActionSkillData(isdivergence, NowUseSkill));
-        return txt;
     }
     //  ==============================================================================================================================
     //                                              行動記録

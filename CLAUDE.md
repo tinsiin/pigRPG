@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## プロジェクト概要
 
 pigRPG - Unity製Android向けRPG（日本語プロジェクト）
-- Unity 2022.3.x / Windows
+- Unity 6 / Windows
 
 ## 編集制約
 

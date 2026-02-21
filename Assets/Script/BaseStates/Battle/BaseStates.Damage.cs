@@ -536,7 +536,7 @@ public abstract partial class BaseStates
         HP -= totalDmg;
         CantKillSkillClamp(Atker,skill);//殺せない系再代入クランプ処理（戦闘版は常時適用）
         Debug.Log("攻撃が実行された");
-        AddBattleLog(Atker.CharacterName + "が" + this.CharacterName + "を攻撃した-「" + totalDmg + "」ダメージを与えた");
+        AddBattleLog(Atker.CharacterName + "が" + this.CharacterName + "を攻撃した-「" + totalDmg + "」");
 
         //攻撃者がダメージを殺すまでに与えたダメージ辞書に記録する
         Atker.RecordDamageDealtToEnemyUntilKill(dmg.Total,this);

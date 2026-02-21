@@ -96,11 +96,15 @@ public sealed class BattleUIBridge : IBattleUiAdapter
     public void DisplayLogs()
     {
         if (_schizoLog == null) return;
-        _schizoLog.ClearLogs();
-        foreach (var entry in eventHistory.Entries)
+
+        var (start, count) = eventHistory.AdvanceDisplayCursor();
+        if (count <= 0) return;
+
+        var entries = eventHistory.Entries;
+        for (int i = start; i < start + count; i++)
         {
-            if (entry.Type != BattleEventType.Log) continue;
-            _schizoLog.AddLog(entry.Message, entry.Important);
+            if (entries[i].Type != BattleEventType.Log) continue;
+            _schizoLog.AddLog(entries[i].Message, entries[i].Important);
         }
         _schizoLog.DisplayAllAsync().Forget();
     }
@@ -172,12 +176,6 @@ public sealed class BattleUIBridge : IBattleUiAdapter
     public void AddLog(string message, bool important)
     {
         eventHistory.Add(message, important);
-        AddLogInternal(message, important);
-    }
-
-    private void AddLogInternal(string message, bool important)
-    {
-        _schizoLog?.AddLog(message, important);
     }
 
     public void HardStopAndClearLogs()
