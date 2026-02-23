@@ -116,7 +116,11 @@ public class DamageFlowNumber : MonoBehaviour
         await LMotion.Create(startPos.y, startPos.y + _riseDistance, _riseDuration)
             .WithEase(Ease.OutCubic)
             .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-            .Bind(y => _rect.anchoredPosition = new Vector2(startPos.x, y))
+            .Bind(y =>
+            {
+                if (_rect == null) return;
+                _rect.anchoredPosition = new Vector2(startPos.x, y);
+            })
             .ToUniTask();
         if (this == null) return;
 

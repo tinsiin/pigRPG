@@ -229,6 +229,7 @@ public sealed class PortraitPresenter : MonoBehaviour
     private async UniTask PlayRockmanTransition(PortraitPosition position, Image image, RectTransform rectTransform)
     {
         var rainBar = position == PortraitPosition.Left ? leftRainBar : rightRainBar;
+        var originalPos = position == PortraitPosition.Left ? leftOriginalPos : rightOriginalPos;
 
         if (rainBar != null)
         {
@@ -242,13 +243,15 @@ public sealed class PortraitPresenter : MonoBehaviour
                 }
             }
 
-            // 雨バー表示
+            // rainBarを立ち絵の位置に合わせる
+            var rainRect = rainBar.rectTransform;
+            rainRect.anchoredPosition = new Vector2(originalPos.x, originalPos.y);
+
             rainBar.color = new Color(color.r, color.g, color.b, 0f);
             rainBar.gameObject.SetActive(true);
 
-            var rainRect = rainBar.rectTransform;
-            var rainStartY = rainRect.anchoredPosition.y + 300f;
-            var rainEndY = rainRect.anchoredPosition.y;
+            var rainStartY = originalPos.y + 400f;
+            var rainEndY = originalPos.y;
 
             var completed = false;
 
@@ -272,7 +275,7 @@ public sealed class PortraitPresenter : MonoBehaviour
 
             // 雨バーをフェードアウト
             completed = false;
-            LMotion.Create(1f, 0f, 0.1f)
+            LMotion.Create(1f, 0f, 0.15f)
                 .WithOnComplete(() => completed = true)
                 .Bind(a =>
                 {
@@ -286,7 +289,43 @@ public sealed class PortraitPresenter : MonoBehaviour
             rainBar.gameObject.SetActive(false);
         }
 
-        await PlayFadeIn(image);
+        // 立ち絵を「下から生えてくるように」表示
+        if (image == null || rectTransform == null)
+        {
+            await PlayFadeIn(image);
+            return;
+        }
+
+        var growOffset = 80f;
+        var startPos = new Vector2(originalPos.x, originalPos.y - growOffset);
+
+        rectTransform.anchoredPosition = startPos;
+        var c2 = image.color;
+        c2.a = 0f;
+        image.color = c2;
+        image.gameObject.SetActive(true);
+
+        var growCompleted = false;
+
+        // 下から定位置へスライド
+        LMotion.Create(startPos, originalPos, transitionDuration * 1.5f)
+            .WithEase(Ease.OutQuad)
+            .WithOnComplete(() => growCompleted = true)
+            .BindToAnchoredPosition(rectTransform)
+            .AddTo(image.gameObject);
+
+        // フェードイン
+        LMotion.Create(0f, 1f, transitionDuration * 1.5f)
+            .WithEase(Ease.OutQuad)
+            .Bind(a =>
+            {
+                var c = image.color;
+                c.a = a;
+                image.color = c;
+            })
+            .AddTo(image.gameObject);
+
+        await UniTask.WaitUntil(() => growCompleted);
     }
 
     private async UniTask PlaySlideFromTop(Image image, RectTransform rectTransform, PortraitPosition position)

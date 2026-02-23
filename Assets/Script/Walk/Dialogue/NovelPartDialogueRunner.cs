@@ -49,6 +49,11 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
         ui.SetBackButtonEnabled(false);
         ui.ClearReactions();
 
+        // 前回の立ち絵・雑音などの内部状態をリセット
+        // （TabState.walkで見た目は消えていても、Presenterの状態が残っていると
+        //  同キャラ同表情判定でトランジションがスキップされるため）
+        await ui.HideAllAsync();
+
         // 主人公の精神属性を表示（ディノイドモード用）
         var protagonistImpression = context.GetProtagonistImpression();
         ui.SetProtagonistSpiritualProperty(protagonistImpression);
@@ -206,6 +211,10 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
 
     private async UniTask<int> ExecuteStep(DialogueStep step, DialogueContext context, int stepIndex)
     {
+        // 0. アニメーション前にUIを可視化（TabState設定）
+        //    これがないと立ち絵トランジション等がUI非表示中に実行され、見えない
+        ui.SetTabState(allowBacktrack ? TabState.EventDialogue : TabState.FieldDialogue);
+
         // 1. 背景変更
         if (ShouldUpdateBackground(step))
         {
@@ -323,12 +332,11 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
             return;
         }
 
-        // 戻る機能の有無でTabStateを切り替え
+        // 入力待ち（TabStateはExecuteStep冒頭で設定済み）
         try
         {
             if (allowBacktrack)
             {
-                ui.SetTabState(TabState.EventDialogue);
                 var isNext = await inputProvider.WaitForNextOrBackAsync();
                 if (!isNext)
                 {
@@ -338,7 +346,6 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
             }
             else
             {
-                ui.SetTabState(TabState.FieldDialogue);
                 await inputProvider.WaitForNextAsync();
             }
         }
