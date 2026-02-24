@@ -13,6 +13,9 @@ public class EventDialogueUI : MonoBehaviour
     [SerializeField]
     private Button nextButton;
 
+    [SerializeField]
+    private Button backlogButton;
+
     private NovelInputHub inputHub;
 
     private void Awake()
@@ -25,6 +28,10 @@ public class EventDialogueUI : MonoBehaviour
         {
             nextButton.onClick.AddListener(OnNextButtonClicked);
         }
+        if (backlogButton != null)
+        {
+            backlogButton.onClick.AddListener(OnBacklogButtonClicked);
+        }
     }
 
     private void OnDestroy()
@@ -36,6 +43,10 @@ public class EventDialogueUI : MonoBehaviour
         if (nextButton != null)
         {
             nextButton.onClick.RemoveListener(OnNextButtonClicked);
+        }
+        if (backlogButton != null)
+        {
+            backlogButton.onClick.RemoveListener(OnBacklogButtonClicked);
         }
     }
 
@@ -66,5 +77,10 @@ public class EventDialogueUI : MonoBehaviour
     private void OnNextButtonClicked()
     {
         inputHub?.NotifyNext();
+    }
+
+    private void OnBacklogButtonClicked()
+    {
+        inputHub?.NotifyBacklog();
     }
 }

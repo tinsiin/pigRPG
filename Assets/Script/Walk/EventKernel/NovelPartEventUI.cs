@@ -19,7 +19,7 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
     [SerializeField] private BackgroundDatabase backgroundDatabase;
 
     [Header("Backlog UI")]
-    [SerializeField] private GameObject backlogPanel;
+    [SerializeField] private BacklogPageView backlogPageView;
     [SerializeField] private GameObject backButton;
 
     [Header("Message Dropper")]
@@ -36,7 +36,6 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
     [SerializeField] private DisplayMode initialDisplayMode = DisplayMode.Dinoid;
     private NovelInputHub inputHub;
     private bool backRequested;
-    private bool backlogRequested;
 
     // 分離されたマネージャー
     private NovelZoomManager zoomManager;
@@ -315,30 +314,23 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
 
     #region Navigation (Back, Backlog)
 
+    public int BacklogLinesPerPage => backlogPageView != null ? backlogPageView.LinesPerPage : 8;
+    public int BacklogMaxBacktrackPages => backlogPageView != null ? backlogPageView.MaxBacktrackPages : 10;
+
     public async UniTask ShowBacklog(DialogueBacklog backlog)
     {
-        if (backlogPanel != null)
+        if (backlogPageView != null)
         {
-            // TODO: バックログUIにエントリを表示（ScrollView + BacklogItemテンプレート）
-            backlogPanel.SetActive(true);
+            using (UIBlocker.Instance?.Acquire(BlockScope.AllContents))
+            {
+                await backlogPageView.ShowAsync(backlog);
+            }
         }
-        else
-        {
-            Debug.Log($"[NovelPartEventUI] ShowBacklog: {backlog?.Count ?? 0} entries");
-        }
-        await UniTask.Yield();
     }
 
     public void HideBacklog()
     {
-        if (backlogPanel != null)
-        {
-            backlogPanel.SetActive(false);
-        }
-        else
-        {
-            Debug.Log("[NovelPartEventUI] HideBacklog");
-        }
+        backlogPageView?.ForceClose();
     }
 
     public void SetBackButtonEnabled(bool enabled)
@@ -358,9 +350,7 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
 
     public bool ConsumeBacklogRequest()
     {
-        var result = backlogRequested;
-        backlogRequested = false;
-        return result;
+        return inputHub?.ConsumeBacklogRequest() ?? false;
     }
 
     public void RestoreState(DialogueStateSnapshot snapshot)
@@ -394,11 +384,6 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
     public void OnBackButtonClicked()
     {
         backRequested = true;
-    }
-
-    public void OnBacklogButtonClicked()
-    {
-        backlogRequested = true;
     }
 
     #endregion

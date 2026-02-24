@@ -10,6 +10,7 @@ public sealed class NovelInputHub : INovelInputProvider
     private UniTaskCompletionSource<bool> nextOrBackTcs;
     private UniTaskCompletionSource<int> choiceTcs;
     private bool isCancelled;
+    private bool backlogRequested;
 
     /// <summary>
     /// 次へ進む入力を通知する。
@@ -91,4 +92,24 @@ public sealed class NovelInputHub : INovelInputProvider
     /// キャンセルされたかどうか。
     /// </summary>
     public bool IsCancelled => isCancelled;
+
+    /// <summary>
+    /// バックログ表示入力を通知する。
+    /// </summary>
+    public void NotifyBacklog()
+    {
+        backlogRequested = true;
+        // 入力待ちをキャンセルして即座にバックログ処理へ進む
+        nextOrBackTcs?.TrySetCanceled();
+    }
+
+    /// <summary>
+    /// バックログ表示リクエストを消費する。
+    /// </summary>
+    public bool ConsumeBacklogRequest()
+    {
+        var result = backlogRequested;
+        backlogRequested = false;
+        return result;
+    }
 }

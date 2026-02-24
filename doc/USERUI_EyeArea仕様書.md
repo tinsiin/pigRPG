@@ -153,6 +153,13 @@ finally { UIBlocker.Instance.EndBlock("NovelPart"); }
 - タブ切り替え自体は常に可能（ブロックするのは各タブ内のコンテンツ操作のみ）
 - R3 ReactivePropertyで状態変更を購読可能
 
+**UIBlockerを使用している箇所:**
+
+| 箇所 | スコープ | 期間 | 備考 |
+|------|---------|------|------|
+| BattleInitializer | AllContents | ズームアニメーション中 | Acquire（using） |
+| NovelPartEventUI.ShowBacklog | AllContents | バックログパネル表示中 | Acquire（using） |
+
 **詳細:** [UIBlocker設計.md](./終了済み/UIBlocker設計.md)
 
 ### 状態管理: TabState

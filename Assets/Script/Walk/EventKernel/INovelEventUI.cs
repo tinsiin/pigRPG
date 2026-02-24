@@ -139,9 +139,19 @@ public interface INovelEventUI : IEventUI, INovelZoomUI, INovelReactionUI
     DisplayMode CurrentDisplayMode { get; }
 
     /// <summary>
-    /// バックログを表示する。
+    /// バックログを表示し、閉じるまで待機する。
     /// </summary>
     UniTask ShowBacklog(DialogueBacklog backlog);
+
+    /// <summary>
+    /// バックログの1ページあたりのエントリ数。
+    /// </summary>
+    int BacklogLinesPerPage { get; }
+
+    /// <summary>
+    /// バックログの最大遡りページ数。
+    /// </summary>
+    int BacklogMaxBacktrackPages { get; }
 
     /// <summary>
     /// バックログを非表示にする。

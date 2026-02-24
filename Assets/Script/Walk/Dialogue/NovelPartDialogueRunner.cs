@@ -9,6 +9,11 @@ using UnityEngine;
 /// </summary>
 public sealed class NovelPartDialogueRunner : IDialogueRunner
 {
+    /// <summary>
+    /// ExecuteStepがバックログ表示により中断されたことを示す戻り値。
+    /// </summary>
+    private const int StepInterrupted = -2;
+
     private readonly INovelEventUI ui;
     private DialogueStep previousStep;
     private DialogueBacklog backlog;
@@ -43,7 +48,15 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
 
         // バックログと戻る機能の初期化
         allowBacktrack = context.AllowBacktrack;
-        backlog = context.AllowBacktrack || context.ShowBacklog ? new DialogueBacklog() : null;
+        if (context.AllowBacktrack || context.ShowBacklog)
+        {
+            var maxEntries = ui.BacklogLinesPerPage * ui.BacklogMaxBacktrackPages;
+            backlog = new DialogueBacklog(maxEntries);
+        }
+        else
+        {
+            backlog = null;
+        }
         snapshots = context.AllowBacktrack ? new List<DialogueStateSnapshot>() : null;
 
         ui.SetBackButtonEnabled(false);
@@ -86,6 +99,12 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
 
                 var stepResult = await ExecuteStep(step, context, currentIndex);
 
+                // バックログ表示により中断された場合、同じステップを再実行
+                if (stepResult == StepInterrupted)
+                {
+                    continue;
+                }
+
                 // 状態スナップショット保存（ExecuteStep後、Effect実行後の状態を保存）
                 if (snapshots != null && snapshots.Count <= currentIndex)
                 {
@@ -124,24 +143,21 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
                 // 戻るリクエストをチェック（NovelInputHubからの通知 or UIボタンからの通知）
                 if (allowBacktrack && (backRequested || ui.ConsumeBackRequest()) && currentIndex > 0)
                 {
-                    backRequested = false;  // リセット
-                    currentIndex--;
-                    var prevSnapshot = snapshots[currentIndex];
-                    ui.RestoreState(prevSnapshot);
-                    backlog?.TruncateTo(currentIndex);
-                    previousStep = currentIndex > 0 ? steps[currentIndex - 1] : null;
-                    continue;
+                    // 戻れる範囲の制限
+                    var maxBackSteps = ui.BacklogLinesPerPage * ui.BacklogMaxBacktrackPages;
+                    var earliestAllowed = System.Math.Max(0, currentIndex - maxBackSteps);
+                    if (currentIndex - 1 >= earliestAllowed)
+                    {
+                        backRequested = false;
+                        currentIndex--;
+                        var prevSnapshot = snapshots[currentIndex];
+                        ui.RestoreState(prevSnapshot);
+                        backlog?.TruncateTo(currentIndex);
+                        previousStep = currentIndex > 0 ? steps[currentIndex - 1] : null;
+                        continue;
+                    }
                 }
                 backRequested = false;  // 使われなかった場合もリセット
-
-                // バックログリクエストをチェック
-                if (backlog != null && ui.ConsumeBacklogRequest())
-                {
-                    await ui.ShowBacklog(backlog);
-                    // バックログ閉じるまで待機
-                    await WaitForBacklogClose();
-                    continue; // 同じステップを再表示
-                }
 
                 // バックログにエントリ追加
                 backlog?.Add(currentIndex, step);
@@ -191,19 +207,6 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
             // 注: ズームアウトはNovelDialogueStep側のfinallyで実行される
             ui.SetTabState(TabState.walk);
         }
-    }
-
-    private async UniTask WaitForBacklogClose()
-    {
-        // バックログが閉じるまで待機
-        while (true)
-        {
-            await UniTask.Yield();
-            // バックログパネルが非アクティブになったら終了
-            // または何らかの入力で閉じる
-            break;
-        }
-        ui.HideBacklog();
     }
 
     private async UniTask<int> ExecuteStep(DialogueStep step, DialogueContext context, int stepIndex)
@@ -293,6 +296,13 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
 
         // 5. ユーザー入力待ち
         await WaitForInput(context);
+
+        // 5.1. バックログリクエストで中断された場合、選択肢・Effectをスキップ
+        if (backlog != null && ui.ConsumeBacklogRequest())
+        {
+            await ui.ShowBacklog(backlog);
+            return StepInterrupted;
+        }
 
         // 5.5. 雑音加速（入力後、残っている雑音を捌ける）
         ui.AccelerateNoises();
