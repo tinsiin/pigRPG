@@ -16,6 +16,9 @@ public class EventDialogueUI : MonoBehaviour
     [SerializeField]
     private Button backlogButton;
 
+    [SerializeField]
+    private Button closeButton;
+
     private NovelInputHub inputHub;
 
     private void Awake()
@@ -32,6 +35,11 @@ public class EventDialogueUI : MonoBehaviour
         {
             backlogButton.onClick.AddListener(OnBacklogButtonClicked);
         }
+        if (closeButton != null)
+        {
+            closeButton.onClick.AddListener(OnCloseButtonClicked);
+            closeButton.gameObject.SetActive(false);
+        }
     }
 
     private void OnDestroy()
@@ -47,6 +55,10 @@ public class EventDialogueUI : MonoBehaviour
         if (backlogButton != null)
         {
             backlogButton.onClick.RemoveListener(OnBacklogButtonClicked);
+        }
+        if (closeButton != null)
+        {
+            closeButton.onClick.RemoveListener(OnCloseButtonClicked);
         }
     }
 
@@ -69,12 +81,39 @@ public class EventDialogueUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 次へボタンのinteractableを設定する。
+    /// </summary>
+    public void SetNextButtonInteractable(bool interactable)
+    {
+        if (nextButton != null)
+        {
+            nextButton.interactable = interactable;
+        }
+    }
+
+    /// <summary>
+    /// 閉じるボタンの表示/非表示を設定する。
+    /// </summary>
+    public void SetCloseButtonVisible(bool visible)
+    {
+        if (closeButton != null)
+        {
+            closeButton.gameObject.SetActive(visible);
+        }
+    }
+
     private void OnPrevButtonClicked()
     {
         inputHub?.NotifyBack();
     }
 
     private void OnNextButtonClicked()
+    {
+        inputHub?.NotifyNext();
+    }
+
+    private void OnCloseButtonClicked()
     {
         inputHub?.NotifyNext();
     }

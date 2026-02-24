@@ -97,6 +97,11 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
                 // 戻るボタン有効化（2ステップ目以降、かつallowBacktrack）
                 ui.SetBackButtonEnabled(allowBacktrack && currentIndex > 0);
 
+                // 最後のステップではNextボタン無効化 + 閉じるボタン表示（イベント会話のみ）
+                var isLastStep = allowBacktrack && currentIndex == steps.Length - 1;
+                ui.SetNextButtonEnabled(!isLastStep);
+                ui.SetCloseButtonVisible(isLastStep);
+
                 var stepResult = await ExecuteStep(step, context, currentIndex);
 
                 // バックログ表示により中断された場合、同じステップを再実行
@@ -195,6 +200,8 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
             // 正常終了・リアクション終了・例外中断いずれの場合も確実にクリーンアップ
             ui.ClearReactions();
             ui.SetBackButtonEnabled(false);
+            ui.SetNextButtonEnabled(true);
+            ui.SetCloseButtonVisible(false);
             ui.SetProtagonistSpiritualProperty(null);
 
             // 表示中の立ち絵をスライドアウトで退場させる（UIが消える前に）

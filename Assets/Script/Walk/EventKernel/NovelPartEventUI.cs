@@ -338,6 +338,22 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         }
     }
 
+    public void SetNextButtonEnabled(bool enabled)
+    {
+        if (eventDialogueUI != null)
+        {
+            eventDialogueUI.SetNextButtonInteractable(enabled);
+        }
+    }
+
+    public void SetCloseButtonVisible(bool visible)
+    {
+        if (eventDialogueUI != null)
+        {
+            eventDialogueUI.SetCloseButtonVisible(visible);
+        }
+    }
+
     public bool ConsumeBackRequest()
     {
         var result = backRequested;

@@ -181,6 +181,18 @@ public interface INovelEventUI : IEventUI, INovelZoomUI, ICentralObjectUI, INove
     void SetBackButtonEnabled(bool enabled);
 
     /// <summary>
+    /// 次へボタンの有効/無効を設定する。
+    /// 最後のステップでfalseにして誤操作を防ぐ。
+    /// </summary>
+    void SetNextButtonEnabled(bool enabled);
+
+    /// <summary>
+    /// 閉じるボタンの表示/非表示を設定する。
+    /// 最後のステップでtrueにして明示的な終了手段を提供する。
+    /// </summary>
+    void SetCloseButtonVisible(bool visible);
+
+    /// <summary>
     /// 戻るボタンが押されたかを消費する（ポーリング用）。
     /// </summary>
     bool ConsumeBackRequest();
