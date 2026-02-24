@@ -25,6 +25,9 @@ public sealed class PortraitPresenter : MonoBehaviour
     [SerializeField] private float rainBarDuration = 0.35f;
     [SerializeField] private float exitSlideDistance = 500f;
     [SerializeField] private float slideOffset = 200f;
+    [Header("キャラ切り替えクロスフェード")]
+    [SerializeField] private float crossFadeOutDuration = 0.1f;
+    [SerializeField] private float crossFadeInDuration = 0.1f;
 
     private PortraitDatabase portraitDatabase;
     private PortraitState currentLeftState;
@@ -237,6 +240,10 @@ public sealed class PortraitPresenter : MonoBehaviour
             return;
         }
 
+        // キャラ切り替え判定（既にキャラがいる側で、別のキャラに変わった場合）
+        bool isCharacterSwitch = currentState != null &&
+                                 currentState.CharacterId != state.CharacterId;
+
         // 状態更新
         if (position == PortraitPosition.Left)
         {
@@ -256,10 +263,17 @@ public sealed class PortraitPresenter : MonoBehaviour
 
         if (image == null) return;
 
-        image.sprite = sprite;
-
-        // トランジション実行
-        await PlayTransition(state.TransitionType, position, image, rectTransform);
+        if (isCharacterSwitch)
+        {
+            // キャラ切り替え: クロスフェード（旧キャラをフェードアウト→スプライト差替え→フェードイン）
+            await PlayCharacterCrossFade(image, sprite);
+        }
+        else
+        {
+            image.sprite = sprite;
+            // 初登場 or 表情変化: 通常のトランジション
+            await PlayTransition(state.TransitionType, position, image, rectTransform);
+        }
     }
 
     private async UniTask PlayTransition(PortraitTransition transition, PortraitPosition position, Image image, RectTransform rectTransform)
@@ -464,10 +478,23 @@ public sealed class PortraitPresenter : MonoBehaviour
         image.color = color;
         image.gameObject.SetActive(true);
 
-        var completed = false;
+        await AnimateAlpha(image, 0f, 1f, transitionDuration, Ease.OutQuad);
+    }
 
-        LMotion.Create(0f, 1f, transitionDuration)
-            .WithEase(Ease.OutQuad)
+    private async UniTask PlayCharacterCrossFade(Image image, Sprite newSprite)
+    {
+        if (image == null) return;
+
+        await AnimateAlpha(image, 1f, 0f, crossFadeOutDuration, Ease.InQuad);
+        image.sprite = newSprite;
+        await AnimateAlpha(image, 0f, 1f, crossFadeInDuration, Ease.OutQuad);
+    }
+
+    private async UniTask AnimateAlpha(Image image, float from, float to, float duration, Ease ease)
+    {
+        var completed = false;
+        LMotion.Create(from, to, duration)
+            .WithEase(ease)
             .WithOnComplete(() => completed = true)
             .Bind(a =>
             {
@@ -476,7 +503,6 @@ public sealed class PortraitPresenter : MonoBehaviour
                 image.color = c;
             })
             .AddTo(image.gameObject);
-
         await UniTask.WaitUntil(() => completed);
     }
 
@@ -484,26 +510,12 @@ public sealed class PortraitPresenter : MonoBehaviour
     {
         if (image == null || !image.gameObject.activeSelf) return;
 
-        var startAlpha = image.color.a;
-        var completed = false;
-
-        LMotion.Create(startAlpha, 0f, transitionDuration)
-            .WithEase(Ease.InQuad)
-            .WithOnComplete(() => completed = true)
-            .Bind(a =>
-            {
-                var c = image.color;
-                c.a = a;
-                image.color = c;
-            })
-            .AddTo(image.gameObject);
-
-        await UniTask.WaitUntil(() => completed);
+        await AnimateAlpha(image, image.color.a, 0f, transitionDuration, Ease.InQuad);
 
         image.gameObject.SetActive(false);
-        var c2 = image.color;
-        c2.a = 1f;
-        image.color = c2;
+        var c = image.color;
+        c.a = 1f;
+        image.color = c;
     }
 
     private async UniTask SlideOut(Image image, RectTransform rectTransform, float distance, Vector2 originalPos)
