@@ -29,8 +29,6 @@ public sealed class KZoomController : IKZoomController
     private readonly Func<TMPTextBackgroundImage, TMP_Text, bool, TMP_Text> _getOrSetupTMP;
     private readonly Func<string, TMPTextBackgroundImage, int, float, bool, string> _fitTextIntoRect;
 
-    // コーナー計算用キャッシュ
-    private static Vector3[] s_corners;
 
     public KZoomController(
         KZoomConfig config,
@@ -330,8 +328,8 @@ public sealed class KZoomController : IKZoomController
 
     private void ComputeKFit(RectTransform iconRT, out float outScale, out Vector2 outAnchoredPos)
     {
-        GetWorldRect(iconRT, out Vector2 iconCenter, out Vector2 iconSize);
-        GetWorldRect(_config.TargetRect, out Vector2 targetCenter, out Vector2 targetSize);
+        RectTransformUtil.GetWorldRect(iconRT, out Vector2 iconCenter, out Vector2 iconSize);
+        RectTransformUtil.GetWorldRect(_config.TargetRect, out Vector2 targetCenter, out Vector2 targetSize);
 
         float sH = SafeDiv(targetSize.y, iconSize.y);
         float sW = SafeDiv(targetSize.x, iconSize.x);
@@ -352,15 +350,6 @@ public sealed class KZoomController : IKZoomController
         return Mathf.Abs(b) < 1e-5f ? 1f : a / b;
     }
 
-    private static void GetWorldRect(RectTransform rt, out Vector2 center, out Vector2 size)
-    {
-        var corners = s_corners ??= new Vector3[4];
-        rt.GetWorldCorners(corners);
-        var min = new Vector2(corners[0].x, corners[0].y);
-        var max = new Vector2(corners[2].x, corners[2].y);
-        center = (min + max) * 0.5f;
-        size = max - min;
-    }
 
     private void SetKPassivesText(BaseStates actor)
     {

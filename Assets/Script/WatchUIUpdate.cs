@@ -771,7 +771,6 @@ public partial class WatchUIUpdate : MonoBehaviour,
     private CancellationTokenSource _kCts;
     private Vector2 _kOriginalPos;
     private Vector3 _kOriginalScale;
-    private static Vector3[] s_corners;
     // Kズーム前のトランスフォーム保存が有効か（EnterKで保存されたか）
     private bool _kSnapshotValid = false;
     // Kパッシブ表示: フィット用の生トークン文字列を保持（再フィット用）
@@ -1345,8 +1344,8 @@ public partial class WatchUIUpdate : MonoBehaviour,
     /// </summary>
     private void ComputeKFit(RectTransform iconRT, out float outScale, out Vector2 outAnchoredPos)
     {
-        GetWorldRect(iconRT, out var iconCenter, out var iconSize);
-        GetWorldRect(kTargetRect, out var targetCenter, out var targetSize);
+        RectTransformUtil.GetWorldRect(iconRT, out var iconCenter, out var iconSize);
+        RectTransformUtil.GetWorldRect(kTargetRect, out var targetCenter, out var targetSize);
 
         float sx = SafeDiv(targetSize.x, iconSize.x);
         float sy = SafeDiv(targetSize.y, iconSize.y);
@@ -1370,15 +1369,6 @@ public partial class WatchUIUpdate : MonoBehaviour,
         return Mathf.Abs(b) < 1e-5f ? 1f : a / b;
     }
 
-    private static void GetWorldRect(RectTransform rt, out Vector2 center, out Vector2 size)
-    {
-        var corners = s_corners ??= new Vector3[4];
-        rt.GetWorldCorners(corners);
-        var min = new Vector2(corners[0].x, corners[0].y);
-        var max = new Vector2(corners[2].x, corners[2].y);
-        center = (min + max) * 0.5f;
-        size = max - min;
-    }
 
     // ActionMark の表示/非表示ファサード（Phase 3: ActionMarkControllerへ委譲）
     public void ShowActionMark() => ActionMarkCtrl.Show();

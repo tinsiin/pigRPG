@@ -294,9 +294,9 @@ public sealed class WalkingSystemManager : MonoBehaviour, IPlayersContextConsume
                 eventHost?.SetUI(novelEventUI);
 
                 // CentralObjectPresenterを設定（3者会話構図で中央オブジェクトスプライト変更に使用）
-                if (novelEventUI is NovelPartEventUI concreteUI && centralPresenter != null)
+                if (novelEventUI != null && centralPresenter != null)
                 {
-                    concreteUI.SetCentralObjectPresenter(centralPresenter);
+                    novelEventUI.SetCentralObjectPresenter(centralPresenter);
                 }
             }
         }

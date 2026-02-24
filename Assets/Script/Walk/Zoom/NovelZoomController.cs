@@ -20,8 +20,6 @@ public sealed class NovelZoomController
     private bool _isZooming;
     private CancellationTokenSource _cts;
 
-    // コーナー計算用キャッシュ
-    private static Vector3[] s_corners;
 
     public bool IsZooming => _isZooming;
 
@@ -67,18 +65,14 @@ public sealed class NovelZoomController
         _originalScale = _config.ZoomContainer.localScale;
         _hasSnapshot = true;
 
-        // フォーカス領域がdefaultの場合はFullを使用
-        if (focusArea.Preset == FocusPreset.Full && focusArea.CustomRect == default)
-        {
-            focusArea = FocusArea.Default;
-        }
-
         // フィット計算
         ComputeFit(centralObjectRT, focusArea, out float targetScale, out Vector2 targetPos);
 
         Debug.Log($"[NovelZoomController] EnterZoom: scale={targetScale:F2}, pos={targetPos}, focus={focusArea.Preset}");
 
         // ズームアニメーション
+        // 正常完了時: _isZooming=true を維持（ExitZoomで解除する設計）
+        // キャンセル時: RestoreImmediateで即時復帰＋フラグクリア
         try
         {
             var scaleTask = LMotion.Create(_originalScale, new Vector3(targetScale, targetScale, 1f), _config.ZoomDuration)
@@ -97,8 +91,12 @@ public sealed class NovelZoomController
         }
         catch (System.OperationCanceledException)
         {
-            // キャンセル時は即時復帰
-            RestoreImmediate();
+            RestoreImmediate(); // 即時復帰 + _isZooming=false + _hasSnapshot=false
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[NovelZoomController] EnterZoom failed: {e}");
+            RestoreImmediate(); // 予期しない例外でもフラグを確実にクリア
         }
     }
 
@@ -175,14 +173,14 @@ public sealed class NovelZoomController
     private void ComputeFit(RectTransform centralObjectRT, FocusArea focusArea, out float outScale, out Vector2 outPos)
     {
         // オブジェクト全体のワールド座標を取得
-        GetWorldRect(centralObjectRT, out Vector2 objectCenter, out Vector2 objectSize);
+        RectTransformUtil.GetWorldRect(centralObjectRT, out Vector2 objectCenter, out Vector2 objectSize);
 
         // フォーカス領域を適用
         var focusRect = focusArea.GetRect();
         var focusCenter = ApplyFocusRect(objectCenter, objectSize, focusRect, out Vector2 focusSize);
 
         // ターゲット領域を取得
-        GetWorldRect(_config.TargetRect, out Vector2 targetCenter, out Vector2 targetSize);
+        RectTransformUtil.GetWorldRect(_config.TargetRect, out Vector2 targetCenter, out Vector2 targetSize);
 
         // サイズ比からスケール計算（フォーカス領域基準）
         float scaleH = SafeDiv(targetSize.y, focusSize.y);
@@ -234,13 +232,4 @@ public sealed class NovelZoomController
         return Mathf.Abs(b) < 1e-5f ? 1f : a / b;
     }
 
-    private static void GetWorldRect(RectTransform rt, out Vector2 center, out Vector2 size)
-    {
-        var corners = s_corners ??= new Vector3[4];
-        rt.GetWorldCorners(corners);
-        var min = new Vector2(corners[0].x, corners[0].y);
-        var max = new Vector2(corners[2].x, corners[2].y);
-        center = (min + max) * 0.5f;
-        size = max - min;
-    }
 }

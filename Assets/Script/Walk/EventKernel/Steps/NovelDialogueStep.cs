@@ -94,12 +94,11 @@ public sealed class NovelDialogueStep : IEventStep
         try
         {
             // ダイアログコンテキスト生成
-            // 注: ズーム責務はStep側だが、CentralObjectRTは中央オブジェクトスプライト変更に必要なため渡す
             var dialogueContext = new DialogueContext(dialogueData, context.GameContext, displayMode, allowSkip)
             {
                 AllowBacktrack = allowBacktrack,
                 ShowBacklog = showBacklog,
-                CentralObjectRT = context.CentralObjectRT,  // 3者会話構図で中央オブジェクトスプライト変更に使用
+                CentralObjectRT = context.CentralObjectRT,  // 中央オブジェクトの存在判定に使用（スプライト変更はICentralObjectUI経由）
                 // 精神属性連携用（CharacterId版を使用）
                 ProtagonistCharacterId = GetProtagonistCharacterId(),
                 Roster = context.GameContext?.Players?.Roster

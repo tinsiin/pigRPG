@@ -2,7 +2,7 @@ using Cysharp.Threading.Tasks;
 
 /// <summary>
 /// ズーム制御インターフェース。
-/// 中央オブジェクトへのズームイン/アウトとスプライト操作を担当。
+/// 中央オブジェクトへのズームイン/アウトのみを担当。
 /// </summary>
 public interface INovelZoomUI
 {
@@ -20,7 +20,14 @@ public interface INovelZoomUI
     /// ズームを即座に原状復帰する（フェイルセーフ用）。
     /// </summary>
     void RestoreZoomImmediate();
+}
 
+/// <summary>
+/// 中央オブジェクトのスプライト管理インターフェース。
+/// スプライトの更新・取得と、雑音連動の一時表情変更を担当。
+/// </summary>
+public interface ICentralObjectUI
+{
     /// <summary>
     /// 中央オブジェクトのスプライトを変更する。
     /// characterId指定時はPortraitDatabaseから表情解決可能。
@@ -41,6 +48,16 @@ public interface INovelZoomUI
     /// 現在の中央オブジェクトの表情IDを取得する（スナップショット用）。
     /// </summary>
     string GetCurrentCentralObjectExpression();
+
+    /// <summary>
+    /// 雑音連動で一時的に表情を変更する。
+    /// </summary>
+    void SetTemporaryCentralExpression(string expression);
+
+    /// <summary>
+    /// 一時表情をクリアして元の表情に戻す。
+    /// </summary>
+    void ClearTemporaryCentralExpression();
 }
 
 /// <summary>
@@ -68,7 +85,7 @@ public interface INovelReactionUI
 /// IEventUI + INovelZoomUI + INovelReactionUI を継承し、
 /// 立ち絵・背景・雑音・モード切替・ナビゲーションを追加。
 /// </summary>
-public interface INovelEventUI : IEventUI, INovelZoomUI, INovelReactionUI
+public interface INovelEventUI : IEventUI, INovelZoomUI, ICentralObjectUI, INovelReactionUI
 {
     /// <summary>
     /// 左右の立ち絵を表示する。nullで非表示。
@@ -197,4 +214,10 @@ public interface INovelEventUI : IEventUI, INovelZoomUI, INovelReactionUI
     /// 主人公の精神属性を表示する（ディノイドモードのアイコン下）。nullで非表示。
     /// </summary>
     void SetProtagonistSpiritualProperty(SpiritualProperty? property);
+
+    /// <summary>
+    /// CentralObjectPresenterを設定する。
+    /// WalkingSystemManager初期化時に呼び出す。
+    /// </summary>
+    void SetCentralObjectPresenter(CentralObjectPresenter presenter);
 }

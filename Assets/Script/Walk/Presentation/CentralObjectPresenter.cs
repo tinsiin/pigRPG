@@ -235,17 +235,7 @@ public sealed class CentralObjectPresenter
     {
         if (root == null) return null;
 
-        // GameObjectを作成
-        var obj = new GameObject("CentralObject", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        var rect = obj.GetComponent<RectTransform>();
-        rect.SetParent(root, false);
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.pivot = new Vector2(0.5f, 0.5f);
-
-        var img = obj.GetComponent<Image>();
-        img.raycastTarget = false;
-        obj.AddComponent<WalkSpawnedMarker>();
+        var (obj, rect, img) = CreateBaseViewObject();
 
         // ビジュアル設定
         img.sprite = visual.HasSprite ? visual.Sprite : GetFallbackSprite();
@@ -457,21 +447,35 @@ public sealed class CentralObjectPresenter
         }
     }
 
+    /// <summary>
+    /// 基本的なViewObject（GameObject + RectTransform + Image + WalkSpawnedMarker）を生成する。
+    /// EnsureViewObjectとCreateAnimatedViewObjectの共通処理。
+    /// </summary>
+    private (GameObject obj, RectTransform rect, Image img) CreateBaseViewObject()
+    {
+        var obj = new GameObject("CentralObject", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        var rect = obj.GetComponent<RectTransform>();
+        rect.SetParent(root, false);
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+
+        var img = obj.GetComponent<Image>();
+        img.raycastTarget = false;
+        obj.AddComponent<WalkSpawnedMarker>();
+
+        return (obj, rect, img);
+    }
+
     private void EnsureViewObject()
     {
         if (root == null) return;
         if (viewObject != null) return;
 
-        viewObject = new GameObject("CentralObject", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        rectTransform = viewObject.GetComponent<RectTransform>();
-        rectTransform.SetParent(root, false);
-        rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-        rectTransform.pivot = new Vector2(0.5f, 0.5f);
-
-        image = viewObject.GetComponent<Image>();
-        image.raycastTarget = false;
-        viewObject.AddComponent<WalkSpawnedMarker>();
+        var (obj, rect, img) = CreateBaseViewObject();
+        viewObject = obj;
+        rectTransform = rect;
+        image = img;
     }
 
     private void EnsureBackImage()

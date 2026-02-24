@@ -39,6 +39,7 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
 
     // 分離されたマネージャー
     private NovelZoomManager zoomManager;
+    private CentralObjectManager centralObjectManager;
     private NovelReactionHandler reactionHandler;
 
     /// <summary>
@@ -48,11 +49,6 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
     public DisplayMode CurrentDisplayMode =>
         textBoxPresenter != null ? textBoxPresenter.CurrentMode : initialDisplayMode;
     public INovelInputProvider InputProvider => inputHub;
-
-    /// <summary>
-    /// ズームマネージャーへのアクセス（NovelDialogueStep等がINovelZoomUIとして使用）。
-    /// </summary>
-    public NovelZoomManager ZoomManager => zoomManager;
 
     private void Awake()
     {
@@ -105,6 +101,7 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
 
         // 分離マネージャーの初期化
         zoomManager = new NovelZoomManager(zoomConfig);
+        centralObjectManager = new CentralObjectManager();
         reactionHandler = new NovelReactionHandler(textBoxPresenter);
     }
 
@@ -239,17 +236,17 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         }
 
         // 中央オブジェクト
-        var centralId = zoomManager?.GetCurrentCentralObjectCharacterId();
+        var centralId = centralObjectManager?.GetCurrentCentralObjectCharacterId();
         if (!string.IsNullOrEmpty(centralId) && centralId == speaker)
         {
-            zoomManager?.SetTemporaryCentralExpression(entry.Expression);
+            centralObjectManager?.SetTemporaryCentralExpression(entry.Expression);
         }
     }
 
     public void ClearTemporaryExpressions()
     {
         portraitPresenter?.ClearTemporaryExpressions();
-        zoomManager?.ClearTemporaryCentralExpression();
+        centralObjectManager?.ClearTemporaryCentralExpression();
     }
 
     public void AccelerateNoises()
@@ -396,27 +393,19 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         backgroundPresenter?.HideImmediate();
         noisePresenter?.ClearAll();
         textBoxPresenter?.Clear();
-        zoomManager?.UpdateCentralObjectSprite(null);
+        centralObjectManager?.UpdateCentralObjectSprite(null);
     }
 
     public void HideAll()
     {
         ClearReactions();
-        portraitPresenter?.ClearAll();
-        backgroundPresenter?.HideImmediate();
-        noisePresenter?.ClearAll();
-        textBoxPresenter?.Hide();
-        zoomManager?.UpdateCentralObjectSprite(null);
+        ClearAll();
+        textBoxPresenter?.Hide(); // ClearAll()のClear()に加えてGameObject非アクティブ化
     }
 
     public async UniTask HideAllAsync()
     {
-        ClearReactions();
-        portraitPresenter?.ClearAll();
-        backgroundPresenter?.HideImmediate();
-        noisePresenter?.ClearAll();
-        textBoxPresenter?.Hide();
-        zoomManager?.UpdateCentralObjectSprite(null);
+        HideAll();
         await UniTask.Yield();
     }
 
@@ -433,17 +422,27 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
     public void RestoreZoomImmediate()
         => zoomManager.RestoreZoomImmediate();
 
+    #endregion
+
+    #region ICentralObjectUI (委譲)
+
     public void UpdateCentralObjectSprite(Sprite sprite, string characterId = null, string expression = null)
-        => zoomManager.UpdateCentralObjectSprite(sprite, characterId, expression);
+        => centralObjectManager.UpdateCentralObjectSprite(sprite, characterId, expression);
 
     public Sprite GetCurrentCentralObjectSprite()
-        => zoomManager.GetCurrentCentralObjectSprite();
+        => centralObjectManager.GetCurrentCentralObjectSprite();
 
     public string GetCurrentCentralObjectCharacterId()
-        => zoomManager.GetCurrentCentralObjectCharacterId();
+        => centralObjectManager.GetCurrentCentralObjectCharacterId();
 
     public string GetCurrentCentralObjectExpression()
-        => zoomManager.GetCurrentCentralObjectExpression();
+        => centralObjectManager.GetCurrentCentralObjectExpression();
+
+    public void SetTemporaryCentralExpression(string expression)
+        => centralObjectManager.SetTemporaryCentralExpression(expression);
+
+    public void ClearTemporaryCentralExpression()
+        => centralObjectManager.ClearTemporaryCentralExpression();
 
     /// <summary>
     /// CentralObjectPresenterを設定する。
@@ -451,8 +450,7 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
     /// </summary>
     public void SetCentralObjectPresenter(CentralObjectPresenter presenter)
     {
-        zoomManager?.SetCentralObjectPresenter(presenter);
-        zoomManager?.SetPortraitDatabase(portraitDatabase);
+        centralObjectManager?.SetCentralObjectPresenter(presenter, portraitDatabase);
     }
 
     #endregion
