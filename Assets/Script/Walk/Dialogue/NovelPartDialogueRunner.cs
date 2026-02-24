@@ -70,130 +70,127 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
         var steps = context.GetSteps();
         var currentIndex = 0;
 
-        while (currentIndex < steps.Length)
+        try
         {
-            var step = steps[currentIndex];
-            if (step == null)
+            while (currentIndex < steps.Length)
             {
+                var step = steps[currentIndex];
+                if (step == null)
+                {
+                    currentIndex++;
+                    continue;
+                }
+
+                // 戻るボタン有効化（2ステップ目以降、かつallowBacktrack）
+                ui.SetBackButtonEnabled(allowBacktrack && currentIndex > 0);
+
+                var stepResult = await ExecuteStep(step, context, currentIndex);
+
+                // 状態スナップショット保存（ExecuteStep後、Effect実行後の状態を保存）
+                if (snapshots != null && snapshots.Count <= currentIndex)
+                {
+                    var snapshot = new DialogueStateSnapshot(currentIndex, step, ui.CurrentDisplayMode);
+                    if (previousStep != null)
+                    {
+                        // 前ステップの状態を引き継ぐ
+                        var prevSnapshot = snapshots.Count > 0 ? snapshots[snapshots.Count - 1] : null;
+                        if (prevSnapshot != null)
+                        {
+                            snapshot.LeftPortrait = prevSnapshot.LeftPortrait;
+                            snapshot.RightPortrait = prevSnapshot.RightPortrait;
+                            snapshot.HasBackground = prevSnapshot.HasBackground;
+                            snapshot.BackgroundId = prevSnapshot.BackgroundId;
+                            // 中央オブジェクトは継承しない（UIから実際の状態を取得する）
+                        }
+                    }
+                    snapshot.ApplyStep(step);  // 既存：立ち絵/背景の累積更新
+
+                    // 中央オブジェクトはApplyStepではなくUIから直接取得
+                    snapshot.CentralObjectSprite = ui.GetCurrentCentralObjectSprite();
+                    snapshot.CentralObjectCharacterId = ui.GetCurrentCentralObjectCharacterId();
+                    snapshot.CentralObjectExpression = ui.GetCurrentCentralObjectExpression();
+
+                    snapshots.Add(snapshot);
+                }
+
+                // リアクションがクリックされた場合 → リアクション終了
+                if (reactionTriggered != null)
+                {
+                    Debug.Log($"[NovelPartDialogueRunner] Reaction triggered: {reactionTriggered.Text} (type={reactionTriggered.Type})");
+                    await ui.HideAllAsync();
+                    return DialogueResult.ReactionEndedResult(reactionTriggered);
+                }
+
+                // 戻るリクエストをチェック（NovelInputHubからの通知 or UIボタンからの通知）
+                if (allowBacktrack && (backRequested || ui.ConsumeBackRequest()) && currentIndex > 0)
+                {
+                    backRequested = false;  // リセット
+                    currentIndex--;
+                    var prevSnapshot = snapshots[currentIndex];
+                    ui.RestoreState(prevSnapshot);
+                    backlog?.TruncateTo(currentIndex);
+                    previousStep = currentIndex > 0 ? steps[currentIndex - 1] : null;
+                    continue;
+                }
+                backRequested = false;  // 使われなかった場合もリセット
+
+                // バックログリクエストをチェック
+                if (backlog != null && ui.ConsumeBacklogRequest())
+                {
+                    await ui.ShowBacklog(backlog);
+                    // バックログ閉じるまで待機
+                    await WaitForBacklogClose();
+                    continue; // 同じステップを再表示
+                }
+
+                // バックログにエントリ追加
+                backlog?.Add(currentIndex, step);
+
+                if (step.HasChoices && stepResult >= 0)
+                {
+                    result.SelectedChoiceIndex = stepResult;
+
+                    // 選択肢の精神属性を記録
+                    var choices = step.Choices;
+                    if (stepResult < choices.Length)
+                    {
+                        var choice = choices[stepResult];
+                        if (!string.IsNullOrEmpty(choice?.SpiritProperty))
+                        {
+                            result.ChangedSpiritProperty = choice.SpiritProperty;
+                        }
+
+                        // 選択肢のEffectを実行
+                        if (choice?.Effects != null)
+                        {
+                            await ApplyEffects(choice.Effects, context.GameContext);
+                        }
+                    }
+                }
+
+                previousStep = step;
                 currentIndex++;
-                continue;
             }
 
-            // 戻るボタン有効化（2ステップ目以降、かつallowBacktrack）
-            if (allowBacktrack && currentIndex > 0)
-            {
-                ui.SetBackButtonEnabled(true);
-            }
-            else
-            {
-                ui.SetBackButtonEnabled(false);
-            }
-
-            var stepResult = await ExecuteStep(step, context, currentIndex);
-
-            // 状態スナップショット保存（ExecuteStep後、Effect実行後の状態を保存）
-            if (snapshots != null && snapshots.Count <= currentIndex)
-            {
-                var snapshot = new DialogueStateSnapshot(currentIndex, step, ui.CurrentDisplayMode);
-                if (previousStep != null)
-                {
-                    // 前ステップの状態を引き継ぐ
-                    var prevSnapshot = snapshots.Count > 0 ? snapshots[snapshots.Count - 1] : null;
-                    if (prevSnapshot != null)
-                    {
-                        snapshot.LeftPortrait = prevSnapshot.LeftPortrait;
-                        snapshot.RightPortrait = prevSnapshot.RightPortrait;
-                        snapshot.HasBackground = prevSnapshot.HasBackground;
-                        snapshot.BackgroundId = prevSnapshot.BackgroundId;
-                        // 中央オブジェクトは継承しない（UIから実際の状態を取得する）
-                    }
-                }
-                snapshot.ApplyStep(step);  // 既存：立ち絵/背景の累積更新
-
-                // 中央オブジェクトはApplyStepではなくUIから直接取得
-                snapshot.CentralObjectSprite = ui.GetCurrentCentralObjectSprite();
-
-                snapshots.Add(snapshot);
-            }
-
-            // リアクションがクリックされた場合 → リアクション終了
-            if (reactionTriggered != null)
-            {
-                Debug.Log($"[NovelPartDialogueRunner] Reaction triggered: {reactionTriggered.Text} (type={reactionTriggered.Type})");
-
-                // ノベルパートを閉じる（終了）
-                ui.ClearReactions();
-                ui.SetBackButtonEnabled(false);
-                ui.SetProtagonistSpiritualProperty(null);  // 精神属性表示をクリア
-                await ui.HideAllAsync();
-
-                // 注: ズームアウトはNovelDialogueStep側のfinallyで実行される
-
-                ui.SetTabState(TabState.walk);  // 歩行状態に戻す
-
-                // リアクション情報を含めて終了を返す
-                return DialogueResult.ReactionEndedResult(reactionTriggered);
-            }
-
-            // 戻るリクエストをチェック（NovelInputHubからの通知 or UIボタンからの通知）
-            if (allowBacktrack && (backRequested || ui.ConsumeBackRequest()) && currentIndex > 0)
-            {
-                backRequested = false;  // リセット
-                currentIndex--;
-                var prevSnapshot = snapshots[currentIndex];
-                ui.RestoreState(prevSnapshot);
-                backlog?.TruncateTo(currentIndex);
-                previousStep = currentIndex > 0 ? steps[currentIndex - 1] : null;
-                continue;
-            }
-            backRequested = false;  // 使われなかった場合もリセット
-
-            // バックログリクエストをチェック
-            if (backlog != null && ui.ConsumeBacklogRequest())
-            {
-                await ui.ShowBacklog(backlog);
-                // バックログ閉じるまで待機
-                await WaitForBacklogClose();
-                continue; // 同じステップを再表示
-            }
-
-            // バックログにエントリ追加
-            backlog?.Add(currentIndex, step);
-
-            if (step.HasChoices && stepResult >= 0)
-            {
-                result.SelectedChoiceIndex = stepResult;
-
-                // 選択肢の精神属性を記録
-                var choices = step.Choices;
-                if (stepResult < choices.Length)
-                {
-                    var choice = choices[stepResult];
-                    if (!string.IsNullOrEmpty(choice?.SpiritProperty))
-                    {
-                        result.ChangedSpiritProperty = choice.SpiritProperty;
-                    }
-
-                    // 選択肢のEffectを実行
-                    if (choice?.Effects != null)
-                    {
-                        await ApplyEffects(choice.Effects, context.GameContext);
-                    }
-                }
-            }
-
-            previousStep = step;
-            currentIndex++;
+            return result;
         }
+        finally
+        {
+            // 正常終了・リアクション終了・例外中断いずれの場合も確実にクリーンアップ
+            ui.ClearReactions();
+            ui.SetBackButtonEnabled(false);
+            ui.SetProtagonistSpiritualProperty(null);
 
-        ui.SetBackButtonEnabled(false);
-        ui.ClearReactions();
-        ui.SetProtagonistSpiritualProperty(null);  // 精神属性表示をクリア
+            // 表示中の立ち絵をスライドアウトで退場させる（UIが消える前に）
+            // Exit()はcurrentState==nullなら即returnするため、未表示側は安全にスキップ
+            await UniTask.WhenAll(
+                ui.ExitPortrait(PortraitPosition.Left),
+                ui.ExitPortrait(PortraitPosition.Right)
+            );
 
-        // 注: ズームアウトはNovelDialogueStep側のfinallyで実行される
-
-        ui.SetTabState(TabState.walk);  // 歩行状態に戻す
-        return result;
+            // 注: ズームアウトはNovelDialogueStep側のfinallyで実行される
+            ui.SetTabState(TabState.walk);
+        }
     }
 
     private async UniTask WaitForBacklogClose()
@@ -215,6 +212,9 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
         //    これがないと立ち絵トランジション等がUI非表示中に実行され、見えない
         ui.SetTabState(allowBacktrack ? TabState.EventDialogue : TabState.FieldDialogue);
 
+        // 0.5. 前ステップの雑音による一時表情をリセット
+        ui.ClearTemporaryExpressions();
+
         // 1. 背景変更
         if (ShouldUpdateBackground(step))
         {
@@ -228,8 +228,9 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
             }
         }
 
-        // 2. 立ち絵変更
-        if (ShouldUpdatePortrait(step))
+        // 2. 立ち絵変更（Dinoid→Portrait切替時はステップ3で処理するためスキップ）
+        var deferPortrait = ShouldSwitchMode(step) && step.DisplayMode == DisplayMode.Portrait;
+        if (!deferPortrait && ShouldUpdatePortrait(step))
         {
             await ui.ShowPortrait(step.LeftPortrait, step.RightPortrait);
         }
@@ -237,13 +238,31 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
         // 2.5. 中央オブジェクト変更
         if (step.HasCentralObjectChange && context.CentralObjectRT != null)
         {
-            ui.UpdateCentralObjectSprite(step.CentralObjectSprite);
+            ui.UpdateCentralObjectSprite(step.CentralObjectSprite, step.CentralObjectCharacterId);
         }
 
         // 3. テキストボックス切り替え
         if (ShouldSwitchMode(step))
         {
-            await ui.SwitchTextBox(step.DisplayMode);
+            if (step.DisplayMode == DisplayMode.Dinoid)
+            {
+                // Portrait→Dinoid: 立ち絵退場 → テキストボックス切替
+                await UniTask.WhenAll(
+                    ui.ExitPortrait(PortraitPosition.Left),
+                    ui.ExitPortrait(PortraitPosition.Right)
+                );
+                await ui.SwitchTextBox(step.DisplayMode);
+            }
+            else
+            {
+                // Dinoid→Portrait: テキストボックス閉 → 立ち絵登場 → テキストボックス開
+                await ui.FadeOutCurrentTextBox();
+                if (ShouldUpdatePortrait(step))
+                {
+                    await ui.ShowPortrait(step.LeftPortrait, step.RightPortrait);
+                }
+                await ui.FadeInNewTextBox(step.DisplayMode);
+            }
         }
 
         // 4. テキスト表示 + 雑音発火（並列）
@@ -274,6 +293,9 @@ public sealed class NovelPartDialogueRunner : IDialogueRunner
 
         // 5. ユーザー入力待ち
         await WaitForInput(context);
+
+        // 5.5. 雑音加速（入力後、残っている雑音を捌ける）
+        ui.AccelerateNoises();
 
         // 6. 選択肢表示
         var selectedIndex = -1;

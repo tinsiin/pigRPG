@@ -4,6 +4,7 @@ using UnityEngine;
 /// <summary>
 /// INovelEventUIの実装。
 /// 各Presenterを統合してノベルパート表示を制御する。
+/// ズームとリアクションはそれぞれ専用マネージャーに委譲。
 /// </summary>
 public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
 {
@@ -21,8 +22,6 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
     [SerializeField] private GameObject backlogPanel;
     [SerializeField] private GameObject backButton;
 
-    // ReactionTextHandlerはTextBoxPresenter経由で取得するため、フィールド不要
-
     [Header("Message Dropper")]
     [SerializeField] private MessageDropper messageDropper;
 
@@ -34,16 +33,27 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
     [Header("Zoom")]
     [SerializeField] private NovelZoomConfig zoomConfig;
 
-    private DisplayMode currentDisplayMode = DisplayMode.Dinoid;
+    [SerializeField] private DisplayMode initialDisplayMode = DisplayMode.Dinoid;
     private NovelInputHub inputHub;
     private bool backRequested;
     private bool backlogRequested;
-    private System.Action<ReactionSegment> currentReactionCallback;
-    private NovelZoomController zoomController;
-    private CentralObjectPresenter centralObjectPresenter;
 
-    public DisplayMode CurrentDisplayMode => currentDisplayMode;
+    // 分離されたマネージャー
+    private NovelZoomManager zoomManager;
+    private NovelReactionHandler reactionHandler;
+
+    /// <summary>
+    /// 現在のDisplayMode。TextBoxPresenterが信頼できる唯一の情報源。
+    /// TextBoxPresenter未初期化時はInspector設定値をフォールバックとして返す。
+    /// </summary>
+    public DisplayMode CurrentDisplayMode =>
+        textBoxPresenter != null ? textBoxPresenter.CurrentMode : initialDisplayMode;
     public INovelInputProvider InputProvider => inputHub;
+
+    /// <summary>
+    /// ズームマネージャーへのアクセス（NovelDialogueStep等がINovelZoomUIとして使用）。
+    /// </summary>
+    public NovelZoomManager ZoomManager => zoomManager;
 
     private void Awake()
     {
@@ -85,19 +95,18 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         if (noisePresenter != null)
         {
             noisePresenter.Initialize();
+            noisePresenter.SetPortraitDatabase(portraitDatabase);
         }
 
         if (textBoxPresenter != null)
         {
             textBoxPresenter.SetPortraitDatabase(portraitDatabase);
-            textBoxPresenter.Initialize(currentDisplayMode);
+            textBoxPresenter.Initialize(initialDisplayMode);
         }
 
-        // ズームコントローラー初期化
-        if (zoomConfig != null)
-        {
-            zoomController = new NovelZoomController(zoomConfig);
-        }
+        // 分離マネージャーの初期化
+        zoomManager = new NovelZoomManager(zoomConfig);
+        reactionHandler = new NovelReactionHandler(textBoxPresenter);
     }
 
     public void SetTabState(TabState state)
@@ -107,18 +116,16 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
             UIStateHub.UserState.Value = state;
         }
 
-        // 戻るボタンの有効/無効を状態に応じて設定
         if (eventDialogueUI != null)
         {
             eventDialogueUI.SetPrevButtonEnabled(state == TabState.EventDialogue);
         }
     }
 
-    #region IEventUI Implementation (既存互換)
+    #region IEventUI Implementation
 
     public void ShowMessage(string message)
     {
-        // TextBoxPresenter経由でメッセージ表示
         if (textBoxPresenter != null)
         {
             textBoxPresenter.SetText(null, message);
@@ -137,21 +144,15 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
             return 0;
         }
 
-        // TabStateをNovelChoiceに切り替え
         SetTabState(TabState.NovelChoice);
-
-        // 選択肢ボタンを表示
         novelChoicePresenter.ShowChoices(labels);
-
-        // 選択を待つ
         var selectedIndex = await inputHub.WaitForChoiceAsync(labels.Length);
-
         return selectedIndex;
     }
 
     #endregion
 
-    #region INovelEventUI Implementation
+    #region Presentation (Portrait, Background, Text, Noise)
 
     public async UniTask ShowPortrait(PortraitState left, PortraitState right)
     {
@@ -209,7 +210,7 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
     {
         if (noisePresenter != null)
         {
-            noisePresenter.Play(entries);
+            noisePresenter.Play(entries, OnNoiseSpawned);
         }
         else if (entries != null)
         {
@@ -218,6 +219,38 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
                 Debug.Log($"[NovelPartEventUI] PlayNoise: [{entry.Speaker}] {entry.Text}");
             }
         }
+    }
+
+    private void OnNoiseSpawned(NoiseEntry entry)
+    {
+        if (string.IsNullOrEmpty(entry.Expression)) return;
+
+        var speaker = entry.Speaker;
+
+        // 左右立ち絵
+        if (portraitPresenter != null)
+        {
+            var leftState = portraitPresenter.CurrentLeftState;
+            var rightState = portraitPresenter.CurrentRightState;
+
+            if (leftState != null && leftState.CharacterId == speaker)
+                portraitPresenter.SetTemporaryExpression(PortraitPosition.Left, entry.Expression);
+            if (rightState != null && rightState.CharacterId == speaker)
+                portraitPresenter.SetTemporaryExpression(PortraitPosition.Right, entry.Expression);
+        }
+
+        // 中央オブジェクト
+        var centralId = zoomManager?.GetCurrentCentralObjectCharacterId();
+        if (!string.IsNullOrEmpty(centralId) && centralId == speaker)
+        {
+            zoomManager?.SetTemporaryCentralExpression(entry.Expression);
+        }
+    }
+
+    public void ClearTemporaryExpressions()
+    {
+        portraitPresenter?.ClearTemporaryExpressions();
+        zoomManager?.ClearTemporaryCentralExpression();
     }
 
     public void AccelerateNoises()
@@ -239,8 +272,11 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
             textBoxPresenter.SetText(speaker, text);
         }
 
-        // ディノイドモード時はMessageDropperにも送信
-        if (currentDisplayMode == DisplayMode.Dinoid && messageDropper != null)
+        // MessageDropperはフィールド会話のDinoidモード時のみ発火。
+        // イベント会話ではバックログがあるため不要。
+        if (CurrentDisplayMode == DisplayMode.Dinoid
+            && messageDropper != null
+            && UIStateHub.UserState?.Value == TabState.FieldDialogue)
         {
             messageDropper.CreateMessage(text);
         }
@@ -250,9 +286,7 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
 
     public async UniTask SwitchTextBox(DisplayMode mode)
     {
-        if (currentDisplayMode == mode) return;
-
-        currentDisplayMode = mode;
+        if (CurrentDisplayMode == mode) return;
 
         if (textBoxPresenter != null)
         {
@@ -265,15 +299,27 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         }
     }
 
+    public async UniTask FadeOutCurrentTextBox()
+    {
+        if (textBoxPresenter != null)
+            await textBoxPresenter.FadeOutCurrent();
+    }
+
+    public async UniTask FadeInNewTextBox(DisplayMode mode)
+    {
+        if (textBoxPresenter != null)
+            await textBoxPresenter.FadeInNew(mode);
+    }
+
     #endregion
 
-    #region Backlog and Back Navigation
+    #region Navigation (Back, Backlog)
 
     public async UniTask ShowBacklog(DialogueBacklog backlog)
     {
         if (backlogPanel != null)
         {
-            // TODO: バックログUIにエントリを表示
+            // TODO: バックログUIにエントリを表示（ScrollView + BacklogItemテンプレート）
             backlogPanel.SetActive(true);
         }
         else
@@ -321,14 +367,9 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
     {
         if (snapshot == null) return;
 
-        // モード復元
-        currentDisplayMode = snapshot.DisplayMode;
         textBoxPresenter?.SetModeImmediate(snapshot.DisplayMode);
-
-        // 立ち絵復元（即座に、トランジションなし）
         portraitPresenter?.RestoreImmediate(snapshot.LeftPortrait, snapshot.RightPortrait);
 
-        // 背景復元
         if (snapshot.HasBackground)
         {
             backgroundPresenter?.ShowImmediate(snapshot.BackgroundId);
@@ -338,21 +379,23 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
             backgroundPresenter?.HideImmediate();
         }
 
-        // 中央オブジェクト復元（nullでも適用 = スナップショット時点の状態を完全に復元）
-        UpdateCentralObjectSprite(snapshot.CentralObjectSprite);
+        // 中央オブジェクト復元（キャラクターIDがあれば identity ごと復元）
+        if (!string.IsNullOrEmpty(snapshot.CentralObjectCharacterId))
+        {
+            UpdateCentralObjectSprite(snapshot.CentralObjectSprite,
+                snapshot.CentralObjectCharacterId, snapshot.CentralObjectExpression);
+        }
+        else
+        {
+            UpdateCentralObjectSprite(snapshot.CentralObjectSprite);
+        }
     }
 
-    /// <summary>
-    /// UIボタンから呼び出される：戻るリクエスト。
-    /// </summary>
     public void OnBackButtonClicked()
     {
         backRequested = true;
     }
 
-    /// <summary>
-    /// UIボタンから呼び出される：バックログリクエスト。
-    /// </summary>
     public void OnBacklogButtonClicked()
     {
         backlogRequested = true;
@@ -360,7 +403,7 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
 
     #endregion
 
-    #region Utility Methods
+    #region State Management (HideAll, ClearAll)
 
     public void ClearAll()
     {
@@ -368,6 +411,7 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         backgroundPresenter?.HideImmediate();
         noisePresenter?.ClearAll();
         textBoxPresenter?.Clear();
+        zoomManager?.UpdateCentralObjectSprite(null);
     }
 
     public void HideAll()
@@ -377,6 +421,7 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         backgroundPresenter?.HideImmediate();
         noisePresenter?.ClearAll();
         textBoxPresenter?.Hide();
+        zoomManager?.UpdateCentralObjectSprite(null);
     }
 
     public async UniTask HideAllAsync()
@@ -386,50 +431,65 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         backgroundPresenter?.HideImmediate();
         noisePresenter?.ClearAll();
         textBoxPresenter?.Hide();
+        zoomManager?.UpdateCentralObjectSprite(null);
         await UniTask.Yield();
     }
 
     #endregion
 
-    #region Reaction System
+    #region INovelZoomUI (委譲)
+
+    public UniTask ZoomToCentralAsync(RectTransform centralObjectRT, FocusArea focusArea)
+        => zoomManager.ZoomToCentralAsync(centralObjectRT, focusArea);
+
+    public UniTask ExitZoomAsync()
+        => zoomManager.ExitZoomAsync();
+
+    public void RestoreZoomImmediate()
+        => zoomManager.RestoreZoomImmediate();
+
+    public void UpdateCentralObjectSprite(Sprite sprite, string characterId = null, string expression = null)
+        => zoomManager.UpdateCentralObjectSprite(sprite, characterId, expression);
+
+    public Sprite GetCurrentCentralObjectSprite()
+        => zoomManager.GetCurrentCentralObjectSprite();
+
+    public string GetCurrentCentralObjectCharacterId()
+        => zoomManager.GetCurrentCentralObjectCharacterId();
+
+    public string GetCurrentCentralObjectExpression()
+        => zoomManager.GetCurrentCentralObjectExpression();
+
+    /// <summary>
+    /// CentralObjectPresenterを設定する。
+    /// WalkingSystemManager初期化時に呼び出す。
+    /// </summary>
+    public void SetCentralObjectPresenter(CentralObjectPresenter presenter)
+    {
+        zoomManager?.SetCentralObjectPresenter(presenter);
+        zoomManager?.SetPortraitDatabase(portraitDatabase);
+    }
+
+    #endregion
+
+    #region INovelReactionUI (委譲)
 
     public void SetReactionText(string richText, ReactionSegment[] reactions, System.Action<ReactionSegment> onClicked)
-    {
-        currentReactionCallback = onClicked;
-
-        // TextBoxPresenterにリッチテキストを設定
-        if (textBoxPresenter != null)
-        {
-            textBoxPresenter.SetRichText(richText);
-
-            // 現在のモードに応じたReactionTextHandlerを取得
-            var reactionHandler = textBoxPresenter.GetCurrentReactionHandler();
-            if (reactionHandler != null)
-            {
-                reactionHandler.Setup(reactions, OnReactionClicked);
-            }
-            else
-            {
-                Debug.LogWarning("[NovelPartEventUI] ReactionTextHandler is not assigned in TextBoxPresenter");
-            }
-        }
-        else
-        {
-            Debug.LogWarning("[NovelPartEventUI] TextBoxPresenter is not assigned");
-        }
-    }
+        => reactionHandler.SetReactionText(richText, reactions, onClicked);
 
     public void ClearReactions()
-    {
-        currentReactionCallback = null;
-        // 両方のReactionTextHandlerをクリア
-        textBoxPresenter?.ClearAllReactionHandlers();
-    }
+        => reactionHandler.ClearReactions();
 
-    private void OnReactionClicked(ReactionSegment segment)
+    #endregion
+
+    #region Spiritual Property Display
+
+    public void SetProtagonistSpiritualProperty(SpiritualProperty? property)
     {
-        // コールバックを呼び出す
-        currentReactionCallback?.Invoke(segment);
+        if (textBoxPresenter != null)
+        {
+            textBoxPresenter.SetSpiritualProperty(property);
+        }
     }
 
     #endregion
@@ -450,67 +510,6 @@ public sealed class NovelPartEventUI : MonoBehaviour, INovelEventUI
         {
             await backgroundPresenter.SlideIn(backgroundId);
         }
-    }
-
-    #endregion
-
-    #region Zoom System
-
-    public async UniTask ZoomToCentralAsync(RectTransform centralObjectRT, FocusArea focusArea)
-    {
-        if (zoomController == null)
-        {
-            Debug.LogWarning("[NovelPartEventUI] ZoomController is not initialized");
-            return;
-        }
-
-        await zoomController.EnterZoom(centralObjectRT, focusArea);
-    }
-
-    public async UniTask ExitZoomAsync()
-    {
-        if (zoomController == null) return;
-        await zoomController.ExitZoom();
-    }
-
-    public void RestoreZoomImmediate()
-    {
-        zoomController?.RestoreImmediate();
-    }
-
-    #endregion
-
-    #region Spiritual Property Display
-
-    public void SetProtagonistSpiritualProperty(SpiritualProperty? property)
-    {
-        if (textBoxPresenter != null)
-        {
-            textBoxPresenter.SetSpiritualProperty(property);
-        }
-    }
-
-    #endregion
-
-    #region Central Object
-
-    /// <summary>
-    /// CentralObjectPresenterを設定する。
-    /// WalkingSystemManager初期化時に呼び出す。
-    /// </summary>
-    public void SetCentralObjectPresenter(CentralObjectPresenter presenter)
-    {
-        centralObjectPresenter = presenter;
-    }
-
-    public void UpdateCentralObjectSprite(Sprite sprite)
-    {
-        centralObjectPresenter?.UpdateSprite(sprite);
-    }
-
-    public Sprite GetCurrentCentralObjectSprite()
-    {
-        return centralObjectPresenter?.GetCurrentSprite();
     }
 
     #endregion

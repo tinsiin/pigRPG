@@ -44,59 +44,108 @@ public static class SetupNovelTestData
         var stepsProp = serialized.FindProperty("steps");
         stepsProp.arraySize = 3;
 
-        // Step 0: 左にロックマン登場、ディノイドモード → ポートレートモードへ
+        // Step 0: 左にロックマン登場
         {
             var step = stepsProp.GetArrayElementAtIndex(0);
-            step.FindPropertyRelative("speaker").stringValue = "テストキャラA";
-            step.FindPropertyRelative("text").stringValue = "これはノベルパートのテストですわ。\nロックマントランジションで立ち絵が登場するはず。";
+            step.FindPropertyRelative("speaker").stringValue = "ゲイノ";
+            step.FindPropertyRelative("text").stringValue = "よう、久しぶりだな。\nちょっと話があるんだけど。";
             step.FindPropertyRelative("displayMode").enumValueIndex = (int)DisplayMode.Portrait;
             step.FindPropertyRelative("hasBackground").boolValue = false;
 
             // 左立ち絵: ロックマントランジション
             var leftPortrait = step.FindPropertyRelative("leftPortrait");
-            leftPortrait.FindPropertyRelative("characterId").stringValue = "test_char_a";
+            leftPortrait.FindPropertyRelative("characterId").stringValue = "geino";
             leftPortrait.FindPropertyRelative("expression").stringValue = "normal";
             leftPortrait.FindPropertyRelative("transitionType").enumValueIndex = (int)PortraitTransition.Rockman;
         }
 
-        // Step 1: 右にスライド登場
+        // Step 1: 右にスライド登場 + 雑音テスト
         {
             var step = stepsProp.GetArrayElementAtIndex(1);
-            step.FindPropertyRelative("speaker").stringValue = "テストキャラB";
-            step.FindPropertyRelative("text").stringValue = "右からスライドインで登場。\n立ち絵のトランジション確認中。";
+            step.FindPropertyRelative("speaker").stringValue = "サテライト";
+            step.FindPropertyRelative("text").stringValue = "あら、わたしも呼ばれたの？\nなんの用かしら。";
             step.FindPropertyRelative("displayMode").enumValueIndex = (int)DisplayMode.Portrait;
             step.FindPropertyRelative("hasBackground").boolValue = false;
 
             // 左立ち絵を維持
             var leftPortrait = step.FindPropertyRelative("leftPortrait");
-            leftPortrait.FindPropertyRelative("characterId").stringValue = "test_char_a";
+            leftPortrait.FindPropertyRelative("characterId").stringValue = "geino";
             leftPortrait.FindPropertyRelative("expression").stringValue = "normal";
             leftPortrait.FindPropertyRelative("transitionType").enumValueIndex = (int)PortraitTransition.None;
 
             // 右立ち絵: 上からスライドイン
             var rightPortrait = step.FindPropertyRelative("rightPortrait");
-            rightPortrait.FindPropertyRelative("characterId").stringValue = "test_char_b";
+            rightPortrait.FindPropertyRelative("characterId").stringValue = "satelite";
             rightPortrait.FindPropertyRelative("expression").stringValue = "normal";
             rightPortrait.FindPropertyRelative("transitionType").enumValueIndex = (int)PortraitTransition.SlideTop;
+
+            // 雑音: アイコン付き / 話者なし / DB未登録話者 の3パターン
+            var noises = step.FindPropertyRelative("noises");
+            noises.arraySize = 3;
+
+            // 雑音0: geino（アイコン付き）
+            var n0 = noises.GetArrayElementAtIndex(0);
+            n0.FindPropertyRelative("speaker").stringValue = "geino";
+            n0.FindPropertyRelative("text").stringValue = "おっ、来たな";
+            n0.FindPropertyRelative("delaySeconds").floatValue = 0.2f;
+            n0.FindPropertyRelative("speedMultiplier").floatValue = 1f;
+            n0.FindPropertyRelative("verticalOffset").floatValue = 40f;
+
+            // 雑音1: 話者なし（テキストのみ）
+            var n1 = noises.GetArrayElementAtIndex(1);
+            n1.FindPropertyRelative("speaker").stringValue = "";
+            n1.FindPropertyRelative("text").stringValue = "ざわざわ…";
+            n1.FindPropertyRelative("delaySeconds").floatValue = 0.5f;
+            n1.FindPropertyRelative("speedMultiplier").floatValue = 1.2f;
+            n1.FindPropertyRelative("verticalOffset").floatValue = -30f;
+
+            // 雑音2: DB未登録話者（[話者名] テキスト フォールバック）
+            var n2 = noises.GetArrayElementAtIndex(2);
+            n2.FindPropertyRelative("speaker").stringValue = "通行人";
+            n2.FindPropertyRelative("text").stringValue = "なにやってんだあいつら";
+            n2.FindPropertyRelative("delaySeconds").floatValue = 0.8f;
+            n2.FindPropertyRelative("speedMultiplier").floatValue = 0.9f;
+            n2.FindPropertyRelative("verticalOffset").floatValue = 10f;
         }
 
-        // Step 2: テキストだけ変更（立ち絵維持）
+        // Step 2: テキスト変更（立ち絵維持） + 表情連動付き雑音
         {
             var step = stepsProp.GetArrayElementAtIndex(2);
-            step.FindPropertyRelative("speaker").stringValue = "テストキャラA";
-            step.FindPropertyRelative("text").stringValue = "会話テスト完了。\nお疲れ様ですわ。";
+            step.FindPropertyRelative("speaker").stringValue = "ゲイノ";
+            step.FindPropertyRelative("text").stringValue = "まぁいい、また今度な。\nじゃあな。";
             step.FindPropertyRelative("displayMode").enumValueIndex = (int)DisplayMode.Portrait;
             step.FindPropertyRelative("hasBackground").boolValue = false;
 
             var leftPortrait = step.FindPropertyRelative("leftPortrait");
-            leftPortrait.FindPropertyRelative("characterId").stringValue = "test_char_a";
+            leftPortrait.FindPropertyRelative("characterId").stringValue = "geino";
             leftPortrait.FindPropertyRelative("expression").stringValue = "normal";
             leftPortrait.FindPropertyRelative("transitionType").enumValueIndex = (int)PortraitTransition.None;
 
             var rightPortrait = step.FindPropertyRelative("rightPortrait");
-            rightPortrait.FindPropertyRelative("characterId").stringValue = "test_char_b";
+            rightPortrait.FindPropertyRelative("characterId").stringValue = "satelite";
             rightPortrait.FindPropertyRelative("expression").stringValue = "normal";
             rightPortrait.FindPropertyRelative("transitionType").enumValueIndex = (int)PortraitTransition.None;
+
+            // 雑音: 表情連動テスト
+            var noises = step.FindPropertyRelative("noises");
+            noises.arraySize = 2;
+
+            // 雑音0: satelite + 表情連動（surprised）
+            var n0 = noises.GetArrayElementAtIndex(0);
+            n0.FindPropertyRelative("speaker").stringValue = "satelite";
+            n0.FindPropertyRelative("text").stringValue = "えっ、もう終わり？";
+            n0.FindPropertyRelative("delaySeconds").floatValue = 0.3f;
+            n0.FindPropertyRelative("speedMultiplier").floatValue = 1f;
+            n0.FindPropertyRelative("verticalOffset").floatValue = 20f;
+            n0.FindPropertyRelative("expression").stringValue = "surprised";
+
+            // 雑音1: geino（アイコンのみ、表情連動なし）
+            var n1 = noises.GetArrayElementAtIndex(1);
+            n1.FindPropertyRelative("speaker").stringValue = "geino";
+            n1.FindPropertyRelative("text").stringValue = "おつかれ";
+            n1.FindPropertyRelative("delaySeconds").floatValue = 0.7f;
+            n1.FindPropertyRelative("speedMultiplier").floatValue = 1.1f;
+            n1.FindPropertyRelative("verticalOffset").floatValue = -20f;
         }
 
         serialized.ApplyModifiedPropertiesWithoutUndo();

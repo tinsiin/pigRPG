@@ -4,6 +4,15 @@ using UnityEngine;
 /// <summary>
 /// ダイアログ状態のスナップショット。
 /// 戻る機能で状態を復元するために使用。
+///
+/// 【復元契約: 部分復元 + ステップ再実行】
+/// このスナップショットは視覚状態のみを保存する:
+///   保存する: 立ち絵、背景、DisplayMode、CentralObjectSprite
+///   保存しない: テキスト内容、雑音、リアクション状態
+///
+/// RestoreState() で視覚状態を即時復元した後、DialogueRunnerが
+/// 同じステップを再実行（ExecuteStep）することで、テキスト・雑音等は
+/// 自然に再発火される。この二段階で完全な復元が成立する。
 /// </summary>
 [Serializable]
 public sealed class DialogueStateSnapshot
@@ -15,6 +24,8 @@ public sealed class DialogueStateSnapshot
     public bool HasBackground;
     public string BackgroundId;
     public Sprite CentralObjectSprite;
+    public string CentralObjectCharacterId;
+    public string CentralObjectExpression;
 
     public DialogueStateSnapshot() { }
 
@@ -85,7 +96,9 @@ public sealed class DialogueStateSnapshot
             RightPortrait = RightPortrait?.Clone(),
             HasBackground = HasBackground,
             BackgroundId = BackgroundId,
-            CentralObjectSprite = CentralObjectSprite  // 参照型なのでそのまま代入
+            CentralObjectSprite = CentralObjectSprite,  // 参照型なのでそのまま代入
+            CentralObjectCharacterId = CentralObjectCharacterId,
+            CentralObjectExpression = CentralObjectExpression
         };
     }
 }

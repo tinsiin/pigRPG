@@ -71,28 +71,35 @@ public sealed class TextBoxPresenter : MonoBehaviour
     {
         if (currentMode == mode) return;
 
-        var oldMode = currentMode;
+        await FadeOutCurrent();
+
+        await FadeInNew(mode);
+    }
+
+    /// <summary>
+    /// 現在のテキストボックスをフェードアウトのみ行う。
+    /// Dinoid→Portrait切替時に、立ち絵登場を間に挟むために使用。
+    /// </summary>
+    public async UniTask FadeOutCurrent()
+    {
+        if (currentMode == DisplayMode.Dinoid)
+            await FadeOutTextBox(dinoidTextBox, dinoidCanvasGroup, dinoidRect, dinoidOriginalPos);
+        else
+            await FadeOutTextBox(portraitTextBox, portraitCanvasGroup, portraitRect, portraitOriginalPos);
+    }
+
+    /// <summary>
+    /// 新しいモードのテキストボックスをフェードインのみ行う。
+    /// FadeOutCurrentと対になるメソッド。currentModeを更新する。
+    /// </summary>
+    public async UniTask FadeInNew(DisplayMode mode)
+    {
         currentMode = mode;
 
-        // 旧テキストボックスをフェードアウト
-        if (oldMode == DisplayMode.Dinoid)
-        {
-            await FadeOutTextBox(dinoidTextBox, dinoidCanvasGroup, dinoidRect, dinoidOriginalPos);
-        }
-        else
-        {
-            await FadeOutTextBox(portraitTextBox, portraitCanvasGroup, portraitRect, portraitOriginalPos);
-        }
-
-        // 新テキストボックスをフェードイン（ダンロン風：右斜め下からシュッと出現）
         if (mode == DisplayMode.Dinoid)
-        {
             await FadeInTextBox(dinoidTextBox, dinoidCanvasGroup, dinoidRect, dinoidOriginalPos);
-        }
         else
-        {
             await FadeInTextBox(portraitTextBox, portraitCanvasGroup, portraitRect, portraitOriginalPos);
-        }
     }
 
     public void SetText(string speaker, string text)

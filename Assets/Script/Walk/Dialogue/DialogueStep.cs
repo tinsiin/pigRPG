@@ -38,6 +38,8 @@ public sealed class DialogueStep
 
     [Header("中央オブジェクト")]
     [SerializeField] private Sprite centralObjectSprite;
+    [Tooltip("中央オブジェクトが表すキャラクターID。設定時はPortraitDatabaseから表情引き当て可能。null=静物。")]
+    [SerializeField] private string centralObjectCharacterId;
 
     public string Speaker => speaker;
     public string Text => text;
@@ -57,5 +59,6 @@ public sealed class DialogueStep
     public bool HasReactions => reactions != null && reactions.Length > 0;
 
     public Sprite CentralObjectSprite => centralObjectSprite;
-    public bool HasCentralObjectChange => centralObjectSprite != null;
+    public string CentralObjectCharacterId => centralObjectCharacterId;
+    public bool HasCentralObjectChange => centralObjectSprite != null || !string.IsNullOrEmpty(centralObjectCharacterId);
 }

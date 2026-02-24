@@ -31,6 +31,11 @@ public sealed class PortraitPresenter : MonoBehaviour
     private PortraitState currentRightState;
     private Vector2 leftOriginalPos;
     private Vector2 rightOriginalPos;
+    private bool hasTemporaryLeft;
+    private bool hasTemporaryRight;
+
+    public PortraitState CurrentLeftState => currentLeftState;
+    public PortraitState CurrentRightState => currentRightState;
 
     public void SetPortraitDatabase(PortraitDatabase db)
     {
@@ -71,13 +76,17 @@ public sealed class PortraitPresenter : MonoBehaviour
     public async UniTask Exit(PortraitPosition position)
     {
         // 横にスライドアウト（捌ける）
+        // 立ち絵が表示されていない場合は何もしない
+        // （非アクティブなGameObjectでLitMotionを走らせるとハングする）
         if (position == PortraitPosition.Left)
         {
+            if (currentLeftState == null) return;
             currentLeftState = null;
             await SlideOut(leftImage, leftTransform, -exitSlideDistance, leftOriginalPos);
         }
         else
         {
+            if (currentRightState == null) return;
             currentRightState = null;
             await SlideOut(rightImage, rightTransform, exitSlideDistance, rightOriginalPos);
         }
@@ -103,6 +112,52 @@ public sealed class PortraitPresenter : MonoBehaviour
     {
         HideImmediate(PortraitPosition.Left);
         HideImmediate(PortraitPosition.Right);
+        hasTemporaryLeft = false;
+        hasTemporaryRight = false;
+    }
+
+    /// <summary>
+    /// 雑音連動: スプライトのみ一時的に差し替える（currentStateは変更しない）。
+    /// 次のステップ開始時にClearTemporaryExpressionsで元に戻る。
+    /// </summary>
+    public void SetTemporaryExpression(PortraitPosition position, string expression)
+    {
+        var state = position == PortraitPosition.Left ? currentLeftState : currentRightState;
+        if (state == null) return;
+
+        var sprite = portraitDatabase?.GetPortrait(state.CharacterId, expression);
+        if (sprite == null) return;
+
+        var image = position == PortraitPosition.Left ? leftImage : rightImage;
+        if (image != null) image.sprite = sprite;
+
+        if (position == PortraitPosition.Left) hasTemporaryLeft = true;
+        else hasTemporaryRight = true;
+    }
+
+    /// <summary>
+    /// 一時表情をクリアし、currentStateの表情に戻す。
+    /// ExecuteStep冒頭で呼ぶ。
+    /// </summary>
+    public void ClearTemporaryExpressions()
+    {
+        if (hasTemporaryLeft && currentLeftState != null)
+        {
+            var sprite = GetSpriteForState(currentLeftState);
+            if (leftImage != null && sprite != null) leftImage.sprite = sprite;
+            hasTemporaryLeft = false;
+        }
+        if (hasTemporaryRight && currentRightState != null)
+        {
+            var sprite = GetSpriteForState(currentRightState);
+            if (rightImage != null && sprite != null) rightImage.sprite = sprite;
+            hasTemporaryRight = false;
+        }
+    }
+
+    private Sprite GetSpriteForState(PortraitState state)
+    {
+        return state.PortraitSprite ?? portraitDatabase?.GetPortrait(state.CharacterId, state.Expression);
     }
 
     /// <summary>

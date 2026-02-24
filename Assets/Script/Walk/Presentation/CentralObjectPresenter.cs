@@ -24,6 +24,15 @@ public sealed class CentralObjectPresenter
     private CentralAnimConfig animConfig = CentralAnimConfig.Default;
     private bool useAnimation = true;
 
+    // キャラクター同一性（雑音→表情連動用）
+    private string currentCharacterId;
+    private string currentExpression;
+    private bool hasTemporaryExpression;
+    private PortraitDatabase portraitDatabase;
+
+    public string CurrentCharacterId => currentCharacterId;
+    public string CurrentExpression => currentExpression;
+
     public void SetRoot(RectTransform nextRoot)
     {
         root = nextRoot;
@@ -44,6 +53,11 @@ public sealed class CentralObjectPresenter
         useAnimation = use;
     }
 
+    public void SetPortraitDatabase(PortraitDatabase db)
+    {
+        portraitDatabase = db;
+    }
+
     /// <summary>
     /// 現在表示中の中央オブジェクトのRectTransformを取得する。
     /// ズームシステムで使用。
@@ -60,11 +74,53 @@ public sealed class CentralObjectPresenter
     /// <summary>
     /// スプライトのみを変更する（位置・サイズは維持）。
     /// ノベルパート中の中央オブジェクト変更用。
+    /// characterId指定時はPortraitDatabaseから表情解決可能。
     /// </summary>
-    public void UpdateSprite(Sprite sprite)
+    public void UpdateSprite(Sprite sprite, string characterId = null, string expression = null)
     {
+        currentCharacterId = characterId;
+        currentExpression = expression;
+        hasTemporaryExpression = false;
+
         if (image == null) return;
+
+        // characterId指定時、spriteがnullならPortraitDatabaseから取得
+        if (sprite == null && !string.IsNullOrEmpty(characterId) && portraitDatabase != null)
+        {
+            sprite = portraitDatabase.GetPortrait(characterId, expression);
+        }
+
         image.sprite = sprite ?? GetFallbackSprite();
+    }
+
+    /// <summary>
+    /// 雑音連動: スプライトのみ一時的に差し替える（currentExpressionは変更しない）。
+    /// 次のステップ開始時にClearTemporaryExpressionで元に戻る。
+    /// </summary>
+    public void SetTemporaryExpression(string expression)
+    {
+        if (string.IsNullOrEmpty(currentCharacterId) || portraitDatabase == null) return;
+
+        var sprite = portraitDatabase.GetPortrait(currentCharacterId, expression);
+        if (sprite == null || image == null) return;
+
+        image.sprite = sprite;
+        hasTemporaryExpression = true;
+    }
+
+    /// <summary>
+    /// 一時表情をクリアし、currentExpressionの表情に戻す。
+    /// ExecuteStep冒頭で呼ぶ。
+    /// </summary>
+    public void ClearTemporaryExpression()
+    {
+        if (!hasTemporaryExpression) return;
+        hasTemporaryExpression = false;
+
+        if (string.IsNullOrEmpty(currentCharacterId) || image == null) return;
+
+        var sprite = portraitDatabase?.GetPortrait(currentCharacterId, currentExpression);
+        if (sprite != null) image.sprite = sprite;
     }
 
     /// <summary>
@@ -145,6 +201,9 @@ public sealed class CentralObjectPresenter
         image = null;
         rectTransform = null;
         button = null;
+        currentCharacterId = null;
+        currentExpression = null;
+        hasTemporaryExpression = false;
 
         if (mover != null)
         {
@@ -381,6 +440,9 @@ public sealed class CentralObjectPresenter
 
         button = null;
         canvasGroup = null;
+        currentCharacterId = null;
+        currentExpression = null;
+        hasTemporaryExpression = false;
         currentMode = CentralDisplayMode.Hidden;
 
         if (root == null) return;

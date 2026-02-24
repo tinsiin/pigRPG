@@ -1,22 +1,90 @@
 using Cysharp.Threading.Tasks;
 
 /// <summary>
-/// ノベルパート用の拡張EventUIインターフェース。
-/// 既存のIEventUIを継承し、立ち絵・背景・雑音・モード切替を追加。
+/// ズーム制御インターフェース。
+/// 中央オブジェクトへのズームイン/アウトとスプライト操作を担当。
 /// </summary>
-public interface INovelEventUI : IEventUI
+public interface INovelZoomUI
 {
     /// <summary>
-    /// 左右の立ち絵を表示する。
-    /// null指定で表示しない/非表示にする。
+    /// 中央オブジェクトにズームインする。
+    /// </summary>
+    UniTask ZoomToCentralAsync(UnityEngine.RectTransform centralObjectRT, FocusArea focusArea);
+
+    /// <summary>
+    /// ズームを終了して原状復帰する。
+    /// </summary>
+    UniTask ExitZoomAsync();
+
+    /// <summary>
+    /// ズームを即座に原状復帰する（フェイルセーフ用）。
+    /// </summary>
+    void RestoreZoomImmediate();
+
+    /// <summary>
+    /// 中央オブジェクトのスプライトを変更する。
+    /// characterId指定時はPortraitDatabaseから表情解決可能。
+    /// </summary>
+    void UpdateCentralObjectSprite(UnityEngine.Sprite sprite, string characterId = null, string expression = null);
+
+    /// <summary>
+    /// 現在の中央オブジェクトスプライトを取得する（スナップショット用）。
+    /// </summary>
+    UnityEngine.Sprite GetCurrentCentralObjectSprite();
+
+    /// <summary>
+    /// 現在の中央オブジェクトのキャラクターIDを取得する（雑音マッチング用）。
+    /// </summary>
+    string GetCurrentCentralObjectCharacterId();
+
+    /// <summary>
+    /// 現在の中央オブジェクトの表情IDを取得する（スナップショット用）。
+    /// </summary>
+    string GetCurrentCentralObjectExpression();
+}
+
+/// <summary>
+/// リアクションシステムインターフェース。
+/// セリフ内のクリッカブル要素の設定とクリアを担当。
+/// </summary>
+public interface INovelReactionUI
+{
+    /// <summary>
+    /// リアクション可能テキストを設定する。
+    /// </summary>
+    /// <param name="richText">TMPリッチテキスト（色付き + linkタグ付き）</param>
+    /// <param name="reactions">リアクションセグメント配列</param>
+    /// <param name="onClicked">クリック時コールバック</param>
+    void SetReactionText(string richText, ReactionSegment[] reactions, System.Action<ReactionSegment> onClicked);
+
+    /// <summary>
+    /// リアクション設定をクリアする。
+    /// </summary>
+    void ClearReactions();
+}
+
+/// <summary>
+/// ノベルパート用の統合EventUIインターフェース。
+/// IEventUI + INovelZoomUI + INovelReactionUI を継承し、
+/// 立ち絵・背景・雑音・モード切替・ナビゲーションを追加。
+/// </summary>
+public interface INovelEventUI : IEventUI, INovelZoomUI, INovelReactionUI
+{
+    /// <summary>
+    /// 左右の立ち絵を表示する。nullで非表示。
     /// トランジションはPortraitState.TransitionTypeで指定。
     /// </summary>
     UniTask ShowPortrait(PortraitState left, PortraitState right);
 
     /// <summary>
-    /// 指定位置の立ち絵を非表示にする。
+    /// 指定位置の立ち絵をフェードアウトで非表示にする。
     /// </summary>
     UniTask HidePortrait(PortraitPosition position);
+
+    /// <summary>
+    /// 指定位置の立ち絵をスライドアウトで退場させる。
+    /// </summary>
+    UniTask ExitPortrait(PortraitPosition position);
 
     /// <summary>
     /// 背景を表示する。
@@ -29,26 +97,41 @@ public interface INovelEventUI : IEventUI
     UniTask HideBackground();
 
     /// <summary>
-    /// 雑音を再生する。fire-and-forget。
-    /// 各NoiseEntryのDelaySeconds/SpeedMultiplier/VerticalOffsetに従う。
+    /// 雑音を再生する（fire-and-forget）。
     /// </summary>
     void PlayNoise(NoiseEntry[] entries);
 
     /// <summary>
-    /// 全ての雑音を加速する（セリフ飛ばし時）。
+    /// 残存する全雑音をEaseIn加速する（入力後の掃き出し用）。
     /// </summary>
     void AccelerateNoises();
 
     /// <summary>
-    /// テキストを表示する。
-    /// DisplayModeに応じて表示方法が変わる。
+    /// 雑音連動による一時表情をリセットする（ステップ境界で呼ぶ）。
+    /// </summary>
+    void ClearTemporaryExpressions();
+
+    /// <summary>
+    /// テキストを表示する。DisplayModeに応じて表示先が変わる。
     /// </summary>
     UniTask ShowText(string speaker, string text);
 
     /// <summary>
-    /// テキストボックスのモードを切り替える。
+    /// テキストボックスのモードを切り替える（フェードアウト→フェードイン）。
     /// </summary>
     UniTask SwitchTextBox(DisplayMode mode);
+
+    /// <summary>
+    /// 現在のテキストボックスをフェードアウトのみ行う。
+    /// モード切替時に立ち絵登場を間に挟むために使用。
+    /// </summary>
+    UniTask FadeOutCurrentTextBox();
+
+    /// <summary>
+    /// 新しいモードのテキストボックスをフェードインのみ行う。
+    /// FadeOutCurrentTextBoxと対で使用。
+    /// </summary>
+    UniTask FadeInNewTextBox(DisplayMode mode);
 
     /// <summary>
     /// 現在の表示モード。
@@ -71,38 +154,22 @@ public interface INovelEventUI : IEventUI
     void SetBackButtonEnabled(bool enabled);
 
     /// <summary>
-    /// 戻るボタンが押されたか（ポーリング用）。
-    /// 呼び出し後にリセットされる。
+    /// 戻るボタンが押されたかを消費する（ポーリング用）。
     /// </summary>
     bool ConsumeBackRequest();
 
     /// <summary>
-    /// バックログボタンが押されたか（ポーリング用）。
-    /// 呼び出し後にリセットされる。
+    /// バックログボタンが押されたかを消費する（ポーリング用）。
     /// </summary>
     bool ConsumeBacklogRequest();
 
     /// <summary>
-    /// 状態を即座に復元する（戻る機能用）。
-    /// トランジションなしで状態を適用。
+    /// 状態を即座に復元する（戻る機能用、トランジションなし）。
     /// </summary>
     void RestoreState(DialogueStateSnapshot snapshot);
 
     /// <summary>
-    /// リアクション可能テキストを設定する。
-    /// </summary>
-    /// <param name="richText">TMPリッチテキスト（色付き + linkタグ付き）</param>
-    /// <param name="reactions">リアクションセグメント配列</param>
-    /// <param name="onClicked">クリック時コールバック</param>
-    void SetReactionText(string richText, ReactionSegment[] reactions, System.Action<ReactionSegment> onClicked);
-
-    /// <summary>
-    /// リアクション設定をクリアする。
-    /// </summary>
-    void ClearReactions();
-
-    /// <summary>
-    /// 全UI要素を非表示にする（リアクション終了時等）。
+    /// 全UI要素を非表示にする。
     /// </summary>
     UniTask HideAllAsync();
 
@@ -117,38 +184,7 @@ public interface INovelEventUI : IEventUI
     void SetTabState(TabState state);
 
     /// <summary>
-    /// 中央オブジェクトにズームインする。
-    /// 中央オブジェクトがターゲット領域にフィットするようズーム。
-    /// </summary>
-    /// <param name="centralObjectRT">中央オブジェクトのRectTransform</param>
-    /// <param name="focusArea">フォーカス領域（どの部分をフィットさせるか）</param>
-    UniTask ZoomToCentralAsync(UnityEngine.RectTransform centralObjectRT, FocusArea focusArea);
-
-    /// <summary>
-    /// ズームを終了して原状復帰する。
-    /// </summary>
-    UniTask ExitZoomAsync();
-
-    /// <summary>
-    /// ズームを即座に原状復帰する（フェイルセーフ用）。
-    /// </summary>
-    void RestoreZoomImmediate();
-
-    /// <summary>
-    /// 主人公の精神属性を表示する（ディノイドモードのアイコン下）。
-    /// nullで非表示。
+    /// 主人公の精神属性を表示する（ディノイドモードのアイコン下）。nullで非表示。
     /// </summary>
     void SetProtagonistSpiritualProperty(SpiritualProperty? property);
-
-    /// <summary>
-    /// 中央オブジェクトのスプライトを変更する。
-    /// ズーム中の会話でのみ有効。
-    /// </summary>
-    void UpdateCentralObjectSprite(UnityEngine.Sprite sprite);
-
-    /// <summary>
-    /// 現在の中央オブジェクトスプライトを取得する。
-    /// スナップショット作成用。
-    /// </summary>
-    UnityEngine.Sprite GetCurrentCentralObjectSprite();
 }
