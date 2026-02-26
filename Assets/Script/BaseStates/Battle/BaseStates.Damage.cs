@@ -35,6 +35,46 @@ public abstract partial class BaseStates
     //  ==============================================================================================================================
     
     /// <summary>
+    /// 精神分散防御: 人間状況・精神属性条件下で物理dmgの一部を精神dmgに転換する。
+    /// バリアレイヤー通過後、刃物即死の前に適用。
+    /// 詳細: doc/精神分散防御仕様書.md
+    /// </summary>
+    void ApplyMentalDispersal(ref StatesPowerBreakdown dmg, ref StatesPowerBreakdown mentalDmg)
+    {
+        // 1. 物理ダメージが0以下なら分散不要
+        if (dmg.Total <= 0f) return;
+
+        // 2. 人間状況チェック（高揚/混乱/辛い以外は発動しない）
+        if (!MentalDispersalConfig.IsActiveDemeanor(NowCondition)) return;
+
+        // 3. 精神属性チェック（人間状況×精神属性の対応表に該当しなければ発動しない）
+        if (!MentalDispersalConfig.IsActiveCondition(NowCondition, MyImpression)) return;
+
+        // 4. 分散率を算出: Σ(十日能力 × 重み) / 正規化定数
+        var tenDay = TenDayValuesBase();
+        float weightedSum = 0f;
+        foreach (var kv in MentalDispersalConfig.DispersalWeights)
+        {
+            weightedSum += tenDay.GetValueOrZero(kv.Key) * kv.Value;
+        }
+        float dispersalRate = Mathf.Min(1f, weightedSum / MentalDispersalConfig.NormalizationDivisor);
+        if (dispersalRate <= 0f) return;
+
+        // 5. 精神分散量（Breakdownのまま比例抽出し、十日能力内訳を保持する）
+        var dispersed = dmg * dispersalRate;
+
+        // 6. 精神変換係数: ベース(0.95〜1.0のランダム) − テント空洞 × 0.00675
+        float tentVoid = tenDay.GetValueOrZero(TenDayAbility.TentVoid);
+        float conversionCoefficient = Mathf.Max(0f,
+            RandomSource.NextFloat(MentalDispersalConfig.ConversionBaseMin, MentalDispersalConfig.ConversionBaseMax)
+            - tentVoid * MentalDispersalConfig.TentVoidCoefficient);
+
+        // 7. 物理dmgから分散量を引き、精神dmgに変換後の量を加算（Breakdown同士の演算で内訳を維持）
+        dmg -= dispersed;
+        mentalDmg += dispersed * conversionCoefficient;
+    }
+
+    /// <summary>
     /// 即死刃物クリティカル
     /// </summary>
     bool BladeCriticalCalculation(ref StatesPowerBreakdown dmg, ref StatesPowerBreakdown resonanceDmg, BaseStates Atker, BaseSkill skill)
@@ -510,6 +550,9 @@ public abstract partial class BaseStates
         //vitalLayerを通る処理
         BarrierLayers(ref dmg,ref mentalDmg, Atker);
 
+        //精神分散防御（人間状況・精神属性条件下で物理dmgの一部を精神dmgに転換）
+        ApplyMentalDispersal(ref dmg, ref mentalDmg);
+
         //刃物スキルであり、ダメージがまだ残っていて、自分の体力がダメージより多いのなら、刃物即死クリティカル
         bool BladeCriticalDeath = false;
         if(skill.IsBlade && dmg.Total > 0 && HP > dmg.Total)BladeCriticalDeath = BladeCriticalCalculation(ref dmg,ref ResonanceDmg,Atker,skill);
@@ -694,6 +737,10 @@ public abstract partial class BaseStates
         // vitalLayerを通る処理
         if(o.BarrierLayers)
             BarrierLayers(ref dmg,ref mentalDmg, Atker);
+
+        // 精神分散防御
+        if(o.MentalDispersal)
+            ApplyMentalDispersal(ref dmg, ref mentalDmg);
 
         // 刃物スキルであり、ダメージがまだ残っていて、自分の体力がダメージより多いのなら、刃物即死クリティカル
         bool BladeCriticalDeath = false;
@@ -1239,6 +1286,7 @@ public enum AimStyle
         public bool PassivesReduction = true; // パッシブによる減衰率
         public bool TLOReduction = true;
         public bool BarrierLayers = true;
+        public bool MentalDispersal = false; // 精神分散防御（戦闘外ではデフォルト無効）
         public bool CantKillClamp = true;
         public bool DontDamageClamp = true;
         public bool MentalDamage = true;
