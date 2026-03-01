@@ -35,14 +35,6 @@ public sealed class BattleStateManager
         set => _state.AlliesRunOut = value;
     }
 
-    public NormalEnemy VoluntaryRunOutEnemy
-    {
-        get => _state.VoluntaryRunOutEnemy;
-        set => _state.VoluntaryRunOutEnemy = value;
-    }
-
-    public List<NormalEnemy> DominoRunOutEnemies => _state.DominoRunOutEnemies;
-
     public void ResetTurnFlags()
     {
         _state.ResetTurnFlags();
@@ -64,22 +56,6 @@ public sealed class BattleStateManager
     {
         GuardTerminalTransition("AlliesRunOut");
         _state.AlliesRunOut = true;
-    }
-
-    public void SetVoluntaryRunOutEnemy(NormalEnemy enemy)
-    {
-        _state.VoluntaryRunOutEnemy = enemy;
-    }
-
-    public void AddDominoRunOutEnemy(NormalEnemy enemy)
-    {
-        if (enemy == null) return;
-        _state.DominoRunOutEnemies.Add(enemy);
-    }
-
-    public void ClearDominoRunOutEnemies()
-    {
-        _state.DominoRunOutEnemies.Clear();
     }
 
     private void GuardTerminalTransition(string nextState)

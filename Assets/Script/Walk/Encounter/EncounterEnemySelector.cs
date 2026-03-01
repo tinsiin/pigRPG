@@ -11,20 +11,28 @@ public class EncounterEnemySelector
 {
     private readonly IEnemyRebornManager _rebornManager;
     private readonly IEnemyMatchCalculator _matchCalc;
+    private readonly FriendshipComboRegistry _comboRegistry;
+
+    /// <summary>結成中にsympathyが発動したかの追跡フラグ</summary>
+    private bool _anyMemberSympathy;
 
     /// <summary>
     /// テスト用コンストラクタ（依存性注入）
     /// </summary>
-    public EncounterEnemySelector(IEnemyRebornManager rebornManager, IEnemyMatchCalculator matchCalc)
+    public EncounterEnemySelector(
+        IEnemyRebornManager rebornManager,
+        IEnemyMatchCalculator matchCalc,
+        FriendshipComboRegistry comboRegistry = null)
     {
         _rebornManager = rebornManager ?? EnemyRebornManager.Instance;
         _matchCalc = matchCalc ?? EnemyCollectManager.Instance;
+        _comboRegistry = comboRegistry;
     }
 
     /// <summary>
     /// デフォルトコンストラクタ（フォールバック）
     /// </summary>
-    public EncounterEnemySelector() : this(EnemyRebornManager.Instance, EnemyCollectManager.Instance)
+    public EncounterEnemySelector() : this(EnemyRebornManager.Instance, EnemyCollectManager.Instance, null)
     {
     }
 
@@ -38,9 +46,10 @@ public class EncounterEnemySelector
         int globalSteps,
         int number = -1,
         IEnemyMatchCalculator matchCalc = null,
-        IEnemyRebornManager rebornManager = null)
+        IEnemyRebornManager rebornManager = null,
+        FriendshipComboRegistry comboRegistry = null)
     {
-        var selector = new EncounterEnemySelector(rebornManager, matchCalc);
+        var selector = new EncounterEnemySelector(rebornManager, matchCalc, comboRegistry);
         return selector.Select(enemies, globalSteps, number);
     }
 
@@ -59,13 +68,28 @@ public class EncounterEnemySelector
     {
         if (enemies == null || enemies.Count == 0) return null;
 
-        var resultList = new List<NormalEnemy>();
+        _anyMemberSympathy = false;
+
         var validEnemies = FilterEligibleEnemies(enemies, globalSteps);
         ApplyReencountCallbacks(validEnemies, globalSteps);
         if (!validEnemies.Any()) return null;
 
         var referenceOne = SelectLeader(validEnemies);
-        resultList.Add(referenceOne);
+
+        // === コンビ分岐: リーダーがコンビメンバーなら再結成 ===
+        if (_comboRegistry != null && _comboRegistry.AllCombos.Count > 0)
+        {
+            var combo = _comboRegistry.FindComboByMemberGuid(referenceOne.EnemyGuid);
+            if (combo != null)
+            {
+                return AssembleComboGroup(referenceOne, combo, validEnemies);
+            }
+            // フリーリーダー: コンビメンバーを候補から除外して通常フローへ
+            ExcludeComboMembers(validEnemies);
+        }
+
+        // 通常フロー
+        var resultList = new List<NormalEnemy> { referenceOne };
 
         var manualCount = number >= 1;
         var targetCount = manualCount ? Mathf.Clamp(number, 1, 3) : -1;
@@ -165,6 +189,7 @@ public class EncounterEnemySelector
         var target = validEnemies[targetIndex];
         var okCount = 0;
         var sympathy = HasSympathy(resultList, target);
+        if (sympathy) _anyMemberSympathy = true;
 
         for (var i = 0; i < resultList.Count; i++)
         {
@@ -279,10 +304,70 @@ public class EncounterEnemySelector
         }
     }
 
+    /// <summary>
+    /// コンビ再結成: リーダーの相方を有効敵プールから集めてグループ化。
+    /// 相性チェック不要（既に登録済みコンビのため）。
+    /// </summary>
+    private BattleGroup AssembleComboGroup(
+        NormalEnemy leader,
+        FriendshipComboSaveData combo,
+        List<NormalEnemy> validEnemies)
+    {
+        var resultList = new List<NormalEnemy> { leader };
+
+        for (var i = 0; i < combo.MemberGuids.Count; i++)
+        {
+            var guid = combo.MemberGuids[i];
+            if (guid == leader.EnemyGuid) continue;
+
+            // broken判定
+            var state = _comboRegistry.GetEnemyState(guid);
+            if (state != null && state.IsBroken) continue;
+
+            var partner = FindByGuid(validEnemies, guid);
+            if (partner != null)
+            {
+                partner.InitializeMyImpression();
+                resultList.Add(partner);
+            }
+        }
+
+        return CreateBattleGroup(resultList, GetPartyImpression(resultList));
+    }
+
+    /// <summary>
+    /// 候補リストからコンビ登録済みメンバーを除外する。
+    /// フリーリーダーが選ばれた場合に使用。
+    /// </summary>
+    private void ExcludeComboMembers(List<NormalEnemy> validEnemies)
+    {
+        for (var i = validEnemies.Count - 1; i >= 0; i--)
+        {
+            if (_comboRegistry.FindComboByMemberGuid(validEnemies[i].EnemyGuid) != null)
+            {
+                validEnemies.RemoveAt(i);
+            }
+        }
+    }
+
+    private static NormalEnemy FindByGuid(List<NormalEnemy> enemies, string guid)
+    {
+        for (var i = 0; i < enemies.Count; i++)
+        {
+            if (enemies[i].EnemyGuid == guid)
+                return enemies[i];
+        }
+        return null;
+    }
+
     private BattleGroup CreateBattleGroup(List<NormalEnemy> resultList, PartyProperty ourImpression)
     {
         var compatibilityData = BuildCompatibilityData(resultList);
-        return new BattleGroup(resultList.Cast<BaseStates>().ToList(), ourImpression, Faction.Enemy, compatibilityData);
+        // リーダー（resultList[0]）はTryAddCompatibleTargetを通らないのでここで判定
+        var leaderSympathy = resultList.Count > 0 && resultList[0].HP <= resultList[0].MaxHP / 2;
+        var sympathy = _anyMemberSympathy || leaderSympathy;
+        return new BattleGroup(resultList.Cast<BaseStates>().ToList(), ourImpression,
+            Faction.Enemy, compatibilityData, sympathy);
     }
 
     private Dictionary<(BaseStates, BaseStates), int> BuildCompatibilityData(List<NormalEnemy> resultList)

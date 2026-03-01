@@ -65,13 +65,6 @@ public sealed class BattleActionContext
         get => StateManager.AlliesRunOut;
         set => StateManager.AlliesRunOut = value;
     }
-    public NormalEnemy VoluntaryRunOutEnemy
-    {
-        get => StateManager.VoluntaryRunOutEnemy;
-        set => StateManager.VoluntaryRunOutEnemy = value;
-    }
-    public List<NormalEnemy> DominoRunOutEnemies => StateManager.DominoRunOutEnemies;
-
     public BattleActionContext(
         BattleGroup allyGroup,
         BattleGroup enemyGroup,

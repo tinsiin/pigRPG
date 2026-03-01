@@ -115,6 +115,11 @@ public class BattleManager : IBattleContext
     private readonly BattleEventRecorder eventRecorder;
     private readonly IBattleMetaProvider metaProvider;
     private readonly BattleFlow battleFlow;
+
+    /// <summary>
+    /// 友情コンビ登録用レジストリ。外部から設定される。nullなら登録判定をスキップ。
+    /// </summary>
+    public FriendshipComboRegistry ComboRegistry { get; set; }
     internal BattleUIBridge UiBridge => uiBridge;
     internal BattleEventBus EventBus => eventBus;
     internal BattleEventRecorder EventRecorder => eventRecorder;
@@ -125,8 +130,6 @@ public class BattleManager : IBattleContext
     internal bool Wipeout { get => actionContext.Wipeout; set => actionContext.Wipeout = value; }
     internal bool EnemyGroupEmpty { get => actionContext.EnemyGroupEmpty; set => actionContext.EnemyGroupEmpty = value; }
     internal bool AlliesRunOut { get => actionContext.AlliesRunOut; set => actionContext.AlliesRunOut = value; }
-    internal NormalEnemy VoluntaryRunOutEnemy { get => actionContext.VoluntaryRunOutEnemy; set => actionContext.VoluntaryRunOutEnemy = value; }
-    internal List<NormalEnemy> DominoRunOutEnemies => actionContext.DominoRunOutEnemies;
 
     // ActionContext への委譲プロパティ (Action flags)
     public bool DoNothing { get => actionContext.DoNothing; set => actionContext.DoNothing = value; }
@@ -206,7 +209,8 @@ public class BattleManager : IBattleContext
         var turnExecutor = new TurnExecutor(actionContext, presentation, eventBus);
         var skillExecutor = new SkillExecutor(actionContext, presentation, turnExecutor);
         var actionSkipExecutor = new ActionSkipExecutor(actionContext, turnExecutor);
-        var escapeHandler = new EscapeHandler(actionContext, turnExecutor, escapeRate);
+        var escapeHandler = new EscapeHandler(actionContext, turnExecutor, escapeRate,
+            onGroupEscape: TryRegisterGroupEscapeCombo);
         battleFlow = new BattleFlow(
             actionContext,
             presentation,
@@ -409,7 +413,11 @@ public class BattleManager : IBattleContext
 
         //全てのキャラクターの特別な補正をリセットする
         EnemyGroup.ResetCharactersUseThinges();
-        AllyGroup.ResetCharactersUseThinges();        
+        AllyGroup.ResetCharactersUseThinges();
+
+        // 友情コンビ登録判定（RecovelyStart前に実行。damageDatas等がまだ無傷のタイミング）
+        TryRegisterFriendshipCombo();
+        MarkBrokenEnemies();
 
         //敵キャラは死んだりした該当者のみ選んで復活準備
         var progress = metaProvider != null ? metaProvider.GlobalSteps : 0;
@@ -446,6 +454,105 @@ public class BattleManager : IBattleContext
         }
 
         CleanupBattleState();
+    }
+
+    /// <summary>
+    /// 友情コンビ登録判定。戦闘終了時、クリーンアップ前に呼ばれる。
+    /// </summary>
+    private void TryRegisterFriendshipCombo()
+    {
+        if (ComboRegistry == null) return;
+        if (EnemyGroup == null || EnemyGroup.Ours.Count < 2) return;
+
+        var members = CollectNormalEnemies(EnemyGroup.Ours);
+        if (members.Count < 2) return;
+
+        TryRegisterComboCore(members, GetOutcomeMultiplier(), damageEvalTargets: members);
+    }
+
+    /// <summary>
+    /// 戦闘結果に応じた友情コンビ登録倍率を返す。
+    /// 敵勝利(×1.5) > 味方勝利/味方逃走(×1.0)
+    /// ※敵逃走(×2.0)はEscapeHandler内のグループ逃走コールバックで別経路処理
+    /// </summary>
+    private float GetOutcomeMultiplier()
+    {
+        if (actionContext.Wipeout && actionContext.ActerFaction == Faction.Ally)
+            return 1.5f; // 敵勝利: 一緒に勝った最強の絆
+        return 1.0f;     // 味方勝利 or 味方逃走
+    }
+
+    /// <summary>
+    /// グループ逃走時のコンビ登録判定。
+    /// EscapeHandler から連鎖逃走者が1人以上いた場合にコールバックされる。
+    /// 自発逃走者は既にEscapeAndRemoveで除去済み。連鎖逃走者はまだOursに残っている。
+    /// </summary>
+    private void TryRegisterGroupEscapeCombo(List<NormalEnemy> escapers)
+    {
+        if (ComboRegistry == null) return;
+        if (escapers == null || escapers.Count < 2) return;
+
+        TryRegisterComboCore(escapers, 2.0f, damageEvalTargets: escapers);
+    }
+
+    /// <summary>
+    /// コンビ登録の共通ロジック。既存コンビチェック→シグナル収集→確率判定→登録。
+    /// damageEvalTargets: ダメージ効率の評価対象を限定する場合に指定（グループ逃走時）。
+    /// </summary>
+    private void TryRegisterComboCore(List<NormalEnemy> members, float outcomeMultiplier,
+        List<NormalEnemy> damageEvalTargets = null)
+    {
+        // 既にコンビ登録済みなら再遭遇カウント++して終了（全メンバーをチェック）
+        for (var i = 0; i < members.Count; i++)
+        {
+            var existing = ComboRegistry.FindComboByMemberGuid(members[i].EnemyGuid);
+            if (existing != null)
+            {
+                existing.ReEncountCount++;
+                return;
+            }
+        }
+
+        // シグナル収集 + 結果倍率を加味して判定
+        var signals = FriendshipComboJudge.CollectSignals(EnemyGroup, AllyGroup, damageEvalTargets);
+        if (!FriendshipComboJudge.ShouldRegister(signals, out var isKusareEn, outcomeMultiplier)) return;
+
+        // コンビ登録
+        var combo = new FriendshipComboSaveData
+        {
+            ComboId = System.Guid.NewGuid().ToString(),
+            IsKusareEnPath = isKusareEn,
+            ReEncountCount = 0
+        };
+        for (var i = 0; i < members.Count; i++)
+            combo.MemberGuids.Add(members[i].EnemyGuid);
+        ComboRegistry.Register(combo);
+    }
+
+    private static List<NormalEnemy> CollectNormalEnemies(List<BaseStates> ours)
+    {
+        var list = new List<NormalEnemy>();
+        for (var i = 0; i < ours.Count; i++)
+        {
+            if (ours[i] is NormalEnemy ne)
+                list.Add(ne);
+        }
+        return list;
+    }
+
+    /// <summary>
+    /// 戦闘終了時、brokenした敵をComboRegistryに反映する。
+    /// </summary>
+    private void MarkBrokenEnemies()
+    {
+        if (ComboRegistry == null || EnemyGroup == null) return;
+        foreach (var chara in EnemyGroup.Ours)
+        {
+            if (chara is NormalEnemy ne && ne.broken)
+            {
+                ComboRegistry.MarkBroken(ne.EnemyGuid);
+            }
+        }
     }
 
     /// <summary>

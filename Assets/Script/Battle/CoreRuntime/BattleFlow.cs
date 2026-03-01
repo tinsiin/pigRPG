@@ -205,11 +205,6 @@ public sealed class BattleFlow
         {
             return DialogEndAct();
         }
-        if (_context.DominoRunOutEnemies.Count > 0)
-        {
-            return _escapeHandler.DominoEscapeACT();
-        }
-
         if (_context.SkillStock)
         {
             return _actionSkipExecutor.SkillStockACT();

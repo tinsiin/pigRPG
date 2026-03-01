@@ -34,9 +34,11 @@ public class BattleInitializer
         IBattleMetaProvider metaProviderOverride = null,
         int? randomSeed = null,
         BattleRuleCatalog ruleCatalogOverride = null,
-        BattleRuleRegistry ruleRegistryOverride = null)
+        BattleRuleRegistry ruleRegistryOverride = null,
+        FriendshipComboRegistry comboRegistry = null)
     {
-        var enemyGroup = EncounterEnemySelector.SelectGroup(enemies, globalSteps, enemyNumber);
+        var enemyGroup = EncounterEnemySelector.SelectGroup(enemies, globalSteps, enemyNumber,
+            comboRegistry: comboRegistry);
         return InitializeBattleFromGroup(
             enemyGroup,
             playersParty,
@@ -48,7 +50,8 @@ public class BattleInitializer
             metaProviderOverride,
             randomSeed,
             ruleCatalogOverride,
-            ruleRegistryOverride);
+            ruleRegistryOverride,
+            comboRegistry);
     }
 
     private async UniTask<BattleSetupResult> InitializeBattleFromGroup(
@@ -62,7 +65,8 @@ public class BattleInitializer
         IBattleMetaProvider metaProviderOverride,
         int? randomSeed,
         BattleRuleCatalog ruleCatalogOverride,
-        BattleRuleRegistry ruleRegistryOverride)
+        BattleRuleRegistry ruleRegistryOverride,
+        FriendshipComboRegistry comboRegistry = null)
     {
         var result = new BattleSetupResult();
         if (playersParty == null)
@@ -101,6 +105,7 @@ public class BattleInitializer
         Debug.Assert(BattleOrchestratorHub.Current != null,
             "BattleOrchestrator initialization failed - BattleOrchestratorHub.Current is null after Set()");
         result.BattleContext = result.Orchestrator.Manager;
+        result.Orchestrator.Manager.ComboRegistry = comboRegistry;
         result.Session = result.Orchestrator.Session;
 
         if (playersSkillUI != null)

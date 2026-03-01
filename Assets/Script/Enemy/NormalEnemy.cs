@@ -28,6 +28,29 @@ public class NormalEnemy : BaseStates
     [SerializeField] private GrowthSettings _growthSettings;
     private readonly Dictionary<GrowthStrategyType, IGrowthStrategy> _growthStrategies = new();
 
+    /// <summary>
+    /// 個体識別用GUID。ランタイムコピー時に自動発行。友情コンビ登録で個体を追跡するために使用。
+    /// </summary>
+    private string _enemyGuid;
+    public string EnemyGuid
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(_enemyGuid))
+                _enemyGuid = System.Guid.NewGuid().ToString();
+            return _enemyGuid;
+        }
+    }
+
+    /// <summary>
+    /// 外部からGUIDを復元する（セーブデータからのロード時）
+    /// </summary>
+    public void RestoreGuid(string guid)
+    {
+        if (!string.IsNullOrEmpty(guid))
+            _enemyGuid = guid;
+    }
+
     [Header("復活歩数設定 基本生命キャラにだけ設定して、\n-1だと復活しないです。0だと即復活します。")]
     [FormerlySerializedAs("RecovelySteps")]
     /// <summary>
@@ -311,6 +334,9 @@ public class NormalEnemy : BaseStates
         // 敵UIオブジェクトのコピー（UIコンポーネントは参照コピー）
 
         clone._brain = this._brain;            // AIをコピー
+
+        // 新個体として新しいGUIDを発行（テンプレートのGUIDは引き継がない）
+        clone._enemyGuid = System.Guid.NewGuid().ToString();
 
         /*clone.broken = this.broken;
         clone._recovelyStepCount = this._recovelyStepCount;

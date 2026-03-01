@@ -44,11 +44,6 @@ public sealed class TurnExecutor
         {
             return TabState.NextWait;
         }
-        if (_context.DominoRunOutEnemies.Count > 0)
-        {
-            return TabState.NextWait;
-        }
-
         CharacterAddFromListOrRandom();
 
         if (_context.VoidTurn)

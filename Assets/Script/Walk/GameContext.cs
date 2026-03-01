@@ -21,6 +21,9 @@ public sealed class GameContext
     public IDialogueRunner DialogueRunner { get; set; }
     public EventEntryStateManager EventEntryStateManager { get; } = new();
 
+    // 友情コンビ登録システム
+    public FriendshipComboRegistry ComboRegistry { get; } = new();
+
     // Phase 2: Gate/Anchor integration
     public GateResolver GateResolver { get; set; }
     public AnchorManager AnchorManager { get; set; }
@@ -187,12 +190,69 @@ public sealed class GameContext
                 {
                     var enemy = source[i];
                     if (enemy == null) continue;
-                    list.Add(enemy.DeepCopy());
+                    var copy = enemy.DeepCopy();
+
+                    // コンビメンバーのGUID復元（セーブ/ロード後に同一個体を紐付ける）
+                    if (ComboRegistry != null)
+                    {
+                        var saved = ComboRegistry.GetEnemyStateByEncounterIndex(encounter.Id, i);
+                        if (saved != null)
+                        {
+                            copy.RestoreGuid(saved.EnemyGuid);
+                        }
+                    }
+
+                    list.Add(copy);
                 }
             }
             encounterEnemies[encounter] = list;
         }
         return list;
+    }
+
+    /// <summary>
+    /// コンビメンバーの敵個体状態をエクスポートする。
+    /// EncounterSO → テンプレートインデックスの対応を保持して永続化に使用。
+    /// </summary>
+    public List<EnemyPersistenceData> ExportComboEnemyStates()
+    {
+        var result = new List<EnemyPersistenceData>();
+        if (ComboRegistry == null || ComboRegistry.AllCombos.Count == 0) return result;
+
+        foreach (var kvp in encounterEnemies)
+        {
+            var encounter = kvp.Key;
+            var runtimeList = kvp.Value;
+            if (encounter == null || runtimeList == null) continue;
+
+            var source = encounter.EnemyList;
+            if (source == null) continue;
+
+            // runtimeList は GetRuntimeEnemies で source の null をスキップして構築されるため、
+            // 同じスキップ順序でインデックスを対応させる
+            var runtimeIdx = 0;
+            for (var i = 0; i < source.Count; i++)
+            {
+                if (source[i] == null) continue;
+                if (runtimeIdx >= runtimeList.Count) break;
+
+                var enemy = runtimeList[runtimeIdx];
+                runtimeIdx++;
+                if (enemy == null) continue;
+                if (ComboRegistry.FindComboByMemberGuid(enemy.EnemyGuid) == null) continue;
+
+                result.Add(new EnemyPersistenceData
+                {
+                    EnemyGuid = enemy.EnemyGuid,
+                    EncounterId = encounter.Id,
+                    TemplateIndex = i,
+                    IsBroken = enemy.broken,
+                    HP = enemy.HP,
+                    MentalHP = enemy.MentalHP
+                });
+            }
+        }
+        return result;
     }
 
     public IReadOnlyDictionary<string, bool> GetAllFlags()

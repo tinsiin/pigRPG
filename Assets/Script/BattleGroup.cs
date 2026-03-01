@@ -34,13 +34,29 @@ public class BattleGroup
     /// <summary>
     ///     コンストラクタ
     /// </summary>
-    public BattleGroup(List<BaseStates> ours, PartyProperty ourImpression,Faction _which,Dictionary<(BaseStates,BaseStates),int> CompatibilityData = null)
+    public BattleGroup(List<BaseStates> ours, PartyProperty ourImpression, Faction _which,
+        Dictionary<(BaseStates,BaseStates),int> CompatibilityData = null,
+        bool hasFormationSympathy = false)
     {
         Ours = ours;
         OurImpression = ourImpression;
         which = _which;
         CharaCompatibility = CompatibilityData ?? new Dictionary<(BaseStates, BaseStates), int>();
+        HasFormationSympathy = hasFormationSympathy;
+        GroupTotalMaxHP = ours.Sum(c => c.MaxHP);
     }
+
+    /// <summary>
+    /// グループ結成時に同情効果（HP≤50%のメンバーがいた）が発動していたか。
+    /// 友情コンビ登録の4シグナルの1つ。
+    /// </summary>
+    public bool HasFormationSympathy { get; }
+
+    /// <summary>
+    /// グループ結成時の全メンバーMaxHP合計。ダメージ効率の分母に使用。
+    /// </summary>
+    public float GroupTotalMaxHP { get; }
+
     /// <summary>
     /// グループ全員の現在HP
     /// </summary>

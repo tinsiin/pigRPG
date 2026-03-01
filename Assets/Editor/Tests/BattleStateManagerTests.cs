@@ -41,63 +41,11 @@ public class BattleStateManagerTests
     }
 
     [Test]
-    public void AddDominoRunOutEnemy_AddsEnemyToList()
-    {
-        var enemy = new NormalEnemy
-        {
-            DefaultImpression = SpiritualProperty.Doremis,
-            MyType = CharacterType.Life
-        };
-
-        _manager.AddDominoRunOutEnemy(enemy);
-
-        Assert.AreEqual(1, _manager.DominoRunOutEnemies.Count);
-        Assert.AreSame(enemy, _manager.DominoRunOutEnemies[0]);
-    }
-
-    [Test]
-    public void AddDominoRunOutEnemy_IgnoresNullEnemy()
-    {
-        _manager.AddDominoRunOutEnemy(null);
-
-        Assert.AreEqual(0, _manager.DominoRunOutEnemies.Count);
-    }
-
-    [Test]
-    public void ClearDominoRunOutEnemies_ClearsList()
-    {
-        var enemy = new NormalEnemy
-        {
-            DefaultImpression = SpiritualProperty.Doremis,
-            MyType = CharacterType.Life
-        };
-        _manager.AddDominoRunOutEnemy(enemy);
-
-        _manager.ClearDominoRunOutEnemies();
-
-        Assert.AreEqual(0, _manager.DominoRunOutEnemies.Count);
-    }
-
-    [Test]
     public void TurnCount_CanBeSetAndRetrieved()
     {
         _manager.TurnCount = 5;
 
         Assert.AreEqual(5, _manager.TurnCount);
-    }
-
-    [Test]
-    public void SetVoluntaryRunOutEnemy_SetsEnemy()
-    {
-        var enemy = new NormalEnemy
-        {
-            DefaultImpression = SpiritualProperty.Doremis,
-            MyType = CharacterType.Life
-        };
-
-        _manager.SetVoluntaryRunOutEnemy(enemy);
-
-        Assert.AreSame(enemy, _manager.VoluntaryRunOutEnemy);
     }
 
     [Test]

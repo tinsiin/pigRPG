@@ -32,6 +32,11 @@ public sealed class UnityBattleRunner : IBattleRunner
             ? context.GameContext.GetRuntimeEnemies(context.Encounter)
             : context.Encounter.EnemyList;
 
+        // ストーリーエンカウントは友情コンビ登録の対象外
+        var comboRegistry = context.Encounter.IsStoryEncounter
+            ? null
+            : context.GameContext?.ComboRegistry;
+
         var setup = await initializer.InitializeBattle(
             enemies,
             context.GlobalSteps,
@@ -42,7 +47,8 @@ public sealed class UnityBattleRunner : IBattleRunner
             players.Tuning,
             context.Encounter.EscapeRate,
             context.Encounter.EnemyCount,
-            tracker);
+            tracker,
+            comboRegistry: comboRegistry);
 
         if (setup == null || !setup.EncounterOccurred || setup.Orchestrator == null)
         {

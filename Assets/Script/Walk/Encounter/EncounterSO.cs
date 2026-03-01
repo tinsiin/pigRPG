@@ -10,6 +10,10 @@ public sealed class EncounterSO : ScriptableObject
     [SerializeField] private int enemyCount = 2;
     [SerializeField] private float escapeRate = 50f;
 
+    [Header("ストーリー敵フラグ")]
+    [Tooltip("trueの場合、友情コンビ登録の対象外になる")]
+    [SerializeField] private bool isStoryEncounter;
+
     [Header("勝利時イベントキュー")]
     [SerializeField] private EventQueueEntry[] onWinEvents;
 
@@ -24,6 +28,7 @@ public sealed class EncounterSO : ScriptableObject
     public IReadOnlyList<NormalEnemy> EnemyList => enemyList;
     public int EnemyCount => enemyCount;
     public float EscapeRate => escapeRate;
+    public bool IsStoryEncounter => isStoryEncounter;
     public EventQueueEntry[] OnWinEvents => onWinEvents;
     public EventQueueEntry[] OnLoseEvents => onLoseEvents;
     public EventQueueEntry[] OnEscapeEvents => onEscapeEvents;

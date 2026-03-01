@@ -65,6 +65,10 @@ public class WalkProgressData
     // Event entry state persistence (unified ForcedEvent + EventQueue)
     public List<EventQueueEntryState> EventEntryStates = new();
 
+    // Friendship combo persistence
+    public List<FriendshipComboSaveData> FriendshipCombos = new();
+    public List<EnemyPersistenceData> EnemyStates = new();
+
     public static WalkProgressData FromContext(GameContext context)
     {
         if (context == null) return null;
@@ -131,6 +135,14 @@ public class WalkProgressData
         // Export unified event entry states
         data.EventEntryStates = context.EventEntryStateManager.Export();
 
+        // Export friendship combos
+        var comboData = context.ComboRegistry?.Export();
+        if (comboData != null)
+        {
+            data.FriendshipCombos = comboData.Combos ?? new();
+        }
+        data.EnemyStates = context.ExportComboEnemyStates();
+
         return data;
     }
 
@@ -189,5 +201,15 @@ public class WalkProgressData
 
         // Restore unified event entry states
         context.EventEntryStateManager.Import(EventEntryStates);
+
+        // Restore friendship combos (ComboRegistryの復元はGetRuntimeEnemiesより先に行う)
+        if (context.ComboRegistry != null)
+        {
+            context.ComboRegistry.Import(new FriendshipComboRegistrySaveData
+            {
+                Combos = FriendshipCombos ?? new(),
+                EnemyStates = EnemyStates ?? new()
+            });
+        }
     }
 }
