@@ -103,8 +103,9 @@ public abstract partial class BaseStates
         //思えの値を回復する
         ResonanceHealingOnBattle();
         //アクション単位での行動記録
-        var isdivergence = GetIsSkillDivergence();
-        DidActionSkillDatas.Add(new ActionSkillData(isdivergence, NowUseSkill));
+        var isdivergence = GetIsSkillDivergence(out float divergenceDegree);
+        DidActionSkillDatas.Add(new ActionSkillData(isdivergence, NowUseSkill, divergenceDegree));
+        ApplyMentalExhaustion(divergenceDegree);
     }
     //  ==============================================================================================================================
     //                                              行動記録
@@ -397,9 +398,14 @@ public class ActionSkillData
     /// </summary>
     public bool IsDivergence;
     public BaseSkill Skill;
-    public ActionSkillData(bool isdivergence, BaseSkill skill)
+    /// <summary>
+    /// 乖離度（距離の平均値）。精神消耗の計算に使用。
+    /// </summary>
+    public float DivergenceDegree;
+    public ActionSkillData(bool isdivergence, BaseSkill skill, float divergenceDegree = 0f)
     {
         IsDivergence = isdivergence;
         Skill = skill;
+        DivergenceDegree = divergenceDegree;
     }
 }

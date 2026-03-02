@@ -115,7 +115,17 @@ public abstract partial class BaseStates
     /// </summary>
     public bool GetIsSkillDivergence()
     {
-        if(DefaultImpression == SpiritualProperty.None) 
+        return GetIsSkillDivergence(out _);
+    }
+    /// <summary>
+    /// 現在のスキルが乖離してるかどうかを返す（乖離度も取得）
+    /// </summary>
+    /// <param name="divergenceDegree">乖離度（距離の平均値）。乖離判定が行われなかった場合は0</param>
+    public bool GetIsSkillDivergence(out float divergenceDegree)
+    {
+        divergenceDegree = 0f;
+
+        if(DefaultImpression == SpiritualProperty.None)
         {
             Debug.Log($"{CharacterName}の{NowUseSkill.SkillName}-"
             +"「DefaultImpressionがnoneなら乖離判定は行われません。」none精神属性互換の十日能力とかないからね");
@@ -129,7 +139,7 @@ public abstract partial class BaseStates
         var SuggestionJudgementSkillTenDay =new TenDayAbilityDictionary(NowUseSkill.TenDayValues());
         //キーリストを取得
         var SuggestionJudgementSkillTenDayKeys = SuggestionJudgementSkillTenDay.Keys.ToArray();
-        Debug.Log($"(使用スキルの乖離判定)判定するスキル印象構造の種類数 : {SuggestionJudgementSkillTenDayKeys.Length}");    
+        Debug.Log($"(使用スキルの乖離判定)判定するスキル印象構造の種類数 : {SuggestionJudgementSkillTenDayKeys.Length}");
         if(SuggestionJudgementSkillTenDayKeys.Length <= 0)
         {
             Debug.Log("(使用スキルの乖離判定)判定するスキル印象構造の種類数が0以下、つまりスキルに印象構造がセットされてないので、GetIsSkillDivergenceはfalseを返し終了します。");
@@ -163,11 +173,77 @@ public abstract partial class BaseStates
              += AllBetweenSkillTenAndDefaultImpressionDistance / SpritualTenDayAbilitysMap[DefaultImpression].Count;
         }
         //平均の平均を出す　判定印象構造とデフォルト精神属性互換の精神属性全て同士の距離の平均の平均
-        var AvarageAllAverageBetweenSkillTenAndDefaultImpressionDistance 
+        var AvarageAllAverageBetweenSkillTenAndDefaultImpressionDistance
         = AllAverageBetweenSkillTenAndDefaultImpressionDistance / JudgementSkillTenDays.Count;
 
         //この平均の平均が特定の定数より多い、　離れているのなら、乖離したスキルとみなす。
-        return AvarageAllAverageBetweenSkillTenAndDefaultImpressionDistance >= 8;
+        divergenceDegree = AvarageAllAverageBetweenSkillTenAndDefaultImpressionDistance;
+        return divergenceDegree >= MentalExhaustionConfig.DivergenceThreshold;
+    }
+
+    //  ==============================================================================================================================
+    //                                             乖離スキル精神消耗
+    //                                      乖離したスキルを連発すると精神HPが加速的に消耗する
+    //                                      doc/乖離スキル精神消耗仕様書.md
+    //  ==============================================================================================================================
+
+    /// <summary> 戦闘中の乖離スキル連発カウント N（全乖離スキル共通） </summary>
+    int _divergentSkillUseCount = 0;
+    /// <summary> 副次効果（精神DEF低下）の蓄積値 </summary>
+    float _mentalDefExhaustionAccum = 0f;
+    /// <summary> 精神DEF倍率（蓄積に応じて 1.0 → 0.5 → 0.25） </summary>
+    float _mentalDefExhaustionMultiplier = 1.0f;
+
+    /// <summary>
+    /// 乖離スキル精神消耗を適用する。スキル使用開始時に呼ばれる。
+    /// 主効果: 精神HP消耗（乖離度≧8で発動、N回目で線形加速）
+    /// 副次効果: 精神DEF低下（乖離度≧12で蓄積、段階的に低下）
+    /// </summary>
+    /// <param name="divergenceDegree">GetIsSkillDivergence で算出された乖離度</param>
+    void ApplyMentalExhaustion(float divergenceDegree)
+    {
+        // ゲート判定: 乖離度が閾値未満なら何もしない
+        if (divergenceDegree < MentalExhaustionConfig.DivergenceThreshold) return;
+
+        // 連発カウント N を加算
+        _divergentSkillUseCount++;
+        int N = _divergentSkillUseCount;
+
+        // 使いこなし度の計算: Σ actor.BaseTenDayValues[スキルの印象構造キー] / スキルの印象構造合計値
+        var skillTenDayValues = NowUseSkill.TenDayValues(actor: this);
+        float skillTenDaySum = NowUseSkill.TenDayValuesSum;
+        float mastery = 0f;
+        if (skillTenDaySum > 0f)
+        {
+            float actorSum = 0f;
+            foreach (var key in skillTenDayValues.Keys)
+            {
+                actorSum += _baseTenDayValues.GetValueOrZero(key);
+            }
+            mastery = actorSum / skillTenDaySum;
+        }
+
+        // ── 主効果: 精神HP消耗 ──
+        float drain = MentalExhaustionConfig.CalcBaseDrain(mastery) * MentalExhaustionConfig.AccelerationF(N) * MentalMaxHP;
+        if (drain > 0f)
+        {
+            MentalHP -= drain;
+            Debug.Log($"[精神消耗] {CharacterName}: N={N}, mastery={mastery:F2}, 消耗={drain:F1}, " +
+                      $"残り精神HP={MentalHP:F1}/{MentalMaxHP:F1}");
+        }
+
+        // ── 副次効果: 精神DEF低下（高乖離度のみ） ──
+        if (divergenceDegree >= MentalExhaustionConfig.HighDivergenceThreshold)
+        {
+            float accumUnit = MentalExhaustionConfig.CalcDefAccumulationUnit(mastery) * MentalExhaustionConfig.AccelerationF(N);
+            _mentalDefExhaustionAccum += accumUnit;
+            float newMultiplier = MentalExhaustionConfig.GetDefMultiplier(_mentalDefExhaustionAccum);
+            if (newMultiplier != _mentalDefExhaustionMultiplier)
+            {
+                _mentalDefExhaustionMultiplier = newMultiplier;
+                Debug.Log($"[精神消耗-DEF低下] {CharacterName}: 蓄積={_mentalDefExhaustionAccum:F2}, DEF倍率={_mentalDefExhaustionMultiplier}");
+            }
+        }
     }
 
     //  ==============================================================================================================================

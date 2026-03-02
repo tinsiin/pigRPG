@@ -624,7 +624,7 @@ public abstract partial class BaseStates
             PowerLevel.Low => 0.7f,
             PowerLevel.VeryLow => 0.4f,
             _ => -4444444,//エラーだ
-        };
+        } * _mentalDefExhaustionMultiplier;
     }
 
     //  ==============================================================================================================================

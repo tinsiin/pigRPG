@@ -175,6 +175,9 @@ public abstract partial class BaseStates
         RecovelyWaitStart();//リカバリーターンのリセット
         _mentalDivergenceRefilCount = 0;//精神HP乖離の再充填カウントをゼロに戻す
         _mentalDivergenceCount = 0;//精神HP乖離のカウントをゼロに戻す
+        _divergentSkillUseCount = 0;//乖離スキル連発カウントをリセット
+        _mentalDefExhaustionAccum = 0f;//精神DEF低下の蓄積をリセット
+        _mentalDefExhaustionMultiplier = 1.0f;//精神DEF倍率をリセット
         _mentalPointRecoveryCountUp = 0;//精神HP自然回復のカウントをゼロに戻す
         DamageDealtToEnemyUntilKill = new();//戦闘開始時にキャラクターを殺すまでに与えたダメージを記録する辞書を初期化する
         battleGain = new();//バトルが開始するたびに勝利ブースト用の値を初期化

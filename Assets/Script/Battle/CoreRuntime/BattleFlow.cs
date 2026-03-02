@@ -118,14 +118,6 @@ public sealed class BattleFlow
     }
 
     /// <summary>
-    /// 連鎖逃走を実行
-    /// </summary>
-    public TabState DominoEscapeAct()
-    {
-        return _escapeHandler.DominoEscapeACT();
-    }
-
-    /// <summary>
     /// レイザーダメージを実行
     /// </summary>
     public TabState RatherAct()
