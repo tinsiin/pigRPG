@@ -95,7 +95,8 @@ public partial class BaseSkill
         foreach(var levelData in FixedSkillLevelData)
             dst.FixedSkillLevelData.Add(levelData.Clone());
         dst._infiniteSkillPowerUnit = _infiniteSkillPowerUnit;
-        dst._infiniteSkillTenDaysUnit = _infiniteSkillTenDaysUnit;
+        dst._infiniteSkillTenDaysSwingUnit = _infiniteSkillTenDaysSwingUnit;
+        dst._infiniteSkillTenDaysHitUnit = _infiniteSkillTenDaysHitUnit;
 
         // bufferSkillType, bufferSubEffects等: 非シリアライズのランタイム一時値なのでデフォルト(0/空)のままでOK
         // A/B_MoveSet_Cash: CashMoveSet()で戦闘開始時にレベルデータから詰められるためコピー不要

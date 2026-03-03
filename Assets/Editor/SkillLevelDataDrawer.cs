@@ -42,7 +42,7 @@ public class SkillLevelDataDrawer : PropertyDrawer
         // ② スキル性質
         new[] { "BaseSkillType", "ConsecutiveType", "ZoneTrait", "DistributionType", "PowerRangePercentageDictionary", "HitRangePercentageDictionary" },
         // ③ 威力・命中・ダメージ
-        new[] { "SkillPower", "TenDayValues", "SkillHitPer", "MentalDamageRatio", "DefAtk", "PowerSpread", "Cantkill" },
+        new[] { "SkillPower", "TenDayValuesSwing", "TenDayValuesHit", "SkillHitPer", "MentalDamageRatio", "DefAtk", "PowerSpread", "Cantkill" },
         // ④ コスト・補正
         new[] { "RequiredNormalP", "RequiredAttrP", "RequiredRemainingHPPercent", "EvasionModifier", "AttackModifier", "AttackMentalHealPercent", "SkillDidWaitCount" },
         // ⑤ 連撃・ストック・トリガー
@@ -74,7 +74,8 @@ public class SkillLevelDataDrawer : PropertyDrawer
         { "PowerRangePercentageDictionary", "威力の範囲別割合差分" },
         { "HitRangePercentageDictionary", "命中率の範囲別補正" },
         { "SkillPower", "スキル威力" },
-        { "TenDayValues", "十日能力値" },
+        { "TenDayValuesSwing", "十日能力値（素振り）" },
+        { "TenDayValuesHit", "十日能力値（HIT時）" },
         { "SkillHitPer", "命中補正 (%)" },
         { "MentalDamageRatio", "精神攻撃率" },
         { "DefAtk", "防御無視率" },

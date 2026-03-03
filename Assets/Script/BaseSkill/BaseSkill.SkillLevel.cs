@@ -83,10 +83,15 @@ public partial class BaseSkill
     [SerializeField]
     float _infiniteSkillPowerUnit;
     /// <summary>
-    /// 無限に伸びる部分の印象構造(全て)の単位。
+    /// 素振り成長用の十日能力無限単位
     /// </summary>
     [SerializeField]
-    float _infiniteSkillTenDaysUnit;
+    float _infiniteSkillTenDaysSwingUnit;
+    /// <summary>
+    /// HIT時成長用の十日能力無限単位
+    /// </summary>
+    [SerializeField]
+    float _infiniteSkillTenDaysHitUnit;
 
 
     //  ==============================================================================================================================
@@ -231,7 +236,14 @@ public class SkillLevelData
 
     // ─── ③ 威力・命中・ダメージ ───
     public float SkillPower;
-    public TenDayAbilityDictionary TenDayValues;
+    /// <summary>
+    /// 素振り時に成長する十日能力値
+    /// </summary>
+    public TenDayAbilityDictionary TenDayValuesSwing;
+    /// <summary>
+    /// HIT時に成長する十日能力値
+    /// </summary>
+    public TenDayAbilityDictionary TenDayValuesHit;
     public int SkillHitPer;
     public float MentalDamageRatio;
     public float DefAtk;
@@ -331,8 +343,10 @@ public class SkillLevelData
         };
 
         // TenDayValuesのディープコピー
-        if (this.TenDayValues != null)
-            copy.TenDayValues = new TenDayAbilityDictionary(this.TenDayValues);
+        if (this.TenDayValuesSwing != null)
+            copy.TenDayValuesSwing = new TenDayAbilityDictionary(this.TenDayValuesSwing);
+        if (this.TenDayValuesHit != null)
+            copy.TenDayValuesHit = new TenDayAbilityDictionary(this.TenDayValuesHit);
 
         // PowerSpreadのディープコピー
         if (this.PowerSpread != null)

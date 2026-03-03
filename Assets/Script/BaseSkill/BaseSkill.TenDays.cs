@@ -10,44 +10,68 @@ using Cysharp.Threading.Tasks;
 public partial class BaseSkill
 {
     /// <summary>
-    /// スキルの印象構造　十日能力値
-    /// ゆりかごするかどうかは引数で
+    /// スキルの印象構造（素振り + HIT の合算）。
+    /// 乖離判定・使いこなし度・TenDayValuesSum 等、成長以外の全用途で使用。
     /// </summary>
     public TenDayAbilityDictionary TenDayValues(bool IsCradle = false, BaseStates actor = null)
+    {
+        return TenDayValuesSwing(IsCradle, actor) + TenDayValuesHit(IsCradle, actor);
+    }
+
+    /// <summary>
+    /// 素振り成長用の十日能力値
+    /// </summary>
+    public TenDayAbilityDictionary TenDayValuesSwing(bool IsCradle = false, BaseStates actor = null)
+    {
+        return GetTenDayValuesInternal(IsCradle, actor, swing: true);
+    }
+
+    /// <summary>
+    /// HIT時成長用の十日能力値
+    /// </summary>
+    public TenDayAbilityDictionary TenDayValuesHit(bool IsCradle = false, BaseStates actor = null)
+    {
+        return GetTenDayValuesInternal(IsCradle, actor, swing: false);
+    }
+
+    /// <summary>
+    /// 内部共通: swing=true なら素振り側、false ならHIT側を返す
+    /// </summary>
+    TenDayAbilityDictionary GetTenDayValuesInternal(bool IsCradle, BaseStates actor, bool swing)
     {
         if (FixedSkillLevelData == null || FixedSkillLevelData.Count == 0)
         {
             Debug.LogError($"スキル「{SkillName}」のFixedSkillLevelDataが空です。Inspectorで最低1つのスキルレベルデータを設定してください");
             return new TenDayAbilityDictionary();
         }
-        Debug.Log($"スキル印象構造の取得 : スキル有限レベルリストの数:{FixedSkillLevelData.Count}" + (actor != null ? $",キャラ:{actor.CharacterName}" : ""));
         var Level = _nowSkillLevel;
         if(IsCradle)
         {
-            Level = _cradleSkillLevel;//ゆりかごならゆりかご用計算されたスキルレベルが
+            Level = _cradleSkillLevel;
         }
 
-        //skillLecelが有限範囲ならそれを返す
         if(FixedSkillLevelData.Count > Level)
         {
-            return FixedSkillLevelData[Level].TenDayValues;
-        }else
-        {//そうでないなら有限最終以降と無限単位の加算
-            //有限リストの最終値と無限単位に以降のスキルレベルを乗算した物を加算
-            //有限リストの最終値を基礎値にする
-            var BaseTenDayValues = FixedSkillLevelData[FixedSkillLevelData.Count - 1].TenDayValues;
+            var data = FixedSkillLevelData[Level];
+            return swing ? (data.TenDayValuesSwing ?? new TenDayAbilityDictionary())
+                         : (data.TenDayValuesHit ?? new TenDayAbilityDictionary());
+        }
+        else
+        {
+            var lastData = FixedSkillLevelData[FixedSkillLevelData.Count - 1];
+            var InfiniteLevelMultiplier = Level - (FixedSkillLevelData.Count - 1);
 
-            //有限リストの超過分、無限単位にどの程度かけるかの数
-            var InfiniteLevelMultiplier =  Level - (FixedSkillLevelData.Count - 1);
+            var baseValues = swing ? (lastData.TenDayValuesSwing ?? new TenDayAbilityDictionary())
+                                   : (lastData.TenDayValuesHit ?? new TenDayAbilityDictionary());
+            var infUnit = swing ? _infiniteSkillTenDaysSwingUnit
+                                : _infiniteSkillTenDaysHitUnit;
 
-            //基礎値に無限単位に超過分を掛けたものを加算して返す。
-            return BaseTenDayValues + _infiniteSkillTenDaysUnit * InfiniteLevelMultiplier;
-        
+            return baseValues + infUnit * InfiniteLevelMultiplier;
         }
     }
 
     /// <summary>
-    /// スキルの印象構造の十日能力値の合計
+    /// スキルの印象構造の十日能力値の合計（素振り+HIT合算）
     /// </summary>
     public float TenDayValuesSum => TenDayValues().Sum(kvp => kvp.Value);
 }

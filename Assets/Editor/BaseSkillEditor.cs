@@ -117,8 +117,10 @@ public class BaseSkillDrawer : PropertyDrawer
         float h = LINE + PAD; // セクションヘッダー
         var infPower = property.FindPropertyRelative("_infiniteSkillPowerUnit");
         if (infPower != null) h += EditorGUI.GetPropertyHeight(infPower) + PAD;
-        var infTen = property.FindPropertyRelative("_infiniteSkillTenDaysUnit");
-        if (infTen != null) h += EditorGUI.GetPropertyHeight(infTen) + PAD;
+        var infTenSwing = property.FindPropertyRelative("_infiniteSkillTenDaysSwingUnit");
+        if (infTenSwing != null) h += EditorGUI.GetPropertyHeight(infTenSwing) + PAD;
+        var infTenHit = property.FindPropertyRelative("_infiniteSkillTenDaysHitUnit");
+        if (infTenHit != null) h += EditorGUI.GetPropertyHeight(infTenHit) + PAD;
         return h;
     }
 
@@ -218,11 +220,18 @@ public class BaseSkillDrawer : PropertyDrawer
             EditorGUI.PropertyField(new Rect(pos.x, y, pos.width, h), infPower, new GUIContent("威力の無限単位"));
             y += h + PAD;
         }
-        var infTen = property.FindPropertyRelative("_infiniteSkillTenDaysUnit");
-        if (infTen != null)
+        var infTenSwing = property.FindPropertyRelative("_infiniteSkillTenDaysSwingUnit");
+        if (infTenSwing != null)
         {
-            float h = EditorGUI.GetPropertyHeight(infTen);
-            EditorGUI.PropertyField(new Rect(pos.x, y, pos.width, h), infTen, new GUIContent("10日能力の無限単位"));
+            float h = EditorGUI.GetPropertyHeight(infTenSwing);
+            EditorGUI.PropertyField(new Rect(pos.x, y, pos.width, h), infTenSwing, new GUIContent("10日能力の無限単位（素振り）"));
+            y += h + PAD;
+        }
+        var infTenHit = property.FindPropertyRelative("_infiniteSkillTenDaysHitUnit");
+        if (infTenHit != null)
+        {
+            float h = EditorGUI.GetPropertyHeight(infTenHit);
+            EditorGUI.PropertyField(new Rect(pos.x, y, pos.width, h), infTenHit, new GUIContent("10日能力の無限単位（HIT時）"));
             y += h + PAD;
         }
     }

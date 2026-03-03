@@ -22,9 +22,9 @@ public abstract partial class BaseStates
         //素振り分のスキルの印象構造の十日能力が上昇する。
         if(NowUseSkill.HasType(SkillType.Attack))
         {
-            GrowTenDayAbilityBySkill(0.3f,NowUseSkill.TenDayValues(actor: this));
+            GrowTenDayAbilityBySkill(0.3f,NowUseSkill.TenDayValuesSwing(actor: this));
         }else{
-            GrowTenDayAbilityBySkill(0.1f,NowUseSkill.TenDayValues(actor: this));
+            GrowTenDayAbilityBySkill(0.1f,NowUseSkill.TenDayValuesSwing(actor: this));
         }
 
         SkillUseConsecutiveCountUp(NowUseSkill);//連続カウントアップ

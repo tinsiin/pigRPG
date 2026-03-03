@@ -992,7 +992,7 @@ public abstract partial class BaseStates
             float clampedRatio = attacker.CalculateClampedStrengthRatio(TenDayValuesSumBase());
 
             //攻撃者のHIT分の成長を記録
-            attacker.TenDayGrowthListByHIT.Add((growRate * clampedRatio, skill.TenDayValues(skill.IsTLOA, actor: attacker)));//成長量にTLOAならゆりかごを考慮
+            attacker.TenDayGrowthListByHIT.Add((growRate * clampedRatio, skill.TenDayValuesHit(skill.IsTLOA, actor: attacker)));//成長量にTLOAならゆりかごを考慮（HIT用十日能力値）
 
             arrowThicknessDamagePercent = 0.2f;//ヒットしたら矢印の太さちょっと増やしとく
 
