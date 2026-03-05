@@ -1,0 +1,111 @@
+{
+  "format": "kfx",
+  "name": "revival_pillar",
+  "canvas": 100,
+  "fps": 30,
+  "duration": 1.5,
+  "target": "icon",
+  "icon_rect": { "x": 20, "y": 15, "width": 60, "height": 70 },
+  "layers": [
+    {
+      "id": "base_glow",
+      "type": "circle",
+      "blend": "additive",
+      "visible": [0.0, 1.2],
+      "keyframes": [
+        { "time": 0.0, "ease": "easeOut", "x": 50, "y": 75, "radius": 3, "opacity": 0.0,
+          "brush": { "type": "radial", "center": "#ffffffcc", "edge": "#ffffdd00" } },
+        { "time": 0.2, "radius": 22, "opacity": 0.7 },
+        { "time": 0.8, "ease": "easeOut", "radius": 25, "opacity": 0.5 },
+        { "time": 1.2, "radius": 18, "opacity": 0.0 }
+      ]
+    },
+    {
+      "id": "pillar_left",
+      "type": "tapered_line",
+      "blend": "additive",
+      "visible": [0.1, 1.3],
+      "keyframes": [
+        { "time": 0.1, "ease": "easeOut",
+          "x1": 42, "y1": 85, "x2": 40, "y2": 85,
+          "width_start": 4, "width_end": 1.5,
+          "pen": { "color": "#ffffffcc" }, "opacity": 0.0 },
+        { "time": 0.35, "x2": 38, "y2": 10, "opacity": 0.9 },
+        { "time": 0.9, "ease": "easeOut", "x2": 36, "y2": -5, "opacity": 0.6 },
+        { "time": 1.3, "y2": -15, "opacity": 0.0 }
+      ]
+    },
+    {
+      "id": "pillar_center",
+      "type": "tapered_line",
+      "blend": "additive",
+      "visible": [0.05, 1.3],
+      "keyframes": [
+        { "time": 0.05, "ease": "easeOut",
+          "x1": 50, "y1": 82, "x2": 50, "y2": 82,
+          "width_start": 5, "width_end": 2,
+          "pen": { "color": "#ffffeeee" }, "opacity": 0.0 },
+        { "time": 0.3, "x2": 50, "y2": 8, "opacity": 1.0 },
+        { "time": 0.85, "ease": "easeOut", "y2": -8, "opacity": 0.7 },
+        { "time": 1.3, "y2": -20, "opacity": 0.0 }
+      ]
+    },
+    {
+      "id": "pillar_right",
+      "type": "tapered_line",
+      "blend": "additive",
+      "visible": [0.13, 1.3],
+      "keyframes": [
+        { "time": 0.13, "ease": "easeOut",
+          "x1": 58, "y1": 85, "x2": 60, "y2": 85,
+          "width_start": 4, "width_end": 1.5,
+          "pen": { "color": "#ffffffcc" }, "opacity": 0.0 },
+        { "time": 0.38, "x2": 62, "y2": 10, "opacity": 0.9 },
+        { "time": 0.9, "ease": "easeOut", "x2": 64, "y2": -5, "opacity": 0.6 },
+        { "time": 1.3, "y2": -15, "opacity": 0.0 }
+      ]
+    },
+    {
+      "id": "ring_rise",
+      "type": "ring",
+      "blend": "additive",
+      "visible": [0.2, 1.0],
+      "keyframes": [
+        { "time": 0.2, "ease": "easeOut", "x": 50, "y": 80, "radius": 20, "inner_radius": 16, "opacity": 0.0,
+          "brush": { "type": "radial", "center": "#ffffddcc", "edge": "#ffffdd00" } },
+        { "time": 0.35, "y": 65, "radius": 18, "inner_radius": 14, "opacity": 0.8 },
+        { "time": 0.65, "ease": "easeOut", "y": 35, "radius": 14, "inner_radius": 11, "opacity": 0.6 },
+        { "time": 1.0, "y": 5, "radius": 10, "inner_radius": 8, "opacity": 0.0 }
+      ]
+    },
+    {
+      "id": "flash",
+      "type": "circle",
+      "blend": "additive",
+      "visible": [0.28, 0.55],
+      "keyframes": [
+        { "time": 0.28, "ease": "easeOut", "x": 50, "y": 50, "radius": 5, "opacity": 0.0,
+          "brush": { "type": "radial", "center": "#ffffffee", "edge": "#ffffff00" } },
+        { "time": 0.35, "radius": 30, "opacity": 0.9 },
+        { "time": 0.55, "radius": 35, "opacity": 0.0 }
+      ]
+    },
+    {
+      "id": "rise_particles",
+      "type": "emitter",
+      "blend": "additive",
+      "visible": [0.25, 1.5],
+      "x": 50, "y": 70,
+      "count": 14,
+      "angle_range": [250, 290],
+      "speed_range": [1.5, 3.5],
+      "gravity": -0.12,
+      "drag": 0.97,
+      "lifetime": 1.0,
+      "size_range": [1.0, 2.5],
+      "color_start": "#ffffddcc",
+      "color_end": "#ffffff00",
+      "seed": 33
+    }
+  ]
+}

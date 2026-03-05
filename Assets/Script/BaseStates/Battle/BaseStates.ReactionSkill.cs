@@ -5,6 +5,7 @@ using static CommonCalc;
 using NRandom;
 using Cysharp.Threading.Tasks;
 using System.Linq;
+using Effects.Integration;
 using static TenDayAbilityPosition;
 
 public abstract partial class BaseStates
@@ -563,6 +564,14 @@ public abstract partial class BaseStates
         if (hitResult != HitResult.Hit) return;
         Angel();
         isHeal = true;
+
+        // 第2層: 蘇生エフェクト
+        if (BattleIcon != null)
+            EffectManager.Play("revival_pillar", BattleIcon);
+
+        // 第4層: SchizoLog
+        AddBattleLog(attacker.CharacterName + "が" + CharacterName + "を蘇生した", important: true);
+
         manager.MyGroup(this).PartyApplyConditionChangeOnCloseAllyAngel(this);
     }
     /// <summary>
