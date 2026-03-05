@@ -888,6 +888,10 @@ public abstract partial class BaseStates
             var healed = ExecuteHealFriendlyCore(skillPower, hitResult, ref isHeal);
             healAmount += healed;
 
+            // 第4層: SchizoLog
+            if (healed > 0)
+                AddBattleLog(attacker.CharacterName + "が" + CharacterName + "を回復-「" + (int)healed + "」");
+
             // 回復フロー数字
             if (healed > 0 && BattleIcon != null)
             {

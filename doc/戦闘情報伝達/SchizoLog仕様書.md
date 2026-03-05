@@ -144,7 +144,10 @@ BattleManager.OnBattleEnd()
 | ファイル | 内容 |
 |---|---|
 | BaseStates.Damage.cs | `"{攻撃者名}が{対象名}を攻撃した-「{totalDmg}」"` |
+| BaseStates.Damage.cs | `"{対象名}に†{damage}の浸食"` （レイザーダメージ） |
 | BaseStates.ReactionSkill.cs | `"{攻撃者名}は外した"` |
+| BaseStates.ReactionSkill.cs | `"{術者名}が{対象名}を回復-「{healed}」"` |
+| BaseStates.ReactionSkill.cs | `"{術者名}が{対象名}を蘇生した"` (important) |
 
 ## シーン上の配置
 

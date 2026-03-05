@@ -811,6 +811,10 @@ public abstract partial class BaseStates
             if (uiRefs != null && uiRefs.DamageFlowPrefab != null)
                 BattleIcon.SpawnRatherDamageFlow((int)damage.Total, uiRefs.DamageFlowPrefab);
         }
+
+        // 第4層: SchizoLog
+        if (damage.Total > 0)
+            AddBattleLog(CharacterName + "に†" + (int)damage.Total + "の浸食");
     }
 
     //  ==============================================================================================================================
