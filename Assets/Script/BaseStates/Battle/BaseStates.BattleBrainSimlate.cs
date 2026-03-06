@@ -6,11 +6,108 @@ using NRandom;
 using Cysharp.Threading.Tasks;
 using System.Linq;
 
+/// <summary>
+/// AI命中率シミュレート用ポリシー。
+/// 前のめり状態の考慮有無を制御する。
+/// </summary>
+[Serializable]
+public struct HitSimulatePolicy
+{
+    public bool considerVanguard;
+    public bool attackerIsVanguard;
+    public bool targetIsVanguard;
+
+    public static HitSimulatePolicy FromBattleState(
+        IBattleContext ctx, BaseStates attacker, BaseStates target)
+    {
+        return new HitSimulatePolicy
+        {
+            considerVanguard = true,
+            attackerIsVanguard = ctx.IsVanguard(attacker),
+            targetIsVanguard = ctx.IsVanguard(target),
+        };
+    }
+
+    public static HitSimulatePolicy Minimal => new HitSimulatePolicy
+    {
+        considerVanguard = false,
+    };
+}
 
 //敵スキルAIに対する全キャラシミュレート用
 //シミュレートなので　厳密に実際のBM上での実行計算を再現する必要がない。
-public abstract partial class BaseStates    
+public abstract partial class BaseStates
 {
+
+    //  ==============================================================================================================================
+    //                                              メインのシミュレート関数とか
+    //  ==============================================================================================================================
+
+    //  ==============================================================================================================================
+    //                                              命中率シミュレート
+    //  ==============================================================================================================================
+
+    /// <summary>
+    /// AI用の簡易命中率シミュレート。
+    /// IsReactHIT + SkillHitCalc を確率論的に近似。
+    /// 乱数を使わず、確定的な期待命中率(0.0~1.0)を返す。
+    /// </summary>
+    public float SimulateHitRate(BaseStates attacker, BaseSkill skill, HitSimulatePolicy policy)
+    {
+        // 第1段階: キャラ間命中回避
+        float eye = attacker.EYE().Total;
+        float agi = AGI().Total;
+
+        // 後衛命中低下: 前のめり選択可能スキルかつ攻撃者が後衛の場合
+        float minusChance = 0f;
+        if (policy.considerVanguard && !policy.attackerIsVanguard
+            && skill.AggressiveOnExecute.canSelect)
+        {
+            minusChance = agi * 0.2f;
+        }
+        minusChance = Mathf.Min(minusChance, eye);
+
+        // 簡易版: SkillEvasionModifier=1.0f想定（落ち着きカウント無視）
+        // 実コードのIsReactHITに合わせ、分母は生のeye（minusChance減算前）+ evasionRate
+        float evasionRate = agi;
+        float effectiveEye = eye - minusChance;
+        float charHitRate = Mathf.Clamp01(
+            effectiveEye / Mathf.Max(eye + evasionRate, 0.001f));
+
+        // 第2段階: スキル命中率
+        float skillHitRate = skill.SkillHitPer / 100f;
+        float supremacy = AccuracySupremacy(eye, agi);
+        skillHitRate = Mathf.Clamp01(skillHitRate + supremacy / 100f);
+
+        // 統合
+        float baseHitRate = charHitRate * skillHitRate;
+
+        // 第3段階: 特殊補正（簡易近似）
+        // 爆破型+前のめりターゲット → かすり化近似
+        if (policy.considerVanguard
+            && skill.DistributionType == AttackDistributionType.Explosion
+            && policy.targetIsVanguard)
+        {
+            float evadeRate = 1f - baseHitRate;
+            baseHitRate += evadeRate * 0.7f;
+        }
+        // 魔法かすり近似（1/3かすり化）
+        if (skill.IsMagic)
+        {
+            float evadeRate = 1f - baseHitRate;
+            baseHitRate += evadeRate * 0.33f;
+        }
+
+        return Mathf.Clamp01(baseHitRate);
+    }
+
+    /// <summary>
+    /// 簡易オーバーロード（前のめり考慮なし）
+    /// </summary>
+    public float SimulateHitRate(BaseStates attacker, BaseSkill skill)
+    {
+        return SimulateHitRate(attacker, skill, HitSimulatePolicy.Minimal);
+    }
 
     //  ==============================================================================================================================
     //                                              メインのシミュレート関数とか

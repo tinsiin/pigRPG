@@ -55,39 +55,27 @@ AIの判断過程を追跡するログ基盤。
 
 ---
 
-## Phase 1: 基盤整備（~200-400行追加）
+## Phase 1: 基盤整備 → 完了
 
 **目標:** BasicTacticalAIが書けるだけの部品を揃える
 
-| 順序 | 作業 | 行数目安 | 根拠 |
-|---|---|---|---|
-| 1-1 | 自HP/精神HP情報取得（HpRatio等） | 20-40 | A, D |
-| 1-2 | ターン数取得の整備 | 10-20 | A, D |
-| 1-3 | 敵グループ列挙ヘルパー | 20-30 | D |
-| 1-4 | ShouldEscape() virtual + Inspector逃走パラメータ | 30-50 | A |
-| 1-5 | SimulateHitRate + HitSimulatePolicy | 80-150 | B |
-| 1-6 | SkillAnalysisPolicy.useExpectedDamage統合 | 30-50 | B |
-| 1-7 | FindSkill(name/id) ヘルパー | 10-15 | A |
-| 1-8 | **BasicTacticalAI作成**（実証） | 60-100 | D, G |
+| 順序 | 作業 | 状態 |
+|---|---|---|
+| 1-1 | 自HP/精神HP情報取得（HpRatio, MentalHpRatio, IsLowHP） | **完了** |
+| 1-2 | ターン数取得（TurnCount） | **完了** |
+| 1-3 | 敵グループ列挙（GetPotentialTargets） | **完了** |
+| 1-4 | ShouldEscape() virtual + Inspector逃走パラメータ（_canEscape, _escapeChance） | **完了** |
+| 1-5 | SimulateHitRate + HitSimulatePolicy構造体 | **完了** |
+| 1-6 | useExpectedDamage + considerVanguardForHit統合、EvaluateDamage内部ヘルパー、Analyzer関数のEvaluateDamage化 | **完了** |
+| 1-7 | FindSkill(name)ヘルパー（※BaseSkillにIDプロパティがないため名前検索のみ） | **完了** |
+| 1-8 | BasicTacticalAI作成（`BasicTacticalAI.cs`） | **完了** |
 
-### BasicTacticalAIで実現する体験変化
+### 実装詳細
 
-SimpleRandomTestAI（ランダム選択）→ BasicTacticalAI で:
-- ターゲット選択の合理化（HP低い味方を狙う） → 「油断できなくなった」
-- ダメージ最大スキルの選択 → 「適当に殴ってこなくなった」
-- 逃走の導入 → 「敵も生き延びようとしている」
-
-Inspector設定の組み合わせ（SkillAnalysisPolicy / 逃走確率 / variationStages）だけで16通り以上の個性が1つのSOクラスから生まれる。（根拠: G 2.7）
-
-### 依存関係
-
-```
-1-1 HpRatio ──→ 1-4 ShouldEscape()
-1-2 ターン数 ──→ 1-8 BasicTacticalAI（決め打ちパターン）
-1-3 敵列挙 ───→ 1-8 BasicTacticalAI
-1-5 HitRate ──→ 1-6 期待ダメージ統合
-1-1～1-7 全て → 1-8 BasicTacticalAI
-```
+- **HitSimulatePolicy**: `BaseStates.BattleBrainSimlate.cs`に定義。`FromBattleState(ctx, attacker, target)`で前のめり情報を自動取得、`Minimal`で前のめり無視
+- **SimulateHitRate**: IsReactHIT + SkillHitCalcの確率論的近似。乱数を使わず確定的な期待命中率(0.0~1.0)を返す。意図的に再現しない要素: ミニマムヒットチャンス、落ち着きカウント、味方別口回避、パッシブ由来回避、先手攻撃補正
+- **EvaluateDamage**: Analyzer内部で使用。`useExpectedDamage=true`の場合、`SimulateDamage × SimulateHitRate`で期待ダメージ評価。`considerVanguardForHit`で前のめり考慮を制御
+- **BasicTacticalAI**: 逃走判断→ダメージ分析→フォールバック(ランダム)の3段構成。Inspector設定だけで多様な個性を実現
 
 ---
 

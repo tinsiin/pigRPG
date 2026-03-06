@@ -604,7 +604,7 @@ public abstract class BattleAIBrain : ScriptableObject
             BaseSkill ResultSkill = null;
             foreach(var skill in availableSkills)
             {
-                var damage = target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy);
+                var damage = EvaluateDamage(target, skill);
                 LogThink(3, () => $"  Single試算: {skill.SkillName} → {target.CharacterName} = {damage:F1}");
                 if(damage > potential)//与えたダメージが多ければ
                 {
@@ -619,7 +619,7 @@ public abstract class BattleAIBrain : ScriptableObject
         // 新しいロジック：刻み・ブレ段階システムを使用
         var stepResult = DamageStepAnalysisHelper.SelectWithStepAndVariation(
             availableSkills,
-            skill => target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy),
+            skill => EvaluateDamage(target, skill),
             _damageSimulatePolicy,
             RandomSource
         );
@@ -657,7 +657,7 @@ public abstract class BattleAIBrain : ScriptableObject
             {
                 foreach(var target in potentialTargets)
                 {
-                    var damage = target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy);
+                    var damage = EvaluateDamage(target, skill);
                     LogThink(3, () => $"  Group試算: {skill.SkillName} → {target.CharacterName} = {damage:F1}");
                     if(damage > maxDamage)
                     {
@@ -682,7 +682,7 @@ public abstract class BattleAIBrain : ScriptableObject
         {
             foreach(var target in potentialTargets)
             {
-                var damage = target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy);
+                var damage = EvaluateDamage(target, skill);
                 LogThink(3, () => $"  Group試算: {skill.SkillName} → {target.CharacterName} = {damage:F1}");
                 combinations.Add(new BruteForceResult
                 {
@@ -1120,8 +1120,91 @@ public abstract class BattleAIBrain : ScriptableObject
             yield return m;
         }
     }
+
+    // ── Phase 1 基盤ユーティリティ ──────────────────────────────────
+
+    // --- 1-1: 自キャラ状態ヘルパー ---
+    protected float HpRatio => user != null && user.MaxHP > 0 ? user.HP / user.MaxHP : 0f;
+    protected float MentalHpRatio => user != null && user.MentalMaxHP > 0 ? user.MentalHP / user.MentalMaxHP : 0f;
+    protected bool IsLowHP(float threshold = 0.25f) => HpRatio < threshold;
+
+    // --- 1-2: ターン数取得 ---
+    protected int TurnCount => manager?.BattleTurnCount ?? 0;
+
+    // --- 1-3: 敵グループ列挙（AIから見た攻撃対象） ---
+    protected List<BaseStates> GetPotentialTargets(bool includeDeadTargets = false)
+    {
+        if (manager == null || user == null) return new List<BaseStates>();
+        var myFaction = manager.GetCharacterFaction(user);
+        var opponentFaction = myFaction == Faction.Ally ? Faction.Enemy : Faction.Ally;
+        var opponentGroup = manager.FactionToGroup(opponentFaction);
+        if (opponentGroup?.Ours == null) return new List<BaseStates>();
+        return opponentGroup.Ours
+            .Where(t => t != null && (includeDeadTargets || !t.Death()))
+            .ToList();
+    }
+
+    // --- 1-4: 逃走判断 ---
+    [Header("逃走設定")]
+    [SerializeField, Range(0f, 1f)] private float _escapeChance = 0f;
+    [SerializeField] private bool _canEscape = false;
+
+    protected virtual bool ShouldEscape()
+    {
+        if (!_canEscape) return false;
+        bool result = Roll(_escapeChance);
+        if (result) LogThink(2, $"逃走判定: 成功 (chance={_escapeChance:P0})");
+        return result;
+    }
+
+    // --- 1-5/1-6: 命中率シミュレート + 期待ダメージ ---
+
+    /// <summary>
+    /// ターゲットに対するスキルの命中率を推定する（派生クラス向け公開ヘルパー）
+    /// </summary>
+    protected float EstimateHitRate(BaseStates target, BaseSkill skill)
+    {
+        if (target == null || skill == null || user == null) return 0f;
+        var policy = _damageSimulatePolicy.considerVanguardForHit && manager != null
+            ? HitSimulatePolicy.FromBattleState(manager, user, target)
+            : HitSimulatePolicy.Minimal;
+        return target.SimulateHitRate(user, skill, policy);
+    }
+
+    /// <summary>
+    /// ダメージ × 命中率の期待ダメージを返す（派生クラス向け公開ヘルパー）
+    /// </summary>
+    protected float EstimateExpectedDamage(BaseStates target, BaseSkill skill)
+    {
+        float damage = target.SimulateDamage(user, skill, _damageSimulatePolicy);
+        float hitRate = EstimateHitRate(target, skill);
+        return damage * hitRate;
+    }
+
+    /// <summary>
+    /// ポリシーに応じてダメージまたは期待ダメージを返す（分析関数内部用）
+    /// </summary>
+    private float EvaluateDamage(BaseStates target, BaseSkill skill)
+    {
+        float damage = target.SimulateDamage(user, skill, _damageSimulatePolicy);
+        if (_damageSimulatePolicy.useExpectedDamage)
+        {
+            var hitPolicy = _damageSimulatePolicy.considerVanguardForHit && manager != null
+                ? HitSimulatePolicy.FromBattleState(manager, user, target)
+                : HitSimulatePolicy.Minimal;
+            float hitRate = target.SimulateHitRate(user, skill, hitPolicy);
+            LogThink(3, () => $"  期待ダメージ補正: hitRate={hitRate:F3} dmg={damage:F1} → {damage * hitRate:F1}");
+            damage *= hitRate;
+        }
+        return damage;
+    }
+
+    // --- 1-7: スキル名検索ヘルパー ---
+    protected BaseSkill FindSkill(string name)
+        => availableSkills?.FirstOrDefault(s => s != null && s.SkillName == name);
+
     // =============================================================================
-    // 思考部品のパーツ　
+    // 思考部品のパーツ
     // 以下の関数は各コールバック内で組み合わせることで　キャラごとの仕様を再現します(主に派生クラスで)
     // =============================================================================
 
@@ -1268,6 +1351,12 @@ public struct SkillAnalysisPolicy
     [Header("完全DEFシミュレーションbool SimlateNemeyDEFがオンの場合の追加オプション。falseならb_b_defと共通十日能力による防御力のみによるシミュレート")]
     public bool SimlatePerfectEnemyDEF;//完全DEFシミュレート（パッシブ・AimStyle排他含む）
     
+    [Header("命中率シミュレーション")]
+    [Tooltip("trueの場合、期待ダメージ(ダメージ x 命中率)で評価する")]
+    public bool useExpectedDamage;
+    [Tooltip("前のめり状態を命中率計算に反映するか")]
+    public bool considerVanguardForHit;
+
     [Header("ダメージ刻み・ブレ段階設定")]
     [Tooltip("ダメージを指定の刻み幅で下方向に丸めて評価します。\n例) step=10, 生ダメージ=237 → 230 として扱う。\n1 を指定すると刻み無し(従来通りの生ダメージ評価)。\n推奨: ダメージスケールに応じて 5〜50 程度。小さすぎると従来に近く、\n大きすぎると候補が粗くなります。")]
     [Min(1)]
