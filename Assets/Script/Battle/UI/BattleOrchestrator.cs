@@ -289,21 +289,11 @@ public sealed class BattleOrchestrator : IBattleLifecycle
         }
         if (skill.IsFullStock())
         {
-            Debug.Log(skill.SkillName + "をストックが満杯。");
+            Debug.Log(skill.SkillName + "のストックが満杯。");
             return CurrentUiState;
         }
 
-        skill.ATKCountStock();
-        Debug.Log(skill.SkillName + "をストックしました。");
-
-        var list = actor.SkillList
-            .Where(item => !ReferenceEquals(item, skill) && item.HasConsecutiveType(SkillConsecutiveType.Stockpile))
-            .ToList();
-        foreach (var stockSkill in list)
-        {
-            stockSkill.ForgetStock();
-        }
-
+        actor.NowUseSkill = skill; // 直接代入（SKillUseCallは使わない。ストックロジックはBM側SkillStockACTに集約）
         Context.SkillStock = true;
         UpdateChoiceState(TabState.NextWait);
         return CurrentUiState;

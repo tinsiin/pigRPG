@@ -127,6 +127,12 @@ public partial class BaseSkill
     //  ==============================================================================================================================
     private int _nowStockCount;//現在のストック数
 
+    // AI用公開getter
+    public int NowStockCount => _nowStockCount;
+    public int MaxStockCount => DefaultAtkCount;
+    public int StockDefault => DefaultStockCount;
+    public int StockPower => GetStcokPower();
+
     ///<summary> ストックデフォルト値。DefaultAtkCount を超えないように調整された値を返す</summary>
     int DefaultStockCount {
         get {

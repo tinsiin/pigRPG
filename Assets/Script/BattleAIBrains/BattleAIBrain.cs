@@ -69,10 +69,12 @@ public abstract class BattleAIBrain : ScriptableObject
         public SkillZoneTrait? RangeWill;
         public DirectedWill? TargetWill;
         public bool IsEscape;
+        public bool IsStock; // trueならSkillフィールドをストック対象として扱う
 
         public bool HasSkill => Skill != null;
         public bool HasRangeWill => RangeWill.HasValue;
         public bool HasTargetWill => TargetWill.HasValue;
+        // HasAnyにIsStockは含めない（IsStock=trueなら必ずSkillもセットされるためHasSkillで十分）
         public bool HasAny => HasSkill || HasRangeWill || HasTargetWill || IsEscape;
     }
 
@@ -103,6 +105,19 @@ public abstract class BattleAIBrain : ScriptableObject
         if(decision.IsEscape)//逃走するならスキル使用の理由がないので
         {
             user.SelectedEscape = true;
+            return;
+        }
+
+        // ストック行動（SKillUseCallは使わない。ポイント消費・CashMoveSet・ForgetStock二重実行の副作用があるため）
+        if (decision.IsStock && decision.HasSkill)
+        {
+            if (decision.Skill.IsFullStock())
+            {
+                manager.DoNothing = true; // 満杯なら何もしない（ターン浪費を防ぐ）
+                return;
+            }
+            user.NowUseSkill = decision.Skill; // 直接代入
+            manager.SkillStock = true;
             return;
         }
 
@@ -253,6 +268,7 @@ public abstract class BattleAIBrain : ScriptableObject
         }
 
         Debug.LogError("BattleAIBrain.Run: Plan結果のコミットが行われませんでしたPlanに値が設定されてない");
+        manager.DoNothing = true;
 
     }
 
@@ -369,6 +385,97 @@ public abstract class BattleAIBrain : ScriptableObject
             return null;
         }
         return RandomSource.GetItem(badPassives);//ランダムに一つ入手
+    }
+
+
+    // ---------- ストック・トリガー情報取得ユーティリティ----------------------------------
+
+    protected struct StockInfo
+    {
+        public int Current;      // 現在のストック数
+        public int Max;          // 最大値（DefaultAtkCount）
+        public int Default;      // デフォルト値（DefaultStockCount）
+        public bool IsFull;      // 満杯か
+        public int StockPower;   // 1回のストックで増える量
+        public int TurnsToFull;  // 満杯まであと何回ストックが必要か
+        public float FillRate;   // 充填率（Current / Max）
+    }
+
+    protected struct TriggerInfo
+    {
+        public int CurrentCount;    // 現在のカウント
+        public int MaxCount;        // 最大カウント
+        public bool IsTriggering;   // カウント中か
+        public int RemainingTurns;  // 発動まであと何ターンか
+        public int RollBackCount;   // 巻き戻し量
+        public bool CanCancel;      // キャンセル可能か
+    }
+
+    /// <summary>
+    /// Stockpileフラグを持つスキルを列挙する
+    /// </summary>
+    protected IEnumerable<BaseSkill> GetStockpileSkills(IEnumerable<BaseSkill> skills)
+    {
+        if (skills == null) yield break;
+        foreach (var s in skills)
+        {
+            if (s != null && s.HasConsecutiveType(SkillConsecutiveType.Stockpile))
+                yield return s;
+        }
+    }
+
+    /// <summary>
+    /// 指定スキルのストック状態を一括取得する
+    /// </summary>
+    protected StockInfo GetStockInfo(BaseSkill skill)
+    {
+        if (skill == null) return default;
+        int current = skill.NowStockCount;
+        int max = skill.MaxStockCount;
+        int power = skill.StockPower;
+        int remaining = power > 0 ? Mathf.Max(0, Mathf.CeilToInt((float)(max - current) / power)) : 0;
+        return new StockInfo
+        {
+            Current = current,
+            Max = max,
+            Default = skill.StockDefault,
+            IsFull = skill.IsFullStock(),
+            StockPower = power,
+            TurnsToFull = remaining,
+            FillRate = max > 0 ? (float)current / max : 0f,
+        };
+    }
+
+    /// <summary>
+    /// 発動カウント付きスキルを列挙する
+    /// </summary>
+    protected IEnumerable<BaseSkill> GetTriggerSkills(IEnumerable<BaseSkill> skills)
+    {
+        if (skills == null) yield break;
+        foreach (var s in skills)
+        {
+            if (s != null && s.TriggerMax > 0)
+                yield return s;
+        }
+    }
+
+    /// <summary>
+    /// 指定スキルのトリガー状態を一括取得する
+    /// </summary>
+    protected TriggerInfo GetTriggerInfo(BaseSkill skill)
+    {
+        if (skill == null) return default;
+        int current = skill.CurrentTriggerCount;
+        int max = skill.TriggerMax;
+        return new TriggerInfo
+        {
+            CurrentCount = current,
+            MaxCount = max,
+            IsTriggering = skill.IsTriggering,
+            RemainingTurns = current + 1, // -1到達で発動のため。カウント未開始時はMaxCount+1を返す
+            RollBackCount = skill.TriggerRollBack,
+            CanCancel = skill.CanCancelTrigger,
+        };
     }
 
 

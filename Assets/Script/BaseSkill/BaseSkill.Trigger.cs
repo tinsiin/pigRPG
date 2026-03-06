@@ -16,6 +16,10 @@ public partial class BaseSkill
 
     int TriggerRollBackCount => FixedSkillLevelData[_levelIndex].TriggerRollBackCount;
 
+    // AI用公開getter
+    public int CurrentTriggerCount => _triggerCount;
+    public int TriggerMax => TriggerCountMax;
+    public int TriggerRollBack => TriggerRollBackCount;
 
     private int _triggerCount;//発動への−カウント　このカウント分連続でやらないと発動しなかったりする　重要なのは連続でやらなくても　一気にまたゼロからになるかはスキル次第
 

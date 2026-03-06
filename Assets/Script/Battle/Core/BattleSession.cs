@@ -165,27 +165,10 @@ public sealed class BattleSession : IBattleSession
 
     private TabState ApplyStockSkill(BaseStates actor, BaseSkill skill)
     {
-        if (actor == null || skill == null)
-        {
-            return TabState.NextWait;
-        }
-        if (skill.IsFullStock())
-        {
-            _manager.ActionContext.Logger.Log(skill.SkillName + "をストックが満杯。");
-            return TabState.NextWait;
-        }
+        if (actor == null || skill == null) return TabState.NextWait;
+        if (skill.IsFullStock()) return TabState.NextWait;
 
-        skill.ATKCountStock();
-        _manager.ActionContext.Logger.Log(skill.SkillName + "をストックしました。");
-
-        var list = actor.SkillList
-            .Where(item => !ReferenceEquals(item, skill) && item.HasConsecutiveType(SkillConsecutiveType.Stockpile))
-            .ToList();
-        foreach (var stockSkill in list)
-        {
-            stockSkill.ForgetStock();
-        }
-
+        actor.NowUseSkill = skill; // 直接代入（ストックロジックはBM側SkillStockACTに集約）
         _manager.SkillStock = true;
         return TabState.NextWait;
     }
