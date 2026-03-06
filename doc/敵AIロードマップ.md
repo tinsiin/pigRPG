@@ -44,12 +44,13 @@ BattleAIBrain（ScriptableObject）が`user`, `manager`, `availableSkills`を可
 
 ---
 
-## Priority 1: LogThinkシステム（~50-80行）
+## Priority 1: LogThinkシステム → 完了
 
-AIの判断過程を追跡するログ基盤。現在は判断過程の記録手段が完全にゼロであり、Phase 1部品のデバッグに不可欠。
+AIの判断過程を追跡するログ基盤。
 
-- Inspector設定可能なログレベル（0=結果のみ ～ 3=全試算）
-- 最初に入れる箇所: SkillActRun分岐、SingleBestDamageAnalyzer、MultiBestDamageAndTargetAnalyzer、MustSkillSelect
+- `_thinkLogLevel`: Inspector設定可能なログレベル（0=最終結果, 1=候補一覧, 2=スコア詳細, 3=全試算）
+- `LogThink(level, message)`: レベルフィルタ付きログ出力（`[AI:キャラ名][Tターン]`プレフィックス）
+- ログ挿入箇所: SkillActRun各分岐、Plan結果、MustSkillSelectフィルタ前後、SingleBestDamageAnalyzer各スキル試算+最終選択、MultiBestDamageAndTargetAnalyzer全組み合わせ試算+最終選択
 - 根拠: H (3.2 #1)
 
 ---

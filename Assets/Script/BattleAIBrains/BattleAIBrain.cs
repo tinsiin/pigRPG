@@ -15,6 +15,10 @@ public abstract class BattleAIBrain : ScriptableObject
     /// </summary>
     [SerializeField]SkillAnalysisPolicy _damageSimulatePolicy;
 
+    [Header("AI思考ログ")]
+    [Tooltip("0=最終結果のみ, 1=候補一覧, 2=スコア詳細, 3=全試算")]
+    [SerializeField, Range(0, 3)] private int _thinkLogLevel = 0;
+
     protected IBattleContext manager;
     private IBattleContext _battleContext;
     private IBattleRandom _random = new SystemBattleRandom();
@@ -218,6 +222,16 @@ public abstract class BattleAIBrain : ScriptableObject
             )
             .ToList();
 
+        LogThink(2, $"MustSkillSelect: {availableSkills.Count}件 → {filtered.Count}件");
+        if (filtered.Count < availableSkills.Count)
+        {
+            LogThink(3, () =>
+            {
+                var removed = availableSkills.Where(s => s != null && !filtered.Contains(s)).Select(s => s.SkillName);
+                return $"MustSkillSelect 除外: [{string.Join(", ", removed)}]";
+            });
+        }
+
         return filtered;
     }
 
@@ -253,6 +267,7 @@ public abstract class BattleAIBrain : ScriptableObject
         // 1) 連続実行（Freeze）は最優先で処理し、通常思考へ進まない（強制力）
         if (user.IsFreeze)
         {
+            LogThink(0, "Freeze継続");
             HandleFreezeContinuation();
             return;
         }
@@ -260,7 +275,7 @@ public abstract class BattleAIBrain : ScriptableObject
         // 2) 強制キャンセル行動限定条件がtrueなら（強制力）
         if (user.HasCanCancelCantACTPassive)
         {
-            // キャンセル専用思考（デフォルトは当該パッシブを消して DoNothing）
+            LogThink(0, "キャンセル行動（CantACTパッシブ）");
             OnCancelPassiveThink();
             return;
         }
@@ -270,7 +285,7 @@ public abstract class BattleAIBrain : ScriptableObject
         availableSkills = MustSkillSelect(user.SkillList.ToList());
         if(availableSkills.Count == 0)
         {
-            Debug.Log("BattleAIBrain.Run: availableSkills が空です");
+            LogThink(0, "使用可能スキルなし → DoNothing");
             manager.DoNothing = true;
             return;
         }
@@ -281,15 +296,19 @@ public abstract class BattleAIBrain : ScriptableObject
 
         // 5) 新スタイル：Planで結果だけを記述 → Commitで一括反映（単体先約ならSkillのみ）
         {
+            LogThink(1, () => $"候補スキル数={availableSkills.Count}: [{string.Join(", ", availableSkills.Select(s => s.SkillName))}]");
+
             var decision = new AIDecision();
             Plan(decision);
             if (decision.HasAny)
             {
+                LogThink(0, $"決定: {(decision.IsEscape ? "逃走" : decision.IsStock ? $"ストック({decision.Skill?.SkillName})" : decision.Skill?.SkillName ?? "???")}");
                 CommitDecision(decision, reserved);
                 return;
             }
         }
 
+        LogThink(0, "Plan結果なし → DoNothing");
         Debug.LogError("BattleAIBrain.Run: Plan結果のコミットが行われませんでしたPlanに値が設定されてない");
         manager.DoNothing = true;
 
@@ -586,22 +605,26 @@ public abstract class BattleAIBrain : ScriptableObject
             foreach(var skill in availableSkills)
             {
                 var damage = target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy);
+                LogThink(3, () => $"  Single試算: {skill.SkillName} → {target.CharacterName} = {damage:F1}");
                 if(damage > potential)//与えたダメージが多ければ
                 {
                     potential = damage;//基準を更新
                     ResultSkill = skill;//結果を更新
                 }
             }
+            LogThink(2, $"Single最適: {ResultSkill?.SkillName ?? "none"} → {target.CharacterName} (dmg={potential:F1})");
             return ResultSkill;
         }
 
         // 新しいロジック：刻み・ブレ段階システムを使用
-        return DamageStepAnalysisHelper.SelectWithStepAndVariation(
+        var stepResult = DamageStepAnalysisHelper.SelectWithStepAndVariation(
             availableSkills,
             skill => target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy),
             _damageSimulatePolicy,
             RandomSource
         );
+        LogThink(2, $"Single最適(Step): {stepResult?.SkillName ?? "none"} → {target.CharacterName}");
+        return stepResult;
     }   
     /// <summary>
     /// グループに対して最大ダメージを与えるスキルとターゲットの組み合わせを分析する
@@ -635,6 +658,7 @@ public abstract class BattleAIBrain : ScriptableObject
                 foreach(var target in potentialTargets)
                 {
                     var damage = target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy);
+                    LogThink(3, () => $"  Group試算: {skill.SkillName} → {target.CharacterName} = {damage:F1}");
                     if(damage > maxDamage)
                     {
                         maxDamage = damage;
@@ -644,6 +668,7 @@ public abstract class BattleAIBrain : ScriptableObject
                 }
             }
 
+            LogThink(2, $"Group最適: {bestSkill?.SkillName ?? "none"} → {bestTarget?.CharacterName ?? "none"} (dmg={maxDamage:F1})");
             return new BruteForceResult
             {
                 Skill = bestSkill,
@@ -658,6 +683,7 @@ public abstract class BattleAIBrain : ScriptableObject
             foreach(var target in potentialTargets)
             {
                 var damage = target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy);
+                LogThink(3, () => $"  Group試算: {skill.SkillName} → {target.CharacterName} = {damage:F1}");
                 combinations.Add(new BruteForceResult
                 {
                     Skill = skill,
@@ -675,7 +701,9 @@ public abstract class BattleAIBrain : ScriptableObject
             RandomSource
         );
 
-        return selectedCombination ?? combinations.First();
+        var groupResult = selectedCombination ?? combinations.First();
+        LogThink(2, $"Group最適(Step): {groupResult.Skill?.SkillName ?? "none"} → {groupResult.Target?.CharacterName ?? "none"}");
+        return groupResult;
     }
 
 
@@ -1055,6 +1083,29 @@ public abstract class BattleAIBrain : ScriptableObject
     {
         var p = Mathf.Clamp01(p01);
         return RandomSource.NextFloat() < p;
+    }
+
+    // ── AI思考ログ ─────────────────────────────────────────────
+    // level: 0=最終結果, 1=候補一覧, 2=スコア詳細, 3=全試算
+    protected void LogThink(int level, string message)
+    {
+        if (level > _thinkLogLevel) return;
+        var charName = user?.CharacterName ?? "???";
+        var turn = manager?.BattleTurnCount.ToString() ?? "?";
+        Debug.Log($"[AI:{charName}][T{turn}] {message}");
+    }
+
+    /// <summary>
+    /// 高コスト文字列生成を遅延評価するオーバーロード。
+    /// レベルチェック通過時のみ messageFactory を呼び出す。
+    /// ループ内や LINQ/string.Join を含む呼び出しで使用すること。
+    /// </summary>
+    protected void LogThink(int level, Func<string> messageFactory)
+    {
+        if (level > _thinkLogLevel) return;
+        var charName = user?.CharacterName ?? "???";
+        var turn = manager?.BattleTurnCount.ToString() ?? "?";
+        Debug.Log($"[AI:{charName}][T{turn}] {messageFactory()}");
     }
 
     // グループ味方列挙ユーティリティ（self は除外）

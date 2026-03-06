@@ -86,9 +86,13 @@ NormalEnemy.BattleEndSkillAI()
 1. decision == null → DoNothing + エラーログ
 2. IsEscape → SelectedEscape
 3. IsStock && HasSkill → 満杯チェック → NowUseSkill直接代入 + SkillStock
-4. 単体先約あり → SKillUseCall(Skill)のみ
-5. 通常 → SKillUseCall + RangeWill + TargetWill
+4. 単体先約あり && !HasSkill → DoNothing + エラーログ
+5. 単体先約あり && HasSkill → SKillUseCall(Skill)のみ
+6. !HasSkill → DoNothing + エラーログ（スキル未設定の異常パス防止）
+7. 通常 → SKillUseCall + RangeWill(置換) + TargetWill
 ```
+
+※RangeWillはプレイヤー側（UI段階的選択のためAdd/OR）と異なり、AIは一括決定のため置換で適用。ターン開始時にRangeWill=0リセット済みのため実質的な差異はない。
 
 ### 2.5 MustSkillSelect（使用可能スキル選別）
 
@@ -98,6 +102,59 @@ NormalEnemy.BattleEndSkillAI()
 2. 単体先約がある場合: `IsEligibleForSingleTargetReservation()` — 単体系ZoneTrait+攻撃タイプに限定
 
 ※刃物武器チェック（`IsBlade`）は変数として取得されているが、現時点ではフィルタ条件に含まれていない。
+
+### 2.6 AI思考ログ（LogThinkシステム）
+
+AIの判断過程を追跡するためのログ基盤。Inspector設定でログの詳細度を制御する。
+
+#### 設定
+
+| フィールド | 型 | 説明 |
+|---|---|---|
+| `_thinkLogLevel` | int (0-3) | Inspectorで設定。このレベル以下のログのみ出力される |
+
+#### ログレベル
+
+| レベル | 名称 | 出力内容 | 用途 |
+|---|---|---|---|
+| 0 | Result | 最終決定（スキル名/逃走/DoNothing） | リリース・プレイテスト |
+| 1 | Candidates | 候補スキル一覧 | プレイテスト |
+| 2 | Scored | MustSkillSelectフィルタ結果、Single/Group分析の最適結果+ダメージ値 | AI調整 |
+| 3 | Full | 全スキル×ターゲット個別ダメージ試算、除外スキル名 | デバッグ |
+
+#### 使用方法
+
+```csharp
+// 基底クラスが提供するログ関数
+protected void LogThink(int level, string message)
+```
+
+出力フォーマット: `[AI:キャラ名][Tターン数] メッセージ`
+
+デフォルト`_thinkLogLevel=0`のため、明示的に上げない限り最終結果のみが出力される。
+
+#### ログ挿入箇所（現行）
+
+| 箇所 | レベル | 内容 |
+|---|---|---|
+| SkillActRun: Freeze分岐 | 0 | 「Freeze継続」 |
+| SkillActRun: Cancel分岐 | 0 | 「キャンセル行動」 |
+| SkillActRun: スキル空 | 0 | 「使用可能スキルなし」 |
+| SkillActRun: Plan結果 | 0 | 最終決定（スキル名/逃走/ストック） |
+| SkillActRun: Plan結果なし | 0 | 「Plan結果なし → DoNothing」 |
+| SkillActRun: Plan前 | 1 | 候補スキル名一覧 |
+| MustSkillSelect | 2 | フィルタ前後件数 |
+| MustSkillSelect | 3 | 除外スキル名 |
+| SingleBestDamageAnalyzer | 2 | 最適スキル+ダメージ値 |
+| SingleBestDamageAnalyzer | 3 | 各スキルの個別試算ダメージ（※Step版ではDamageStepAnalysisHelper内部処理のため出力なし） |
+| SingleBestDamageAnalyzer (Step) | 2 | 最適スキル（Step版） |
+| MultiBestDamageAndTargetAnalyzer | 2 | 最適組み合わせ |
+| MultiBestDamageAndTargetAnalyzer | 3 | 全組み合わせの個別試算ダメージ |
+| MultiBestDamageAndTargetAnalyzer (Step) | 2 | 最適組み合わせ（Step版） |
+
+#### 拡張方針
+
+Phase 1以降で新しい思考部品（逃走判断、命中率シミュレート、トラウマ率等）を追加する際、その判断過程にも`LogThink()`を挿入していく。インフラとして全AI部品に横断的に適用される。
 
 ---
 
@@ -675,3 +732,4 @@ GeneratePostBattleActions(self, allies, pref)
 | 2026-03-07 | 11.6にAI思考要素の実装粒度の判断基準を追加（情報取得/判断ロジック/操作の3層分類、未実装要素への適用例） |
 | 2026-03-07 | 11.6改善: 判断ロジックのヘルパー化判断を追加（AnalyzeBestDamage=正の例、ストック溜め判断=負の例）、問い2を精緻化、11.1.1/11.1.2から11.6への参照追加 |
 | 2026-03-07 | 11.6補強: 情報取得を「前提層」として明示。判断ロジックのヘルパー化要否とは独立して常に必要である旨を強調、3層の依存関係と実装順序を追記 |
+| 2026-03-07 | 2.6追加: AI思考ログ（LogThinkシステム）の仕様。SkillActRun/MustSkillSelect/Single・Groupダメージ分析にログ挿入 |
