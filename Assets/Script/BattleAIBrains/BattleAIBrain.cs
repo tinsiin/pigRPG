@@ -22,6 +22,11 @@ public abstract class BattleAIBrain : ScriptableObject
     protected BaseStates user;
     protected List<BaseSkill> availableSkills;
 
+#if UNITY_EDITOR
+    // SO共有汚染検出用: 前回Run()を呼んだキャラを記録
+    [NonSerialized] private BaseStates _lastRunActer;
+#endif
+
     // =============================================================================================================================
     // 戦闘後・利他行動プロファイル
     //  - 相性値しきい値/有効フラグのみをBrain側で保持
@@ -133,8 +138,18 @@ public abstract class BattleAIBrain : ScriptableObject
             return;
         }
 
-        if (decision.HasSkill) user.SKillUseCall(decision.Skill);
+        if (!decision.HasSkill)
+        {
+            // スキル未設定で到達した異常パス（RangeWill/TargetWillのみ、IsStockのみ等）
+            manager.DoNothing = true;
+            Debug.LogError("BattleAIBrain.CommitDecision: 通常パスですが Skill が設定されていません");
+            return;
+        }
+
+        user.SKillUseCall(decision.Skill);
         // AI決定の範囲意志を正規化してから適用（競合解消）
+        // ※プレイヤー側はUI段階的選択のためAdd(OR)だが、AIは一括決定のため置換で正しい
+        //   ターン開始時にRangeWill=0にリセット済みなので実質的な差異はない
         if (decision.HasRangeWill) user.RangeWill = SkillZoneTraitNormalizer.Normalize(decision.RangeWill.Value);
         if (decision.HasTargetWill) manager.Acter.Target = decision.TargetWill.Value;
         // d.Targets(直接的な対象者) の具体的な積み先は既存BMフロー依存のためここでは未コミット
@@ -222,6 +237,14 @@ public abstract class BattleAIBrain : ScriptableObject
             return;
         }
         _random = manager.Random ?? _random;
+
+#if UNITY_EDITOR
+        // SO共有汚染検出: 前回の実行主体と異なる場合に警告（同一SOを複数敵が共有している兆候）
+        if (_lastRunActer != null && _lastRunActer != manager.Acter)
+            Debug.LogWarning($"[AI汚染検出] 同一BrainSOが複数キャラで共有されています 前回={_lastRunActer.CharacterName} 今回={manager.Acter.CharacterName}");
+        _lastRunActer = manager.Acter;
+#endif
+
         user = manager.Acter;
 
         // ポリシーの不正値を実行前に検証・矯正（0以下はエラーを出して1に補正）
@@ -509,6 +532,7 @@ public abstract class BattleAIBrain : ScriptableObject
         {
             ResultTarget = potentialTargets[0];
             ResultSkill = SingleBestDamageAnalyzer(availableSkills, ResultTarget);
+            return new BruteForceResult { Skill = ResultSkill, Target = ResultTarget };
         }
 
         //敵グループのHPに対して有効なスキルを分析する
@@ -742,7 +766,7 @@ public abstract class BattleAIBrain : ScriptableObject
             return false;
         }
 
-        // 実行主体を AI 側にも保持（必要に応じて派生で参照）
+        // 実行主体を AI 側にも保持（PostBattlePlanで派生が参照するため）
         user = self;
         // BM は原則取得可能想定。取得失敗時はログのみ（利他部品側で自分のみへフォールバック）
         manager = context ?? _battleContext ?? BattleContextHub.Current;
@@ -754,6 +778,10 @@ public abstract class BattleAIBrain : ScriptableObject
         {
             return false; // 何もしない
         }
+
+        // SO共有汚染メモ: await以降はSOフィールド(user/manager)が他敵のRun()で上書きされうる。
+        // 現状selfはメソッドパラメータ（安全）、manager参照はRoll()のみで影響軽微。
+        // 根本対策（user/managerをメソッドパラメータ化）は中期リファクタとして別途対応。
 
         try
         {
