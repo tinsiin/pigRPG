@@ -702,7 +702,7 @@ public abstract class BattleAIBrain : ScriptableObject
         public void AddAction(BaseStates target, BaseSkill skill, bool isSelf = false, PostBattleActionOptions? options = null)
         {
             if (target == null || skill == null) return;
-            Actions.Add(new PostBattleAction { Target = target, IsSelf = isSelf, Options = options.GetValueOrDefault() });
+            Actions.Add(new PostBattleAction { Target = target, Skills = new List<BaseSkill> { skill }, IsSelf = isSelf, Options = options.GetValueOrDefault() });
         }
 
         // ヘルパ（任意）: 複数スキルのアクション追加（最大5に丸め）

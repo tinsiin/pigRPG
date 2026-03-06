@@ -88,7 +88,7 @@ public abstract partial class BaseStates
         //追加HP（バリア層）のシミュレート処理（オプション）
         if(policy.SimlateVitalLayerPenetration)
         {
-            SimulateBarrierLayers(ref dmg, ref mentalDmg, attacker);
+            SimulateBarrierLayers(ref dmg, ref mentalDmg, attacker, skill);
         }
 
         //シミュレートするダメージの種類で分岐
@@ -108,11 +108,11 @@ public abstract partial class BaseStates
     /// バリア層のシミュレート処理（実際のバリア層を変更せずにダメージ計算のみ行う）
     /// PenetrateLayerのロジックを再現しつつ、実体を変更しない
     /// </summary>
-    private void SimulateBarrierLayers(ref StatesPowerBreakdown dmg, ref StatesPowerBreakdown mentalDmg, BaseStates atker)
+    private void SimulateBarrierLayers(ref StatesPowerBreakdown dmg, ref StatesPowerBreakdown mentalDmg, BaseStates atker, BaseSkill skill)
     {
         // バリア層のシミュレート用データを作成（実体は変更しない）
         var simulateVitalLayers = new List<(float layerHP, float maxLayerHP, BaseVitalLayer originalLayer)>();
-        
+
         // 元のバリア層リストから必要な情報をコピー
         foreach(var layer in _vitalLayerList)
         {
@@ -122,7 +122,7 @@ public abstract partial class BaseStates
         for (int i = 0; i < simulateVitalLayers.Count;)
         {
             var (layerHP, maxLayerHP, originalLayer) = simulateVitalLayers[i];
-            var skillPhy = atker.NowUseSkill.SkillPhysical;
+            var skillPhy = skill.SkillPhysical;
             
             // PenetrateLayerのロジックを再現（実体を変更せずに）
             var (newDmg, newMentalDmg, newLayerHP, isDestroyed) = SimulatePenetrateLayer(
