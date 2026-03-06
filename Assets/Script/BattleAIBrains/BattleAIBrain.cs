@@ -269,6 +269,7 @@ public abstract class BattleAIBrain : ScriptableObject
         {
             LogThink(0, "Freeze継続");
             HandleFreezeContinuation();
+            SnapshotHPAfterDecision();
             return;
         }
 
@@ -277,6 +278,7 @@ public abstract class BattleAIBrain : ScriptableObject
         {
             LogThink(0, "キャンセル行動（CantACTパッシブ）");
             OnCancelPassiveThink();
+            SnapshotHPAfterDecision();
             return;
         }
 
@@ -287,6 +289,7 @@ public abstract class BattleAIBrain : ScriptableObject
         {
             LogThink(0, "使用可能スキルなし → DoNothing");
             manager.DoNothing = true;
+            SnapshotHPAfterDecision();
             return;
         }
 
@@ -304,6 +307,15 @@ public abstract class BattleAIBrain : ScriptableObject
             {
                 LogThink(0, $"決定: {(decision.IsEscape ? "逃走" : decision.IsStock ? $"ストック({decision.Skill?.SkillName})" : decision.Skill?.SkillName ?? "???")}");
                 CommitDecision(decision, reserved);
+                // AI戦闘記憶: 行動記録
+                user.AIMemory?.RecordAction(new ActionRecord
+                {
+                    Skill = decision.Skill,
+                    Target = null, // ターゲットはBM側で最終決定されるためここでは未確定
+                    Turn = TurnCount,
+                    WasEscape = decision.IsEscape,
+                });
+                SnapshotHPAfterDecision();
                 return;
             }
         }
@@ -311,7 +323,16 @@ public abstract class BattleAIBrain : ScriptableObject
         LogThink(0, "Plan結果なし → DoNothing");
         Debug.LogError("BattleAIBrain.Run: Plan結果のコミットが行われませんでしたPlanに値が設定されてない");
         manager.DoNothing = true;
+        SnapshotHPAfterDecision();
+    }
 
+    /// <summary>
+    /// 思考完了後にHPスナップショットを記録する。
+    /// 次ターンのHpDropRate計算で「前ターン思考時のHP」として参照される。
+    /// </summary>
+    private void SnapshotHPAfterDecision()
+    {
+        user?.AIMemory?.SnapshotHP(user.HP, user.MentalHP);
     }
 
 
@@ -1149,12 +1170,99 @@ public abstract class BattleAIBrain : ScriptableObject
     [SerializeField, Range(0f, 1f)] private float _escapeChance = 0f;
     [SerializeField] private bool _canEscape = false;
 
+    [Header("トラウマ設定")]
+    [Tooltip("カウンター1回あたりのトラウマ率上昇量")]
+    [SerializeField, Range(0f, 0.3f)] private float _traumaPerCounter = 0.15f;
+    [Tooltip("HP急減時のトラウマ率ボーナス倍率（HpDropRate × この値がトラウマに加算）")]
+    [SerializeField, Range(0f, 1f)] private float _traumaHpDropWeight = 0.3f;
+    [Tooltip("味方死亡1回あたりのトラウマ率上昇量")]
+    [SerializeField, Range(0f, 0.3f)] private float _traumaPerAllyDeath = 0.1f;
+    [Tooltip("トラウマ率の上限（これ以上は上がらない）")]
+    [SerializeField, Range(0f, 1f)] private float _traumaCap = 0.8f;
+
+    /// <summary>
+    /// 逃走判断。HP急減・トラウマが逃走確率を押し上げる。
+    /// </summary>
     protected virtual bool ShouldEscape()
     {
         if (!_canEscape) return false;
-        bool result = Roll(_escapeChance);
-        if (result) LogThink(2, $"逃走判定: 成功 (chance={_escapeChance:P0})");
+        // 基本逃走確率 + HP急減ボーナス
+        float chance = _escapeChance + HpDropRate * 0.2f;
+        chance = Mathf.Clamp01(chance);
+        bool result = Roll(chance);
+        if (result) LogThink(2, $"逃走判定: 成功 (base={_escapeChance:P0} hpDrop={HpDropRate:F2} effective={chance:P0})");
         return result;
+    }
+
+    // ── Phase 2-4: トラウマシステム ────────────────────────────
+
+    /// <summary>
+    /// 現在のトラウマ率を計算する (0.0~_traumaCap)。
+    /// カウンター被弾・HP急減・味方死亡で上昇する感情軸パラメータ。
+    /// </summary>
+    protected float TraumaRate
+    {
+        get
+        {
+            var mem = Memory;
+            if (mem == null) return 0f;
+
+            float rate = 0f;
+            // カウンター被弾
+            rate += mem.CounterCount * _traumaPerCounter;
+            // HP急減
+            rate += HpDropRate * _traumaHpDropWeight;
+            // 味方死亡（相性値で重み付け: 70未満=0, 70~79=×1.0, 80~90=×1.5, 91+=×2.5）
+            rate += mem.AllyDeathTraumaWeight * _traumaPerAllyDeath;
+
+            return Mathf.Clamp(rate, 0f, _traumaCap);
+        }
+    }
+
+    /// <summary>
+    /// 指定スキルに対してトラウマ回避が発動するか判定する。
+    /// そのスキルでカウンターされた経験がある場合のみトラウマ判定の対象になる。
+    /// </summary>
+    protected bool IsTraumaAvoided(BaseSkill skill)
+    {
+        if (skill == null) return false;
+        int countered = CounterCountBySkill(skill);
+        if (countered <= 0) return false;
+
+        // スキル固有トラウマ = 全体トラウマ率 × (そのスキルでのカウンター回数 / 全カウンター回数)
+        float totalTrauma = TraumaRate;
+        int totalCounters = CounterCount;
+        float skillTrauma = totalCounters > 0
+            ? totalTrauma * ((float)countered / totalCounters)
+            : 0f;
+
+        bool avoided = Roll(skillTrauma);
+        if (avoided)
+        {
+            LogThink(1, $"トラウマ回避: {skill.SkillName} (trauma={skillTrauma:P0}, countered={countered}回)");
+        }
+        return avoided;
+    }
+
+    /// <summary>
+    /// スキルリストからトラウマ回避されたスキルを除外する。
+    /// 全スキルが除外された場合はフォールバックとして元のリストを返す。
+    /// </summary>
+    protected List<BaseSkill> FilterByTrauma(List<BaseSkill> skills)
+    {
+        if (skills == null || skills.Count <= 1) return skills;
+
+        var filtered = skills.Where(s => !IsTraumaAvoided(s)).ToList();
+        if (filtered.Count == 0)
+        {
+            LogThink(1, "トラウマ: 全スキル回避 → フォールバック（元リスト使用）");
+            return skills;
+        }
+        if (filtered.Count < skills.Count)
+        {
+            LogThink(2, $"トラウマフィルタ: {skills.Count}件 → {filtered.Count}件");
+        }
+        return filtered;
     }
 
     // --- 1-5/1-6: 命中率シミュレート + 期待ダメージ ---
@@ -1202,6 +1310,43 @@ public abstract class BattleAIBrain : ScriptableObject
     // --- 1-7: スキル名検索ヘルパー ---
     protected BaseSkill FindSkill(string name)
         => availableSkills?.FirstOrDefault(s => s != null && s.SkillName == name);
+
+    // ── Phase 2 記憶参照ユーティリティ ────────────────────────────
+
+    /// <summary>
+    /// 自キャラのAI戦闘記憶（なければnull）
+    /// </summary>
+    protected BattleMemory Memory => user?.AIMemory;
+
+    /// <summary>
+    /// 前ターンからのHP急減率 (0.0~1.0)
+    /// </summary>
+    protected float HpDropRate => Memory?.HpDropRate(user?.HP ?? 0f) ?? 0f;
+
+    /// <summary>
+    /// このターンに受けた合計ダメージ
+    /// </summary>
+    protected float DamageThisTurn => Memory?.TotalDamageThisTurn(TurnCount) ?? 0f;
+
+    /// <summary>
+    /// カウンターされた総回数
+    /// </summary>
+    protected int CounterCount => Memory?.CounterCount ?? 0;
+
+    /// <summary>
+    /// 指定スキルでカウンターされた回数
+    /// </summary>
+    protected int CounterCountBySkill(BaseSkill skill) => Memory?.CounterCountBySkill(skill) ?? 0;
+
+    /// <summary>
+    /// 指定スキルの使用回数
+    /// </summary>
+    protected int SkillUseCount(BaseSkill skill) => Memory?.SkillUseCount(skill) ?? 0;
+
+    /// <summary>
+    /// 味方の死亡数（自分を含まない）
+    /// </summary>
+    protected int AllyDeathCount => Memory?.AllyDeathCount ?? 0;
 
     // =============================================================================
     // 思考部品のパーツ

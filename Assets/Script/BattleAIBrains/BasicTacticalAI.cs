@@ -26,13 +26,16 @@ public class BasicTacticalAI : BattleAIBrain
             return;
         }
 
+        // トラウマフィルタ（カウンターされたスキルを回避）
+        var candidates = FilterByTrauma(availableSkills);
+
         // 攻撃対象の列挙
         var targets = GetPotentialTargets();
 
         // ダメージ分析でベストスキル＋ターゲットを選定
-        if (targets.Count > 0 && availableSkills.Count >= 2)
+        if (targets.Count > 0 && candidates.Count >= 2)
         {
-            var result = AnalyzeBestDamage(availableSkills, targets);
+            var result = AnalyzeBestDamage(candidates, targets);
             if (result?.Skill != null)
             {
                 decision.Skill = result.Skill;
@@ -46,9 +49,9 @@ public class BasicTacticalAI : BattleAIBrain
         }
 
         // フォールバック: スキルが1つだけ、またはダメージ分析が使えない場合
-        var skill = availableSkills.Count == 1
-            ? availableSkills[0]
-            : RandomSource.GetItem(availableSkills);
+        var skill = candidates.Count == 1
+            ? candidates[0]
+            : RandomSource.GetItem(candidates);
 
         decision.Skill = skill;
         if (skill.HasZoneTraitAny(SkillZoneTrait.CanPerfectSelectSingleTarget))

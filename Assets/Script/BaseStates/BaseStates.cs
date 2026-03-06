@@ -73,6 +73,9 @@ public abstract partial class BaseStates
         PassiveProvider = provider;
     }
 
+    // AI用戦闘記憶（NormalEnemyでoverride）
+    public virtual BattleMemory AIMemory => null;
+
     // Phase 3d: ArrowManager DI注入
     public IArrowManager ArrowManager { get; private set; }
 

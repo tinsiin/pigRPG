@@ -190,7 +190,9 @@ public abstract partial class BaseStates
 
         //スキルの戦闘開始時コールバック
         OnBattleStartSkills();
-        
+
+        // AI戦闘記憶のリセット（前回戦闘の記録をクリア）
+        AIMemory?.Clear();
     }
     public virtual void OnBattleEndNoArgument()
     {

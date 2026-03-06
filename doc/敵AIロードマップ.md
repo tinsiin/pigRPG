@@ -79,25 +79,32 @@ AIの判断過程を追跡するログ基盤。
 
 ---
 
-## Phase 2: 記憶・学習（~300-500行追加）
+## Phase 2: 記憶・学習 → 完了
 
 **目標:** 敵キャラごとの個性と深み
 
-| 順序 | 作業 | 行数目安 | 根拠 |
-|---|---|---|---|
-| 2-1 | BattleMemory + DamageRecord/ActionRecord | 100-150 | C |
-| 2-2 | 被害記録の書き込みフック（BM側、各箇所1行追加） | 20-30 | C |
-| 2-3 | 記録参照ユーティリティ（基底クラス） | 40-60 | C |
-| 2-4 | トラウマ率 + IsTraumaAvoided() | 60-100 | C |
-| 2-5 | _lastTurnHP + HpDropRate | 15-25 | A |
-| 2-6 | 行動記録参照 | 30-50 | C, D |
-| 2-7 | 逃走思考（上級: トラウマ連携） | 40-60 | A |
+| 順序 | 作業 | 状態 |
+|---|---|---|
+| 2-1 | BattleMemory + DamageRecord/ActionRecord/CounterRecord/DeathRecord | **完了** |
+| 2-2 | 被害記録の書き込みフック（Damage, Death, AllyDeath, Counter, Action, HPSnapshot 計6箇所） | **完了** |
+| 2-3 | 記録参照ユーティリティ（基底クラス: Memory, HpDropRate, DamageThisTurn, CounterCount等） | **完了** |
+| 2-4 | トラウマ率(TraumaRate) + IsTraumaAvoided() + FilterByTrauma() | **完了** |
+| 2-5 | HPスナップショット + HpDropRate → ShouldEscape連携 | **完了** |
+| 2-6 | 行動記録参照拡充（SkillUseCount, RecentActions, AllyDeathCount） | **完了** |
+| 2-7 | 逃走思考拡張（HP急減ボーナス統合） | **完了** |
+
+### 実装詳細
+
+- **BattleMemory**: `NormalEnemy`に`[NonSerialized]`で保持（lazy初期化）。`BaseStates.AIMemory`(virtual)でアクセス
+- **記録フック配置**: `DamageOnBattle()`内(被害+死亡)、`TryInterruptCounter()`内(カウンター)、`CommitDecision()`後(行動)、`SkillActRun()`各分岐末尾(HPスナップショット、思考完了後に記録)
+- **トラウマ**: Inspector設定4つ（`_traumaPerCounter`, `_traumaHpDropWeight`, `_traumaPerAllyDeath`, `_traumaCap`）で個体の感度調整。`FilterByTrauma()`はBasicTacticalAIで統合済み
+- **逃走拡張**: `ShouldEscape()`が`_escapeChance + HpDropRate × 0.2`で判定。virtualのため派生でトラウマ連携override可
 
 ### 設計上の重要決定
 
 - **BattleMemoryはNormalEnemyに保持**（SOに持たせない）。SO共有問題を回避。根拠: C (3.1)
 - **トラウマ回避は思慮レベル不問**（感情・本能軸）。被害記録の戦略利用は思慮レベル依存（知性軸）。根拠: C (3.6)
-- **トラウマ率上限0.8を設ける** + フィルタ後スキル0件ならフォールバック。根拠: F (1.4)
+- **トラウマ率上限0.8（デフォルト）** + フィルタ後スキル0件ならフォールバック。根拠: F (1.4)
 
 ### トラウマの体験設計
 

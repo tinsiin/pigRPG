@@ -26,6 +26,10 @@ public class NormalEnemy : BaseStates
 {
     [SerializeField] BattleAIBrain _brain;
     [SerializeField] private GrowthSettings _growthSettings;
+
+    // AI用戦闘記憶（個体ごとに保持、ランタイム専用）
+    [NonSerialized] private BattleMemory _aiMemory;
+    public override BattleMemory AIMemory => _aiMemory ??= new BattleMemory();
     private readonly Dictionary<GrowthStrategyType, IGrowthStrategy> _growthStrategies = new();
 
     /// <summary>

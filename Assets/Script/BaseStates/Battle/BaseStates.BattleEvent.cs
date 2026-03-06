@@ -953,6 +953,14 @@ public abstract partial class BaseStates
                         manager.Acts.Add(this,manager.GetCharacterFaction(this),"割り込みカウンター",null,isfreeze,null,CounterDEFATK);//通常の行動予約 
                     }
 
+                    // AI戦闘記憶: 攻撃者（カウンターされた側）の記憶に記録
+                    attacker.AIMemory?.RecordCounter(new CounterRecord
+                    {
+                        CounteredBy = this,
+                        SkillUsed = skill,
+                        Turn = manager?.BattleTurnCount ?? 0,
+                    });
+
                     //無効化は誰でも可能です　以下のtrueを返して、呼び出し側で今回の攻撃の無効化は行います。
                     return true;
                 }

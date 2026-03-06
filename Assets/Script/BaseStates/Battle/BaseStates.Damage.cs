@@ -607,12 +607,30 @@ public abstract partial class BaseStates
         var OverKillOverFlow = totalDmg - tempHP;//余剰ダメージ
 
         //死んだら攻撃者のOnKillを発生
-        if(Death())
+        bool died = Death();
+        if(died)
         {
             Atker.OnKill(this);//攻撃者のOnkill発生
 
             //overKillの処理
             OverKilledBrokenCalc(Atker,OverKillOverFlow);//攻撃者、引かれる前のHP,ダメージを渡す。
+        }
+
+        // AI戦闘記憶: 被害記録
+        AIMemory?.RecordDamage(new DamageRecord
+        {
+            Attacker = Atker,
+            Skill = skill,
+            Damage = totalDmg,
+            MentalDamage = totalMentalDmg,
+            HitResult = hitResult,
+            Turn = manager?.BattleTurnCount ?? 0,
+            ResultedInDeath = died,
+        });
+        // 自分が死亡した場合、味方全員の記憶にも死亡記録を残す
+        if (died)
+        {
+            NotifyAllyDeathToMemory(Atker, skill);
         }
 
         //もし"攻撃者が"割り込みカウンターパッシブだったら
@@ -779,6 +797,44 @@ public abstract partial class BaseStates
         // 以下は戦闘専用処理のため省略（連鎖・記録・割込み・OnKill/OverKill・生存チャンス・攻撃後パッシブ等）
 
         return dmg;
+    }
+
+    /// <summary>
+    /// 自分が死亡した時、味方全員のAI記憶に死亡記録を残す
+    /// </summary>
+    private void NotifyAllyDeathToMemory(BaseStates killer, BaseSkill killerSkill)
+    {
+        var group = manager?.MyGroup(this);
+        if (group?.Ours == null) return;
+        int turn = manager?.BattleTurnCount ?? 0;
+        var compat = group.CharaCompatibility;
+        foreach (var ally in group.Ours)
+        {
+            if (ally == null || ally == this || ally.Death()) continue;
+            // ally → this（死んだ味方）への相性値を取得
+            int affinity = compat != null && compat.TryGetValue((ally, this), out var v) ? v : 0;
+            ally.AIMemory?.RecordDeath(new DeathRecord
+            {
+                Victim = this,
+                Killer = killer,
+                KillerSkill = killerSkill,
+                Turn = turn,
+                IsSelf = false,
+                IsAlly = true,
+                Affinity = affinity,
+            });
+        }
+        // 自分自身の記憶にも死亡記録
+        AIMemory?.RecordDeath(new DeathRecord
+        {
+            Victim = this,
+            Killer = killer,
+            KillerSkill = killerSkill,
+            Turn = turn,
+            IsSelf = true,
+            IsAlly = false,
+            Affinity = 0,
+        });
     }
 
     /// <summary>
