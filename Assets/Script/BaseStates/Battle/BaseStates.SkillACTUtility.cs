@@ -6,6 +6,12 @@ using NRandom;
 using Cysharp.Threading.Tasks;
 using System.Linq;
 
+public enum FreezeResumeResult
+{
+    Cancelled,          // 打ち切りまたはエラー（DoNothingにすべき）
+    Resumed,            // 復元完了、操作不要（BMに委譲）
+    ResumedCanOperate   // 復元完了、操作可能（UI遷移 or AI思考が必要）
+}
 
 //戦闘などでスキル実行に伴う関数群
 //ある程度はっきりしてるのをここにおいて　細かい物はACTUtilityの方にある。
@@ -155,6 +161,42 @@ public abstract partial class BaseStates
     /// スキルが強制続行中かどうか
     /// </summary>
     public bool IsFreeze => FreezeUseSkill != null;
+
+    /// <summary>
+    /// Freeze状態のスキル復元を行う統一メソッド。
+    /// TurnExecutor（主人公側）と BattleAIBrain（AI側）の両方から呼ばれる。
+    /// 戻り値で呼び出し側が次の処理（UI遷移 or AI思考）を決める。
+    /// </summary>
+    public FreezeResumeResult ResumeFreezeSkill()
+    {
+        // 打ち切り予約がある場合は中止
+        if (IsDeleteMyFreezeConsecutive)
+        {
+            DeleteConsecutiveATK();
+            return FreezeResumeResult.Cancelled;
+        }
+
+        var skill = FreezeUseSkill;
+        if (skill == null)
+        {
+            Debug.LogError("ResumeFreezeSkill: FreezeUseSkill が null です");
+            return FreezeResumeResult.Cancelled;
+        }
+
+        // スキルと範囲を復元
+        NowUseSkill = skill;
+        RangeWill = FreezeRangeWill;
+
+        // 2回目以降かつ操作可能なら、呼び出し側で操作処理を行う
+        if (skill.NowConsecutiveATKFromTheSecondTimeOnward()
+            && skill.HasConsecutiveType(SkillConsecutiveType.CanOprate))
+        {
+            return FreezeResumeResult.ResumedCanOperate;
+        }
+
+        return FreezeResumeResult.Resumed;
+    }
+
     //  ==============================================================================================================================
     //                                              スキル連続攻撃強制続行　FreezeConsecuticve
     //  ==============================================================================================================================

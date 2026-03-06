@@ -68,14 +68,12 @@ public abstract class BattleAIBrain : ScriptableObject
         public BaseSkill Skill;
         public SkillZoneTrait? RangeWill;
         public DirectedWill? TargetWill;
-        public List<BaseStates> Targets;
         public bool IsEscape;
 
         public bool HasSkill => Skill != null;
         public bool HasRangeWill => RangeWill.HasValue;
         public bool HasTargetWill => TargetWill.HasValue;
-        public bool HasTargets => Targets != null && Targets.Count > 0;
-        public bool HasAny => HasSkill || HasRangeWill || HasTargetWill || HasTargets;
+        public bool HasAny => HasSkill || HasRangeWill || HasTargetWill || IsEscape;
     }
 
     // Inspector 変更時にポリシーの不正値を検証・矯正
@@ -260,40 +258,25 @@ public abstract class BattleAIBrain : ScriptableObject
 
 
     /// <summary>
-    /// 連続実行（Freeze）中のターンをAI側で強制的に処理する。
-    /// 味方側のACTPopに相当する分岐（NowUseSkill/RangeWillの復元）を再現し、
+    /// 連続実行（Freeze）中のターンをAI側で処理する。
+    /// スキル復元は BaseStates.ResumeFreezeSkill() に統一。
     /// 操作可能（CanOprate）な場合のみAIが範囲/対象を決めるフックを呼ぶ。
     /// </summary>
     protected void HandleFreezeContinuation()
     {
-        // プレイヤー側ACTPop相当: 連続実行(Freeze)の打ち切り予約がある場合は即時中止し、このターンは何もしない
-        if (user.IsDeleteMyFreezeConsecutive)
-        {
-            user.DeleteConsecutiveATK();      // 連続実行を破棄
-            manager.DoNothing = true;         // このターンは何もしない
-            Debug.Log(user.CharacterName + "（AI）は連続実行を中止し、何もしない");
-            return;                            // Freeze継続処理には進まない
-        }
+        var result = user.ResumeFreezeSkill();
 
-        var skill = user.FreezeUseSkill;
-        if (skill == null)
+        if (result == FreezeResumeResult.Cancelled)
         {
-            Debug.LogError("HandleFreezeContinuation: FreezeUseSkill が null です");
             manager.DoNothing = true;
             return;
         }
 
-        // 強制続行スキルの状態を復元
-        user.NowUseSkill = skill;
-        user.RangeWill   = user.FreezeRangeWill;
-
-        // 2回目以降かつ操作可能なら、AIで範囲/対象を決め直す
-        if (skill.NowConsecutiveATKFromTheSecondTimeOnward()
-            && skill.HasConsecutiveType(SkillConsecutiveType.CanOprate))
+        if (result == FreezeResumeResult.ResumedCanOperate)
         {
-            OnFreezeOperate(skill);
+            OnFreezeOperate(user.NowUseSkill);
         }
-        // 操作不可の場合は何もせずBMの後段フロー（SelectTargetFromWill→SkillACT）に委譲
+        // Resumed: 操作不可の場合は何もせずBMの後段フロー（SelectTargetFromWill→SkillACT）に委譲
     }
 
 
@@ -444,13 +427,6 @@ public abstract class BattleAIBrain : ScriptableObject
             ResultSkill = SingleBestDamageAnalyzer(availableSkills, ResultTarget);
         }
 
-        foreach(var skill in availableSkills)
-        {
-            foreach(var target in potentialTargets)
-            {
-                var damage = target.SimulateDamage(manager.Acter, skill, _damageSimulatePolicy);
-            }
-        }
         return new BruteForceResult
         {
             Skill = ResultSkill,

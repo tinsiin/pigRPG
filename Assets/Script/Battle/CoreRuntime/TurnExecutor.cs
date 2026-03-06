@@ -87,23 +87,17 @@ public sealed class TurnExecutor
             }
             else
             {
-                if (_context.Acter.IsDeleteMyFreezeConsecutive)
+                var freezeResult = _context.Acter.ResumeFreezeSkill();
+                if (freezeResult == FreezeResumeResult.Cancelled)
                 {
-                    _context.Acter.DeleteConsecutiveATK();
                     _context.DoNothing = true;
                     _context.Logger.Log(_context.Acter.CharacterName + "（主人公キャラ）は何もしない");
                     return TabState.NextWait;
                 }
-
-                var skill = _context.Acter.FreezeUseSkill;
-                _context.Acter.RangeWill = _context.Acter.FreezeRangeWill;
-                _context.Acter.NowUseSkill = skill;
-
-                if (skill.NowConsecutiveATKFromTheSecondTimeOnward()
-                    && skill.HasConsecutiveType(SkillConsecutiveType.CanOprate))
+                if (freezeResult == FreezeResumeResult.ResumedCanOperate)
                 {
                     _context.Logger.Log(_context.Acter.CharacterName + "（主人公キャラ）は連続攻撃中の操作へ");
-                    return AllyClass.DetermineNextUIState(skill);
+                    return AllyClass.DetermineNextUIState(_context.Acter.NowUseSkill);
                 }
             }
         }
