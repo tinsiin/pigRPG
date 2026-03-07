@@ -269,6 +269,7 @@ public sealed class TargetingService
             {
                 context.AppendTopMessage?.Invoke("テラーズヒット");
                 targets.Add(selectGroup.InstantVanguard);
+                selectGroup.InstantVanguard.AIMemory?.RecordShield(new ShieldRecord { Attacker = acter });
                 _logger.Log(acter.CharacterName + "は後衛を狙ったが前のめりしてる奴に阻まれた");
             }
             else
@@ -367,6 +368,7 @@ public sealed class TargetingService
             {
                 context.AppendTopMessage?.Invoke("テラーズヒット");
                 targets.Add(selectGroup.InstantVanguard);
+                selectGroup.InstantVanguard.AIMemory?.RecordShield(new ShieldRecord { Attacker = acter });
                 _logger.Log(acter.CharacterName + "は後衛を狙ったが前のめりしてる奴に阻まれた");
             }
             else

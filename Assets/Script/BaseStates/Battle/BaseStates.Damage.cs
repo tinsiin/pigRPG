@@ -800,7 +800,8 @@ public abstract partial class BaseStates
     }
 
     /// <summary>
-    /// 自分が死亡した時、味方全員のAI記憶に死亡記録を残す
+    /// 自分が死亡した時、味方全員のAI記憶に死亡記録を残す。
+    /// 加えて敵グループにも「敵を倒した」記録を残す（PostBattleBondCalculator用）。
     /// </summary>
     private void NotifyAllyDeathToMemory(BaseStates killer, BaseSkill killerSkill)
     {
@@ -835,6 +836,24 @@ public abstract partial class BaseStates
             IsAlly = false,
             Affinity = 0,
         });
+
+        // 敵グループに「敵を倒した」記録を残す（CalcKillBonus用）
+        var opposingGroup = (group == manager.AllyGroup) ? manager.EnemyGroup : manager.AllyGroup;
+        if (opposingGroup?.Ours == null) return;
+        foreach (var enemy in opposingGroup.Ours)
+        {
+            if (enemy == null || enemy.Death()) continue;
+            enemy.AIMemory?.RecordDeath(new DeathRecord
+            {
+                Victim = this,
+                Killer = killer,
+                KillerSkill = killerSkill,
+                Turn = turn,
+                IsSelf = false,
+                IsAlly = false,
+                Affinity = 0,
+            });
+        }
     }
 
     /// <summary>

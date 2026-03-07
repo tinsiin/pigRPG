@@ -30,6 +30,25 @@ public class NormalEnemy : BaseStates
     // AI用戦闘記憶（個体ごとに保持、ランタイム専用）
     [NonSerialized] private BattleMemory _aiMemory;
     public override BattleMemory AIMemory => _aiMemory ??= new BattleMemory();
+
+    // 相性値変動の永続化（個体ごと、ランタイム専用）
+    // キー = 相手のEnemyGuid, 値 = CSV基礎値からの累積変動量（+/-）
+    [NonSerialized] private Dictionary<string, int> _bondDeltas = new();
+
+    public void RecordBondDelta(string otherGuid, int delta)
+    {
+        if (string.IsNullOrEmpty(otherGuid) || delta == 0) return;
+        _bondDeltas.TryGetValue(otherGuid, out var current);
+        _bondDeltas[otherGuid] = current + delta;
+    }
+
+    public int GetBondDelta(string otherGuid)
+    {
+        if (string.IsNullOrEmpty(otherGuid)) return 0;
+        _bondDeltas.TryGetValue(otherGuid, out var delta);
+        return delta;
+    }
+
     private readonly Dictionary<GrowthStrategyType, IGrowthStrategy> _growthStrategies = new();
 
     /// <summary>
@@ -340,6 +359,7 @@ public class NormalEnemy : BaseStates
         clone._brain = this._brain;            // AIをコピー
 
         // 新個体として新しいGUIDを発行（テンプレートのGUIDは引き継がない）
+        // _bondDeltas は意図的にコピーしない（新個体は空の関係性から始まる。GUIDも新規なので旧データは参照不可）
         clone._enemyGuid = System.Guid.NewGuid().ToString();
 
         /*clone.broken = this.broken;

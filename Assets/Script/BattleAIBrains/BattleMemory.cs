@@ -21,6 +21,11 @@ public class BattleMemory
     private readonly List<CounterRecord> _counterRecords = new();
     public IReadOnlyList<CounterRecord> CounterRecords => _counterRecords;
 
+    // ── かばい記録（テラーズヒット）────────────────────────────
+    private readonly List<ShieldRecord> _shieldRecords = new();
+    public IReadOnlyList<ShieldRecord> ShieldRecords => _shieldRecords;
+    public int ShieldCount => _shieldRecords.Count;
+
     // ── 死亡記録 ──────────────────────────────────────────────
     private readonly List<DeathRecord> _deathRecords = new();
     public IReadOnlyList<DeathRecord> DeathRecords => _deathRecords;
@@ -43,9 +48,26 @@ public class BattleMemory
         _actionRecords.Add(record);
     }
 
+    /// <summary>
+    /// 直近の行動記録にターゲットを補填する。
+    /// AIの行動決定時点ではBM側のターゲット解決が未完了のため、スキル実行後に呼ぶ。
+    /// </summary>
+    public void PatchLastActionTargets(List<BaseStates> targets)
+    {
+        if (_actionRecords.Count == 0) return;
+        var last = _actionRecords[_actionRecords.Count - 1];
+        last.Targets = targets;
+        _actionRecords[_actionRecords.Count - 1] = last;
+    }
+
     public void RecordCounter(CounterRecord record)
     {
         _counterRecords.Add(record);
+    }
+
+    public void RecordShield(ShieldRecord record)
+    {
+        _shieldRecords.Add(record);
     }
 
     public void RecordDeath(DeathRecord record)
@@ -164,6 +186,7 @@ public class BattleMemory
         _damageRecords.Clear();
         _actionRecords.Clear();
         _counterRecords.Clear();
+        _shieldRecords.Clear();
         _deathRecords.Clear();
         LastTurnHP = 0f;
         LastTurnMentalHP = 0f;
@@ -194,7 +217,7 @@ public struct DamageRecord
 public struct ActionRecord
 {
     public BaseSkill Skill;
-    public BaseStates Target;
+    public List<BaseStates> Targets;
     public int Turn;
     public bool WasEscape;
 }
@@ -207,6 +230,14 @@ public struct CounterRecord
     public BaseStates CounteredBy;
     public BaseSkill SkillUsed;    // カウンターされた時に自分が使っていたスキル
     public int Turn;
+}
+
+/// <summary>
+/// かばい記録（テラーズヒットで味方の代わりにダメージを引き受けた）
+/// </summary>
+public struct ShieldRecord
+{
+    public BaseStates Attacker;  // テラーズヒットを仕掛けてきた攻撃者
 }
 
 /// <summary>

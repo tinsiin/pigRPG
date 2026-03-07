@@ -382,10 +382,12 @@ public class EncounterEnemySelector
                 var first = resultList[i];
                 var second = resultList[j];
                 if (first == null || second == null) continue;
-                var compatibilityValue = _matchCalc.GetImpressionMatchPercent(first.MyImpression, second.MyImpression);
-                compatibilityData[(first, second)] = compatibilityValue;
-                compatibilityValue = _matchCalc.GetImpressionMatchPercent(second.MyImpression, first.MyImpression);
-                compatibilityData[(second, first)] = compatibilityValue;
+                // CSV基礎値 + 永続化された相性変動値の合算
+                var bondAvg = (first.GetBondDelta(second.EnemyGuid) + second.GetBondDelta(first.EnemyGuid)) / 2;
+                var compatAB = _matchCalc.GetImpressionMatchPercent(first.MyImpression, second.MyImpression);
+                compatibilityData[(first, second)] = Mathf.Clamp(compatAB + bondAvg, 0, 160);
+                var compatBA = _matchCalc.GetImpressionMatchPercent(second.MyImpression, first.MyImpression);
+                compatibilityData[(second, first)] = Mathf.Clamp(compatBA + bondAvg, 0, 160);
             }
         }
 

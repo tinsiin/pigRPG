@@ -363,12 +363,18 @@ public class BattleGroup
     /// </summary>
     public List<BaseStates> Ours {  get; private set; }
     /// <summary>
-    ///グループから逃走処理
-    ///逃走時コールバックとキャラクターの消去
+    /// 戦闘中に逃走した敵の記録（PostBattleBondCalculator用）
+    /// </summary>
+    private readonly List<NormalEnemy> _escapedMembers = new();
+    public IReadOnlyList<NormalEnemy> EscapedMembers => _escapedMembers;
+
+    /// <summary>
+    /// グループから逃走処理。逃走時コールバックとキャラクターの消去
     /// </summary>
     public void EscapeAndRemove(NormalEnemy chara)
     {
         Ours.Remove(chara);
+        _escapedMembers.Add(chara);
         chara.OnRunOut();//逃走コールバック
     }
 

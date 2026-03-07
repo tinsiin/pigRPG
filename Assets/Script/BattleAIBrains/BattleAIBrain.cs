@@ -257,7 +257,7 @@ public abstract partial class BattleAIBrain : ScriptableObject
                 user.AIMemory?.RecordAction(new ActionRecord
                 {
                     Skill = decision.Skill,
-                    Target = null, // ターゲットはBM側で最終決定されるためここでは未確定
+                    Targets = null, // ターゲットはBM側で最終決定されるためここでは未確定（PatchLastActionTargetsで補填）
                     Turn = TurnCount,
                     WasEscape = decision.IsEscape,
                 });

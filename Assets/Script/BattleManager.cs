@@ -423,6 +423,9 @@ public class BattleManager : IBattleContext
         var progress = metaProvider != null ? metaProvider.GlobalSteps : 0;
         EnemyGroup.RecovelyStart(progress);
 
+        // 戦闘後相性値変動（PostBattle行動の前に計算し、変動後の値を利他行動システムが読む）
+        PostBattleBondCalculator.Apply(EnemyGroup);
+
         //敵グループの終了時のスキルAI
         EnemyGroup.EnemiesBattleEndSkillAI();
 

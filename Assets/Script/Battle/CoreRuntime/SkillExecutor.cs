@@ -58,6 +58,15 @@ public sealed class SkillExecutor
             _context.Unders,
             _presentation.AppendTopMessage);
 
+        // AIの行動記録にターゲットを補填（AI決定時点ではBM未解決だったため）
+        if (_context.Unders.Count > 0)
+        {
+            var targets = new List<BaseStates>();
+            for (int i = 0; i < _context.Unders.Count; i++)
+                targets.Add(_context.Unders.GetAtCharacter(i));
+            acter.AIMemory?.PatchLastActionTargets(targets);
+        }
+
         BeVanguardSkillACT();
 
         if (_context.Unders.Count < 1)
