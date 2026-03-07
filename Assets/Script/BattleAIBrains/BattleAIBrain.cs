@@ -343,6 +343,15 @@ public abstract class BattleAIBrain : ScriptableObject
     /// </summary>
     protected void HandleFreezeContinuation()
     {
+        // Freeze中断判断フック（派生AIでoverride可能）
+        if (ShouldAbortFreeze())
+        {
+            LogThink(0, "Freeze中断を選択");
+            user.DeleteConsecutiveATK();
+            manager.DoNothing = true;
+            return;
+        }
+
         var result = user.ResumeFreezeSkill();
 
         if (result == FreezeResumeResult.Cancelled)
@@ -387,6 +396,13 @@ public abstract class BattleAIBrain : ScriptableObject
         //デフォルトでは何もしないがabstractにするとわざわざ必ず派生で実装する必要があるので、
         //virtualにしておく。
     }
+
+    /// <summary>
+    /// Freeze継続中に中断するかどうかの判断フック。
+    /// ResumeFreezeSkillの前に呼ばれる。派生AIでoverrideして条件を設定できる。
+    /// trueを返すとFreeze強制解除 → DoNothing。
+    /// </summary>
+    protected virtual bool ShouldAbortFreeze() => false;
     
         
 
@@ -539,6 +555,74 @@ public abstract class BattleAIBrain : ScriptableObject
             RollBackCount = skill.TriggerRollBack,
             CanCancel = skill.CanCancelTrigger,
         };
+    }
+
+
+    // ---------- Freeze情報・カウンターリスク推定 ----------------------------------
+
+    protected struct FreezeInfo
+    {
+        public BaseSkill Skill;           // 凍結中のスキル
+        public bool IsFreeze;             // 凍結中か
+        public SkillZoneTrait RangeWill;  // 凍結中の範囲
+        public bool CanOperate;           // 操作可能（範囲/対象を変更できる）か
+        public bool WillBeDeleted;        // 次ターンで打ち切り予約があるか
+    }
+
+    /// <summary>
+    /// 自キャラのFreeze状態を一括取得する
+    /// </summary>
+    protected FreezeInfo GetFreezeInfo()
+    {
+        if (user == null) return default;
+        var skill = user.FreezeUseSkill;
+        return new FreezeInfo
+        {
+            Skill = skill,
+            IsFreeze = user.IsFreeze,
+            RangeWill = user.FreezeRangeWill,
+            CanOperate = skill != null
+                && skill.NowConsecutiveATKFromTheSecondTimeOnward()
+                && skill.HasConsecutiveType(SkillConsecutiveType.CanOprate),
+            WillBeDeleted = user.IsDeleteMyFreezeConsecutive,
+        };
+    }
+
+    /// <summary>
+    /// ターゲットにカウンターされるリスクを推定する (0.0~1.0)。
+    /// TryInterruptCounterのロジックを確率論的に簡易近似。乱数は使わない。
+    /// </summary>
+    protected float EstimateCounterRisk(BaseStates target, BaseSkill skill)
+    {
+        if (target == null || skill == null || user == null) return 0f;
+        if (!target.IsInterruptCounterActive) return 0f;
+        // カウンター側のPowerLevelがMedium未満なら発動不可
+        if (target.NowPower < PowerLevel.Medium) return 0f;
+
+        // Gate 1: DEFATK/3 + Vond差補正
+        var userVond = user.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Vond);
+        var targetVond = target.TenDayValuesBase().GetValueOrZero(TenDayAbility.Vond);
+        float vondBonus = targetVond > userVond ? (targetVond - userVond) * 0.01f : 0f;
+        float gate1 = Mathf.Clamp01(skill.DEFATK / 3f + vondBonus);
+
+        // Gate 2: カウンター側 vs 攻撃側の能力値比較
+        var targetPD = target.TenDayValuesBase().GetValueOrZero(TenDayAbility.PersonaDivergence);
+        var targetTV = target.TenDayValuesBase().GetValueOrZero(TenDayAbility.TentVoid);
+        var userSort = user.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Sort);
+        var userRain = user.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.Rain);
+        var userCold = user.TenDayValuesForSkill().GetValueOrZero(TenDayAbility.ColdHeartedCalm);
+
+        float exVoid = 10f; // Tuning?.ExplosionVoidValueのデフォルト近似
+        float denom = targetTV - exVoid;
+        // counterValueは負になりうる（targetTV < exVoidの場合）が、その場合gate2 ≤ 0 → Clamp01で0になり実害なし
+        float counterValue = (targetVond + (Mathf.Abs(denom) > 0.01f ? targetPD / denom : 0f)) * 0.9f;
+        float attackerValue = Mathf.Max(userSort - userRain / 3f, 0f) + userCold;
+
+        float total = counterValue + attackerValue;
+        float gate2 = total > 0.01f ? counterValue / total : 0f;
+
+        // Gate 3: 50%固定判定
+        return Mathf.Clamp01(gate1 * gate2 * 0.5f);
     }
 
 
@@ -1170,6 +1254,14 @@ public abstract class BattleAIBrain : ScriptableObject
     [SerializeField, Range(0f, 1f)] private float _escapeChance = 0f;
     [SerializeField] private bool _canEscape = false;
 
+    [Header("思慮推測レベル（3軸パーソナリティ: 知性軸）")]
+    [Tooltip("0=情報読みなし, 1=HP・基本判断, 2=パッシブ読み(不完全)+カウンターリスク推定, 3=高精度パッシブ+ポイント推測")]
+    [SerializeField, Range(0, 3)] private int _deliberationLevel = 0;
+
+    [Header("精神レベル（3軸パーソナリティ: EQ軸）")]
+    [Tooltip("0=精神判断なし(物理のみ), 1=精神HP削れ認識, 2=精神属性相性活用, 3=物理vs精神の最適判断")]
+    [SerializeField, Range(0, 3)] private int _spiritualLevel = 0;
+
     [Header("トラウマ設定")]
     [Tooltip("カウンター1回あたりのトラウマ率上昇量")]
     [SerializeField, Range(0f, 0.3f)] private float _traumaPerCounter = 0.15f;
@@ -1290,14 +1382,42 @@ public abstract class BattleAIBrain : ScriptableObject
     }
 
     /// <summary>
-    /// ポリシーに応じてダメージまたは期待ダメージを返す（分析関数内部用）
+    /// ポリシーに応じてダメージまたは期待ダメージを返す（分析関数内部用）。
+    /// 精神レベルに応じてdamageType/spiritualModifierを動的に調整する。
     /// </summary>
     private float EvaluateDamage(BaseStates target, BaseSkill skill)
     {
-        float damage = target.SimulateDamage(user, skill, _damageSimulatePolicy);
-        if (_damageSimulatePolicy.useExpectedDamage)
+        var policy = GetSpirituallyAwarePolicy(target);
+        float damage = EvaluateDamageWithPolicy(target, skill, policy);
+
+        // Lv3: 物理と精神の両方を評価し、高い方を採用
+        if (_spiritualLevel >= 3)
         {
-            var hitPolicy = _damageSimulatePolicy.considerVanguardForHit && manager != null
+            var altPolicy = policy;
+            altPolicy.damageType = policy.damageType == SimulateDamageType.dmg
+                ? SimulateDamageType.mentalDmg
+                : SimulateDamageType.dmg;
+            altPolicy.spiritualModifier = true;
+            float altDamage = EvaluateDamageWithPolicy(target, skill, altPolicy);
+            if (altDamage > damage)
+            {
+                LogThink(3, () => $"  精神Lv3切替: {altPolicy.damageType}の方が有効 ({altDamage:F1} > {damage:F1})");
+                damage = altDamage;
+            }
+        }
+
+        return damage;
+    }
+
+    /// <summary>
+    /// 指定ポリシーでダメージ（or期待ダメージ）を評価する内部ヘルパー
+    /// </summary>
+    private float EvaluateDamageWithPolicy(BaseStates target, BaseSkill skill, SkillAnalysisPolicy policy)
+    {
+        float damage = target.SimulateDamage(user, skill, policy);
+        if (policy.useExpectedDamage)
+        {
+            var hitPolicy = policy.considerVanguardForHit && manager != null
                 ? HitSimulatePolicy.FromBattleState(manager, user, target)
                 : HitSimulatePolicy.Minimal;
             float hitRate = target.SimulateHitRate(user, skill, hitPolicy);
@@ -1305,6 +1425,36 @@ public abstract class BattleAIBrain : ScriptableObject
             damage *= hitRate;
         }
         return damage;
+    }
+
+    /// <summary>
+    /// 精神レベルに応じてSkillAnalysisPolicyを動的に調整する。
+    /// Lv0: 変更なし（Inspector設定のまま）
+    /// Lv1: ターゲットの精神HPが物理HPより削れているなら精神ダメージを狙う
+    /// Lv2: さらに精神属性相性を考慮
+    /// Lv3: GetSpirituallyAwarePolicyではLv2と同じ。EvaluateDamage側で両方比較
+    /// </summary>
+    private SkillAnalysisPolicy GetSpirituallyAwarePolicy(BaseStates target)
+    {
+        var policy = _damageSimulatePolicy;
+        if (_spiritualLevel <= 0 || target == null) return policy;
+
+        // Lv1+: ターゲットの精神HPが物理HPより削れていたら精神ダメージモードに切り替え
+        float targetHpRatio = target.MaxHP > 0 ? target.HP / target.MaxHP : 1f;
+        float targetMentalRatio = target.MentalMaxHP > 0 ? target.MentalHP / target.MentalMaxHP : 1f;
+        if (targetMentalRatio < targetHpRatio)
+        {
+            policy.damageType = SimulateDamageType.mentalDmg;
+            LogThink(3, () => $"  精神Lv{_spiritualLevel}: 精神HP({targetMentalRatio:P0})が物理HP({targetHpRatio:P0})より削れている → mentalDmg");
+        }
+
+        // Lv2+: 精神属性相性を考慮
+        if (_spiritualLevel >= 2)
+        {
+            policy.spiritualModifier = true;
+        }
+
+        return policy;
     }
 
     // --- 1-7: スキル名検索ヘルパー ---
@@ -1347,6 +1497,57 @@ public abstract class BattleAIBrain : ScriptableObject
     /// 味方の死亡数（自分を含まない）
     /// </summary>
     protected int AllyDeathCount => Memory?.AllyDeathCount ?? 0;
+
+    // ── Phase 3 思慮推測レベル・パッシブ読み ────────────────────────────
+
+    /// <summary>
+    /// 思慮推測レベル（0-3）。派生AIでの条件分岐用プロパティ。
+    /// </summary>
+    protected int DeliberationLevel => _deliberationLevel;
+
+    /// <summary>
+    /// 精神レベル（0-3）。派生AIでの条件分岐用プロパティ。
+    /// </summary>
+    protected int SpiritualLevel => _spiritualLevel;
+
+    /// <summary>
+    /// ターゲットのパッシブリストを思慮レベルに応じてフィルタしたコピーを返す。
+    /// 直接参照を返さないことで戦闘システムへの副作用を防止する。
+    /// Lv0-1: 空リスト（パッシブ読み不可）
+    /// Lv2: 各パッシブに30%の見落とし確率
+    /// Lv3: 各パッシブに10%の見落とし確率（100%にはしない）
+    /// </summary>
+    protected List<BasePassive> ReadTargetPassives(BaseStates target)
+    {
+        if (target == null || _deliberationLevel <= 1) return new List<BasePassive>();
+
+        var passives = target.Passives;
+        if (passives == null || passives.Count == 0) return new List<BasePassive>();
+
+        // コピーを作成（直接参照で戦闘システム破壊を防ぐ）
+        var result = new List<BasePassive>(passives.Count);
+        float perceptionRate = _deliberationLevel >= 3 ? 0.9f : 0.7f;
+        foreach (var p in passives)
+        {
+            if (p != null && Roll(perceptionRate))
+                result.Add(p);
+        }
+
+        LogThink(2, $"パッシブ読み(Lv{_deliberationLevel}): {target.CharacterName} → {result.Count}/{passives.Count}件認識");
+        return result;
+    }
+
+    /// <summary>
+    /// ターゲットが特定IDのパッシブを持っているか推定する（思慮レベル依存）。
+    /// Lv0-1: 常にfalse。Lv2: 70%の認識率。Lv3: 90%の認識率。
+    /// </summary>
+    protected bool CanSeePassive(BaseStates target, int passiveId)
+    {
+        if (target == null || _deliberationLevel <= 1) return false;
+        if (!target.HasPassive(passiveId)) return false;
+        float rate = _deliberationLevel >= 3 ? 0.9f : 0.7f;
+        return Roll(rate);
+    }
 
     // =============================================================================
     // 思考部品のパーツ

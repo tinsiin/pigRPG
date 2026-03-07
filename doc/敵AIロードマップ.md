@@ -119,17 +119,17 @@ AIの判断過程を追跡するログ基盤。
 
 ---
 
-## Phase 3: 高度な要素（~400-800行追加）
+## Phase 3: 高度な要素 → 完了
 
 **目標:** 高知能ボスキャラの実現
 
-| 順序 | 作業 | 行数目安 | 根拠 |
-|---|---|---|---|
-| 3-1 | ShouldAbortFreeze() virtualフック | 5-10 | E |
-| 3-2 | GetFreezeInfo / EstimateCounterRisk | 60-100 | E |
-| 3-3 | ReadTargetPassives + 思慮レベル可視性 | 80-120 | E |
-| 3-4 | 思慮推測レベル基盤（_deliberationLevel） | 150-300 | C, E |
-| 3-5 | 精神レベル基盤（damageType切り替え、spiritualModifier活用） | 80-120 | D, 第一次6.3 |
+| 順序 | 作業 | 状態 |
+|---|---|---|
+| 3-1 | ShouldAbortFreeze() virtualフック | **完了** |
+| 3-2 | GetFreezeInfo / EstimateCounterRisk | **完了** |
+| 3-3 | ReadTargetPassives + 思慮レベル可視性 | **完了** |
+| 3-4 | 思慮推測レベル基盤（_deliberationLevel） | **完了** |
+| 3-5 | 精神レベル基盤（damageType切り替え、spiritualModifier活用） | **完了** |
 
 ### 3軸パーソナリティ
 
@@ -139,11 +139,24 @@ AIの判断過程を追跡するログ基盤。
 トラウマ率    = 感情反応（カウンターされた恐怖、HP急減の記憶）
 ```
 
-### 注意事項
+### 実装詳細
+
+- **ShouldAbortFreeze()**: `HandleFreezeContinuation()`内で`ResumeFreezeSkill()`の**前**に呼ばれるvirtualフック（デフォルトfalse）。trueなら`DeleteConsecutiveATK()` → `DoNothing`
+- **FreezeInfo**: Freeze状態を一括取得する構造体（Skill, IsFreeze, RangeWill, CanOperate, WillBeDeleted）
+- **EstimateCounterRisk(target, skill)**: TryInterruptCounterのロジックを確率論的に近似（Gate1:DEFATK/Vond差 × Gate2:能力値比較 × Gate3:50%固定）
+- **_deliberationLevel** (0-3): Inspectorフィールド。`ReadTargetPassives()`の認識率を制御（Lv0-1:空, Lv2:70%, Lv3:90%）
+- **_spiritualLevel** (0-3): Inspectorフィールド。`EvaluateDamage()`内部で`GetSpirituallyAwarePolicy()`を通じてdamageType/spiritualModifierを動的調整
+- **ReadTargetPassives(target)**: target.Passivesの**コピー**を返す（直接参照防止）。思慮レベルで認識率フィルタ
+- **CanSeePassive(target, passiveId)**: 特定パッシブの認識判定（思慮レベル依存）
+- **EvaluateDamageWithPolicy**: EvaluateDamageから抽出した内部ヘルパー。精神Lv3の両面比較で使用
+
+### 設計上の重要決定
 
 - ShouldAbortFreeze()は**ResumeFreezeSkillの前に呼ぶこと**（後だと状態不整合）。根拠: F (#3)
 - ReadTargetPassivesは**target.Passivesのコピーを返すこと**（直接参照で戦闘システム破壊）。根拠: F (1.2)
-- 思慮レベル3でもパッシブ読み精度は100%にしない（「ズルい」と感じさせない）。根拠: G (2.2, 2.6)
+- 思慮レベル3でもパッシブ読み精度は100%にしない（90%）。根拠: G (2.2, 2.6)
+- 精神レベルは思慮推測レベルと**独立軸**。思慮が低くても精神が高ければ精神攻めは鋭い。根拠: D, 第一次6.3
+- EstimateCounterRiskのExplosionVoidValueは10f固定近似（意図的不完全性）
 
 ---
 
