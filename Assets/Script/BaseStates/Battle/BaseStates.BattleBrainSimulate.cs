@@ -134,12 +134,12 @@ public abstract partial class BaseStates
 
         //防御力（ポリシーに応じた簡易/完全シミュレーション）
         StatesPowerBreakdown def;
-        if (policy.SimlatePerfectEnemyDEF)
+        if (policy.SimulatePerfectEnemyDEF)
         {
             // 従来通りの完全なDEF計算を使用（パッシブ補正やAimStyle排他などすべて含む）
             def = DEF();
         }
-        else if (policy.SimlateEnemyDEF)
+        else if (policy.SimulateEnemyDEF)
         {
             // 基本防御力のみ：b_b_def + 共通TenDay係数（AimStyle排他・パッシブ補正などは含めない）
             var basic = new StatesPowerBreakdown(new TenDayAbilityDictionary(), b_b_def);
@@ -183,7 +183,7 @@ public abstract partial class BaseStates
         }
 
         //追加HP（バリア層）のシミュレート処理（オプション）
-        if(policy.SimlateVitalLayerPenetration)
+        if(policy.SimulateVitalLayerPenetration)
         {
             SimulateBarrierLayers(ref dmg, ref mentalDmg, attacker, skill);
         }
