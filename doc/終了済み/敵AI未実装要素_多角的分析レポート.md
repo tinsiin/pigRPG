@@ -6,6 +6,8 @@
 分析対象: 敵AI仕様書 セクション11（未実装・将来構想）
 前提: 11.6「AI思考要素の実装粒度の判断基準」（情報取得/判断ロジック/操作の3層フレームワーク）
 
+> **実装状況（2026-03-07更新）:** 本レポートの提案に基づくPhase 1〜3は全て実装完了。詳細は `doc/終了済み/敵AIロードマップ.md` 参照。Phase 4（AIAPI）は将来構想として保留。
+
 ---
 
 ## 目次
@@ -898,48 +900,48 @@ protected List<PassiveSnapshot> ReadTargetPassives(BaseStates target, int insigh
 
 ## 7. 統合ロードマップ
 
-### Phase 1: 基盤整備（200-400行追加）
+### Phase 1: 基盤整備 → ✅完了
 
 **目標:** BasicTacticalAIが書けるだけの部品を揃える
 
-| 順序 | 作業 | 行数目安 | 提案元 |
-|---|---|---|---|
-| 1-1 | 自HP/精神HP情報取得（HpRatio等） | 20-40行 | A, D |
-| 1-2 | ターン数取得の整備 | 10-20行 | A, D |
-| 1-3 | 敵グループ列挙ヘルパー | 20-30行 | D |
-| 1-4 | ShouldEscape() virtual + Inspector逃走パラメータ | 30-50行 | A |
-| 1-5 | SimulateHitRate + HitSimulatePolicy | 80-150行 | B |
-| 1-6 | SkillAnalysisPolicy.useExpectedDamage統合 | 30-50行 | B |
-| 1-7 | FindSkill(name/id) ヘルパー | 10-15行 | A |
-| 1-8 | BasicTacticalAI作成（実証） | 60-100行 | D |
+| 順序 | 作業 | 行数目安 | 提案元 | 状態 |
+|---|---|---|---|---|
+| 1-1 | 自HP/精神HP情報取得（HpRatio等） | 20-40行 | A, D | **完了** |
+| 1-2 | ターン数取得の整備 | 10-20行 | A, D | **完了** |
+| 1-3 | 敵グループ列挙ヘルパー | 20-30行 | D | **完了** |
+| 1-4 | ShouldEscape() virtual + Inspector逃走パラメータ | 30-50行 | A | **完了** |
+| 1-5 | SimulateHitRate + HitSimulatePolicy | 80-150行 | B | **完了** |
+| 1-6 | SkillAnalysisPolicy.useExpectedDamage統合 | 30-50行 | B | **完了** |
+| 1-7 | FindSkill(name/id) ヘルパー | 10-15行 | A | **完了** |
+| 1-8 | BasicTacticalAI作成（実証） | 60-100行 | D | **完了** |
 
-### Phase 2: 記憶・学習（300-500行追加）
+### Phase 2: 記憶・学習 → ✅完了
 
 **目標:** 敵キャラごとの個性と深みを出す
 
-| 順序 | 作業 | 行数目安 | 提案元 |
-|---|---|---|---|
-| 2-1 | BattleMemory + DamageRecord/ActionRecord | 100-150行 | C |
-| 2-2 | 被害記録の書き込みフック（BM側） | 20-30行 | C |
-| 2-3 | 記録参照ユーティリティ（基底クラス） | 40-60行 | C |
-| 2-4 | トラウマ率 + IsTraumaAvoided() | 60-100行 | C |
-| 2-5 | _lastTurnHP + HpDropRate | 15-25行 | A |
-| 2-6 | 行動記録参照 | 30-50行 | C, D |
-| 2-7 | 逃走思考（上級: トラウマ連携） | 40-60行 | A |
+| 順序 | 作業 | 行数目安 | 提案元 | 状態 |
+|---|---|---|---|---|
+| 2-1 | BattleMemory + DamageRecord/ActionRecord | 100-150行 | C | **完了** |
+| 2-2 | 被害記録の書き込みフック（BM側） | 20-30行 | C | **完了** |
+| 2-3 | 記録参照ユーティリティ（基底クラス） | 40-60行 | C | **完了** |
+| 2-4 | トラウマ率 + IsTraumaAvoided() | 60-100行 | C | **完了** |
+| 2-5 | _lastTurnHP + HpDropRate | 15-25行 | A | **完了** |
+| 2-6 | 行動記録参照 | 30-50行 | C, D | **完了** |
+| 2-7 | 逃走思考（上級: トラウマ連携） | 40-60行 | A | **完了** |
 
-### Phase 3: 高度な要素（400-800行追加）
+### Phase 3: 高度な要素 → ✅完了
 
 **目標:** 高知能キャラの実現、体系的な賢さの管理
 
-| 順序 | 作業 | 行数目安 | 提案元 |
-|---|---|---|---|
-| 3-1 | ShouldAbortFreeze() virtualフック | 5-10行 | E |
-| 3-2 | GetFreezeInfo / EstimateCounterRisk | 60-100行 | E |
-| 3-3 | ReadTargetPassives + 思慮レベル可視性 | 80-120行 | E |
-| 3-4 | 思慮推測レベル基盤（_deliberationLevel） | 150-300行 | C, E |
-| 3-5 | 精神レベル基盤（damageType切り替え、spiritualModifier活用判断） | 80-120行 | D, 補足6.3 |
+| 順序 | 作業 | 行数目安 | 提案元 | 状態 |
+|---|---|---|---|---|
+| 3-1 | ShouldAbortFreeze() virtualフック | 5-10行 | E | **完了** |
+| 3-2 | GetFreezeInfo / EstimateCounterRisk | 60-100行 | E | **完了** |
+| 3-3 | ReadTargetPassives + 思慮レベル可視性 | 80-120行 | E | **完了** |
+| 3-4 | 思慮推測レベル基盤（_deliberationLevel） | 150-300行 | C, E | **完了** |
+| 3-5 | 精神レベル基盤（damageType切り替え、spiritualModifier活用判断） | 80-120行 | D, 補足6.3 | **完了** |
 
-### Phase 4: 構想段階
+### Phase 4: 将来構想（保留）
 
 - AIAPI（情報取得ユーティリティをJSON化して共通基盤に）
 - 戦闘後AI自動選定エンジン（11.7）

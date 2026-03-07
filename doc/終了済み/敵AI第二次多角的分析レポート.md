@@ -1,9 +1,11 @@
 # 敵AI 第二次多角的分析レポート
 
-本書は敵AIシステムの未実装要素について、第一次レポート（`doc/敵AI未実装要素_多角的分析レポート.md`）とは異なる5つの視点から分析した結果をまとめたものである。
+本書は敵AIシステムの未実装要素について、第一次レポート（`doc/終了済み/敵AI未実装要素_多角的分析レポート.md`）とは異なる5つの視点から分析した結果をまとめたものである。
 
 分析日: 2026-03-07
 前提: 第一次レポートのPhase 1-4ロードマップ、敵AI仕様書セクション11
+
+> **実装状況（2026-03-07更新）:** 本レポートの指摘・提案に基づくPhase 1〜3は全て実装完了。詳細は `doc/終了済み/敵AIロードマップ.md` 参照。Phase 4（AIAPI）は将来構想として保留。
 
 ---
 
@@ -567,15 +569,15 @@ AI側: `user.RangeWill = SkillZoneTraitNormalizer.Normalize(decision.RangeWill.V
 
 ### 6.6 優先順位の統合結論
 
-| 順序 | 作業 | 根拠（エージェント） |
-|---|---|---|
-| **0** | AddAction()バグ修正 + SimulateBarrierLayers修正 | F, J（即時修正必須） |
-| **0** | SO汚染検出ガード追加 | F, H（即時修正必須） |
-| **1** | LogThinkシステム導入 | H（Phase 1部品と同時に必要） |
-| **2** | Phase 1部品実装（第一次レポートのロードマップ通り） | 全チーム合意 |
-| **3** | BasicTacticalAI作成 | G（体験インパクト最大の変化点） |
-| **4** | テスト基盤整備 | H（DamageStepHelperから開始） |
-| **5** | Phase 2以降 | 第一次レポートの順序に従う |
+| 順序 | 作業 | 根拠（エージェント） | 状態 |
+|---|---|---|---|
+| **0** | AddAction()バグ修正 + SimulateBarrierLayers修正 | F, J（即時修正必須） | ✅完了 |
+| **0** | SO汚染検出ガード追加 | F, H（即時修正必須） | ✅完了 |
+| **1** | LogThinkシステム導入 | H（Phase 1部品と同時に必要） | ✅完了 |
+| **2** | Phase 1部品実装（第一次レポートのロードマップ通り） | 全チーム合意 | ✅完了 |
+| **3** | BasicTacticalAI作成 | G（体験インパクト最大の変化点） | ✅完了 |
+| **4** | テスト基盤整備 | H（DamageStepHelperから開始） | 未着手 |
+| **5** | Phase 2以降 | 第一次レポートの順序に従う | ✅Phase 3まで完了 |
 
 ---
 
@@ -592,4 +594,4 @@ AI側: `user.RangeWill = SkillZoneTraitNormalizer.Normalize(decision.RangeWill.V
 | `Assets/Script/Battle/CoreRuntime/EscapeHandler.cs` | 逃走・連鎖逃走処理 |
 | `Assets/Editor/Tests/BattleContextHubTests.cs` | MockBattleContext既存実装例 |
 | `doc/敵AI仕様書.md` | 現行AI仕様書 |
-| `doc/敵AI未実装要素_多角的分析レポート.md` | 第一次分析レポート |
+| `doc/終了済み/敵AI未実装要素_多角的分析レポート.md` | 第一次分析レポート |
