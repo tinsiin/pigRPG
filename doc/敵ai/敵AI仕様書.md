@@ -3,11 +3,16 @@
 本書は敵の戦闘AIシステムの**現行実装**に基づく仕様書である。
 
 関連ファイル:
-- `Assets/Script/BattleAIBrains/BattleAIBrain.cs` — AI基底クラス
+- `Assets/Script/BattleAIBrains/BattleAIBrain.cs` — AI基底クラス（partial class、以下5ファイルに分割）
+  - `BattleAIBrain.DamageAnalysis.cs` — ダメージ分析・命中率・期待ダメージ
+  - `BattleAIBrain.PostBattle.cs` — 戦闘後自己行動
+  - `BattleAIBrain.Altruism.cs` — 利他行動プロファイル・ターゲット生成
+  - `BattleAIBrain.ThinkingParts.cs` — パッシブキャンセル・ストック/トリガー・Freeze・カウンターリスク・スコアリング
+  - `BattleAIBrain.PersonalityAndMemory.cs` — 3軸パーソナリティ・逃走・トラウマ・記憶・パッシブ読み
 - `Assets/Script/BattleAIBrains/SimpleRandomTestAI.cs` — テスト用派生AI
 - `Assets/Script/BattleAIBrains/BasicTacticalAI.cs` — 基本戦術AI
 - `Assets/Script/BattleAIBrains/BattleMemory.cs` — AI戦闘記憶（個体別、被害・行動・カウンター・死亡記録）
-- `Assets/Script/BaseStates/Battle/BaseStates.BattleBrainSimlate.cs` — ダメージ・命中率シミュレート
+- `Assets/Script/BaseStates/Battle/BaseStates.BattleBrainSimulate.cs` — ダメージ・命中率シミュレート
 - `Assets/Script/Enemy/NormalEnemy.cs` — 敵クラス（AIの呼び出し元）
 
 関連仕様書:
@@ -149,11 +154,9 @@ protected void LogThink(int level, string message)
 | MustSkillSelect | 2 | フィルタ前後件数 |
 | MustSkillSelect | 3 | 除外スキル名 |
 | SingleBestDamageAnalyzer | 2 | 最適スキル+ダメージ値 |
-| SingleBestDamageAnalyzer | 3 | 各スキルの個別試算ダメージ（※Step版ではDamageStepAnalysisHelper内部処理のため出力なし） |
-| SingleBestDamageAnalyzer (Step) | 2 | 最適スキル（Step版） |
+| SingleBestDamageAnalyzer | 3 | 各スキルの個別試算ダメージ |
 | MultiBestDamageAndTargetAnalyzer | 2 | 最適組み合わせ |
 | MultiBestDamageAndTargetAnalyzer | 3 | 全組み合わせの個別試算ダメージ |
-| MultiBestDamageAndTargetAnalyzer (Step) | 2 | 最適組み合わせ（Step版） |
 
 #### 拡張方針
 
@@ -223,9 +226,9 @@ Inspectorで設定するダメージシミュレーションのポリシー:
 | `damageType` | SimulateDamageType | dmg: 物理ダメージ / mentalDmg: 精神ダメージ |
 | `spiritualModifier` | bool | 精神補正を考慮するか |
 | `physicalResistance` | bool | 物理耐性による減衰を考慮するか |
-| `SimlateVitalLayerPenetration` | bool | バリア層貫通をシミュレートするか |
-| `SimlateEnemyDEF` | bool | 敵DEFを考慮するか（基本防御力のみ） |
-| `SimlatePerfectEnemyDEF` | bool | 完全DEFシミュレート（パッシブ・AimStyle含む） |
+| `SimulateVitalLayerPenetration` | bool | バリア層貫通をシミュレートするか |
+| `SimulateEnemyDEF` | bool | 敵DEFを考慮するか（基本防御力のみ） |
+| `SimulatePerfectEnemyDEF` | bool | 完全DEFシミュレート（パッシブ・AimStyle含む） |
 | `useExpectedDamage` | bool | trueなら期待ダメージ(ダメージ×命中率)で評価 |
 | `considerVanguardForHit` | bool | 前のめり状態を命中率計算に反映するか |
 
@@ -248,13 +251,7 @@ AIの行動にバリエーションを持たせるための仕組み:
 - **groupType == Single**: `hpType`に応じてターゲット1人を選択→`SingleBestDamageAnalyzer`
 - **スキル1つしかない場合**: 分析不要として`null`を返す
 
-### 4.2 デフォルトスキル選択
-
-`SelectSkill(candidates, potentialTargets)` (virtual):
-- ターゲットがいれば`AnalyzeBestDamage`で最大ダメージスキルを選択
-- なければ`candidates[0]`をフォールバック
-
-### 4.3 パッシブキャンセル部品
+### 4.2 パッシブキャンセル部品
 
 | 関数 | 用途 |
 |---|---|
@@ -262,7 +259,7 @@ AIの行動にバリエーションを持たせるための仕組み:
 | `RandomSelectCanCancelPassiveOnlyBadPassives(list)` | IsBad=trueからランダム1つ |
 | `CancelPassive(passive)` | パッシブ除去＋`PassiveCancel`フラグ設定 |
 
-### 4.4 ストック・トリガー情報取得ユーティリティ
+### 4.3 ストック・トリガー情報取得ユーティリティ
 
 派生AIがストック・トリガースキルの状態を簡易に取得するためのヘルパー。「いつ溜めるか」「いつ撃つか」の判断自体は派生AIのPlan()で手書きする領域。
 
@@ -298,7 +295,7 @@ AIの行動にバリエーションを持たせるための仕組み:
 
 **ストック行動のコミット方法:** ユーティリティ関数ではなく`AIDecision`経由。`decision.Skill = s; decision.IsStock = true;` とPlanに書くだけで、CommitDecisionがBM側SkillStockACTに委譲する。
 
-### 4.4b カウンターリスク推定（Phase 3）
+### 4.3b カウンターリスク推定（Phase 3）
 
 `EstimateCounterRisk(target, skill)` → float (0.0~1.0)
 
@@ -345,7 +342,7 @@ Inspector設定:
 
 #### 命中率シミュレート + 期待ダメージ (1-5, 1-6)
 
-**SimulateHitRate** (`BaseStates.BattleBrainSimlate.cs`に配置):
+**SimulateHitRate** (`BaseStates.BattleBrainSimulate.cs`に配置):
 
 IsReactHIT + SkillHitCalcを確率論的に近似。乱数を使わず確定的な期待命中率(0.0~1.0)を返す。
 
@@ -481,7 +478,7 @@ effectiveChance = _escapeChance + HpDropRate × 0.2
 
 ## 5. シミュレート関数（BaseStates側）
 
-配置: `BaseStates.BattleBrainSimlate.cs`
+配置: `BaseStates.BattleBrainSimulate.cs`
 
 `BaseStates.SimulateDamage(attacker, skill, policy)` — AI用のダメージ試算関数。
 `BaseStates.SimulateHitRate(attacker, skill, policy)` — AI用の命中率試算関数。セクション4.5参照。
@@ -491,8 +488,8 @@ effectiveChance = _escapeChance + HpDropRate × 0.2
 1. **スキル威力計算**: `ComputeSkillPowers`（spread=1.0固定）
    - `spiritualModifier == false`なら素の威力にリセット
 2. **防御力計算**: ポリシーに応じて3段階
-   - `SimlatePerfectEnemyDEF`: 完全DEF（パッシブ・AimStyle含む）
-   - `SimlateEnemyDEF`: 基本防御力のみ（b_b_def + 共通TenDay）
+   - `SimulatePerfectEnemyDEF`: 完全DEF（パッシブ・AimStyle含む）
+   - `SimulateEnemyDEF`: 基本防御力のみ（b_b_def + 共通TenDay）
    - どちらもfalse: DEF=0
 3. **ダメージ計算**: 魔法/非魔法で分岐
 4. **物理耐性減衰**（オプション）
@@ -640,7 +637,6 @@ Plan(decision):
 | `Plan(AIDecision)` | **メイン思考**。スキル/範囲/対象/逃走を決定 |
 | `OnFreezeOperate(BaseSkill)` | Freeze中の操作可能スキルの範囲/対象決め直し |
 | `OnCancelPassiveThink()` | 強制キャンセル時の思考カスタマイズ |
-| `SelectSkill(candidates, targets)` | デフォルトスキル選択ロジックの差し替え |
 | `PostBattlePlan(self, decision)` | 戦闘後行動の計画 |
 | `GetPostBattlePolicy()` | 戦闘後適用時のポリシー変更 |
 | `ScoreHealSkill(self, skill)` | 回復スキルスコアリングの差し替え |
@@ -912,7 +908,7 @@ AIAPIでのパッシブ想像は、アイコン拡大ステータス表示で表
 
 | 判断の性質 | 方針 | 例 |
 |---|---|---|
-| **キャラ共通の基礎判断** — どのキャラでも問う汎用的な問い。パラメータ調整で差を出せる | **ヘルパー化する**（基底クラスにvirtualメソッドとして配置、Inspectorで調整可能に） | `AnalyzeBestDamage`（4.1）: 「どのスキルが最もダメージを出すか」は全キャラ共通の基礎問題。SkillAnalysisPolicyのInspector設定で分析方針を調整でき、SelectSkill()のoverrideで丸ごと差し替えも可能 |
+| **キャラ共通の基礎判断** — どのキャラでも問う汎用的な問い。パラメータ調整で差を出せる | **ヘルパー化する**（基底クラスにvirtualメソッドとして配置、Inspectorで調整可能に） | `AnalyzeBestDamage`（4.1）: 「どのスキルが最もダメージを出すか」は全キャラ共通の基礎問題。SkillAnalysisPolicyのInspector設定で分析方針を調整 |
 | **キャラ固有の戦略判断** — キャラごとに判断軸自体が異なる。汎用化すると引数が発散する | **手書き**（派生AIのPlan()内で直接記述） | ストックの溜め判断: キャラAはHP条件で溜め、キャラBはターン数で溜め、キャラCは敵パッシブを見て溜める→`ShouldStock(fillRate, hpRatio, turnCount, ...)`のような関数にしても引数が発散し、結局全派生でoverrideするため関数として成立しない |
 
 AnalyzeBestDamageは**ヘルパー化の正の例**（部品化すべきケース）、ストック・トリガーの溜め判断は**負の例**（部品化すべきでないケース）。この両方のケースを踏まえて判断する。
@@ -993,3 +989,4 @@ GeneratePostBattleActions(self, allies, pref)
 | 2026-03-07 | Phase 2記憶・学習完了: 4.7(BattleMemory/記憶参照/トラウマシステム/ShouldEscape拡張)追加、関連ファイルにBattleMemory.cs追加、4.6にトラウマフィルタ統合反映、11.1.4を実装済みに更新、11.2の記録・履歴系を実装済みに更新、11.4トラウマ率を実装済みに更新 |
 | 2026-03-07 | Phase 3高度要素完了: ShouldAbortFreezeフック(3.1)、FreezeInfo+EstimateCounterRisk(4.4b)、思慮推測レベル+ReadTargetPassives(11.3)、精神レベル+EvaluateDamage動的調整(11.4)追加、4.6にdeliberationLevel/spiritualLevel反映 |
 | 2026-03-07 | 11.2を3層分析付きに全面改訂: 全思慮要素に情報取得/判断ロジック/操作の方針を明記。11.6の適用例テーブルを実装済み実績+未着手方針に更新。分析レポート・ロードマップを`doc/終了済み/`に移動 |
+| 2026-03-07 | リファクタリング反映: partial class分割(6ファイル)、Simlate→Simulate命名修正、SelectSkill()削除、セクション番号再調整(4.2→パッシブキャンセル、4.3→ストック)、ログテーブル統合(DamageStepAnalysisHelper統一) |
