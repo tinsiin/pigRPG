@@ -270,6 +270,20 @@ public class NormalEnemy : BaseStates
         //思えの値は死んだらリセットされてるし、パワーは再遭遇時コールバックで歩行変化するから。
     }
     /// <summary>
+    /// 再エンカウント時のHP自然回復。
+    /// 歩数が多いほど回復の上限が上がるが、実際の回復量はランダム。
+    /// </summary>
+    const int FullRecoverySteps = 200;
+    void NaturalHPRecovery(int distanceTraveled)
+    {
+        if(Death()) return;
+        var recoveryRatio = Mathf.Min((float)distanceTraveled / FullRecoverySteps, 1f);
+        var random = manager?.Random ?? new SystemBattleRandom();
+        var heal = MaxHP * random.NextFloat(0f, recoveryRatio);
+        HP += heal;
+    }
+
+    /// <summary>
     /// 再遭遇時コールバック。パッシブとか自信ブーストなどの、
     // 歩行に変化のあるものは敵グループはここら辺で一気に処理をする。
     //敵の初回エンカウント時のコールバックでもある。
@@ -309,6 +323,8 @@ public class NormalEnemy : BaseStates
             //歩行時の有効化されてないスキルの成長処理
             ApplyGrowth(GrowthStrategyType.ReEncount, distanceTraveled);
 
+            //HP自然回復（歩数ベース）
+            NaturalHPRecovery(distanceTraveled);
         }
         //「精神属性はEnemyCollectAI」　つまり敵グループの収集に必須なので、このコールバックの前の収集関数内で既に決まってます。
 
