@@ -73,9 +73,10 @@ public sealed class EncounterResolver
             return EncounterRollResult.None;
         }
 
-        // Calculate combined multiplier (node + overlays)
+        // Calculate combined multiplier (node + overlays + alive ratio)
         var overlayMultiplier = context.GetEncounterMultiplier();
-        var combinedMultiplier = nodeMultiplier * overlayMultiplier;
+        var aliveRatio = context.GetAliveRatio(table);
+        var combinedMultiplier = nodeMultiplier * overlayMultiplier * aliveRatio;
 
         var rate = Mathf.Clamp01((table.BaseRate + state.Misses * table.PityIncrement) * combinedMultiplier);
         if (table.PityMax > 0f)
@@ -86,7 +87,7 @@ public sealed class EncounterResolver
         if (rate <= 0f)
         {
             state.Misses++;
-            Log(table, context, $"miss: rate<=0 base={table.BaseRate:0.###} pity={table.PityIncrement:0.###} misses={state.Misses}");
+            Log(table, context, $"miss: rate<=0 base={table.BaseRate:0.###} pity={table.PityIncrement:0.###} alive={aliveRatio:0.##} misses={state.Misses}");
             return EncounterRollResult.None;
         }
 
@@ -94,7 +95,7 @@ public sealed class EncounterResolver
         if (roll > rate)
         {
             state.Misses++;
-            Log(table, context, $"miss: roll={roll:0.###} rate={rate:0.###} base={table.BaseRate:0.###} misses={state.Misses}");
+            Log(table, context, $"miss: roll={roll:0.###} rate={rate:0.###} base={table.BaseRate:0.###} alive={aliveRatio:0.##} misses={state.Misses}");
             return EncounterRollResult.None;
         }
 
@@ -109,7 +110,7 @@ public sealed class EncounterResolver
 
         state.CooldownRemaining = Mathf.Max(0, table.CooldownSteps);
         state.Misses = 0;
-        Log(table, context, $"hit: roll={roll:0.###} rate={rate:0.###} encounter={encounter.name}");
+        Log(table, context, $"hit: roll={roll:0.###} rate={rate:0.###} alive={aliveRatio:0.##} encounter={encounter.name}");
         return new EncounterRollResult(true, encounter);
     }
 

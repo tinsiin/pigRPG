@@ -284,3 +284,5 @@ FilterEligibleEnemies:
 - `NormalEnemy.ResetEncounterProgress(int globalSteps)` — Reborn復活時の死亡期間リセット
 - `IEnemyRebornManager.CanReborn(enemy, globalSteps, stepMultiplier)` — stepMultiplierパラメータ（デフォルト1）
 - `EnemyRebornManager.CanReborn` — distanceTraveled × stepMultiplier の適用
+
+※ エンカウント頻度の偏り防止（aliveRatio）は `doc/エンカウント仕様書.md` §1 を参照

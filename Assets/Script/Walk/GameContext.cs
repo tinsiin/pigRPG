@@ -211,6 +211,56 @@ public sealed class GameContext
     }
 
     /// <summary>
+    /// エンカウントテーブル内の全敵の生存比率を返す（0.0〜1.0）。
+    /// 生存敵が少ないほどエンカウント頻度を下げるための補正値。
+    /// 条件未解放のエントリはカウントから除外する（解放後に初めて母数に参入）。
+    /// まだインスタンス化されていないエンカウントの敵は全員生存として扱う。
+    /// </summary>
+    public float GetAliveRatio(EncounterTableSO table)
+    {
+        if (table?.Entries == null || table.Entries.Length == 0) return 1f;
+
+        var totalCount = 0;
+        var aliveCount = 0;
+
+        for (var i = 0; i < table.Entries.Length; i++)
+        {
+            var entry = table.Entries[i];
+            if (entry?.Encounter == null) continue;
+
+            // 条件未解放のエントリは母数に含めない
+            if (!EncounterResolver.AreConditionsMet(entry.Conditions, this)) continue;
+
+            if (encounterEnemies.TryGetValue(entry.Encounter, out var enemies) && enemies != null)
+            {
+                for (var j = 0; j < enemies.Count; j++)
+                {
+                    if (enemies[j] == null) continue;
+                    totalCount++;
+                    if (!enemies[j].Death() && !enemies[j].broken)
+                        aliveCount++;
+                }
+            }
+            else
+            {
+                // 未インスタンス化 → テンプレートの非nullエントリだけ全員生存扱い
+                var templateList = entry.Encounter.EnemyList;
+                if (templateList != null)
+                {
+                    for (var k = 0; k < templateList.Count; k++)
+                    {
+                        if (templateList[k] == null) continue;
+                        totalCount++;
+                        aliveCount++;
+                    }
+                }
+            }
+        }
+
+        return totalCount == 0 ? 1f : (float)aliveCount / totalCount;
+    }
+
+    /// <summary>
     /// コンビメンバーの敵個体状態をエクスポートする。
     /// EncounterSO → テンプレートインデックスの対応を保持して永続化に使用。
     /// </summary>
