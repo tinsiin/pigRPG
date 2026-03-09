@@ -254,6 +254,21 @@ FilterEligibleEnemies:
   Dead + otherwise → skip
 ```
 
+### 復活経路による死亡期間の扱いの違い
+
+復活した敵が `ReEncountCallback` に入る際、死亡中の経過歩数（distanceTraveled）をどう扱うかが復活経路で異なる。
+
+| 復活経路 | `_lastEncounterProgress` | distanceTraveled | 設計意図 |
+|---------|-------------------------|-----------------|---------|
+| **DeathHeal** | リセットしない（死亡前の値） | 死亡期間を含む | 「相方に世話されていた」→ HP回復・パッシブ消化・成長の恩恵を受ける |
+| **Reborn** | `globalSteps` にリセット | 0 | 「自力で蘇る＝まっさら」→ 死亡中の時間経過は無かったことにする |
+
+- Reborn復活は `OnReborn()` で全回復済みのため、NaturalHPRecovery は不要
+- DeathHeal復活は HP=ε なので、死亡期間分の NaturalHPRecovery が実質的な回復源になる
+- Reborn復活でリセットしないと、死亡中にパッシブが消化され成長が計上される不自然さが残る
+- Reborn復活直後は `_lastDistanceTraveled = 0` となるため、パッシブ蓄積（§3）の受け手にならない（提供側にはなれる）。
+  これは意図的な挙動: Reborn復活は全回復で出てくるためパッシブ不在でも実害がなく、「まだ一緒に歩いていない」状態として自然。次回エンカウントからは通常通り蓄積される
+
 ### 戦闘後AIとの関係
 
 | システム | 性質 | タイミング |
@@ -266,5 +281,6 @@ FilterEligibleEnemies:
 
 - `EncounterEnemySelector.FilterEligibleEnemies` — DeathHeal即時蘇生 + Reborn 2倍速の分岐
 - `EncounterEnemySelector.FindLivingComboPartner` — 死亡コンボメンバーの生存相方を探すヘルパー
+- `NormalEnemy.ResetEncounterProgress(int globalSteps)` — Reborn復活時の死亡期間リセット
 - `IEnemyRebornManager.CanReborn(enemy, globalSteps, stepMultiplier)` — stepMultiplierパラメータ（デフォルト1）
 - `EnemyRebornManager.CanReborn` — distanceTraveled × stepMultiplier の適用

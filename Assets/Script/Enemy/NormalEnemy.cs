@@ -128,6 +128,15 @@ public class NormalEnemy : BaseStates
     /// </summary>
     private int _lastEncounterProgress = -1;
 
+    /// <summary>
+    /// 復活時にエンカウント記録をリセットする。
+    /// Reborn復活用: 死亡期間の距離を無効化し、distanceTraveled=0で再出発させる。
+    /// </summary>
+    public void ResetEncounterProgress(int globalSteps)
+    {
+        _lastEncounterProgress = globalSteps;
+    }
+
     
     /// <summary>
     /// 敵の実体スキルリスト

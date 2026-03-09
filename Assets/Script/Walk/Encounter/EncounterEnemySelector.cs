@@ -156,6 +156,9 @@ public class EncounterEnemySelector
             // Reborn（友情コンビ相方が生存なら2倍速）
             if (ene.Reborn && _rebornManager.CanReborn(ene, globalSteps, partner != null ? 2 : 1))
             {
+                // Reborn復活は「自力で蘇る＝まっさら」→ 死亡期間の距離を無効化
+                // （DeathHealは「相方に世話されていた」→ リセットせず時間の恩恵を受ける）
+                ene.ResetEncounterProgress(globalSteps);
                 validEnemies.Add(ene);
             }
         }
