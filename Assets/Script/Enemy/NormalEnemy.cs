@@ -51,6 +51,10 @@ public class NormalEnemy : BaseStates
 
     private readonly Dictionary<GrowthStrategyType, IGrowthStrategy> _growthStrategies = new();
 
+    /// <summary>直前のReEncountCallbackで計算されたdistanceTraveled。パッシブ蓄積用。</summary>
+    private int _lastDistanceTraveled;
+    public int LastDistanceTraveled => _lastDistanceTraveled;
+
     /// <summary>
     /// 個体識別用GUID。ランタイムコピー時に自動発行。友情コンビ登録で個体を追跡するために使用。
     /// </summary>
@@ -279,8 +283,78 @@ public class NormalEnemy : BaseStates
         if(Death()) return;
         var recoveryRatio = Mathf.Min((float)distanceTraveled / FullRecoverySteps, 1f);
         var random = manager?.Random ?? new SystemBattleRandom();
-        var heal = MaxHP * random.NextFloat(0f, recoveryRatio);
+
+        // 友情コンビなら回復の下限が上がる
+        var lowerBound = 0f;
+        var combo = GameContextHub.Current?.ComboRegistry?.FindComboByMemberGuid(EnemyGuid);
+        if (combo != null)
+            lowerBound = combo.LowerRatio * recoveryRatio;
+
+        var heal = MaxHP * random.NextFloat(lowerBound, recoveryRatio);
         HP += heal;
+    }
+
+    /// <summary>
+    /// 友情コンビのパッシブ蓄積。相方の味方向けパッシブ付与スキルを全て適用し、
+    /// simulatedSteps分の歩行消化を新規パッシブのみに実行する。
+    /// 既存の歩行消化（減らす側）と合わせてパッシブの新陳代謝を実現する。
+    /// </summary>
+    public void AccumulateComboPassives(NormalEnemy partner, int distanceTraveled)
+    {
+        if (partner == null || distanceTraveled <= 0 || Death()) return;
+
+        var combo = GameContextHub.Current?.ComboRegistry?.FindComboByMemberGuid(EnemyGuid);
+        if (combo == null) return;
+
+        var provider = PassiveProvider ?? PassiveManager.Instance;
+        if (provider == null) return;
+
+        // 既存パッシブIDのスナップショット（新規判定用。重ね掛けは新規扱いしない）
+        var existingIds = new HashSet<int>();
+        foreach (var p in Passives) existingIds.Add(p.ID);
+
+        // 相方のスキルから対象パッシブを列挙・付与
+        foreach (var skill in partner.SkillList)
+        {
+            if (skill == null) continue;
+            if (!skill.HasType(SkillType.addPassive)) continue;
+            if (!skill.HasZoneTraitAny(SkillZoneTrait.SelectOnlyAlly, SkillZoneTrait.SelfSkill)) continue;
+
+            foreach (var passiveId in skill.SubEffects)
+            {
+                var template = provider.GetAtID(passiveId);
+                if (template == null || template.IsBad) continue;
+                ApplyPassiveByID(passiveId, partner);
+            }
+        }
+
+        // 新規パッシブを特定（重ね掛けされた既存パッシブは除外）
+        var newPassives = new List<BasePassive>();
+        foreach (var p in Passives)
+        {
+            if (!existingIds.Contains(p.ID))
+                newPassives.Add(p);
+        }
+        if (newPassives.Count == 0) return;
+
+        // simulatedSteps: 「相方がsimulatedSteps前にパッシブをかけた」前提
+        var random = manager?.Random ?? new SystemBattleRandom();
+        var lowerBound = (int)(combo.LowerRatio * distanceTraveled);
+        var simulatedSteps = random.NextInt(lowerBound, distanceTraveled + 1);
+
+        // 新規パッシブのみの歩行消化ループ
+        for (var step = 0; step < simulatedSteps; step++)
+        {
+            foreach (var pas in newPassives.ToArray())
+            {
+                if (!Passives.Contains(pas)) continue;
+                if (pas.DurationWalkCounter > 0)
+                    pas.WalkEffect();
+                pas.UpdateWalkSurvival(this);
+            }
+            newPassives.RemoveAll(p => !Passives.Contains(p));
+            if (newPassives.Count == 0) break;
+        }
     }
 
     /// <summary>
@@ -292,6 +366,7 @@ public class NormalEnemy : BaseStates
     {
         bool isFirstEncounter = false;
         var distanceTraveled = 0;//距離差分
+        _lastDistanceTraveled = 0;
 
         //遭遇したら遭遇地点記録
         if(_lastEncounterProgress == -1)
@@ -300,6 +375,7 @@ public class NormalEnemy : BaseStates
         }else{
             //二回目以降の遭遇なら移動距離を取得
             distanceTraveled = Math.Abs(globalSteps - _lastEncounterProgress);//移動距離取得
+            _lastDistanceTraveled = distanceTraveled;
         }
 
         //二回目以降の遭遇の処理

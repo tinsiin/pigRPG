@@ -11,6 +11,17 @@ public sealed class FriendshipComboSaveData
     public List<string> MemberGuids = new();
     public bool IsKusareEnPath;
     public int ReEncountCount;
+
+    /// <summary>
+    /// 友情コンビの成熟に必要な再会回数。この回数でlowerRatioが1.0に達する。
+    /// HP自然回復ボーナス(§2.1)とパッシブ蓄積(§2.4)の共通定数。
+    /// </summary>
+    public const int BondMatureCount = 11;
+
+    /// <summary>
+    /// 再会回数に基づく下限率。0〜1.0。付き合いが長いほど恩恵が確実になる。
+    /// </summary>
+    public float LowerRatio => Math.Min((float)ReEncountCount / BondMatureCount, 1f);
 }
 
 /// <summary>

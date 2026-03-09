@@ -72,6 +72,7 @@ public class EncounterEnemySelector
 
         var validEnemies = FilterEligibleEnemies(enemies, globalSteps);
         ApplyReencountCallbacks(validEnemies, globalSteps);
+        ApplyComboPassiveAccumulation(validEnemies);
         if (!validEnemies.Any()) return null;
 
         var referenceOne = SelectLeader(validEnemies);
@@ -153,6 +154,50 @@ public class EncounterEnemySelector
             var ene = validEnemies[i];
             EnsureInitialized(ene);
             ene.ReEncountCallback(globalSteps);
+        }
+    }
+
+    /// <summary>
+    /// 友情コンビのパッシブ蓄積。コンビメンバー間で互いにパッシブをかけ合う。
+    /// ApplyReencountCallbacks の後に呼び出す。
+    /// </summary>
+    private void ApplyComboPassiveAccumulation(List<NormalEnemy> validEnemies)
+    {
+        if (_comboRegistry == null || _comboRegistry.AllCombos.Count == 0) return;
+
+        var processedCombos = new HashSet<string>();
+
+        for (var i = 0; i < validEnemies.Count; i++)
+        {
+            var enemy = validEnemies[i];
+            var combo = _comboRegistry.FindComboByMemberGuid(enemy.EnemyGuid);
+            if (combo == null || processedCombos.Contains(combo.ComboId)) continue;
+            processedCombos.Add(combo.ComboId);
+
+            // コンボの生存メンバーをvalidEnemiesから収集
+            var members = new List<NormalEnemy>();
+            for (var m = 0; m < combo.MemberGuids.Count; m++)
+            {
+                var member = FindByGuid(validEnemies, combo.MemberGuids[m]);
+                if (member != null && !member.Death())
+                    members.Add(member);
+            }
+
+            if (members.Count < 2) continue;
+
+            // 双方向: 各メンバーが他の全メンバーからパッシブを受ける
+            for (var a = 0; a < members.Count; a++)
+            {
+                var receiver = members[a];
+                var dist = receiver.LastDistanceTraveled;
+                if (dist <= 0) continue;
+
+                for (var b = 0; b < members.Count; b++)
+                {
+                    if (a == b) continue;
+                    receiver.AccumulateComboPassives(members[b], dist);
+                }
+            }
         }
     }
 
