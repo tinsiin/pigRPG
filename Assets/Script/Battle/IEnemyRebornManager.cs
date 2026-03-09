@@ -18,7 +18,7 @@ public interface IEnemyRebornManager
     /// <summary>
     /// 敵が復活可能かどうかを判定する
     /// </summary>
-    bool CanReborn(NormalEnemy enemy, int globalSteps);
+    bool CanReborn(NormalEnemy enemy, int globalSteps, int stepMultiplier = 1);
 
     /// <summary>
     /// 敵の復活情報をクリアする

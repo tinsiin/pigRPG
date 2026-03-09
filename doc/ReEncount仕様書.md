@@ -12,6 +12,12 @@
 ```
 EncounterEnemySelector.Select():
 │
+├── FilterEligibleEnemies(enemies, globalSteps)    … 有効敵フィルタリング 【§4】
+│   ├── 生存敵 → そのまま追加
+│   ├── broken → スキップ
+│   ├── 友情コンビ相方がDeathHeal持ち → Angel() + 追加（即時蘇生）
+│   └── Reborn + CanReborn(2x if combo partner) → 追加（復活）
+│
 ├── ApplyReencountCallbacks(validEnemies, globalSteps)
 │   │   全有効敵に対して ReEncountCallback を実行
 │   │
@@ -202,3 +208,63 @@ lowerRatio = min(ReEncountCount / BondMatureCount, 1.0)
 - `NormalEnemy.LastDistanceTraveled` — ReEncountCallbackで保存した移動距離
 - `EncounterEnemySelector.ApplyComboPassiveAccumulation(validEnemies)` — オーケストレーション
 - 呼び出し: `EncounterEnemySelector.Select()` 内、`ApplyReencountCallbacks` の直後
+
+## 4. 友情コンビ死亡メンバー支援
+
+友情コンビのメンバーが死亡している場合、相方の存在によって復活が有利になる。
+戦闘後AIの「意志による蘇生」とは別の、**友情コンビという関係性そのものから来る汎用的な恩恵**。
+
+### 処理タイミング
+
+`EncounterEnemySelector.FilterEligibleEnemies` 内で、死亡敵のフィルタリング時に実行。
+`ReEncountCallback` より前の段階で蘇生/復活判定を行う。
+
+### a. 相方のDeathHealによる即時蘇生
+
+友情コンビの相方が `DeathHeal` スキルを持っている場合、Rebornを待たずに即座に蘇生する。
+
+- **条件**: 相方が生存（`!Death() && !broken`）かつ `SkillType.DeathHeal` を持つスキルがある
+- **蘇生処理**: `Angel()` でHP=ε復活
+- **蘇生後のHP回復**: `ReEncountCallback` 内の `NaturalHPRecovery` が歩数ベースで回復
+- **戦闘後AIで蘇生済みの場合**: `Death()` が false → FilterEligibleEnemiesの生存敵分岐で処理（自動スキップ）
+
+#### 蘇生後のHP流れ
+
+1. `FilterEligibleEnemies`: `Angel()` → HP=ε（ほぼ0）
+2. `ReEncountCallback`: `NaturalHPRecovery(distanceTraveled)` → 歩数に応じて回復
+3. 結果: 蘇生直後はHPが低いが、歩数が長ければそこそこ回復
+
+### b. Reborn歩数の2倍速加速
+
+友情コンビの相方が生存している場合、死亡メンバーの `RebornSteps` による復活カウントダウンが **固定2倍速** になる。
+
+- **条件**: `ene.Reborn == true` かつ相方が生存（`!Death() && !broken`）
+- **実装**: `EnemyRebornManager.CanReborn(enemy, globalSteps, stepMultiplier: 2)` で歩数消化に2倍の倍率を適用
+- **相方がいない場合**: 通常の1倍速（`stepMultiplier: 1`）
+
+### 優先順位
+
+DeathHealが優先。DeathHealで蘇生されたらRebornは不要。
+
+```
+FilterEligibleEnemies:
+  Dead + broken → skip
+  Dead + combo partner has DeathHeal → Angel() + add（即時蘇生）
+  Dead + Reborn + CanReborn(2x if combo partner alive) → add（復活）
+  Dead + otherwise → skip
+```
+
+### 戦闘後AIとの関係
+
+| システム | 性質 | タイミング |
+|----------|------|-----------|
+| 戦闘後AI（DeathHeal） | 敵の意志で「その場で蘇生を試みて確率的に諦める」 | 戦闘終了直後 |
+| **本システム（DeathHeal即時蘇生）** | **友情コンビの関係性による自動蘇生（セーフティネット）** | **再エンカウント時** |
+| **本システム（Reborn 2倍速）** | **仲間がそばにいることで復活が早まる** | **再エンカウント時** |
+
+### 実装箇所
+
+- `EncounterEnemySelector.FilterEligibleEnemies` — DeathHeal即時蘇生 + Reborn 2倍速の分岐
+- `EncounterEnemySelector.FindLivingComboPartner` — 死亡コンボメンバーの生存相方を探すヘルパー
+- `IEnemyRebornManager.CanReborn(enemy, globalSteps, stepMultiplier)` — stepMultiplierパラメータ（デフォルト1）
+- `EnemyRebornManager.CanReborn` — distanceTraveled × stepMultiplier の適用

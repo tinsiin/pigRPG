@@ -50,7 +50,7 @@ public sealed class EnemyRebornManager : IEnemyRebornManager
         info.State = EnemyRebornState.Counting;
     }
 
-    public bool CanReborn(NormalEnemy enemy, int globalSteps)
+    public bool CanReborn(NormalEnemy enemy, int globalSteps, int stepMultiplier = 1)
     {
         if (enemy == null) return false;
 
@@ -67,7 +67,7 @@ public sealed class EnemyRebornManager : IEnemyRebornManager
             return true;
         }
 
-        var distanceTraveled = Math.Abs(globalSteps - info.LastProgress);
+        var distanceTraveled = Math.Abs(globalSteps - info.LastProgress) * stepMultiplier;
         if ((info.RemainingSteps -= distanceTraveled) <= 0)
         {
             info.RemainingSteps = 0;

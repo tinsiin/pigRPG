@@ -47,7 +47,7 @@ public class EncounterEnemySelectorTests
 
     private sealed class TestRebornManager : IEnemyRebornManager
     {
-        public bool CanReborn(NormalEnemy enemy, int globalSteps)
+        public bool CanReborn(NormalEnemy enemy, int globalSteps, int stepMultiplier = 1)
         {
             if (enemy == null) return false;
             if (enemy.broken) return false;

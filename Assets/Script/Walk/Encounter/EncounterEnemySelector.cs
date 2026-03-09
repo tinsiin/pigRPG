@@ -139,12 +139,51 @@ public class EncounterEnemySelector
             }
             if (ene.broken) continue;
 
-            if (ene.Reborn && _rebornManager.CanReborn(ene, globalSteps))
+            // 友情コンビ相方のDeathHealによる即時蘇生
+            var partner = FindLivingComboPartner(ene, enemies);
+            if (partner != null)
+            {
+                EnsureInitialized(partner);
+                if (partner.SkillList.Any(s => s.HasType(SkillType.DeathHeal)))
+                {
+                    ene.Angel();
+                    _rebornManager.Clear(ene);
+                    validEnemies.Add(ene);
+                    continue;
+                }
+            }
+
+            // Reborn（友情コンビ相方が生存なら2倍速）
+            if (ene.Reborn && _rebornManager.CanReborn(ene, globalSteps, partner != null ? 2 : 1))
             {
                 validEnemies.Add(ene);
             }
         }
         return validEnemies;
+    }
+
+    /// <summary>
+    /// 死亡した友情コンビメンバーの生存相方を探す。見つからなければnull。
+    /// </summary>
+    private NormalEnemy FindLivingComboPartner(NormalEnemy deadEnemy, IReadOnlyList<NormalEnemy> enemies)
+    {
+        if (_comboRegistry == null) return null;
+        var combo = _comboRegistry.FindComboByMemberGuid(deadEnemy.EnemyGuid);
+        if (combo == null) return null;
+
+        for (var i = 0; i < combo.MemberGuids.Count; i++)
+        {
+            var guid = combo.MemberGuids[i];
+            if (guid == deadEnemy.EnemyGuid) continue;
+
+            for (var j = 0; j < enemies.Count; j++)
+            {
+                if (enemies[j] == null) continue;
+                if (enemies[j].EnemyGuid == guid && !enemies[j].Death() && !enemies[j].broken)
+                    return enemies[j];
+            }
+        }
+        return null;
     }
 
     private static void ApplyReencountCallbacks(List<NormalEnemy> validEnemies, int globalSteps)
