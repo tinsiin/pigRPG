@@ -2,7 +2,7 @@
 
 再エンカウント時（`NormalEnemy.ReEncountCallback`）に実行される全処理の仕様。
 
-> **構想段階の内容**: `doc/ReEncountステータス変化構想.md` を参照
+> **構想の経緯**: `doc/終了済み/ReEncountステータス変化構想.md` を参照（全項目完了）
 
 ## 1. ReEncountCallbackの全体フロー
 
