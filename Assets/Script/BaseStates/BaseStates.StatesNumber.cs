@@ -25,7 +25,6 @@ public abstract partial class BaseStates
         get { return _hp; }
         set
         {
-            Debug.Log($"HP:{value}");
             // HP をクランプ
             if (value > MaxHP)//最大値を超えないようにする
             {

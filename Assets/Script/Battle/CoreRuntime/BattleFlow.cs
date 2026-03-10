@@ -1,5 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 /// <summary>
 /// 戦闘進行を担当するクラス。
@@ -163,9 +164,21 @@ public sealed class BattleFlow
         BattleEnded?.Invoke();
         if (_onBattleEndCallback != null)
         {
-            _onBattleEndCallback.Invoke().Forget();
+            FireBattleEndCallback().Forget();
         }
         return TabState.walk;
+    }
+
+    private async UniTaskVoid FireBattleEndCallback()
+    {
+        try
+        {
+            await _onBattleEndCallback.Invoke();
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
     }
 
     /// <summary>

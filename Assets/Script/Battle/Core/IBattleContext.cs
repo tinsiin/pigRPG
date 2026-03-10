@@ -4,7 +4,7 @@ public interface IBattleContext
 {
     BattleGroup AllyGroup { get; }
     BattleGroup EnemyGroup { get; }
-    List<BaseStates> AllCharacters { get; }
+    IReadOnlyList<BaseStates> AllCharacters { get; }
     BaseStates Acter { get; }
     UnderActersEntryList unders { get; }
     ActionQueue Acts { get; }

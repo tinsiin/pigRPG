@@ -34,6 +34,7 @@ public sealed class RevengeBonusEffect : ISkillEffect
             if (liveAllyGroupList.Count < 1) continue;
 
             var data = chara.RecentDamageData;
+            if (data == null) continue;
             var damageRate = data.Damage / chara.MaxHP;
 
             foreach (var ally in liveAllyGroupList)

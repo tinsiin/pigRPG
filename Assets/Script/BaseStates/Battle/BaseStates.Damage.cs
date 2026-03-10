@@ -26,7 +26,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// 直近の被害記録
     /// </summary>
-    public DamageData RecentDamageData => damageDatas[damageDatas.Count - 1];
+    public DamageData RecentDamageData => damageDatas.Count > 0 ? damageDatas[damageDatas.Count - 1] : null;
 
     //  ==============================================================================================================================
     //                                              ダメージ計算-補正関数群
@@ -644,7 +644,7 @@ public abstract partial class BaseStates
             //その連続攻撃の追加硬直値分だけ、「食らわせ」というパッシブを食らう。
 
             //ただし範囲攻撃で巻き添えの場合もあるから追加で判定　
-            if(!RecentACTSkillData.IsDone && RecentACTSkillData.Target == Atker)//直近の攻撃行動で割り込みされてたか And 割り込みしてきた(攻撃対象)のが今の割り込みパッシブ攻撃者か
+            if(RecentACTSkillData != null && !RecentACTSkillData.IsDone && RecentACTSkillData.Target == Atker)//直近の攻撃行動で割り込みされてたか And 割り込みしてきた(攻撃対象)のが今の割り込みパッシブ攻撃者か
             {
                 var DurationTurn = RecentACTSkillData.Skill.SKillDidWaitCount;//食らうターン
                 if(DurationTurn > 0)//持続ターンが存在すれば、

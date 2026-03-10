@@ -8,7 +8,6 @@ using RandomExtensions.Linq;
 using System;
 using static UnityEngine.Rendering.DebugUI;
 using static CommonCalc;
-using UnityEditor;
 using static TenDayAbilityPosition;
 
 //BaseStatesのシンプルなコア部分

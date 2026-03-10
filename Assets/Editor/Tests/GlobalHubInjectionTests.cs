@@ -156,7 +156,7 @@ public class GlobalHubInjectionTests
     {
         public BattleGroup AllyGroup => null;
         public BattleGroup EnemyGroup => null;
-        public List<BaseStates> AllCharacters => new List<BaseStates>();
+        public IReadOnlyList<BaseStates> AllCharacters => new List<BaseStates>();
         public BaseStates Acter => null;
         public UnderActersEntryList unders => null;
         public ActionQueue Acts => null;

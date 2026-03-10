@@ -119,7 +119,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// 直近の行動記録
     /// </summary>
-    public ACTSkillDataForOneTarget RecentACTSkillData => ActDoOneSkillDatas[ActDoOneSkillDatas.Count - 1];
+    public ACTSkillDataForOneTarget RecentACTSkillData => ActDoOneSkillDatas.Count > 0 ? ActDoOneSkillDatas[ActDoOneSkillDatas.Count - 1] : null;
     /// <summary>
     /// アクション事のスキルデータ AttackChara単位で記録　= スキル一回に対して
     /// </summary>
@@ -133,7 +133,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// 直近の行動記録
     /// </summary>
-    public ACTSkillDataForOneTarget RecentSkillData => ActDoOneSkillDatas[ActDoOneSkillDatas.Count - 1];
+    public ACTSkillDataForOneTarget RecentSkillData => ActDoOneSkillDatas.Count > 0 ? ActDoOneSkillDatas[ActDoOneSkillDatas.Count - 1] : null;
     /// <summary>
     /// 指定したスキルが最近のスキルデータでヒットしたかどうかを調べる
     /// </summary>
@@ -287,7 +287,7 @@ public class TargetBonusDatas
     /// </summary>
     public void AllDecrementDurationTurn()
     {
-        for (int i = 0; i < DurationTurns.Count; i++)
+        for (int i = DurationTurns.Count - 1; i >= 0; i--)
         {
             DecrementDurationTurn(i);
         }

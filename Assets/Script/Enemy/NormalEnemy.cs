@@ -146,7 +146,24 @@ public class NormalEnemy : BaseStates
     /// <summary>
     /// 敵は成長ポイントが-1に指定されたスキルのみ、実体スキルリストとして返す
     /// </summary>
-    public override IReadOnlyList<BaseSkill> SkillList => EnemySkillList.Where(skill => skill.growthPoint <= -1).ToList();
+    private List<BaseSkill> _skillListCache;
+    private bool _skillListDirty = true;
+    public override IReadOnlyList<BaseSkill> SkillList
+    {
+        get
+        {
+            if (_skillListDirty || _skillListCache == null)
+            {
+                _skillListCache = EnemySkillList.Where(skill => skill.growthPoint <= -1).Cast<BaseSkill>().ToList();
+                _skillListDirty = false;
+            }
+            return _skillListCache;
+        }
+    }
+    /// <summary>
+    /// スキルリストキャッシュを無効化する（growthPoint変更後に呼ぶ）
+    /// </summary>
+    public void InvalidateSkillListCache() => _skillListDirty = true;
     /// <summary>
     /// まだ有効化されてないスキルのリスト
     /// </summary>
@@ -195,9 +212,16 @@ public class NormalEnemy : BaseStates
     {
         _brain?.BindBattleContext(context);
     }
-    public virtual async void BattleEndSkillAI()
+    public virtual async UniTaskVoid BattleEndSkillAI()
     {
-        await _brain.PostBattleActRun(this, manager);
+        try
+        {
+            await _brain.PostBattleActRun(this, manager);
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
     }
 
     //スキル成長の処理など------------------------------------------------------------------------------------------------------スキル成長の処理などーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
@@ -226,6 +250,7 @@ public class NormalEnemy : BaseStates
             distanceTraveled,
             random);
         strategy.Apply(context);
+        InvalidateSkillListCache();
     }
 
     public virtual void InitializeMyImpression()

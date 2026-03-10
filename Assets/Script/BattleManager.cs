@@ -47,7 +47,18 @@ public class BattleManager : IBattleContext
     /// <summary>
     ///全キャラクターのリスト
     /// </summary>
-    public List<BaseStates> AllCharacters => AllyGroup.Ours.Concat(EnemyGroup.Ours).ToList();
+    private List<BaseStates> _allCharactersCache;
+    public IReadOnlyList<BaseStates> AllCharacters
+    {
+        get
+        {
+            _allCharactersCache ??= new List<BaseStates>();
+            _allCharactersCache.Clear();
+            _allCharactersCache.AddRange(AllyGroup.Ours);
+            _allCharactersCache.AddRange(EnemyGroup.Ours);
+            return _allCharactersCache;
+        }
+    }
 
     /// <summary>
     /// factionのグループを返す
