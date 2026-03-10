@@ -593,5 +593,5 @@ AI側: `user.RangeWill = SkillZoneTraitNormalizer.Normalize(decision.RangeWill.V
 | `Assets/Script/Battle/CoreRuntime/Services/SystemBattleRandom.cs` | seed対応済み乱数 |
 | `Assets/Script/Battle/CoreRuntime/EscapeHandler.cs` | 逃走・連鎖逃走処理 |
 | `Assets/Editor/Tests/BattleContextHubTests.cs` | MockBattleContext既存実装例 |
-| `doc/敵AI仕様書.md` | 現行AI仕様書 |
+| `doc/敵ai/敵AI仕様書.md` | 現行AI仕様書 |
 | `doc/終了済み/敵AI未実装要素_多角的分析レポート.md` | 第一次分析レポート |

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using RandomExtensions;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -363,6 +364,7 @@ public class NormalEnemy : BaseStates
             }
             newPassives.RemoveAll(p => !Passives.Contains(p));
             if (newPassives.Count == 0) break;
+            if (Death()) break; // パッシブ蓄積中に死亡したらループ脱出
         }
     }
 
@@ -401,12 +403,11 @@ public class NormalEnemy : BaseStates
                 UpdateWalkAllPassiveSurvival();//歩行によるパッシブ残存処理
                 UpdateAllSkillPassiveWalkSurvival();//スキルパッシブの歩行残存処理
                 ResonanceHealingOnWalking();//歩行時思えの値回復
-                //RecoverMentalHPOnWalk();//歩行時精神HP回復 基本的に歩行時の精神hp回復はポイント用だし、それ抜きにしたら戦闘開始時に精神HPはmaxになるし。
-                //RecoverPointOnWalk();//歩行時ポイント回復 敵には外でスキル使うとかないから、戦闘時のポイント初期化で十分なので歩行回復なし
+                if (Death()) break; // パッシブ致死: 死亡したらループ脱出
             }
 
             //歩行時の有効化されてないスキルの成長処理
-            ApplyGrowth(GrowthStrategyType.ReEncount, distanceTraveled);
+            if (!Death()) ApplyGrowth(GrowthStrategyType.ReEncount, distanceTraveled);
 
             //HP自然回復（歩数ベース）
             NaturalHPRecovery(distanceTraveled);
@@ -427,6 +428,20 @@ public class NormalEnemy : BaseStates
                     PrepareReborn(globalSteps);//復活歩数準備
                 }
             }
+    }
+
+    /// <summary>
+    /// パッシブ致死時に、致死の手柄となるパッシブを返す。
+    /// _grantor が設定されているパッシブからランダム選出（IsBad優先）。
+    /// </summary>
+    public BasePassive FindKillerPassive()
+    {
+        var withGrantor = Passives.FindAll(p => p._grantor != null);
+        if (withGrantor.Count == 0) return null;
+
+        var bad = withGrantor.FindAll(p => p.IsBad);
+        var pool = bad.Count > 0 ? bad : withGrantor;
+        return pool[RandomExtensions.RandomEx.Shared.NextInt(0, pool.Count)];
     }
 
 

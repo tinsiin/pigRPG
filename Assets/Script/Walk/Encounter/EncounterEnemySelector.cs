@@ -41,7 +41,7 @@ public class EncounterEnemySelector
     /// <summary>
     /// 敵グループを選択する（互換性維持用 static ラッパー）
     /// </summary>
-    public static BattleGroup SelectGroup(
+    public static EnemySelectionResult SelectGroup(
         IReadOnlyList<NormalEnemy> enemies,
         int globalSteps,
         int number = -1,
@@ -61,19 +61,28 @@ public class EncounterEnemySelector
     /// <param name="enemies">候補となる敵リスト</param>
     /// <param name="globalSteps">現在のグローバルステップ数</param>
     /// <param name="number">指定人数（-1で自動）</param>
-    public BattleGroup Select(
+    public EnemySelectionResult Select(
         IReadOnlyList<NormalEnemy> enemies,
         int globalSteps,
         int number = -1)
     {
-        if (enemies == null || enemies.Count == 0) return null;
+        var result = new EnemySelectionResult();
+        if (enemies == null || enemies.Count == 0) return result;
 
         _anyMemberSympathy = false;
 
         var validEnemies = FilterEligibleEnemies(enemies, globalSteps);
         ApplyReencountCallbacks(validEnemies, globalSteps);
+
+        // パッシブ致死: Callback後の死亡敵を再フィルタ + 致死ログ収集
+        CollectPassiveKillsAndRefilter(validEnemies, result.PassiveKills);
+
         ApplyComboPassiveAccumulation(validEnemies);
-        if (!validEnemies.Any()) return null;
+
+        // パッシブ蓄積後にも死亡チェック
+        CollectPassiveKillsAndRefilter(validEnemies, result.PassiveKills);
+
+        if (!validEnemies.Any()) return result;
 
         var referenceOne = SelectLeader(validEnemies);
 
@@ -83,7 +92,8 @@ public class EncounterEnemySelector
             var combo = _comboRegistry.FindComboByMemberGuid(referenceOne.EnemyGuid);
             if (combo != null)
             {
-                return AssembleComboGroup(referenceOne, combo, validEnemies);
+                result.Group = AssembleComboGroup(referenceOne, combo, validEnemies);
+                return result;
             }
             // フリーリーダー: コンビメンバーを候補から除外して通常フローへ
             ExcludeComboMembers(validEnemies);
@@ -97,28 +107,59 @@ public class EncounterEnemySelector
 
         if (manualCount && targetCount == 1)
         {
-            return CreateBattleGroup(resultList, GetPartyImpression(resultList));
+            result.Group = CreateBattleGroup(resultList, GetPartyImpression(resultList));
+            return result;
         }
 
         if (!manualCount &&
             (_matchCalc.LonelyMatchUp(resultList[0].MyImpression) || validEnemies.Count <= 0))
         {
-            return CreateBattleGroup(resultList, GetPartyImpression(resultList));
+            result.Group = CreateBattleGroup(resultList, GetPartyImpression(resultList));
+            return result;
         }
 
         while (true)
         {
             if (TryResolveManualEnd(manualCount, targetCount, resultList, validEnemies, out var manualImpression))
             {
-                return CreateBattleGroup(resultList, manualImpression);
+                result.Group = CreateBattleGroup(resultList, manualImpression);
+                return result;
             }
 
             TryAddCompatibleTarget(resultList, validEnemies);
 
             if (TryResolveAutoEnd(manualCount, resultList, validEnemies, out var autoImpression))
             {
-                return CreateBattleGroup(resultList, autoImpression);
+                result.Group = CreateBattleGroup(resultList, autoImpression);
+                return result;
             }
+        }
+    }
+
+    /// <summary>
+    /// validEnemiesから死亡敵を除去し、致死ログ情報を収集する。
+    /// </summary>
+    private static void CollectPassiveKillsAndRefilter(
+        List<NormalEnemy> validEnemies,
+        List<PassiveKillEntry> kills)
+    {
+        for (var i = validEnemies.Count - 1; i >= 0; i--)
+        {
+            var ene = validEnemies[i];
+            if (!ene.Death()) continue;
+
+            var killer = ene.FindKillerPassive();
+            if (killer != null)
+            {
+                kills.Add(new PassiveKillEntry
+                {
+                    VictimName = ene.CharacterName,
+                    GrantorName = killer._grantor?.CharacterName,
+                    PassiveName = killer.PassiveName
+                });
+            }
+
+            validEnemies.RemoveAt(i);
         }
     }
 

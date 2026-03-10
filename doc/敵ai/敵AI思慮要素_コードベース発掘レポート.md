@@ -4,7 +4,7 @@
 
 **調査日**: 2026-03-07
 **調査範囲**: `Assets/Script/` 以下全体（BaseStates, BaseSkill, BattleManager, BattleGroup, BasePassive, BaseVitalLayer, Config, EscapeHandler等）
-**対象仕様書**: `doc/敵AI仕様書.md` セクション11.2（既存20要素）
+**対象仕様書**: `doc/敵ai/敵AI仕様書.md` セクション11.2（既存20要素）
 **発掘結果**: 新規約50要素
 
 ---

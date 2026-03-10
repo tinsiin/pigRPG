@@ -3,6 +3,7 @@
 再エンカウント時（`NormalEnemy.ReEncountCallback`）に実行される全処理の仕様。
 
 > **構想の経緯**: `doc/終了済み/ReEncountステータス変化構想.md` を参照（全項目完了）
+> **関連**: パッシブ致死ログの詳細は `doc/終了済み/パッシブ致死構想.md` を参照
 
 ## 1. ReEncountCallbackの全体フロー
 
@@ -31,7 +32,8 @@ EncounterEnemySelector.Select():
 │       │   │   ├── AllPassiveWalkEffect()          … 既存パッシブのWalkEffect発火
 │       │   │   ├── UpdateWalkAllPassiveSurvival()  … パッシブ歩行残存カウンタ減少
 │       │   │   ├── UpdateAllSkillPassiveWalkSurvival() … スキルパッシブの歩行残存
-│       │   │   └── ResonanceHealingOnWalking()     … 共鳴値の歩行時回復
+│       │   │   ├── ResonanceHealingOnWalking()     … 共鳴値の歩行時回復
+│       │   │   └── ★ if (Death()) break           … パッシブ致死時の早期脱出
 │       │   │
 │       │   ├── ApplyGrowth(ReEncount, distanceTraveled) … スキル成長処理
 │       │   │
@@ -44,9 +46,15 @@ EncounterEnemySelector.Select():
 │       │
 │       └── 死亡判定 → 復活準備（復活タイプかつ未破壊の場合）
 │
+├── ★ CollectPassiveKillsAndRefilter              … 死亡敵除去 + 致死ログ収集
+│
 ├── ApplyComboPassiveAccumulation(validEnemies)  … パッシブ蓄積 【§3】
 │
-└── SelectLeader → バトルグループ結成
+├── ★ CollectPassiveKillsAndRefilter              … 蓄積中の死亡にも対応
+│
+├── if (!validEnemies.Any()) → 全滅: ログ表示、return null
+│
+└── SelectLeader → バトルグループ結成（生存者のみ）
 ```
 
 ### 既存パッシブ歩行消化について
@@ -55,7 +63,20 @@ EncounterEnemySelector.Select():
 
 なお、メモに「再遭遇時パッシブ生存判定（1/2生存、1/3効果）」という簡易版の構想があったが、
 これは歩行消化の仕組みがまだなかった時期の発想であり、現在の歩数分ループが同じ目的をより精密に果たしている。
-詳細は `doc/ReEncountステータス変化構想.md` §2.2 を参照。
+詳細は `doc/終了済み/ReEncountステータス変化構想.md` §2.2 を参照。
+
+### パッシブ致死と死亡敵の再フィルタ
+
+歩行消化ループ中にパッシブの `WalkEffect()` で敵のHPが0以下になることがある（パッシブ致死）。
+この場合、以下の対応が実装されている:
+
+- **歩行消化ループ内**: `if (Death()) break;` で早期脱出（パフォーマンス改善 + 死亡後の無意味な処理を防止）
+- **Callback後の再フィルタ**: `CollectPassiveKillsAndRefilter` で `validEnemies` から死亡敵を除去し、致死ログ情報を収集
+- **再フィルタ呼び出し箇所**: `ApplyReencountCallbacks` 直後と `ApplyComboPassiveAccumulation` 直後の2箇所
+
+再フィルタがないと、死亡敵が `validEnemies` に残留し、リーダーに選出されたり戦闘に持ち込まれる問題があった。
+
+致死ログの表示先は戦闘の有無で分岐する。詳細は `doc/終了済み/パッシブ致死構想.md` §2 を参照。
 
 ## 2. HP自然回復
 
@@ -183,6 +204,7 @@ AccumulateComboPassives(partner, distanceTraveled):
   │       「相方がsimulatedSteps前にパッシブをかけた」前提
   ├── 5. 新規パッシブのみを対象にsimulatedSteps分の歩行消化を実行
   │       （WalkEffect + UpdateWalkSurvival）
+  │       ★ if (Death()) break — シミュレーション中に死亡したら早期脱出
   └── 6. 残存したパッシブだけが戦闘に持ち込まれる
 ```
 

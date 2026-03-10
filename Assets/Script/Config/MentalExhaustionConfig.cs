@@ -4,7 +4,7 @@ using UnityEngine;
 /// 乖離スキル精神消耗に関する定数・計算メソッドを一元管理する設定。
 /// 乖離したスキルを戦闘中に連発すると精神HPが加速的に消耗し、
 /// ダウナー乖離を自然に誘発するメカニクス。
-/// 詳細: doc/乖離スキル精神消耗仕様書.md
+/// 詳細: doc/スキル/乖離スキル精神消耗仕様書.md
 /// </summary>
 public static class MentalExhaustionConfig
 {

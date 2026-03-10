@@ -37,8 +37,22 @@ public class BattleInitializer
         BattleRuleRegistry ruleRegistryOverride = null,
         FriendshipComboRegistry comboRegistry = null)
     {
-        var enemyGroup = EncounterEnemySelector.SelectGroup(enemies, globalSteps, enemyNumber,
+        var selectionResult = EncounterEnemySelector.SelectGroup(enemies, globalSteps, enemyNumber,
             comboRegistry: comboRegistry);
+        var enemyGroup = selectionResult.Group;
+
+        // パッシブ致死ログ: 全滅時 → MessageDropperで歩行中に通知
+        if (enemyGroup == null && selectionResult.HasPassiveKills)
+        {
+            ShowPassiveKillsOnMessageDropper(selectionResult.PassiveKills);
+        }
+
+        // パッシブ致死ログ: 一部致死で戦闘に入る場合 → SchizoLogで戦闘開始時に表示
+        if (enemyGroup != null && selectionResult.HasPassiveKills)
+        {
+            ShowPassiveKillsOnSchizoLog(selectionResult.PassiveKills);
+        }
+
         return InitializeBattleFromGroup(
             enemyGroup,
             playersParty,
@@ -210,6 +224,38 @@ public class BattleInitializer
             randomSeed: randomSeed);
     }
     
+    private void ShowPassiveKillsOnMessageDropper(List<PassiveKillEntry> kills)
+    {
+        if (_messageDropper == null) return;
+        foreach (var kill in kills)
+        {
+            _messageDropper.CreateMessage(FormatPassiveKillMessage(kill));
+        }
+    }
+
+    private static void ShowPassiveKillsOnSchizoLog(List<PassiveKillEntry> kills)
+    {
+        if (SchizoLog.Instance == null) return;
+        foreach (var kill in kills)
+        {
+            SchizoLog.Instance.AddLog(FormatPassiveKillBattleMessage(kill));
+        }
+    }
+
+    private static string FormatPassiveKillMessage(PassiveKillEntry kill)
+    {
+        return kill.GrantorName != null
+            ? $"{kill.GrantorName}の{kill.PassiveName}により{kill.VictimName}は倒れた"
+            : $"{kill.PassiveName}により{kill.VictimName}は倒れた";
+    }
+
+    private static string FormatPassiveKillBattleMessage(PassiveKillEntry kill)
+    {
+        return kill.GrantorName != null
+            ? $"{kill.VictimName}は{kill.GrantorName}の{kill.PassiveName}により既に息絶えていた"
+            : $"{kill.VictimName}は{kill.PassiveName}により既に息絶えていた";
+    }
+
     /// <summary>
     /// 戦闘UI の初期状態を設定
     /// </summary>

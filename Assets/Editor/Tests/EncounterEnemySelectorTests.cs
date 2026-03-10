@@ -92,7 +92,7 @@ public class EncounterEnemySelectorTests
         var enemies = new List<NormalEnemy>();
         var result = _selector.Select(enemies, 100);
 
-        Assert.IsNull(result);
+        Assert.IsNull(result.Group);
     }
 
     [Test]
@@ -100,7 +100,7 @@ public class EncounterEnemySelectorTests
     {
         var result = _selector.Select(null, 100);
 
-        Assert.IsNull(result);
+        Assert.IsNull(result.Group);
     }
 
     [Test]
@@ -111,8 +111,8 @@ public class EncounterEnemySelectorTests
 
         var result = _selector.Select(enemies, 100);
 
-        Assert.IsNotNull(result);
-        Assert.IsTrue(result.Ours.Contains(alive));
+        Assert.IsNotNull(result.Group);
+        Assert.IsTrue(result.Group.Ours.Contains(alive));
     }
 
     [Test]
@@ -125,9 +125,9 @@ public class EncounterEnemySelectorTests
 
         var result = _selector.Select(enemies, 100);
 
-        Assert.IsNotNull(result);
+        Assert.IsNotNull(result.Group);
         // 復活可能な敵も候補に含まれる（選ばれるかは乱数次第）
-        Assert.GreaterOrEqual(result.Ours.Count, 1);
+        Assert.GreaterOrEqual(result.Group.Ours.Count, 1);
     }
 
     [Test]
@@ -139,8 +139,8 @@ public class EncounterEnemySelectorTests
 
         var result = _selector.Select(enemies, 100);
 
-        Assert.IsNotNull(result);
-        Assert.IsFalse(result.Ours.Contains(broken));
+        Assert.IsNotNull(result.Group);
+        Assert.IsFalse(result.Group.Ours.Contains(broken));
     }
 
     [Test]
@@ -152,8 +152,8 @@ public class EncounterEnemySelectorTests
 
         var result = _selector.Select(enemies, 100);
 
-        Assert.IsNotNull(result);
-        Assert.IsFalse(result.Ours.Contains(deadNoReborn));
+        Assert.IsNotNull(result.Group);
+        Assert.IsFalse(result.Group.Ours.Contains(deadNoReborn));
     }
 
     [Test]
@@ -169,8 +169,8 @@ public class EncounterEnemySelectorTests
 
         var result = selector.Select(enemies, 100, number: 1);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(1, result.Ours.Count);
+        Assert.IsNotNull(result.Group);
+        Assert.AreEqual(1, result.Group.Ours.Count);
     }
 
     [Test]
@@ -187,8 +187,8 @@ public class EncounterEnemySelectorTests
 
         var result = selector.Select(enemies, 100, number: 5);
 
-        Assert.IsNotNull(result);
-        Assert.LessOrEqual(result.Ours.Count, 3);
+        Assert.IsNotNull(result.Group);
+        Assert.LessOrEqual(result.Group.Ours.Count, 3);
     }
 
     private static NormalEnemy CreateEnemy(
