@@ -560,6 +560,9 @@ public abstract partial class BaseStates
         //命中段階による最終ダメージ計算
         HitDmgCalculation(ref dmg,ref ResonanceDmg, hitResult,Atker);
 
+        //汎用クリティカル判定（ImprintAdrenaline等）
+        ApplyGenericCritical(ref dmg, ref ResonanceDmg, Atker);
+
         //TLOAスキルの威力減衰 本体HPの割合に対するダメージの削り切れる限界というもの。
         ApplyTLOADamageReduction(ref dmg,ref ResonanceDmg);
 
@@ -1278,6 +1281,32 @@ public abstract partial class BaseStates
                 dmg *=criticalRate;
                 ResonanceDmg *= criticalRate;
                 return;
+        }
+    }
+
+    /// <summary>
+    /// 汎用クリティカル判定＋バースト威力倍率の適用。
+    /// 攻撃者のパッシブ（ImprintAdrenaline等）から率と倍率を取得し、ダメージに反映する。
+    /// 命中クリティカル(1.5倍)とは独立した別枠。
+    /// </summary>
+    void ApplyGenericCritical(ref StatesPowerBreakdown dmg, ref StatesPowerBreakdown ResonanceDmg, BaseStates Attacker)
+    {
+        // バースト威力倍率（確定1.4倍等）
+        var burstMul = Attacker.TotalBurstMultiplier();
+        if (burstMul > 1.0f)
+        {
+            dmg *= burstMul;
+            ResonanceDmg *= burstMul;
+            Debug.Log($"[GenericCritical] バースト威力倍率 {burstMul}x 適用");
+        }
+
+        // 汎用クリティカル率判定
+        var critRate = Attacker.TotalGenericCriticalRate();
+        if (critRate > 0f && rollper(critRate))
+        {
+            dmg *= GenericCriticalMultiplier;
+            ResonanceDmg *= GenericCriticalMultiplier;
+            Debug.Log($"[GenericCritical] 汎用クリティカル発動！ {GenericCriticalMultiplier}x (率: {critRate}%)");
         }
     }
 

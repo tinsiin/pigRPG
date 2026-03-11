@@ -84,6 +84,18 @@ public abstract partial class BaseStates
     }
 
     /// <summary>
+    /// スキル実行前の全パッシブ効果（コンボ判定等）
+    /// </summary>
+    public void PassivesOnBeforeSkillAction()
+    {
+        var copy = _passiveList.ToArray();
+        foreach (var pas in copy)
+        {
+            pas.OnBeforeSkillAction();
+        }
+    }
+
+    /// <summary>
     /// 攻撃後のパッシブ効果
     /// </summary>
     public void PassivesOnAfterAttack()
@@ -94,6 +106,34 @@ public abstract partial class BaseStates
         {
             pas.OnAfterAttack();
         }
+    }
+
+    /// <summary>
+    /// パッシブ由来の汎用クリティカル率（%）を集計する。
+    /// BaseStates.GenericCriticalRate（恒常分）とは別にコンボ分等を返す。
+    /// </summary>
+    public float PassivesGenericCriticalContribution()
+    {
+        float total = 0f;
+        foreach (var pas in _passiveList)
+        {
+            total += pas.GetGenericCriticalContribution();
+        }
+        return total;
+    }
+
+    /// <summary>
+    /// パッシブ由来のバースト威力倍率を集計する（最大値を採用）。
+    /// </summary>
+    public float PassivesBurstMultiplier()
+    {
+        float max = 1.0f;
+        foreach (var pas in _passiveList)
+        {
+            var m = pas.GetBurstMultiplier();
+            if (m > max) max = m;
+        }
+        return max;
     }
     /// <summary>
     /// キャラ単位への攻撃後のパッシブ効果　　命中段階を伴った処理

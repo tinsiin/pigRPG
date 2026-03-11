@@ -36,7 +36,7 @@ public abstract partial class BaseStates
     /// <summary>
     ///追加HPを適用  passiveと違い適合条件がないからvoid
     /// </summary>
-    public void ApplyVitalLayer(int id)
+    public void ApplyVitalLayer(int id, float hpMultiplier = 1f)
     {
         //リスト内に同一の物があるか判定する。
         var sameHP = _vitalLayerList.FirstOrDefault(lay => lay.id == id);
@@ -47,6 +47,9 @@ public abstract partial class BaseStates
         else//初物の場合
         {
             var newLayer = VitalLayerManager.Instance.GetAtID(id).DeepCopy();//マネージャーから取得 当然ディープコピー
+            // 汎用クリティカル: 新規バリアのMaxHPをスケーリング
+            if (hpMultiplier > 1f)
+                newLayer.ScaleMaxHP(hpMultiplier);
             newLayer.ReplenishHP();//maxにしないとね
             //優先順位にリスト内で並び替えつつ追加
             // _vitalLaerList 内で、新しいレイヤーの Priority より大きい最初の要素のインデックスを探す

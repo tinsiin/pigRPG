@@ -344,6 +344,23 @@ public class BasePassive
         UpdateInterruptCounterSurvival();//パッシブ消えるかどうか
     }
     /// <summary>
+    /// 所持者がスキルを実行する直前（ダメージ計算より前）に呼ばれる。
+    /// ImprintAdrenalineのコンボ判定などに使用。
+    /// </summary>
+    public virtual void OnBeforeSkillAction() { }
+
+    /// <summary>
+    /// このパッシブが提供する汎用クリティカル率（%）を返す。
+    /// 既定では0。ImprintAdrenaline等で上書きする。
+    /// </summary>
+    public virtual float GetGenericCriticalContribution() => 0f;
+
+    /// <summary>
+    /// バースト時の確定威力倍率を返す。既定では1.0f（変化なし）。
+    /// </summary>
+    public virtual float GetBurstMultiplier() => 1.0f;
+
+    /// <summary>
     /// 攻撃後
     /// </summary>
     public virtual void OnAfterAttack()
@@ -1124,9 +1141,9 @@ public class BasePassive
     /// インスタンス共有するとターン処理が共有されてヤバいし、
     /// これやると自由に敵のパッシブを壊すこととか実装できるようになる
     /// </summary>
-    public BasePassive DeepCopy()
+    public virtual BasePassive DeepCopy()
     {
-        var copy = new BasePassive();
+        var copy = (BasePassive)Activator.CreateInstance(GetType());
         copy.OkImpression = OkImpression;
         copy.OkType = OkType;
         copy.IsCantACT = IsCantACT;

@@ -65,6 +65,9 @@ public abstract partial class BaseStates
             manager.FactionToGroup(Faction.Ally).PartyPassivesOnBeforeAllAlliesDamage(this,ref Unders);
         }
 
+        //スキル実行前のパッシブ効果（ImprintAdrenalineのコンボ判定等）
+        PassivesOnBeforeSkillAction();
+
         //キャラクターに対して実行
         BeginSkillHitAggregation();
         for (var i = 0; i < Unders.Count; i++)

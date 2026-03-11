@@ -59,6 +59,14 @@ public class BaseVitalLayer
         LayerHP = 999999;
     }
 
+    /// <summary>
+    /// MaxLayerHPを倍率で変更する（汎用クリティカル用）
+    /// </summary>
+    public void ScaleMaxHP(float multiplier)
+    {
+        _maxLayhp *= multiplier;
+    }
+
 
     /// <summary>
     /// 戦闘の中断によって消えるかどうか

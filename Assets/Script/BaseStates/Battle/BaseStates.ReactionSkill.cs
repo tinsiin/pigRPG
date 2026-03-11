@@ -284,7 +284,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// 悪いパッシブ付与処理
     /// </summary>
-    bool BadPassiveHit(BaseSkill skill,BaseStates grantor)
+    bool BadPassiveHit(BaseSkill skill,BaseStates grantor, float durationMultiplier = 1f)
     {
         var hit = false;
         // Phase 3b: DI注入を優先、フォールバックでPassiveManager.Instance
@@ -292,6 +292,7 @@ public abstract partial class BaseStates
         foreach (var id in skill.SubEffects.Where(id => provider.GetAtID(id).IsBad))
         {//付与する瞬間はインスタンス作成のディープコピーがまだないので、passivemanagerで調査する
             ApplyPassiveBufferInBattleByID(id,grantor);
+            ApplyDurationExtension(id, durationMultiplier);
             hit = true;//goodpassiveHitに説明
         }
         return hit;
@@ -326,12 +327,12 @@ public abstract partial class BaseStates
     /// <summary>
     /// 悪い追加HP付与処理
     /// </summary>
-    bool BadVitalLayerHit(BaseSkill skill)
+    bool BadVitalLayerHit(BaseSkill skill, float hpMultiplier = 1f)
     {
         var done = false;
         foreach (var id in skill.SubVitalLayers.Where(id => VitalLayerManager.Instance.GetAtID(id).IsBad))
         {
-            ApplyVitalLayer(id);
+            ApplyVitalLayer(id, hpMultiplier);
             done = true;
         }
         return done;
@@ -361,7 +362,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// 良いパッシブ付与処理
     /// </summary>
-    bool GoodPassiveHit(BaseSkill skill,BaseStates grantor)
+    bool GoodPassiveHit(BaseSkill skill,BaseStates grantor, float durationMultiplier = 1f)
     {
         var hit = false;
         // Phase 3b: DI注入を優先、フォールバックでPassiveManager.Instance
@@ -369,6 +370,7 @@ public abstract partial class BaseStates
         foreach (var id in skill.SubEffects.Where(id => !provider.GetAtID(id).IsBad))
         {
             ApplyPassiveBufferInBattleByID(id,grantor);
+            ApplyDurationExtension(id, durationMultiplier);
             hit = true;//スキル命中率を介してるのだから、適合したかどうかはヒットしたかしないかに関係ない。 = ApplyPassiveで元々適合したかどうかをhitに代入してた
             //。。。バッファーリストの関係で一々シミュレイト用関数作るのがめんどくさかったけど、この考えが割と合理的だったからそうしたけどね。
             //それに、このhitしたのに敵になかったら、プレイヤーはこのパッシブの適合条件で適合しなかったことを察せれるし。
@@ -401,7 +403,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// 良いスキルパッシブ付与処理
     /// </summary>
-    async UniTask<bool> GoodSkillPassiveHit(BaseSkill skill, BaseStates actor)
+    async UniTask<bool> GoodSkillPassiveHit(BaseSkill skill, BaseStates actor, float durationMultiplier = 1f)
     {
         var hit = false;
         foreach (var pas in skill.AggressiveSkillPassiveList.Where(pas => !pas.IsBad))//スキルパッシブスキルに装弾されたスキルパッシブ
@@ -409,10 +411,11 @@ public abstract partial class BaseStates
             //スキルパッシブ付与対象のスキル
             var targetedSkill =  await skill.SelectSkillPassiveAddTarget(actor, this);
             if(targetedSkill == null)continue;//付与対象のスキルがなかったら、次のループへ
+            var pasToApply = ApplySkillPassiveDurationExtension(pas, durationMultiplier);
             //付与対象のスキルで回す
             foreach(var targetSkill in targetedSkill)
             {
-                targetSkill.ApplySkillPassiveBufferInBattle(pas);//スキルパッシブ追加用バッファに追加
+                targetSkill.ApplySkillPassiveBufferInBattle(pasToApply);//スキルパッシブ追加用バッファに追加
             }
 
             //ヒットしたことを返すフラグ
@@ -423,7 +426,7 @@ public abstract partial class BaseStates
     /// <summary>
     /// 悪いスキルパッシブ付与処理
     /// </summary>
-    async UniTask<bool> BadSkillPassiveHit(BaseSkill skill, BaseStates actor)
+    async UniTask<bool> BadSkillPassiveHit(BaseSkill skill, BaseStates actor, float durationMultiplier = 1f)
     {
         var hit = false;
         foreach (var pas in skill.AggressiveSkillPassiveList.Where(pas => pas.IsBad))//スキルパッシブスキルに装弾されたスキルパッシブ
@@ -431,10 +434,11 @@ public abstract partial class BaseStates
             //スキルパッシブ付与対象のスキル
             var targetedSkill = await skill.SelectSkillPassiveAddTarget(actor, this);
             if(targetedSkill == null)continue;//付与対象のスキルがなかったら、次のループへ
+            var pasToApply = ApplySkillPassiveDurationExtension(pas, durationMultiplier);
             //付与対象のスキルで回す
             foreach(var targetSkill in targetedSkill)
             {
-                targetSkill.ApplySkillPassiveBufferInBattle(pas);//追加用バッファに追加
+                targetSkill.ApplySkillPassiveBufferInBattle(pasToApply);//追加用バッファに追加
             }
 
             //ヒットしたことを返すフラグ
@@ -474,12 +478,12 @@ public abstract partial class BaseStates
     /// 良い追加HP付与処理
     /// </summary>
     /// <param name="skill"></param>
-    bool GoodVitalLayerHit(BaseSkill skill)
+    bool GoodVitalLayerHit(BaseSkill skill, float hpMultiplier = 1f)
     {
         var done = false;
         foreach (var id in skill.SubVitalLayers.Where(id => !VitalLayerManager.Instance.GetAtID(id).IsBad))
         {
-            ApplyVitalLayer(id);
+            ApplyVitalLayer(id, hpMultiplier);
             done = true;
         }
         return done;
@@ -518,7 +522,8 @@ public abstract partial class BaseStates
     bool ExecuteAddPassiveFriendlyCore(BaseStates attacker, BaseSkill skill, HitResult hitResult)
     {
         if (hitResult != HitResult.Hit) return false;
-        return this.GoodPassiveHit(skill, attacker);
+        var mul = GetGenericCriticalMultiplierForNonDamage(attacker);
+        return this.GoodPassiveHit(skill, attacker, mul);
     }
     /// <summary>
     /// 友好系: 良い追加HP付与のコア（命中結果に従って適用）
@@ -526,7 +531,8 @@ public abstract partial class BaseStates
     bool ExecuteAddVitalLayerFriendlyCore(BaseStates attacker, BaseSkill skill, HitResult hitResult)
     {
         if (hitResult != HitResult.Hit) return false;
-        this.GoodVitalLayerHit(skill);
+        var mul = GetGenericCriticalMultiplierForNonDamage(attacker);
+        this.GoodVitalLayerHit(skill, mul);
         return true;
     }
     /// <summary>
@@ -535,7 +541,8 @@ public abstract partial class BaseStates
     async UniTask<bool> ExecuteAddSkillPassiveFriendlyCore(BaseStates attacker, BaseSkill skill, HitResult hitResult)
     {
         if (hitResult != HitResult.Hit) return false;
-        return await this.GoodSkillPassiveHit(skill, attacker);
+        var mul = GetGenericCriticalMultiplierForNonDamage(attacker);
+        return await this.GoodSkillPassiveHit(skill, attacker, mul);
     }
     /// <summary>
     /// 友好系: 良いパッシブ除去のコア（命中結果に従って適用）
@@ -565,6 +572,11 @@ public abstract partial class BaseStates
         Angel();
         isHeal = true;
 
+        // 汎用クリティカル: 復活時HP × multiplier
+        var mul = GetGenericCriticalMultiplierForNonDamage(attacker);
+        if (mul > 1.0f)
+            HP *= mul; // HP setterがMaxHPでクランプする
+
         // 第2層: 蘇生エフェクト
         if (BattleIcon != null)
             EffectManager.Play("revival_pillar", BattleIcon);
@@ -578,25 +590,81 @@ public abstract partial class BaseStates
     /// 友好系: ヒールのコア（命中結果に従って適用）
     /// 適用量を返す
     /// </summary>
-    float ExecuteHealFriendlyCore(float skillPower, HitResult hitResult, ref bool isHeal)
+    float ExecuteHealFriendlyCore(float skillPower, HitResult hitResult, ref bool isHeal, BaseStates attacker = null)
     {
         if (hitResult != HitResult.Hit) return 0f;
         isHeal = true;
+        // 汎用クリティカル: 回復量1.9倍
+        if (attacker != null)
+            skillPower *= GetGenericCriticalMultiplierForNonDamage(attacker);
         return Heal(skillPower);
     }
     /// <summary>
     /// 友好系: 精神ヒールのコア（命中結果に従って適用）
     /// </summary>
-    void ExecuteMentalHealFriendlyCore(float skillPowerForMental, HitResult hitResult, ref bool isHeal)
+    void ExecuteMentalHealFriendlyCore(float skillPowerForMental, HitResult hitResult, ref bool isHeal, BaseStates attacker = null)
     {
         if (hitResult != HitResult.Hit) return;
         isHeal = true;
+        // 汎用クリティカル: 回復量1.9倍
+        if (attacker != null)
+            skillPowerForMental *= GetGenericCriticalMultiplierForNonDamage(attacker);
         MentalHeal(skillPowerForMental);
+    }
+
+    /// <summary>
+    /// 非ダメージ系スキル（回復、復活、バリア、パッシブ付与等）向けの汎用クリティカル倍率を返す。
+    /// バースト倍率 × クリティカル判定を合算して返す。ダメージ版ApplyGenericCriticalの非ダメージ版。
+    /// </summary>
+    float GetGenericCriticalMultiplierForNonDamage(BaseStates attacker)
+    {
+        float multiplier = 1.0f;
+
+        // バースト威力倍率（確定）
+        var burstMul = attacker.TotalBurstMultiplier();
+        if (burstMul > 1.0f)
+        {
+            multiplier *= burstMul;
+            Debug.Log($"[GenericCritical] 非ダメージ系バースト倍率 {burstMul}x 適用");
+        }
+
+        // 汎用クリティカル率判定
+        var critRate = attacker.TotalGenericCriticalRate();
+        if (critRate > 0f && rollper(critRate))
+        {
+            multiplier *= GenericCriticalMultiplier;
+            Debug.Log($"[GenericCritical] 非ダメージ系汎用クリティカル発動！ {GenericCriticalMultiplier}x (率: {critRate}%)");
+        }
+
+        return multiplier;
+    }
+
+    /// <summary>
+    /// バッファ済みパッシブのDurationTurnを汎用クリティカル倍率で延長する（切り捨て）。
+    /// </summary>
+    void ApplyDurationExtension(int passiveId, float durationMultiplier)
+    {
+        if (durationMultiplier <= 1f) return;
+        var buffered = GetBufferPassiveByID(passiveId);
+        if (buffered != null && buffered.DurationTurn > 0)
+            buffered.DurationTurn = Mathf.FloorToInt(buffered.DurationTurn * durationMultiplier);
+    }
+
+    /// <summary>
+    /// SkillPassiveのDurationTurnを汎用クリティカル倍率で延長する（テンプレート保護のためDeepCopy）。
+    /// 延長不要なら元のインスタンスをそのまま返す。
+    /// </summary>
+    static BaseSkillPassive ApplySkillPassiveDurationExtension(BaseSkillPassive original, float durationMultiplier)
+    {
+        if (durationMultiplier <= 1f || original.DurationTurn <= 0) return original;
+        var copy = original.DeepCopy();
+        copy.DurationTurn = Mathf.FloorToInt(copy.DurationTurn * durationMultiplier);
+        return copy;
     }
 
     /* ---------------------------------
      * 処理まとめ系
-     * --------------------------------- 
+     * ---------------------------------
      */
 
     /// <summary>
@@ -623,7 +691,8 @@ public abstract partial class BaseStates
             if (rollper(rndFrequency))
             {
                 //悪いパッシブを付与しようとしてるのなら、命中回避計算
-                badPassiveHit = BadPassiveHit(skill,Atker);
+                var passMul = GetGenericCriticalMultiplierForNonDamage(Atker);
+                badPassiveHit = BadPassiveHit(skill,Atker, passMul);
             }else
             {
                 Debug.Log("悪いパッシブを付与が上手く発動しなかった。");
@@ -635,7 +704,8 @@ public abstract partial class BaseStates
             if (rollper(rndFrequency))
             {
                 //悪い追加HPを付与しようとしてるのなら、命中回避計算
-                badVitalLayerHit = BadVitalLayerHit(skill);
+                var vlMul = GetGenericCriticalMultiplierForNonDamage(Atker);
+                badVitalLayerHit = BadVitalLayerHit(skill, vlMul);
             }else
             {
                 Debug.Log("悪い追加HPを付与が上手く発動しなかった。");
@@ -679,7 +749,8 @@ public abstract partial class BaseStates
             if (rollper(rndFrequency))
             {
                 //悪いスキルパッシブを付与しようとしてるのなら、命中回避計算
-                badSkillPassiveHit = await BadSkillPassiveHit(skill, Atker);
+                var spMul = GetGenericCriticalMultiplierForNonDamage(Atker);
+                badSkillPassiveHit = await BadSkillPassiveHit(skill, Atker, spMul);
             }else
             {
                 Debug.Log("悪い「スキル」パッシブを付与が上手く発動しなかった。");
@@ -885,7 +956,7 @@ public abstract partial class BaseStates
             var hitResult = skill.SkillHitCalc(this, actor: attacker);
             hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
             AccumulateHitResult(hitResult);
-            var healed = ExecuteHealFriendlyCore(skillPower, hitResult, ref isHeal);
+            var healed = ExecuteHealFriendlyCore(skillPower, hitResult, ref isHeal, attacker);
             healAmount += healed;
 
             // 第4層: SchizoLog
@@ -907,7 +978,7 @@ public abstract partial class BaseStates
             var hitResult = skill.SkillHitCalc(this, actor: attacker);
             hitResult = MixAllyEvade(hitResult,attacker);
             AccumulateHitResult(hitResult);
-            ExecuteMentalHealFriendlyCore(skillPower, hitResult, ref isHeal);
+            ExecuteMentalHealFriendlyCore(skillPower, hitResult, ref isHeal, attacker);
         }
 
         //付与や除去系の友好的スキル(敵対的な物はApplyNonDamageHostileEffectsで処理)

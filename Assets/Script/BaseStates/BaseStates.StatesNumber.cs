@@ -90,6 +90,40 @@ public abstract partial class BaseStates
             }
         }
     }
+    //  ==============================================================================================================================
+    //                                              汎用クリティカル
+    //  ==============================================================================================================================
+
+    /// <summary>
+    /// 汎用クリティカル発動時のダメージ/効果倍率。
+    /// システムレベルの定数（ImprintAdrenaline等の個別パッシブに依存しない）。
+    /// </summary>
+    public const float GenericCriticalMultiplier = 1.9f;
+
+    /// <summary>
+    /// 恒常汎用クリティカル率（%）。バースト到達時に加算され、BM内永続。
+    /// パッシブ消失後も残る。将来的にImprintAdrenaline以外からの加算にも対応。
+    /// </summary>
+    [NonSerialized]
+    public float GenericCriticalRate;
+
+    /// <summary>
+    /// 汎用クリティカル率の合計（%）を返す。
+    /// 恒常分（GenericCriticalRate）+ パッシブ由来分（コンボ等）の合算。
+    /// </summary>
+    public float TotalGenericCriticalRate()
+    {
+        return GenericCriticalRate + PassivesGenericCriticalContribution();
+    }
+
+    /// <summary>
+    /// パッシブ由来のバースト威力倍率を返す。バーストでなければ1.0f。
+    /// </summary>
+    public float TotalBurstMultiplier()
+    {
+        return PassivesBurstMultiplier();
+    }
+
     /// <summary>
     /// 精神HP最大値
     /// </summary>
