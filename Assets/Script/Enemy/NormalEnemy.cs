@@ -95,11 +95,17 @@ public class NormalEnemy : BaseStates
         get { return RebornSteps >= 0; }//復活歩数がゼロ以上なら復活する敵　つまり-1に設定すると復活しない
     }
 
-    [Header("割り込みカウンター有効/無効\n頭のいいキャラなら戦闘時AIAPIで変更する")]
+    [Header("割り込みカウンター有効/無効（Inspector=初期値、AIから動的変更可）")]
     [SerializeField]
     private bool _interruptCounterActive = true;
 
     public override bool IsInterruptCounterActive => _interruptCounterActive;
+
+    /// <summary>
+    /// AIから割り込みカウンターの有効/無効を動的に変更する。
+    /// Plan()等の思考フェーズで呼び出し、戦況に応じて割り込みカウンターを封じる用途。
+    /// </summary>
+    public override void SetInterruptCounterActive(bool active) => _interruptCounterActive = active;
 
 
     

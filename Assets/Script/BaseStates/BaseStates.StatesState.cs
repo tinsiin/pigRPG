@@ -2873,9 +2873,14 @@ public abstract partial class BaseStates
     /// <summary>
     /// 「標準のロジック」の割り込みカウンターが発動するかのオプション
     /// AllyClassはUIから、Enemyは継承してシリアライズで設定する。
-    /// とりあえずtrueで設定
     /// </summary>
     public virtual bool IsInterruptCounterActive => true;
+
+    /// <summary>
+    /// 割り込みカウンターの有効/無効を動的に変更する。
+    /// 基底では何もしない。NormalEnemy/AllyClassで個別にoverrideする。
+    /// </summary>
+    public virtual void SetInterruptCounterActive(bool active) { }
 
 
 

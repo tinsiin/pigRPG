@@ -798,6 +798,7 @@ AIが判断材料として参照しうる要素の全体像。各要素につい
 | 味方前のめり連携 | 基盤済み | `manager.IsVanguard(ally)` で取得可能→**新ユーティリティ不要** | 味方の前のめり状態に応じた連携判断→**キャラ固有、Plan()手書き** | 既存 |
 | 自分・味方の物理属性 | 基盤済み | publicプロパティ→**新ユーティリティ不要** | **キャラ固有、Plan()手書き** | 既存 |
 | ポイント残量 | ✅基本対応済み | `MustSkillSelect()`が`CanCastSkill`で自動フィルタ。個別スキルコストはBaseSkillプロパティでpublic→**新ユーティリティ不要** | リソース配分（温存vs即使用）→**キャラ固有、Plan()手書き**。温存基準がキャラごとに全く異なるため（HP条件/ターン数/敵の残数等）ヘルパー化は引数発散パターン（ストック溜め判断と同構造） | 既存 |
+| 割り込みカウンターActive制御 | ✅対応済み | `user.IsInterruptCounterActive`（public getter）。Inspector初期値 + `user.SetInterruptCounterActive(bool)`で動的変更可能 | 「連続攻撃を食らっても割り込みカウンターを使わない」等の自制判断→**キャラ固有、Plan()手書き**。賢い敵が戦況に応じてカウンター封印/解除を切り替える用途。※攻撃側では`EstimateCounterRisk()`で相手のカウンター確率を推定しリスク回避（4.3b参照）。本項目は被攻撃側の対称的な制御 | `user.SetInterruptCounterActive(false/true)` をPlan()内で呼ぶだけ。既存パイプラインで対応 |
 
 #### 記録・履歴系
 
@@ -1031,3 +1032,4 @@ GeneratePostBattleActions(self, allies, pref)
 | 2026-03-08 | レビュー修正: ActionRecord.Target補填(PatchLastActionTarget+SkillExecutor統合)でCalcHealBond復活、BattleGroup.EscapedMembersでApplyEscapeBonds復活、4.7にTarget補填説明追加、6.2トリガー表を実装状況更新 |
 | 2026-03-08 | かばい（テラーズヒット）実装: ShieldRecord追加(BattleMemory)、TargetingServiceで即記録、PostBattleBondCalculatorにCalcShieldBond(+10/回)追加、6.2トリガー表全4件✅完了 |
 | 2026-03-08 | レビュー修正2: CalcKillBonusデッドコード修正（NotifyAllyDeathToMemoryで敵グループにもDeathRecord通知追加）、BattleGroup XMLコメント配置修正、ActionRecord.Target→Targets(List)複数ターゲット対応 |
+| 2026-03-15 | 割り込みカウンターActive動的制御: NormalEnemy/BaseStatesに`SetInterruptCounterActive(bool)`追加、11.2思慮要素テーブルに項目追加。AIのPlan()から割り込みカウンターの有効/無効を戦況に応じて切り替え可能に |
