@@ -2936,7 +2936,7 @@ public enum Demeanor
     /// </summary>
     Confused,
     /// <summary>
-    /// 普段の状態を表します。
+    /// 普調の状態を表します。
     /// </summary>
     Normal
     }
