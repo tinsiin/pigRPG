@@ -48,12 +48,12 @@ public sealed class EffectResolver
         _pipeline.AddComboRule(rule);
     }
 
-    public void ApplyRatherDamage(List<BaseStates> targets, float damageAmount)
+    public void ApplyRatherDamage(List<BaseStates> targets, float damageAmount, BaseStates source = null)
     {
         var damage = new StatesPowerBreakdown(new TenDayAbilityDictionary(), damageAmount);
         foreach (var target in targets)
         {
-            target.RatherDamage(damage, false, 1);
+            target.RatherDamage(damage, false, 1, source);
         }
     }
 

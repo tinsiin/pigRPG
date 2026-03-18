@@ -20,7 +20,7 @@ public sealed class ActionQueue
         return entry != null;
     }
 
-    public void RatherAdd(string mes, List<BaseStates> raterTargets = null, float raterDamage = 0f)
+    public void RatherAdd(string mes, List<BaseStates> raterTargets = null, float raterDamage = 0f, BaseStates ratherSource = null)
     {
         _entries.Add(new ActionEntry
         {
@@ -33,7 +33,8 @@ public sealed class ActionQueue
             SingleTarget = null,
             ExCounterDEFATK = -1f,
             RatherTargets = raterTargets,
-            RatherDamage = raterDamage
+            RatherDamage = raterDamage,
+            RatherSource = ratherSource
         });
     }
 

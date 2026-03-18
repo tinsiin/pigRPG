@@ -71,7 +71,17 @@ public abstract partial class BaseStates
             //スキルのその場DontMove性の担保のため、前のめりの選択がないスキルは後衛でも命中低下しない
             if(skill.AggressiveOnExecute.canSelect)
             {//だから前のめり選べるスキルの場合のみ命中低下する。
-                minusMyChance += AGI().Total * 0.2f;//チャンス計算だけだからTotal    
+                minusMyChance += AGI().Total * 0.2f;//チャンス計算だけだからTotal
+            }
+        }
+        else if (Attacker.IsIrritationAttack
+                 && (Attacker.MyImpression & SpiritualProperty.Psycho) == 0)
+        {
+            // イラつき攻撃で前のめりだが、命中低下免除を適用しない（怒りで雑に突っ込むため）
+            // Psycho例外: 冷静に狙えるので通常通り免除
+            if(skill.AggressiveOnExecute.canSelect)
+            {
+                minusMyChance += AGI().Total * 0.2f;
             }
         }
 

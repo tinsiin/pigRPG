@@ -65,6 +65,8 @@ public abstract partial class BaseStates
         //落ち着きをリセット　死んだらスキルの持続力無くなるしね
         CalmDown();
 
+        // イラつきシステム: 死亡通知（全キャラのイラつきから死者を横断処理）
+        IrritationService.OnCharacterDeath(this, LastDamageSource, LastDamageWasPassive);
     }
     //  ==============================================================================================================================
     //                                              ReactionSkill用
@@ -96,12 +98,19 @@ public abstract partial class BaseStates
     /// </summary>
     protected virtual void OnBattleAnyEffectHit(BaseStates attacker, BaseSkill skill, bool isAttack, HitResult bestHitOutcome)
     {
+        // 挑発属性: スキルに挑発属性あり + CompleteEvade以外 → イラつき付与
+        if (skill.HasProvokeAttribute && bestHitOutcome != HitResult.CompleteEvade)
+        {
+            IrritationService.Add(this, attacker, skill.ProvokeAmountOnHit);
+        }
     }
     /// <summary>
     /// 戦闘中に次のターンに進む際のコールバック
     /// </summary>
     public void OnNextTurnNoArgument()
     {
+        ResetIrritationTurnFlags(); // イラつき攻撃フラグのターンリセット
+
         ProcessBattleDeathIfNeeded();//バトル内での死亡コールバック実装
 
         UpdateTurnAllPassiveSurvival();
@@ -130,6 +139,12 @@ public abstract partial class BaseStates
             }
 
             CalmDownCountDec();//落ち着きカウントダウン
+
+            // イラつき減衰（3ターンごとに判定）
+            if (TickIrritationDecay())
+            {
+                IrritationService.Decay(this);
+            }
         }
        
         ApplyBufferApplyingPassive();//パッシブをここで付与。 =>詳細は豚のパッシブみとけ
@@ -193,6 +208,9 @@ public abstract partial class BaseStates
 
         // AI戦闘記憶のリセット（前回戦闘の記録をクリア）
         AIMemory?.Clear();
+
+        // イラつきシステムの初期化
+        InitIrritationState();
     }
     public virtual void OnBattleEndNoArgument()
     {

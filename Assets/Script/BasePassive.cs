@@ -435,7 +435,7 @@ public class BasePassive
             if(link.DamageLinkRatio>0)//ダメージ率があるなら
             {
                 //パッシブ所持者のレイザーダメージ
-                link.Passive._owner.RatherDamage(damage,link.LayerDamage,link.DamageLinkRatio);
+                link.Passive._owner.RatherDamage(damage,link.LayerDamage,link.DamageLinkRatio, Atker);
             }
         }
     }
@@ -467,7 +467,7 @@ public class BasePassive
             return;
         }
 
-        manager.Acts.RatherAdd(message, targets, power);
+        manager.Acts.RatherAdd(message, targets, power, _owner);
     }
 
 

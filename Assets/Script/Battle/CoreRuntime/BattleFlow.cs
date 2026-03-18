@@ -123,8 +123,8 @@ public sealed class BattleFlow
     /// </summary>
     public TabState RatherAct()
     {
-        var (targets, damage) = _context.ConsumeRatherAct();
-        _context.Effects.ApplyRatherDamage(targets, damage);
+        var (targets, damage, source) = _context.ConsumeRatherAct();
+        _context.Effects.ApplyRatherDamage(targets, damage, source);
         NextTurn(true);
         return SelectNextActor();
     }

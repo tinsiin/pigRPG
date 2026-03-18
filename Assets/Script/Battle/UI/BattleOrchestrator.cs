@@ -273,7 +273,9 @@ public sealed class BattleOrchestrator : IBattleLifecycle
 
         var nextState = (Context.Acts.TryPeek(out var entry) && entry.SingleTarget != null)
             ? TabState.NextWait
-            : AllyClass.DetermineNextUIState(actor.NowUseSkill);
+            : (actor.IsIrritationAttack && actor.IrritationForcedTarget != null)
+                ? TabState.NextWait // イラつき強制ターゲット: ターゲット選択スキップ
+                : AllyClass.DetermineNextUIState(actor.NowUseSkill);
 
         UpdateChoiceState(nextState);
         return CurrentUiState;

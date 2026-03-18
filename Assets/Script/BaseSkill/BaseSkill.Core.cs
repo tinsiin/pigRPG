@@ -69,6 +69,10 @@ public partial class BaseSkill
     public SerializableDictionary<SpiritualProperty, int> RequiredAttrP => FixedSkillLevelData[_levelIndex].RequiredAttrP;
     public float RequiredRemainingHPPercent => FixedSkillLevelData[_levelIndex].RequiredRemainingHPPercent;
     public bool Cantkill => FixedSkillLevelData[_levelIndex].Cantkill;
+    /// <summary>挑発属性を持つか</summary>
+    public bool HasProvokeAttribute => FixedSkillLevelData[_levelIndex].HasProvokeAttribute;
+    /// <summary>挑発ヒット時の付与量</summary>
+    public int ProvokeAmountOnHit => FixedSkillLevelData[_levelIndex].ProvokeAmountOnHit;
     public int SKillDidWaitCount => FixedSkillLevelData[_levelIndex].SkillDidWaitCount;
     public float EvasionModifier => FixedSkillLevelData[_levelIndex].EvasionModifier;
     public float AttackModifier => FixedSkillLevelData[_levelIndex].AttackModifier;

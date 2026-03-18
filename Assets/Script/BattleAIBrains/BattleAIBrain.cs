@@ -231,6 +231,14 @@ public abstract partial class BattleAIBrain : ScriptableObject
 
         // 3) 使用可能スキル選別（Freezeでない通常ターンのみ）
         availableSkills = MustSkillSelect(user.SkillList.ToList());
+
+        // 3b) イラつき攻撃時: 攻撃系スキルのみに制限
+        if (user.IsIrritationAttack && user.IrritationForcedTarget != null)
+        {
+            availableSkills = availableSkills.Where(s => s.HasType(SkillType.Attack)).ToList();
+            LogThink(0, $"イラつき攻撃: 攻撃系スキルのみに制限（残り{availableSkills.Count}）");
+        }
+
         if(availableSkills.Count == 0)
         {
             LogThink(0, "使用可能スキルなし → DoNothing");

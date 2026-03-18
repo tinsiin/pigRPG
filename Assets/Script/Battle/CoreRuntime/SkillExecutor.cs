@@ -50,13 +50,42 @@ public sealed class SkillExecutor
             acter.RangeWill = SkillZoneTraitNormalizer.NormalizeForInitial(skill.ZoneTrait);
         }
 
-        _context.Targeting.SelectTargets(
-            acter,
-            _context.ActerFaction,
-            _context.AllyGroup,
-            _context.EnemyGroup,
-            _context.Unders,
-            _presentation.AppendTopMessage);
+        // イラつき強制ターゲット: 確率ヒット時はターゲットを上書き
+        if (acter.IsIrritationAttack && acter.IrritationForcedTarget != null
+            && !acter.IrritationForcedTarget.Death())
+        {
+            acter.Target = DirectedWill.One;
+            _context.Unders.CharaAdd(acter.IrritationForcedTarget);
+            _context.Logger.Log($"イラつき強制ターゲット: {acter.IrritationForcedTarget.CharacterName}");
+        }
+        else
+        {
+            _context.Targeting.SelectTargets(
+                acter,
+                _context.ActerFaction,
+                _context.AllyGroup,
+                _context.EnemyGroup,
+                _context.Unders,
+                _presentation.AppendTopMessage);
+        }
+
+        // パターン2判定: 確率ミスだが攻撃系スキルでイラつき対象を自発選択した場合
+        if (!acter.IsIrritationAttack && skill.HasType(SkillType.Attack) && _context.Unders.Count > 0)
+        {
+            var maxTarget = IrritationService.GetMaxIrritationTarget(acter);
+            if (maxTarget != null)
+            {
+                for (int i = 0; i < _context.Unders.Count; i++)
+                {
+                    if (_context.Unders.GetAtCharacter(i) == maxTarget)
+                    {
+                        acter.IsIrritationAttack = true; // フラグ後付けON
+                        _context.Logger.Log($"イラつき攻撃（パターン2）: {maxTarget.CharacterName}を自発選択");
+                        break;
+                    }
+                }
+            }
+        }
 
         // AIの行動記録にターゲットを補填（AI決定時点ではBM未解決だったため）
         if (_context.Unders.Count > 0)
@@ -67,6 +96,11 @@ public sealed class SkillExecutor
             acter.AIMemory?.PatchLastActionTargets(targets);
         }
 
+        // 前のめり: イラつき攻撃時 or 暴走時は強制前のめり
+        if (acter.IsIrritationAttack || IrritationService.IsRaging(acter))
+        {
+            _context.BeVanguard(acter);
+        }
         BeVanguardSkillACT();
 
         if (_context.Unders.Count < 1)

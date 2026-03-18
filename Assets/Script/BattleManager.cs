@@ -314,9 +314,9 @@ public class BattleManager : IBattleContext
     {
         actionContext.ResetUnders();
     }
-    internal void PrepareRatherAct(List<BaseStates> targets, float damage)
+    internal void PrepareRatherAct(List<BaseStates> targets, float damage, BaseStates source = null)
     {
-        actionContext.PrepareRatherAct(targets, damage);
+        actionContext.PrepareRatherAct(targets, damage, source);
         UnityEngine.Debug.Log("レイザーアクト");
     }
     internal void IncrementBattleTurnCount()

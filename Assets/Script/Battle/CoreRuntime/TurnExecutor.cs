@@ -67,6 +67,18 @@ public sealed class TurnExecutor
         var isFreezeByPassives = _context.Acter.IsFreezeByPassives;
         var hasCanCancelCantACTPassive = _context.Acter.HasCanCancelCantACTPassive;
 
+        // イラつき確率判定（Freeze/CantACT中は除外、敵味方共通）
+        if (!_context.Acter.IsFreeze && (!isFreezeByPassives || hasCanCancelCantACTPassive))
+        {
+            var (irritationHit, forcedTarget) = IrritationService.JudgeTrigger(_context.Acter);
+            if (irritationHit)
+            {
+                _context.Acter.IsIrritationAttack = true;
+                _context.Acter.IrritationForcedTarget = forcedTarget;
+                _context.Logger.Log($"{_context.Acter.CharacterName}はイラつき攻撃発動！ターゲット: {forcedTarget?.CharacterName}");
+            }
+        }
+
         if (_context.ActerFaction == Faction.Ally)
         {
             _context.Logger.Log(_context.Acter.CharacterName + "(主人公キャラ)は行動する");
@@ -176,7 +188,7 @@ public sealed class TurnExecutor
             var ratherTarget = entry?.RatherTargets;
             if (ratherTarget != null)
             {
-                _context.PrepareRatherAct(ratherTarget, entry != null ? entry.RatherDamage : 0f);
+                _context.PrepareRatherAct(ratherTarget, entry != null ? entry.RatherDamage : 0f, entry?.RatherSource);
             }
 
             if (entry != null && entry.Freeze)

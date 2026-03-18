@@ -250,6 +250,12 @@ public class SkillLevelData
     public float[] PowerSpread;
     public bool Cantkill;
 
+    // ─── ③b 挑発属性 ───
+    /// <summary>挑発属性フラグ（trueならヒット時にイラつきを付与）</summary>
+    public bool HasProvokeAttribute;
+    /// <summary>ヒット時のイラつき付与量（整数）</summary>
+    public int ProvokeAmountOnHit = 1;
+
     // ─── ④ コスト・補正 ───
     public int RequiredNormalP;
     public SerializableDictionary<SpiritualProperty, int> RequiredAttrP = new();
@@ -316,6 +322,9 @@ public class SkillLevelData
             MentalDamageRatio = this.MentalDamageRatio,
             DefAtk = this.DefAtk,
             Cantkill = this.Cantkill,
+            // ③b 挑発属性
+            HasProvokeAttribute = this.HasProvokeAttribute,
+            ProvokeAmountOnHit = this.ProvokeAmountOnHit,
             // ④ コスト・補正
             RequiredNormalP = this.RequiredNormalP,
             RequiredRemainingHPPercent = this.RequiredRemainingHPPercent,

@@ -575,10 +575,21 @@ public abstract partial class BaseStates
         ResonanceDamage(ResonanceDmg, skill, Atker);
 
         var totalDmg = dmg.Total;//直接引くように変数に代入
+
+        // イラつき暴走の火力倍率（攻撃者のイラつき合計が暴走閾値以上なら乗算）
+        float rageMultiplier = IrritationService.GetRageMultiplier(Atker);
+        if (rageMultiplier > 1f)
+        {
+            totalDmg *= rageMultiplier;
+        }
+
         if(totalDmg < 0)totalDmg = 0;//0未満は0にする　逆に回復してしまうのを防止
         var tempHP = HP;//計算用にダメージ受ける前のHPを記録
 
-        
+        // ダメージソース記録（死亡時「誰が倒したか」判定用）
+        LastDamageSource = Atker;
+        LastDamageWasPassive = false;
+
         HP -= totalDmg;
         CantKillSkillClamp(Atker,skill);//殺せない系再代入クランプ処理（戦闘版は常時適用）
         Debug.Log("攻撃が実行された");
@@ -586,6 +597,12 @@ public abstract partial class BaseStates
 
         //攻撃者がダメージを殺すまでに与えたダメージ辞書に記録する
         Atker.RecordDamageDealtToEnemyUntilKill(dmg.Total,this);
+
+        // やり場のないイラつき解消判定（条件①: 攻撃でmaxHP3%以上のダメージ）
+        if (totalDmg > 0)
+        {
+            IrritationService.TryResolveUnresolved(Atker, this, totalDmg);
+        }
 
         var totalMentalDmg = mentalDmg.Total;//直接引くように変数に代入
         if(totalMentalDmg < 0)totalMentalDmg = 0;//0未満は0にする
@@ -867,7 +884,7 @@ public abstract partial class BaseStates
     /// </summary>
     /// <param name="damage">ダメージ</param>
     /// <param name="LayerDamage">VitalLayerを通すかどうか</param>
-    public void RatherDamage(StatesPowerBreakdown damage,bool LayerDamage,float DamageRatio)
+    public void RatherDamage(StatesPowerBreakdown damage,bool LayerDamage,float DamageRatio, BaseStates source = null)
     {
         StatesPowerBreakdown notUseDamage = damage;//使わないが、引数に渡す必要がある
         damage *= DamageRatio;//ダメージの倍率を掛ける
@@ -878,6 +895,10 @@ public abstract partial class BaseStates
             // スキル非依存のため、物理属性やスキル連動効果を持たない簡易版を使用
             BarrierLayersForPassiveDamage(ref damage,ref notUseDamage);
         }
+
+        // イラつきシステム: ダメージ出所の記録（パッシブダメージ扱い）
+        LastDamageSource = source;
+        LastDamageWasPassive = true;
 
         // 純粋に本体HPを減算（スキル依存のクランプ等は適用しない）
         HP -= damage.Total;

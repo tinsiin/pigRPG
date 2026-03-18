@@ -41,6 +41,7 @@ public sealed class BattleActionContext
     // Rather action state
     private readonly List<BaseStates> _ratherTargetList = new();
     private float _ratherDamageAmount;
+    private BaseStates _ratherSource;
 
     // Services
     public IBattleQueryService QueryService { get; }
@@ -139,25 +140,28 @@ public sealed class BattleActionContext
     /// <summary>
     /// レイザーアクトの準備
     /// </summary>
-    public void PrepareRatherAct(List<BaseStates> targets, float damage)
+    public void PrepareRatherAct(List<BaseStates> targets, float damage, BaseStates source = null)
     {
         if (targets == null) return;
         _ratherTargetList.AddRange(targets);
         _ratherDamageAmount = damage;
+        _ratherSource = source;
         IsRather = true;
     }
 
     /// <summary>
     /// レイザーアクトのターゲットを取得してクリア
     /// </summary>
-    public (List<BaseStates> targets, float damage) ConsumeRatherAct()
+    public (List<BaseStates> targets, float damage, BaseStates source) ConsumeRatherAct()
     {
         var targets = new List<BaseStates>(_ratherTargetList);
         var damage = _ratherDamageAmount;
+        var source = _ratherSource;
         _ratherTargetList.Clear();
         _ratherDamageAmount = 0;
+        _ratherSource = null;
         IsRather = false;
-        return (targets, damage);
+        return (targets, damage, source);
     }
 
     /// <summary>

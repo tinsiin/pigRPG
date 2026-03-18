@@ -137,6 +137,12 @@ public sealed class BattleUIBridge : IBattleUiAdapter
             onlyRemainButtonByType = SkillFilterPresets.SingleTargetTypeMask;
         }
 
+        // イラつき攻撃時: 攻撃系スキルのみに制限
+        if (acter.IsIrritationAttack && acter.IrritationForcedTarget != null)
+        {
+            onlyRemainButtonByType = SkillType.Attack;
+        }
+
         // CharacterIdベースで処理（新キャラにも対応）
         if (!TryGetCharacterId(acter, out var characterId))
         {

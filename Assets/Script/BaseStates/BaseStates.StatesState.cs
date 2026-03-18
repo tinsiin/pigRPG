@@ -598,6 +598,8 @@ public abstract partial class BaseStates
     /// 現在のこのキャラの人間状況
     /// </summary>
     Demeanor NowCondition;
+    /// <summary>現在の人間状況（読み取り専用）</summary>
+    public Demeanor CurrentDemeanor => NowCondition;
     /// <summary>
     /// 前回の人間状況　同じのが続いてるかの判断要
     /// </summary>
@@ -2882,7 +2884,102 @@ public abstract partial class BaseStates
     /// </summary>
     public virtual void SetInterruptCounterActive(bool active) { }
 
+    //  ==============================================================================================================================
+    //                                    イラつきシステム（ランタイム専用・DeepCopy対象外）
+    //  ==============================================================================================================================
 
+    /// <summary>対象別イラつきカウンター（キー=イラつき対象, 値=カウント）</summary>
+    [NonSerialized] private Dictionary<BaseStates, int> _irritationCounters;
+    /// <summary>やり場のないイラつき（キー=元の対象, 値=カウント）</summary>
+    [NonSerialized] private Dictionary<BaseStates, int> _unresolvedIrritation;
+    /// <summary>減衰判定カウンター（0→1→2→判定してリセット）</summary>
+    [NonSerialized] private int _irritationDecayTurnCounter;
+    /// <summary>イラつき攻撃フラグ（ターン一時、ターン開始時にリセット）</summary>
+    [NonSerialized] private bool _isIrritationAttack;
+    /// <summary>確率ヒット時の強制ターゲット（null=確率ミスまたは通常）</summary>
+    [NonSerialized] private BaseStates _irritationForcedTarget;
+    /// <summary>最後にダメージを与えたキャラ（死亡時「誰が倒したか」判定用）</summary>
+    [NonSerialized] private BaseStates _lastDamageSource;
+    /// <summary>最後のダメージがパッシブ由来かどうか</summary>
+    [NonSerialized] private bool _lastDamageWasPassive;
+
+    /// <summary>暴走閾値（キャラごとに設定可能、デフォルト8）</summary>
+    [SerializeField] private int _rageThreshold = 8;
+
+    /// <summary>対象別イラつきカウンターへの読み取り専用アクセス</summary>
+    public Dictionary<BaseStates, int> IrritationCounters => _irritationCounters;
+    /// <summary>やり場のないイラつきへの読み取り専用アクセス</summary>
+    public Dictionary<BaseStates, int> UnresolvedIrritation => _unresolvedIrritation;
+
+    /// <summary>イラつき攻撃フラグ</summary>
+    public bool IsIrritationAttack
+    {
+        get => _isIrritationAttack;
+        set => _isIrritationAttack = value;
+    }
+
+    /// <summary>確率ヒット時の強制ターゲット</summary>
+    public BaseStates IrritationForcedTarget
+    {
+        get => _irritationForcedTarget;
+        set => _irritationForcedTarget = value;
+    }
+
+    /// <summary>暴走閾値</summary>
+    public int RageThreshold => _rageThreshold;
+
+    /// <summary>最後にダメージを与えたキャラ</summary>
+    public BaseStates LastDamageSource
+    {
+        get => _lastDamageSource;
+        set => _lastDamageSource = value;
+    }
+
+    /// <summary>最後のダメージがパッシブ由来か</summary>
+    public bool LastDamageWasPassive
+    {
+        get => _lastDamageWasPassive;
+        set => _lastDamageWasPassive = value;
+    }
+
+    /// <summary>
+    /// イラつき関連のランタイム状態を初期化する。OnBattleStartNoArgumentから呼ぶ。
+    /// </summary>
+    public void InitIrritationState()
+    {
+        _irritationCounters = new Dictionary<BaseStates, int>();
+        _unresolvedIrritation = new Dictionary<BaseStates, int>();
+        _irritationDecayTurnCounter = 0;
+        _isIrritationAttack = false;
+        _irritationForcedTarget = null;
+        _lastDamageSource = null;
+        _lastDamageWasPassive = false;
+    }
+
+    /// <summary>
+    /// ターン一時フラグをリセットする。OnNextTurnNoArgument冒頭から呼ぶ。
+    /// </summary>
+    public void ResetIrritationTurnFlags()
+    {
+        _isIrritationAttack = false;
+        _irritationForcedTarget = null;
+    }
+
+    /// <summary>
+    /// 減衰カウンターをインクリメントし、3に達したらtrueを返す（呼び出し側がDecayを実行しリセットする）。
+    /// </summary>
+    public bool TickIrritationDecay()
+    {
+        if (_irritationCounters == null || _irritationCounters.Count == 0)
+            return false;
+        _irritationDecayTurnCounter++;
+        if (_irritationDecayTurnCounter >= 3)
+        {
+            _irritationDecayTurnCounter = 0;
+            return true;
+        }
+        return false;
+    }
 
 
 }

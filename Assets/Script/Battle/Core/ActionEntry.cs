@@ -20,4 +20,5 @@ public sealed class ActionEntry
     public float ExCounterDEFATK;
     public List<BaseStates> RatherTargets;
     public float RatherDamage;
+    public BaseStates RatherSource;
 }
