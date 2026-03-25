@@ -2966,6 +2966,14 @@ public abstract partial class BaseStates
     }
 
     /// <summary>
+    /// 次の減衰判定まで残りターン数を返す（0=次ターンで減衰、1=あと1ターン、2=あと2ターン）。
+    /// </summary>
+    public int GetIrritationDecayTurnsLeft()
+    {
+        return 3 - _irritationDecayTurnCounter;
+    }
+
+    /// <summary>
     /// 減衰カウンターをインクリメントし、3に達したらtrueを返す（呼び出し側がDecayを実行しリセットする）。
     /// </summary>
     public bool TickIrritationDecay()

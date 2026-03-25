@@ -152,17 +152,19 @@ public sealed class KZoomController : IKZoomController
             .BindToAnchoredPosition(rootRT)
             .ToUniTask(ct);
 
-        // パッシブテキストの準備
+        // パッシブテキスト・イラつきテキストの準備
         BaseStates actorForK = FindActorByUI(_state.ExclusiveUI);
         SetKPassivesText(actorForK);
+        SetKIrritationText(actorForK);
 
         // テキストのスライドインもズームと同時に開始
         var slideTask = SlideInKTexts(title, ct);
         var fadePassivesTask = FadeInKPassives(actorForK, ct);
+        var fadeIrritationTask = FadeInKIrritation(actorForK, ct);
 
         try
         {
-            await UniTask.WhenAll(scaleTask, posTask, slideTask, fadePassivesTask);
+            await UniTask.WhenAll(scaleTask, posTask, slideTask, fadePassivesTask, fadeIrritationTask);
         }
         catch (OperationCanceledException)
         {
@@ -185,6 +187,7 @@ public sealed class KZoomController : IKZoomController
         // テキストは即時非表示
         if (_config.NameText != null) _config.NameText.gameObject.SetActive(false);
         if (_config.PassivesText != null) _config.PassivesText.gameObject.SetActive(false);
+        if (_config.IrritationText != null) _config.IrritationText.gameObject.SetActive(false);
 
         _state.Cts?.Cancel();
         _state.Cts?.Dispose();
@@ -238,6 +241,7 @@ public sealed class KZoomController : IKZoomController
         // テキスト非表示
         if (_config.NameText != null) _config.NameText.gameObject.SetActive(false);
         if (_config.PassivesText != null) _config.PassivesText.gameObject.SetActive(false);
+        if (_config.IrritationText != null) _config.IrritationText.gameObject.SetActive(false);
 
         // 位置/スケール即時復元
         if (_config.ZoomRoot != null && _state.SnapshotValid)
@@ -271,6 +275,7 @@ public sealed class KZoomController : IKZoomController
 
         if (_config.NameText != null) _config.NameText.gameObject.SetActive(false);
         if (_config.PassivesText != null) _config.PassivesText.gameObject.SetActive(false);
+        if (_config.IrritationText != null) _config.IrritationText.gameObject.SetActive(false);
 
         if (_state.ActionMarkWasActive)
         {
@@ -410,6 +415,74 @@ public sealed class KZoomController : IKZoomController
             sb.Append(token);
             first = false;
         }
+        return sb.ToString();
+    }
+
+    // ─── イラつき表示 ───
+
+    private void SetKIrritationText(BaseStates actor)
+    {
+        if (_config.IrritationText == null) return;
+
+        if (_getOrSetupTMP != null)
+        {
+            _state.IrritationTMP = _getOrSetupTMP(_config.IrritationText, _state.IrritationTMP, false);
+        }
+
+        var go = _config.IrritationText.gameObject;
+        var cg0 = go.GetComponent<CanvasGroup>();
+        if (cg0 == null) cg0 = go.AddComponent<CanvasGroup>();
+        go.SetActive(true);
+        cg0.alpha = 0f;
+        Canvas.ForceUpdateCanvases();
+
+        string tokens = BuildIrritationTokens(actor);
+        _config.IrritationText.text = tokens;
+        _config.IrritationText.RefreshBackground();
+    }
+
+    private async UniTask FadeInKIrritation(BaseStates actor, CancellationToken ct)
+    {
+        if (_config.IrritationText == null) return;
+        var go = _config.IrritationText.gameObject;
+        if (string.IsNullOrEmpty(_config.IrritationText.text))
+        {
+            go.SetActive(false);
+            return;
+        }
+        var cg = go.GetComponent<CanvasGroup>();
+        if (cg == null) cg = go.AddComponent<CanvasGroup>();
+        cg.alpha = 0f;
+        go.SetActive(true);
+        _config.IrritationText.RefreshBackground();
+
+        await LMotion.Create(0f, 1f, _config.IrritationFadeDuration)
+            .WithEase(Ease.Linear)
+            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+            .Bind(a => cg.alpha = a)
+            .ToUniTask(ct);
+    }
+
+    private string BuildIrritationTokens(BaseStates actor)
+    {
+        if (actor == null) return string.Empty;
+
+        var sb = new StringBuilder();
+
+        // 最大イラつき対象のトークン
+        var maxTarget = IrritationService.GetMaxIrritationTarget(actor);
+        if (maxTarget != null)
+        {
+            sb.Append($"<イラつき→{maxTarget.CharacterName}>");
+        }
+
+        // イライラ状態（暴走）トークン
+        if (IrritationService.IsRaging(actor))
+        {
+            if (sb.Length > 0) sb.Append(' ');
+            sb.Append("<イライラ>");
+        }
+
         return sb.ToString();
     }
 

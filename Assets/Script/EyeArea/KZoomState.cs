@@ -45,6 +45,9 @@ public class KZoomState
     /// <summary>K中に非表示にした他UIの退避リスト</summary>
     public List<(BattleIconUI ui, bool wasActive)> HiddenOtherUIs { get; set; }
 
+    /// <summary>イラつき表示用TMPキャッシュ</summary>
+    public TMP_Text IrritationTMP { get; set; }
+
     /// <summary>状態をリセットする</summary>
     public void Reset()
     {
@@ -58,6 +61,7 @@ public class KZoomState
         SnapshotValid = false;
         PassivesTokensRaw = string.Empty;
         PassivesTMP = null;
+        IrritationTMP = null;
         ExclusiveUI = null;
         ActionMarkWasActive = false;
         SchizoWasVisible = false;

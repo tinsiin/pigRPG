@@ -1,5 +1,6 @@
 using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -60,12 +61,13 @@ public class StatesBannerController : MonoBehaviour
 
     [Header("2Page Components")]
 
-    //[SerializeField, Tooltip("攻撃排他ステのグラフ")] 
+    //[SerializeField, Tooltip("攻撃排他ステのグラフ")]
     //private StatesBannerAttackColumnsView m_AttackColumnsView;
-    //[SerializeField, Tooltip("防御の排他ステのグラフ")] 
+    //[SerializeField, Tooltip("防御の排他ステのグラフ")]
     //private StatesBannerDefenseColumnsView m_DefenseColumnsView;
     [SerializeField]
     private TextMeshProUGUI m_atkText;
+
     [SerializeField]
     private TextMeshProUGUI m_defText;
     [SerializeField, Tooltip("右側カラムに表示する防御テキスト（任意）。未割当なら単一カラム表示。")]
@@ -75,6 +77,9 @@ public class StatesBannerController : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI m_agiText;
 
+    [Header("IrritationPage Components")]
+    [SerializeField, Tooltip("イラつきページ: イラつき情報全体を表示するテキスト")]
+    private TextMeshProUGUI m_IrritationText;
 
     [Header("Optimization Cache")]
     private bool _hasLast;
@@ -335,7 +340,8 @@ public class StatesBannerController : MonoBehaviour
         //if (m_DefenseColumnsView == null) m_DefenseColumnsView = GetComponentInChildren<StatesBannerDefenseColumnsView>(true);
         //if (m_DefenseColumnsView != null) m_DefenseColumnsView.Bind(actor);
 
-
+        // イラつき情報テキスト更新
+        UpdateIrritationText(actor);
     }
 
 
@@ -374,7 +380,85 @@ public class StatesBannerController : MonoBehaviour
         {
             return;
         }
+    }
 
+    // ─── イラつき情報テキスト ───
 
+    private void UpdateIrritationText(BaseStates actor)
+    {
+        if (m_IrritationText == null) return;
+
+        if (actor == null
+            || (!IrritationService.HasAnyIrritation(actor)
+                && (actor.UnresolvedIrritation == null || actor.UnresolvedIrritation.Count == 0)))
+        {
+            if (m_IrritationText.text != string.Empty) m_IrritationText.text = string.Empty;
+            return;
+        }
+
+        var sb = new StringBuilder();
+        var maxTarget = IrritationService.GetMaxIrritationTarget(actor);
+
+        // A. 通常イラつき（対象別一覧、最大は<>強調）
+        if (actor.IrritationCounters != null && actor.IrritationCounters.Count > 0)
+        {
+            sb.Append("イラつき: ");
+            bool first = true;
+            foreach (var kv in actor.IrritationCounters)
+            {
+                if (kv.Key == null || kv.Value <= 0) continue;
+                if (!first) sb.Append("  ");
+                bool isMax = (kv.Key == maxTarget);
+                string name = kv.Key.CharacterName ?? "???";
+                if (isMax)
+                    sb.Append($"<{name}→{kv.Value}>");
+                else
+                    sb.Append($"{name}→{kv.Value}");
+                first = false;
+            }
+        }
+
+        // B. やり場のないイラつき
+        if (actor.UnresolvedIrritation != null && actor.UnresolvedIrritation.Count > 0)
+        {
+            if (sb.Length > 0) sb.Append('\n');
+            sb.Append("やり場なし: ");
+            bool first = true;
+            foreach (var kv in actor.UnresolvedIrritation)
+            {
+                if (kv.Key == null || kv.Value <= 0) continue;
+                if (!first) sb.Append("  ");
+                string name = kv.Key.CharacterName ?? "???";
+                sb.Append($"{name}→{kv.Value}");
+                first = false;
+            }
+        }
+
+        // C. 暴走関連
+        int total = IrritationService.GetTotalIrritation(actor);
+        int threshold = actor.RageThreshold;
+        if (sb.Length > 0) sb.Append('\n');
+        if (IrritationService.IsRaging(actor))
+        {
+            int excess = total - threshold;
+            float multiplier = IrritationService.GetRageMultiplier(actor);
+            sb.Append($"イライラ状態! 合計{total}/{threshold} (超過{excess} → {multiplier:F2}倍)");
+        }
+        else
+        {
+            sb.Append($"合計{total}/{threshold}");
+        }
+
+        // D. 減衰情報
+        if (actor.IrritationCounters != null && actor.IrritationCounters.Count > 0)
+        {
+            int decayTurnsLeft = actor.GetIrritationDecayTurnsLeft();
+            int decayAmount = IrritationService.GetDecayAmount(actor.MyImpression);
+            if (sb.Length > 0) sb.Append('\n');
+            sb.Append($"減衰: あと{decayTurnsLeft}ターン (−{decayAmount})");
+        }
+
+        string result = sb.ToString();
+        if (m_IrritationText.text != result) m_IrritationText.text = result;
     }
 }

@@ -65,4 +65,12 @@ public class KZoomConfig
 
     /// <summary>既存ズーム中はアイコンクリック無効</summary>
     public bool DisableIconClickWhileBattleZoom = true;
+
+    // ─── イラつき表示 ───
+
+    /// <summary>イラつきテキスト（パッシブとは別の専用領域）</summary>
+    public TMPTextBackgroundImage IrritationText;
+
+    /// <summary>イラつきフェード時間</summary>
+    public float IrritationFadeDuration = 0.35f;
 }

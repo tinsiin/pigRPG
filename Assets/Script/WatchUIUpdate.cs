@@ -653,7 +653,8 @@ public partial class WatchUIUpdate : MonoBehaviour,
                     PassivesDebugMode = kPassivesDebugMode,
                     PassivesDebugCount = kPassivesDebugCount,
                     PassivesDebugPrefix = kPassivesDebugPrefix,
-                    DisableIconClickWhileBattleZoom = disableIconClickWhileBattleZoom
+                    DisableIconClickWhileBattleZoom = disableIconClickWhileBattleZoom,
+                    IrritationText = kIrritationText
                 };
 
                 // State作成
@@ -749,6 +750,7 @@ public partial class WatchUIUpdate : MonoBehaviour,
     [Space(4)]
     [SerializeField] private TMPTextBackgroundImage kNameText;           // 名前TMP
     [SerializeField] private TMPTextBackgroundImage kPassivesText;       // パッシブ一覧TMP（K専用、フェード表示）
+    [SerializeField] private TMPTextBackgroundImage kIrritationText;     // イラつき表示TMP（K専用、パッシブとは別領域）
     [SerializeField] private float kTextSlideDuration = 0.35f;
     [SerializeField] private Ease kTextSlideEase = Ease.OutCubic;
     [SerializeField] private float kTextSlideOffsetX = 220f;      // 右からのオフセット量
@@ -829,6 +831,7 @@ public partial class WatchUIUpdate : MonoBehaviour,
         // KモードUI初期設定
         if (kNameText != null) kNameText.gameObject.SetActive(false);
         if (kPassivesText != null) kPassivesText.gameObject.SetActive(false);
+        if (kIrritationText != null) kIrritationText.gameObject.SetActive(false);
 
         // 初回カクつき低減のためのウォームアップを起動時に実行（任意）
         if (warmupOnStart)

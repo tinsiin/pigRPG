@@ -1,0 +1,42 @@
+{
+  "format": "kfx",
+  "name": "irritation_aura",
+  "canvas": 100,
+  "fps": 15,
+  "duration": 2.0,
+  "target": "icon",
+  "icon_rect": { "x": 15, "y": 15, "width": 70, "height": 70 },
+  "layers": [
+    {
+      "id": "pulse_glow",
+      "type": "circle",
+      "blend": "additive",
+      "keyframes": [
+        { "time": 0.0, "ease": "easeInOut", "x": 50, "y": 50, "radius": 28, "opacity": 0.25,
+          "brush": { "type": "radial", "center": "#FF444466", "edge": "#CC222200" } },
+        { "time": 0.7, "ease": "easeInOut", "radius": 35, "opacity": 0.4,
+          "brush": { "type": "radial", "center": "#FF555580", "edge": "#CC222200" } },
+        { "time": 1.3, "ease": "easeInOut", "radius": 28, "opacity": 0.25,
+          "brush": { "type": "radial", "center": "#FF444466", "edge": "#CC222200" } },
+        { "time": 2.0, "radius": 32, "opacity": 0.3,
+          "brush": { "type": "radial", "center": "#FF444470", "edge": "#CC222200" } }
+      ]
+    },
+    {
+      "id": "anger_sparks",
+      "type": "emitter",
+      "blend": "additive",
+      "x": 50, "y": 45,
+      "count": 5,
+      "angle_range": [240, 300],
+      "speed_range": [0.3, 0.8],
+      "gravity": -0.03,
+      "drag": 0.97,
+      "lifetime": 1.8,
+      "size_range": [0.8, 1.8],
+      "color_start": "#FF444499",
+      "color_end": "#CC220000",
+      "seed": 17
+    }
+  ]
+}

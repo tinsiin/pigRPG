@@ -495,6 +495,7 @@ public class NormalEnemy : BaseStates
         {
             clone.EnemySkillList.Add(skill.InitEnemyDeepCopy());
         }
+        clone.InvalidateSkillListCache(); // InitBaseStatesDeepCopy中にSkillListキャッシュが空で構築されるため再構築
 
         // UI設定をコピー
         clone._uiPlacementType = this._uiPlacementType;

@@ -251,6 +251,7 @@ public class SkillLevelData
     public bool Cantkill;
 
     // ─── ③b 挑発属性 ───
+    [Header("③b 挑発属性")]
     /// <summary>挑発属性フラグ（trueならヒット時にイラつきを付与）</summary>
     public bool HasProvokeAttribute;
     /// <summary>ヒット時のイラつき付与量（整数）</summary>

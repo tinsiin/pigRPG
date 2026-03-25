@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Effects.Integration;
 using UnityEngine;
 
 /// <summary>
@@ -97,6 +98,8 @@ public static class IrritationService
             target.IrritationCounters[source] += finalAmount;
         else
             target.IrritationCounters[source] = finalAmount;
+
+        UpdateEffects(target);
     }
 
     // =================================================================
@@ -123,6 +126,8 @@ public static class IrritationService
             if (chara.IrritationCounters[key] <= 0)
                 chara.IrritationCounters.Remove(key);
         }
+
+        UpdateEffects(chara);
     }
 
     // =================================================================
@@ -253,6 +258,12 @@ public static class IrritationService
 
         // 死者自身のイラつきもクリア
         deadChara.IrritationCounters?.Clear();
+
+        // 死者自身のエフェクトを確実に停止（AllCharactersから既に除外されている場合に備える）
+        UpdateEffects(deadChara);
+
+        // 全キャラのエフェクトを更新（死亡により複数キャラの暴走状態が変わりうる）
+        UpdateAllEffects();
     }
 
     // =================================================================
@@ -272,6 +283,7 @@ public static class IrritationService
         if (damageAmount >= threshold)
         {
             attacker.UnresolvedIrritation.Remove(target);
+            UpdateEffects(attacker);
         }
     }
 
@@ -324,10 +336,56 @@ public static class IrritationService
     }
 
     // =================================================================
+    //  エフェクト制御（6a）
+    // =================================================================
+
+    private const string IrritationAuraEffect = "irritation_aura";
+    private const string RageAuraEffect = "rage_aura";
+
+    /// <summary>
+    /// キャラのイラつきエフェクト状態を現在のイラつき状況に合わせて更新する。
+    /// イラつき変動後（Add/Decay/OnCharacterDeath）に呼ぶ。
+    /// </summary>
+    public static void UpdateEffects(BaseStates chara)
+    {
+        if (chara?.BattleIcon == null) return;
+        var icon = chara.BattleIcon;
+
+        bool hasIrritation = HasAnyIrritation(chara);
+        bool isRaging = hasIrritation && IsRaging(chara);
+
+        if (hasIrritation)
+            EffectManager.Play(IrritationAuraEffect, icon, loop: true);
+        else
+            EffectManager.Stop(icon, IrritationAuraEffect);
+
+        if (isRaging)
+            EffectManager.Play(RageAuraEffect, icon, loop: true);
+        else
+            EffectManager.Stop(icon, RageAuraEffect);
+    }
+
+    /// <summary>
+    /// 全キャラのイラつきエフェクトを更新する（死亡時など複数キャラに影響がある場合）。
+    /// </summary>
+    public static void UpdateAllEffects()
+    {
+        var context = BattleContextHub.IsInBattle ? BattleContextHub.Current : null;
+        if (context == null) return;
+
+        foreach (var chara in context.AllCharacters)
+        {
+            if (chara != null)
+                UpdateEffects(chara);
+        }
+    }
+
+    // =================================================================
     //  テーブル参照（内部用）
     // =================================================================
 
-    private static int GetDecayAmount(SpiritualProperty impression)
+    /// <summary>精神属性に応じた減衰量を返す（UI表示用に公開）。</summary>
+    public static int GetDecayAmount(SpiritualProperty impression)
     {
         // 配列順で先頭マッチ（複合精神属性でも決定的）
         foreach (var (flag, value) in DecayTable)
