@@ -82,9 +82,10 @@ public static class IrritationService
         // 辞書未初期化ガード
         if (target.IrritationCounters == null) return;
 
-        // 精神属性別 付与量補正
+        // 精神属性別 付与量補正 × 十日能力の強さ補正
         float modifier = GetApplicationModifier(target.MyImpression);
-        int finalAmount = Mathf.Max(1, Mathf.RoundToInt(rawAmount * modifier));
+        float strengthMod = GetStrengthModifier(source, target);
+        int finalAmount = Mathf.Max(1, Mathf.RoundToInt(rawAmount * modifier * strengthMod));
 
         // やり場のないイラつきの再挑発解消（条件②: 同じ対象から再挑発→全加算）
         if (target.UnresolvedIrritation != null && target.UnresolvedIrritation.TryGetValue(source, out int unresolvedAmount))
@@ -404,6 +405,18 @@ public static class IrritationService
                 return value;
         }
         return 1.0f; // デフォルト
+    }
+
+    // 十日能力の強さ補正: 3倍以上弱い相手からの挑発は付与量が線形低下
+    private const float StrengthThreshold = 0.33f;
+
+    private static float GetStrengthModifier(BaseStates source, BaseStates target)
+    {
+        float targetSum = target.TenDayValuesSumBase();
+        if (targetSum <= 0f) return 1.0f;
+
+        float ratio = source.TenDayValuesSumForSkill() / targetSum;
+        return (ratio > StrengthThreshold) ? 1.0f : ratio / StrengthThreshold;
     }
 
     private static float GetTriggerCoefficient(Demeanor condition)
