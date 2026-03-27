@@ -82,10 +82,11 @@ public static class IrritationService
         // 辞書未初期化ガード
         if (target.IrritationCounters == null) return;
 
-        // 精神属性別 付与量補正 × 十日能力の強さ補正
+        // 精神属性別 付与量補正 × 十日能力の強さ補正 × パッシブ付与量軽減
         float modifier = GetApplicationModifier(target.MyImpression);
         float strengthMod = GetStrengthModifier(source, target);
-        int finalAmount = Mathf.Max(1, Mathf.RoundToInt(rawAmount * modifier * strengthMod));
+        float passiveResist = target.PassivesIrritationApplicationResistRate();
+        int finalAmount = Mathf.Max(1, Mathf.RoundToInt(rawAmount * modifier * strengthMod * passiveResist));
 
         // やり場のないイラつきの再挑発解消（条件②: 同じ対象から再挑発→全加算）
         if (target.UnresolvedIrritation != null && target.UnresolvedIrritation.TryGetValue(source, out int unresolvedAmount))
@@ -115,7 +116,7 @@ public static class IrritationService
     {
         if (chara?.IrritationCounters == null || chara.IrritationCounters.Count == 0) return;
 
-        int decayAmount = GetDecayAmount(chara.MyImpression);
+        int decayAmount = GetEffectiveDecayAmount(chara);
         if (decayAmount <= 0) return;
 
         // Keys列挙中に変更するためリスト化（foreachで統一）
@@ -172,8 +173,8 @@ public static class IrritationService
         // Demeanor別係数
         float coefficient = GetTriggerCoefficient(chara.CurrentDemeanor);
 
-        // 発動確率
-        float probability = triggerValue * coefficient;
+        // 発動確率（パッシブ軽減率を乗算）
+        float probability = triggerValue * coefficient * chara.PassivesIrritationTriggerResistRate();
 
         // 乱数判定
         var random = BattleContextHub.IsInBattle ? BattleContextHub.Current?.Random : null;
@@ -384,6 +385,14 @@ public static class IrritationService
     // =================================================================
     //  テーブル参照（内部用）
     // =================================================================
+
+    /// <summary>パッシブ込みの実効減衰量を返す。baseDecayが0なら0（不動）。負値にはならない。</summary>
+    public static int GetEffectiveDecayAmount(BaseStates chara)
+    {
+        int baseDecay = GetDecayAmount(chara.MyImpression);
+        if (baseDecay <= 0) return 0;
+        return Mathf.Max(0, baseDecay + chara.PassivesIrritationDecayBonus());
+    }
 
     /// <summary>精神属性に応じた減衰量を返す（UI表示用に公開）。</summary>
     public static int GetDecayAmount(SpiritualProperty impression)

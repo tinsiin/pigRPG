@@ -353,6 +353,39 @@ public abstract partial class BaseStates
         // 集めたデフォ値以外の値の中から、ランダムで一つ返す
         return rates.ToArray().RandomElement();
     }
+    /// <summary>
+    /// 全パッシブの挑発付与量軽減率を乗算集約。デフォルト1.0（軽減なし）。
+    /// </summary>
+    public float PassivesIrritationApplicationResistRate()
+    {
+        float result = 1f;
+        foreach (var pas in _passiveList)
+            result *= pas.IrritationApplicationResistRate;
+        return result;
+    }
+
+    /// <summary>
+    /// 全パッシブの挑発減衰量加算を合算集約。デフォルト0。
+    /// </summary>
+    public int PassivesIrritationDecayBonus()
+    {
+        int total = 0;
+        foreach (var pas in _passiveList)
+            total += pas.IrritationDecayBonus;
+        return total;
+    }
+
+    /// <summary>
+    /// 全パッシブの挑発発動確率軽減率を乗算集約。デフォルト1.0（軽減なし）。
+    /// </summary>
+    public float PassivesIrritationTriggerResistRate()
+    {
+        float result = 1f;
+        foreach (var pas in _passiveList)
+            result *= pas.IrritationTriggerResistRate;
+        return result;
+    }
+
         /// <summary>
     /// パッシブのパーセンテージ補正を返す  特別補正と違い一個一個掛ける
     ///  特別補正と違い、積と平均の中間を取る（ブレンド方式）　CalculateBlendedModifierのconstで操作

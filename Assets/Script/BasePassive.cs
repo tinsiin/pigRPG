@@ -1135,6 +1135,18 @@ public class BasePassive
   
 
 
+    // --- 挑発耐性プロパティ ---
+    [SerializeField] float _irritationApplicationResistRate = 1f;
+    [SerializeField] int   _irritationDecayBonus = 0;
+    [SerializeField] float _irritationTriggerResistRate = 1f;
+
+    /// <summary> イラつき付与量への軽減率（乗算）。0.5で半減。デフォルト1.0 </summary>
+    public float IrritationApplicationResistRate => _irritationApplicationResistRate;
+    /// <summary> 3ターンごとの減衰量への加算値。デフォルト0 </summary>
+    public int IrritationDecayBonus => _irritationDecayBonus;
+    /// <summary> イラつき攻撃の発動確率への軽減率（乗算）。0.5で半減。デフォルト1.0 </summary>
+    public float IrritationTriggerResistRate => _irritationTriggerResistRate;
+
     //これらで操り切れない部分は、直接baseStatesでのforeachでpassiveListから探す関数でゴリ押しすればいい。
 
     /// <summary>
@@ -1160,7 +1172,10 @@ public class BasePassive
         }
         
         copy.PassivePower = PassivePower;
-        
+        copy._irritationApplicationResistRate = _irritationApplicationResistRate;
+        copy._irritationDecayBonus = _irritationDecayBonus;
+        copy._irritationTriggerResistRate = _irritationTriggerResistRate;
+
         return copy;
     }
 }

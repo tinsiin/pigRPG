@@ -452,10 +452,17 @@ public class StatesBannerController : MonoBehaviour
         // D. 減衰情報
         if (actor.IrritationCounters != null && actor.IrritationCounters.Count > 0)
         {
-            int decayTurnsLeft = actor.GetIrritationDecayTurnsLeft();
-            int decayAmount = IrritationService.GetDecayAmount(actor.MyImpression);
+            int totalDecay = IrritationService.GetEffectiveDecayAmount(actor);
             if (sb.Length > 0) sb.Append('\n');
-            sb.Append($"減衰: あと{decayTurnsLeft}ターン (−{decayAmount})");
+            if (totalDecay > 0)
+            {
+                int decayTurnsLeft = actor.GetIrritationDecayTurnsLeft();
+                sb.Append($"減衰: あと{decayTurnsLeft}ターン (−{totalDecay})");
+            }
+            else
+            {
+                sb.Append("減衰なし（不動）");
+            }
         }
 
         string result = sb.ToString();
