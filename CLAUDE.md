@@ -27,6 +27,11 @@ pigRPG - Unity製Android向けRPG（日本語プロジェクト）
 | 乱数 | NRandom（NRandom.Numericsでベクトル乱数も可） |
 | リアクティブ | R3 |
 
+## スキルのカスタムドロワー
+
+BaseSkill / SkillLevelData はカスタムPropertyDrawerで描画されている（`Assets/Editor/BaseSkillEditor.cs`, `SkillLevelDataDrawer.cs`）。
+Inspectorに表示されるプロパティを追加・変更した場合、**ドロワー側の更新も必須**（やらないと表示されない）。表示セクションや配置順も意図的に設計されているため、追加位置も考慮すること。
+
 ## 新規ファイル作成時の注意
 
 Assetsフォルダ以下を調べ、同一機能・同一役割のファイル、フォルダが既に存在しないか確認すること。
