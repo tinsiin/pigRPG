@@ -950,7 +950,7 @@ public abstract partial class BaseStates
                             NowUseSkill = NowUseWeapon.WeaponSkill;
                             isfreeze = true;
                         }
-                        manager.Acts.Add(this,manager.GetCharacterFaction(this),"割り込みカウンター",null,isfreeze,null,CounterDEFATK);//通常の行動予約 
+                        manager.Acts.Add(this,manager.GetCharacterFaction(this),"割り込みカウンター",null,isfreeze,attacker,CounterDEFATK);//通常の行動予約
                     }
 
                     // AI戦闘記憶: 攻撃者（カウンターされた側）の記憶に記録
