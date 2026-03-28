@@ -33,13 +33,6 @@ public sealed class SkillExecutor
         // 分散計算のためにスキルを設定
         _context.Unders.SetCurrentSkill(skill);
 
-        var singleTarget = _context.Acts.TryPeek(out var entry) ? entry.SingleTarget : null;
-        if (singleTarget != null)
-        {
-            acter.Target = DirectedWill.One;
-            _context.Unders.CharaAdd(singleTarget);
-        }
-
         if (skill.HasZoneTrait(SkillZoneTrait.RandomRange))
         {
             DetermineRangeRandomly();
@@ -50,16 +43,38 @@ public sealed class SkillExecutor
             acter.RangeWill = SkillZoneTraitNormalizer.NormalizeForInitial(skill.ZoneTrait);
         }
 
-        // イラつき強制ターゲット: 確率ヒット時はターゲットを上書き
-        if (acter.IsIrritationAttack && acter.IrritationForcedTarget != null
+        // ── ターゲット決定（排他分岐: 吸引 > SingleTarget > イラつき > 通常） ──
+        // 優先順位の仕様: doc/ターゲット強制優先順位仕様書.md
+        var attractionTarget = AttractionService.GetAttractor(acter);
+        bool isAttracted = attractionTarget != null && !attractionTarget.Death()
+            && !skill.HasZoneTrait(SkillZoneTrait.SelfSkill);
+
+        var singleTarget = _context.Acts.TryPeek(out var entry) ? entry.SingleTarget : null;
+
+        if (isAttracted)
+        {
+            // 吸引強制ターゲット: 全スキル系統、最優先
+            acter.Target = DirectedWill.One;
+            _context.Unders.CharaAdd(attractionTarget);
+            _context.Logger.Log($"吸引強制ターゲット: {attractionTarget.CharacterName}");
+        }
+        else if (singleTarget != null)
+        {
+            // SingleTarget: 先約リストによるカウンター対象固定（吸引のみに負ける）
+            acter.Target = DirectedWill.One;
+            _context.Unders.CharaAdd(singleTarget);
+        }
+        else if (acter.IsIrritationAttack && acter.IrritationForcedTarget != null
             && !acter.IrritationForcedTarget.Death())
         {
+            // イラつき強制ターゲット: 攻撃系スキル
             acter.Target = DirectedWill.One;
             _context.Unders.CharaAdd(acter.IrritationForcedTarget);
             _context.Logger.Log($"イラつき強制ターゲット: {acter.IrritationForcedTarget.CharacterName}");
         }
         else
         {
+            // 通常ターゲット選択
             _context.Targeting.SelectTargets(
                 acter,
                 _context.ActerFaction,

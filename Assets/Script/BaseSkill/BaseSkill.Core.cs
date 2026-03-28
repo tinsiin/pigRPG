@@ -73,6 +73,10 @@ public partial class BaseSkill
     public bool HasProvokeAttribute => FixedSkillLevelData[_levelIndex].HasProvokeAttribute;
     /// <summary>挑発ヒット時の付与量</summary>
     public int ProvokeAmountOnHit => FixedSkillLevelData[_levelIndex].ProvokeAmountOnHit;
+    /// <summary>吸引属性を持つか</summary>
+    public bool HasAttractionAttribute => FixedSkillLevelData[_levelIndex].HasAttractionAttribute;
+    /// <summary>吸引パッシブの持続ターン数</summary>
+    public int AttractionDurationTurns => FixedSkillLevelData[_levelIndex].AttractionDurationTurns;
     public int SKillDidWaitCount => FixedSkillLevelData[_levelIndex].SkillDidWaitCount;
     public float EvasionModifier => FixedSkillLevelData[_levelIndex].EvasionModifier;
     public float AttackModifier => FixedSkillLevelData[_levelIndex].AttackModifier;

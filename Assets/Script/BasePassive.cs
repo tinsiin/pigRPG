@@ -567,7 +567,7 @@ public class BasePassive
 
         // 2) VitalLayer の生存条件チェック
         //    IsSurvivalCondition == true の Layer が "ひとつも残っていない" 場合
-        if (VitalLayers != null)
+        if (VitalLayers != null && VitalLayers.Count > 0)
         {
             if (!HasRemainingSurvivalVitalLayer(user))
             {

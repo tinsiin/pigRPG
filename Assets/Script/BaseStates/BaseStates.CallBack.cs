@@ -67,6 +67,9 @@ public abstract partial class BaseStates
 
         // イラつきシステム: 死亡通知（全キャラのイラつきから死者を横断処理）
         IrritationService.OnCharacterDeath(this, LastDamageSource, LastDamageWasPassive);
+
+        // 吸引システム: 死亡した吸引元のパッシブを全キャラから除去
+        AttractionService.OnAttractorDeath(this);
     }
     //  ==============================================================================================================================
     //                                              ReactionSkill用
@@ -102,6 +105,12 @@ public abstract partial class BaseStates
         if (skill.HasProvokeAttribute && bestHitOutcome != HitResult.CompleteEvade)
         {
             IrritationService.Add(this, attacker, skill.ProvokeAmountOnHit);
+        }
+
+        // 吸引属性: スキルに吸引属性あり + CompleteEvade以外 → 吸引パッシブ付与
+        if (skill.HasAttractionAttribute && bestHitOutcome != HitResult.CompleteEvade)
+        {
+            AttractionService.TryApply(this, attacker, skill.AttractionDurationTurns);
         }
     }
     /// <summary>

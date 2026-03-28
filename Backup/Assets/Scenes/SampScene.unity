@@ -25544,7 +25544,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.95803905, g: 0.17928156, b: 0.94910794, a: 0.8460147}
+  m_Color: {r: 0.89441377, g: 0.45112577, b: 0.87194043, a: 0.6125271}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -46391,6 +46391,8 @@ MonoBehaviour:
             Cantkill: 0
             HasProvokeAttribute: 0
             ProvokeAmountOnHit: 1
+            HasAttractionAttribute: 0
+            AttractionDurationTurns: 3
             RequiredNormalP: 0
             RequiredAttrP:
               _list: []
@@ -46499,6 +46501,7 @@ MonoBehaviour:
   - rid: 9189338323944472576
   - rid: 9189338356401045504
   - rid: 9189338397372055552
+  - rid: 8963074295230890066
   references:
     version: 2
     RefIds:
@@ -46548,6 +46551,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 2127851221303427072
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -46594,6 +46600,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 2127851221303427073
       type: {class: Raitistini, ns: , asm: Assembly-CSharp}
       data:
@@ -46640,6 +46649,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 2127851221303427074
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -46686,6 +46698,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 2127851287253090304
       type: {class: Slaim, ns: , asm: Assembly-CSharp}
       data:
@@ -46732,6 +46747,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
         EasterNoshiirLockKey: 0
     - rid: 2127851343115190272
       type: {class: LeadingStep, ns: , asm: Assembly-CSharp}
@@ -46779,6 +46797,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 2127851343115190273
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -46827,6 +46848,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 2127851343115190274
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -46873,6 +46897,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 2127851343115190275
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -46919,6 +46946,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 2127851384214913024
       type: {class: geino_Slaim, ns: , asm: Assembly-CSharp}
       data:
@@ -46965,6 +46995,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
         EasterNoshiirLockKey: 0
     - rid: 2127851432044396544
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
@@ -47012,6 +47045,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 2127851432044396545
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -47058,6 +47094,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 3171372632022712320
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -47104,6 +47143,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 3171372632022712321
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -47158,6 +47200,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 3171372633387433985
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -47208,6 +47253,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 6711005805807403020
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -47254,6 +47302,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 8285219776706641920
       type: {class: ForcedDowner, ns: , asm: Assembly-CSharp}
       data:
@@ -47300,6 +47351,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 8285219776706641921
       type: {class: Upper, ns: , asm: Assembly-CSharp}
       data:
@@ -47346,6 +47400,58 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
+    - rid: 8963074295230890066
+      type: {class: AttractionPassive, ns: , asm: Assembly-CSharp}
+      data:
+        OkImpression: -1
+        OkType: -1
+        IsCantACT: 0
+        CanCancel: 0
+        IsEternal: 0
+        IsBad: 1
+        MaxPassivePower: 0
+        PassiveName: "skill\u5438\u5F15"
+        SmallPassiveName: "\u5438\u5F15"
+        ID: 26
+        DurationTurn: -1
+        DurationTurnCounter: 0
+        DurationWalk: -1
+        DurationWalkCounter: 0
+        RemoveOnDeath: 0
+        RemoveOnDamage: 0
+        RemoveOnAttack: 0
+        RemoveOnInterruptCounter: 0
+        RemoveOnAfterAttack: 0
+        RemoveOnAfterAttackToTarget: 0
+        RemoveOnAfterPerfectSingleAttack: 0
+        RemoveOnNotVanguard: 0
+        RemoveOnAfterAlliesDamage: 0
+        ExtraPassivesIdOnSkillACT: []
+        VitalLayers: []
+        BlockVanguardByAlly_IfImVanguard: 0
+        BeVanguardOnApply: 0
+        _atkFixedValue: 0
+        _defFixedValue: 0
+        _eyeFixedValue: 0
+        _agiFixedValue: 0
+        _atkPercentageModifier: 1
+        _defPercentageModifier: 1
+        _eyePercentageModifier: 1
+        _agiPercentageModifier: 1
+        NormalDontDamageHpMinRatio: -1
+        DamageReductionRateOnDamage: -1
+        TargetProbability: 0
+        _skillActivationRate: 100
+        _maxRecoveryTurnModifier: 0
+        _healEffectRate: 100
+        _attackACTKerenACTRate: 4.4
+        _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 8980149206437855232
       type: {class: InterruptCounterPassive, ns: , asm: Assembly-CSharp}
       data:
@@ -47392,6 +47498,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 8980149223421378560
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -47438,6 +47547,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 9189337874187157504
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -47484,6 +47596,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 9189337874187157505
       type: {class: BasePassive, ns: , asm: Assembly-CSharp}
       data:
@@ -47530,6 +47645,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 9189338310192660480
       type: {class: Turtle, ns: , asm: Assembly-CSharp}
       data:
@@ -47576,6 +47694,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 22
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 9189338323944472576
       type: {class: Achilles, ns: , asm: Assembly-CSharp}
       data:
@@ -47622,6 +47743,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 9189338356401045504
       type: {class: KageronCounter, ns: , asm: Assembly-CSharp}
       data:
@@ -47668,6 +47792,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 4.4
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
     - rid: 9189338397372055552
       type: {class: Slaim2, ns: , asm: Assembly-CSharp}
       data:
@@ -47714,6 +47841,9 @@ MonoBehaviour:
         _healEffectRate: 100
         _attackACTKerenACTRate: 8.1
         _defenceACTKerenACTRate: 4.4
+        _irritationApplicationResistRate: 1
+        _irritationDecayBonus: 0
+        _irritationTriggerResistRate: 1
 --- !u!114 &1195921980
 MonoBehaviour:
   m_ObjectHideFlags: 0

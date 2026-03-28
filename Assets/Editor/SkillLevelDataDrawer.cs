@@ -43,7 +43,8 @@ public class SkillLevelDataDrawer : PropertyDrawer
         new[] { "BaseSkillType", "ConsecutiveType", "ZoneTrait", "DistributionType", "PowerRangePercentageDictionary", "HitRangePercentageDictionary" },
         // ③ 威力・命中・ダメージ
         new[] { "SkillPower", "TenDayValuesSwing", "TenDayValuesHit", "SkillHitPer", "MentalDamageRatio", "DefAtk", "PowerSpread", "Cantkill",
-                "HasProvokeAttribute", "ProvokeAmountOnHit" },
+                "HasProvokeAttribute", "ProvokeAmountOnHit",
+                "HasAttractionAttribute", "AttractionDurationTurns" },
         // ④ コスト・補正
         new[] { "RequiredNormalP", "RequiredAttrP", "RequiredRemainingHPPercent", "EvasionModifier", "AttackModifier", "AttackMentalHealPercent", "SkillDidWaitCount" },
         // ⑤ 連撃・ストック・トリガー
@@ -84,6 +85,8 @@ public class SkillLevelDataDrawer : PropertyDrawer
         { "Cantkill", "殺せない (1残る)" },
         { "HasProvokeAttribute", "挑発属性" },
         { "ProvokeAmountOnHit", "挑発イラつき付与量" },
+        { "HasAttractionAttribute", "吸引属性 (機械専用)" },
+        { "AttractionDurationTurns", "吸引持続ターン数 (機械専用)" },
         { "RequiredNormalP", "必要ノーマルP" },
         { "RequiredAttrP", "必要属性P内訳" },
         { "RequiredRemainingHPPercent", "必要残りHP割合" },

@@ -32,6 +32,15 @@ pigRPG - Unity製Android向けRPG（日本語プロジェクト）
 BaseSkill / SkillLevelData はカスタムPropertyDrawerで描画されている（`Assets/Editor/BaseSkillEditor.cs`, `SkillLevelDataDrawer.cs`）。
 Inspectorに表示されるプロパティを追加・変更した場合、**ドロワー側の更新も必須**（やらないと表示されない）。表示セクションや配置順も意図的に設計されているため、追加位置も考慮すること。
 
+## パッシブシステムの注意
+
+`BasePassive` は `ScriptableObject` ではなく `[Serializable]` な普通のクラス。`PassiveManager` は `[SerializeReference, SelectableSerializeReference]` でインスペクタ上にパッシブインスタンスを直接登録する仕組み。
+
+- パッシブのインスタンス生成は `new` で行う（`ScriptableObject.CreateInstance<>()` ではない）
+- パッシブのサブクラスも `[Serializable]` な普通のクラスとして作る
+- PassiveManagerの `_masterList` に登録するパッシブはインスペクタから手動登録
+- スキルヒット等で動的に生成・付与するパッシブはPassiveManager登録不要（`new` → `ApplyPassive()` で直接付与可能）
+
 ## 新規ファイル作成時の注意
 
 Assetsフォルダ以下を調べ、同一機能・同一役割のファイル、フォルダが既に存在しないか確認すること。

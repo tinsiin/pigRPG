@@ -257,6 +257,13 @@ public class SkillLevelData
     /// <summary>ヒット時のイラつき付与量（整数）</summary>
     public int ProvokeAmountOnHit = 1;
 
+    // ─── ③c 吸引属性 ───
+    [Header("③c 吸引属性")]
+    /// <summary>吸引属性フラグ（trueならヒット時に吸引パッシブを付与、機械専用）</summary>
+    public bool HasAttractionAttribute;
+    /// <summary>吸引パッシブの持続ターン数</summary>
+    public int AttractionDurationTurns = 3;
+
     // ─── ④ コスト・補正 ───
     public int RequiredNormalP;
     public SerializableDictionary<SpiritualProperty, int> RequiredAttrP = new();
@@ -326,6 +333,9 @@ public class SkillLevelData
             // ③b 挑発属性
             HasProvokeAttribute = this.HasProvokeAttribute,
             ProvokeAmountOnHit = this.ProvokeAmountOnHit,
+            // ③c 吸引属性
+            HasAttractionAttribute = this.HasAttractionAttribute,
+            AttractionDurationTurns = this.AttractionDurationTurns,
             // ④ コスト・補正
             RequiredNormalP = this.RequiredNormalP,
             RequiredRemainingHPPercent = this.RequiredRemainingHPPercent,
