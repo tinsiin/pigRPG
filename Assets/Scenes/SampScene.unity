@@ -25544,7 +25544,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.89441377, g: 0.45112577, b: 0.87194043, a: 0.6125271}
+  m_Color: {r: 0.9466758, g: 0.227832, b: 0.9353261, a: 0.80431455}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -47420,7 +47420,7 @@ MonoBehaviour:
         DurationTurnCounter: 0
         DurationWalk: -1
         DurationWalkCounter: 0
-        RemoveOnDeath: 0
+        RemoveOnDeath: 1
         RemoveOnDamage: 0
         RemoveOnAttack: 0
         RemoveOnInterruptCounter: 0

@@ -62,10 +62,10 @@ public class PassivesMordaleAreaController : MonoBehaviour, IPointerClickHandler
         PassiveTextUtils.SetupTmpBasics(m_FirstText, truncate: true);
         PassiveTextUtils.SetupTmpBasics(m_SecondText, truncate: true);
 
-        // トークン列を生成（<> リテラル表示。トークン間は半角スペース）
+        // トークン列を生成（正式名称で全表示。<> リテラル表示。トークン間は半角スペース）
         string allTokens = m_DebugMode
             ? PassiveTextUtils.BuildDummyPassivesTokens(m_DebugCount, m_DebugPrefix)
-            : PassiveTextUtils.BuildPassivesTokens(actor);
+            : PassiveTextUtils.BuildPassivesFullNameTokens(actor);
 
         // ページ構築（aTMPに詰め、続きはbTMPへ。さらに残る場合はbTMPを省略付きにし、次ページへ持ち越し）
         BuildPages(allTokens);

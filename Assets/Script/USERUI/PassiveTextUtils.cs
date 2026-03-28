@@ -63,6 +63,46 @@ public static class PassiveTextUtils
         return sb.ToString();
     }
 
+    // 実データから <正式名称> 列を生成（モーダル全表示用）
+    public static string BuildPassivesFullNameTokens(BaseStates actor)
+    {
+        if (actor == null || actor.Passives == null || actor.Passives.Count == 0)
+            return string.Empty;
+
+        var ordered = actor.Passives
+            .Select((p, idx) => new { p, idx })
+            .Where(x => x.p != null)
+            .Select(x => new
+            {
+                x.p,
+                x.idx,
+                kTurn = x.p.DurationTurn < 0 ? int.MaxValue : x.p.DurationTurn,
+                kTurnCnt = (x.p.DurationTurn < 0 || x.p.DurationTurnCounter < 0) ? int.MaxValue : x.p.DurationTurnCounter,
+                kWalk = x.p.DurationWalk < 0 ? int.MaxValue : x.p.DurationWalk,
+                kWalkCnt = (x.p.DurationWalk < 0 || x.p.DurationWalkCounter < 0) ? int.MaxValue : x.p.DurationWalkCounter
+            })
+            .OrderBy(x => x.kTurn)
+            .ThenBy(x => x.kTurnCnt)
+            .ThenBy(x => x.kWalk)
+            .ThenBy(x => x.kWalkCnt)
+            .ThenBy(x => x.idx)
+            .Select(x => x.p);
+
+        var sb = new StringBuilder();
+        bool first = true;
+        foreach (var p in ordered)
+        {
+            string raw = !string.IsNullOrWhiteSpace(p.PassiveName) ? p.PassiveName
+                : !string.IsNullOrWhiteSpace(p.SmallPassiveName) ? p.SmallPassiveName
+                : $"fa{p.ID}";
+            string token = $"<{raw}>";
+            if (!first) sb.Append(' ');
+            sb.Append(token);
+            first = false;
+        }
+        return sb.ToString();
+    }
+
     // ダミー <token> 列を生成
     public static string BuildDummyPassivesTokens(int count, string prefix)
     {
