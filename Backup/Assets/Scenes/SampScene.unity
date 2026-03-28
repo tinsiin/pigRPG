@@ -25681,7 +25681,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.8954625, g: 0.4466449, b: 0.8732124, a: 0.6163757}
+  m_Color: {r: 0.9414, g: 0.25037327, b: 0.92892736, a: 0.78495383}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -46069,7 +46069,7 @@ MonoBehaviour:
   FieldDialogueObject: {fileID: 0}
   EventDialogueObject: {fileID: 0}
   NovelChoiceObject: {fileID: 0}
-  BattleObject: {fileID: 0}
+  BattleObject: {fileID: 8000000001}
 --- !u!114 &1190210412
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46097,9 +46097,8 @@ MonoBehaviour:
   m_PassivesTexts:
   - {fileID: 6793402}
   - {fileID: 738264950}
-  - {fileID: 0}
   m_PassivesModalArea: {fileID: 1180822962}
-  m_PassiveModalButton: {fileID: 0}
+  m_PassiveModalButton: {fileID: 1850482509}
   m_PassivesDebugMode: 0
   m_PassivesDebugCount: 100
   m_PassivesDebugPrefix: pas

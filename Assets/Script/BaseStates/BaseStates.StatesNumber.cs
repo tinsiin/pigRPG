@@ -1379,7 +1379,7 @@ public abstract partial class BaseStates
     /// </summary>
     public float CalculateResonanceSkillCountMicroScaling(int skillCount ,float resonanceValue)
     {
-        return resonanceValue * (1 - (skillCount - 1 * skillCountMicroScaling));
+        return resonanceValue * (1 - (skillCount - 1) * skillCountMicroScaling);
         //スキルが二つ以上なら数に応じて引かれる
     }
     /// <summary>
