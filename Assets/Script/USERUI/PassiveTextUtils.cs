@@ -54,7 +54,7 @@ public static class PassiveTextUtils
         bool first = true;
         foreach (var p in ordered)
         {
-            string raw = string.IsNullOrWhiteSpace(p.SmallPassiveName) ? p.ID.ToString() : p.SmallPassiveName;
+            string raw = string.IsNullOrWhiteSpace(p.SmallPassiveName) ? $"fa{p.ID}" : p.SmallPassiveName;
             string token = $"<{raw}>";
             if (!first) sb.Append(' ');
             sb.Append(token);

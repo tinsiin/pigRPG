@@ -7,6 +7,15 @@ using UnityEngine;
 /// </summary>
 public class AttractionPassive : BasePassive
 {
+    public override void OnApply(BaseStates user, BaseStates grantor)
+    {
+        base.OnApply(user, grantor);
+
+        // 吸引元の名前を表示名に反映: <吸引(名前)>
+        if (grantor != null)
+            SmallPassiveName = $"吸引({grantor.CharacterName})";
+    }
+
     public override void OnNextTurn()
     {
         base.OnNextTurn();

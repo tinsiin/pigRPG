@@ -1162,6 +1162,7 @@ public class BasePassive
         copy.IsBad = IsBad;
         copy.MaxPassivePower = MaxPassivePower;
         copy.PassiveName = PassiveName;
+        copy.SmallPassiveName = SmallPassiveName;
         copy.ID = ID;
         copy.DurationTurn = DurationTurn;
         copy.DurationWalk = DurationWalk;

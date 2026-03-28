@@ -409,7 +409,7 @@ public sealed class KZoomController : IKZoomController
         {
             var p = list[i];
             if (p == null) continue;
-            string raw = string.IsNullOrWhiteSpace(p.SmallPassiveName) ? p.ID.ToString() : p.SmallPassiveName;
+            string raw = string.IsNullOrWhiteSpace(p.SmallPassiveName) ? $"fa{p.ID}" : p.SmallPassiveName;
             string token = $"<{raw}>";
             if (!first) sb.Append(' ');
             sb.Append(token);

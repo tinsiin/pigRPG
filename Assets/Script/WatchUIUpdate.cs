@@ -188,7 +188,7 @@ public partial class WatchUIUpdate : MonoBehaviour,
         {
             var p = list[i];
             if (p == null) continue;
-            string raw = string.IsNullOrWhiteSpace(p.SmallPassiveName) ? p.ID.ToString() : p.SmallPassiveName;
+            string raw = string.IsNullOrWhiteSpace(p.SmallPassiveName) ? $"fa{p.ID}" : p.SmallPassiveName;
             // <noparse> で包むため、エスケープ不要。トークン間は半角スペース1個。
             string token = $"<{raw}>";
             if (!first) sb.Append(' ');
