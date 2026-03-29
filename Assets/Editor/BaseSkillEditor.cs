@@ -134,6 +134,9 @@ public class BaseSkillDrawer : PropertyDrawer
         h += SummaryPanelHeight(property); // 概要パネル
         h += PAD * 2;
 
+        // 効果解決方法セクション
+        h += ResolutionModeHeight(property);
+
         // バリデーション警告
         h += ValidationWarningCount(property) * (HELPBOX_H + PAD);
         h += PAD * 2;
@@ -181,6 +184,9 @@ public class BaseSkillDrawer : PropertyDrawer
         // スキル概要パネル
         DrawSummaryPanel(ref y, pos, property);
         y += PAD * 2;
+
+        // 効果解決方法
+        DrawResolutionMode(ref y, pos, property);
 
         // バリデーション警告
         DrawValidationWarnings(ref y, pos, property);
@@ -445,6 +451,47 @@ public class BaseSkillDrawer : PropertyDrawer
                 }
                 if (!SkillZoneTraitNormalizer.Validate(ztVal, out var msg))
                     DrawHelpBox(ref y, pos, msg, MessageType.Warning);
+            }
+        }
+    }
+
+    // ─── 効果解決方法セクション ───
+    float ResolutionModeHeight(SerializedProperty property)
+    {
+        float h = LINE + PAD; // ラベル行
+        var modeProp = property.FindPropertyRelative("_resolutionMode");
+        if (modeProp != null)
+        {
+            h += LINE + PAD; // enum
+            if (modeProp.intValue == (int)EffectResolutionMode.Packaged)
+                h += LINE + PAD; // _isPackagedHostile
+        }
+        return h;
+    }
+
+    void DrawResolutionMode(ref float y, Rect pos, SerializedProperty property)
+    {
+        float indent = EditorGUI.indentLevel * 15f;
+        EditorGUI.LabelField(
+            new Rect(pos.x + indent, y, pos.width - indent, LINE),
+            "\u2501\u2501 効果解決方法 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501",
+            EditorStyles.miniLabel);
+        y += LINE + PAD;
+
+        var modeProp = property.FindPropertyRelative("_resolutionMode");
+        if (modeProp != null)
+        {
+            EditorGUI.PropertyField(new Rect(pos.x, y, pos.width, LINE), modeProp, new GUIContent("解決方法"));
+            y += LINE + PAD;
+
+            if (modeProp.intValue == (int)EffectResolutionMode.Packaged)
+            {
+                var hostileProp = property.FindPropertyRelative("_isPackagedHostile");
+                if (hostileProp != null)
+                {
+                    EditorGUI.PropertyField(new Rect(pos.x, y, pos.width, LINE), hostileProp, new GUIContent("敵対的パッケージ（命中回避あり）"));
+                    y += LINE + PAD;
+                }
             }
         }
     }

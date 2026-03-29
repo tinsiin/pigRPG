@@ -5,13 +5,40 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
-
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
+
+/// <summary>
+/// スキル効果の解決方法（SkillTypeとは直交する軸）
+/// SkillTypeが「何をするか(What)」を表すのに対し、こちらは「どう処理するか(How)」を表す。
+/// </summary>
+public enum EffectResolutionMode
+{
+    /// <summary>現行パイプライン：各SubEffectが個別に命中判定</summary>
+    Standard = 0,
+    /// <summary>パッケージ化：単一命中判定 → ManualSkillEffect（旧Manual1）</summary>
+    Packaged = 1,
+}
 
 [Serializable]
 public partial class BaseSkill
 {
+    //  ==============================================================================================================================
+    //                                              効果解決方法（旧Manual1）
+    //  ==============================================================================================================================
+
+    /// <summary>
+    /// スキル効果の解決方法。Standard=標準パイプライン、Packaged=単一命中判定+ManualSkillEffect
+    /// </summary>
+    [SerializeField] EffectResolutionMode _resolutionMode = EffectResolutionMode.Standard;
+    /// <summary>
+    /// Packaged時の敵対判定。true=悪い攻撃(IsReactHIT)、false=良いアクション(SkillHitCalcのみ)
+    /// </summary>
+    [SerializeField] bool _isPackagedHostile;
+
+    public EffectResolutionMode ResolutionMode => _resolutionMode;
+    public bool IsPackagedHostile => _isPackagedHostile;
+
     //  ==============================================================================================================================
     //                                              参照
     //  ==============================================================================================================================
@@ -106,6 +133,10 @@ public partial class BaseSkill
         dst._infiniteSkillTenDaysSwingUnit = _infiniteSkillTenDaysSwingUnit;
         dst._infiniteSkillTenDaysHitUnit = _infiniteSkillTenDaysHitUnit;
 
+        // 効果解決方法
+        dst._resolutionMode = _resolutionMode;
+        dst._isPackagedHostile = _isPackagedHostile;
+
         // bufferSkillType, bufferSubEffects等: 非シリアライズのランタイム一時値なのでデフォルト(0/空)のままでOK
         // A/B_MoveSet_Cash: CashMoveSet()で戦闘開始時にレベルデータから詰められるためコピー不要
         // ReactiveSkillPassiveList / AggressiveSkillPassiveList: 戦闘中に動的に追加されるためコピー不要
@@ -156,8 +187,7 @@ public enum SkillType
     AddVitalLayer =1 << 5,
     RemoveVitalLayer =1 << 6,
     MentalHeal = 1 << 7,
-    Manual1_GoodHitCalc = 1 << 8,
-    Manual1_BadHitCalc = 1 << 9,
+    // 1 << 8, 1 << 9 は旧Manual1用。EffectResolutionModeに移行済みのため欠番。
     /// <summary>
     /// スキルパッシブを付与する
     /// </summary>

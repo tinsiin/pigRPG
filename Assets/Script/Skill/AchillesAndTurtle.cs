@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using static CommonCalc;
 
-public class AchillesAndTurtle : BaseSkill//アキレスと亀- 混沌時間
+public class AchillesAndTurtle : AllySkill//アキレスと亀- 混沌時間
 {
 
 

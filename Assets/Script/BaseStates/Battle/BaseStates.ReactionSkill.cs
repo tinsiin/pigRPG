@@ -845,18 +845,18 @@ public abstract partial class BaseStates
         //スキルの持ってる性質を全て処理として実行
         Debug.Log($"{attacker.CharacterName}の{skill.SkillName}のスキル性質 = {skill.SkillType}(ReactionSkill)");
 
-        //Manual1
-        if(skill.HasType(SkillType.Manual1_GoodHitCalc))//良い攻撃
+        //Packaged（旧Manual1）: 単一命中判定 → ManualSkillEffect
+        if(skill.ResolutionMode == EffectResolutionMode.Packaged)
         {
-            var hitResult = skill.SkillHitCalc(this, actor: attacker);//良い攻撃なのでスキル命中のみ
-            hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
-            AccumulateHitResult(hitResult);
-
-            skill.ManualSkillEffect(attacker, this, hitResult);//効果
-        }
-        if(skill.HasType(SkillType.Manual1_BadHitCalc))//悪い攻撃
-        {
-            var hitResult = IsReactHIT(attacker);//攻撃タイプでないので直接IsReactHitね
+            HitResult hitResult;
+            if(skill.IsPackagedHostile)//悪い攻撃
+            {
+                hitResult = IsReactHIT(attacker);//IsReactHIT内部でSkillHitCalc+命中凌駕も通る
+            }
+            else//良いアクション
+            {
+                hitResult = skill.SkillHitCalc(this, actor: attacker);//スキル命中のみ
+            }
             hitResult = MixAllyEvade(hitResult,attacker);//味方別口回避の発生と回避判定
             AccumulateHitResult(hitResult);
 

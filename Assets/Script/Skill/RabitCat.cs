@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using static CommonCalc;
 
-public class RabitCat : BaseSkill
+public class RabitCat : AllySkill
 {
     public override HitResult SkillHitCalc(BaseStates target,float supremacyBonus = 0,HitResult hitResult = HitResult.Hit,bool PreliminaryMagicGrazeRoll = false, BaseStates actor = null)
     {
