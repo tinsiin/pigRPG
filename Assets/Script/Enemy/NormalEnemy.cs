@@ -135,6 +135,48 @@ public class NormalEnemy : BaseStates
     /// </summary>
     private int _lastEncounterProgress = -1;
 
+    /// <summary>セーブ用: 最後のエンカウント時歩数</summary>
+    public int LastEncounterProgress => _lastEncounterProgress;
+
+    /// <summary>セーブ用: 相性値変動の読み取り専用参照</summary>
+    public IReadOnlyDictionary<string, int> BondDeltas => _bondDeltas;
+
+    /// <summary>
+    /// セーブデータから敵個体の状態を復元する。
+    /// DeepCopy直後に呼ぶこと（テンプレートからDeepCopy → セーブ状態を上書き復元）。
+    /// </summary>
+    public void RestoreState(EnemyPersistenceData saved)
+    {
+        if (saved == null) return;
+
+        // 戦闘状態
+        HP = saved.HP;
+        MentalHP = saved.MentalHP;
+        broken = saved.IsBroken;
+        // broken=trueなのにHP>0は不正（データ改ざん等）→HP=0を強制
+        if (broken && !Death()) HP = 0;
+
+        // エンカウント進行（レガシーガード: 0は-1として扱う）
+        _lastEncounterProgress = saved.LastEncounterProgress == 0 ? -1 : saved.LastEncounterProgress;
+
+        // 武器適応率（レガシーガード: 0以下は1.0fにフォールバック）
+        RestoreAdaptation(
+            saved.AdaptationRate <= 0 ? 1.0f : saved.AdaptationRate,
+            saved.AdaptationStartRate <= 0 ? 1.0f : saved.AdaptationStartRate,
+            saved.BattlesSinceProtocolSwitch);
+
+        // 相性値変動
+        _bondDeltas.Clear();
+        if (saved.BondDeltas != null)
+        {
+            foreach (var entry in saved.BondDeltas)
+            {
+                if (!string.IsNullOrEmpty(entry.Guid))
+                    _bondDeltas[entry.Guid] = entry.Delta;
+            }
+        }
+    }
+
     /// <summary>
     /// 復活時にエンカウント記録をリセットする。
     /// Reborn復活用: 死亡期間の距離を無効化し、distanceTraveled=0で再出発させる。

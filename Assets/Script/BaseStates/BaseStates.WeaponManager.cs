@@ -42,6 +42,22 @@ public abstract partial class BaseStates
     /// </summary>
     public float AdaptationRate => _adaptationRate;
 
+    /// <summary>適応率スタート値（セーブ用）</summary>
+    public float AdaptationStartRate => _adaptationStartRate;
+
+    /// <summary>規格切替後の経過戦闘数（セーブ用）</summary>
+    public int BattlesSinceProtocolSwitch => _battlesSinceProtocolSwitch;
+
+    /// <summary>
+    /// セーブデータから適応率を復元する
+    /// </summary>
+    internal void RestoreAdaptation(float rate, float startRate, int battlesSince)
+    {
+        _adaptationRate = rate;
+        _adaptationStartRate = startRate;
+        _battlesSinceProtocolSwitch = battlesSince;
+    }
+
     /// <summary>
     /// 指定した武器をこのキャラクターが装備できるか判定する。
     /// BaseTenDayValues が weapon.TenDayValues の全要求を満たしていれば true。

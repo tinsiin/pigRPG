@@ -24,4 +24,19 @@ public interface IEnemyRebornManager
     /// 敵の復活情報をクリアする
     /// </summary>
     void Clear(NormalEnemy enemy);
+
+    /// <summary>
+    /// 全敵の復活情報をクリアする（ロード時・ノード移動時に使用）
+    /// </summary>
+    void ClearAll();
+
+    /// <summary>
+    /// 敵の復活状態を取得する（セーブ用）。エントリがなければnull
+    /// </summary>
+    (int RemainingSteps, int LastProgress, EnemyRebornState State)? GetRebornState(NormalEnemy enemy);
+
+    /// <summary>
+    /// セーブデータから復活状態を復元する
+    /// </summary>
+    void RestoreRebornState(NormalEnemy enemy, int remainingSteps, int lastProgress, EnemyRebornState state);
 }

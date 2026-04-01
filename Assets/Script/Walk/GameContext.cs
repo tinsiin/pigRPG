@@ -9,6 +9,10 @@ public sealed class GameContext
     private readonly HashSet<string> tags = new();
     private readonly Dictionary<string, EncounterState> encounterStatesByTableId = new();
     private readonly Dictionary<EncounterSO, List<NormalEnemy>> encounterEnemies = new();
+    // セーブデータから復元された敵状態。ロード時の復元専用（read-only after import）。
+    // ランタイム中の状態はencounterEnemies内のNormalEnemyインスタンスが正。
+    // エクスポート時はランタイムインスタンスから直接読む（ここは参照しない）。
+    private readonly Dictionary<string, EnemyPersistenceData> _savedEnemyStates = new();
     private readonly Dictionary<CharacterId, StageBonus> stageBonuses = new();
     private readonly EncounterOverlayStack encounterOverlays = new();
     private bool isEncounterDisabled;
@@ -192,13 +196,19 @@ public sealed class GameContext
                     if (enemy == null) continue;
                     var copy = enemy.DeepCopy();
 
-                    // コンビメンバーのGUID復元（セーブ/ロード後に同一個体を紐付ける）
-                    if (ComboRegistry != null)
+                    // セーブデータから全状態復元（コンボ・非コンボ問わず）
+                    var saved = GetSavedEnemyState(encounter.Id, i);
+                    if (saved != null)
                     {
-                        var saved = ComboRegistry.GetEnemyStateByEncounterIndex(encounter.Id, i);
-                        if (saved != null)
+                        copy.RestoreGuid(saved.EnemyGuid);
+                        copy.RestoreState(saved);
+
+                        // 復活状態の復元
+                        if (saved.RebornState > 0)
                         {
-                            copy.RestoreGuid(saved.EnemyGuid);
+                            EnemyRebornManager.Instance.RestoreRebornState(
+                                copy, saved.RebornRemainingSteps,
+                                saved.RebornLastProgress, (EnemyRebornState)saved.RebornState);
                         }
                     }
 
@@ -261,13 +271,12 @@ public sealed class GameContext
     }
 
     /// <summary>
-    /// コンビメンバーの敵個体状態をエクスポートする。
+    /// 全敵の個体状態をエクスポートする。
     /// EncounterSO → テンプレートインデックスの対応を保持して永続化に使用。
     /// </summary>
-    public List<EnemyPersistenceData> ExportComboEnemyStates()
+    public List<EnemyPersistenceData> ExportAllEnemyStates()
     {
         var result = new List<EnemyPersistenceData>();
-        if (ComboRegistry == null || ComboRegistry.AllCombos.Count == 0) return result;
 
         foreach (var kvp in encounterEnemies)
         {
@@ -289,7 +298,18 @@ public sealed class GameContext
                 var enemy = runtimeList[runtimeIdx];
                 runtimeIdx++;
                 if (enemy == null) continue;
-                if (ComboRegistry.FindComboByMemberGuid(enemy.EnemyGuid) == null) continue;
+
+                // 相性値変動のシリアライズ
+                List<BondDeltaEntry> bondDeltas = null;
+                if (enemy.BondDeltas.Count > 0)
+                {
+                    bondDeltas = new List<BondDeltaEntry>();
+                    foreach (var bd in enemy.BondDeltas)
+                        bondDeltas.Add(new BondDeltaEntry { Guid = bd.Key, Delta = bd.Value });
+                }
+
+                // 復活状態の取得
+                var rebornState = EnemyRebornManager.Instance.GetRebornState(enemy);
 
                 result.Add(new EnemyPersistenceData
                 {
@@ -298,11 +318,64 @@ public sealed class GameContext
                     TemplateIndex = i,
                     IsBroken = enemy.broken,
                     HP = enemy.HP,
-                    MentalHP = enemy.MentalHP
+                    MentalHP = enemy.MentalHP,
+                    LastEncounterProgress = enemy.LastEncounterProgress,
+                    AdaptationRate = enemy.AdaptationRate,
+                    AdaptationStartRate = enemy.AdaptationStartRate,
+                    BattlesSinceProtocolSwitch = enemy.BattlesSinceProtocolSwitch,
+                    RebornRemainingSteps = rebornState?.RemainingSteps ?? -1,
+                    RebornLastProgress = rebornState?.LastProgress ?? -1,
+                    RebornState = rebornState.HasValue ? (int)rebornState.Value.State : 0,
+                    BondDeltas = bondDeltas
                 });
             }
         }
+        // 未訪問エンカウントの保存済み状態をマージ（ロード後に未訪問のまま再セーブした場合の消失を防止）
+        var exportedKeys = new HashSet<string>();
+        foreach (var entry in result)
+            exportedKeys.Add($"{entry.EncounterId}:{entry.TemplateIndex}");
+
+        foreach (var kvp in _savedEnemyStates)
+        {
+            if (!exportedKeys.Contains(kvp.Key))
+                result.Add(kvp.Value);
+        }
+
         return result;
+    }
+
+    /// <summary>
+    /// ロード時にセーブデータから敵状態を取り込む（復元専用）
+    /// </summary>
+    public void ImportEnemyStates(List<EnemyPersistenceData> states)
+    {
+        _savedEnemyStates.Clear();
+        if (states == null) return;
+        foreach (var s in states)
+        {
+            if (s == null || string.IsNullOrEmpty(s.EncounterId)) continue;
+            var key = $"{s.EncounterId}:{s.TemplateIndex}";
+            _savedEnemyStates[key] = s;
+        }
+    }
+
+    /// <summary>
+    /// GetRuntimeEnemies内から呼ぶ。対応するセーブデータがあれば返す
+    /// </summary>
+    public EnemyPersistenceData GetSavedEnemyState(string encounterId, int templateIndex)
+    {
+        var key = $"{encounterId}:{templateIndex}";
+        _savedEnemyStates.TryGetValue(key, out var data);
+        return data;
+    }
+
+    /// <summary>
+    /// ノード移動時に敵キャッシュと復元用データをクリアする
+    /// </summary>
+    public void ClearEnemyCache()
+    {
+        encounterEnemies.Clear();
+        _savedEnemyStates.Clear();
     }
 
     public IReadOnlyDictionary<string, bool> GetAllFlags()

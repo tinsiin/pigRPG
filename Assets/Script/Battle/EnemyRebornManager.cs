@@ -87,6 +87,26 @@ public sealed class EnemyRebornManager : IEnemyRebornManager
         _infos.Remove(enemy);
     }
 
+    public void ClearAll()
+    {
+        _infos.Clear();
+    }
+
+    public (int RemainingSteps, int LastProgress, EnemyRebornState State)? GetRebornState(NormalEnemy enemy)
+    {
+        if (enemy == null || !_infos.TryGetValue(enemy, out var info)) return null;
+        return (info.RemainingSteps, info.LastProgress, info.State);
+    }
+
+    public void RestoreRebornState(NormalEnemy enemy, int remainingSteps, int lastProgress, EnemyRebornState state)
+    {
+        if (enemy == null) return;
+        var info = GetOrCreate(enemy);
+        info.RemainingSteps = remainingSteps;
+        info.LastProgress = lastProgress;
+        info.State = state;
+    }
+
     private RebornInfo GetOrCreate(NormalEnemy enemy)
     {
         if (_infos.TryGetValue(enemy, out var info)) return info;

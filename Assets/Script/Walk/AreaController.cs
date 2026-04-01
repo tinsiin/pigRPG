@@ -1036,6 +1036,10 @@ public sealed class AreaController
         // Phase 2: Clear node-scoped anchors
         anchorManager.ClearAnchorsInScope(AnchorScope.Node);
 
+        // 敵キャッシュ・復元データ・復活カウンターをクリア（ノード移動時は敵状態破棄）
+        context.ClearEnemyCache();
+        EnemyRebornManager.Instance.ClearAll();
+
         // Phase 1.1: Reset side/central object state on node transition
         sideObjectSelector.ClearPending();
         ConfigureSideObjectSelector();

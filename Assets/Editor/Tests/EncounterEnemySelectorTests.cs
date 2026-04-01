@@ -68,6 +68,21 @@ public class EncounterEnemySelectorTests
         {
             // テスト用: 何もしない
         }
+
+        public void ClearAll()
+        {
+            // テスト用: 何もしない
+        }
+
+        public (int RemainingSteps, int LastProgress, EnemyRebornState State)? GetRebornState(NormalEnemy enemy)
+        {
+            return null;
+        }
+
+        public void RestoreRebornState(NormalEnemy enemy, int remainingSteps, int lastProgress, EnemyRebornState state)
+        {
+            // テスト用: 何もしない
+        }
     }
 
     private const BindingFlags PrivateInstance = BindingFlags.NonPublic | BindingFlags.Instance;

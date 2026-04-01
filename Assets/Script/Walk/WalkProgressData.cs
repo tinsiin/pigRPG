@@ -141,7 +141,7 @@ public class WalkProgressData
         {
             data.FriendshipCombos = comboData.Combos ?? new();
         }
-        data.EnemyStates = context.ExportComboEnemyStates();
+        data.EnemyStates = context.ExportAllEnemyStates();
 
         return data;
     }
@@ -201,6 +201,13 @@ public class WalkProgressData
 
         // Restore unified event entry states
         context.EventEntryStateManager.Import(EventEntryStates);
+
+        // ロード時に旧セッションのキャッシュをクリア（二重ロード時の古いencounterEnemies残留を防止）
+        context.ClearEnemyCache();
+        EnemyRebornManager.Instance.ClearAll();
+
+        // 全敵の状態をGameContextに復元（GetRuntimeEnemiesで使用）
+        context.ImportEnemyStates(EnemyStates);
 
         // Restore friendship combos (ComboRegistryの復元はGetRuntimeEnemiesより先に行う)
         if (context.ComboRegistry != null)
